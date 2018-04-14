@@ -1,4 +1,5 @@
 # Petanque-Turnier-Manager
+v0.7
 
 Der Petanque Turnier Manager ist eine Offline Turnierleitung LibreOffice Calc Erweiterung/Extension. 
 
