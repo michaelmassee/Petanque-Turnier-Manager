@@ -30,6 +30,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
+import de.petanqueturniermanager.helper.msgbox.QuestionBox;
 import de.petanqueturniermanager.helper.msgbox.WarningBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -283,11 +284,9 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		checkNotNull(meldungen);
 
 		if (meldungen.spieler().size() < 4) {
-
 			this.errMsg.showOk("Fehler beim erstellen von Spielrunde",
 					"Kann spielrunde nicht Auslosen. Anzahl Spieler < 4. Aktive Spieler = "
 							+ meldungen.spieler().size());
-
 			return;
 		}
 
@@ -304,11 +303,25 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			// loeschen
 			getSheetHelper().removeSheet(getSheetName(neueSpielrundeNr));
 		}
+
+		boolean doubletteRunde = false;
+		// abfrage nur doublette runde ?
+		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(getPropertiesSpalte().getSpieltag());
+		if (isKannNurDoublette) {
+			QuestionBox questionBox = new QuestionBox(getxContext());
+			short result = questionBox.showYesNo("Spielrunde Doublette",
+					"Neue Spielrunde nur Doublette Paarungen auslosen ?");
+
+			if (result == MessageBoxResults.YES) {
+				doubletteRunde = true;
+			}
+		}
+
 		sheet = getSpielRundeSheet(neueSpielrundeNr);
 		getSheetHelper().setActiveSheet(sheet);
 		TripletteDoublPaarungen paarungen = new TripletteDoublPaarungen();
 		try {
-			SpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr, meldungen);
+			SpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr, meldungen, doubletteRunde);
 			spielRundeSheet.validateSpielerTeam(null);
 			spielerNummerEinfuegen(spielRundeSheet);
 			headerPaarungen(sheet, spielRundeSheet);
@@ -329,7 +342,6 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			msg += "um weitere Spielrunden aus zu losen.";
 
 			this.errMsg.showOk("Fehler beim Auslosen", msg);
-
 		}
 	}
 

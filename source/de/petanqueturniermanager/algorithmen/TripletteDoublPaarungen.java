@@ -23,6 +23,10 @@ public class TripletteDoublPaarungen {
 	static int DOUBL_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
 
 	public SpielRunde neueSpielrunde(int rndNr, Meldungen meldungen) throws AlgorithmenException {
+		return neueSpielrunde(rndNr, meldungen, false);
+	}
+
+	public SpielRunde neueSpielrunde(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
 		TeamRechner teamRechner = new TeamRechner(meldungen.spieler().size());
@@ -32,24 +36,31 @@ public class TripletteDoublPaarungen {
 			return null;
 		}
 
-		for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-			// dummy spieler einfuegen
-			meldungen.addSpielerWennNichtVorhanden(
-					Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr).setSetzPos(DOUBL_SPIELER_SETZPOS));
+		if (nurDoublette && !teamRechner.isNurDoubletteMoeglich()) {
+			throw new AlgorithmenException("Keine Doublette Spielrunde möglich");
 		}
-		teamRechner = new TeamRechner(meldungen.spieler().size());
 
-		SpielRunde spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
-		// dummys wieder entfernen
-		for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-			Spieler spieler = Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr);
-			spielRunde.removeSpieler(spieler);
-			meldungen.removeSpieler(spieler);
+		SpielRunde spielRunde = null;
+		if (nurDoublette) {
+			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 2, meldungen);
+		} else {
+			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
+				// dummy spieler einfuegen
+				meldungen.addSpielerWennNichtVorhanden(
+						Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr).setSetzPos(DOUBL_SPIELER_SETZPOS));
+			}
+			teamRechner = new TeamRechner(meldungen.spieler().size());
+
+			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
+			// dummys wieder entfernen
+			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
+				Spieler spieler = Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr);
+				spielRunde.removeSpieler(spieler);
+				meldungen.removeSpieler(spieler);
+			}
 		}
 		spielRunde.sortiereTeamsNachGroese();
-
 		spielRunde.validateSpielerTeam(null);
-
 		return spielRunde;
 	}
 
