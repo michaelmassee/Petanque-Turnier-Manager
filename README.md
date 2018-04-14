@@ -14,7 +14,7 @@ https://de.libreoffice.org/download/libreoffice-still/<br/>
 https://help.libreoffice.org/Common/Extension_Manager/de<br/>
 
 Die aktuelle Extention *.oxt Datei:<br/>
-http://bc-linden.de/oeffentlich/?dir=petanqueturniermanager<br/>
+https://github.com/michaelmassee/Petanque-Turnier-Manager/releases<br/>
 
 ## Start:
 Öffne/Erstelle in LibreOffice eine neue Calc Datei.
