@@ -17,6 +17,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
@@ -31,6 +32,7 @@ import com.sun.star.util.XSortable;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellvalue.AbstractCellValue;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
@@ -102,6 +104,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		nichtgespielteRundenFuellen();
 		this.getRangListeSpalte().upDateRanglisteSpalte();
 		updateSummenSpalten();
+		insertSortValidateSpalte();
 		doSort();
 		footer();
 	}
@@ -418,6 +421,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		return letzteDatenSpalte() + ERSTE_SORTSPALTE_OFFSET;
 	}
 
+	private int validateSpalte() {
+		return sortSpalte() + 1;
+	}
+
 	public List<SpielerSpieltagErgebnis> spielTagErgebnisseEinlesen() {
 		List<SpielerSpieltagErgebnis> spielTagErgebnisse = new ArrayList<>();
 
@@ -465,9 +472,118 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		return erg;
 	}
 
+	private void insertSortValidateSpalte() {
+
+		XSpreadsheet sheet = getSheet();
+		validateSpalte();
+
+		StringCellValue validateHeader = StringCellValue
+				.from(sheet, Position.from(validateSpalte(), ERSTE_DATEN_ZEILE - 1)).setComment("Validate Spalte")
+				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setSpalteHoriJustify(CellHoriJustify.CENTER).setValue("Err");
+
+		this.getSheetHelper().setTextInCell(validateHeader);
+
+		// formula zusammenbauen
+		// --------------------------------------------------------------------------
+		// SummenSpalten
+		int letzteZeile = this.spielerSpalte.letzteDatenZeile();
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		int ersteZeile = this.spielerSpalte.getErsteDatenZiele();
+
+		StringCellValue platzPlatzEins = StringCellValue.from(getSheet(), Position.from(validateSpalte(), ersteZeile),
+				"x");
+
+		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteZeile);
+		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteZeile);
+		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteZeile);
+		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ersteZeile);
+
+		// 1 = 1 zeile oben
+		// 2 = aktuelle zeile
+		// if (a2>a1) {
+		// ERR
+		// }
+		// if (a1==a2 && b2>b1 ) {
+		// ERR
+		// }
+		// if (a1==a2 && b1==b2 && c2>c1 ) {
+		// ERR
+		// }
+		// if (a1==a2 && b1==b2 && c1==c2 && d2>d1) {
+		// ERR
+		// }
+
+		//@formatter:off
+//		String formula = "IF(ROW()=" + (ersteZeile + 1) + ";\"\";" // erste zeile ignorieren
+		String formula = "IF(" + compareFormula(summeSpielGewonnenZelle1,">") + ";\"X1\";\"\")"
+				// ----------------
+				+ " & IF(AND("
+				+ compareFormula(summeSpielGewonnenZelle1,"=")
+				+ ";" + compareFormula(summeSpielDiffZelle1,">")
+				+ ")"
+				+ ";\"X2\";\"\")"
+				// ----------------
+				+ " & IF(AND("
+				+ compareFormula(summeSpielGewonnenZelle1,"=")
+				+ ";" + compareFormula(summeSpielDiffZelle1,"=")
+				+ ";" + compareFormula(punkteDiffZelle1,">")
+				+ ")"
+				+ ";\"X3\";\"\")"
+				// ----------------
+				+ " & IF(AND("
+				+ compareFormula(summeSpielGewonnenZelle1,"=")
+				+ ";" + compareFormula(summeSpielDiffZelle1,"=")
+				+ ";" + compareFormula(punkteDiffZelle1,"=")
+				+ ";" + compareFormula(punkteGewonnenZelle1,">")
+				+ ")"
+				+ ";\"X4\";\"\")"
+				;
+		//@formatter:on
+
+		// erste Zelle wert
+		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteZeile);
+		this.getSheetHelper()
+				.setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
+
+		// Alle Nummer Bold
+		this.getSheetHelper().setPropertyInRange(getSheet(),
+				RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition), AbstractCellValue.CHAR_WEIGHT,
+				FontWeight.BOLD);
+		this.getSheetHelper().setPropertyInRange(getSheet(),
+				RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition), AbstractCellValue.CHAR_COLOR,
+				ColorHelper.CHAR_COLOR_RED);
+
+		// --------------------------------------------------------------------------
+	}
+
+	/**
+	 * vergleiche wert in aktuelle zeile mit eine zeile oben<br>
+	 * 1 = 1 zeile oben zeile -1 <br>
+	 * 2 = aktuelle zeile
+	 *
+	 * @param pos
+	 * @return a2>a1
+	 */
+	private String compareFormula(Position pos, String operator) {
+		return pos.getAddress() + operator + Position.from(pos).zeilePlus(-1).getAddress();
+	}
+
+	/**
+	 * vergleiche wert in zeile unten mit aktuelle zeile<br>
+	 * nachteil von INDIREKT schwer zu lesen
+	 *
+	 * @param pos
+	 * @return INDIREKT(ADRESSE(ZEILE()-1;14;8))>INDIREKT(ADRESSE(ZEILE();14;8))
+	 */
+	private String indirectFormula(Position pos, String operator) {
+		return "INDIRECT(ADDRESS(ROW()+1;" + (pos.getSpalte() + 1) + ";8))" + operator + "INDIRECT(ADDRESS(ROW();"
+				+ (pos.getSpalte() + 1) + ";8))";
+	}
+
 	private void doSort() {
 
-		XSpreadsheet sheet = getSpieltagSheet();
+		XSpreadsheet sheet = getSheet();
 		List<SpielerSpieltagErgebnis> ergList = spielTagErgebnisseEinlesen();
 
 		// Sortieren
