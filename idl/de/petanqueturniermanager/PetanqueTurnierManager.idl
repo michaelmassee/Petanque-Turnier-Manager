@@ -1,0 +1,12 @@
+#ifndef __de_petanqueturniermanager_petanqueturniermanager_idl__
+#define __de_petanqueturniermanager_petanqueturniermanager_idl__
+
+#include <com/sun/star/task/XJobExecutor.idl>
+module de { module petanqueturniermanager { 	
+
+	// service PetanqueTurnierManager : de::petanqueturniermanager::XPetanqueTurnierManager {
+	service PetanqueTurnierManager : com::sun::star::task::XJobExecutor {
+	};
+
+ }; };
+#endif
