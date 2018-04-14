@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="info" name="petanqueturniermanager" packages="">
+  <Appenders>
+     <Console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
+    </Console>
+    <RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" 
+    			filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{MM-dd-yyyy}.log.gz" >
+      	<PatternLayout>
+        	<Pattern>%d %p %c{1.} %m%n</Pattern>
+		</PatternLayout>
+  		<Policies>
+    		<SizeBasedTriggeringPolicy size="10 KB"/>
+  		</Policies>
+  		<DefaultRolloverStrategy max="5" />
+    </RollingFile>
+  </Appenders>
+  <Loggers>
+     <Root level="error">
+      <AppenderRef ref="Console"/>
+    </Root>
+    <Logger name="de.petanqueturniermanager" level="all">
+      <AppenderRef ref="infofile"/>
+    </Logger>
+  </Loggers>
+</Configuration>

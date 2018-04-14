@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons"
+	xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
+		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
+
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="replace">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="de">Petanque TurnierManager</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<!-- name= bestimmt reihenfolge im menu -->
+
+					<!-- ****************************************************************** -->
+					<!-- Supermêlée -->
+					<node oor:name="A1" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value />
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value />
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value />
+							<value xml:lang="de">Supermêlée</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<node oor:name="A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Meldeliste</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="B1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Aktuelle Spielrunde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?aktuelle_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="B2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Nächste Spielrunde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?naechste_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="B4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spieltag Rangliste Aktualisieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?spieltag_rangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="C1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Team-Paarungen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?supermelee_teampaarungen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+						</node>
+					</node>
+					<!-- ****************************************************************** -->
+
+					<node oor:name="Y1" oor:op="replace">
+						<prop oor:name="Title">
+							<value xml:lang="de">~Konfiguration</value>
+						</prop>
+						<prop oor:name="URL">
+							<value>service:de.petanqueturniermanager.Turnier?konfiguration</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+					</node>
+
+
+					<!-- Test Turniere -->
+					<!-- ****************************************************************** -->
+					<node oor:name="ZZ1" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value />
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value />
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value />
+							<value xml:lang="de">Beispiel Turnierdaten</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+
+							<node oor:name="A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Supermêlée, generiere eine Meldeliste mit 90 Meldungen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?meldeliste_testdaten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Supermêlée, generiere 5 Spielrunden</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?spielrunden_testdaten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+						</node>
+					</node>
+					<!-- ****************************************************************** -->
+
+
+					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> 
+						<prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> </prop> <prop 
+						oor:name="Target" oor:type="xs:string"> <value>_self</value> </prop> </node> -->
+
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>

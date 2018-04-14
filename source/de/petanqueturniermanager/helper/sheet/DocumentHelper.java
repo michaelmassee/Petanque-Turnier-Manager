@@ -1,0 +1,65 @@
+package de.petanqueturniermanager.helper.sheet;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.sun.star.frame.XDesktop;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XModel;
+import com.sun.star.lang.XComponent;
+import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheetView;
+import com.sun.star.text.XTextDocument;
+import com.sun.star.uno.UnoRuntime;
+import com.sun.star.uno.XComponentContext;
+
+// https://api.libreoffice.org/examples/examples.html#Java_examples
+// https://wiki.openoffice.org/wiki/Documentation/DevGuide/OpenOffice.org_Developers_Guide
+// Addon Guide
+//https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Add-Ons
+
+public class DocumentHelper {
+	private static final Logger logger = LogManager.getLogger(DocumentHelper.class);
+
+	/** Returns the current XDesktop */
+	public static XDesktop getCurrentDesktop(XComponentContext xContext) {
+		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
+				xContext.getServiceManager());
+		Object desktop = null;
+		try {
+			desktop = xMCF.createInstanceWithContext("com.sun.star.frame.Desktop", xContext);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return null;
+		}
+		return UnoRuntime.queryInterface(com.sun.star.frame.XDesktop.class, desktop);
+	}
+
+	/** Returns the current XComponent */
+	private static XComponent getCurrentComponent(XComponentContext xContext) {
+		return getCurrentDesktop(xContext).getCurrentComponent();
+	}
+
+	/** Returns the current frame */
+	public static XFrame getCurrentFrame(XComponentContext xContext) {
+		XModel xModel = UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
+		return xModel.getCurrentController().getFrame();
+	}
+
+	/** Returns the current text document (if any) */
+	public static XTextDocument getCurrentTextDocument(XComponentContext xContext) {
+		return UnoRuntime.queryInterface(XTextDocument.class, getCurrentComponent(xContext));
+	}
+
+	/** Returns the current Spreadsheet document (if any) */
+	public static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
+		return UnoRuntime.queryInterface(XSpreadsheetDocument.class, getCurrentComponent(xContext));
+	}
+
+	/** Returns the current SpreadsheetView */
+	public static XSpreadsheetView getCurrentSpreadsheetView(XComponentContext xContext) {
+		XModel xModel = UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
+		return UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
+	}
+}
