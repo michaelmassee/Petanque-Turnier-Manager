@@ -327,8 +327,9 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			headerPaarungen(sheet, spielRundeSheet);
 			headerSpielerNr(sheet);
 			datenformatieren(sheet, neueSpielrundeNr);
-			spielrundeProperties(sheet, neueSpielrundeNr);
+			spielrundeProperties(sheet, neueSpielrundeNr, doubletteRunde);
 			getPropertiesSpalte().setSpielRunde(neueSpielrundeNr);
+			wennNurDoubletteRundeDannSpaltenAusblenden(sheet, doubletteRunde);
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
@@ -345,13 +346,22 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		}
 	}
 
+	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet sheet, boolean doubletteRunde) {
+		if (doubletteRunde) {
+			// 3e Spalte Team 1
+			getSheetHelper().setColumnProperty(sheet, ERSTE_SPALTE_RUNDESPIELPLAN + 2, "IsVisible", false);
+			// 3e Spalte Team 2
+			getSheetHelper().setColumnProperty(sheet, ERSTE_SPALTE_RUNDESPIELPLAN + 5, "IsVisible", false);
+		}
+	}
+
 	/**
 	 * die für diesen Spielrunde properties ausgeben<br>
 	 * position rechts unter den block mit spieler nummer
 	 *
 	 * @param sheet
 	 */
-	private void spielrundeProperties(XSpreadsheet sheet, int aktuelleSpielrunde) {
+	private void spielrundeProperties(XSpreadsheet sheet, int aktuelleSpielrunde, boolean doubletteSpielRunde) {
 		Position datenEnd = letzteZeile(aktuelleSpielrunde);
 		StringCellValue propName = StringCellValue.from(sheet,
 				Position.from(ERSTE_SPIELERNR_SPALTE - 1, datenEnd.getZeile()));
@@ -369,6 +379,11 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		int anzAusg = this.meldeListe.getAusgestiegenSpieler(spieltag);
 		getSheetHelper().setTextInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(2).setValue("Ausgestiegen"));
 		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
+
+		getSheetHelper().setTextInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(2).setValue("Doublette")
+				.setComment("Doublette Spielrunde"));
+		getSheetHelper().setTextInCell(
+				StringCellValue.from(propVal).zeilePlusEins().setValue((doubletteSpielRunde ? "J" : "")));
 	}
 
 	private void datenformatieren(XSpreadsheet sheet, int aktuelleSpielrunde) {
@@ -376,15 +391,15 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		Position datenStart = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
 		Position datenEnd = letzteZeile(aktuelleSpielrunde);
 
-		// bis zur mitte mit doppelte linie
+		// bis zur mitte mit normal gitter
 		RangePosition datenRange = RangePosition.from(datenStart,
 				Position.from(ERSTE_SPALTE_RUNDESPIELPLAN + 2, datenEnd.getZeile()));
-		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().doubleLn().forRight().toBorder();
+		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().toBorder();
 		getSheetHelper().setPropertyInRange(sheet, datenRange, TABLE_BORDER2, border);
 
-		// zweite haelfte normal gitter
+		// zweite haelfte doppelte linie links
 		datenRange = RangePosition.from(Position.from(ERSTE_SPALTE_RUNDESPIELPLAN + 3, ERSTE_DATEN_ZEILE), datenEnd);
-		border = BorderFactory.from().allThin().boldLn().forTop().toBorder();
+		border = BorderFactory.from().allThin().boldLn().forTop().doubleLn().forLeft().toBorder();
 		getSheetHelper().setPropertyInRange(sheet, datenRange, TABLE_BORDER2, border);
 
 		// zeile höhe

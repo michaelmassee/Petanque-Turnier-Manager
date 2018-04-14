@@ -48,8 +48,6 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 
 // welche service ???
 // https://www.openoffice.org/api/docs/common/ref/com/sun/star/lang/XComponent-xref.html
-// ?
-// XComponent.dispose()
 
 public class SheetHelper {
 
