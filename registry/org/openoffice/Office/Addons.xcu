@@ -71,7 +71,7 @@
 
 							<node oor:name="B4" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Spieltag Rangliste Aktualisieren</value>
+									<value xml:lang="de">Spieltag Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?spieltag_rangliste</value>
