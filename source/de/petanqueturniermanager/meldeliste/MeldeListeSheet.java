@@ -51,6 +51,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 	public static final int SUMMEN_AKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE; // Zeile 6
 	public static final int SUMMEN_INAKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE + 1;
 	public static final int SUMMEN_AUSGESTIEGENE_ZEILE = SUMMEN_ERSTE_ZEILE + 2; // Zeile 8
+	public static final int SUMMEN_KANN_DOUBLETTE_ZEILE = SUMMEN_ERSTE_ZEILE + 7; // Zeile 10
 
 	public static final int ERSTE_ZEILE_PROPERTIES = 12; // Zeile 13
 
@@ -338,8 +339,8 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		bezCelVal.setComment("Triplette Teams").setValue("∑x3").zeilePlusEins();
 		this.sheetHelper.setTextInCell(bezCelVal);
 
-		bezCelVal.setComment("Kann Doublette gespielt werden").setValue("Doubl").zeilePlusEins();
-		this.sheetHelper.setTextInCell(bezCelVal);
+		bezCelVal.setComment("Kann Doublette gespielt werden").setValue("Doublette").zeilePlusEins();
+		this.sheetHelper.setTextInCell(bezCelVal.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE));
 
 		for (int spieltagCntr = 1; spieltagCntr <= this.anzSpieltage; spieltagCntr++) {
 
@@ -386,7 +387,8 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 
 			String formulaSverweisNurDoublette = this.supermeleeTeamPaarungen
 					.formulaSverweisNurDoublette(anzSpielerAddr);
-			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), formulaSverweisNurDoublette);
+			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE),
+					formulaSverweisNurDoublette);
 		}
 	}
 
@@ -415,6 +417,16 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 
 	public Position getAusgestiegenSpielerPosition(int Spieltag) {
 		return Position.from(ersteSummeSpalte() + Spieltag, SUMMEN_AUSGESTIEGENE_ZEILE);
+	}
+	// ---------------------------------------------
+
+	public Boolean isKannNurDoublette(int Spieltag) {
+		return StringUtils
+				.isNotBlank(this.sheetHelper.getTextFromCell(getSheet(), getKannNurDoublettePosition(Spieltag)));
+	}
+
+	public Position getKannNurDoublettePosition(int Spieltag) {
+		return Position.from(ersteSummeSpalte() + Spieltag, SUMMEN_KANN_DOUBLETTE_ZEILE);
 	}
 	// ---------------------------------------------
 
