@@ -17,6 +17,7 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableSortField;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
@@ -25,8 +26,11 @@ import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
@@ -113,21 +117,24 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		this.sheetHelper.setTextInCell(sheet, SPALTE_FORMATION + 1, ZEILE_FORMATION, getFormation().getBezeichnung());
 		// Header einfuegen
 		// ------
-		this.spielerSpalte.insertHeaderInSheet();
+		int hederBackColor = this.propertiesSpalte.getRanglisteHeaderFarbe();
+		this.spielerSpalte.insertHeaderInSheet(hederBackColor);
 		if (nichtZusammenSpielenSpalte() > -1) {
 
 			StringCellValue bezCelVal = StringCellValue
 					.from(sheet, nichtZusammenSpielenSpalte(), ERSTE_DATEN_ZEILE - 1, "SetzPos")
 					.setSpalteHoriJustify(CellHoriJustify.CENTER)
 					.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")
-					.setSetColumnWidth(800);
+					.setSetColumnWidth(800).setCellBackColor(hederBackColor)
+					.setBorder(BorderFactory.from().allThin().toBorder());
 			this.sheetHelper.setTextInCell(bezCelVal);
 		}
 
 		StringCellValue bezCelSpieltagVal = StringCellValue
 				.from(sheet, ersteSpieltagspalteSpalte(), ERSTE_DATEN_ZEILE - 1, spielTagHeader(1))
 				.setSpalteHoriJustify(CellHoriJustify.CENTER).setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv")
-				.setSetColumnWidth(2000);
+				.setSetColumnWidth(2000).setCellBackColor(hederBackColor)
+				.setBorder(BorderFactory.from().allThin().toBorder());
 
 		for (int spielTagCntr = 0; spielTagCntr < this.anzSpieltage; spielTagCntr++) {
 			bezCelSpieltagVal.setValue(spielTagHeader(spielTagCntr + 1));
@@ -142,6 +149,19 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		doSort(this.spielerSpalte.getSpielerNameSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
 		this.propertiesSpalte.updateKonfigBlock();
+
+		this.spielerSpalte.formatDaten();
+		this.formatDaten();
+	}
+
+	void formatDaten() {
+		int letzteDatenZeile = this.spielerSpalte.letzteDatenZeile();
+		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(),
+				letzteDatenZeile);
+
+		this.sheetHelper.setPropertiesInRange(getSheet(), datenRange,
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 	}
 
 	/**
@@ -535,5 +555,21 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 	@Override
 	public int getSpielerZeileNr(int spielerNr) {
 		return this.spielerSpalte.getSpielerZeileNr(spielerNr);
+	}
+
+	@Override
+	public Integer getRanglisteHintergrundFarbeGerade() {
+		return this.propertiesSpalte.getRanglisteHintergrundFarbeGerade();
+	}
+
+	@Override
+	public Integer getRanglisteHintergrundFarbeUnGerade() {
+		return this.propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
+	}
+
+	@Override
+	public Integer getRanglisteHeaderFarbe() {
+		return this.propertiesSpalte.getRanglisteHeaderFarbe();
+
 	}
 }

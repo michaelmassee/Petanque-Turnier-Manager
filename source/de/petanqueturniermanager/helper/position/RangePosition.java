@@ -6,6 +6,8 @@ package de.petanqueturniermanager.helper.position;
 
 import static com.google.common.base.Preconditions.*;
 
+import com.google.common.base.MoreObjects;
+
 public class RangePosition {
 
 	private final AbstractPosition<?> start;
@@ -56,6 +58,16 @@ public class RangePosition {
 
 	public int getEndeSpalte() {
 		return this.ende.getSpalte();
+	}
+
+	@Override
+	public String toString() {
+		// @formatter:off
+		return MoreObjects.toStringHelper(this)
+				.add("\r\nStart", this.start)
+				.add("\r\nEnd", this.ende)
+				.toString();
+		// @formatter:on
 	}
 
 }

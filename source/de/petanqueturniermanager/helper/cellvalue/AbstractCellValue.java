@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.MoreObjects;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
@@ -20,27 +21,13 @@ import de.petanqueturniermanager.helper.position.Position;
 @SuppressWarnings("rawtypes")
 abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
-	// VertJustifyMethod
-
-	public static final String HORI_JUSTIFY = "HoriJustify";
-	public static final String VERT_JUSTIFY = "VertJustify";
-	public static final String CHAR_COLOR = "CharColor";
-	public static final String CHAR_WEIGHT = "CharWeight";
-	public static final String CHAR_HEIGHT = "CharHeight";
-	public static final String TABLE_BORDER = "TableBorder";
-	public static final String TABLE_BORDER2 = "TableBorder2";
-	public static final String HEIGHT = "Height";
-	// SHRINK_TO_FIT = Boolean, Text in der Zelle wird an der Zelle Große angepasst
-	public static final String SHRINK_TO_FIT = "ShrinkToFit";
-	public static final String CELL_BACK_COLOR = "CellBackColor";
-
 	private V value;
 	private XSpreadsheet sheet;
 	private Position pos;
 	private String comment;
 	private int setColumnWidth;
 	private CellHoriJustify spalteHoriJustify;
-	private HashMap<String, Object> cellProperties = new HashMap<>();
+	private CellProperties cellProperties = new CellProperties();
 	private Position endPosMerge; // wenn vorhanden dann merge die zellen von pos bis endPosMerge
 	private FillAutoPosition fillAuto; // wenn vorhanden dann autoFill bis diese Position
 
@@ -225,7 +212,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public T setCellProperties(HashMap<String, Object> cellProperties) {
+	public T setCellProperties(CellProperties cellProperties) {
 		this.cellProperties = cellProperties;
 		return (T) this;
 	}
@@ -243,7 +230,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCharWeight(float fontWeight) {
-		this.cellProperties.put(CHAR_WEIGHT, fontWeight);
+		this.cellProperties.setCharWeight(fontWeight);
 		return (T) this;
 	}
 
@@ -252,7 +239,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCharColor(Integer charColor) {
-		this.cellProperties.put(CHAR_COLOR, charColor);
+		this.cellProperties.setCharColor(charColor);
 		return (T) this;
 	}
 
@@ -262,19 +249,19 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCharColor(String hexCharColor) {
-		this.cellProperties.put(CHAR_COLOR, Integer.valueOf(hexCharColor, 16));
+		this.cellProperties.setCharColor(Integer.valueOf(hexCharColor, 16));
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	public T setHeight(int height) {
-		this.cellProperties.put(HEIGHT, height);
+		this.cellProperties.setHeight(height);
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	public T setCharHeight(int height) {
-		this.cellProperties.put(CHAR_HEIGHT, height);
+		this.cellProperties.setCharHeight(height);
 		return (T) this;
 	}
 
@@ -285,7 +272,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setHoriJustify(CellHoriJustify cellHoriJustify) {
-		this.cellProperties.put(HORI_JUSTIFY, cellHoriJustify);
+		this.cellProperties.setHoriJustify(cellHoriJustify);
 		return (T) this;
 	}
 
@@ -296,7 +283,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setShrinkToFit(boolean shrink) {
-		this.cellProperties.put(SHRINK_TO_FIT, shrink);
+		this.cellProperties.setShrinkToFit(shrink);
 		return (T) this;
 	}
 
@@ -307,13 +294,19 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setVertJustify(int vertjustify) {
-		this.cellProperties.put(VERT_JUSTIFY, vertjustify);
+		this.cellProperties.setVertJustify(vertjustify);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T removeCellBackColor() {
+		this.cellProperties.removeCellBackColor();
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	public T setCellBackColor(Integer color) {
-		this.cellProperties.put(CELL_BACK_COLOR, color);
+		this.cellProperties.setCellBackColor(color);
 		return (T) this;
 	}
 
@@ -323,7 +316,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCellBackColor(String hexCharColor) {
-		this.cellProperties.put(CELL_BACK_COLOR, Integer.valueOf(hexCharColor, 16));
+		this.cellProperties.setCellBackColor(Integer.valueOf(hexCharColor, 16));
 		return (T) this;
 	}
 
@@ -337,4 +330,15 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		return (T) this;
 	}
 
+	@SuppressWarnings("unchecked")
+	public T setFillAutoDown(int zeile) {
+		this.fillAuto = FillAutoPosition.from(getPos()).zeile(zeile);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T setBorder(TableBorder2 tableBorder2) {
+		this.cellProperties.setBorder(tableBorder2);
+		return (T) this;
+	}
 }

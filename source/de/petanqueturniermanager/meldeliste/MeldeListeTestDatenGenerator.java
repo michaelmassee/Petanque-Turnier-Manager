@@ -68,7 +68,7 @@ public class MeldeListeTestDatenGenerator extends SheetRunner {
 
 		List<String> testNamen = listeMitTestNamen();
 
-		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(), MeldeListeSheet.ERSTE_DATEN_ZEILE);
+		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(), MeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
 
@@ -77,13 +77,13 @@ public class MeldeListeTestDatenGenerator extends SheetRunner {
 
 		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr++) {
 			sheetHelper.setTextInCell(meldelisteSheet, pos.zeilePlusEins(), testNamen.get(spielerCntr));
+			numVal.setPos(pos).spaltePlusEins();
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
 				sheetHelper.setValInCell(numVal.setValue((double) randomNum));
 			} else {
 				sheetHelper.setTextInCell(StringCellValue.from(numVal).setValue(""));
 			}
-			numVal.zeilePlusEins();
 		}
 
 		this.meldeListe.upDateSheet();

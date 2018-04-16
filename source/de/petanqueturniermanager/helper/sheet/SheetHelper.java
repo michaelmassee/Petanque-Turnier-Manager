@@ -5,7 +5,7 @@
 package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.AbstractCellValue.*;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 
 import java.util.HashMap;
 
@@ -40,6 +40,7 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XMergeable;
 
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValue;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
@@ -579,11 +580,20 @@ public class SheetHelper {
 	 * @return xcellrange, null when error
 	 */
 
-	public XCellRange setPropertyInRange(XSpreadsheet sheet, RangePosition pos, String name, Object val) {
+	public XCellRange setPropertyInRange(XSpreadsheet sheet, RangePosition pos, String key, Object val) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
-		checkNotNull(name);
+		checkNotNull(key);
 		checkNotNull(val);
+		CellProperties properties = new CellProperties();
+		properties.put(key, val);
+		return setPropertiesInRange(sheet, pos, properties);
+	}
+
+	public XCellRange setPropertiesInRange(XSpreadsheet sheet, RangePosition pos, CellProperties properties) {
+		checkNotNull(sheet);
+		checkNotNull(pos);
+		checkNotNull(properties);
 
 		XCellRange xCellRange = null;
 		try {
@@ -592,9 +602,16 @@ public class SheetHelper {
 					pos.getEndeZeile());
 
 			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
-			xPropSet.setPropertyValue(name, val);
-		} catch (IndexOutOfBoundsException | IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-				| WrappedTargetException e) {
+			properties.forEach((key, val) -> {
+				try {
+					xPropSet.setPropertyValue(key, val);
+				} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException
+						| PropertyVetoException e) {
+					logger.error(e.getMessage(), e);
+				}
+			});
+
+		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			logger.error(e.getMessage(), e);
 		}
 		return xCellRange;
@@ -756,23 +773,51 @@ public class SheetHelper {
 		// xAnnotation.setIsVisible(true);
 	}
 
-	public void clearRange(XSpreadsheet xSheet, RangePosition rangePos) {
+	public XCellRange clearRange(XSpreadsheet xSheet, RangePosition rangePos) {
 		checkNotNull(xSheet);
 		checkNotNull(rangePos);
 
 		XCellRange xRangetoClear;
-		try {
-			xRangetoClear = xSheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
-					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+		xRangetoClear = getCellRange(xSheet, rangePos);
+		if (xRangetoClear != null) {
 			// --- Sheet operation. ---
 			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class,
 					xRangetoClear);
 			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED
 					| CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS | CellFlags.STRING | CellFlags.STYLES
 					| CellFlags.VALUE);
+		}
+		return xRangetoClear;
+	}
+
+	public XCellRange getCellRange(XSpreadsheet xSheet, RangePosition rangePos) {
+		checkNotNull(xSheet);
+		checkNotNull(rangePos);
+
+		XCellRange xCellRange = null;
+
+		try {
+			xCellRange = xSheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
+					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
+
+		return xCellRange;
+	}
+
+	public XCellRangesQuery getCellRangesQuery(XSpreadsheet xSheet, RangePosition rangePos) {
+		checkNotNull(xSheet);
+		checkNotNull(rangePos);
+
+		XCellRange xCellRange = null;
+		XCellRangesQuery xCellRangesQuery = null;
+
+		xCellRange = getCellRange(xSheet, rangePos);
+		if (xCellRange != null) {
+			xCellRangesQuery = UnoRuntime.queryInterface(com.sun.star.sheet.XCellRangesQuery.class, xCellRange);
+		}
+		return xCellRangesQuery;
 	}
 
 }

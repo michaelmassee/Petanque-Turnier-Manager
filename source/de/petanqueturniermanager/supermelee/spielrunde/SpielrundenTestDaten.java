@@ -15,17 +15,20 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.meldeliste.MeldeListeTestDatenGenerator;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundenTestDaten.class);
 
 	private final NaechsteSpielrundeSheet naechsteSpielrundeSheet;
 	private final MeldeListeTestDatenGenerator meldeListeTestDatenGenerator;
+	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
 
 	public SpielrundenTestDaten(XComponentContext xContext) {
 		super(xContext);
 		this.naechsteSpielrundeSheet = new NaechsteSpielrundeSheet(xContext);
 		this.meldeListeTestDatenGenerator = new MeldeListeTestDatenGenerator(xContext);
+		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
 	}
 
 	@Override
@@ -35,10 +38,12 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 
 	@Override
 	protected void doRun() {
-		generate();
-
 		// for (int i = 0; i < 10; i++) {
-		// generate();
+		generate();
+		this.spieltagRanglisteSheet.generate();
+		if (this.spieltagRanglisteSheet.isErrorInSheet()) {
+			return;
+		}
 		// }
 
 	}
@@ -84,5 +89,6 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 				}
 			}
 		}
+
 	}
 }

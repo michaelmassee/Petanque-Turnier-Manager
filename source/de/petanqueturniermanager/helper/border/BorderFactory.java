@@ -103,7 +103,7 @@ public class BorderFactory {
 		borderLine.OuterLineWidth = 18;
 		borderLine.LineDistance = 53;
 		borderLine.LineStyle = BorderLineStyle.SOLID;
-		borderLine.LineWidth = 88;
+		borderLine.LineWidth = 60; // 88
 		return borderLine;
 	}
 
