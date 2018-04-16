@@ -30,9 +30,13 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "NeuAuslosenAb";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Hintergrundfarbe 1";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Hintergrundfarbe 2";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Headerfarbe 1";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Hintergr. Spielr. G";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Hintergr. Spielr. U";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Header Spielrunde.";
+
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Hintergr. Rangliste G";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Hintergr. Rangliste U";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Header Rangliste";
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -53,6 +57,16 @@ public class PropertiesSpalte {
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
 				.setDefaultVal(Integer.valueOf("e6ebf4", 16)).setDescription("Spielrunde Header-Hintergrundfarbe"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
+				.setDefaultVal(Integer.valueOf("e1e9f7", 16))
+				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
+				.setDefaultVal(Integer.valueOf("c0d6f7", 16))
+				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
+				.setDefaultVal(Integer.valueOf("e6ebf4", 16)).setDescription("Rangliste Header-Hintergrundfarbe"));
+
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -256,6 +270,18 @@ public class PropertiesSpalte {
 
 	public Integer getSpielRundeHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER);
+	}
+
+	public Integer getRanglisteHintergrundFarbeGerade() {
+		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE);
+	}
+
+	public Integer getRanglisteHintergrundFarbeUnGerade() {
+		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
+	}
+
+	public Integer getRanglisteHeaderFarbe() {
+		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER);
 	}
 
 	public Integer getSpielRundeNeuAuslosenAb() {

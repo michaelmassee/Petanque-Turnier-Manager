@@ -17,7 +17,8 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellvalue.AbstractCellValue;
+import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
@@ -53,12 +54,13 @@ public class RangListeSpalte {
 		return this.endsummenspalten.get();
 	}
 
-	public void insertHeaderInSheet() {
+	public void insertHeaderInSheet(int headerColor) {
 		int ersteZeile = getMitSpielerSpalte().getErsteDatenZiele();
 
 		StringCellValue celVal = StringCellValue
 				.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile - 1), "Platz")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setSetColumnWidth(1000).setCharWeight(FontWeight.BOLD);
+				.setSpalteHoriJustify(CellHoriJustify.CENTER).setSetColumnWidth(1000).setCharWeight(FontWeight.BOLD)
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 	}
 
@@ -96,8 +98,9 @@ public class RangListeSpalte {
 				.setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
 
 		// Alle Nummer Bold
-		this.sheetHelper.setPropertyInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
-				AbstractCellValue.CHAR_WEIGHT, FontWeight.BOLD);
+		this.sheetHelper.setPropertiesInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+				CellProperties.from().setCharWeight(FontWeight.BOLD)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
 	}
 
 	/**

@@ -5,7 +5,7 @@
 package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.AbstractCellValue.*;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -307,14 +307,17 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		boolean doubletteRunde = false;
 		// abfrage nur doublette runde ?
 		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(getPropertiesSpalte().getSpieltag());
-		if (isKannNurDoublette) {
+		if (!force && isKannNurDoublette) {
 			QuestionBox questionBox = new QuestionBox(getxContext());
 			short result = questionBox.showYesNo("Spielrunde Doublette",
-					"Neue Spielrunde nur Doublette Paarungen auslosen ?");
+					"Neue Spielrunde " + neueSpielrundeNr + "\r\nnur Doublette Paarungen auslosen ?");
 
 			if (result == MessageBoxResults.YES) {
 				doubletteRunde = true;
 			}
+		}
+		if (force && isKannNurDoublette) {
+			doubletteRunde = true;
 		}
 
 		sheet = getSpielRundeSheet(neueSpielrundeNr);

@@ -392,7 +392,7 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 
 		int spielerZeile = this.spielerSpalte.findSpielerZeileNachSpielrNr(spielrNr);
 
-		XSpreadsheet sheet = getEndranglisteSheet();
+		XSpreadsheet sheet = getSheet();
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 			int ersteSpieltagSummeSpalte = ERSTE_SPIELTAG_SPALTE + ((spieltagCntr - 1) * ANZAHL_SPALTEN_IN_SUMME);

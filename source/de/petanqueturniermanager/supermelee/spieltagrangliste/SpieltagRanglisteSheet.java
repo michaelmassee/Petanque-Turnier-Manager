@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
-import static de.petanqueturniermanager.helper.cellvalue.AbstractCellValue.*;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
 
 import java.util.ArrayList;
@@ -31,16 +31,18 @@ import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellvalue.AbstractCellValue;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
+import de.petanqueturniermanager.helper.sheet.IRangliste;
 import de.petanqueturniermanager.helper.sheet.RangListeSpalte;
+import de.petanqueturniermanager.helper.sheet.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.meldeliste.Formation;
 import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
@@ -48,13 +50,9 @@ import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.spielrunde.AktuelleSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielerSpielrundeErgebnis;
 
-public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSpalte, IEndSummeSpalten, ISheet {
+public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSpalte, IEndSummeSpalten, IRangliste {
 
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet.class);
-
-	public static final int ERSTE_KOPFDATEN_ZEILE = 0; // Zeile 1
-	public static final int ZWEITE_KOPFDATEN_ZEILE = 1; // Zeile 2
-	public static final int DRITTE_KOPFDATEN_ZEILE = 2; // Zeile 3
 
 	public static final String KOPFDATEN_SUMME = "Summe";
 	public static final String KOPFDATEN_SUMME_SPIELE = "Spiele";
@@ -77,6 +75,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	private final AktuelleSpielrundeSheet aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final XComponentContext xContext;
+	private final RanglisteFormatter ranglisteFormatter;
 
 	public SpieltagRanglisteSheet(XComponentContext xContext) {
 		super(xContext);
@@ -86,81 +85,39 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 				Formation.SUPERMELEE);
 		this.aktuelleSpielrundeSheet = new AktuelleSpielrundeSheet(xContext);
 		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this, this, this);
+		this.ranglisteFormatter = new RanglisteFormatter(xContext, this, ANZAHL_SPALTEN_IN_SPIELRUNDE,
+				this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.meldeliste);
 	}
 
 	@Override
 	protected void doRun() {
+		generate();
+	}
+
+	public void generate() {
 		// neu erstellen
 		int spieltagNr = this.meldeliste.aktuelleSpieltag();
 		if (spieltagNr < 1) {
 			return;
 		}
+		Integer headerColor = this.meldeliste.getRanglisteHeaderFarbe();
+
 		getSheetHelper().removeSheet(getSheetName(spieltagNr));
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
+		this.ranglisteFormatter.updateHeader(spieltagNr);
 		this.spielerSpalte.alleSpieltagSpielerEinfuegen();
-		updateHeader();
-		ergebnisseEinfuegen();
-		nichtgespielteRundenFuellen();
-		this.getRangListeSpalte().upDateRanglisteSpalte();
 		updateSummenSpalten();
 		insertSortValidateSpalte();
+		ergebnisseEinfuegen();
+		nichtgespielteRundenFuellen();
 		doSort();
+		this.spielerSpalte.insertHeaderInSheet(headerColor);
+		this.spielerSpalte.formatDaten();
+		this.getRangListeSpalte().upDateRanglisteSpalte();
+		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
+		this.ranglisteFormatter.formatDaten();
 		footer();
-	}
-
-	protected void updateHeader() {
-		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden();
-		if (anzSpielRunden < 1) {
-			return;
-		}
-		XSpreadsheet sheet = getSheet();
-
-		// spieler nr + namen
-		this.spielerSpalte.insertHeaderInSheet();
-		this.getRangListeSpalte().insertHeaderInSheet();
-
-		// -------------------------
-		// spielrunden spalten
-		// -------------------------
-		StringCellValue headerPlus = StringCellValue
-				.from(sheet, Position.from(ERSTE_SPIELRUNDE_SPALTE, DRITTE_KOPFDATEN_ZEILE), "+")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
-
-		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
-			int plusSpalte = ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2);
-			this.getSheetHelper()
-					.setTextInCell(headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
-			this.getSheetHelper().setTextInCell(
-					headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
-
-			// Runden Counter
-			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue("Rnd " + spielRunde)
-					.zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setSetColumnWidth(0).setComment(null);
-			this.getSheetHelper().setTextInCell(headerRndCounter);
-		}
-		// -------------------------
-
-		// summen spalten
-		StringCellValue headerSumme = StringCellValue
-				.from(sheet, Position.from(ERSTE_SPIELRUNDE_SPALTE, DRITTE_KOPFDATEN_ZEILE), "+")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		int ersteSummeSpalte = getErsteSummeSpalte();
-		this.getSheetHelper().setTextInCell(
-				headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+").setComment("Summe Spiele +"));
-		this.getSheetHelper().setTextInCell(
-				headerSumme.spalte(ersteSummeSpalte + SPIELE_MINUS_OFFS).setValue("-").setComment("Summe Spiele -"));
-		this.getSheetHelper().setTextInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_DIV_OFFS).setValue("Δ")
-				.setComment("Summe Spiele Differenz"));
-		this.getSheetHelper().setTextInCell(
-				headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("+").setComment("Summe Punkte +"));
-		this.getSheetHelper().setTextInCell(
-				headerSumme.spalte(ersteSummeSpalte + PUNKTE_MINUS_OFFS).setValue("-").setComment("Summe Punkte -"));
-		this.getSheetHelper().setTextInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_DIV_OFFS).setValue("Δ")
-				.setComment("Summe Punkte Differenz"));
 	}
 
 	protected void updateSummenSpalten() {
@@ -170,7 +127,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		if (anzSpielRunden < 1) {
 			return;
 		}
-		XSpreadsheet sheet = getSpieltagSheet();
+		XSpreadsheet sheet = getSheet();
 		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
@@ -239,7 +196,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		if (anzSpielRunden < 1) {
 			return;
 		}
-		XSpreadsheet sheet = getSpieltagSheet();
+		XSpreadsheet sheet = getSheet();
 
 		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
 
@@ -260,7 +217,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	private void ergebnisseEinfuegen() {
 
-		XSpreadsheet sheet = getSpieltagSheet();
+		XSpreadsheet sheet = getSheet();
 		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden();
 
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
@@ -273,7 +230,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 			ergebnisse.forEach((ergebnis) -> {
 				int spielerNr = ergebnis.getSpielerNr();
 				// zeile finden
-				int spielerZeile = this.spielerSpalte.findSpielerZeileNachSpielrNr(spielerNr);
+				int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielerNr);
 				if (spielerZeile >= ERSTE_DATEN_ZEILE) {
 					Position posSpielerPunktePlus = Position.from(posPunktePlus).zeile(spielerZeile);
 					// Formula auf plus punkte eintragen
@@ -348,9 +305,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 			// gefunden
 			int returnSpalte = ersteSummeSpalte + summeSpalte;
 
-			String ersteZelleAddress = this.getSheetHelper().getAddressFromColumnRow(SPIELER_NR_SPALTE,
-					ERSTE_DATEN_ZEILE);
-			String letzteZelleAddress = this.getSheetHelper().getAddressFromColumnRow(returnSpalte, 999);
+			String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddress();
+			String letzteZelleAddress = Position.from(returnSpalte, 999).getAddress();
+
 			return "=VLOOKUP(" + spielrNrAdresse + ";$'" + getSheetName(spieltagNr) + "'.$" + ersteZelleAddress + ":$"
 					+ letzteZelleAddress + ";" + (returnSpalte + 1) + // erste spalte = 1
 					";0)";
@@ -371,7 +328,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		List<Integer> spielerNrlist = new ArrayList<>();
 
-		XSpreadsheet spieltagSheet = getSpieltagSheet();
+		XSpreadsheet spieltagSheet = getSheet();
 		if (spieltagSheet != null) {
 			for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr < 999; zeileCntr++) {
 				String cellText = this.getSheetHelper().getTextFromCell(spieltagSheet,
@@ -422,7 +379,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	}
 
 	private int validateSpalte() {
-		return sortSpalte() + 1;
+		return sortSpalte() + 5;
 	}
 
 	public List<SpielerSpieltagErgebnis> spielTagErgebnisseEinlesen() {
@@ -442,13 +399,13 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	}
 
 	public SpielerSpieltagErgebnis spielerErgebnisseEinlesen(int spieltag, int spielrNr) {
-		int spielerZeile = this.spielerSpalte.findSpielerZeileNachSpielrNr(spielrNr);
+		int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielrNr);
 
 		if (spielerZeile < ERSTE_DATEN_ZEILE) {
 			return null;
 		}
 
-		XSpreadsheet spieltagSheet = getSpieltagSheet();
+		XSpreadsheet spieltagSheet = getSheet();
 		if (spieltagSheet == null) {
 			return null;
 		}
@@ -475,7 +432,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	private void insertSortValidateSpalte() {
 
 		XSpreadsheet sheet = getSheet();
-		validateSpalte();
 
 		StringCellValue validateHeader = StringCellValue
 				.from(sheet, Position.from(validateSpalte(), ERSTE_DATEN_ZEILE - 1)).setComment("Validate Spalte")
@@ -547,13 +503,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 				.setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
 
 		// Alle Nummer Bold
-		this.getSheetHelper().setPropertyInRange(getSheet(),
-				RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition), AbstractCellValue.CHAR_WEIGHT,
-				FontWeight.BOLD);
-		this.getSheetHelper().setPropertyInRange(getSheet(),
-				RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition), AbstractCellValue.CHAR_COLOR,
-				ColorHelper.CHAR_COLOR_RED);
-
+		this.getSheetHelper().setPropertiesInRange(getSheet(),
+				RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+				CellProperties.from().setCharWeight(FontWeight.BOLD).setCharColor(ColorHelper.CHAR_COLOR_RED));
 		// --------------------------------------------------------------------------
 	}
 
@@ -569,16 +521,22 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		return pos.getAddress() + operator + Position.from(pos).zeilePlus(-1).getAddress();
 	}
 
-	/**
-	 * vergleiche wert in zeile unten mit aktuelle zeile<br>
-	 * nachteil von INDIREKT schwer zu lesen
-	 *
-	 * @param pos
-	 * @return INDIREKT(ADRESSE(ZEILE()-1;14;8))>INDIREKT(ADRESSE(ZEILE();14;8))
-	 */
-	private String indirectFormula(Position pos, String operator) {
-		return "INDIRECT(ADDRESS(ROW()+1;" + (pos.getSpalte() + 1) + ";8))" + operator + "INDIRECT(ADDRESS(ROW();"
-				+ (pos.getSpalte() + 1) + ";8))";
+	public boolean isErrorInSheet() {
+		XSpreadsheet sheet = getSheet();
+		int validateSpalte = validateSpalte();
+		Position valSpalteStart = Position.from(validateSpalte, ERSTE_DATEN_ZEILE);
+		Position valSpalteEnd = Position.from(validateSpalte, this.spielerSpalte.letzteDatenZeile());
+
+		for (int zeile = valSpalteStart.getZeile(); zeile <= valSpalteEnd.getZeile(); zeile++) {
+			String text = this.getSheetHelper().getTextFromCell(sheet, Position.from(validateSpalte, zeile));
+			if (StringUtils.isNoneBlank(text)) {
+				// error
+				ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
+				errMsg.showOk("Fehler in Spieltagrangliste", "Fehler in Zeile " + zeile);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private void doSort() {
@@ -595,6 +553,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		});
 
 		// Sortier Daten einfuegen
+		// -----
+
 		StringCellValue sortlisteHeader = StringCellValue
 				.from(sheet, Position.from(sortSpalte(), ERSTE_DATEN_ZEILE - 1)).setComment("Rangliste Sortier Spalte")
 				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
@@ -608,6 +568,33 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 			sortlisteVal.setValue(StringUtils.leftPad("" + (ranglistePosition + 1), 3, '0')).zeile(spielerZeile);
 			this.getSheetHelper().setTextInCell(sortlisteVal);
 		}
+
+		// sortspalten for manuell sortieren
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
+		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ERSTE_DATEN_ZEILE);
+		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ERSTE_DATEN_ZEILE);
+		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
+
+		StringCellValue sortSpalte = StringCellValue.from(sortlisteVal).zeile(ERSTE_DATEN_ZEILE);
+		StringCellValue headerVal = StringCellValue.from(sortlisteVal).zeile(ERSTE_DATEN_ZEILE - 1);
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(summeSpielGewonnenZelle1.getAddress()));
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(summeSpielDiffZelle1.getAddress()));
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(punkteDiffZelle1.getAddress()));
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(punkteGewonnenZelle1.getAddress()));
+		// -----
 
 		// spalte zeile (column, row, column, row)
 		XCellRange xCellRange = getxCellRangeAlleDaten();
@@ -642,7 +629,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	 * @return
 	 */
 	private XCellRange getxCellRangeAlleDaten() {
-		XSpreadsheet sheet = getSpieltagSheet();
+		XSpreadsheet sheet = getSheet();
 		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
 		XCellRange xCellRange = null;
 		try {
@@ -709,5 +696,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	public RangListeSpalte getRangListeSpalte() {
 		return this.rangListeSpalte;
+	}
+
+	@Override
+	public int getAnzahlRunden() {
+		return this.aktuelleSpielrundeSheet.countNumberOfSpielRunden();
 	}
 }

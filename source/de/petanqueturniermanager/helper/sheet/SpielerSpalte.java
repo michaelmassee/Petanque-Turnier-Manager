@@ -16,13 +16,17 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.meldeliste.Formation;
 import de.petanqueturniermanager.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.model.Meldungen;
@@ -30,7 +34,7 @@ import de.petanqueturniermanager.model.Meldungen;
 public class SpielerSpalte {
 	private static final Logger logger = LogManager.getLogger(SpielerSpalte.class);
 
-	private static final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
+	private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
 
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
 	public static final String HEADER_SPIELER_NR = "#";
@@ -81,17 +85,30 @@ public class SpielerSpalte {
 		return 0;
 	}
 
-	public void insertHeaderInSheet() {
+	public void formatDaten() {
+		int letzteDatenZeile = letzteDatenZeile();
+		RangePosition datenRange = RangePosition.from(this.spielerNrSpalte, this.ersteDatenZiele,
+				this.spielerNameErsteSpalte, letzteDatenZeile);
+
+		this.sheetHelper.setPropertiesInRange(getSheet(), datenRange,
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+	}
+
+	public void insertHeaderInSheet(int headerColor) {
 
 		StringCellValue celVal = StringCellValue
 				.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1),
 						HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setSetColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH);
+				.setSetColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setBorder(BorderFactory.from().allThin().toBorder())
+				.setCellBackColor(headerColor);
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 
 		celVal.setSetColumnWidth(4000).setComment(null).spalte(this.spielerNameErsteSpalte)
-				.setValue(HEADER_SPIELER_NAME);
+				.setValue(HEADER_SPIELER_NAME).setBorder(BorderFactory.from().allThin().toBorder())
+				.setCellBackColor(headerColor);
+
 		for (int anzSpieler = 0; anzSpieler < anzahlSpielerNamenSpalten(); anzSpieler++) {
 			this.sheetHelper.setTextInCell(celVal);
 			celVal.spaltePlusEins();
@@ -135,34 +152,34 @@ public class SpielerSpalte {
 	}
 
 	/**
-	 * return 0 wenn not found
+	 * return -1 wenn not found
 	 */
 	public int getSpielerZeileNr(int spielerNr) {
 		checkArgument(spielerNr > 0);
 
 		// in Cache ?
-		if (spielerZeileNummerCache.get(spielerNr) != null) {
+		Position spielerNrPosAusCache = this.spielerZeileNummerCache.get(spielerNr);
+		if (spielerNrPosAusCache != null) {
 			// noch korrekt ?
-			Position spielerNrPos = spielerZeileNummerCache.get(spielerNr);
-			int zeileNr = this.sheetHelper.getIntFromCell(this.getSheet(), spielerNrPos);
-			if (zeileNr == spielerNrPos.getZeile()) {
-				return zeileNr;
+			int spielrNrAusSheet = this.sheetHelper.getIntFromCell(this.getSheet(), spielerNrPosAusCache);
+			if (spielrNrAusSheet == spielerNr) {
+				// wert aus cache
+				return spielerNrPosAusCache.getZeile();
 			}
 		}
 
+		// neu suchen in sheet
 		for (int zeileCntr = this.getErsteDatenZiele(); zeileCntr < 999; zeileCntr++) {
 			Position spielerNrPos = Position.from(this.spielerNrSpalte, zeileCntr);
 			String cellText = this.sheetHelper.getTextFromCell(this.getSheet(), spielerNrPos);
 			if (!StringUtils.isBlank(cellText)) {
 				if (NumberUtils.toInt(cellText) == spielerNr) {
-					spielerZeileNummerCache.put(spielerNr, spielerNrPos);
+					this.spielerZeileNummerCache.put(spielerNr, spielerNrPos);
 					return zeileCntr;
 				}
-			} else {
-				break;
 			}
 		}
-		return 0;
+		return -1;
 	}
 
 	public void alleSpieltagSpielerEinfuegen() {
@@ -239,21 +256,24 @@ public class SpielerSpalte {
 	 * @param spielerNr
 	 * @return -1 when not found
 	 */
-
+	@Deprecated
 	public int findSpielerZeileNachSpielrNr(int spielerNr) {
-		for (int zeileCntr = this.getErsteDatenZiele(); zeileCntr < 999; zeileCntr++) {
-			// alle durchsuchen
-			String cellText = this.sheetHelper.getTextFromCell(this.getSheet(),
-					Position.from(this.spielerNrSpalte, zeileCntr));
-			if (!StringUtils.isBlank(cellText)) {
-				int nrInCell = NumberUtils.toInt(cellText, -1);
-				if (nrInCell == spielerNr) {
-					return zeileCntr;
-				}
-			}
-		}
-		return -1;
+		return getSpielerZeileNr(spielerNr);
 	}
+
+	// for (int zeileCntr = this.getErsteDatenZiele(); zeileCntr < 999; zeileCntr++) {
+	// // alle durchsuchen
+	// String cellText = this.sheetHelper.getTextFromCell(this.getSheet(),
+	// Position.from(this.spielerNrSpalte, zeileCntr));
+	// if (!StringUtils.isBlank(cellText)) {
+	// int nrInCell = NumberUtils.toInt(cellText, -1);
+	// if (nrInCell == spielerNr) {
+	// return zeileCntr;
+	// }
+	// }
+	// }
+	// return -1;
+	// }
 
 	public String formulaCountSpieler() {
 		String ersteZelle = Position.from(this.spielerNrSpalte, this.ersteDatenZiele).getAddress();

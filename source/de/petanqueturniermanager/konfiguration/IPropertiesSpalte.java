@@ -20,4 +20,10 @@ public interface IPropertiesSpalte {
 
 	Integer getSpielRundeHeaderFarbe();
 
+	Integer getRanglisteHintergrundFarbeGerade();
+
+	Integer getRanglisteHintergrundFarbeUnGerade();
+
+	Integer getRanglisteHeaderFarbe();
+
 }
