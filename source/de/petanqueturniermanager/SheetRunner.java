@@ -11,7 +11,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.sheet.CloseConnections;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -36,7 +35,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning = false;
-				CloseConnections.closeOfficeConnection();
+				// bringt Nix ?!?
+				// CloseConnections.closeOfficeConnection();
 			}
 		}
 	}

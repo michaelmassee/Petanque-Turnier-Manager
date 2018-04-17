@@ -36,7 +36,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.konfiguration.PropertiesSpalte;
 import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
@@ -337,15 +336,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
 			getSheetHelper().removeSheet(getSheetName(neueSpielrundeNr));
-
-			String msg = e.getMessage();
-			msg += "\r\n";
-			msg += "Nicht genug aktive Meldungen um weitere Runden ohne Doppelte Teams aus zu losen.\r\n";
-			msg += "In der Meldeliste, Parameter \"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN
-					+ "\"\r\nauf " + neueSpielrundeNr + " ändern, ";
-			msg += "um weitere Spielrunden aus zu losen.";
-
-			this.errMsg.showOk("Fehler beim Auslosen", msg);
+			this.errMsg.showOk("Fehler beim Auslosen", e.getMessage());
+			throw new RuntimeException(e); // komplett raus
 		}
 	}
 
