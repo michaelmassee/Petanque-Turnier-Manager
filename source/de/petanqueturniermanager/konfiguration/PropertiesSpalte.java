@@ -32,11 +32,11 @@ public class PropertiesSpalte {
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "NeuAuslosenAb";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Hintergr. Spielr. G";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Hintergr. Spielr. U";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Header Spielrunde.";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Spielrunde-Header";
 
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Hintergr. Rangliste G";
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Hintergr. Rangliste U";
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Header Rangliste";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste-Header";
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
