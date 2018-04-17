@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.meldeliste;
 
 import static com.google.common.base.Preconditions.*;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,9 +27,11 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.Position;
@@ -169,7 +172,29 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 
 		this.sheetHelper.setPropertiesInRange(getSheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1));
+
+		// gerade / ungrade hintergrund farbe
+		// CellBackColor
+		Integer geradeColor = this.propertiesSpalte.getRanglisteHintergrundFarbeGerade();
+		Integer unGeradeColor = this.propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
+
+		int letzteSpielTagSpalte = letzteSpielTagSpalte();
+
+		for (int zeileCntr = datenRange.getStartZeile(); zeileCntr <= letzteDatenZeile; zeileCntr++) {
+			RangePosition datenRangeLine = RangePosition.from(0, zeileCntr, letzteSpielTagSpalte, zeileCntr);
+			if ((zeileCntr & 1) == 0) {
+				if (unGeradeColor != null) {
+					this.sheetHelper.setPropertyInRange(getSheet(), datenRangeLine, CELL_BACK_COLOR, unGeradeColor);
+				}
+			} else {
+				if (geradeColor != null) {
+					this.sheetHelper.setPropertyInRange(getSheet(), datenRangeLine, CELL_BACK_COLOR, geradeColor);
+				}
+			}
+		}
+
 	}
 
 	/**
@@ -265,12 +290,18 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 			return false; // keine Daten
 		}
 
+		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
+
 		// doppelte spieler Nummer entfernen !?!?!
 		HashSet<Integer> spielrNrInSheet = new HashSet<>();
 		int spielrNr;
+		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
+				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			spielrNr = this.sheetHelper.getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNrInSheet.contains(spielrNr)) {
+				// RED Color
+				this.sheetHelper.setValInCell(celVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
 				this.errMsgBox.showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr
 						+ " ist doppelt in der Meldliste !!!");
 				return true;
@@ -298,10 +329,11 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		doSort(this.spielerSpalte.getSpielerNameSpalte(), true);
 
 		// lücken füllen
+		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
 		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			spielrNr = this.sheetHelper.getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr == -1) {
-				this.sheetHelper.setValInCell(xSheet, SPIELER_NR_SPALTE, spielerZeilecntr, ++letzteSpielerNr);
+				this.sheetHelper.setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
 	}
