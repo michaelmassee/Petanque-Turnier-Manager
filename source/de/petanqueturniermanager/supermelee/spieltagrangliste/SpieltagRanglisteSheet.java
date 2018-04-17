@@ -109,14 +109,15 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		this.spielerSpalte.alleSpieltagSpielerEinfuegen();
 		updateSummenSpalten();
 		insertSortValidateSpalte();
-		ergebnisseEinfuegen();
-		nichtgespielteRundenFuellen();
-		doSort();
+		insertManuelsortSpalten();
 		this.spielerSpalte.insertHeaderInSheet(headerColor);
 		this.spielerSpalte.formatDaten();
 		this.getRangListeSpalte().upDateRanglisteSpalte();
 		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
 		this.ranglisteFormatter.formatDaten();
+		ergebnisseEinfuegen();
+		nichtgespielteRundenFuellen();
+		doSortmitSortSpalte();
 		footer();
 	}
 
@@ -539,7 +540,42 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		return false;
 	}
 
-	private void doSort() {
+	private void insertManuelsortSpalten() {
+		// sortspalten for manuell sortieren
+
+		StringCellValue sortlisteVal = StringCellValue
+				.from(getSheet(), Position.from(sortSpalte(), ERSTE_DATEN_ZEILE - 1))
+				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setSpalteHoriJustify(CellHoriJustify.CENTER);
+
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
+		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ERSTE_DATEN_ZEILE);
+		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ERSTE_DATEN_ZEILE);
+		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
+
+		StringCellValue sortSpalte = StringCellValue.from(sortlisteVal).zeile(ERSTE_DATEN_ZEILE);
+		StringCellValue headerVal = StringCellValue.from(sortlisteVal).zeile(ERSTE_DATEN_ZEILE - 1);
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(summeSpielGewonnenZelle1.getAddress()));
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(summeSpielDiffZelle1.getAddress()));
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(punkteDiffZelle1.getAddress()));
+
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
+				.setValue(punkteGewonnenZelle1.getAddress()));
+
+	}
+
+	private void doSortmitSortSpalte() {
 
 		XSpreadsheet sheet = getSheet();
 		List<SpielerSpieltagErgebnis> ergList = spielTagErgebnisseEinlesen();
@@ -569,33 +605,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 			this.getSheetHelper().setTextInCell(sortlisteVal);
 		}
 
-		// sortspalten for manuell sortieren
-		int ersteSpalteEndsumme = getErsteSummeSpalte();
-		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
-		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ERSTE_DATEN_ZEILE);
-		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ERSTE_DATEN_ZEILE);
-		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
-
-		StringCellValue sortSpalte = StringCellValue.from(sortlisteVal).zeile(ERSTE_DATEN_ZEILE);
-		StringCellValue headerVal = StringCellValue.from(sortlisteVal).zeile(ERSTE_DATEN_ZEILE - 1);
-
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
-				.setValue(summeSpielGewonnenZelle1.getAddress()));
-
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
-				.setValue(summeSpielDiffZelle1.getAddress()));
-
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
-				.setValue(punkteDiffZelle1.getAddress()));
-
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile())
-				.setValue(punkteGewonnenZelle1.getAddress()));
-		// -----
-
 		// spalte zeile (column, row, column, row)
 		XCellRange xCellRange = getxCellRangeAlleDaten();
 
@@ -616,9 +625,71 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		propVal.Value = aSortFields;
 		aSortDesc[0] = propVal;
 
+		// specifies if cell formats are moved with the contents they belong to.
 		aSortDesc[1] = new PropertyValue();
-		aSortDesc[1].Name = "NaturalSort";
-		aSortDesc[1].Value = new Boolean(true);
+		aSortDesc[1].Name = "BindFormatsToContent";
+		aSortDesc[1].Value = false;
+
+		xSortable.sort(aSortDesc);
+	}
+
+	/**
+	 * Baustelle Feld 4 Funktioniert nicht
+	 */
+	private void doSortmitBestehende() {
+
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
+		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ERSTE_DATEN_ZEILE);
+		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ERSTE_DATEN_ZEILE);
+		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
+
+		// spalte zeile (column, row, column, row)
+		XCellRange xCellRange = getxCellRangeAlleDaten();
+
+		if (xCellRange == null) {
+			return;
+		}
+
+		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
+		TableSortField[] aSortFields = new TableSortField[4];
+		TableSortField field1 = new TableSortField();
+		field1.Field = summeSpielGewonnenZelle1.getSpalte(); // 0 = erste spalte
+		field1.IsAscending = false; // false = meiste Punte oben
+		aSortFields[0] = field1;
+
+		TableSortField field2 = new TableSortField();
+		field2.Field = summeSpielDiffZelle1.getSpalte(); // 0 = erste spalte
+		field2.IsAscending = false; // false =meiste Punte oben
+		aSortFields[1] = field2;
+
+		TableSortField field3 = new TableSortField();
+		field3.Field = punkteDiffZelle1.getSpalte(); // 0 = erste spalte
+		field3.IsAscending = false; // false = meiste Punte oben
+		aSortFields[2] = field3;
+
+		// !!!!!!! Feld 4 Funktioniet nicht
+		TableSortField field4 = new TableSortField();
+		field4.Field = punkteGewonnenZelle1.getSpalte(); // 0 = erste spalte
+		field4.IsAscending = true; // false= meiste Punte oben
+		aSortFields[3] = field4;
+
+		PropertyValue[] aSortDesc = new PropertyValue[3];
+		PropertyValue propVal = new PropertyValue();
+		propVal.Name = "SortFields";
+		propVal.Value = aSortFields;
+		aSortDesc[0] = propVal;
+
+		// specifies if cell formats are moved with the contents they belong to.
+		aSortDesc[1] = new PropertyValue();
+		aSortDesc[1].Name = "BindFormatsToContent";
+		aSortDesc[1].Value = false;
+
+		// The size of the sequence using the MaxSortFieldsCount property.
+		// [ readonly ] long
+		aSortDesc[2] = new PropertyValue();
+		aSortDesc[2].Name = "MaxSortFieldsCount";
+		aSortDesc[2].Value = (long) 5;
 
 		xSortable.sort(aSortDesc);
 	}

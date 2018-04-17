@@ -317,11 +317,17 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		// sorted before text cells.
 		aSortFields[0] = field1;
 
-		PropertyValue[] aSortDesc = new PropertyValue[1];
+		PropertyValue[] aSortDesc = new PropertyValue[2];
 		PropertyValue propVal = new PropertyValue();
 		propVal.Name = "SortFields";
 		propVal.Value = aSortFields;
 		aSortDesc[0] = propVal;
+
+		// specifies if cell formats are moved with the contents they belong to.
+		propVal.Name = "BindFormatsToContent";
+		propVal.Value = false;
+		aSortDesc[1] = propVal;
+
 		xSortable.sort(aSortDesc);
 	}
 
