@@ -7,6 +7,7 @@ package de.petanqueturniermanager.meldeliste;
 import static com.google.common.base.Preconditions.*;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +30,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -61,6 +63,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 
 	public static final String SHEETNAME = "Meldeliste";
 
+	private final ErrorMessageBox errMsgBox;
 	private final DocumentPropertiesHelper properties;
 	private final SheetHelper sheetHelper;
 	private final SpielerSpalte spielerSpalte;
@@ -76,6 +79,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 				getFormation());
 		this.supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
 		this.propertiesSpalte = new PropertiesSpalte(xContext, ersteSummeSpalte(), ERSTE_ZEILE_PROPERTIES, this, this);
+		this.errMsgBox = new ErrorMessageBox(xContext);
 	}
 
 	public Formation getFormation() {
@@ -110,6 +114,10 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 	}
 
 	public void upDateSheet() {
+
+		if (isErrorInSheet()) {
+			return;
+		}
 
 		XSpreadsheet sheet = getSheet();
 		this.sheetHelper.setActiveSheet(sheet);
@@ -249,6 +257,30 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		return this.spielerSpalte.getSpielerNameSpalte();
 	}
 
+	public boolean isErrorInSheet() {
+		XSpreadsheet xSheet = getSheet();
+
+		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
+		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+			return false; // keine Daten
+		}
+
+		// doppelte spieler Nummer entfernen !?!?!
+		HashSet<Integer> spielrNrInSheet = new HashSet<>();
+		int spielrNr;
+		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
+			spielrNr = this.sheetHelper.getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
+			if (spielrNrInSheet.contains(spielrNr)) {
+				this.errMsgBox.showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr
+						+ " ist doppelt in der Meldliste !!!");
+				return true;
+			} else {
+				spielrNrInSheet.add(spielrNr);
+			}
+		}
+		return false;
+	}
+
 	public void updateSpielerNr() {
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
 		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
@@ -262,7 +294,6 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		if (spielrNr > -1) {
 			letzteSpielerNr = spielrNr;
 		}
-
 		// spieler nach Alphabet sortieren
 		doSort(this.spielerSpalte.getSpielerNameSpalte(), true);
 
@@ -324,6 +355,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		aSortDesc[0] = propVal;
 
 		// specifies if cell formats are moved with the contents they belong to.
+		propVal = new PropertyValue();
 		propVal.Name = "BindFormatsToContent";
 		propVal.Value = false;
 		aSortDesc[1] = propVal;
