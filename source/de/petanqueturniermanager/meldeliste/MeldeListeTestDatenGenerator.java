@@ -77,7 +77,7 @@ public class MeldeListeTestDatenGenerator extends SheetRunner {
 
 		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr++) {
 			sheetHelper.setTextInCell(meldelisteSheet, pos.zeilePlusEins(), testNamen.get(spielerCntr));
-			numVal.setPos(pos).spaltePlusEins();
+			numVal.zeile(pos.getZeile());
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
 				sheetHelper.setValInCell(numVal.setValue((double) randomNum));
