@@ -52,12 +52,12 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 
 		this.meldeListeTestDatenGenerator.generateTestDaten();
 
-		for (int spielrunde = 1; spielrunde < 6; spielrunde++) {
+		for (int spielrunde = 1; spielrunde < 5; spielrunde++) {
 			this.getSheetHelper().removeSheet(this.getSheetName(spielrunde));
 		}
 
 		this.getPropertiesSpalte().setSpielRunde(1);
-		for (int spielrundeNr = 1; spielrundeNr < 6; spielrundeNr++) {
+		for (int spielrundeNr = 1; spielrundeNr < 5; spielrundeNr++) {
 
 			if (spielrundeNr > 1) {
 				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen();

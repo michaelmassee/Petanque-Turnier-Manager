@@ -81,6 +81,18 @@
 								</prop>
 							</node>
 
+							<node oor:name="B5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spieltag Rangliste Sortieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?spieltag_rangliste_sort</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 							<node oor:name="C1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Team-Paarungen</value>
@@ -142,7 +154,7 @@
 
 							<node oor:name="A2" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Supermêlée, generiere 5 Spielrunden</value>
+									<value xml:lang="de">Supermêlée, generiere 4 Spielrunden</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?spielrunden_testdaten</value>

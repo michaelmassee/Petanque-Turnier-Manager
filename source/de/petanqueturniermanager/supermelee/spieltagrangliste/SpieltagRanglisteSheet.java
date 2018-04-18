@@ -117,7 +117,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		this.ranglisteFormatter.formatDaten();
 		ergebnisseEinfuegen();
 		nichtgespielteRundenFuellen();
-		doSortmitSortSpalte();
+		doSortmitBestehende();
 		footer();
 	}
 
@@ -202,8 +202,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
 
 		NumberCellValue punktePlus = NumberCellValue.from(sheet, Position.from(1, 1), 7)
-				.setCharColor(ColorHelper.CHAR_COLOR_RED).setComment("Nicht gespielte Runde (7:13)");
-		NumberCellValue punkteMinus = NumberCellValue.from(punktePlus).setValue((double) 13);
+				.setComment("Nicht gespielte Runde (7:13)");
+		NumberCellValue punkteMinus = NumberCellValue.from(punktePlus).setValue((double) 13).setComment(null);
 
 		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letzteDatenzeile; zeileCntr++) {
 			for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
@@ -575,6 +575,11 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	}
 
+	/**
+	 * eigen sort spalte einfuegen, und nach nur eine spalte sortieren<br>
+	 * als workaround, weil nur 3 spalten am stück sortierbar langsam
+	 */
+	@Deprecated
 	private void doSortmitSortSpalte() {
 
 		XSpreadsheet sheet = getSheet();
@@ -634,9 +639,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	}
 
 	/**
-	 * Baustelle Feld 4 Funktioniert nicht
+	 * mit bestehende spalten im sheet selbst sortieren.<br>
+	 * sortieren in 2 schritten
 	 */
-	private void doSortmitBestehende() {
+	protected void doSortmitBestehende() {
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
@@ -652,32 +658,49 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		}
 
 		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
-		TableSortField[] aSortFields = new TableSortField[4];
-		TableSortField field1 = new TableSortField();
-		field1.Field = summeSpielGewonnenZelle1.getSpalte(); // 0 = erste spalte
-		field1.IsAscending = false; // false = meiste Punte oben
-		aSortFields[0] = field1;
 
-		TableSortField field2 = new TableSortField();
-		field2.Field = summeSpielDiffZelle1.getSpalte(); // 0 = erste spalte
-		field2.IsAscending = false; // false =meiste Punte oben
-		aSortFields[1] = field2;
+		// nur 3 felder sind sortierbar !, deswegen die 4 spalte zuerst einzel sortieren.
+		// wenn einzel sortieren dann von letzte bis erst spalte !
+		{
+			TableSortField[] aSortFields = new TableSortField[1];
+			TableSortField field4 = new TableSortField();
+			field4.Field = punkteGewonnenZelle1.getSpalte(); // 0 = erste spalte
+			field4.IsAscending = false; // false= meiste Punkte oben
+			aSortFields[0] = field4;
 
-		TableSortField field3 = new TableSortField();
-		field3.Field = punkteDiffZelle1.getSpalte(); // 0 = erste spalte
-		field3.IsAscending = false; // false = meiste Punte oben
-		aSortFields[2] = field3;
+			PropertyValue[] sortDescr = sortDescr(aSortFields);
+			xSortable.sort(sortDescr);
+		}
 
-		// !!!!!!! Feld 4 Funktioniet nicht
-		TableSortField field4 = new TableSortField();
-		field4.Field = punkteGewonnenZelle1.getSpalte(); // 0 = erste spalte
-		field4.IsAscending = true; // false= meiste Punte oben
-		aSortFields[3] = field4;
+		{
+			TableSortField[] aSortFields = new TableSortField[3]; // MAX 3 felder
+			TableSortField field1 = new TableSortField();
+			field1.Field = summeSpielGewonnenZelle1.getSpalte();
+			field1.IsAscending = false; // false = meiste Punkte oben
+			aSortFields[0] = field1;
 
-		PropertyValue[] aSortDesc = new PropertyValue[3];
+			TableSortField field2 = new TableSortField();
+			field2.Field = summeSpielDiffZelle1.getSpalte(); // 0 = erste spalte
+			field2.IsAscending = false; // false =meiste Punkte oben
+			aSortFields[1] = field2;
+
+			TableSortField field3 = new TableSortField();
+			field3.Field = punkteDiffZelle1.getSpalte(); // 0 = erste spalte
+			field3.IsAscending = false; // false = meiste Punkte oben
+			aSortFields[2] = field3;
+
+			PropertyValue[] sortDescr = sortDescr(aSortFields);
+			xSortable.sort(sortDescr);
+		}
+
+	}
+
+	private PropertyValue[] sortDescr(TableSortField[] sortFields) {
+
+		PropertyValue[] aSortDesc = new PropertyValue[2];
 		PropertyValue propVal = new PropertyValue();
 		propVal.Name = "SortFields";
-		propVal.Value = aSortFields;
+		propVal.Value = sortFields;
 		aSortDesc[0] = propVal;
 
 		// specifies if cell formats are moved with the contents they belong to.
@@ -685,13 +708,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		aSortDesc[1].Name = "BindFormatsToContent";
 		aSortDesc[1].Value = false;
 
-		// The size of the sequence using the MaxSortFieldsCount property.
-		// [ readonly ] long
-		aSortDesc[2] = new PropertyValue();
-		aSortDesc[2].Name = "MaxSortFieldsCount";
-		aSortDesc[2].Value = (long) 5;
-
-		xSortable.sort(aSortDesc);
+		return aSortDesc;
 	}
 
 	/**
