@@ -87,6 +87,10 @@ public class SpielerSpalte {
 
 	public void formatDaten() {
 		int letzteDatenZeile = letzteDatenZeile();
+		if (letzteDatenZeile < this.ersteDatenZiele) {
+			// keine Daten
+			return;
+		}
 		RangePosition datenRange = RangePosition.from(this.spielerNrSpalte, this.ersteDatenZiele,
 				this.spielerNameErsteSpalte, letzteDatenZeile);
 
