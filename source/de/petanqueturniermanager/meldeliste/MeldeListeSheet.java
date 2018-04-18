@@ -299,6 +299,10 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			spielrNr = this.sheetHelper.getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
+			if (spielrNr == -1) {
+				// keine nummer vorhanden
+				continue;
+			}
 			if (spielrNrInSheet.contains(spielrNr)) {
 				// RED Color
 				this.sheetHelper.setValInCell(celVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
