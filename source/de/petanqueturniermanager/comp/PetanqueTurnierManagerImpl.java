@@ -23,6 +23,7 @@ import de.petanqueturniermanager.supermelee.spielrunde.AktuelleSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.NaechsteSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundenTestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetSortOnly;
 
 // Jobs
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Jobs
@@ -105,6 +106,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			// ------------------------------
 			case "spieltag_rangliste":
 				new SpieltagRanglisteSheet(this.m_xContext).start();
+				break;
+			// ------------------------------
+			case "spieltag_rangliste_sort":
+				new SpieltagRanglisteSheetSortOnly(this.m_xContext).start();
 				break;
 			// ------------------------------
 			case "mittelhessenrunde_endrangliste":
