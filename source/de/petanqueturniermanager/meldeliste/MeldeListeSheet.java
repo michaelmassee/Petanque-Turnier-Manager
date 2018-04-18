@@ -167,6 +167,11 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 
 	void formatDaten() {
 		int letzteDatenZeile = this.spielerSpalte.letzteDatenZeile();
+		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
+			// keine Daten
+			return;
+		}
+
 		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(),
 				letzteDatenZeile);
 
@@ -261,7 +266,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		doSort(this.spielerSpalte.getSpielerNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob
 		// daten oder nicht
 		int letzteNrZeile = this.spielerSpalte.neachsteFreieDatenZeile();
-		if (letzteNrZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
 		XSpreadsheet xSheet = getSheet();
@@ -318,7 +323,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 
 	public void updateSpielerNr() {
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
-		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+		if (letzteSpielZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
 		XSpreadsheet xSheet = getSheet();
