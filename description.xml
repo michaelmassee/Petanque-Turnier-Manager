@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <description xmlns="http://openoffice.org/extensions/description/2006" xmlns:d="http://openoffice.org/extensions/description/2006" xmlns:xlink="http://www.w3.org/1999/xlink">
-	<version value="0.7"/>
+	<version value="0.8"/>
 	<identifier value="de.petanqueturniermanager"/>
 	<update-information>
 		<src xlink:href="http://bc-linden.de/oeffentlich/?dir=petanqueturniermanager"/>
 		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases"/>
 	</update-information>
 	<publisher>
-		<name lang="en" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
+		<name lang="de" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
 	</publisher>
 	<display-name>
 		<name lang="en">PetanqueTurnierManager</name>
 	</display-name>
 	<extension-description>
-		<src lang="en" xlink:href="README.md"/>
+		<src lang="de" xlink:href="description/desc_de.txt"/>
 	</extension-description>
 </description>
