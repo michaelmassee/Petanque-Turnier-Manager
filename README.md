@@ -1,7 +1,6 @@
 # Petanque-Turnier-Manager
-v0.7
 
-Der Petanque Turnier Manager ist eine Offline Turnierleitung LibreOffice Calc Erweiterung/Extension. 
+Der Petanque Turnier Manager ist eine Offline Turnierleitung LibreOffice Calc Erweiterung/Extension.
 
 ## Installation:
 
@@ -10,11 +9,11 @@ https://de.libreoffice.org/<br/>
 https://de.libreoffice.org/discover/calc/<br/>
 https://de.libreoffice.org/download/libreoffice-still/<br/>
 
-## LibreOffice Extention Instalieren:
-https://help.libreoffice.org/Common/Extension_Manager/de<br/>
-
-Die aktuelle Extention *.oxt Datei:<br/>
+## LibreOffice Extension Instalieren:
+Die aktuelle Extension *.oxt Datei runterladen<br/>
 https://github.com/michaelmassee/Petanque-Turnier-Manager/releases<br/>
+Anschließend installieren<br>
+https://help.libreoffice.org/Common/Extension_Manager/de<br/>
 
 ## Start:
 Öffne/Erstelle in LibreOffice eine neue Calc Datei.

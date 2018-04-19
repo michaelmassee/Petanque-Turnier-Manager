@@ -1,2 +1,3 @@
 Petanque Turnier Manager
+Eine Offline Turnierleitung LibreOffice Calc Erweiterung/Extension.
 feedback: michael@massee.de
