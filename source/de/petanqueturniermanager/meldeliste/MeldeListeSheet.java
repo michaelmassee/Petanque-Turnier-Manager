@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
@@ -44,10 +45,10 @@ import de.petanqueturniermanager.konfiguration.PropertiesSpalte;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
-import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 
-public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, ISheet, IPropertiesSpalte {
-	private static final Logger logger = LogManager.getLogger(EndranglisteSheet.class);
+public class MeldeListeSheet extends Thread
+		implements IMeldeliste, Runnable, ISheet, IPropertiesSpalte, IMitSpielerSpalte {
+	private static final Logger logger = LogManager.getLogger(MeldeListeSheet.class);
 
 	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0
 	public static final int ZEILE_FORMATION = 0; // Zeile 0
@@ -178,7 +179,7 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 		this.sheetHelper.setPropertiesInRange(getSheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1));
+						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
@@ -649,6 +650,42 @@ public class MeldeListeSheet extends Thread implements IMeldeliste, Runnable, IS
 	@Override
 	public Integer getRanglisteHeaderFarbe() {
 		return this.propertiesSpalte.getRanglisteHeaderFarbe();
-
 	}
+
+	@Override
+	public Integer getNichtGespielteRundePlus() {
+		return this.propertiesSpalte.getNichtGespielteRundePlus();
+	}
+
+	@Override
+	public Integer getNichtGespielteRundeMinus() {
+		return this.propertiesSpalte.getNichtGespielteRundeMinus();
+	}
+
+	@Override
+	public List<String> getSpielerNamenList() {
+		doSort(this.getSpielerNameSpalte(), true); // nach namen sortieren
+		return this.spielerSpalte.getSpielerNamenList();
+	}
+
+	@Override
+	public int neachsteFreieDatenZeile() {
+		return this.spielerSpalte.neachsteFreieDatenZeile();
+	}
+
+	@Override
+	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) {
+		this.spielerSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
+	}
+
+	@Override
+	public int letzteDatenZeile() {
+		return this.spielerSpalte.letzteDatenZeile();
+	}
+
+	@Override
+	public int getErsteDatenZiele() {
+		return this.spielerSpalte.getErsteDatenZiele();
+	}
+
 }

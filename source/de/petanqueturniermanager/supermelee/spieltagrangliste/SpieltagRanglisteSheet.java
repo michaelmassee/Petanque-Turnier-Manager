@@ -105,13 +105,13 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		getSheetHelper().removeSheet(getSheetName(spieltagNr));
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
-		this.ranglisteFormatter.updateHeader(spieltagNr);
 		this.spielerSpalte.alleSpieltagSpielerEinfuegen();
 		updateSummenSpalten();
 		insertSortValidateSpalte();
 		insertManuelsortSpalten();
 		this.spielerSpalte.insertHeaderInSheet(headerColor);
 		this.spielerSpalte.formatDaten();
+		this.ranglisteFormatter.updateHeader(spieltagNr);
 		this.getRangListeSpalte().upDateRanglisteSpalte();
 		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
 		this.ranglisteFormatter.formatDaten();
@@ -201,9 +201,13 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
 
-		NumberCellValue punktePlus = NumberCellValue.from(sheet, Position.from(1, 1), 7)
-				.setComment("Nicht gespielte Runde (7:13)");
-		NumberCellValue punkteMinus = NumberCellValue.from(punktePlus).setValue((double) 13).setComment(null);
+		int nichtgespieltPlus = this.meldeliste.getNichtGespielteRundePlus();
+		int nichtgespieltMinus = this.meldeliste.getNichtGespielteRundeMinus();
+
+		NumberCellValue punktePlus = NumberCellValue.from(sheet, Position.from(1, 1), nichtgespieltPlus)
+				.setComment("Nicht gespielte Runde (" + nichtgespieltPlus + ":" + nichtgespieltMinus + ")");
+		NumberCellValue punkteMinus = NumberCellValue.from(punktePlus).setValue((double) nichtgespieltMinus)
+				.setComment(null);
 
 		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letzteDatenzeile; zeileCntr++) {
 			for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
@@ -262,8 +266,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		getSheetHelper().setRowProperty(this.getSheet(), stringVal.getPos().getZeile(), HEIGHT, 300);
 
-		getSheetHelper()
-				.setTextInCell(stringVal.zeilePlusEins().setValue("Nicht gespielten Runden werden mit 7:13 gewertet"));
+		int nichtgespieltPlus = this.meldeliste.getNichtGespielteRundePlus();
+		int nichtgespieltMinus = this.meldeliste.getNichtGespielteRundeMinus();
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue(
+				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 		getSheetHelper().setRowProperty(this.getSheet(), stringVal.getPos().getZeile(), HEIGHT, 300);
 
 	}
@@ -789,5 +795,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	@Override
 	public int getAnzahlRunden() {
 		return this.aktuelleSpielrundeSheet.countNumberOfSpielRunden();
+	}
+
+	@Override
+	public List<String> getSpielerNamenList() {
+		return this.spielerSpalte.getSpielerNamenList();
 	}
 }

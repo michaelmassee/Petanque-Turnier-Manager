@@ -38,6 +38,9 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Hintergr. Rangliste U";
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste-Header";
 
+	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS = "Nicht gespielte Runde +"; // 0
+	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde -"; // 13
+
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
@@ -67,6 +70,12 @@ public class PropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
 				.setDefaultVal(Integer.valueOf("e6ebf4", 16)).setDescription("Rangliste Header-Hintergrundfarbe"));
 
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS)
+						.setDefaultVal(0).setDescription("Pluspunkte nicht gespielte Runde"));
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS)
+						.setDefaultVal(13).setDescription("Minuspunkte nicht gespielte Runde"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -287,4 +296,13 @@ public class PropertiesSpalte {
 	public Integer getSpielRundeNeuAuslosenAb() {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN);
 	}
+
+	public Integer getNichtGespielteRundePlus() {
+		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS);
+	}
+
+	public Integer getNichtGespielteRundeMinus() {
+		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS);
+	}
+
 }

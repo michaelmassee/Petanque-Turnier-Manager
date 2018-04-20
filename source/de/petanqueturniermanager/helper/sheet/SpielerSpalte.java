@@ -6,7 +6,9 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -20,6 +22,7 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -91,12 +94,26 @@ public class SpielerSpalte {
 			// keine Daten
 			return;
 		}
-		RangePosition datenRange = RangePosition.from(this.spielerNrSpalte, this.ersteDatenZiele,
+
+		// Spieler Nr
+		// -------------------------------------
+		RangePosition spielrNrdatenRange = RangePosition.from(this.spielerNrSpalte, this.ersteDatenZiele,
+				this.spielerNrSpalte, letzteDatenZeile);
+
+		this.sheetHelper.setPropertiesInRange(getSheet(), spielrNrdatenRange,
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+						.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+		// -------------------------------------
+
+		// Spieler Namen
+		RangePosition datenRange = RangePosition.from(this.spielerNameErsteSpalte, this.ersteDatenZiele,
 				this.spielerNameErsteSpalte, letzteDatenZeile);
 
 		this.sheetHelper.setPropertiesInRange(getSheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
+
 	}
 
 	public void insertHeaderInSheet(int headerColor) {
@@ -204,7 +221,8 @@ public class SpielerSpalte {
 			celValSpielerNr.setValue((double) spieler.getNr());
 			this.sheetHelper.setValInCell(celValSpielerNr);
 			StringCellValue strCelVal = StringCellValue.from(celValSpielerNr);
-			this.sheetHelper.setFormulaInCell(strCelVal.spaltePlusEins().setValue(verweisAufMeldeListeFormula));
+			this.sheetHelper.setFormulaInCell(
+					strCelVal.spaltePlusEins().setShrinkToFit(true).setValue(verweisAufMeldeListeFormula));
 			celValSpielerNr.zeilePlusEins();
 		});
 	}
@@ -229,7 +247,8 @@ public class SpielerSpalte {
 			String spielrNrAddress = this.sheetHelper.getAddressFromColumnRow(celValSpielerNr.getPos());
 			String verweisAufMeldeListeFormula = getMeldeliste().formulaSverweisSpielernamen(spielrNrAddress);
 			StringCellValue strCelVal = StringCellValue.from(celValSpielerNr);
-			this.sheetHelper.setFormulaInCell(strCelVal.spaltePlusEins().setValue(verweisAufMeldeListeFormula));
+			this.sheetHelper.setFormulaInCell(
+					strCelVal.setShrinkToFit(true).spaltePlusEins().setValue(verweisAufMeldeListeFormula));
 		}
 	}
 
@@ -239,6 +258,24 @@ public class SpielerSpalte {
 	 */
 	public String getSpielrNrAddressNachSpielrNr(int spielrNr) {
 		return getSpielrNrAddressNachZeile(findSpielerZeileNachSpielrNr(spielrNr));
+	}
+
+	public List<String> getSpielerNamenList() {
+		List<String> spielerNamen = new ArrayList<String>();
+		int letzteZeile = this.letzteDatenZeile();
+		XSpreadsheet sheet = getSheet();
+
+		Position posSpielerName = Position.from(getSpielerNameSpalte(), this.ersteDatenZiele);
+
+		if (letzteZeile >= this.ersteDatenZiele) {
+			for (int spielerZeile = this.ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
+				String spielerName = this.sheetHelper.getTextFromCell(sheet, posSpielerName.zeile(spielerZeile));
+				if (StringUtils.isNotBlank(spielerName)) {
+					spielerNamen.add(spielerName);
+				}
+			}
+		}
+		return spielerNamen;
 	}
 
 	public String getSpielrNrAddressNachZeile(int zeile) {

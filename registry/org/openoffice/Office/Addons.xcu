@@ -45,6 +45,24 @@
 								</prop>
 							</node>
 
+							<node oor:name="A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Anmeldungen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?anmeldungen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A3" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
 							<node oor:name="B1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Aktuelle Spielrunde</value>
@@ -68,6 +86,13 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="B3" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
 
 							<node oor:name="B4" oor:op="replace">
 								<prop oor:name="Title">
@@ -126,6 +151,12 @@
 					<!-- ****************************************************************** -->
 					<node oor:name="ZZ1" oor:op="replace">
 						<prop oor:name="URL" oor:type="xs:string">
+							<value>private:separator</value>
+						</prop>
+					</node>
+
+					<node oor:name="ZZ2" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
 							<value />
 						</prop>
 						<prop oor:name="ImageIdentifier" oor:type="xs:string">
@@ -166,7 +197,6 @@
 						</node>
 					</node>
 					<!-- ****************************************************************** -->
-
 
 					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> 
 						<prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> </prop> <prop 
