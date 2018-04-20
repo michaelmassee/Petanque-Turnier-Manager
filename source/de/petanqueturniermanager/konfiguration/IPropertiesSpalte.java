@@ -26,4 +26,8 @@ public interface IPropertiesSpalte {
 
 	Integer getRanglisteHeaderFarbe();
 
+	Integer getNichtGespielteRundePlus();
+
+	Integer getNichtGespielteRundeMinus();
+
 }

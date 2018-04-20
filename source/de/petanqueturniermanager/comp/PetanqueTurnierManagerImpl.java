@@ -15,6 +15,7 @@ import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
+import de.petanqueturniermanager.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
 import de.petanqueturniermanager.meldeliste.MeldeListeTestDatenGenerator;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
@@ -86,6 +87,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			// ------------------------------
 			case "meldeliste":
 				new MeldeListeSheet(this.m_xContext).start();
+				break;
+			case "anmeldungen":
+				new AnmeldungenSheet(this.m_xContext).start();
 				break;
 			case "meldeliste_testdaten":
 				new MeldeListeTestDatenGenerator(this.m_xContext).start();

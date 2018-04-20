@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
+import java.util.List;
+
 public interface IMitSpielerSpalte {
 
 	int neachsteFreieDatenZeile();
@@ -15,5 +17,7 @@ public interface IMitSpielerSpalte {
 	public int letzteDatenZeile();
 
 	int getErsteDatenZiele();
+
+	List<String> getSpielerNamenList();
 
 }

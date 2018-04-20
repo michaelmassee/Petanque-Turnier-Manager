@@ -481,4 +481,9 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 		return this.sheetHelper.newIfNotExist(SHEETNAME, (short) 0);
 	}
 
+	@Override
+	public List<String> getSpielerNamenList() {
+		return this.spielerSpalte.getSpielerNamenList();
+	}
+
 }

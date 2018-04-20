@@ -8,7 +8,7 @@ package de.petanqueturniermanager.meldeliste;
 */
 
 public enum SpielrundeGespielt {
-	NEIN(0), JA(1), AUSGESETZT(2), UNDEFINIERT(99);
+	NEIN(-1), JA(1), AUSGESETZT(2), UNDEFINIERT(99);
 
 	private final int id;
 

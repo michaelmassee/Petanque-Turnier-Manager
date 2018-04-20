@@ -4,6 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
 public class SpieltagRanglisteSheetSortOnly extends SpieltagRanglisteSheet {
@@ -14,6 +15,8 @@ public class SpieltagRanglisteSheetSortOnly extends SpieltagRanglisteSheet {
 
 	@Override
 	protected void doRun() {
+		XSpreadsheet sheet = getSheet();
+		getSheetHelper().setActiveSheet(sheet);
 		doSortmitBestehende();
 	}
 

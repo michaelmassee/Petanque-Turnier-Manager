@@ -77,7 +77,7 @@ public class RanglisteFormatter {
 					headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
 
 			// Runden Counter
-			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue("Rnd " + spielRunde)
+			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde + ". Rnd")
 					.zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setSetColumnWidth(0).setComment(null);
 			this.sheetHelper.setTextInCell(headerRndCounter);
 		}
@@ -128,7 +128,7 @@ public class RanglisteFormatter {
 		// Spieltag Info
 		StringCellValue spieltagInfo = StringCellValue.from(sheet, headerSumme.getPos()).spalte(0)
 				.setValue(spieltagNr + ". Spieltag").setEndPosMerge(headerSumme.getPos().spaltePlus(-1))
-				.setHoriJustify(CellHoriJustify.CENTER);
+				.setHoriJustify(CellHoriJustify.LEFT);
 		this.sheetHelper.setTextInCell(spieltagInfo);
 	}
 

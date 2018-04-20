@@ -40,7 +40,7 @@ public class StringCellValue extends AbstractCellValue<StringCellValue, String> 
 	}
 
 	public static final StringCellValue from(XSpreadsheet sheet) {
-		return new StringCellValue(sheet, Position.from(1, 1), "xx");
+		return new StringCellValue(sheet, Position.from(0, 0), "xx");
 	}
 
 	public static final StringCellValue from(XSpreadsheet sheet, Position pos) {
