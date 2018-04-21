@@ -12,6 +12,7 @@ import com.sun.star.table.TableBorder2;
 @SuppressWarnings("serial")
 public class CellProperties extends HashMap<String, Object> {
 
+	public static final String WIDTH = "Width";
 	public static final String HORI_JUSTIFY = "HoriJustify";
 	public static final String VERT_JUSTIFY = "VertJustify";
 	public static final String CHAR_COLOR = "CharColor";
@@ -127,6 +128,11 @@ public class CellProperties extends HashMap<String, Object> {
 
 	public CellProperties removeCellBackColor() {
 		this.remove(CELL_BACK_COLOR);
+		return this;
+	}
+
+	public CellProperties setWidth(int width) {
+		this.put(WIDTH, width);
 		return this;
 	}
 

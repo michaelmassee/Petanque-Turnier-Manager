@@ -35,11 +35,13 @@ import de.petanqueturniermanager.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.model.Meldungen;
 
 public class SpielerSpalte {
+
 	private static final Logger logger = LogManager.getLogger(SpielerSpalte.class);
 
 	private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
 
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
+	public static final int DEFAULT_SPIELER_NAME_WIDTH = 4000;
 	public static final String HEADER_SPIELER_NR = "#";
 	public static final String HEADER_SPIELER_NAME = "Name";
 	private final Formation formation;
@@ -126,7 +128,7 @@ public class SpielerSpalte {
 				.setCellBackColor(headerColor);
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 
-		celVal.setSetColumnWidth(4000).setComment(null).spalte(this.spielerNameErsteSpalte)
+		celVal.setSetColumnWidth(DEFAULT_SPIELER_NAME_WIDTH).setComment(null).spalte(this.spielerNameErsteSpalte)
 				.setValue(HEADER_SPIELER_NAME).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor);
 
@@ -260,8 +262,26 @@ public class SpielerSpalte {
 		return getSpielrNrAddressNachZeile(findSpielerZeileNachSpielrNr(spielrNr));
 	}
 
+	public List<Integer> getSpielerNrList() {
+		List<Integer> spielerNrList = new ArrayList<>();
+		int letzteZeile = this.letzteDatenZeile();
+		XSpreadsheet sheet = getSheet();
+
+		Position posSpielerNr = Position.from(this.spielerNrSpalte, this.ersteDatenZiele);
+
+		if (letzteZeile >= this.ersteDatenZiele) {
+			for (int spielerZeile = this.ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
+				Integer spielerNr = this.sheetHelper.getIntFromCell(sheet, posSpielerNr.zeile(spielerZeile));
+				if (spielerNr > -1) {
+					spielerNrList.add(spielerNr);
+				}
+			}
+		}
+		return spielerNrList;
+	}
+
 	public List<String> getSpielerNamenList() {
-		List<String> spielerNamen = new ArrayList<String>();
+		List<String> spielerNamen = new ArrayList<>();
 		int letzteZeile = this.letzteDatenZeile();
 		XSpreadsheet sheet = getSheet();
 

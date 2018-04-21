@@ -669,6 +669,12 @@ public class MeldeListeSheet extends Thread
 	}
 
 	@Override
+	public List<Integer> getSpielerNrList() {
+		doSort(this.getSpielerNameSpalte(), true); // nach namen sortieren
+		return this.spielerSpalte.getSpielerNrList();
+	}
+
+	@Override
 	public int neachsteFreieDatenZeile() {
 		return this.spielerSpalte.neachsteFreieDatenZeile();
 	}
