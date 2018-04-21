@@ -521,8 +521,17 @@ public class SheetHelper {
 		return xPropSet;
 	}
 
+	public XPropertySet setColumnProperties(XSpreadsheet sheet, int spalte, CellProperties properties) {
+		checkNotNull(sheet);
+		checkNotNull(properties);
+		XPropertySet xPropSet = getColumnPropertySet(sheet, spalte);
+		setProperties(xPropSet, properties);
+		return xPropSet;
+	}
+
 	// spalte
 	public XPropertySet setColumnProperty(XSpreadsheet sheet, int spalte, String key, Object val) {
+		checkNotNull(sheet);
 		XPropertySet xPropSet = getColumnPropertySet(sheet, spalte);
 		if (xPropSet != null) {
 			setProperty(xPropSet, key, val);
@@ -541,18 +550,24 @@ public class SheetHelper {
 		return xPropSet;
 	}
 
-	public void setProperties(XPropertySet xPropSet, HashMap<String, Object> properties) {
-		properties.forEach((key, value) -> {
-			setProperty(xPropSet, key, value);
-		});
-	}
-
 	public void inpectPropertySet(XPropertySet xPropSet) {
 		XPropertySetInfo propertySetInfo = xPropSet.getPropertySetInfo();
 		Property[] properties = propertySetInfo.getProperties();
 		Arrays.asList(properties).forEach((property) -> {
 			System.out.println(((Property) property).Name);
 			System.out.println(((Property) property).Type);
+		});
+	}
+
+	public void setProperties(XPropertySet xPropSet, CellProperties properties) {
+		properties.forEach((key, value) -> {
+			setProperty(xPropSet, key, value);
+		});
+	}
+
+	public void setProperties(XPropertySet xPropSet, HashMap<String, Object> properties) {
+		properties.forEach((key, value) -> {
+			setProperty(xPropSet, key, value);
 		});
 	}
 
@@ -602,15 +617,7 @@ public class SheetHelper {
 					pos.getEndeZeile());
 
 			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
-			properties.forEach((key, val) -> {
-				try {
-					xPropSet.setPropertyValue(key, val);
-				} catch (IllegalArgumentException | UnknownPropertyException | WrappedTargetException
-						| PropertyVetoException e) {
-					logger.error(e.getMessage(), e);
-				}
-			});
-
+			setProperties(xPropSet, properties);
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			logger.error(e.getMessage(), e);
 		}

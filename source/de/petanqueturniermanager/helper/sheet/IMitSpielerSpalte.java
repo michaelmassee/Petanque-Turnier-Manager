@@ -20,4 +20,6 @@ public interface IMitSpielerSpalte {
 
 	List<String> getSpielerNamenList();
 
+	List<Integer> getSpielerNrList();
+
 }
