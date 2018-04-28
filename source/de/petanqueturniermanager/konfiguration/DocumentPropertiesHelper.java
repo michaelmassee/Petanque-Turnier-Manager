@@ -28,15 +28,13 @@ import de.petanqueturniermanager.meldeliste.Formation;
 /**
  * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
  * https://forum.openoffice.org/en/forum/viewtopic.php?t=33455 <br>
- * 
+ *
  */
 
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
 	public static final String PROP_NAME_FORMATION = "formation";
-	// public static final String PROP_NAME_SPIELTAG = "spieltag";
-	// public static final String PROP_NAME_SPIELRUNDE = "spielrunde";
 
 	final XComponentContext xContext;
 
@@ -47,15 +45,11 @@ public class DocumentPropertiesHelper {
 
 	private void initDefault() {
 		insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.SUPERMELEE.getId());
-		// insertIntPropertyIfNotExist(PROP_NAME_SPIELTAG, 1);
-		// insertIntPropertyIfNotExist(PROP_NAME_SPIELRUNDE, 1);
 	}
 
 	public void showProperties() {
-		InfoModal msgBox = new InfoModal(xContext);
-		// @formatter:off
+		InfoModal msgBox = new InfoModal(this.xContext);
 		String propertiesInfo = PROP_NAME_FORMATION + ": " + getIntProperty(PROP_NAME_FORMATION);
-		// @formatter:on
 		msgBox.show("Konfiguration", propertiesInfo);
 	}
 
@@ -73,7 +67,7 @@ public class DocumentPropertiesHelper {
 
 	private XPropertyContainer getXPropertyContainer() {
 		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class,
-				DocumentHelper.getCurrentSpreadsheetDocument(xContext));
+				DocumentHelper.getCurrentSpreadsheetDocument(this.xContext));
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}
@@ -83,7 +77,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param propName = name von property
+	 * @param propName = name vom property
 	 * @return -1 when not found
 	 */
 	public int getIntProperty(String propName) {

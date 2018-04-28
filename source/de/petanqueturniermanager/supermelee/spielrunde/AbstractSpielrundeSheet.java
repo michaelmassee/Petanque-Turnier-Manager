@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.awt.MessageBoxResults;
 import com.sun.star.beans.XPropertySet;
@@ -23,8 +24,8 @@ import com.sun.star.table.TableBorder2;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.AlgorithmenException;
 import de.petanqueturniermanager.algorithmen.TripletteDoublPaarungen;
+import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -67,9 +68,14 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 	public AbstractSpielrundeSheet(XComponentContext xContext) {
 		super(xContext);
-		this.meldeListe = new MeldeListeSheet(xContext);
+		this.meldeListe = initMeldeListeSheet(xContext);
 		this.errMsg = new ErrorMessageBox(getxContext());
 		this.propertiesSpaltewkRef = new WeakRefHelper<IPropertiesSpalte>(this.meldeListe);
+	}
+
+	@VisibleForTesting
+	MeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
+		return new MeldeListeSheet(xContext);
 	}
 
 	public MeldeListeSheet getMeldeListe() {

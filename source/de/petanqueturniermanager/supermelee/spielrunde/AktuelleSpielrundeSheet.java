@@ -3,15 +3,13 @@
 **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
 
@@ -39,8 +37,9 @@ public class AktuelleSpielrundeSheet extends AbstractSpielrundeSheet {
 		neueSpielrunde(meldungen, aktuelleSpielrunde);
 	}
 
-	public List<SpielerSpielrundeErgebnis> ergebnisseEinlesen(int spielrunde) {
-		List<SpielerSpielrundeErgebnis> spielerSpielrundeErgebnisse = new ArrayList<>();
+	public SpielerSpielrundeErgebnisList ergebnisseEinlesen(int spielrunde) throws GenerateException {
+
+		SpielerSpielrundeErgebnisList spielerSpielrundeErgebnisse = new SpielerSpielrundeErgebnisList();
 		XSpreadsheet sheet = getSpielRundeSheet(spielrunde);
 
 		if (sheet == null) {
@@ -49,16 +48,16 @@ public class AktuelleSpielrundeSheet extends AbstractSpielrundeSheet {
 
 		Position spielerNrPos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
-		int maxCntr = 999;
-		while (maxCntr-- > 0) {
-			int spielerNrErsteSpalte = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
-			if (spielerNrErsteSpalte < 1) {
-				break;
-			}
+		int tCntr = 0;
+		boolean spielerZeilevorhanden = true;
+		while (spielerZeilevorhanden && tCntr++ < 999) {
+			spielerZeilevorhanden = false;
+
 			// Team A
 			for (int spalteCntr = 1; spalteCntr <= 3; spalteCntr++) {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
+					spielerZeilevorhanden = true;
 					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos,
 							ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
 				}
@@ -69,6 +68,7 @@ public class AktuelleSpielrundeSheet extends AbstractSpielrundeSheet {
 			for (int spalteCntr = 1; spalteCntr <= 3; spalteCntr++) {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
+					spielerZeilevorhanden = true;
 					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos,
 							ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
 				}
