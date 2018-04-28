@@ -12,7 +12,7 @@ import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 
-import de.petanqueturniermanager.algorithmen.AlgorithmenException;
+import de.petanqueturniermanager.exception.AlgorithmenException;
 
 public class Team implements Comparable<Team> {
 	private final int nr;

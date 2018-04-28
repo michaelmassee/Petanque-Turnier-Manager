@@ -112,6 +112,15 @@ public abstract class AbstractPosition<T> {
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+		return ((AbstractPosition<?>) obj).getSpalte() == this.getSpalte()
+				&& ((AbstractPosition<?>) obj).getZeile() == this.getZeile();
+	}
+
+	@Override
 	public String toString() {
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)

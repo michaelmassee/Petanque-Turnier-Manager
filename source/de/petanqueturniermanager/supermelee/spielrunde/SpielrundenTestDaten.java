@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.meldeliste.MeldeListeTestDatenGenerator;
@@ -37,7 +38,7 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 	}
 
 	@Override
-	protected void doRun() {
+	protected void doRun() throws GenerateException {
 		// for (int i = 0; i < 10; i++) {
 		generate();
 		this.spieltagRanglisteSheet.generate();

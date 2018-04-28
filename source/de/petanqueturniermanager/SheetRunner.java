@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -31,6 +32,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			SheetRunner.isRunning = true;
 			try {
 				doRun();
+			} catch (GenerateException e) {
+				// TODO error msg
 			} catch (Exception e) {
 				getLogger().error(e.getMessage(), e);
 			} finally {
@@ -43,7 +46,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	protected abstract Logger getLogger();
 
-	protected abstract void doRun();
+	protected abstract void doRun() throws GenerateException;
 
 	public SheetHelper getSheetHelper() {
 		return this.sheetHelper;

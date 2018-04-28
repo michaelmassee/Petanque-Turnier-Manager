@@ -9,7 +9,7 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.petanqueturniermanager.algorithmen.AlgorithmenException;
+import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;

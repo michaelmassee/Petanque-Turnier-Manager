@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.helper.sheet;
 
+import static com.google.common.base.Preconditions.*;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +26,7 @@ public class DocumentHelper {
 
 	/** Returns the current XDesktop */
 	public static XDesktop getCurrentDesktop(XComponentContext xContext) {
+		checkNotNull(xContext, "xContext = null");
 		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
 				xContext.getServiceManager());
 		Object desktop = null;
@@ -38,27 +41,32 @@ public class DocumentHelper {
 
 	/** Returns the current XComponent */
 	private static XComponent getCurrentComponent(XComponentContext xContext) {
+		checkNotNull(xContext, "xContext = null");
 		return getCurrentDesktop(xContext).getCurrentComponent();
 	}
 
 	/** Returns the current frame */
 	public static XFrame getCurrentFrame(XComponentContext xContext) {
+		checkNotNull(xContext, "xContext = null");
 		XModel xModel = UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
 		return xModel.getCurrentController().getFrame();
 	}
 
 	/** Returns the current text document (if any) */
 	public static XTextDocument getCurrentTextDocument(XComponentContext xContext) {
+		checkNotNull(xContext, "xContext = null");
 		return UnoRuntime.queryInterface(XTextDocument.class, getCurrentComponent(xContext));
 	}
 
 	/** Returns the current Spreadsheet document (if any) */
 	public static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
+		checkNotNull(xContext, "xContext = null");
 		return UnoRuntime.queryInterface(XSpreadsheetDocument.class, getCurrentComponent(xContext));
 	}
 
 	/** Returns the current SpreadsheetView */
 	public static XSpreadsheetView getCurrentSpreadsheetView(XComponentContext xContext) {
+		checkNotNull(xContext, "xContext = null");
 		XModel xModel = UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
 		return UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 	}

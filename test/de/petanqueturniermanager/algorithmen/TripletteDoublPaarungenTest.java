@@ -19,8 +19,8 @@ import org.junit.Test;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
-import de.petanqueturniermanager.algorithmen.AlgorithmenException;
 import de.petanqueturniermanager.algorithmen.TripletteDoublPaarungen;
+import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;

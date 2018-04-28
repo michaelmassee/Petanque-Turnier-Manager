@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.algorithmen.AlgorithmenException;
+import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;

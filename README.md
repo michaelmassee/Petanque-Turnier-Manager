@@ -30,5 +30,10 @@ Nach erfolgreichen Installation wird im Calc, ein neuen eintrag im Hauptmenü "P
  * Optional mit Zeitlimit. Spiel muss nicht bis 13 gespielt werden.
  * Mehrere Spieltage.
  * Wenn die Anzahl der Spieler aufgeht, Optional Spielrunden mit nur Doublette Paarungen.
+ * Validierung der Ergebnisse
+ * Jederzeit alles anpassbar, volle Kontrolle über alle Spielrunden, Ergebnisse, Ranglisten.
+ * Tagesrangliste
+ * Rangliste über mehrere Tage
+ * wenn mehrere Spieltage, 1 streichspieltag (Schlechteste/Nichtgespielte Spieltag)
 
 weitere Systeme werden folgen, hierzu gerne Feedback.

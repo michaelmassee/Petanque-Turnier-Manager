@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;

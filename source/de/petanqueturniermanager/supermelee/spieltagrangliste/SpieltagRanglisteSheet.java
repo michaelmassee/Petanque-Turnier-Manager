@@ -30,6 +30,7 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -90,11 +91,11 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	}
 
 	@Override
-	protected void doRun() {
+	protected void doRun() throws GenerateException {
 		generate();
 	}
 
-	public void generate() {
+	public void generate() throws GenerateException {
 		// neu erstellen
 		int spieltagNr = this.meldeliste.aktuelleSpieltag();
 		if (spieltagNr < 1) {
@@ -117,7 +118,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		this.ranglisteFormatter.formatDaten();
 		ergebnisseEinfuegen();
 		nichtgespielteRundenFuellen();
-		doSortmitBestehende();
+		doSort();
 		footer();
 	}
 
@@ -220,7 +221,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		}
 	}
 
-	private void ergebnisseEinfuegen() {
+	private void ergebnisseEinfuegen() throws GenerateException {
 
 		XSpreadsheet sheet = getSheet();
 		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden();
@@ -231,7 +232,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 			Position posPunktePlus = Position
 					.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * ANZAHL_SPALTEN_IN_SPIELRUNDE), 0);
 
-			List<SpielerSpielrundeErgebnis> ergebnisse = this.aktuelleSpielrundeSheet.ergebnisseEinlesen(spielRunde);
+			List<SpielerSpielrundeErgebnis> ergebnisse = this.aktuelleSpielrundeSheet.ergebnisseEinlesen(spielRunde)
+					.getSpielerSpielrundeErgebnis();
 			ergebnisse.forEach((ergebnis) -> {
 				int spielerNr = ergebnis.getSpielerNr();
 				// zeile finden
@@ -331,6 +333,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	/**
 	 * @return
 	 */
+	@Override
 	public List<Integer> getSpielerNrList() {
 
 		List<Integer> spielerNrlist = new ArrayList<>();
@@ -648,7 +651,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	 * mit bestehende spalten im sheet selbst sortieren.<br>
 	 * sortieren in 2 schritten
 	 */
-	protected void doSortmitBestehende() {
+	protected void doSort() {
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);

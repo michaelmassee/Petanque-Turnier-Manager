@@ -17,7 +17,7 @@ public class SpieltagRanglisteSheetSortOnly extends SpieltagRanglisteSheet {
 	protected void doRun() {
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
-		doSortmitBestehende();
+		doSort();
 	}
 
 }
