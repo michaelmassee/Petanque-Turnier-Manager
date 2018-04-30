@@ -124,12 +124,6 @@ public class RanglisteFormatter {
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
 				.setCellBackColor(headerColor);
 		this.sheetHelper.setTextInCell(headerSumme);
-
-		// Spieltag Info
-		StringCellValue spieltagInfo = StringCellValue.from(sheet, headerSumme.getPos()).spalte(0)
-				.setValue(spieltagNr + ". Spieltag").setEndPosMerge(headerSumme.getPos().spaltePlus(-1))
-				.setHoriJustify(CellHoriJustify.LEFT);
-		this.sheetHelper.setTextInCell(spieltagInfo);
 	}
 
 	public void formatDaten() {

@@ -24,11 +24,11 @@ import de.petanqueturniermanager.model.Meldungen;
 public class MeldeListeTestDatenGenerator extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(MeldeListeTestDatenGenerator.class);
 
-	private final MeldeListeSheet meldeListe;
+	private final AbstractMeldeListeSheet meldeListe;
 
 	public MeldeListeTestDatenGenerator(XComponentContext xContext) {
 		super(xContext);
-		this.meldeListe = new MeldeListeSheet(xContext);
+		this.meldeListe = new MeldeListeSheet_New(xContext);
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class MeldeListeTestDatenGenerator extends SheetRunner {
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
 		NumberCellValue numVal = NumberCellValue.from(this.meldeListe.getSheet(),
-				Position.from(aktuelleSpieltagSpalte, MeldeListeSheet.ERSTE_DATEN_ZEILE));
+				Position.from(aktuelleSpieltagSpalte, AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE));
 
 		aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler().forEach((spieler) -> {
 			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
@@ -68,7 +68,7 @@ public class MeldeListeTestDatenGenerator extends SheetRunner {
 
 		List<String> testNamen = listeMitTestNamen();
 
-		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(), MeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
+		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(), AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
 

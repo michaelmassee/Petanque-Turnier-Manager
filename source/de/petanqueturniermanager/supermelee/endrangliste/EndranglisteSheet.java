@@ -33,7 +33,8 @@ import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.meldeliste.Formation;
-import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerEndranglisteErgebnis;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
@@ -55,13 +56,13 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 	private final SheetHelper sheetHelper;
 	private final SpieltagRanglisteSheet spieltagSumme;
 	private final SpielerSpalte spielerSpalte;
-	private final MeldeListeSheet mittelhessenRundeMeldeliste;
+	private final AbstractMeldeListeSheet mittelhessenRundeMeldeliste;
 
 	public EndranglisteSheet(XComponentContext xContext) {
 		checkNotNull(xContext);
 		this.sheetHelper = new SheetHelper(xContext);
 		this.spieltagSumme = new SpieltagRanglisteSheet(xContext);
-		this.mittelhessenRundeMeldeliste = new MeldeListeSheet(xContext);
+		this.mittelhessenRundeMeldeliste = new MeldeListeSheet_Update(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this,
 				this.mittelhessenRundeMeldeliste, Formation.SUPERMELEE);
 	}
@@ -113,6 +114,7 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 		this.sheetHelper.clearRange(getEndranglisteSheet(), range);
 	}
 
+	@Override
 	public List<Integer> getSpielerNrList() {
 		List<Integer> spielerNrlist = new ArrayList<>();
 

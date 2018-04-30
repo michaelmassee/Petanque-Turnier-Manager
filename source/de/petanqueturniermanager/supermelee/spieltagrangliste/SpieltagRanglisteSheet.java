@@ -46,7 +46,8 @@ import de.petanqueturniermanager.helper.sheet.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.meldeliste.Formation;
-import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.spielrunde.AktuelleSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielerSpielrundeErgebnis;
@@ -72,16 +73,14 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	public static final short SHEET_POS = 2; // an welche Position neu einfuegen
 
 	private final SpielerSpalte spielerSpalte;
-	private final MeldeListeSheet meldeliste;
+	private final AbstractMeldeListeSheet meldeliste;
 	private final AktuelleSpielrundeSheet aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
-	private final XComponentContext xContext;
 	private final RanglisteFormatter ranglisteFormatter;
 
 	public SpieltagRanglisteSheet(XComponentContext xContext) {
 		super(xContext);
-		this.xContext = xContext;
-		this.meldeliste = new MeldeListeSheet(xContext);
+		this.meldeliste = new MeldeListeSheet_Update(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste,
 				Formation.SUPERMELEE);
 		this.aktuelleSpielrundeSheet = new AktuelleSpielrundeSheet(xContext);
