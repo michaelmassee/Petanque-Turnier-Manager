@@ -2,7 +2,7 @@
 * Erstellung : 30.04.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.meldeliste;
+package de.petanqueturniermanager.supermelee.meldeliste;
 
 import com.sun.star.uno.XComponentContext;
 

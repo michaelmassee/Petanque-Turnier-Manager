@@ -37,12 +37,12 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.meldeliste.AbstractMeldeListeSheet;
-import de.petanqueturniermanager.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 public abstract class AbstractSpielrundeSheet extends SheetRunner {
 

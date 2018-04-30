@@ -45,10 +45,10 @@ import de.petanqueturniermanager.helper.sheet.IRangliste;
 import de.petanqueturniermanager.helper.sheet.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
-import de.petanqueturniermanager.meldeliste.Formation;
-import de.petanqueturniermanager.meldeliste.AbstractMeldeListeSheet;
-import de.petanqueturniermanager.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
+import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.Formation;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.AktuelleSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielerSpielrundeErgebnis;
 
