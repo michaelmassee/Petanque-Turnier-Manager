@@ -14,8 +14,8 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.meldeliste.MeldeListeTestDatenGenerator;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeTestDatenGenerator;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 public class SpielrundenTestDaten extends AbstractSpielrundeSheet {

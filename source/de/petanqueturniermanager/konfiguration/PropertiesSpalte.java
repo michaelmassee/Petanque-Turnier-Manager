@@ -21,7 +21,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-import de.petanqueturniermanager.meldeliste.IMeldeliste;
+import de.petanqueturniermanager.supermelee.meldeliste.IMeldeliste;
 
 public class PropertiesSpalte {
 	// private static final Logger logger = LogManager.getLogger(PropertiesSpalte.class);

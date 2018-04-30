@@ -23,7 +23,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.msgbox.InfoModal;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
-import de.petanqueturniermanager.meldeliste.Formation;
+import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 
 /**
  * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>

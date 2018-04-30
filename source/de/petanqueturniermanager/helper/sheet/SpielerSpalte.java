@@ -30,9 +30,9 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.meldeliste.Formation;
-import de.petanqueturniermanager.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.meldeliste.Formation;
+import de.petanqueturniermanager.supermelee.meldeliste.IMeldeliste;
 
 public class SpielerSpalte {
 

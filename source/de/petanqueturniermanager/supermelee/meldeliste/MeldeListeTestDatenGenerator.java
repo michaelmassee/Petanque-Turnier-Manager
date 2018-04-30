@@ -2,7 +2,7 @@
 * Erstellung : 24.03.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.meldeliste;
+package de.petanqueturniermanager.supermelee.meldeliste;
 
 import java.util.ArrayList;
 import java.util.List;
