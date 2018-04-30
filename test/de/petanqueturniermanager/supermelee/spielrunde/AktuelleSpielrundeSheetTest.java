@@ -21,26 +21,26 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.AbstractMeldeListeSheet;
 
 public class AktuelleSpielrundeSheetTest {
 
 	AktuelleSpielrundeSheet aktuelleSpielrundeSheet;
 	XComponentContext xComponentContextMock;
-	MeldeListeSheet meldeListeSheetMock;
+	AbstractMeldeListeSheet meldeListeSheetMock;
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 
 	@Before
 	public void setup() {
 		this.xComponentContextMock = PowerMockito.mock(XComponentContext.class);
-		this.meldeListeSheetMock = PowerMockito.mock(MeldeListeSheet.class);
+		this.meldeListeSheetMock = PowerMockito.mock(AbstractMeldeListeSheet.class);
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 
 		this.aktuelleSpielrundeSheet = new AktuelleSpielrundeSheet(this.xComponentContextMock) {
 			@Override
-			MeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
+			AbstractMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
 				return AktuelleSpielrundeSheetTest.this.meldeListeSheetMock;
 			}
 

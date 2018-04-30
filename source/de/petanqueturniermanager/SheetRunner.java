@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -27,19 +28,21 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	@Override
-	public void run() {
+	public final void run() {
 		if (!SheetRunner.isRunning) {
 			SheetRunner.isRunning = true;
 			try {
 				doRun();
 			} catch (GenerateException e) {
-				// TODO error msg
+				getLogger().error(e.getMessage(), e);
+				ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
+				errMsg.showOk("Fehler", e.getMessage());
 			} catch (Exception e) {
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning = false;
-				// bringt Nix ?!?
-				// CloseConnections.closeOfficeConnection();
+				// TODO
+				// CloseConnections.closeOfficeConnection(); // bringt Nix ?!?
 			}
 		}
 	}

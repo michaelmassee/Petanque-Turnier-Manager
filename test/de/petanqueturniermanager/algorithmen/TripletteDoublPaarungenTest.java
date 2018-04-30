@@ -19,7 +19,6 @@ import org.junit.Test;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
-import de.petanqueturniermanager.algorithmen.TripletteDoublPaarungen;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
@@ -37,7 +36,7 @@ public class TripletteDoublPaarungenTest {
 		// this.paarungen = new TripletteDoublPaarungen();
 		this.paarungen = spy(TripletteDoublPaarungen.class);
 
-		this.meldungen = newTestMeldungen();
+		this.meldungen = newTestMeldungen(16);
 		this.teams = newTestTeams(this.meldungen);
 	}
 
@@ -220,7 +219,7 @@ public class TripletteDoublPaarungenTest {
 
 		// erste runde [1,2,3] [4,5,6] [7,8,9] [10,11,12]
 
-		Meldungen meldungen2 = newTestMeldungen();
+		Meldungen meldungen2 = newTestMeldungen(12);
 
 		// erste runde team 1 bis 4
 		// hat jeder mit jeder gespielt
@@ -301,7 +300,7 @@ public class TripletteDoublPaarungenTest {
 		// SpielRunde{Nr=3, Teams=[Team{nr=1, Spieler=[4,10,7]},Team{nr=2, Spieler=[5,9,6]},Team{nr=3,Spieler=[12,8,11]},Team{nr=4, Spieler=[3,2,1]}]}
 		// @formatter:on
 
-		Meldungen testMeldungen = newTestMeldungen();
+		Meldungen testMeldungen = newTestMeldungen(16);
 
 		List<Integer[]> spielerNrTeamListe = new ArrayList<>();
 		spielerNrTeamListe.add(new Integer[] { 9, 12, 10 });
@@ -365,8 +364,8 @@ public class TripletteDoublPaarungenTest {
 
 		Meldungen meldungen = newTestMeldungen(12);
 
-		// TODO 4 runden sind nicht immer möglich
-		for (int rundenr = 1; rundenr < 4; rundenr++) {
+		// TODO 3 runden sind nicht immer möglich
+		for (int rundenr = 1; rundenr < 3; rundenr++) {
 			SpielRunde runde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(rundenr, 3, meldungen);
 			System.out.println(runde);
 			assertNotNull(runde);
@@ -375,23 +374,24 @@ public class TripletteDoublPaarungenTest {
 	}
 
 	@Test
-	public void testNeueSpielrunde_12() throws Exception {
-		Meldungen meldungen = newTestMeldungen();
+	public void testNeueSpielrunde_18() throws Exception {
+		Meldungen meldungen = newTestMeldungen(18);
+		int anzTriplette = 6;
 
 		SpielRunde ersteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
 		System.out.println(ersteRunde);
 		assertNotNull(ersteRunde);
-		assertEquals(4, ersteRunde.teams().size());
+		assertEquals(anzTriplette, ersteRunde.teams().size());
 
 		SpielRunde zweiteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(2, 3, meldungen);
 		System.out.println(zweiteRunde);
 		assertNotNull(zweiteRunde);
-		assertEquals(4, zweiteRunde.teams().size());
+		assertEquals(anzTriplette, zweiteRunde.teams().size());
 
 		SpielRunde dritteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(3, 3, meldungen);
 		System.out.println(dritteRunde);
 		assertNotNull(dritteRunde);
-		assertEquals(4, dritteRunde.teams().size());
+		assertEquals(anzTriplette, dritteRunde.teams().size());
 
 		// SpielRunde vierteRunde = paarungen.neueSpielrunde(4, 3, meldungenOhneMitSpieler);
 		// System.out.println(vierteRunde);
@@ -403,10 +403,6 @@ public class TripletteDoublPaarungenTest {
 		// assertNotNull(fuenfteRunde);
 		// assertEquals(4, fuenfteRunde.teams().size());
 
-	}
-
-	private Meldungen newTestMeldungen() {
-		return newTestMeldungen(12);
 	}
 
 	private Meldungen newTestMeldungen(int anzSpieler) {

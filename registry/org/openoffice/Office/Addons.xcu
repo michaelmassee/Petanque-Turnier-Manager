@@ -8,7 +8,7 @@
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
-					<value xml:lang="de">Petanque TurnierManager</value>
+					<value xml:lang="de">Pétanque TurnierManager</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -35,7 +35,19 @@
 						<node oor:name="Submenu">
 							<node oor:name="A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Meldeliste</value>
+									<value xml:lang="de">Neue Meldeliste</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?neue_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Meldeliste Aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?meldeliste</value>
@@ -45,7 +57,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A2" oor:op="replace">
+							<node oor:name="A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Anmeldungen</value>
 								</prop>
@@ -57,7 +69,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A3" oor:op="replace">
+							<node oor:name="A4" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>

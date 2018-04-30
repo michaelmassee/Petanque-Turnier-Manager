@@ -32,11 +32,11 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int LFDNR_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 
-	private final MeldeListeSheet meldeliste;
+	private final AbstractMeldeListeSheet meldeliste;
 
 	public AnmeldungenSheet(XComponentContext xContext) {
 		super(xContext);
-		this.meldeliste = new MeldeListeSheet(xContext);
+		this.meldeliste = new MeldeListeSheet_Update(xContext);
 	}
 
 	@Override

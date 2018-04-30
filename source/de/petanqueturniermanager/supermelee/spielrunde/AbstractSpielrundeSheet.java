@@ -37,7 +37,8 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.meldeliste.MeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -63,7 +64,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
 	private final WeakRefHelper<IPropertiesSpalte> propertiesSpaltewkRef;
-	private final MeldeListeSheet meldeListe;
+	private final AbstractMeldeListeSheet meldeListe;
 	private final ErrorMessageBox errMsg;
 
 	public AbstractSpielrundeSheet(XComponentContext xContext) {
@@ -74,11 +75,11 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	}
 
 	@VisibleForTesting
-	MeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
-		return new MeldeListeSheet(xContext);
+	AbstractMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
+		return new MeldeListeSheet_Update(xContext);
 	}
 
-	public MeldeListeSheet getMeldeListe() {
+	public AbstractMeldeListeSheet getMeldeListe() {
 		return this.meldeListe;
 	}
 
