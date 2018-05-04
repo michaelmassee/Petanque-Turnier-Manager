@@ -95,6 +95,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			case "anmeldungen":
 				new AnmeldungenSheet(this.m_xContext).start();
 				break;
+			case "neue_spieltag":
+				new MeldeListeSheet_New(this.m_xContext).start();
+				break;
 			case "meldeliste_testdaten":
 				new MeldeListeTestDatenGenerator(this.m_xContext).start();
 				break;
