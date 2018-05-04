@@ -4,6 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import static com.google.common.base.Preconditions.*;
 import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
@@ -47,6 +49,8 @@ import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 
 abstract public class AbstractMeldeListeSheet extends SheetRunner
 		implements IMeldeliste, Runnable, ISheet, IPropertiesSpalte, IMitSpielerSpalte {
+	private static final String SPIELTAG_HEADER_STR = "Spieltag";
+
 	private static final Logger logger = LogManager.getLogger(AbstractMeldeListeSheet.class);
 
 	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0
@@ -54,6 +58,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	public static final int ERSTE_DATEN_ZEILE = 2; // Zeile 3
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
+	public static final int HEADER_ZEILE = ERSTE_DATEN_ZEILE - 1; // Zeile 2
 
 	public static final int SUMMEN_SPALTE_OFFSET = 2; // 2 Spalten weiter zur letzte Spieltag
 	public static final int SUMMEN_ERSTE_ZEILE = ERSTE_DATEN_ZEILE; // Zeile 3
@@ -78,13 +83,39 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	public AbstractMeldeListeSheet(XComponentContext xContext) {
 		super(xContext);
-		this.properties = new DocumentPropertiesHelper(xContext);
+		this.properties = getNewDocumentPropertiesHelper(xContext);
 		this.sheetHelper = new SheetHelper(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this,
 				getFormation());
 		this.supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
 		this.propertiesSpalte = new PropertiesSpalte(xContext, ersteSummeSpalte(), ERSTE_ZEILE_PROPERTIES, this, this);
 		this.errMsgBox = new ErrorMessageBox(xContext);
+	}
+
+	@VisibleForTesting
+	DocumentPropertiesHelper getNewDocumentPropertiesHelper(XComponentContext xContext) {
+		return new DocumentPropertiesHelper(xContext);
+	}
+
+	/**
+	 * anzahl header zählen
+	 *
+	 * @return
+	 */
+	public int countAnzSpieltage() {
+		int anzSpieltage = 0;
+		int ersteSpieltagspalteSpalte = ersteSpieltagspalteSpalte();
+		Position posHeader = Position.from(ersteSpieltagspalteSpalte, HEADER_ZEILE);
+
+		for (int spaltecntr = 0; spaltecntr < 90; spaltecntr++) {
+			String header = this.getSheetHelper().getTextFromCell(this.getSheet(), posHeader);
+
+			if (header != null && header.contains(SPIELTAG_HEADER_STR)) {
+				anzSpieltage++;
+			}
+			posHeader.spaltePlusEins();
+		}
+		return anzSpieltage;
 	}
 
 	public Formation getFormation() {
@@ -121,7 +152,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		if (nichtZusammenSpielenSpalte() > -1) {
 
 			StringCellValue bezCelVal = StringCellValue
-					.from(sheet, nichtZusammenSpielenSpalte(), ERSTE_DATEN_ZEILE - 1, "SetzPos")
+					.from(sheet, nichtZusammenSpielenSpalte(), HEADER_ZEILE, "SetzPos")
 					.setSpalteHoriJustify(CellHoriJustify.CENTER)
 					.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")
 					.setSetColumnWidth(800).setCellBackColor(hederBackColor)
@@ -130,7 +161,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		}
 
 		StringCellValue bezCelSpieltagVal = StringCellValue
-				.from(sheet, ersteSpieltagspalteSpalte(), ERSTE_DATEN_ZEILE - 1, spielTagHeader(1))
+				.from(sheet, ersteSpieltagspalteSpalte(), HEADER_ZEILE, spielTagHeader(1))
 				.setSpalteHoriJustify(CellHoriJustify.CENTER).setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv")
 				.setSetColumnWidth(2000).setCellBackColor(hederBackColor)
 				.setBorder(BorderFactory.from().allThin().toBorder());
@@ -196,9 +227,9 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 */
 	public String spielTagHeader(int spieltag) {
 		if (this.anzSpieltage > 1) {
-			return spieltag + ". Spieltag";
+			return spieltag + ". " + SPIELTAG_HEADER_STR;
 		}
-		return "Spieltag";
+		return SPIELTAG_HEADER_STR;
 	}
 
 	/**
@@ -229,6 +260,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	public int spieltagSpalte(int spieltag) {
+		checkArgument(spieltag > 0, "spieltag %s < 1", spieltag);
 		return ersteSpieltagspalteSpalte() + spieltag - 1;
 	}
 
