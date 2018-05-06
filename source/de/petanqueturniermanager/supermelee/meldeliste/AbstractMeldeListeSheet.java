@@ -38,7 +38,6 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
-import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
@@ -73,7 +72,6 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	private final SpielerSpalte spielerSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
 	private final KonfigurationSheet konfigurationSheet;
-	private int anzSpieltage = 1;
 
 	public AbstractMeldeListeSheet(XComponentContext xContext) {
 		super(xContext);
@@ -88,11 +86,6 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	@VisibleForTesting
 	KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
 		return new KonfigurationSheet(xContext);
-	}
-
-	@VisibleForTesting
-	DocumentPropertiesHelper newDocumentPropertiesHelper(XComponentContext xContext) {
-		return new DocumentPropertiesHelper(xContext);
 	}
 
 	/**
@@ -117,7 +110,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	public Formation getFormation() {
-		return this.konfigurationSheet.getFormation();
+		return this.getKonfigurationSheet().getFormation();
 	}
 
 	@Override
@@ -141,7 +134,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		this.sheetHelper.setTextInCell(sheet, SPALTE_FORMATION + 1, ZEILE_FORMATION, getFormation().getBezeichnung());
 		// Header einfuegen
 		// ------
-		int hederBackColor = this.konfigurationSheet.getRanglisteHeaderFarbe();
+		int hederBackColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
 		this.spielerSpalte.insertHeaderInSheet(hederBackColor);
 		if (nichtZusammenSpielenSpalte() > -1) {
 
@@ -154,17 +147,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 			this.sheetHelper.setTextInCell(bezCelVal);
 		}
 
-		StringCellValue bezCelSpieltagVal = StringCellValue
-				.from(sheet, ersteSpieltagspalteSpalte(), HEADER_ZEILE, spielTagHeader(1))
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv")
-				.setColumnWidth(2000).setCellBackColor(hederBackColor)
-				.setBorder(BorderFactory.from().allThin().toBorder());
-
-		for (int spielTagCntr = 0; spielTagCntr < this.anzSpieltage; spielTagCntr++) {
-			bezCelSpieltagVal.setValue(spielTagHeader(spielTagCntr + 1));
-			this.sheetHelper.setTextInCell(bezCelSpieltagVal);
-			bezCelSpieltagVal.zeilePlusEins();
-		}
+		formatSpielTagSpalte(this.getKonfigurationSheet().getAktuelleSpieltag());
 
 		// eventuelle luecken in spiele namen nach unten sortieren
 		lueckenEntfernen();
@@ -174,6 +157,21 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		updateSpieltageSummenSpalten();
 		this.spielerSpalte.formatDaten();
 		this.formatDaten();
+	}
+
+	protected void formatSpielTagSpalte(int spieltag) {
+		checkArgument(spieltag > 0);
+		XSpreadsheet sheet = getSheet();
+		int hederBackColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
+		StringCellValue bezCelSpieltagVal = StringCellValue
+				.from(sheet, spieltagSpalte(spieltag), HEADER_ZEILE, spielTagHeader(spieltag))
+				.setSpalteHoriJustify(CellHoriJustify.CENTER).setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv")
+				.setColumnWidth(2000).setCellBackColor(hederBackColor)
+				.setBorder(BorderFactory.from().allThin().toBorder());
+
+		// Spieltag header
+		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
+		this.sheetHelper.setTextInCell(bezCelSpieltagVal);
 	}
 
 	void formatDaten() {
@@ -193,8 +191,8 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		Integer geradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbeGerade();
-		Integer unGeradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();
+		Integer geradeColor = this.getKonfigurationSheet().getRanglisteHintergrundFarbeGerade();
+		Integer unGeradeColor = this.getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade();
 
 		int letzteSpielTagSpalte = letzteSpielTagSpalte();
 
@@ -218,10 +216,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 * @return
 	 */
 	public String spielTagHeader(int spieltag) {
-		if (this.anzSpieltage > 1) {
-			return spieltag + ". " + SPIELTAG_HEADER_STR;
-		}
-		return SPIELTAG_HEADER_STR;
+		return spieltag + ". " + SPIELTAG_HEADER_STR;
 	}
 
 	/**
@@ -237,7 +232,8 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	public int letzteSpielTagSpalte() {
-		return ersteSpieltagspalteSpalte() + (this.anzSpieltage - 1);
+		int anzSpieltage = countAnzSpieltage();
+		return ersteSpieltagspalteSpalte() + (anzSpieltage - 1);
 	}
 
 	public int ersteSpieltagspalteSpalte() {
@@ -248,7 +244,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	public int aktuelleSpieltagSpalte() {
-		return spieltagSpalte(this.konfigurationSheet.getSpieltag());
+		return spieltagSpalte(this.getKonfigurationSheet().getAktuelleSpieltag());
 	}
 
 	public int spieltagSpalte(int spieltag) {
@@ -420,11 +416,20 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 		XSpreadsheet sheet = getSheet();
 
-		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE);
+		int anzSpieltage = countAnzSpieltage();
 
-		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "Aktiv")
-				.setSpalteHoriJustify(CellHoriJustify.RIGHT).setComment("Spieler mit \"1\" im Spieltag")
-				.zeile(SUMMEN_AKTIVE_ZEILE);
+		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0,
+				ersteSummeSpalte() + anzSpieltage + 10, 999);
+		getSheetHelper().clearRange(sheet, cleanUpRange);
+
+		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
+
+		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "")
+				.setSpalteHoriJustify(CellHoriJustify.RIGHT).setComment(null).setColumnWidth(3000)
+				.removeCellBackColor();
+		this.sheetHelper.setTextInCell(bezCelVal);
+
+		bezCelVal.setComment(null).setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
 		this.sheetHelper.setTextInCell(bezCelVal);
 
 		bezCelVal.setComment(null).setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
@@ -449,7 +454,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		bezCelVal.setComment("Kann Doublette gespielt werden").setValue("Doublette").zeilePlusEins();
 		this.sheetHelper.setTextInCell(bezCelVal.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE));
 
-		for (int spieltagCntr = 1; spieltagCntr <= this.anzSpieltage; spieltagCntr++) {
+		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 
 			Position posSpieltagWerte = Position.from(ersteSummeSpalte() + spieltagCntr, SUMMEN_ERSTE_ZEILE - 1);
 
@@ -559,12 +564,12 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	@Override
 	public Meldungen getAktiveUndAusgesetztMeldungenAktuellenSpielTag() {
-		return getMeldungen(this.konfigurationSheet.getSpieltag(),
+		return getMeldungen(this.getKonfigurationSheet().getAktuelleSpieltag(),
 				Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	public Meldungen getAktiveMeldungenAktuellenSpielTag() {
-		return getMeldungen(this.konfigurationSheet.getSpieltag(), Arrays.asList(SpielrundeGespielt.JA));
+		return getMeldungen(this.getKonfigurationSheet().getAktuelleSpieltag(), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	public Meldungen getMeldungen(int spieltag, List<SpielrundeGespielt> spielrundeGespielt) {
@@ -640,6 +645,10 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	@Override
 	public int getErsteDatenZiele() {
 		return this.spielerSpalte.getErsteDatenZiele();
+	}
+
+	protected KonfigurationSheet getKonfigurationSheet() {
+		return this.konfigurationSheet;
 	}
 
 }

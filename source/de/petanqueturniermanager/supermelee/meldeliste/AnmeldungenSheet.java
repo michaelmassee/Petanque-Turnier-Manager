@@ -50,7 +50,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() {
 
-		int spieltagNr = this.konfigurationSheet.getSpieltag();
+		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
 		if (spieltagNr < 1) {
 			return;
 		}
@@ -119,7 +119,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getSheet() {
-		int spieltagNr = this.konfigurationSheet.getSpieltag();
+		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
 		return this.getSheetHelper().newIfNotExist(getSheetName(spieltagNr), (short) 1, "98e2d7");
 	}
 

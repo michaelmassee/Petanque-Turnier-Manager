@@ -22,7 +22,6 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 
 public class AbstractMeldeListeSheetTest {
@@ -31,7 +30,6 @@ public class AbstractMeldeListeSheetTest {
 	AbstractMeldeListeSheet meldeSheet;
 	XComponentContext xComponentContextMock;
 	SheetHelper sheetHelperMock;
-	DocumentPropertiesHelper documentPropertiesHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	KonfigurationSheet konfigurationSheetMock;
 
@@ -39,7 +37,6 @@ public class AbstractMeldeListeSheetTest {
 	public void setup() {
 		this.xComponentContextMock = PowerMockito.mock(XComponentContext.class);
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		this.documentPropertiesHelperMock = PowerMockito.mock(DocumentPropertiesHelper.class);
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
@@ -53,11 +50,6 @@ public class AbstractMeldeListeSheetTest {
 			@Override
 			protected void doRun() throws GenerateException {
 				// nichts!
-			}
-
-			@Override
-			DocumentPropertiesHelper newDocumentPropertiesHelper(XComponentContext xContext) {
-				return AbstractMeldeListeSheetTest.this.documentPropertiesHelperMock;
 			}
 
 			@Override

@@ -99,7 +99,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	public void generate() throws GenerateException {
 		// neu erstellen
-		int spieltagNr = this.konfigurationSheet.getSpieltag();
+		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
 		if (spieltagNr < 1) {
 			return;
 		}
@@ -397,7 +397,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	public List<SpielerSpieltagErgebnis> spielTagErgebnisseEinlesen() {
 		List<SpielerSpieltagErgebnis> spielTagErgebnisse = new ArrayList<>();
 
-		int spieltagNr = this.konfigurationSheet.getSpieltag();
+		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
 
 		getSpielerNrList().forEach((spielerNr) -> {
 
@@ -785,7 +785,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	@Override
 	public XSpreadsheet getSheet() {
-		int spieltagNr = this.konfigurationSheet.getSpieltag();
+		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
 		if (spieltagNr < 1) {
 			return null;
 		}

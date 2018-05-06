@@ -57,7 +57,7 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 			this.getSheetHelper().removeSheet(this.getSheetName(spielrunde));
 		}
 
-		this.getKonfigurationSheet().setSpielRunde(1);
+		this.getKonfigurationSheet().setAktuelleSpielRunde(1);
 		for (int spielrundeNr = 1; spielrundeNr < 5; spielrundeNr++) {
 
 			if (spielrundeNr > 1) {
