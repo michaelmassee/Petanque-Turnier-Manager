@@ -8,7 +8,7 @@
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
-					<value xml:lang="de">Pétanque TurnierManager</value>
+					<value xml:lang="de">Pétanque-Turnier-Manager</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -124,6 +124,19 @@
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?spieltag_rangliste_sort</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							
+							
+							<node oor:name="B6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Nächste Spieltag</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?naechste_spieltag</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

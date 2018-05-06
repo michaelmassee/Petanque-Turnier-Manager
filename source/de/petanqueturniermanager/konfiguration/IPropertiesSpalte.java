@@ -9,11 +9,13 @@ import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public interface IPropertiesSpalte {
 
-	int getSpieltag();
+	int getAktuelleSpieltag();
 
-	int getSpielRunde();
+	void setAktuelleSpieltag(int spieltag);
 
-	void setSpielRunde(int neueSpielrunde);
+	int getAktuelleSpielRunde();
+
+	void setAktuelleSpielRunde(int neueSpielrunde);
 
 	Integer getSpielRundeNeuAuslosenAb();
 

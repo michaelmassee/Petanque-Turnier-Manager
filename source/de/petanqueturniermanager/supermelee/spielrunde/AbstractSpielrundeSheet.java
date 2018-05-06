@@ -96,7 +96,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	}
 
 	public String getSheetName(int spielrunde) {
-		int spieltag = this.getKonfigurationSheet().getSpieltag();
+		int spieltag = this.getKonfigurationSheet().getAktuelleSpieltag();
 		return spieltag + "." + spielrunde + ". " + PREFIX_SHEET_NAMEN;
 	}
 
@@ -197,7 +197,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		// erste Header
 		// -------------------------
-		int spieltag = this.getKonfigurationSheet().getSpieltag();
+		int spieltag = this.getKonfigurationSheet().getAktuelleSpieltag();
 		Position ersteHeaderZeile = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
 		Position ersteHeaderZeileMerge = Position.from(ersteHeaderZeile).spalte(ERSTE_SPALTE_ERGEBNISSE - 1);
 
@@ -320,7 +320,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		boolean doubletteRunde = false;
 		// abfrage nur doublette runde ?
-		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(this.getKonfigurationSheet().getSpieltag());
+		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(this.getKonfigurationSheet().getAktuelleSpieltag());
 		if (!force && isKannNurDoublette) {
 			QuestionBox questionBox = new QuestionBox(getxContext());
 			short result = questionBox.showYesNo("Spielrunde Doublette",
@@ -345,7 +345,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			headerSpielerNr(sheet);
 			datenformatieren(sheet, neueSpielrundeNr);
 			spielrundeProperties(sheet, neueSpielrundeNr, doubletteRunde);
-			this.getKonfigurationSheet().setSpielRunde(neueSpielrundeNr);
+			this.getKonfigurationSheet().setAktuelleSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(sheet, doubletteRunde);
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
@@ -379,7 +379,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlus(3).setHoriJustify(CellHoriJustify.CENTER);
 
-		int spieltag = this.getKonfigurationSheet().getSpieltag();
+		int spieltag = this.getKonfigurationSheet().getAktuelleSpieltag();
 
 		// "Aktiv"
 		int anzAktiv = this.meldeListe.getAnzahlAktiveSpieler(spieltag);

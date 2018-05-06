@@ -33,7 +33,7 @@ public class NaechsteSpielrundeSheet extends AbstractSpielrundeSheet {
 	}
 
 	public void naechsteSpielrundeEinfuegen() {
-		int aktuelleSpielrunde = getKonfigurationSheet().getSpielRunde();
+		int aktuelleSpielrunde = getKonfigurationSheet().getAktuelleSpielRunde();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungenAktuellenSpielTag();
 
 		if (!canStart(meldungen, aktuelleSpielrunde)) {

@@ -50,18 +50,23 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	@Override
-	public int getSpieltag() {
-		return this.propertiesSpalte.getSpieltag();
+	public int getAktuelleSpieltag() {
+		return this.propertiesSpalte.getAktuelleSpieltag();
 	}
 
 	@Override
-	public int getSpielRunde() {
-		return this.propertiesSpalte.getSpielRunde();
+	public void setAktuelleSpieltag(int spieltag) {
+		this.propertiesSpalte.setAktuelleSpieltag(spieltag);
 	}
 
 	@Override
-	public void setSpielRunde(int neueSpielrunde) {
-		this.propertiesSpalte.setSpielRunde(neueSpielrunde);
+	public int getAktuelleSpielRunde() {
+		return this.propertiesSpalte.getAktuelleSpielRunde();
+	}
+
+	@Override
+	public void setAktuelleSpielRunde(int neueSpielrunde) {
+		this.propertiesSpalte.setAktuelleSpielRunde(neueSpielrunde);
 	}
 
 	@Override

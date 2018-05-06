@@ -279,15 +279,19 @@ public class PropertiesSpalte {
 		return null;
 	}
 
-	public int getSpieltag() {
+	public int getAktuelleSpieltag() {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELTAG);
 	}
 
-	public int getSpielRunde() {
+	public void setAktuelleSpieltag(int spieltag) {
+		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag);
+	}
+
+	public int getAktuelleSpielRunde() {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE);
 	}
 
-	public void setSpielRunde(int spielrunde) {
+	public void setAktuelleSpielRunde(int spielrunde) {
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde);
 	}
 
