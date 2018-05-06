@@ -57,7 +57,7 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 			this.getSheetHelper().removeSheet(this.getSheetName(spielrunde));
 		}
 
-		this.getPropertiesSpalte().setSpielRunde(1);
+		this.getKonfigurationSheet().setSpielRunde(1);
 		for (int spielrundeNr = 1; spielrundeNr < 5; spielrundeNr++) {
 
 			if (spielrundeNr > 1) {
@@ -66,7 +66,7 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 
 			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungenAktuellenSpielTag();
 			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr,
-					getMeldeListe().getSpielRundeNeuAuslosenAb());
+					getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 			neueSpielrunde(meldungen, spielrundeNr, true);
 
 			// ------------------------------------

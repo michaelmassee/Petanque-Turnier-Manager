@@ -231,7 +231,7 @@ public class SheetHelper {
 
 		// kommentar ?
 		if (cellVal.getPos() != null && cellVal.hasComment()) {
-			setCommentInCell(cellVal.getSheet(), cellVal.getPos(), cellVal.getComment(), xCell);
+			setCommentInCell(cellVal.getSheet(), xCell, cellVal.getComment());
 		}
 
 		XPropertySet xPropertySetColumn = null;
@@ -321,14 +321,14 @@ public class SheetHelper {
 	 * @param sheet
 	 * @param spalte,column, 0 = erste spalte = A
 	 * @param zeile,row, 0 = erste zeile
-	 * @return null when not found
+	 * @return timed textval, null when not found
 	 */
 	public String getTextFromCell(XSpreadsheet sheet, Position pos) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
 
 		XText xText = getXTextFromCell(sheet, pos);
-		if (xText != null) {
+		if (xText != null && xText.getString() != null) {
 			return xText.getString().trim();
 		}
 		return null;
@@ -758,14 +758,17 @@ public class SheetHelper {
 	public void setCommentInCell(XSpreadsheet xSheet, Position pos, String text) {
 		XCell xCell = getCell(xSheet, pos);
 		if (xCell != null) {
-			setCommentInCell(xSheet, pos, text, xCell);
+			setCommentInCell(xSheet, xCell, text);
 		}
 	}
 
-	public void setCommentInCell(XSpreadsheet xSheet, Position pos, String text, XCell xCell) {
+	public void setCommentInCell(XSpreadsheet xSheet, XCell xCell, String text) {
 		checkNotNull(xSheet);
-		checkNotNull(pos);
+		checkNotNull(text);
 		checkNotNull(xCell);
+
+		// XCell xCell = getCell( xSheet,pos);
+
 		// create the CellAddress struct
 		XCellAddressable xCellAddr = UnoRuntime.queryInterface(XCellAddressable.class, xCell);
 		CellAddress aAddress = xCellAddr.getCellAddress();

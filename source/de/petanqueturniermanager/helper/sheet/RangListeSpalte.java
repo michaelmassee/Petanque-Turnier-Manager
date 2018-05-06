@@ -59,7 +59,7 @@ public class RangListeSpalte {
 
 		StringCellValue celVal = StringCellValue
 				.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile - 1), "Platz")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setSetColumnWidth(1000).setCharWeight(FontWeight.BOLD)
+				.setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(1000).setCharWeight(FontWeight.BOLD)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 	}

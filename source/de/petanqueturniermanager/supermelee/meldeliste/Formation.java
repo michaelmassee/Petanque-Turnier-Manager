@@ -6,10 +6,10 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 public enum Formation {
 
-	TETE(1, "Tête"), //
-	DOUBLETTE(2, "Doublette"), //
-	TRIPLETTE(3, "Triplette"), //
-	SUPERMELEE(4, "Supermêlée"); // das ist keine formation, mischung aus Doublette und Triplette
+	TETE(1, "Tête"), // Formé
+	DOUBLETTE(2, "Doublette"), // Formé
+	TRIPLETTE(3, "Triplette"), // Formé
+	MELEE(4, "Mêlée"); // wenn die Teamgroese nicht festeht, wird z.b. bei Supermelee gebraucht
 
 	private final String bezeichnung;
 	private final int id;
@@ -20,7 +20,7 @@ public enum Formation {
 	}
 
 	public String getBezeichnung() {
-		return bezeichnung;
+		return this.bezeichnung;
 	}
 
 	@Override
@@ -29,10 +29,10 @@ public enum Formation {
 	}
 
 	public int getId() {
-		return id;
+		return this.id;
 	}
 
-	static Formation findById(int id) {
+	public static Formation findById(int id) {
 		for (Formation formation : values()) {
 			if (formation.getId() == id) {
 				return formation;

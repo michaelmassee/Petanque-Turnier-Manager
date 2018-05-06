@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 
 public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	private static final Logger logger = LogManager.getLogger(AnmeldungenSheet.class);
@@ -33,10 +34,12 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 
 	private final AbstractMeldeListeSheet meldeliste;
+	private final KonfigurationSheet konfigurationSheet;
 
 	public AnmeldungenSheet(XComponentContext xContext) {
 		super(xContext);
 		this.meldeliste = new MeldeListeSheet_Update(xContext);
+		this.konfigurationSheet = new KonfigurationSheet(xContext);
 	}
 
 	@Override
@@ -47,7 +50,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() {
 
-		int spieltagNr = this.meldeliste.aktuelleSpieltag();
+		int spieltagNr = this.konfigurationSheet.getSpieltag();
 		if (spieltagNr < 1) {
 			return;
 		}
@@ -116,7 +119,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getSheet() {
-		int spieltagNr = this.meldeliste.aktuelleSpieltag();
+		int spieltagNr = this.konfigurationSheet.getSpieltag();
 		return this.getSheetHelper().newIfNotExist(getSheetName(spieltagNr), (short) 1, "98e2d7");
 	}
 

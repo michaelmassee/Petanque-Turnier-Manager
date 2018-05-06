@@ -63,7 +63,7 @@ public class RanglisteFormatter {
 		StringCellValue headerPlus = StringCellValue
 				.from(sheet, Position.from(this.ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+")
 				.setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(headerColor);
+				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(headerColor);
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
 
 		TableBorder2 borderPlus = BorderFactory.from().allThin().boldLn().forLeft().toBorder();
@@ -78,7 +78,7 @@ public class RanglisteFormatter {
 
 			// Runden Counter
 			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde + ". Rnd")
-					.zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setSetColumnWidth(0).setComment(null);
+					.zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setColumnWidth(0).setComment(null);
 			this.sheetHelper.setTextInCell(headerRndCounter);
 		}
 		// -------------------------
@@ -88,7 +88,7 @@ public class RanglisteFormatter {
 		// -------------------------
 		StringCellValue headerSumme = StringCellValue.from(sheet, Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+")
 				.setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(headerColor);
+				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(headerColor);
 
 		this.sheetHelper.setTextInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+")
 				.setComment("Summe Spiele +").setBorder(borderPlus));

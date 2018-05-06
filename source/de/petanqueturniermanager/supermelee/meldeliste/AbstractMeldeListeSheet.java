@@ -12,8 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.beans.PropertyValue;
@@ -41,17 +39,14 @@ import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
-import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.konfiguration.PropertiesSpalte;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 
 abstract public class AbstractMeldeListeSheet extends SheetRunner
-		implements IMeldeliste, Runnable, ISheet, IPropertiesSpalte, IMitSpielerSpalte {
+		implements IMeldeliste, Runnable, ISheet, IMitSpielerSpalte {
 	private static final String SPIELTAG_HEADER_STR = "Spieltag";
-
-	private static final Logger logger = LogManager.getLogger(AbstractMeldeListeSheet.class);
 
 	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0
 	public static final int ZEILE_FORMATION = 0; // Zeile 0
@@ -74,26 +69,29 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	public static final String SHEET_COLOR = "2544dd";
 
 	private final ErrorMessageBox errMsgBox;
-	private final DocumentPropertiesHelper properties;
 	private final SheetHelper sheetHelper;
 	private final SpielerSpalte spielerSpalte;
-	private final PropertiesSpalte propertiesSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
+	private final KonfigurationSheet konfigurationSheet;
 	private int anzSpieltage = 1;
 
 	public AbstractMeldeListeSheet(XComponentContext xContext) {
 		super(xContext);
-		this.properties = getNewDocumentPropertiesHelper(xContext);
+		this.konfigurationSheet = newKonfigurationSheet(xContext);
 		this.sheetHelper = new SheetHelper(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this,
 				getFormation());
 		this.supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
-		this.propertiesSpalte = new PropertiesSpalte(xContext, ersteSummeSpalte(), ERSTE_ZEILE_PROPERTIES, this, this);
 		this.errMsgBox = new ErrorMessageBox(xContext);
 	}
 
 	@VisibleForTesting
-	DocumentPropertiesHelper getNewDocumentPropertiesHelper(XComponentContext xContext) {
+	KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
+		return new KonfigurationSheet(xContext);
+	}
+
+	@VisibleForTesting
+	DocumentPropertiesHelper newDocumentPropertiesHelper(XComponentContext xContext) {
 		return new DocumentPropertiesHelper(xContext);
 	}
 
@@ -119,11 +117,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	public Formation getFormation() {
-		int formationId = this.properties.getIntProperty(DocumentPropertiesHelper.PROP_NAME_FORMATION);
-		if (formationId > -1) {
-			return Formation.findById(formationId);
-		}
-		return null;
+		return this.konfigurationSheet.getFormation();
 	}
 
 	@Override
@@ -147,7 +141,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		this.sheetHelper.setTextInCell(sheet, SPALTE_FORMATION + 1, ZEILE_FORMATION, getFormation().getBezeichnung());
 		// Header einfuegen
 		// ------
-		int hederBackColor = this.propertiesSpalte.getRanglisteHeaderFarbe();
+		int hederBackColor = this.konfigurationSheet.getRanglisteHeaderFarbe();
 		this.spielerSpalte.insertHeaderInSheet(hederBackColor);
 		if (nichtZusammenSpielenSpalte() > -1) {
 
@@ -155,7 +149,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 					.from(sheet, nichtZusammenSpielenSpalte(), HEADER_ZEILE, "SetzPos")
 					.setSpalteHoriJustify(CellHoriJustify.CENTER)
 					.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")
-					.setSetColumnWidth(800).setCellBackColor(hederBackColor)
+					.setColumnWidth(800).setCellBackColor(hederBackColor)
 					.setBorder(BorderFactory.from().allThin().toBorder());
 			this.sheetHelper.setTextInCell(bezCelVal);
 		}
@@ -163,7 +157,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		StringCellValue bezCelSpieltagVal = StringCellValue
 				.from(sheet, ersteSpieltagspalteSpalte(), HEADER_ZEILE, spielTagHeader(1))
 				.setSpalteHoriJustify(CellHoriJustify.CENTER).setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv")
-				.setSetColumnWidth(2000).setCellBackColor(hederBackColor)
+				.setColumnWidth(2000).setCellBackColor(hederBackColor)
 				.setBorder(BorderFactory.from().allThin().toBorder());
 
 		for (int spielTagCntr = 0; spielTagCntr < this.anzSpieltage; spielTagCntr++) {
@@ -178,8 +172,6 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 		doSort(this.spielerSpalte.getSpielerNameSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
-		this.propertiesSpalte.updateKonfigBlock();
-
 		this.spielerSpalte.formatDaten();
 		this.formatDaten();
 	}
@@ -201,8 +193,8 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		Integer geradeColor = this.propertiesSpalte.getRanglisteHintergrundFarbeGerade();
-		Integer unGeradeColor = this.propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
+		Integer geradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbeGerade();
+		Integer unGeradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();
 
 		int letzteSpielTagSpalte = letzteSpielTagSpalte();
 
@@ -238,7 +230,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 * @return -1 wenn nicht vorhanden
 	 */
 	public int nichtZusammenSpielenSpalte() {
-		if (getFormation() == Formation.SUPERMELEE) {
+		if (getFormation() == Formation.MELEE) {
 			return 2; // Spalte C
 		}
 		return -1;
@@ -256,16 +248,12 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	public int aktuelleSpieltagSpalte() {
-		return spieltagSpalte(aktuelleSpieltag());
+		return spieltagSpalte(this.konfigurationSheet.getSpieltag());
 	}
 
 	public int spieltagSpalte(int spieltag) {
 		checkArgument(spieltag > 0, "spieltag %s < 1", spieltag);
 		return ersteSpieltagspalteSpalte() + spieltag - 1;
-	}
-
-	public int aktuelleSpieltag() {
-		return this.propertiesSpalte.getSpieltag();
 	}
 
 	public int ersteSummeSpalte() {
@@ -383,7 +371,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 						letzteSpielZeile);
 			}
 		} catch (IndexOutOfBoundsException e) {
-			logger.error(e.getMessage(), e);
+			getLogger().error(e.getMessage(), e);
 			return null;
 		}
 		return xCellRange;
@@ -571,11 +559,12 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	@Override
 	public Meldungen getAktiveUndAusgesetztMeldungenAktuellenSpielTag() {
-		return getMeldungen(aktuelleSpieltag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+		return getMeldungen(this.konfigurationSheet.getSpieltag(),
+				Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	public Meldungen getAktiveMeldungenAktuellenSpielTag() {
-		return getMeldungen(aktuelleSpieltag(), Arrays.asList(SpielrundeGespielt.JA));
+		return getMeldungen(this.konfigurationSheet.getSpieltag(), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	public Meldungen getMeldungen(int spieltag, List<SpielrundeGespielt> spielrundeGespielt) {
@@ -617,68 +606,8 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	@Override
-	public int getSpieltag() {
-		return this.propertiesSpalte.getSpieltag();
-	}
-
-	@Override
-	public int getSpielRunde() {
-		return this.propertiesSpalte.getSpielRunde();
-	}
-
-	@Override
-	public void setSpielRunde(int neueSpielrunde) {
-		this.propertiesSpalte.setSpielRunde(neueSpielrunde);
-	}
-
-	@Override
-	public Integer getSpielRundeHintergrundFarbeGerade() {
-		return this.propertiesSpalte.getSpielRundeHintergrundFarbeGerade();
-	}
-
-	@Override
-	public Integer getSpielRundeHintergrundFarbeUnGerade() {
-		return this.propertiesSpalte.getSpielRundeHintergrundFarbeUnGerade();
-	}
-
-	@Override
-	public Integer getSpielRundeHeaderFarbe() {
-		return this.propertiesSpalte.getSpielRundeHeaderFarbe();
-	}
-
-	@Override
-	public Integer getSpielRundeNeuAuslosenAb() {
-		return this.propertiesSpalte.getSpielRundeNeuAuslosenAb();
-	}
-
-	@Override
 	public int getSpielerZeileNr(int spielerNr) {
 		return this.spielerSpalte.getSpielerZeileNr(spielerNr);
-	}
-
-	@Override
-	public Integer getRanglisteHintergrundFarbeGerade() {
-		return this.propertiesSpalte.getRanglisteHintergrundFarbeGerade();
-	}
-
-	@Override
-	public Integer getRanglisteHintergrundFarbeUnGerade() {
-		return this.propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
-	}
-
-	@Override
-	public Integer getRanglisteHeaderFarbe() {
-		return this.propertiesSpalte.getRanglisteHeaderFarbe();
-	}
-
-	@Override
-	public Integer getNichtGespielteRundePlus() {
-		return this.propertiesSpalte.getNichtGespielteRundePlus();
-	}
-
-	@Override
-	public Integer getNichtGespielteRundeMinus() {
-		return this.propertiesSpalte.getNichtGespielteRundeMinus();
 	}
 
 	@Override
@@ -711,11 +640,6 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	@Override
 	public int getErsteDatenZiele() {
 		return this.spielerSpalte.getErsteDatenZiele();
-	}
-
-	@Override
-	protected Logger getLogger() {
-		return logger;
 	}
 
 }

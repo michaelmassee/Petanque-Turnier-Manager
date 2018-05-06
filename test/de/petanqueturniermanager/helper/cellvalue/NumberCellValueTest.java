@@ -67,7 +67,7 @@ public class NumberCellValueTest {
 
 		Position pos = Position.from(spalte, zeile);
 		StringCellValue strcellValue = StringCellValue.from(this.spreadsheetMock, pos, "" + val).setComment(testComent)
-				.setSetColumnWidth(columnWidth);
+				.setColumnWidth(columnWidth);
 
 		NumberCellValue numberCellValue = NumberCellValue.from(strcellValue);
 

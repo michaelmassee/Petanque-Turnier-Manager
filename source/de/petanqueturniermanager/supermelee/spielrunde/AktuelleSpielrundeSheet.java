@@ -28,7 +28,7 @@ public class AktuelleSpielrundeSheet extends AbstractSpielrundeSheet {
 	@Override
 	protected void doRun() {
 
-		int aktuelleSpielrunde = getPropertiesSpalte().getSpielRunde();
+		int aktuelleSpielrunde = getKonfigurationSheet().getSpielRunde();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungenAktuellenSpielTag();
 
 		if (!canStart(meldungen, aktuelleSpielrunde)) {
