@@ -10,6 +10,8 @@ import static org.mockito.ArgumentMatchers.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
@@ -21,14 +23,17 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 
 public class AbstractMeldeListeSheetTest {
+	private static final Logger logger = LogManager.getLogger(AbstractMeldeListeSheetTest.class);
 
 	AbstractMeldeListeSheet meldeSheet;
 	XComponentContext xComponentContextMock;
 	SheetHelper sheetHelperMock;
 	DocumentPropertiesHelper documentPropertiesHelperMock;
 	XSpreadsheet xSpreadsheetMock;
+	KonfigurationSheet konfigurationSheetMock;
 
 	@Before
 	public void setup() {
@@ -36,15 +41,22 @@ public class AbstractMeldeListeSheetTest {
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		this.documentPropertiesHelperMock = PowerMockito.mock(DocumentPropertiesHelper.class);
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
+		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
 		this.meldeSheet = new AbstractMeldeListeSheet(this.xComponentContextMock) {
+
+			@Override
+			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
+				return AbstractMeldeListeSheetTest.this.konfigurationSheetMock;
+			}
+
 			@Override
 			protected void doRun() throws GenerateException {
 				// nichts!
 			}
 
 			@Override
-			DocumentPropertiesHelper getNewDocumentPropertiesHelper(XComponentContext xContext) {
+			DocumentPropertiesHelper newDocumentPropertiesHelper(XComponentContext xContext) {
 				return AbstractMeldeListeSheetTest.this.documentPropertiesHelperMock;
 			}
 
@@ -60,7 +72,12 @@ public class AbstractMeldeListeSheetTest {
 
 			@Override
 			public Formation getFormation() {
-				return Formation.SUPERMELEE;
+				return Formation.MELEE;
+			}
+
+			@Override
+			protected Logger getLogger() {
+				return logger;
 			}
 		};
 	}

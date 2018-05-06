@@ -53,7 +53,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		int spalteBreite = 1000;
 
 		StringCellValue strVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler")
-				.setSetColumnWidth(spalteBreite).setSpalteHoriJustify(CellHoriJustify.CENTER);
+				.setColumnWidth(spalteBreite).setSpalteHoriJustify(CellHoriJustify.CENTER);
 		getSheetHelper().setTextInCell(strVal);
 		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x2").setComment("Doublette Teams"));
 		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x3").setComment("Triplette Teams"));

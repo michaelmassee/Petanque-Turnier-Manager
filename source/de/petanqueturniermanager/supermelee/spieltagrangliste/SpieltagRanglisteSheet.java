@@ -45,6 +45,7 @@ import de.petanqueturniermanager.helper.sheet.IRangliste;
 import de.petanqueturniermanager.helper.sheet.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
@@ -77,16 +78,18 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	private final AktuelleSpielrundeSheet aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final RanglisteFormatter ranglisteFormatter;
+	private final KonfigurationSheet konfigurationSheet;
 
 	public SpieltagRanglisteSheet(XComponentContext xContext) {
 		super(xContext);
 		this.meldeliste = new MeldeListeSheet_Update(xContext);
+		this.konfigurationSheet = new KonfigurationSheet(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste,
-				Formation.SUPERMELEE);
+				Formation.MELEE);
 		this.aktuelleSpielrundeSheet = new AktuelleSpielrundeSheet(xContext);
 		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this, this, this);
 		this.ranglisteFormatter = new RanglisteFormatter(xContext, this, ANZAHL_SPALTEN_IN_SPIELRUNDE,
-				this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.meldeliste);
+				this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.konfigurationSheet);
 	}
 
 	@Override
@@ -96,11 +99,11 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	public void generate() throws GenerateException {
 		// neu erstellen
-		int spieltagNr = this.meldeliste.aktuelleSpieltag();
+		int spieltagNr = this.konfigurationSheet.getSpieltag();
 		if (spieltagNr < 1) {
 			return;
 		}
-		Integer headerColor = this.meldeliste.getRanglisteHeaderFarbe();
+		Integer headerColor = this.konfigurationSheet.getRanglisteHeaderFarbe();
 
 		getSheetHelper().removeSheet(getSheetName(spieltagNr));
 		XSpreadsheet sheet = getSheet();
@@ -201,8 +204,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
 
-		int nichtgespieltPlus = this.meldeliste.getNichtGespielteRundePlus();
-		int nichtgespieltMinus = this.meldeliste.getNichtGespielteRundeMinus();
+		int nichtgespieltPlus = this.konfigurationSheet.getNichtGespielteRundePlus();
+		int nichtgespieltMinus = this.konfigurationSheet.getNichtGespielteRundeMinus();
 
 		NumberCellValue punktePlus = NumberCellValue.from(sheet, Position.from(1, 1), nichtgespieltPlus)
 				.setComment("Nicht gespielte Runde (" + nichtgespieltPlus + ":" + nichtgespieltMinus + ")");
@@ -267,8 +270,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		getSheetHelper().setRowProperty(this.getSheet(), stringVal.getPos().getZeile(), HEIGHT, 300);
 
-		int nichtgespieltPlus = this.meldeliste.getNichtGespielteRundePlus();
-		int nichtgespieltMinus = this.meldeliste.getNichtGespielteRundeMinus();
+		int nichtgespieltPlus = this.konfigurationSheet.getNichtGespielteRundePlus();
+		int nichtgespieltMinus = this.konfigurationSheet.getNichtGespielteRundeMinus();
 		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue(
 				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 		getSheetHelper().setRowProperty(this.getSheet(), stringVal.getPos().getZeile(), HEIGHT, 300);
@@ -394,7 +397,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	public List<SpielerSpieltagErgebnis> spielTagErgebnisseEinlesen() {
 		List<SpielerSpieltagErgebnis> spielTagErgebnisse = new ArrayList<>();
 
-		int spieltagNr = this.meldeliste.aktuelleSpieltag();
+		int spieltagNr = this.konfigurationSheet.getSpieltag();
 
 		getSpielerNrList().forEach((spielerNr) -> {
 
@@ -444,8 +447,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		StringCellValue validateHeader = StringCellValue
 				.from(sheet, Position.from(validateSpalte(), ERSTE_DATEN_ZEILE - 1)).setComment("Validate Spalte")
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setValue("Err");
+				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER)
+				.setValue("Err");
 
 		this.getSheetHelper().setTextInCell(validateHeader);
 
@@ -553,8 +556,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		StringCellValue sortlisteVal = StringCellValue
 				.from(getSheet(), Position.from(sortSpalte(), ERSTE_DATEN_ZEILE - 1))
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-				.setSpalteHoriJustify(CellHoriJustify.CENTER);
+				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER);
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ERSTE_DATEN_ZEILE);
@@ -606,8 +608,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		StringCellValue sortlisteHeader = StringCellValue
 				.from(sheet, Position.from(sortSpalte(), ERSTE_DATEN_ZEILE - 1)).setComment("Rangliste Sortier Spalte")
-				.setSetColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setValue("Sort");
+				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER)
+				.setValue("Sort");
 		this.getSheetHelper().setTextInCell(sortlisteHeader);
 
 		StringCellValue sortlisteVal = StringCellValue.from(sortlisteHeader).setComment(null);
@@ -783,7 +785,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	@Override
 	public XSpreadsheet getSheet() {
-		int spieltagNr = this.meldeliste.aktuelleSpieltag();
+		int spieltagNr = this.konfigurationSheet.getSpieltag();
 		if (spieltagNr < 1) {
 			return null;
 		}

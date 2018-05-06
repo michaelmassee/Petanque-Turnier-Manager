@@ -35,8 +35,7 @@ import de.petanqueturniermanager.helper.msgbox.QuestionBox;
 import de.petanqueturniermanager.helper.msgbox.WarningBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -63,15 +62,20 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	public static final int ERSTE_SPIELERNR_SPALTE = 11; // spalte L + 5 Spalten
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
-	private final WeakRefHelper<IPropertiesSpalte> propertiesSpaltewkRef;
 	private final AbstractMeldeListeSheet meldeListe;
+	private final KonfigurationSheet konfigurationSheet;
 	private final ErrorMessageBox errMsg;
 
 	public AbstractSpielrundeSheet(XComponentContext xContext) {
 		super(xContext);
+		this.konfigurationSheet = newKonfigurationSheet(xContext);
 		this.meldeListe = initMeldeListeSheet(xContext);
 		this.errMsg = new ErrorMessageBox(getxContext());
-		this.propertiesSpaltewkRef = new WeakRefHelper<IPropertiesSpalte>(this.meldeListe);
+	}
+
+	@VisibleForTesting
+	KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
+		return new KonfigurationSheet(xContext);
 	}
 
 	@VisibleForTesting
@@ -87,8 +91,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		return getSheetHelper().newIfNotExist(getSheetName(spielrunde), SHEET_POS);
 	}
 
+	protected KonfigurationSheet getKonfigurationSheet() {
+		return this.konfigurationSheet;
+	}
+
 	public String getSheetName(int spielrunde) {
-		int spieltag = getPropertiesSpalte().getSpieltag();
+		int spieltag = this.getKonfigurationSheet().getSpieltag();
 		return spieltag + "." + spielrunde + ". " + PREFIX_SHEET_NAMEN;
 	}
 
@@ -189,12 +197,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		// erste Header
 		// -------------------------
-		int spieltag = getPropertiesSpalte().getSpieltag();
+		int spieltag = this.getKonfigurationSheet().getSpieltag();
 		Position ersteHeaderZeile = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
 		Position ersteHeaderZeileMerge = Position.from(ersteHeaderZeile).spalte(ERSTE_SPALTE_ERGEBNISSE - 1);
 
 		// back color
-		Integer headerFarbe = getPropertiesSpalte().getSpielRundeHeaderFarbe();
+		Integer headerFarbe = this.getKonfigurationSheet().getSpielRundeHeaderFarbe();
 		// CellBackColor
 
 		StringCellValue headerVal = StringCellValue
@@ -256,7 +264,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 	private void headerSpielerNr(XSpreadsheet sheet) {
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
-		StringCellValue headerCelVal = StringCellValue.from(sheet, Position.from(pos), "#").setSetColumnWidth(800)
+		StringCellValue headerCelVal = StringCellValue.from(sheet, Position.from(pos), "#").setColumnWidth(800)
 				.setSpalteHoriJustify(CellHoriJustify.CENTER);
 		getSheetHelper().setTextInCell(headerCelVal);
 		headerCelVal.spaltePlusEins();
@@ -312,7 +320,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		boolean doubletteRunde = false;
 		// abfrage nur doublette runde ?
-		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(getPropertiesSpalte().getSpieltag());
+		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(this.getKonfigurationSheet().getSpieltag());
 		if (!force && isKannNurDoublette) {
 			QuestionBox questionBox = new QuestionBox(getxContext());
 			short result = questionBox.showYesNo("Spielrunde Doublette",
@@ -337,7 +345,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			headerSpielerNr(sheet);
 			datenformatieren(sheet, neueSpielrundeNr);
 			spielrundeProperties(sheet, neueSpielrundeNr, doubletteRunde);
-			getPropertiesSpalte().setSpielRunde(neueSpielrundeNr);
+			this.getKonfigurationSheet().setSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(sheet, doubletteRunde);
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
@@ -371,7 +379,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlus(3).setHoriJustify(CellHoriJustify.CENTER);
 
-		int spieltag = getPropertiesSpalte().getSpieltag();
+		int spieltag = this.getKonfigurationSheet().getSpieltag();
 
 		// "Aktiv"
 		int anzAktiv = this.meldeListe.getAnzahlAktiveSpieler(spieltag);
@@ -418,8 +426,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		Integer geradeColor = getPropertiesSpalte().getSpielRundeHintergrundFarbeGerade();
-		Integer unGeradeColor = getPropertiesSpalte().getSpielRundeHintergrundFarbeUnGerade();
+		Integer geradeColor = this.getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
+		Integer unGeradeColor = this.getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGerade();
 
 		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= datenEnd.getZeile(); zeileCntr++) {
 			datenRange = RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, zeileCntr, ERSTE_SPALTE_ERGEBNISSE + 1,
@@ -473,10 +481,6 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		RangePosition rangPos = RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE, LETZTE_SPALTE,
 				letzteZeile.getZeile());
 		getSheetHelper().clearRange(xSheet, rangPos);
-	}
-
-	protected IPropertiesSpalte getPropertiesSpalte() {
-		return this.propertiesSpaltewkRef.getObject();
 	}
 
 }

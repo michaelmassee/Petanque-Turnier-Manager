@@ -4,6 +4,9 @@
 
 package de.petanqueturniermanager.konfiguration;
 
+import de.petanqueturniermanager.supermelee.meldeliste.Formation;
+import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
+
 public interface IPropertiesSpalte {
 
 	int getSpieltag();
@@ -29,5 +32,9 @@ public interface IPropertiesSpalte {
 	Integer getNichtGespielteRundePlus();
 
 	Integer getNichtGespielteRundeMinus();
+
+	Formation getFormation();
+
+	SpielSystem getSpielSystem();
 
 }

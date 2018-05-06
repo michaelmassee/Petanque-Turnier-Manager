@@ -82,7 +82,7 @@ public class SpielerSpalte {
 			return 2;
 		case TRIPLETTE:
 			return 3;
-		case SUPERMELEE:
+		case MELEE:
 			return 1;
 		default:
 			break;
@@ -124,11 +124,11 @@ public class SpielerSpalte {
 				.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1),
 						HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setSetColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setBorder(BorderFactory.from().allThin().toBorder())
+				.setColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor);
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 
-		celVal.setSetColumnWidth(DEFAULT_SPIELER_NAME_WIDTH).setComment(null).spalte(this.spielerNameErsteSpalte)
+		celVal.setColumnWidth(DEFAULT_SPIELER_NAME_WIDTH).setComment(null).spalte(this.spielerNameErsteSpalte)
 				.setValue(HEADER_SPIELER_NAME).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor);
 
@@ -259,7 +259,7 @@ public class SpielerSpalte {
 	 * @return null when not found
 	 */
 	public String getSpielrNrAddressNachSpielrNr(int spielrNr) {
-		return getSpielrNrAddressNachZeile(findSpielerZeileNachSpielrNr(spielrNr));
+		return getSpielrNrAddressNachZeile(getSpielerZeileNr(spielrNr));
 	}
 
 	public List<Integer> getSpielerNrList() {
@@ -310,31 +310,6 @@ public class SpielerSpalte {
 		}
 		return spielrAdr;
 	}
-
-	/**
-	 * Achtung: die spielrnr spalte kann luecken haben
-	 *
-	 * @param spielerNr
-	 * @return -1 when not found
-	 */
-	@Deprecated
-	public int findSpielerZeileNachSpielrNr(int spielerNr) {
-		return getSpielerZeileNr(spielerNr);
-	}
-
-	// for (int zeileCntr = this.getErsteDatenZiele(); zeileCntr < 999; zeileCntr++) {
-	// // alle durchsuchen
-	// String cellText = this.sheetHelper.getTextFromCell(this.getSheet(),
-	// Position.from(this.spielerNrSpalte, zeileCntr));
-	// if (!StringUtils.isBlank(cellText)) {
-	// int nrInCell = NumberUtils.toInt(cellText, -1);
-	// if (nrInCell == spielerNr) {
-	// return zeileCntr;
-	// }
-	// }
-	// }
-	// return -1;
-	// }
 
 	public String formulaCountSpieler() {
 		String ersteZelle = Position.from(this.spielerNrSpalte, this.ersteDatenZiele).getAddress();

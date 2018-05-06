@@ -14,7 +14,7 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
@@ -127,7 +127,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 				new EndranglisteSheet(this.m_xContext).start();
 				break;
 			case "konfiguration":
-				new DocumentPropertiesHelper(this.m_xContext).showProperties();
+				new KonfigurationSheet(this.m_xContext).start();
 				break;
 			default:
 				logger.error("Unknown action: " + action);

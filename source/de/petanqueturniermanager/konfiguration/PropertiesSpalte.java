@@ -21,29 +21,36 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-import de.petanqueturniermanager.supermelee.meldeliste.IMeldeliste;
+import de.petanqueturniermanager.supermelee.meldeliste.Formation;
+import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public class PropertiesSpalte {
 	// private static final Logger logger = LogManager.getLogger(PropertiesSpalte.class);
 
+	private static final String KONFIG_PROP_NAME_FORMATION = "Formation";
+	private static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
 	private static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 	private static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
-	public static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "NeuAuslosenAb";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Hintergr. Spielr. G";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Hintergr. Spielr. U";
-	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Spielrunde-Header";
+	public static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergr. Gerade";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Spielrunde Hintergr. Ungerade";
+	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Spielrunde Header";
 
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Hintergr. Rangliste G";
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Hintergr. Rangliste U";
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste-Header";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Rangliste Hintergr. Gerade";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Rangliste Hintergr. Ungerade";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste Header";
 
-	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS = "Nicht gespielte Runde +"; // 0
-	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde -"; // 13
+	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS = "Nicht gespielte Runde Punkte +"; // 0
+	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde Punkte -"; // 13
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_FORMATION)
+				.setDefaultVal(4).setDescription("1=Tête,2=Doublette,3=Triplette,4=Mêlée"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM)
+				.setDefaultVal(1).setDescription("1=Supermêlée"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
 				.setDefaultVal(1).setDescription("Aktuelle Spieltag"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
@@ -82,18 +89,32 @@ public class PropertiesSpalte {
 	private final SheetHelper sheetHelper;
 	private int propertiesSpalte;
 	private int erstePropertiesZeile;
+	private int headerZeile;
 
-	public PropertiesSpalte(XComponentContext xContext, int propertiesSpalte, int erstePropertiesZeile, ISheet sheet,
-			IMeldeliste meldeliste) {
+	public PropertiesSpalte(XComponentContext xContext, int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
 		checkNotNull(xContext);
 		checkNotNull(sheet);
-		checkNotNull(meldeliste);
-		checkArgument(propertiesSpalte > -1);
+		checkArgument(propertiesSpalte > -1, "propertiesSpalte %s<0", propertiesSpalte);
+		checkArgument(erstePropertiesZeile > 0, "erstePropertiesZeile %s<1", erstePropertiesZeile);
 
 		this.propertiesSpalte = propertiesSpalte;
 		this.erstePropertiesZeile = erstePropertiesZeile;
+		this.headerZeile = erstePropertiesZeile - 1;
 		this.sheetWkRef = new WeakRefHelper<ISheet>(sheet);
 		this.sheetHelper = new SheetHelper(xContext);
+	}
+
+	public void doFormat() {
+		XSpreadsheet propSheet = this.getPropSheet();
+		// header
+		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
+		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(5500).setValue("Name")
+				.setHoriJustify(CellHoriJustify.RIGHT);
+		this.sheetHelper.setTextInCell(headerVal);
+
+		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(1500).setValue("Wert")
+				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
+		this.sheetHelper.setTextInCell(wertheaderVal);
 	}
 
 	public void updateKonfigBlock() {
@@ -107,11 +128,11 @@ public class PropertiesSpalte {
 			if (pos == null) {
 				// when not found insert new
 				pos = Position.from(this.propertiesSpalte, this.erstePropertiesZeile + idx);
-				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey())
-						.setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.RIGHT);
+				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null)
+						.setHoriJustify(CellHoriJustify.RIGHT);
 				this.sheetHelper.setTextInCell(celVal);
 
-				celVal.spaltePlusEins().setComment(null).setHoriJustify(CellHoriJustify.CENTER);
+				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
 
 				// default Val schreiben
 				switch (configProp.getType()) {
@@ -125,7 +146,8 @@ public class PropertiesSpalte {
 					this.sheetHelper.setValInCell(numberCellValue);
 					break;
 				case COLOR:
-					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal());
+					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(),
+							configProp.getDescription());
 					break;
 				default:
 				}
@@ -182,11 +204,15 @@ public class PropertiesSpalte {
 		return val;
 	}
 
-	public void writeCellBackColorProperty(String key, Integer val) {
+	public void writeCellBackColorProperty(String key, Integer val, String comment) {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		if (pos != null) {
 			this.sheetHelper.setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
+
+			if (StringUtils.isNotEmpty(comment)) {
+				this.sheetHelper.setCommentInCell(sheet, pos, comment);
+			}
 		}
 	}
 
@@ -305,4 +331,19 @@ public class PropertiesSpalte {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS);
 	}
 
+	public Formation getFormation() {
+		int formationId = readIntProperty(KONFIG_PROP_NAME_FORMATION);
+		if (formationId > -1) {
+			return Formation.findById(formationId);
+		}
+		return null;
+	}
+
+	public SpielSystem getSpielSystem() {
+		int spielSystemId = readIntProperty(KONFIG_PROP_NAME_SPIELSYSTEM);
+		if (spielSystemId > -1) {
+			return SpielSystem.findById(spielSystemId);
+		}
+		return null;
+	}
 }

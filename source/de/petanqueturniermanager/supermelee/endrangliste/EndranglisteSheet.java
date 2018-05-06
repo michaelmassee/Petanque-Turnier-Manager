@@ -64,7 +64,7 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 		this.spieltagSumme = new SpieltagRanglisteSheet(xContext);
 		this.mittelhessenRundeMeldeliste = new MeldeListeSheet_Update(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this,
-				this.mittelhessenRundeMeldeliste, Formation.SUPERMELEE);
+				this.mittelhessenRundeMeldeliste, Formation.MELEE);
 	}
 
 	@Override
@@ -341,7 +341,7 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 	private void endSummeSpalte(int spielrNr) {
 		int schlechtesteSpielTag = schlechtesteSpieltag(spielrNr);
 		int anzSpieltage = this.spieltagSumme.countNumberOfSpieltage();
-		int spielerZeile = this.spielerSpalte.findSpielerZeileNachSpielrNr(spielrNr);
+		int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielrNr);
 
 		if (anzSpieltage < 2) {
 			return;
@@ -392,7 +392,7 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 		List<SpielerSpieltagErgebnis> spielerErgebnisse = new ArrayList<>();
 		int anzSpieltage = this.spieltagSumme.countNumberOfSpieltage();
 
-		int spielerZeile = this.spielerSpalte.findSpielerZeileNachSpielrNr(spielrNr);
+		int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielrNr);
 
 		XSpreadsheet sheet = getSheet();
 
@@ -424,7 +424,7 @@ public class EndranglisteSheet extends Thread implements IMitSpielerSpalte, IShe
 		int ersteSpieltagSummeSpalte = ERSTE_SPIELTAG_SPALTE + ((spieltag - 1) * ANZAHL_SPALTEN_IN_SUMME);
 
 		// Spieltage aktualisieren
-		int spielerZeile = this.spielerSpalte.findSpielerZeileNachSpielrNr(spielrNr);
+		int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielrNr);
 		String spielrNrAdresse = this.spielerSpalte.getSpielrNrAddressNachZeile(spielerZeile);
 		String verweisAufSpielPlus = this.spieltagSumme.formulaSverweisAufSpielePlus(spieltag, spielrNrAdresse);
 		if (verweisAufSpielPlus != null) {

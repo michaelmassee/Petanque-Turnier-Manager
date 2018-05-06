@@ -156,7 +156,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public T setSetColumnWidth(int setColumnWidth) {
+	public T setColumnWidth(int setColumnWidth) {
 		this.setColumnWidth = setColumnWidth;
 		return (T) this;
 	}

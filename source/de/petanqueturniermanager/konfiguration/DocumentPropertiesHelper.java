@@ -23,7 +23,6 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.msgbox.InfoModal;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
-import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 
 /**
  * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
@@ -34,25 +33,28 @@ import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
-	public static final String PROP_NAME_FORMATION = "formation";
+	// public static final String PROP_NAME_FORMATION = "formation";
 
 	final XComponentContext xContext;
 
+	@Deprecated
 	public DocumentPropertiesHelper(XComponentContext xContext) {
 		this.xContext = xContext;
 		initDefault();
 	}
 
 	private void initDefault() {
-		insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.SUPERMELEE.getId());
+		// insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.MELEE.getId());
 	}
 
+	@Deprecated
 	public void showProperties() {
 		InfoModal msgBox = new InfoModal(this.xContext);
-		String propertiesInfo = PROP_NAME_FORMATION + ": " + getIntProperty(PROP_NAME_FORMATION);
-		msgBox.show("Konfiguration", propertiesInfo);
+		// String propertiesInfo = PROP_NAME_FORMATION + ": " + getIntProperty(PROP_NAME_FORMATION);
+		// msgBox.show("Konfiguration", propertiesInfo);
 	}
 
+	@Deprecated
 	public void insertIntPropertyIfNotExist(String name, int val) {
 		XPropertyContainer xpc = getXPropertyContainer();
 		try {
@@ -80,6 +82,7 @@ public class DocumentPropertiesHelper {
 	 * @param propName = name vom property
 	 * @return -1 when not found
 	 */
+	@Deprecated
 	public int getIntProperty(String propName) {
 		XPropertySet propSet = getXPropertySet();
 		Object propVal = null;
@@ -99,6 +102,7 @@ public class DocumentPropertiesHelper {
 	 * @param propName
 	 * @param val int val wird als String gespeichert
 	 */
+	@Deprecated
 	public void setIntProperty(String propName, int val) {
 		XPropertySet propSet = getXPropertySet();
 		try {
