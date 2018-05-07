@@ -13,10 +13,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
 
-public class AktuelleSpielrundeSheet extends AbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(AktuelleSpielrundeSheet.class);
+public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
+	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Update.class);
 
-	public AktuelleSpielrundeSheet(XComponentContext xContext) {
+	public SpielrundeSheet_Update(XComponentContext xContext) {
 		super(xContext);
 	}
 

@@ -21,19 +21,19 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.Meldungen;
 
-public class MeldeListeTestDatenGenerator extends SheetRunner {
-	private static final Logger logger = LogManager.getLogger(MeldeListeTestDatenGenerator.class);
+public class MeldeListeSheet_TestDaten extends SheetRunner {
+	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
 
 	private final AbstractMeldeListeSheet meldeListe;
 
-	public MeldeListeTestDatenGenerator(XComponentContext xContext) {
+	public MeldeListeSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
 		this.meldeListe = new MeldeListeSheet_New(xContext);
 	}
 
 	@Override
 	protected Logger getLogger() {
-		return MeldeListeTestDatenGenerator.logger;
+		return MeldeListeSheet_TestDaten.logger;
 	}
 
 	@Override

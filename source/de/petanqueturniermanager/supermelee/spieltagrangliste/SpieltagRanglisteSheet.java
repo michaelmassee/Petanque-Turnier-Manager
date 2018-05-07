@@ -50,7 +50,7 @@ import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.spielrunde.AktuelleSpielrundeSheet;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielerSpielrundeErgebnis;
 
 public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSpalte, IEndSummeSpalten, IRangliste {
@@ -75,7 +75,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	private final SpielerSpalte spielerSpalte;
 	private final AbstractMeldeListeSheet meldeliste;
-	private final AktuelleSpielrundeSheet aktuelleSpielrundeSheet;
+	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final RanglisteFormatter ranglisteFormatter;
 	private final KonfigurationSheet konfigurationSheet;
@@ -86,7 +86,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		this.konfigurationSheet = new KonfigurationSheet(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste,
 				Formation.MELEE);
-		this.aktuelleSpielrundeSheet = new AktuelleSpielrundeSheet(xContext);
+		this.aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xContext);
 		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this, this, this);
 		this.ranglisteFormatter = new RanglisteFormatter(xContext, this, ANZAHL_SPALTEN_IN_SPIELRUNDE,
 				this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.konfigurationSheet);

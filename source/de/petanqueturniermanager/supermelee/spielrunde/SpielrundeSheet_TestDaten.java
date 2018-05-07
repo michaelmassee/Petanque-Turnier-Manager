@@ -15,20 +15,20 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
-import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeTestDatenGenerator;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
-public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(SpielrundenTestDaten.class);
+public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
+	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_TestDaten.class);
 
-	private final NaechsteSpielrundeSheet naechsteSpielrundeSheet;
-	private final MeldeListeTestDatenGenerator meldeListeTestDatenGenerator;
+	private final SpielrundeSheet_Naechste naechsteSpielrundeSheet;
+	private final MeldeListeSheet_TestDaten meldeListeTestDatenGenerator;
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
 
-	public SpielrundenTestDaten(XComponentContext xContext) {
+	public SpielrundeSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
-		this.naechsteSpielrundeSheet = new NaechsteSpielrundeSheet(xContext);
-		this.meldeListeTestDatenGenerator = new MeldeListeTestDatenGenerator(xContext);
+		this.naechsteSpielrundeSheet = new SpielrundeSheet_Naechste(xContext);
+		this.meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(xContext);
 		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
 	}
 
@@ -39,16 +39,16 @@ public class SpielrundenTestDaten extends AbstractSpielrundeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		// for (int i = 0; i < 10; i++) {
 		generate();
 		this.spieltagRanglisteSheet.generate();
 		if (this.spieltagRanglisteSheet.isErrorInSheet()) {
 			return;
 		}
-		// }
-
 	}
 
+	/**
+	 * 5 spielrunden testdaten generieren
+	 */
 	private void generate() {
 
 		this.meldeListeTestDatenGenerator.generateTestDaten();
