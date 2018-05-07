@@ -18,12 +18,13 @@ import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeTestDatenGenerator;
-import de.petanqueturniermanager.supermelee.spielrunde.AktuelleSpielrundeSheet;
-import de.petanqueturniermanager.supermelee.spielrunde.NaechsteSpielrundeSheet;
-import de.petanqueturniermanager.supermelee.spielrunde.SpielrundenTestDaten;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetSortOnly;
 
@@ -96,23 +97,23 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 				new AnmeldungenSheet(this.m_xContext).start();
 				break;
 			case "naechste_spieltag":
-				new MeldeListeSheet_New(this.m_xContext).start();
+				new MeldeListeSheet_NeuerSpieltag(this.m_xContext).start();
 				break;
 			case "meldeliste_testdaten":
-				new MeldeListeTestDatenGenerator(this.m_xContext).start();
+				new MeldeListeSheet_TestDaten(this.m_xContext).start();
 				break;
 			case "supermelee_teampaarungen":
 				new SupermeleeTeamPaarungenSheet(this.m_xContext).start();
 				break;
 			// ------------------------------
 			case "aktuelle_spielrunde":
-				new AktuelleSpielrundeSheet(this.m_xContext).start();
+				new SpielrundeSheet_Update(this.m_xContext).start();
 				break;
 			case "naechste_spielrunde":
-				new NaechsteSpielrundeSheet(this.m_xContext).start();
+				new SpielrundeSheet_Naechste(this.m_xContext).start();
 				break;
 			case "spielrunden_testdaten":
-				new SpielrundenTestDaten(this.m_xContext).start();
+				new SpielrundeSheet_TestDaten(this.m_xContext).start();
 				break;
 			// ------------------------------
 			case "spieltag_rangliste":

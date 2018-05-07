@@ -15,10 +15,10 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 
-public class NaechsteSpielrundeSheet extends AbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(NaechsteSpielrundeSheet.class);
+public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
+	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Naechste.class);
 
-	public NaechsteSpielrundeSheet(XComponentContext xContext) {
+	public SpielrundeSheet_Naechste(XComponentContext xContext) {
 		super(xContext);
 	}
 

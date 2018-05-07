@@ -24,9 +24,9 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
 
-public class AktuelleSpielrundeSheetTest {
+public class SpielrundeSheet_UpdateTest {
 
-	AktuelleSpielrundeSheet aktuelleSpielrundeSheet;
+	SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	XComponentContext xComponentContextMock;
 	AbstractMeldeListeSheet meldeListeSheetMock;
 	SheetHelper sheetHelperMock;
@@ -41,26 +41,26 @@ public class AktuelleSpielrundeSheetTest {
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
-		this.aktuelleSpielrundeSheet = new AktuelleSpielrundeSheet(this.xComponentContextMock) {
+		this.aktuelleSpielrundeSheet = new SpielrundeSheet_Update(this.xComponentContextMock) {
 
 			@Override
 			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
-				return AktuelleSpielrundeSheetTest.this.konfigurationSheetMock;
+				return SpielrundeSheet_UpdateTest.this.konfigurationSheetMock;
 			}
 
 			@Override
 			AbstractMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
-				return AktuelleSpielrundeSheetTest.this.meldeListeSheetMock;
+				return SpielrundeSheet_UpdateTest.this.meldeListeSheetMock;
 			}
 
 			@Override
 			public SheetHelper getSheetHelper() {
-				return AktuelleSpielrundeSheetTest.this.sheetHelperMock;
+				return SpielrundeSheet_UpdateTest.this.sheetHelperMock;
 			}
 
 			@Override
 			public XSpreadsheet getSpielRundeSheet(int spielrunde) {
-				return AktuelleSpielrundeSheetTest.this.xSpreadsheetMock;
+				return SpielrundeSheet_UpdateTest.this.xSpreadsheetMock;
 			}
 
 		};
@@ -132,8 +132,8 @@ public class AktuelleSpielrundeSheetTest {
 	}
 
 	private void setupReturn_from_getIntFromCell(List<int[]> spielpaarungen) {
-		Position spielerNrPos = Position.from(AktuelleSpielrundeSheet.ERSTE_SPIELERNR_SPALTE,
-				AktuelleSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(SpielrundeSheet_Update.ERSTE_SPIELERNR_SPALTE,
+				SpielrundeSheet_Update.ERSTE_DATEN_ZEILE);
 		spielpaarungen.forEach(spielpaarung -> {
 			for (int spielerSpalte = 0; spielerSpalte < 6; spielerSpalte++) {
 				if (spielpaarung[spielerSpalte] > 0) {
@@ -142,7 +142,7 @@ public class AktuelleSpielrundeSheetTest {
 				}
 				spielerNrPos.spaltePlusEins();
 			}
-			spielerNrPos.spalte(AktuelleSpielrundeSheet.ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
+			spielerNrPos.spalte(SpielrundeSheet_Update.ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
 		});
 
 	}

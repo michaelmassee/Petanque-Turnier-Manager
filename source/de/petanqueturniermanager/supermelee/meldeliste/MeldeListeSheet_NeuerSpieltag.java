@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.position.RangePosition;
 
 public class MeldeListeSheet_NeuerSpieltag extends AbstractMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_NeuerSpieltag.class);
@@ -20,11 +21,15 @@ public class MeldeListeSheet_NeuerSpieltag extends AbstractMeldeListeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+		int anzSpieltage = countAnzSpieltage();
+		getKonfigurationSheet().setAktuelleSpieltag(anzSpieltage + 1);
+		getKonfigurationSheet().setAktuelleSpielRunde(1);
 
-	}
+		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), HEADER_ZEILE,
+				aktuelleSpieltagSpalte(), 999);
+		getSheetHelper().clearRange(getSheet(), cleanUpRange);
 
-	private void insertNewSpieltag() {
-
+		upDateSheet();
 	}
 
 	@Override

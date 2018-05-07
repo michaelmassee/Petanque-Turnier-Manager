@@ -53,7 +53,7 @@ public class TripletteDoublPaarungen {
 			teamRechner = new TeamRechner(meldungen.spieler().size());
 
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
-			// dummys wieder entfernen
+			// dummies wieder entfernen
 			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
 				Spieler spieler = Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr);
 				spielRunde.removeSpieler(spieler);
