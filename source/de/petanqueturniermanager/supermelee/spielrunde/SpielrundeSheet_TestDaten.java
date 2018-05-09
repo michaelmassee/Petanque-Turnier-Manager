@@ -15,6 +15,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
@@ -39,8 +40,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+		setSpielTag(SpielTagNr.from(1));
 		generate();
-		this.spieltagRanglisteSheet.generate();
 		if (this.spieltagRanglisteSheet.isErrorInSheet()) {
 			return;
 		}
@@ -48,23 +49,28 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 	/**
 	 * 5 spielrunden testdaten generieren
+	 *
+	 * @throws GenerateException
 	 */
-	private void generate() {
+	public void generate() throws GenerateException {
 
-		this.meldeListeTestDatenGenerator.generateTestDaten();
+		this.meldeListeTestDatenGenerator.generateTestDaten(getSpielTag());
+		this.spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
 
 		for (int spielrunde = 1; spielrunde < 5; spielrunde++) {
-			this.getSheetHelper().removeSheet(this.getSheetName(spielrunde));
+			this.getSheetHelper().removeSheet(this.getSheetName(getSpielTag(), spielrunde));
 		}
 
-		this.getKonfigurationSheet().setAktuelleSpielRunde(1);
+		this.naechsteSpielrundeSheet.setSpielTag(getSpielTag());
+
+		this.getKonfigurationSheet().setAktiveSpielRunde(1);
 		for (int spielrundeNr = 1; spielrundeNr < 5; spielrundeNr++) {
 
 			if (spielrundeNr > 1) {
 				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen();
 			}
 
-			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungenAktuellenSpielTag();
+			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr,
 					getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 			neueSpielrunde(meldungen, spielrundeNr, true);
@@ -72,7 +78,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen
 			// ------------------------------------
-			XSpreadsheet sheet = getSpielRundeSheet(spielrundeNr);
+			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrundeNr);
 			Position letztePos = letzteZeile(spielrundeNr);
 
 			if (letztePos != null && sheet != null) {
@@ -93,6 +99,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 				}
 			}
 		}
+
+		this.spieltagRanglisteSheet.generate();
 
 	}
 }

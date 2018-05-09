@@ -4,26 +4,28 @@
 
 package de.petanqueturniermanager.supermelee.ergebnis;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.*;
 import static java.util.Collections.reverseOrder;
-import static java.util.Comparator.comparingInt;
+import static java.util.Comparator.*;
 
 import java.util.Comparator;
 
 import com.google.common.base.MoreObjects;
 
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+
 public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErgebnis>
 		implements Comparable<SpielerSpieltagErgebnis> {
 
-	private final int spielTag;
+	private final SpielTagNr spielTag;
 
-	public SpielerSpieltagErgebnis(int spielTag, int spielerNr) {
+	public SpielerSpieltagErgebnis(SpielTagNr spielTag, int spielerNr) {
 		super(spielerNr);
-		checkArgument(spielTag > 0);
+		checkNotNull(spielTag);
 		this.spielTag = spielTag;
 	}
 
-	public int getSpielTag() {
+	public SpielTagNr getSpielTag() {
 		return this.spielTag;
 	}
 
@@ -32,7 +34,6 @@ public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErg
 				.thenComparingInt(SpielerSpieltagErgebnis::getSpielDiv)
 				.thenComparingInt(SpielerSpieltagErgebnis::getPunkteDiv)
 				.thenComparingInt(SpielerSpieltagErgebnis::getPunktePlus)
-				.thenComparingInt(SpielerSpieltagErgebnis::getSpielTag)
 				.thenComparing(reverseOrder(comparingInt(SpielerSpieltagErgebnis::getSpielerNr)));
 	}
 
@@ -47,7 +48,7 @@ public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErg
 		return getComparator().compare(o, this);
 	}
 
-	public static SpielerSpieltagErgebnis from(int spielTag, int spielerNr) {
+	public static SpielerSpieltagErgebnis from(SpielTagNr spielTag, int spielerNr) {
 		return new SpielerSpieltagErgebnis(spielTag, spielerNr);
 	}
 

@@ -21,6 +21,7 @@ public class NewSheet {
 	private final XComponentContext xContext;
 	private boolean didCreate = false;
 	private boolean force = false;
+	private boolean setActiv = false;
 	private short pos = 1;
 	private String tabColor = null;
 
@@ -62,12 +63,22 @@ public class NewSheet {
 			}
 			this.sheetHelper.removeSheet(this.sheetName);
 		}
-		this.sheetHelper.newIfNotExist(this.sheetName, this.pos, this.tabColor);
+		sheet = this.sheetHelper.newIfNotExist(this.sheetName, this.pos, this.tabColor);
+
+		if (this.setActiv) {
+			this.sheetHelper.setActiveSheet(sheet);
+		}
+
 		this.didCreate = true;
 		return this.didCreate;
 	}
 
 	public boolean isDidCreate() {
 		return this.didCreate;
+	}
+
+	public NewSheet setActiv() {
+		this.setActiv = true;
+		return this;
 	}
 }

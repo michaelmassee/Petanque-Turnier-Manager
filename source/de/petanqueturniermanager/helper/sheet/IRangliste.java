@@ -4,12 +4,13 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 
 public interface IRangliste extends ISheet {
 
-	int getAnzahlRunden();
+	int getAnzahlRunden() throws GenerateException;
 
-	public int getErsteSummeSpalte();
+	public int getErsteSummeSpalte() throws GenerateException;
 
 }

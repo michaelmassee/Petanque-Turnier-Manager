@@ -34,9 +34,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			try {
 				doRun();
 			} catch (GenerateException e) {
-				getLogger().error(e.getMessage(), e);
-				ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
-				errMsg.showOk("Fehler", e.getMessage());
+				handleGenerateException(e);
 			} catch (Exception e) {
 				getLogger().error(e.getMessage(), e);
 			} finally {
@@ -45,6 +43,13 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				// CloseConnections.closeOfficeConnection(); // bringt Nix ?!?
 			}
 		}
+	}
+
+	protected void handleGenerateException(GenerateException e) {
+		getLogger().error(e.getMessage(), e);
+		ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
+		errMsg.showOk("Fehler", e.getMessage());
+
 	}
 
 	protected abstract Logger getLogger();

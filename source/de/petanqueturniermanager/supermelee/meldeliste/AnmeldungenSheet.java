@@ -14,6 +14,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
@@ -23,6 +24,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	private static final Logger logger = LogManager.getLogger(AnmeldungenSheet.class);
@@ -35,6 +37,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	private final AbstractMeldeListeSheet meldeliste;
 	private final KonfigurationSheet konfigurationSheet;
+	private SpielTagNr spielTag = null;
 
 	public AnmeldungenSheet(XComponentContext xContext) {
 		super(xContext);
@@ -48,14 +51,10 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected void doRun() {
+	protected void doRun() throws GenerateException {
+		this.spielTag = this.konfigurationSheet.getAktiveSpieltag();
 
-		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
-		if (spieltagNr < 1) {
-			return;
-		}
-
-		getSheetHelper().removeSheet(getSheetName(spieltagNr));
+		getSheetHelper().removeSheet(getSheetName(this.spielTag));
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
 
@@ -105,7 +104,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal,
-			CellProperties celPropName, StringCellValue chkBox) {
+			CellProperties celPropName, StringCellValue chkBox) throws GenerateException {
 		this.getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte(), celPropNr);
 		this.getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte(), celPropName);
 		this.getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte(), celPropNr);
@@ -113,14 +112,22 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		this.getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte() + 1, celPropNr);
 	}
 
-	public String getSheetName(int spieltagNr) {
-		return spieltagNr + ". Spieltag " + SHEETNAME;
+	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
+		return spieltagNr.getNr() + ". Spieltag " + SHEETNAME;
 	}
 
 	@Override
-	public XSpreadsheet getSheet() {
-		int spieltagNr = this.konfigurationSheet.getAktuelleSpieltag();
+	public XSpreadsheet getSheet() throws GenerateException {
+		SpielTagNr spieltagNr = getSpielTag();
 		return this.getSheetHelper().newIfNotExist(getSheetName(spieltagNr), (short) 1, "98e2d7");
+	}
+
+	public SpielTagNr getSpielTag() throws GenerateException {
+		return this.spielTag;
+	}
+
+	public void setSpielTag(SpielTagNr spielTag) {
+		this.spielTag = spielTag;
 	}
 
 }
