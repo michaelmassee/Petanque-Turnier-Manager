@@ -233,7 +233,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			// $ = absolute wegen sortieren
 			String formulaSheetName = "=$'" + this.aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), spielRunde)
-					+ "'.$";
+					+ "'.";
 			Position posPunktePlus = Position
 					.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * ANZAHL_SPALTEN_IN_SPIELRUNDE), 0);
 
@@ -249,11 +249,11 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 					Position posSpielerPunktePlus = Position.from(posPunktePlus).zeile(spielerZeile);
 					// Formula auf plus punkte eintragen
 					StringCellValue spielerPlus = StringCellValue.from(sheet, posSpielerPunktePlus,
-							formulaSheetName + ergebnis.getPositionPlusPunkte().getAddress());
+							formulaSheetName + ergebnis.getPositionPlusPunkte().getAddressWith$());
 					getSheetHelper().setFormulaInCell(spielerPlus);
 					// Formula auf minus punkte eintragen
 					StringCellValue spielerMinus = StringCellValue.from(spielerPlus).spaltePlusEins()
-							.setValue(formulaSheetName + ergebnis.getPositionMinusPunkte().getAddress());
+							.setValue(formulaSheetName + ergebnis.getPositionMinusPunkte().getAddressWith$());
 					getSheetHelper().setFormulaInCell(spielerMinus);
 				}
 			}
@@ -324,10 +324,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 			// gefunden
 			int returnSpalte = ersteSummeSpalte + summeSpalte;
 
-			String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddress();
-			String letzteZelleAddress = Position.from(returnSpalte, 999).getAddress();
+			String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
+			String letzteZelleAddress = Position.from(returnSpalte, 999).getAddressWith$();
 
-			return "VLOOKUP(" + spielrNrAdresse + ";$'" + getSheetName(spieltagNr) + "'.$" + ersteZelleAddress + ":$"
+			return "VLOOKUP(" + spielrNrAdresse + ";$'" + getSheetName(spieltagNr) + "'." + ersteZelleAddress + ":"
 					+ letzteZelleAddress + ";" + (returnSpalte + 1) + // erste spalte = 1
 					";0)";
 		}
