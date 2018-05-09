@@ -263,11 +263,9 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	@Override
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		String ersteZelleAddress = this.sheetHelper
-				.getAddressFromColumnRow(Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
-		String letzteZelleAddress = this.sheetHelper
-				.getAddressFromColumnRow(Position.from(this.spielerSpalte.getSpielerNameSpalte(), 999));
-		return "=VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'.$" + ersteZelleAddress + ":$" + letzteZelleAddress
+		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
+		String letzteZelleAddress = Position.from(this.spielerSpalte.getSpielerNameSpalte(), 999).getAddressWith$();
+		return "=VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
 				+ ";2;0)";
 	}
 

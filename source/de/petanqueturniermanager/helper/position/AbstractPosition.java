@@ -111,6 +111,16 @@ public abstract class AbstractPosition<T> {
 		return aStr;
 	}
 
+	public String getAddressWith$() {
+		String aStr = "$";
+		if (getColumn() > 25)
+			aStr += (char) ('A' + getColumn() / 26 - 1);
+		aStr += (char) ('A' + getColumn() % 26);
+		aStr += "$";
+		aStr += (getRow() + 1);
+		return aStr;
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) {

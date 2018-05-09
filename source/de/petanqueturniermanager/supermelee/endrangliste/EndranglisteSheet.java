@@ -99,9 +99,9 @@ public class EndranglisteSheet extends SheetRunner implements ISheet {
 						SpielTagNr.from(spieltagCntr), summeSpalteCntr, verweisAufSpalteSpielerNr);
 				strVal.setValue("IFNA(" + verweisAufSummeSpalte + ";\"\")");
 				// kein filldown verwenden weil die Adresse in der SVERWEIS hochgezaehlt wird
-				for (int zeile = ERSTE_DATEN_ZEILE; zeile < letzteDatenZeile; zeile++) {
-					this.getSheetHelper().setFormulaInCell(strVal.zeile(zeile));
-				}
+				// for (int zeile = ERSTE_DATEN_ZEILE; zeile < letzteDatenZeile; zeile++) {
+				this.getSheetHelper().setFormulaInCell(strVal.setFillAutoDown(letzteDatenZeile));
+				// }
 				strVal.spaltePlusEins();
 			}
 		}

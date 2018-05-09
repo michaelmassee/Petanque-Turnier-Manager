@@ -112,14 +112,12 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		// sheet vorhanden ?
 		getSheet(); // dummy aufruf
 
-		String ersteZelleAddress = getSheetHelper()
-				.getAddressFromColumnRow(Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE));
-		String letzteZelleAddress = getSheetHelper()
-				.getAddressFromColumnRow(Position.from(spalte, ERSTE_DATEN_ZEILE + 999));
+		String ersteZelleAddress = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
+		String letzteZelleAddress = Position.from(spalte, ERSTE_DATEN_ZEILE + 999).getAddressWith$();
 
 		// suchkriterium;matrix;index;sortiert
-		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'.$" + ersteZelleAddress + ":$"
-				+ letzteZelleAddress + ";" + (spalte + 1) + ";0)";
+		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
+				+ ";" + (spalte + 1) + ";0)";
 	}
 
 }
