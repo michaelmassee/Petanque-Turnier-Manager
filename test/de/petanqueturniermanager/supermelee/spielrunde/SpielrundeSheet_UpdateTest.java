@@ -22,6 +22,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
 
 public class SpielrundeSheet_UpdateTest {
@@ -34,7 +35,7 @@ public class SpielrundeSheet_UpdateTest {
 	KonfigurationSheet konfigurationSheetMock;
 
 	@Before
-	public void setup() {
+	public void setup() throws Exception {
 		this.xComponentContextMock = PowerMockito.mock(XComponentContext.class);
 		this.meldeListeSheetMock = PowerMockito.mock(AbstractMeldeListeSheet.class);
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
@@ -59,11 +60,11 @@ public class SpielrundeSheet_UpdateTest {
 			}
 
 			@Override
-			public XSpreadsheet getSpielRundeSheet(int spielrunde) {
+			public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, int spielrunde) {
 				return SpielrundeSheet_UpdateTest.this.xSpreadsheetMock;
 			}
-
 		};
+		this.aktuelleSpielrundeSheet.setSpielTag(SpielTagNr.from(1));
 	}
 
 	@Test

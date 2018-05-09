@@ -6,20 +6,22 @@ package de.petanqueturniermanager.helper.sheet;
 
 import java.util.List;
 
+import de.petanqueturniermanager.exception.GenerateException;
+
 public interface IMitSpielerSpalte {
 
-	int neachsteFreieDatenZeile();
+	int neachsteFreieDatenZeile() throws GenerateException;
 
-	int getSpielerZeileNr(int spielerNr);
+	int getSpielerZeileNr(int spielerNr) throws GenerateException;
 
-	void spielerEinfuegenWennNichtVorhanden(int spielerNr);
+	void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException;
 
-	public int letzteDatenZeile();
+	public int letzteDatenZeile() throws GenerateException;
 
 	int getErsteDatenZiele();
 
-	List<String> getSpielerNamenList();
+	List<String> getSpielerNamenList() throws GenerateException;
 
-	List<Integer> getSpielerNrList();
+	List<Integer> getSpielerNrList() throws GenerateException;
 
 }

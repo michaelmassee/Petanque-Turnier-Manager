@@ -13,6 +13,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -45,7 +46,7 @@ public class RanglisteFormatter {
 		this.ersteSpielRundeSpalte = ersteSpielRundeSpalte;
 	}
 
-	public void updateHeader(int spieltagNr) {
+	public void updateHeader() throws GenerateException {
 		IRangliste rangliste = this.ranglisteWkRef.getObject();
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
@@ -62,8 +63,8 @@ public class RanglisteFormatter {
 		// -------------------------
 		StringCellValue headerPlus = StringCellValue
 				.from(sheet, Position.from(this.ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(headerColor);
+				.setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setCellBackColor(headerColor);
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
 
 		TableBorder2 borderPlus = BorderFactory.from().allThin().boldLn().forLeft().toBorder();
@@ -87,8 +88,8 @@ public class RanglisteFormatter {
 		// DRITTE_KOPFDATEN_ZEILE
 		// -------------------------
 		StringCellValue headerSumme = StringCellValue.from(sheet, Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(headerColor);
+				.setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setCellBackColor(headerColor);
 
 		this.sheetHelper.setTextInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+")
 				.setComment("Summe Spiele +").setBorder(borderPlus));
@@ -126,7 +127,7 @@ public class RanglisteFormatter {
 		this.sheetHelper.setTextInCell(headerSumme);
 	}
 
-	public void formatDaten() {
+	public void formatDaten() throws GenerateException {
 
 		IRangliste rangliste = this.ranglisteWkRef.getObject();
 		SpielerSpalte spielerSpalte = this.spielerSpalteWkRef.getObject();

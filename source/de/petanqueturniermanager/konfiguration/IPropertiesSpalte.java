@@ -4,39 +4,41 @@
 
 package de.petanqueturniermanager.konfiguration;
 
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public interface IPropertiesSpalte {
 
-	int getAktuelleSpieltag();
+	SpielTagNr getAktiveSpieltag() throws GenerateException;
 
-	void setAktuelleSpieltag(int spieltag);
+	void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException;
 
-	int getAktuelleSpielRunde();
+	int getAktiveSpielRunde() throws GenerateException;
 
-	void setAktuelleSpielRunde(int neueSpielrunde);
+	void setAktiveSpielRunde(int neueSpielrunde) throws GenerateException;
 
-	Integer getSpielRundeNeuAuslosenAb();
+	Integer getSpielRundeNeuAuslosenAb() throws GenerateException;
 
-	Integer getSpielRundeHintergrundFarbeGerade();
+	Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException;
 
-	Integer getSpielRundeHintergrundFarbeUnGerade();
+	Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException;
 
-	Integer getSpielRundeHeaderFarbe();
+	Integer getSpielRundeHeaderFarbe() throws GenerateException;
 
-	Integer getRanglisteHintergrundFarbeGerade();
+	Integer getRanglisteHintergrundFarbeGerade() throws GenerateException;
 
-	Integer getRanglisteHintergrundFarbeUnGerade();
+	Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException;
 
-	Integer getRanglisteHeaderFarbe();
+	Integer getRanglisteHeaderFarbe() throws GenerateException;
 
-	Integer getNichtGespielteRundePlus();
+	Integer getNichtGespielteRundePlus() throws GenerateException;
 
-	Integer getNichtGespielteRundeMinus();
+	Integer getNichtGespielteRundeMinus() throws GenerateException;
 
-	Formation getFormation();
+	Formation getFormation() throws GenerateException;
 
-	SpielSystem getSpielSystem();
+	SpielSystem getSpielSystem() throws GenerateException;
 
 }

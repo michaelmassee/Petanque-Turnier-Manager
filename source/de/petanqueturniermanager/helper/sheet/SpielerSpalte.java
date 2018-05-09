@@ -22,6 +22,7 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
@@ -31,6 +32,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.IMeldeliste;
 
@@ -90,7 +92,7 @@ public class SpielerSpalte {
 		return 0;
 	}
 
-	public void formatDaten() {
+	public void formatDaten() throws GenerateException {
 		int letzteDatenZeile = letzteDatenZeile();
 		if (letzteDatenZeile < this.ersteDatenZiele) {
 			// keine Daten
@@ -118,7 +120,7 @@ public class SpielerSpalte {
 
 	}
 
-	public void insertHeaderInSheet(int headerColor) {
+	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
 		StringCellValue celVal = StringCellValue
 				.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1),
@@ -138,15 +140,17 @@ public class SpielerSpalte {
 		}
 	}
 
-	public int letzteDatenZeile() {
+	public int letzteDatenZeile() throws GenerateException {
 		return neachsteFreieDatenZeile() - 1;
 	}
 
 	/**
 	 * funktioniert nach spieler nr<br>
 	 * erste zeile = 0
+	 *
+	 * @throws GenerateException
 	 */
-	public int neachsteFreieDatenZeile() {
+	public int neachsteFreieDatenZeile() throws GenerateException {
 		for (int zeileCntr = 999; zeileCntr >= this.getErsteDatenZiele(); zeileCntr--) {
 			String cellText = this.sheetHelper.getTextFromCell(this.getSheet(),
 					Position.from(this.spielerNrSpalte, zeileCntr));
@@ -162,8 +166,10 @@ public class SpielerSpalte {
 	/**
 	 * funktioniert nach spieler name<br>
 	 * return 0 wenn kein Spieler vorhanden
+	 *
+	 * @throws GenerateException
 	 */
-	public int letzteZeileMitSpielerName() {
+	public int letzteZeileMitSpielerName() throws GenerateException {
 		for (int zeileCntr = 999; zeileCntr >= this.getErsteDatenZiele(); zeileCntr--) {
 			String cellText = this.sheetHelper.getTextFromCell(this.getSheet(),
 					Position.from(this.spielerNameErsteSpalte, zeileCntr));
@@ -176,8 +182,10 @@ public class SpielerSpalte {
 
 	/**
 	 * return -1 wenn not found
+	 *
+	 * @throws GenerateException
 	 */
-	public int getSpielerZeileNr(int spielerNr) {
+	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
 
 		// in Cache ?
@@ -205,9 +213,9 @@ public class SpielerSpalte {
 		return -1;
 	}
 
-	public void alleSpieltagSpielerEinfuegen() {
+	public void alleSpieltagSpielerEinfuegen() throws GenerateException {
 		// spieler einfuegen wenn nicht vorhanden
-		Meldungen meldungen = getMeldeliste().getAktiveUndAusgesetztMeldungenAktuellenSpielTag();
+		Meldungen meldungen = getMeldeliste().getAktiveUndAusgesetztMeldungen();
 
 		NumberCellValue celValSpielerNr = NumberCellValue.from(this.getSheet(),
 				Position.from(this.spielerNrSpalte, getErsteDatenZiele()), 0);
@@ -229,17 +237,17 @@ public class SpielerSpalte {
 		});
 	}
 
-	public void fehlendeSpieltagSpielerEinfuegen() {
+	public void fehlendeSpieltagSpielerEinfuegen() throws GenerateException {
 		// spieler einfuegen wenn nicht vorhanden
-		Meldungen meldungen = getMeldeliste().getAktiveUndAusgesetztMeldungenAktuellenSpielTag();
+		Meldungen meldungen = getMeldeliste().getAktiveUndAusgesetztMeldungen();
 
-		meldungen.spieler().forEach((spieler) -> {
+		for (Spieler spieler : meldungen.spieler()) {
 			spielerEinfuegenWennNichtVorhanden(spieler.getNr());
-		});
+		}
 	}
 
-	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) {
-		if (getSpielerZeileNr(spielerNr) == 0) {
+	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
+		if (getSpielerZeileNr(spielerNr) == -1) {
 			// spieler noch nicht vorhanden
 			int freieZeile = neachsteFreieDatenZeile();
 
@@ -257,12 +265,13 @@ public class SpielerSpalte {
 	/**
 	 * @param spielrNr aus der meldeliste
 	 * @return null when not found
+	 * @throws GenerateException
 	 */
-	public String getSpielrNrAddressNachSpielrNr(int spielrNr) {
+	public String getSpielrNrAddressNachSpielrNr(int spielrNr) throws GenerateException {
 		return getSpielrNrAddressNachZeile(getSpielerZeileNr(spielrNr));
 	}
 
-	public List<Integer> getSpielerNrList() {
+	public List<Integer> getSpielerNrList() throws GenerateException {
 		List<Integer> spielerNrList = new ArrayList<>();
 		int letzteZeile = this.letzteDatenZeile();
 		XSpreadsheet sheet = getSheet();
@@ -280,7 +289,7 @@ public class SpielerSpalte {
 		return spielerNrList;
 	}
 
-	public List<String> getSpielerNamenList() {
+	public List<String> getSpielerNamenList() throws GenerateException {
 		List<String> spielerNamen = new ArrayList<>();
 		int letzteZeile = this.letzteDatenZeile();
 		XSpreadsheet sheet = getSheet();
@@ -298,7 +307,7 @@ public class SpielerSpalte {
 		return spielerNamen;
 	}
 
-	public String getSpielrNrAddressNachZeile(int zeile) {
+	public String getSpielrNrAddressNachZeile(int zeile) throws GenerateException {
 		String spielrAdr = null;
 		if (zeile > -1) {
 			try {
@@ -311,7 +320,7 @@ public class SpielerSpalte {
 		return spielrAdr;
 	}
 
-	public String formulaCountSpieler() {
+	public String formulaCountSpieler() throws GenerateException {
 		String ersteZelle = Position.from(this.spielerNrSpalte, this.ersteDatenZiele).getAddress();
 		String letzteZelle = Position.from(this.spielerNrSpalte, letzteDatenZeile()).getAddress();
 
@@ -330,7 +339,7 @@ public class SpielerSpalte {
 		return this.spielerNameErsteSpalte;
 	}
 
-	private final XSpreadsheet getSheet() {
+	private final XSpreadsheet getSheet() throws GenerateException {
 		return this.sheet.getObject().getSheet();
 	}
 }

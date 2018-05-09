@@ -3,6 +3,8 @@
 **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
+import static com.google.common.base.Preconditions.*;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,6 +14,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Update.class);
@@ -26,10 +29,11 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 	}
 
 	@Override
-	protected void doRun() {
+	protected void doRun() throws GenerateException {
 
-		int aktuelleSpielrunde = getKonfigurationSheet().getAktuelleSpielRunde();
-		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungenAktuellenSpielTag();
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(meldungen, aktuelleSpielrunde)) {
 			return;
@@ -40,7 +44,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 	public SpielerSpielrundeErgebnisList ergebnisseEinlesen(int spielrunde) throws GenerateException {
 
 		SpielerSpielrundeErgebnisList spielerSpielrundeErgebnisse = new SpielerSpielrundeErgebnisList();
-		XSpreadsheet sheet = getSpielRundeSheet(spielrunde);
+		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrunde);
 
 		if (sheet == null) {
 			return spielerSpielrundeErgebnisse;
@@ -79,10 +83,11 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		return spielerSpielrundeErgebnisse;
 	}
 
-	public int countNumberOfSpielRunden() {
+	public int countNumberOfSpielRunden(SpielTagNr spieltag) throws GenerateException {
+		checkNotNull(spieltag);
 		int anz = 0;
 		for (int rdnCntr = 1; rdnCntr < 99; rdnCntr++) {
-			if (this.getSheetHelper().findByName(getSheetName(rdnCntr)) != null) {
+			if (this.getSheetHelper().findByName(getSheetName(spieltag, rdnCntr)) != null) {
 				anz++;
 			} else {
 				break;

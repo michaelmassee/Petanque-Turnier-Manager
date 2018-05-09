@@ -129,14 +129,27 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							
-							
+
+
 							<node oor:name="B6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Nächste Spieltag</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?naechste_spieltag</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+
+							<node oor:name="B7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Endrangliste</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?supermelee_endrangliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -198,7 +211,7 @@
 
 							<node oor:name="A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Supermêlée, generiere eine Meldeliste mit 90 Meldungen</value>
+									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 90 Meldungen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?meldeliste_testdaten</value>
@@ -210,7 +223,7 @@
 
 							<node oor:name="A2" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Supermêlée, generiere 4 Spielrunden</value>
+									<value xml:lang="de">Supermêlée, generiere 1 Spieltag mit 4 Spielrunden</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?spielrunden_testdaten</value>
@@ -219,6 +232,19 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="A3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Supermêlée, generiere 5 Komplette Spieltagen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?SpieltagRanglisteSheet_TestDaten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

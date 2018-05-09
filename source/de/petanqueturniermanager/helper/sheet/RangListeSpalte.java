@@ -16,6 +16,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -54,7 +55,7 @@ public class RangListeSpalte {
 		return this.endsummenspalten.get();
 	}
 
-	public void insertHeaderInSheet(int headerColor) {
+	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 		int ersteZeile = getMitSpielerSpalte().getErsteDatenZiele();
 
 		StringCellValue celVal = StringCellValue
@@ -64,7 +65,7 @@ public class RangListeSpalte {
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 	}
 
-	public void upDateRanglisteSpalte() {
+	public void upDateRanglisteSpalte() throws GenerateException {
 
 		// SummenSpalten
 		int letzteZeile = getMitSpielerSpalte().letzteDatenZeile();
@@ -114,7 +115,7 @@ public class RangListeSpalte {
 				+ (pos.getSpalte() + 1) + ";8))";
 	}
 
-	private final XSpreadsheet getSheet() {
+	private final XSpreadsheet getSheet() throws GenerateException {
 		if (!this.sheet.isEnqueued()) {
 			return this.sheet.get().getSheet();
 		}

@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
@@ -30,7 +31,11 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	public KonfigurationSheet(XComponentContext xContext) {
 		super(xContext);
 		this.propertiesSpalte = new PropertiesSpalte(xContext, PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
-		update();
+		try {
+			update();
+		} catch (GenerateException e) {
+			handleGenerateException(e);
+		}
 	}
 
 	@Override
@@ -44,73 +49,73 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 		update();
 	}
 
-	void update() {
+	void update() throws GenerateException {
 		this.propertiesSpalte.updateKonfigBlock();
 		this.propertiesSpalte.doFormat();
 	}
 
 	@Override
-	public int getAktuelleSpieltag() {
-		return this.propertiesSpalte.getAktuelleSpieltag();
+	public SpielTagNr getAktiveSpieltag() throws GenerateException {
+		return new SpielTagNr(this.propertiesSpalte.getAktiveSpieltag());
 	}
 
 	@Override
-	public void setAktuelleSpieltag(int spieltag) {
-		this.propertiesSpalte.setAktuelleSpieltag(spieltag);
+	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+		this.propertiesSpalte.setAktiveSpieltag(spieltag.getNr());
 	}
 
 	@Override
-	public int getAktuelleSpielRunde() {
-		return this.propertiesSpalte.getAktuelleSpielRunde();
+	public int getAktiveSpielRunde() throws GenerateException {
+		return this.propertiesSpalte.getAktiveSpielRunde();
 	}
 
 	@Override
-	public void setAktuelleSpielRunde(int neueSpielrunde) {
-		this.propertiesSpalte.setAktuelleSpielRunde(neueSpielrunde);
+	public void setAktiveSpielRunde(int neueSpielrunde) throws GenerateException {
+		this.propertiesSpalte.setAktiveSpielRunde(neueSpielrunde);
 	}
 
 	@Override
-	public Integer getSpielRundeHintergrundFarbeGerade() {
+	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
 		return this.propertiesSpalte.getSpielRundeHintergrundFarbeGerade();
 	}
 
 	@Override
-	public Integer getSpielRundeHintergrundFarbeUnGerade() {
+	public Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException {
 		return this.propertiesSpalte.getSpielRundeHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public Integer getSpielRundeHeaderFarbe() {
+	public Integer getSpielRundeHeaderFarbe() throws GenerateException {
 		return this.propertiesSpalte.getSpielRundeHeaderFarbe();
 	}
 
 	@Override
-	public Integer getSpielRundeNeuAuslosenAb() {
+	public Integer getSpielRundeNeuAuslosenAb() throws GenerateException {
 		return this.propertiesSpalte.getSpielRundeNeuAuslosenAb();
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbeGerade() {
+	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
 		return this.propertiesSpalte.getRanglisteHintergrundFarbeGerade();
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbeUnGerade() {
+	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
 		return this.propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public Integer getRanglisteHeaderFarbe() {
+	public Integer getRanglisteHeaderFarbe() throws GenerateException {
 		return this.propertiesSpalte.getRanglisteHeaderFarbe();
 	}
 
 	@Override
-	public Integer getNichtGespielteRundePlus() {
+	public Integer getNichtGespielteRundePlus() throws GenerateException {
 		return this.propertiesSpalte.getNichtGespielteRundePlus();
 	}
 
 	@Override
-	public Integer getNichtGespielteRundeMinus() {
+	public Integer getNichtGespielteRundeMinus() throws GenerateException {
 		return this.propertiesSpalte.getNichtGespielteRundeMinus();
 	}
 
@@ -120,13 +125,13 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	@Override
-	public Formation getFormation() {
+	public Formation getFormation() throws GenerateException {
 		return this.propertiesSpalte.getFormation();
 
 	}
 
 	@Override
-	public SpielSystem getSpielSystem() {
+	public SpielSystem getSpielSystem() throws GenerateException {
 		return this.propertiesSpalte.getSpielSystem();
 	}
 }

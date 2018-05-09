@@ -20,6 +20,7 @@ public class MeldeListeSheet_Update extends AbstractMeldeListeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		upDateSheet();
 	}
 

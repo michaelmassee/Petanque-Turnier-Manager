@@ -15,6 +15,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -104,7 +105,7 @@ public class PropertiesSpalte {
 		this.sheetHelper = new SheetHelper(xContext);
 	}
 
-	public void doFormat() {
+	public void doFormat() throws GenerateException {
 		XSpreadsheet propSheet = this.getPropSheet();
 		// header
 		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
@@ -117,7 +118,7 @@ public class PropertiesSpalte {
 		this.sheetHelper.setTextInCell(wertheaderVal);
 	}
 
-	public void updateKonfigBlock() {
+	public void updateKonfigBlock() throws GenerateException {
 		XSpreadsheet propSheet = this.getPropSheet();
 
 		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
@@ -159,8 +160,9 @@ public class PropertiesSpalte {
 	 *
 	 * @param name
 	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
+	 * @throws GenerateException
 	 */
-	public int readIntProperty(String key) {
+	public int readIntProperty(String key) throws GenerateException {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		int val = -1;
@@ -182,9 +184,10 @@ public class PropertiesSpalte {
 	 *
 	 * @param key = property
 	 * @return Integer, -1 wenn keine Farbe, null when not found
+	 * @throws GenerateException
 	 */
 
-	public Integer readCellBackColorProperty(String key) {
+	public Integer readCellBackColorProperty(String key) throws GenerateException {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		Integer val = null;
@@ -204,7 +207,7 @@ public class PropertiesSpalte {
 		return val;
 	}
 
-	public void writeCellBackColorProperty(String key, Integer val, String comment) {
+	public void writeCellBackColorProperty(String key, Integer val, String comment) throws GenerateException {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		if (pos != null) {
@@ -219,8 +222,9 @@ public class PropertiesSpalte {
 	/**
 	 * @param name
 	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
+	 * @throws GenerateException
 	 */
-	public String readStringProperty(String key) {
+	public String readStringProperty(String key) throws GenerateException {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		String val = null;
@@ -250,8 +254,9 @@ public class PropertiesSpalte {
 	 *
 	 * @param name
 	 * @return defaultVal when not found
+	 * @throws GenerateException
 	 */
-	public void writeIntProperty(String name, int newVal) {
+	public void writeIntProperty(String name, int newVal) throws GenerateException {
 		Position pos = getPropKeyPos(name);
 		if (pos != null) {
 			this.sheetHelper.setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
@@ -262,8 +267,9 @@ public class PropertiesSpalte {
 	 *
 	 * @param name
 	 * @return null when not found
+	 * @throws GenerateException
 	 */
-	public Position getPropKeyPos(String key) {
+	public Position getPropKeyPos(String key) throws GenerateException {
 		checkNotNull(key);
 
 		XSpreadsheet sheet = getPropSheet();
@@ -279,63 +285,63 @@ public class PropertiesSpalte {
 		return null;
 	}
 
-	public int getAktuelleSpieltag() {
+	public int getAktiveSpieltag() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELTAG);
 	}
 
-	public void setAktuelleSpieltag(int spieltag) {
+	public void setAktiveSpieltag(int spieltag) throws GenerateException {
 		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag);
 	}
 
-	public int getAktuelleSpielRunde() {
+	public int getAktiveSpielRunde() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE);
 	}
 
-	public void setAktuelleSpielRunde(int spielrunde) {
+	public void setAktiveSpielRunde(int spielrunde) throws GenerateException {
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde);
 	}
 
-	private final XSpreadsheet getPropSheet() {
+	private final XSpreadsheet getPropSheet() throws GenerateException {
 		return this.sheetWkRef.getObject().getSheet();
 	}
 
-	public Integer getSpielRundeHintergrundFarbeGerade() {
+	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE);
 	}
 
-	public Integer getSpielRundeHintergrundFarbeUnGerade() {
+	public Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE);
 	}
 
-	public Integer getSpielRundeHeaderFarbe() {
+	public Integer getSpielRundeHeaderFarbe() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER);
 	}
 
-	public Integer getRanglisteHintergrundFarbeGerade() {
+	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE);
 	}
 
-	public Integer getRanglisteHintergrundFarbeUnGerade() {
+	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
 	}
 
-	public Integer getRanglisteHeaderFarbe() {
+	public Integer getRanglisteHeaderFarbe() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER);
 	}
 
-	public Integer getSpielRundeNeuAuslosenAb() {
+	public Integer getSpielRundeNeuAuslosenAb() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN);
 	}
 
-	public Integer getNichtGespielteRundePlus() {
+	public Integer getNichtGespielteRundePlus() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS);
 	}
 
-	public Integer getNichtGespielteRundeMinus() {
+	public Integer getNichtGespielteRundeMinus() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS);
 	}
 
-	public Formation getFormation() {
+	public Formation getFormation() throws GenerateException {
 		int formationId = readIntProperty(KONFIG_PROP_NAME_FORMATION);
 		if (formationId > -1) {
 			return Formation.findById(formationId);
@@ -343,7 +349,7 @@ public class PropertiesSpalte {
 		return null;
 	}
 
-	public SpielSystem getSpielSystem() {
+	public SpielSystem getSpielSystem() throws GenerateException {
 		int spielSystemId = readIntProperty(KONFIG_PROP_NAME_SPIELSYSTEM);
 		if (spielSystemId > -1) {
 			return SpielSystem.findById(spielSystemId);

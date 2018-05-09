@@ -20,13 +20,14 @@ import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
-import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
-import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetSortOnly;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
 
 // Jobs
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Jobs
@@ -85,56 +86,71 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		try {
 			logger.info("Trigger " + action);
 
-			switch (action) {
-			// ------------------------------
-			case "neue_meldeliste":
-				new MeldeListeSheet_New(this.m_xContext).start();
-				break;
-			case "meldeliste":
-				new MeldeListeSheet_Update(this.m_xContext).start();
-				break;
-			case "anmeldungen":
-				new AnmeldungenSheet(this.m_xContext).start();
-				break;
-			case "naechste_spieltag":
-				new MeldeListeSheet_NeuerSpieltag(this.m_xContext).start();
-				break;
-			case "meldeliste_testdaten":
-				new MeldeListeSheet_TestDaten(this.m_xContext).start();
-				break;
-			case "supermelee_teampaarungen":
-				new SupermeleeTeamPaarungenSheet(this.m_xContext).start();
-				break;
-			// ------------------------------
-			case "aktuelle_spielrunde":
-				new SpielrundeSheet_Update(this.m_xContext).start();
-				break;
-			case "naechste_spielrunde":
-				new SpielrundeSheet_Naechste(this.m_xContext).start();
-				break;
-			case "spielrunden_testdaten":
-				new SpielrundeSheet_TestDaten(this.m_xContext).start();
-				break;
-			// ------------------------------
-			case "spieltag_rangliste":
-				new SpieltagRanglisteSheet(this.m_xContext).start();
-				break;
-			// ------------------------------
-			case "spieltag_rangliste_sort":
-				new SpieltagRanglisteSheetSortOnly(this.m_xContext).start();
-				break;
-			// ------------------------------
-			case "mittelhessenrunde_endrangliste":
-				new EndranglisteSheet(this.m_xContext).start();
-				break;
-			case "konfiguration":
-				new KonfigurationSheet(this.m_xContext).start();
-				break;
-			default:
+			boolean didHandle = handleSuperMelee(action);
+
+			if (!didHandle) {
 				logger.error("Unknown action: " + action);
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
+
+	private boolean handleSuperMelee(String action) {
+		boolean didHandle = true;
+
+		switch (action) {
+		// ------------------------------
+		case "neue_meldeliste":
+			new MeldeListeSheet_New(this.m_xContext).start();
+			break;
+		case "meldeliste":
+			new MeldeListeSheet_Update(this.m_xContext).start();
+			break;
+		case "anmeldungen":
+			new AnmeldungenSheet(this.m_xContext).start();
+			break;
+		case "naechste_spieltag":
+			new MeldeListeSheet_NeuerSpieltag(this.m_xContext).start();
+			break;
+		case "meldeliste_testdaten":
+			new MeldeListeSheet_TestDaten(this.m_xContext).start();
+			break;
+		case "supermelee_teampaarungen":
+			new SupermeleeTeamPaarungenSheet(this.m_xContext).start();
+			break;
+		// ------------------------------
+		case "aktuelle_spielrunde":
+			new SpielrundeSheet_Update(this.m_xContext).start();
+			break;
+		case "naechste_spielrunde":
+			new SpielrundeSheet_Naechste(this.m_xContext).start();
+			break;
+		case "spielrunden_testdaten":
+			new SpielrundeSheet_TestDaten(this.m_xContext).start();
+			break;
+		// ------------------------------
+		case "spieltag_rangliste":
+			new SpieltagRanglisteSheet(this.m_xContext).start();
+			break;
+		case "spieltag_rangliste_sort":
+			new SpieltagRanglisteSheetSortOnly(this.m_xContext).start();
+			break;
+		case "SpieltagRanglisteSheet_TestDaten":
+			new SpieltagRanglisteSheet_TestDaten(this.m_xContext).start();
+			break;
+		// ------------------------------
+		case "supermelee_endrangliste":
+			new EndranglisteSheet(this.m_xContext).start();
+			break;
+		// ------------------------------
+		case "konfiguration":
+			new KonfigurationSheet(this.m_xContext).start();
+			break;
+		default:
+			didHandle = false;
+		}
+		return didHandle;
+	}
+
 }

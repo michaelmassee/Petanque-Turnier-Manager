@@ -6,6 +6,8 @@ package de.petanqueturniermanager.helper;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.exception.GenerateException;
+
 public interface ISheet {
-	public XSpreadsheet getSheet();
+	public XSpreadsheet getSheet() throws GenerateException;
 }

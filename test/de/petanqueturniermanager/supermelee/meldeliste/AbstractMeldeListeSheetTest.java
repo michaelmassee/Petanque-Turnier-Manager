@@ -23,6 +23,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class AbstractMeldeListeSheetTest {
 	private static final Logger logger = LogManager.getLogger(AbstractMeldeListeSheetTest.class);
@@ -82,9 +83,10 @@ public class AbstractMeldeListeSheetTest {
 		assertThat(result).isEqualTo(3);
 	}
 
-	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) {
+	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) throws GenerateException {
 
-		Position headerPos = Position.from(this.meldeSheet.spieltagSpalte(1), AbstractMeldeListeSheet.HEADER_ZEILE);
+		Position headerPos = Position.from(this.meldeSheet.spieltagSpalte(SpielTagNr.from(1)),
+				AbstractMeldeListeSheet.HEADER_ZEILE);
 		headerList.forEach(header -> {
 			PowerMockito
 					.when(this.sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos))))

@@ -4,14 +4,17 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.Meldungen;
 
 public interface IMeldeliste {
 
 	String formulaSverweisSpielernamen(String spielrNrAdresse);
 
-	Meldungen getAktiveUndAusgesetztMeldungenAktuellenSpielTag();
+	Meldungen getAktiveUndAusgesetztMeldungen() throws GenerateException;
 
-	int getSpielerZeileNr(int spielerNr);
+	int getSpielerZeileNr(int spielerNr) throws GenerateException;
+
+	Meldungen getAktiveMeldungen() throws GenerateException;
 
 }

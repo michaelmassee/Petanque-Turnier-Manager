@@ -15,11 +15,14 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class MeldeListeSheet_TestDaten extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
@@ -37,19 +40,18 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	}
 
 	@Override
-	protected void doRun() {
-		generateTestDaten();
+	protected void doRun() throws GenerateException {
+		generateTestDaten(SpielTagNr.from(1));
 	}
 
-	public void spielerAufAktivInaktivMischen() {
-		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = this.meldeListe
-				.getAktiveUndAusgesetztMeldungenAktuellenSpielTag();
+	public void spielerAufAktivInaktivMischen() throws GenerateException {
+		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = this.meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
 		NumberCellValue numVal = NumberCellValue.from(this.meldeListe.getSheet(),
 				Position.from(aktuelleSpieltagSpalte, AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE));
 
-		aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler().forEach((spieler) -> {
+		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
 			int spielerZeile = this.meldeListe.getSpielerZeileNr(spieler.getNr());
 			numVal.zeile(spielerZeile);
@@ -58,19 +60,21 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 			} else {
 				getSheetHelper().setValInCell(numVal.setValue((double) 1));
 			}
-		});
+		}
 	}
 
-	public void generateTestDaten() {
+	public void generateTestDaten(SpielTagNr spieltag) throws GenerateException {
+		this.meldeListe.setSpielTag(spieltag);
 		XSpreadsheet meldelisteSheet = this.meldeListe.getSheet();
 		SheetHelper sheetHelper = getSheetHelper();
 		sheetHelper.setActiveSheet(meldelisteSheet);
 
 		List<String> testNamen = listeMitTestNamen();
 
-		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(), AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
+		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(),
+				AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
 
-		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
+		int aktuelleSpieltagSpalte = this.meldeListe.spieltagSpalte(spieltag);
 
 		NumberCellValue numVal = NumberCellValue.from(meldelisteSheet,
 				Position.from(pos).spalte(aktuelleSpieltagSpalte));

@@ -10,6 +10,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
@@ -28,13 +29,14 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	}
 
 	@Override
-	protected void doRun() {
+	protected void doRun() throws GenerateException {
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		naechsteSpielrundeEinfuegen();
 	}
 
-	public void naechsteSpielrundeEinfuegen() {
-		int aktuelleSpielrunde = getKonfigurationSheet().getAktuelleSpielRunde();
-		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungenAktuellenSpielTag();
+	public void naechsteSpielrundeEinfuegen() throws GenerateException {
+		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(meldungen, aktuelleSpielrunde)) {
 			return;
@@ -42,7 +44,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 
 		// aktuelle vorhanden ?
 		int neueSpielrunde = aktuelleSpielrunde;
-		if (getSheetHelper().findByName(getSheetName(aktuelleSpielrunde)) != null) {
+		if (getSheetHelper().findByName(getSheetName(getSpielTag(), aktuelleSpielrunde)) != null) {
 			neueSpielrunde++;
 		} else {
 			aktuelleSpielrunde--; // noch nicht vorhanden
@@ -59,9 +61,11 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	 * @param meldungen
 	 * @param aktuelleSpielrunde bis zu diese spielrunde
 	 * @param aktuelleSpielrunde ab diese spielrunde = default = 1
+	 * @throws GenerateException
 	 */
 
-	void gespieltenRundenEinlesen(Meldungen meldungen, int aktuelleSpielrunde, int abSpielrunde) {
+	void gespieltenRundenEinlesen(Meldungen meldungen, int aktuelleSpielrunde, int abSpielrunde)
+			throws GenerateException {
 
 		int spielrunde = 1;
 
@@ -70,7 +74,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		}
 
 		for (; spielrunde <= aktuelleSpielrunde; spielrunde++) {
-			XSpreadsheet sheet = getSpielRundeSheet(spielrunde);
+			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrunde);
 			if (sheet == null) {
 				continue;
 			}

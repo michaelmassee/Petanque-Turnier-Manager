@@ -26,6 +26,7 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
@@ -41,6 +42,7 @@ import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 
 abstract public class AbstractMeldeListeSheet extends SheetRunner
@@ -72,13 +74,14 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	private final SpielerSpalte spielerSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
 	private final KonfigurationSheet konfigurationSheet;
+	private SpielTagNr spielTag = null;
 
 	public AbstractMeldeListeSheet(XComponentContext xContext) {
 		super(xContext);
 		this.konfigurationSheet = newKonfigurationSheet(xContext);
 		this.sheetHelper = new SheetHelper(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this,
-				getFormation());
+				Formation.MELEE);
 		this.supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
 		this.errMsgBox = new ErrorMessageBox(xContext);
 	}
@@ -92,8 +95,9 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 * anzahl header zählen
 	 *
 	 * @return
+	 * @throws GenerateException
 	 */
-	public int countAnzSpieltage() {
+	public int countAnzSpieltage() throws GenerateException {
 		int anzSpieltage = 0;
 		int ersteSpieltagspalteSpalte = ersteSpieltagspalteSpalte();
 		Position posHeader = Position.from(ersteSpieltagspalteSpalte, HEADER_ZEILE);
@@ -109,7 +113,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		return anzSpieltage;
 	}
 
-	public Formation getFormation() {
+	public Formation getFormation() throws GenerateException {
 		return this.getKonfigurationSheet().getFormation();
 	}
 
@@ -122,7 +126,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		this.sheetHelper.setActiveSheet(getSheet());
 	}
 
-	public void upDateSheet() {
+	public void upDateSheet() throws GenerateException {
 
 		if (isErrorInSheet()) {
 			return;
@@ -147,7 +151,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 			this.sheetHelper.setTextInCell(bezCelVal);
 		}
 
-		formatSpielTagSpalte(this.getKonfigurationSheet().getAktuelleSpieltag());
+		formatSpielTagSpalte(getSpielTag());
 
 		// eventuelle luecken in spiele namen nach unten sortieren
 		lueckenEntfernen();
@@ -159,8 +163,8 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		this.formatDaten();
 	}
 
-	protected void formatSpielTagSpalte(int spieltag) {
-		checkArgument(spieltag > 0);
+	protected void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
+		checkNotNull(spieltag);
 		XSpreadsheet sheet = getSheet();
 		int hederBackColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
 		StringCellValue bezCelSpieltagVal = StringCellValue
@@ -174,7 +178,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		this.sheetHelper.setTextInCell(bezCelSpieltagVal);
 	}
 
-	void formatDaten() {
+	void formatDaten() throws GenerateException {
 		int letzteDatenZeile = this.spielerSpalte.letzteDatenZeile();
 		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
 			// keine Daten
@@ -214,45 +218,46 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	/**
 	 * @param spieltag = 1 bis x
 	 * @return
+	 * @throws GenerateException
 	 */
-	public String spielTagHeader(int spieltag) {
-		return spieltag + ". " + SPIELTAG_HEADER_STR;
+	public String spielTagHeader(SpielTagNr spieltag) throws GenerateException {
+		return spieltag.getNr() + ". " + SPIELTAG_HEADER_STR;
 	}
 
 	/**
 	 * diese Spalte nur beim supermelee
 	 *
 	 * @return -1 wenn nicht vorhanden
+	 * @throws GenerateException
 	 */
-	public int nichtZusammenSpielenSpalte() {
+	public int nichtZusammenSpielenSpalte() throws GenerateException {
 		if (getFormation() == Formation.MELEE) {
 			return 2; // Spalte C
 		}
 		return -1;
 	}
 
-	public int letzteSpielTagSpalte() {
+	public int letzteSpielTagSpalte() throws GenerateException {
 		int anzSpieltage = countAnzSpieltage();
 		return ersteSpieltagspalteSpalte() + (anzSpieltage - 1);
 	}
 
-	public int ersteSpieltagspalteSpalte() {
+	public int ersteSpieltagspalteSpalte() throws GenerateException {
 		if (nichtZusammenSpielenSpalte() > -1) {
 			return nichtZusammenSpielenSpalte() + 1;
 		}
 		return SPIELER_NR_SPALTE + this.spielerSpalte.anzahlSpielerNamenSpalten();
 	}
 
-	public int aktuelleSpieltagSpalte() {
-		return spieltagSpalte(this.getKonfigurationSheet().getAktuelleSpieltag());
+	public int aktuelleSpieltagSpalte() throws GenerateException {
+		return spieltagSpalte(this.getKonfigurationSheet().getAktiveSpieltag());
 	}
 
-	public int spieltagSpalte(int spieltag) {
-		checkArgument(spieltag > 0, "spieltag %s < 1", spieltag);
-		return ersteSpieltagspalteSpalte() + spieltag - 1;
+	public int spieltagSpalte(SpielTagNr spieltag) throws GenerateException {
+		return ersteSpieltagspalteSpalte() + spieltag.getNr() - 1;
 	}
 
-	public int ersteSummeSpalte() {
+	public int ersteSummeSpalte() throws GenerateException {
 		return letzteSpielTagSpalte() + SUMMEN_SPALTE_OFFSET;
 	}
 
@@ -266,7 +271,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 				+ ";2;0)";
 	}
 
-	public void lueckenEntfernen() {
+	public void lueckenEntfernen() throws GenerateException {
 		doSort(this.spielerSpalte.getSpielerNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob
 		// daten oder nicht
 		int letzteNrZeile = this.spielerSpalte.neachsteFreieDatenZeile();
@@ -291,7 +296,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		return this.spielerSpalte.getSpielerNameSpalte();
 	}
 
-	public boolean isErrorInSheet() {
+	public boolean isErrorInSheet() throws GenerateException {
 		XSpreadsheet xSheet = getSheet();
 
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
@@ -325,7 +330,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		return false;
 	}
 
-	public void updateSpielerNr() {
+	public void updateSpielerNr() throws GenerateException {
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
 		if (letzteSpielZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
@@ -355,8 +360,9 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 * alle sortierbare daten, ohne header !
 	 *
 	 * @return
+	 * @throws GenerateException
 	 */
-	private XCellRange getxCellRangeAlleDaten() {
+	private XCellRange getxCellRangeAlleDaten() throws GenerateException {
 		XSpreadsheet xSheet = getSheet();
 		XCellRange xCellRange = null;
 		try {
@@ -373,7 +379,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		return xCellRange;
 	}
 
-	public void doSort(int spalteNr, boolean isAscending) {
+	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 
 		XCellRange xCellRange = getxCellRangeAlleDaten();
 
@@ -408,7 +414,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		xSortable.sort(aSortDesc);
 	}
 
-	public void updateSpieltageSummenSpalten() {
+	public void updateSpieltageSummenSpalten() throws GenerateException {
 
 		if (this.spielerSpalte.letzteDatenZeile() < ERSTE_DATEN_ZEILE) {
 			return; // keine daten
@@ -456,6 +462,8 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 
+			SpielTagNr spielTagNr = new SpielTagNr(spieltagCntr);
+
 			Position posSpieltagWerte = Position.from(ersteSummeSpalte() + spieltagCntr, SUMMEN_ERSTE_ZEILE - 1);
 
 			// Header
@@ -463,21 +471,21 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 			// Summe Aktive Spieler "=ZÄHLENWENN(D3:D102;1)"
 			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_AKTIVE_ZEILE),
-					"=" + formulaCountSpieler(spieltagCntr, "1"));
+					"=" + formulaCountSpieler(spielTagNr, "1"));
 
 			// Summe inAktive Spieler "=ZÄHLENWENN(D3:D102;0) + ZÄHLENWENN(D3:D102;"")"
 			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_INAKTIVE_ZEILE),
-					"=" + formulaCountSpieler(spieltagCntr, "0") + " + " + formulaCountSpieler(spieltagCntr, "\"\""));
+					"=" + formulaCountSpieler(spielTagNr, "0") + " + " + formulaCountSpieler(spielTagNr, "\"\""));
 
 			// Ausgestiegen =ZÄHLENWENN(D3:D102;2)
 			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_AUSGESTIEGENE_ZEILE),
-					"=" + formulaCountSpieler(spieltagCntr, "2"));
+					"=" + formulaCountSpieler(spielTagNr, "2"));
 			// -----------------------------------
 			// Aktiv + Ausgestiegen
-			Position anzahlAktiveSpielerPosition = getAnzahlAktiveSpielerPosition(spieltagCntr);
+			Position anzahlAktiveSpielerPosition = getAnzahlAktiveSpielerPosition(spielTagNr);
 			String aktivZelle = this.sheetHelper.getAddressFromColumnRow(anzahlAktiveSpielerPosition);
 			String ausgestiegenZelle = this.sheetHelper
-					.getAddressFromColumnRow(getAusgestiegenSpielerPosition(spieltagCntr));
+					.getAddressFromColumnRow(getAusgestiegenSpielerPosition(spielTagNr));
 			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(),
 					"=" + aktivZelle + "+" + ausgestiegenZelle);
 			// -----------------------------------
@@ -488,7 +496,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 					"=" + aktivZelle + "+" + inAktivZelle + "+" + ausgestiegenZelle);
 			// -----------------------------------
 			String anzSpielerAddr = this.sheetHelper
-					.getAddressFromColumnRow(getAnzahlAktiveSpielerPosition(spieltagCntr));
+					.getAddressFromColumnRow(getAnzahlAktiveSpielerPosition(spielTagNr));
 			String formulaSverweisAnzDoublette = this.supermeleeTeamPaarungen
 					.formulaSverweisAnzDoublette(anzSpielerAddr);
 			this.sheetHelper.setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), formulaSverweisAnzDoublette);
@@ -505,40 +513,40 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	// ---------------------------------------------
-	public int getAnzahlAktiveSpieler(int Spieltag) {
+	public int getAnzahlAktiveSpieler(SpielTagNr Spieltag) throws GenerateException {
 		return this.sheetHelper.getIntFromCell(getSheet(), getAnzahlAktiveSpielerPosition(Spieltag));
 	}
 
-	public Position getAnzahlAktiveSpielerPosition(int Spieltag) {
-		return Position.from(ersteSummeSpalte() + Spieltag, SUMMEN_AKTIVE_ZEILE);
+	public Position getAnzahlAktiveSpielerPosition(SpielTagNr spieltag) throws GenerateException {
+		return Position.from(ersteSummeSpalte() + spieltag.getNr(), SUMMEN_AKTIVE_ZEILE);
 	}
 
 	// ---------------------------------------------
-	public int getAnzahlInAktiveSpieler(int Spieltag) {
-		return this.sheetHelper.getIntFromCell(getSheet(), getAnzahlInAktiveSpielerPosition(Spieltag));
+	public int getAnzahlInAktiveSpieler(SpielTagNr spieltag) throws GenerateException {
+		return this.sheetHelper.getIntFromCell(getSheet(), getAnzahlInAktiveSpielerPosition(spieltag));
 	}
 
-	public Position getAnzahlInAktiveSpielerPosition(int Spieltag) {
-		return Position.from(ersteSummeSpalte() + Spieltag, SUMMEN_INAKTIVE_ZEILE);
+	public Position getAnzahlInAktiveSpielerPosition(SpielTagNr spieltag) throws GenerateException {
+		return Position.from(ersteSummeSpalte() + spieltag.getNr(), SUMMEN_INAKTIVE_ZEILE);
 	}
 
 	// ---------------------------------------------
-	public int getAusgestiegenSpieler(int Spieltag) {
-		return this.sheetHelper.getIntFromCell(getSheet(), getAusgestiegenSpielerPosition(Spieltag));
+	public int getAusgestiegenSpieler(SpielTagNr spieltag) throws GenerateException {
+		return this.sheetHelper.getIntFromCell(getSheet(), getAusgestiegenSpielerPosition(spieltag));
 	}
 
-	public Position getAusgestiegenSpielerPosition(int Spieltag) {
-		return Position.from(ersteSummeSpalte() + Spieltag, SUMMEN_AUSGESTIEGENE_ZEILE);
+	public Position getAusgestiegenSpielerPosition(SpielTagNr spieltag) throws GenerateException {
+		return Position.from(ersteSummeSpalte() + spieltag.getNr(), SUMMEN_AUSGESTIEGENE_ZEILE);
 	}
 	// ---------------------------------------------
 
-	public Boolean isKannNurDoublette(int Spieltag) {
+	public Boolean isKannNurDoublette(SpielTagNr Spieltag) throws GenerateException {
 		return StringUtils
 				.isNotBlank(this.sheetHelper.getTextFromCell(getSheet(), getKannNurDoublettePosition(Spieltag)));
 	}
 
-	public Position getKannNurDoublettePosition(int Spieltag) {
-		return Position.from(ersteSummeSpalte() + Spieltag, SUMMEN_KANN_DOUBLETTE_ZEILE);
+	public Position getKannNurDoublettePosition(SpielTagNr Spieltag) throws GenerateException {
+		return Position.from(ersteSummeSpalte() + Spieltag.getNr(), SUMMEN_KANN_DOUBLETTE_ZEILE);
 	}
 	// ---------------------------------------------
 
@@ -547,8 +555,9 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 * @param spieltag 1 = erste spieltag
 	 * @param status = 1,2
 	 * @return "=ZÄHLENWENN(D3:D102;1)"
+	 * @throws GenerateException
 	 */
-	private String formulaCountSpieler(int spieltag, String status) {
+	private String formulaCountSpieler(SpielTagNr spieltag, String status) throws GenerateException {
 		int spieltagSpalte = spieltagSpalte(spieltag);
 		int letzteZeile = this.spielerSpalte.letzteDatenZeile();
 
@@ -562,17 +571,9 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		return "COUNTIF(" + ersteZelle + ":" + letzteZelle + ";" + status + ")";
 	}
 
-	@Override
-	public Meldungen getAktiveUndAusgesetztMeldungenAktuellenSpielTag() {
-		return getMeldungen(this.getKonfigurationSheet().getAktuelleSpieltag(),
-				Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
-	}
-
-	public Meldungen getAktiveMeldungenAktuellenSpielTag() {
-		return getMeldungen(this.getKonfigurationSheet().getAktuelleSpieltag(), Arrays.asList(SpielrundeGespielt.JA));
-	}
-
-	public Meldungen getMeldungen(int spieltag, List<SpielrundeGespielt> spielrundeGespielt) {
+	public Meldungen getMeldungen(SpielTagNr spieltag, List<SpielrundeGespielt> spielrundeGespielt)
+			throws GenerateException {
+		checkNotNull(spieltag);
 		Meldungen meldung = new Meldungen();
 		int letzteZeile = this.spielerSpalte.letzteDatenZeile();
 
@@ -611,34 +612,34 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	@Override
-	public int getSpielerZeileNr(int spielerNr) {
+	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		return this.spielerSpalte.getSpielerZeileNr(spielerNr);
 	}
 
 	@Override
-	public List<String> getSpielerNamenList() {
+	public List<String> getSpielerNamenList() throws GenerateException {
 		doSort(this.getSpielerNameSpalte(), true); // nach namen sortieren
 		return this.spielerSpalte.getSpielerNamenList();
 	}
 
 	@Override
-	public List<Integer> getSpielerNrList() {
+	public List<Integer> getSpielerNrList() throws GenerateException {
 		doSort(this.getSpielerNameSpalte(), true); // nach namen sortieren
 		return this.spielerSpalte.getSpielerNrList();
 	}
 
 	@Override
-	public int neachsteFreieDatenZeile() {
+	public int neachsteFreieDatenZeile() throws GenerateException {
 		return this.spielerSpalte.neachsteFreieDatenZeile();
 	}
 
 	@Override
-	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) {
+	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
 		this.spielerSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
 	}
 
 	@Override
-	public int letzteDatenZeile() {
+	public int letzteDatenZeile() throws GenerateException {
 		return this.spielerSpalte.letzteDatenZeile();
 	}
 
@@ -650,5 +651,33 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	protected KonfigurationSheet getKonfigurationSheet() {
 		return this.konfigurationSheet;
 	}
+
+	public SpielTagNr getSpielTag() throws GenerateException {
+		return this.spielTag;
+	}
+
+	public void setSpielTag(SpielTagNr spielTag) {
+		this.spielTag = spielTag;
+	}
+
+	@Override
+	public Meldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
+		return getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+	}
+
+	@Override
+	public Meldungen getAktiveMeldungen() throws GenerateException {
+		return getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
+	}
+
+	// @Override
+	// public Meldungen getAktiveUndAusgesetztMeldungenAktuellenSpielTag() throws GenerateException {
+	// return getMeldungen(this.getKonfigurationSheet().getAktiveSpieltag(),
+	// Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+	// }
+	//
+	// public Meldungen getAktiveMeldungenAktuellenSpielTag() throws GenerateException {
+	// return getMeldungen(this.getKonfigurationSheet().getAktiveSpieltag(), Arrays.asList(SpielrundeGespielt.JA));
+	// }
 
 }
