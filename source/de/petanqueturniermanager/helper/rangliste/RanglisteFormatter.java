@@ -2,7 +2,7 @@
 * Erstellung : 14.04.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.helper.sheet;
+package de.petanqueturniermanager.helper.rangliste;
 
 import static com.google.common.base.Preconditions.*;
 import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
@@ -17,6 +17,8 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
 
 public class RanglisteFormatter extends AbstractRanglisteFormatter {
