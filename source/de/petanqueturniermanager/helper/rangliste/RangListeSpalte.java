@@ -2,7 +2,7 @@
 * Erstellung : 01.04.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.helper.sheet;
+package de.petanqueturniermanager.helper.rangliste;
 
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
 
@@ -18,6 +18,8 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 public class RangListeSpalte {
 

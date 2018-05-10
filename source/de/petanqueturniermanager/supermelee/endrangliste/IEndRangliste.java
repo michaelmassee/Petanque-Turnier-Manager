@@ -5,7 +5,7 @@
 package de.petanqueturniermanager.supermelee.endrangliste;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.sheet.IRangliste;
+import de.petanqueturniermanager.helper.rangliste.IRangliste;
 
 public interface IEndRangliste extends IRangliste {
 
