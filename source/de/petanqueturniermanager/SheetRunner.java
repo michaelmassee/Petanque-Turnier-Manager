@@ -52,7 +52,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	}
 
-	protected abstract Logger getLogger();
+	public abstract Logger getLogger();
 
 	protected abstract void doRun() throws GenerateException;
 

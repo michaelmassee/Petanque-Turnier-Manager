@@ -39,7 +39,7 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 

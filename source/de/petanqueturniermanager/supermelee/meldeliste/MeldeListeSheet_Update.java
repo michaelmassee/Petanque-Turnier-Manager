@@ -25,7 +25,7 @@ public class MeldeListeSheet_Update extends AbstractMeldeListeSheet {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 }

@@ -54,12 +54,15 @@ public class NewSheet {
 
 	public boolean create() {
 		XSpreadsheet sheet = this.sheetHelper.findByName(this.sheetName);
-		if (sheet != null && !this.force) {
-			WarningBox warnBox = new WarningBox(this.xContext);
-			short result = warnBox.showYesNo("Erstelle Tabelle",
-					"Tabelle '" + this.sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?");
-			if (result != MessageBoxResults.YES) {
-				return false;
+		this.didCreate = false;
+		if (sheet != null) {
+			if (!this.force) {
+				WarningBox warnBox = new WarningBox(this.xContext);
+				short result = warnBox.showYesNo("Erstelle Tabelle",
+						"Tabelle '" + this.sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?");
+				if (result != MessageBoxResults.YES) {
+					return false;
+				}
 			}
 			this.sheetHelper.removeSheet(this.sheetName);
 		}

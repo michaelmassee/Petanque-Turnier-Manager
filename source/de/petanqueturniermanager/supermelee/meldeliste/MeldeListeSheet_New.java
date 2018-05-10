@@ -32,7 +32,7 @@ public class MeldeListeSheet_New extends AbstractMeldeListeSheet {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 
