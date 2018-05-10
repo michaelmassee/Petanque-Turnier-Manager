@@ -6,18 +6,12 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
 
-import java.lang.ref.WeakReference;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -26,37 +20,23 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
 public class RangListeSpalte {
-	private static final Logger logger = LogManager.getLogger(RangListeSpalte.class);
 
-	private final WeakReference<IMitSpielerSpalte> spielerSpalte;
 	private final int rangListeSpalte;
 	private final SheetHelper sheetHelper;
-	private final WeakReference<IEndSummeSpalten> endsummenspalten;
-	private final WeakReference<ISheet> sheet;
+	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public RangListeSpalte(XComponentContext xContext, int rangListeSpalte, IMitSpielerSpalte spielerSpalte,
-			IEndSummeSpalten endsummeSpaltenSheet, ISheet sheet) {
+	public RangListeSpalte(XComponentContext xContext, int rangListeSpalte, IRangliste iRanglisteSheet) {
 		this.rangListeSpalte = rangListeSpalte;
 		this.sheetHelper = new SheetHelper(xContext);
-		this.spielerSpalte = new WeakReference<IMitSpielerSpalte>(spielerSpalte);
-		this.endsummenspalten = new WeakReference<IEndSummeSpalten>(endsummeSpaltenSheet);
-		this.sheet = new WeakReference<ISheet>(sheet);
+		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
 	}
 
 	public int getRangListeSpalte() {
 		return this.rangListeSpalte;
 	}
 
-	private IMitSpielerSpalte getMitSpielerSpalte() {
-		return this.spielerSpalte.get();
-	}
-
-	private IEndSummeSpalten getEndSummeSpalten() {
-		return this.endsummenspalten.get();
-	}
-
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
-		int ersteZeile = getMitSpielerSpalte().getErsteDatenZiele();
+		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
 		StringCellValue celVal = StringCellValue
 				.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile - 1), "Platz")
@@ -68,9 +48,9 @@ public class RangListeSpalte {
 	public void upDateRanglisteSpalte() throws GenerateException {
 
 		// SummenSpalten
-		int letzteZeile = getMitSpielerSpalte().letzteDatenZeile();
-		int ersteSpalteEndsumme = getEndSummeSpalten().getErsteSummeSpalte();
-		int ersteZeile = getMitSpielerSpalte().getErsteDatenZiele();
+		int letzteZeile = getIRanglisteSheet().letzteDatenZeile();
+		int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
+		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
 		StringCellValue platzPlatzEins = StringCellValue.from(getSheet(),
 				Position.from(this.rangListeSpalte, ersteZeile), "x");
@@ -115,12 +95,12 @@ public class RangListeSpalte {
 				+ (pos.getSpalte() + 1) + ";8))";
 	}
 
-	private final XSpreadsheet getSheet() throws GenerateException {
-		if (!this.sheet.isEnqueued()) {
-			return this.sheet.get().getSheet();
-		}
-		// darf nicht passieren
-		throw new NullPointerException("Weakref ISheet is Null");
+	private IRangliste getIRanglisteSheet() {
+		return this.iRanglisteSheet.getObject();
+	}
+
+	protected XSpreadsheet getSheet() throws GenerateException {
+		return getIRanglisteSheet().getSheet();
 	}
 
 }

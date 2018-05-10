@@ -41,8 +41,7 @@ import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
-import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
-import de.petanqueturniermanager.helper.sheet.IRangliste;
+import de.petanqueturniermanager.helper.sheet.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.sheet.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -55,7 +54,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielerSpielrundeErgebnis;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 
-public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSpalte, IEndSummeSpalten, IRangliste {
+public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpalten, ISpielTagRangliste {
 
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet.class);
 
@@ -90,7 +89,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste,
 				Formation.MELEE);
 		this.aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xContext);
-		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this, this, this);
+		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
 		this.ranglisteFormatter = new RanglisteFormatter(xContext, this, ANZAHL_SPALTEN_IN_SPIELRUNDE,
 				this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.getKonfigurationSheet());
 	}
@@ -120,6 +119,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		this.getRangListeSpalte().upDateRanglisteSpalte();
 		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
 		this.ranglisteFormatter.formatDaten();
+		this.ranglisteFormatter.formatDatenGeradeUngerade();
 		ergebnisseEinfuegen();
 		nichtgespielteRundenFuellen();
 		doSort();
@@ -127,8 +127,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {
-		// TODO Move to endsumme
-
 		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 		if (anzSpielRunden < 1) {
 			return;
@@ -345,14 +343,14 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		return ERSTE_SPIELRUNDE_SPALTE + (anzSpielRunden * 2);
 	}
 
-	/**
-	 * @return
-	 * @throws GenerateException
-	 */
-	@Override
-	public List<Integer> getSpielerNrList() throws GenerateException {
-		return getSpielerNrList(getSpieltagNr());
-	}
+	// /**
+	// * @return
+	// * @throws GenerateException
+	// */
+	// @Override
+	// public List<Integer> getSpielerNrList() throws GenerateException {
+	// return getSpielerNrList(getSpieltagNr());
+	// }
 
 	public List<Integer> getSpielerNrList(SpielTagNr spielTagNr) throws GenerateException {
 		checkNotNull(spielTagNr);
@@ -418,7 +416,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 		SpielTagNr spieltagNr = getSpieltagNr();
 
-		for (int spielerNr : getSpielerNrList()) {
+		for (int spielerNr : this.spielerSpalte.getSpielerNrList()) {
 			SpielerSpieltagErgebnis erg = spielerErgebnisseEinlesen(spieltagNr, spielerNr);
 			if (erg != null) {
 				spielTagErgebnisse.add(erg);
@@ -636,7 +634,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		StringCellValue sortlisteVal = StringCellValue.from(sortlisteHeader).setComment(null);
 
 		for (int ranglistePosition = 0; ranglistePosition < ergList.size(); ranglistePosition++) {
-			int spielerZeile = getSpielerZeileNr(ergList.get(ranglistePosition).getSpielerNr());
+			int spielerZeile = this.spielerSpalte.getSpielerZeileNr(ergList.get(ranglistePosition).getSpielerNr());
 			sortlisteVal.setValue(StringUtils.leftPad("" + (ranglistePosition + 1), 3, '0')).zeile(spielerZeile);
 			this.getSheetHelper().setTextInCell(sortlisteVal);
 		}
@@ -779,23 +777,23 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 	protected Logger getLogger() {
 		return logger;
 	}
-
-	// Delegates
-	// --------------------------
-	@Override
-	public int neachsteFreieDatenZeile() throws GenerateException {
-		return this.spielerSpalte.neachsteFreieDatenZeile();
-	}
-
-	@Override
-	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
-		return this.spielerSpalte.getSpielerZeileNr(spielerNr);
-	}
-
-	@Override
-	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
-		this.spielerSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
-	}
+	//
+	// // Delegates
+	// // --------------------------
+	// @Override
+	// public int neachsteFreieDatenZeile() throws GenerateException {
+	// return this.spielerSpalte.neachsteFreieDatenZeile();
+	// }
+	//
+	// @Override
+	// public int getSpielerZeileNr(int spielerNr) throws GenerateException {
+	// return this.spielerSpalte.getSpielerZeileNr(spielerNr);
+	// }
+	//
+	// @Override
+	// public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
+	// this.spielerSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
+	// }
 
 	@Override
 	public int letzteDatenZeile() throws GenerateException {
@@ -825,10 +823,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 		return this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 	}
 
-	@Override
-	public List<String> getSpielerNamenList() throws GenerateException {
-		return this.spielerSpalte.getSpielerNamenList();
-	}
+	// @Override
+	// public List<String> getSpielerNamenList() throws GenerateException {
+	// return this.spielerSpalte.getSpielerNamenList();
+	// }
 
 	public SpielTagNr getSpieltagNr() throws GenerateException {
 		return this.spieltagNr;
@@ -840,5 +838,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IMitSpielerSp
 
 	protected KonfigurationSheet getKonfigurationSheet() {
 		return this.konfigurationSheet;
+	}
+
+	@Override
+	public int getLetzteSpalte() throws GenerateException {
+		return getErsteSummeSpalte() + ANZAHL_SPALTEN_IN_SUMME - 1;
 	}
 }

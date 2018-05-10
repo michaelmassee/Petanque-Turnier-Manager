@@ -7,7 +7,9 @@ package de.petanqueturniermanager.helper.sheet;
 import static com.google.common.base.Preconditions.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -116,7 +118,7 @@ public class SpielerSpalte {
 
 		this.sheetHelper.setPropertiesInRange(getSheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
 
 	}
 
@@ -216,25 +218,31 @@ public class SpielerSpalte {
 	public void alleSpieltagSpielerEinfuegen() throws GenerateException {
 		// spieler einfuegen wenn nicht vorhanden
 		Meldungen meldungen = getMeldeliste().getAktiveUndAusgesetztMeldungen();
+		HashSet<Integer> spielerNummerList = new HashSet<>();
+		meldungen.spieler().forEach((spieler) -> {
+			spielerNummerList.add(spieler.getNr());
+		});
 
+		alleSpielerNrEinfuegen(spielerNummerList);
+	}
+
+	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList) throws GenerateException {
 		NumberCellValue celValSpielerNr = NumberCellValue.from(this.getSheet(),
 				Position.from(this.spielerNrSpalte, getErsteDatenZiele()), 0);
 
-		// =SVERWEIS(INDIREKT(ADRESSE(ZEILE();1;8));Meldeliste.$A3:$B1000;2;0)
-		// INDIRECT(ADDRESS(ROW()-1;COLUMN();8))"
+		for (int spielrNummer : spielerNummerList) {
+			celValSpielerNr.setValue((double) spielrNummer);
+			this.sheetHelper.setValInCell(celValSpielerNr);
+			celValSpielerNr.zeilePlusEins();
+		}
 
+		// filldown formula
 		String verweisAufMeldeListeFormula = getMeldeliste()
 				.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;8))");
-
-		// Hinweis: Fill Down nicht verwenden
-		meldungen.spieler().forEach((spieler) -> {
-			celValSpielerNr.setValue((double) spieler.getNr());
-			this.sheetHelper.setValInCell(celValSpielerNr);
-			StringCellValue strCelVal = StringCellValue.from(celValSpielerNr);
-			this.sheetHelper.setFormulaInCell(
-					strCelVal.spaltePlusEins().setShrinkToFit(true).setValue(verweisAufMeldeListeFormula));
-			celValSpielerNr.zeilePlusEins();
-		});
+		StringCellValue strCelValSpielerName = StringCellValue.from(getSheet(),
+				Position.from(this.spielerNrSpalte, getErsteDatenZiele()));
+		this.sheetHelper.setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula)
+				.setFillAutoDown(celValSpielerNr.getPos().getZeile() - 1));
 	}
 
 	public void fehlendeSpieltagSpielerEinfuegen() throws GenerateException {

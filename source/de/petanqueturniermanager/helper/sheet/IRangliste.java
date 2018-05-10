@@ -1,5 +1,5 @@
 /**
-* Erstellung : 14.04.2018 / Michael Massee
+* Erstellung : 10.05.2018 / Michael Massee
 **/
 
 package de.petanqueturniermanager.helper.sheet;
@@ -7,10 +7,12 @@ package de.petanqueturniermanager.helper.sheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 
-public interface IRangliste extends ISheet {
+public interface IRangliste extends ISheet, IEndSummeSpalten {
 
-	int getAnzahlRunden() throws GenerateException;
+	int getLetzteSpalte() throws GenerateException;
 
-	public int getErsteSummeSpalte() throws GenerateException;
+	public int letzteDatenZeile() throws GenerateException;
+
+	int getErsteDatenZiele() throws GenerateException;
 
 }

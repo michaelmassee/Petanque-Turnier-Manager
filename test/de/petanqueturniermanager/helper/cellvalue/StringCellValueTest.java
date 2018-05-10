@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.cellvalue;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,8 +14,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 
 @RunWith(PowerMockRunner.class)
@@ -37,6 +35,19 @@ public class StringCellValueTest {
 
 		StringCellValue testStrVal = StringCellValue.from(testNumbCellVal);
 		assertThat(testStrVal.getPos().getSpalte()).isEqualTo(spalte);
+	}
+
+	@Test
+	public void testAppendValue() throws Exception {
+		Position pos = Position.from(12, 12);
+		StringCellValue testStrVal = StringCellValue.from(this.spreadsheetMock, pos);
+		assertThat(testStrVal.getValue()).isEqualTo("");
+
+		testStrVal.appendValue("test");
+		assertThat(testStrVal.getValue()).isEqualTo("test");
+
+		testStrVal.appendValue(" test12");
+		assertThat(testStrVal.getValue()).isEqualTo("test test12");
 	}
 
 }

@@ -12,6 +12,7 @@ import java.util.Comparator;
 
 import com.google.common.base.MoreObjects;
 
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErgebnis>
@@ -25,6 +26,17 @@ public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErg
 		this.spielTag = spielTag;
 	}
 
+	public int getSpielTagNr() {
+		if (this.spielTag != null) {
+			try {
+				return this.spielTag.getNr();
+			} catch (GenerateException e) {
+				return 0;
+			}
+		}
+		return 0;
+	}
+
 	public SpielTagNr getSpielTag() {
 		return this.spielTag;
 	}
@@ -34,6 +46,7 @@ public class SpielerSpieltagErgebnis extends AbstractErgebnis<SpielerSpieltagErg
 				.thenComparingInt(SpielerSpieltagErgebnis::getSpielDiv)
 				.thenComparingInt(SpielerSpieltagErgebnis::getPunkteDiv)
 				.thenComparingInt(SpielerSpieltagErgebnis::getPunktePlus)
+				.thenComparingInt(SpielerSpieltagErgebnis::getSpielTagNr)
 				.thenComparing(reverseOrder(comparingInt(SpielerSpieltagErgebnis::getSpielerNr)));
 	}
 
