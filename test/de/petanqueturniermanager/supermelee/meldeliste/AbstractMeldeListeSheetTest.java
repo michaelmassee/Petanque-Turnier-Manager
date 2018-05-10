@@ -69,7 +69,7 @@ public class AbstractMeldeListeSheetTest {
 			}
 
 			@Override
-			protected Logger getLogger() {
+			public Logger getLogger() {
 				return logger;
 			}
 		};

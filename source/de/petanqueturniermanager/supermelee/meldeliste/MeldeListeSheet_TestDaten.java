@@ -35,7 +35,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return MeldeListeSheet_TestDaten.logger;
 	}
 

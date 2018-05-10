@@ -46,7 +46,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 

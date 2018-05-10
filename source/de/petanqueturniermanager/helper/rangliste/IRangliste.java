@@ -16,4 +16,6 @@ public interface IRangliste extends ISheet, IEndSummeSpalten {
 
 	int getErsteDatenZiele() throws GenerateException;
 
+	int getManuellSortSpalte() throws GenerateException;
+
 }

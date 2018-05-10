@@ -32,7 +32,7 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 

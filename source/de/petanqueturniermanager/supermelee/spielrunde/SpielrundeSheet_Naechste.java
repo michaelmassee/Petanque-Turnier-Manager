@@ -24,7 +24,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 

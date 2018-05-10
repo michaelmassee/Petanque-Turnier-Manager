@@ -23,6 +23,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -54,6 +55,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	private final KonfigurationSheet konfigurationSheet;
 	private final EndRanglisteFormatter endRanglisteFormatter;
 	private final RangListeSpalte rangListeSpalte;
+	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(XComponentContext xContext) {
 		super(xContext);
@@ -65,11 +67,13 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		this.endRanglisteFormatter = new EndRanglisteFormatter(xContext, this, getAnzSpaltenInSpieltag(),
 				this.spielerSpalte, ERSTE_SPIELTAG_SPALTE, this.konfigurationSheet);
 		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
+		this.rangListeSorter = new RangListeSorter(xContext, this);
 	}
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (NewSheet.from(getxContext(), SHEETNAME).pos(SHEET_POS).tabColor(SHEET_COLOR).setActiv().create()) {
+		if (NewSheet.from(getxContext(), SHEETNAME).pos(SHEET_POS).tabColor(SHEET_COLOR).setActiv().forceCreate()
+				.create()) {
 			upDateSheet();
 		}
 	}
@@ -84,14 +88,16 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		spielTageEinfuegen();
 		updateEndSummenSpalten();
 
+		this.rangListeSorter.insertSortValidateSpalte();
+		this.rangListeSorter.insertManuelsortSpalten();
+
 		this.endRanglisteFormatter.formatDaten();
 		this.rangListeSpalte.upDateRanglisteSpalte();
 		this.rangListeSpalte.insertHeaderInSheet(headerColor);
-		this.endRanglisteFormatter.formatDatenGeradeUngerade();
 
+		this.endRanglisteFormatter.formatDatenGeradeUngerade();
+		this.rangListeSorter.doSort();
 		// updateAnzSpieltageSpalte();
-		// doSort();
-		// ranglisteSpalte();
 	}
 
 	private void spielerEinfügen() throws GenerateException {
@@ -418,7 +424,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 
@@ -441,7 +447,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	@Override
 	public int getLetzteSpalte() throws GenerateException {
 		// plus 1 spalte fuer spieltag
-		return getErsteSummeSpalte() + ANZAHL_SPALTEN_IN_SUMME;
+		return getErsteSummeSpalte() + PUNKTE_DIV_OFFS + 1;
 	}
 
 	private int getAnzSpaltenInSpieltag() {
@@ -457,4 +463,10 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	public int getErsteDatenZiele() throws GenerateException {
 		return ERSTE_DATEN_ZEILE;
 	}
+
+	@Override
+	public int getManuellSortSpalte() throws GenerateException {
+		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
+	}
+
 }

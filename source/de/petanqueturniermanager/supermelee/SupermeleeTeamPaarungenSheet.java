@@ -86,7 +86,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 

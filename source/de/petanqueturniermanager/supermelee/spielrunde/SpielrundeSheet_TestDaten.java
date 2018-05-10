@@ -34,7 +34,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	}
 
 	@Override
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return logger;
 	}
 

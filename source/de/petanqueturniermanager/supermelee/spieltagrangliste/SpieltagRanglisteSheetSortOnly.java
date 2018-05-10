@@ -20,7 +20,7 @@ public class SpieltagRanglisteSheetSortOnly extends SpieltagRanglisteSheet {
 		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
-		doSort();
+		getRangListeSorter().doSort();
 	}
 
 }
