@@ -9,7 +9,6 @@ import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -603,71 +602,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	/**
-	 * eigen sort spalte einfuegen, und nach nur eine spalte sortieren<br>
-	 * als workaround, weil nur 3 spalten am stück sortierbar langsam
-	 *
-	 * @throws GenerateException
-	 */
-	@Deprecated
-	private void doSortmitSortSpalte() throws GenerateException {
-
-		XSpreadsheet sheet = getSheet();
-		List<SpielerSpieltagErgebnis> ergList = spielTagErgebnisseEinlesen();
-
-		// Sortieren
-		ergList.sort(new Comparator<SpielerSpieltagErgebnis>() {
-			@Override
-			public int compare(SpielerSpieltagErgebnis o1, SpielerSpieltagErgebnis o2) {
-				return o1.compareTo(o2);
-			}
-		});
-
-		// Sortier Daten einfuegen
-		// -----
-
-		StringCellValue sortlisteHeader = StringCellValue
-				.from(sheet, Position.from(sortSpalte(), ERSTE_DATEN_ZEILE - 1)).setComment("Rangliste Sortier Spalte")
-				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setValue("Sort");
-		this.getSheetHelper().setTextInCell(sortlisteHeader);
-
-		StringCellValue sortlisteVal = StringCellValue.from(sortlisteHeader).setComment(null);
-
-		for (int ranglistePosition = 0; ranglistePosition < ergList.size(); ranglistePosition++) {
-			int spielerZeile = this.spielerSpalte.getSpielerZeileNr(ergList.get(ranglistePosition).getSpielerNr());
-			sortlisteVal.setValue(StringUtils.leftPad("" + (ranglistePosition + 1), 3, '0')).zeile(spielerZeile);
-			this.getSheetHelper().setTextInCell(sortlisteVal);
-		}
-
-		// spalte zeile (column, row, column, row)
-		XCellRange xCellRange = getxCellRangeAlleDaten();
-
-		if (xCellRange == null) {
-			return;
-		}
-
-		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
-		TableSortField[] aSortFields = new TableSortField[1];
-		TableSortField field1 = new TableSortField();
-		field1.Field = sortSpalte(); // 0 = erste spalte, nur eine Spalte sortieren
-		field1.IsAscending = true; // erste oben
-		aSortFields[0] = field1;
-
-		PropertyValue[] aSortDesc = new PropertyValue[2];
-		PropertyValue propVal = new PropertyValue();
-		propVal.Name = "SortFields";
-		propVal.Value = aSortFields;
-		aSortDesc[0] = propVal;
-
-		// specifies if cell formats are moved with the contents they belong to.
-		aSortDesc[1] = new PropertyValue();
-		aSortDesc[1].Name = "BindFormatsToContent";
-		aSortDesc[1].Value = false;
-
-		xSortable.sort(aSortDesc);
-	}
-
-	/**
 	 * mit bestehende spalten im sheet selbst sortieren.<br>
 	 * sortieren in 2 schritten
 	 *
@@ -777,23 +711,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	protected Logger getLogger() {
 		return logger;
 	}
-	//
-	// // Delegates
-	// // --------------------------
-	// @Override
-	// public int neachsteFreieDatenZeile() throws GenerateException {
-	// return this.spielerSpalte.neachsteFreieDatenZeile();
-	// }
-	//
-	// @Override
-	// public int getSpielerZeileNr(int spielerNr) throws GenerateException {
-	// return this.spielerSpalte.getSpielerZeileNr(spielerNr);
-	// }
-	//
-	// @Override
-	// public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
-	// this.spielerSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
-	// }
+	// Delegates
+	// --------------------------
 
 	@Override
 	public int letzteDatenZeile() throws GenerateException {
@@ -822,11 +741,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	public int getAnzahlRunden() throws GenerateException {
 		return this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 	}
-
-	// @Override
-	// public List<String> getSpielerNamenList() throws GenerateException {
-	// return this.spielerSpalte.getSpielerNamenList();
-	// }
 
 	public SpielTagNr getSpieltagNr() throws GenerateException {
 		return this.spieltagNr;
