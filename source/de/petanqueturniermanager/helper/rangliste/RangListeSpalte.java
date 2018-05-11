@@ -50,7 +50,7 @@ public class RangListeSpalte {
 	public void upDateRanglisteSpalte() throws GenerateException {
 
 		// SummenSpalten
-		int letzteZeile = getIRanglisteSheet().letzteDatenZeile();
+		int letzteZeile = getIRanglisteSheet().getLetzteDatenZeile();
 		int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 

@@ -52,7 +52,7 @@ public class RangListeSorter {
 	public void insertManuelsortSpalten() throws GenerateException {
 		// sortspalten for manuell sortieren
 
-		int letzteDatenZeile = getIRangliste().letzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
 		StringCellValue sortlisteVal = StringCellValue
@@ -93,7 +93,7 @@ public class RangListeSorter {
 
 	public void insertSortValidateSpalte() throws GenerateException {
 
-		int letzteDatenZeile = getIRangliste().letzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
 		XSpreadsheet sheet = getIRangliste().getSheet();
@@ -184,7 +184,7 @@ public class RangListeSorter {
 	}
 
 	public boolean isErrorInSheet() throws GenerateException {
-		int letzteDatenZeile = getIRangliste().letzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 		XSpreadsheet sheet = getIRangliste().getSheet();
 		int validateSpalte = validateSpalte();
@@ -285,7 +285,7 @@ public class RangListeSorter {
 	 * @throws GenerateException
 	 */
 	private XCellRange getxCellRangeAlleDaten() throws GenerateException {
-		int letzteDatenZeile = getIRangliste().letzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 		XSpreadsheet sheet = getIRangliste().getSheet();
 		XCellRange xCellRange = null;

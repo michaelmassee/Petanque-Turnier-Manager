@@ -179,7 +179,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	}
 
 	void formatDaten() throws GenerateException {
-		int letzteDatenZeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteDatenZeile = this.spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
 			// keine Daten
 			return;
@@ -414,7 +414,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	public void updateSpieltageSummenSpalten() throws GenerateException {
 
-		if (this.spielerSpalte.letzteDatenZeile() < ERSTE_DATEN_ZEILE) {
+		if (this.spielerSpalte.getLetzteDatenZeile() < ERSTE_DATEN_ZEILE) {
 			return; // keine daten
 		}
 
@@ -557,7 +557,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	 */
 	private String formulaCountSpieler(SpielTagNr spieltag, String status) throws GenerateException {
 		int spieltagSpalte = spieltagSpalte(spieltag);
-		int letzteZeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteZeile = this.spielerSpalte.getLetzteDatenZeile();
 
 		if (letzteZeile < ERSTE_DATEN_ZEILE) {
 			return "";
@@ -573,7 +573,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 			throws GenerateException {
 		checkNotNull(spieltag);
 		Meldungen meldung = new Meldungen();
-		int letzteZeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteZeile = this.spielerSpalte.getLetzteDatenZeile();
 
 		if (letzteZeile >= ERSTE_DATEN_ZEILE) {
 			// daten vorhanden
@@ -638,7 +638,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	@Override
 	public int letzteDatenZeile() throws GenerateException {
-		return this.spielerSpalte.letzteDatenZeile();
+		return this.spielerSpalte.getLetzteDatenZeile();
 	}
 
 	@Override

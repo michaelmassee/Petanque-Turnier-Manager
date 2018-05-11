@@ -17,12 +17,16 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -95,9 +99,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		this.rangListeSpalte.upDateRanglisteSpalte();
 		this.rangListeSpalte.insertHeaderInSheet(headerColor);
 
+		updateAnzSpieltageSpalte();
 		this.endRanglisteFormatter.formatDatenGeradeUngerade();
 		this.rangListeSorter.doSort();
-		// updateAnzSpieltageSpalte();
 	}
 
 	private void spielerEinfügen() throws GenerateException {
@@ -117,7 +121,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		// =WENNNV(SVERWEIS(A4;$'2. Spieltag Rangliste'.$A4:$D1000;4;0);"")
 
 		int anzSpieltage = getAnzahlSpieltage();
-		int letzteDatenZeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteDatenZeile = this.spielerSpalte.getLetzteDatenZeile();
 
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";8))";
 
@@ -139,196 +143,47 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		}
 	}
 
-	// private List<SpielerEndranglisteErgebnis> getSpielerEndranglisteErgebnisse() {
-	// XSpreadsheet xSheet = getEndranglisteSheet();
-	//
-	// // Daten zum Sportieren einlesen
-	// int ersteSpalteEndsumme = ersteSpalteEndsumme();
-	// int letzteZeile = letzteSpielerZeile();
-	// List<SpielerEndranglisteErgebnis> spielerEndranglisteErgebnisse = new ArrayList<>();
-	// for (int spielerZeilCntr = ERSTE_DATEN_ZEILE; spielerZeilCntr <= letzteZeile; spielerZeilCntr++) {
-	// int spielerNr = this.sheetHelper.getIntFromCell(xSheet, SPIELER_NR_SPALTE, spielerZeilCntr);
-	// if (spielerNr > -1) {
-	// SpielerEndranglisteErgebnis erg = new SpielerEndranglisteErgebnis(spielerNr);
-	// erg.setSpielPlus(this.sheetHelper.getIntFromCell(xSheet, ersteSpalteEndsumme + SPIELE_PLUS_OFFS,
-	// spielerZeilCntr));
-	// erg.setSpielMinus(this.sheetHelper.getIntFromCell(xSheet, ersteSpalteEndsumme + SPIELE_MINUS_OFFS,
-	// spielerZeilCntr));
-	// erg.setPunktePlus(this.sheetHelper.getIntFromCell(xSheet, ersteSpalteEndsumme + PUNKTE_PLUS_OFFS,
-	// spielerZeilCntr));
-	// erg.setPunkteMinus(this.sheetHelper.getIntFromCell(xSheet, ersteSpalteEndsumme + PUNKTE_MINUS_OFFS,
-	// spielerZeilCntr));
-	//
-	// if (erg.isValid()) {
-	// spielerEndranglisteErgebnisse.add(erg);
-	// }
-	// }
-	// }
-	// return spielerEndranglisteErgebnisse;
-	// }
-	//
-	// private int ersteSortSpalte() {
-	// return anzSpielTageSpalte() + ERSTE_SORTSPALTE_OFFSET;
-	// }
-	//
-	// /**
-	// * alle sortierbare daten, ohne header !
-	// *
-	// * @return
-	// */
-	//
-	// private XCellRange getxCellRangeAlleDaten() {
-	// XSpreadsheet xSheet = getEndranglisteSheet();
-	// XCellRange xCellRange = null;
-	// try {
-	// if (letzteSpielerZeile() > ERSTE_DATEN_ZEILE) { // daten vorhanden ?
-	// // (column, row, column, row)
-	// xCellRange = xSheet.getCellRangeByPosition(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSortSpalte(),
-	// letzteSpielerZeile());
-	// }
-	// } catch (IndexOutOfBoundsException e) {
-	// logger.error(e.getMessage(), e);
-	// return null;
-	// }
-	// return xCellRange;
-	// }
-	//
-	// private void doSort() {
-	// XSpreadsheet xSheet = getEndranglisteSheet();
-	//
-	// List<SpielerEndranglisteErgebnis> spielerEndranglisteErgebnisse = getSpielerEndranglisteErgebnisse();
-	//
-	// // Sortieren
-	// spielerEndranglisteErgebnisse.sort(new Comparator<SpielerEndranglisteErgebnis>() {
-	// @Override
-	// public int compare(SpielerEndranglisteErgebnis o1, SpielerEndranglisteErgebnis o2) {
-	// return o1.compareTo(o2);
-	// }
-	// });
-	//
-	// // Daten einfuegen
-	// for (int ranglistePosition = 0; ranglistePosition < spielerEndranglisteErgebnisse.size(); ranglistePosition++) {
-	// int spielerZeile = getSpielerZeileNr(spielerEndranglisteErgebnisse.get(ranglistePosition).getSpielerNr());
-	// this.sheetHelper.setTextInCell(xSheet, ersteSortSpalte(), spielerZeile,
-	// StringUtils.leftPad("" + (ranglistePosition + 1), 3, '0'));
-	// }
-	//
-	// // spalte zeile (column, row, column, row)
-	// XCellRange xCellRange = getxCellRangeAlleDaten();
-	//
-	// // XCellRange xCellRange = xSheet.getCellRangeByName("A4:AQ93");
-	// // XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xCellRange);
-	// // try {
-	// // xPropSet.setPropertyValue("CellBackColor", Integer.valueOf(Integer.valueOf(0x888888)));
-	// // } catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-	// // | WrappedTargetException e) {
-	// // e.printStackTrace();
-	// // }
-	//
-	// XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
-	//
-	// // https://www.openoffice.org/api/docs/common/ref/com/sun/star/util/XSortable-xref.html
-	// // https://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Sorting#Table_Sort_Descriptor
-	//
-	// TableSortField[] aSortFields = new TableSortField[1];
-	// TableSortField field1 = new TableSortField();
-	// field1.Field = ersteSortSpalte(); // 0 = erste spalte, nur eine Spalte sortieren
-	// field1.IsAscending = true; // erste oben
-	// // Note – The FieldType member, that is used to select textual or numeric sorting in
-	// // text documents is ignored in the spreadsheet application. In a spreadsheet, a cell
-	// // always has a known type of text or value, which is used for sorting, with numbers
-	// // sorted before text cells.
-	// aSortFields[0] = field1;
-	//
-	// PropertyValue[] aSortDesc = new PropertyValue[2];
-	// PropertyValue propVal = new PropertyValue();
-	// propVal.Name = "SortFields";
-	// propVal.Value = aSortFields;
-	// aSortDesc[0] = propVal;
-	//
-	// aSortDesc[1] = new PropertyValue();
-	// aSortDesc[1].Name = "NaturalSort";
-	// aSortDesc[1].Value = new Boolean(true);
-	//
-	// xSortable.sort(aSortDesc);
-	// }
-	//
-	// private void ranglisteSpalte() {
-	// XSpreadsheet xSheet = getEndranglisteSheet();
-	//
-	// int letzteZeile = letzteSpielerZeile();
-	// int ersteSpalteEndsumme = ersteSpalteEndsumme();
-	//
-	// // erste Zeile = 1 = erste Platz
-	// this.sheetHelper.setValInCell(xSheet, RANGLISTE_SPALTE, ERSTE_DATEN_ZEILE, 1D);
-	//
-	// for (int spielerZeilCntr = ERSTE_DATEN_ZEILE + 1; spielerZeilCntr <= letzteZeile; spielerZeilCntr++) {
-	//
-	// // Rangliste_SPALTE
-	//
-	// String ranglisteAdressPlusEinPlatz = this.sheetHelper.getAddressFromColumnRow(RANGLISTE_SPALTE,
-	// spielerZeilCntr - 1);
-	// // mit ein position oben vergleichen
-	// String summeSpielGewonnenZelle1 = this.sheetHelper
-	// .getAddressFromColumnRow(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, spielerZeilCntr - 1);
-	// // Aktuelle pos
-	// String summeSpielGewonnenZelle2 = this.sheetHelper
-	// .getAddressFromColumnRow(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, spielerZeilCntr);
-	//
-	// String summeSpielDiffZelle1 = this.sheetHelper
-	// .getAddressFromColumnRow(ersteSpalteEndsumme + SPIELE_DIV_OFFS, spielerZeilCntr - 1);
-	// String summeSpielDiffZelle2 = this.sheetHelper
-	// .getAddressFromColumnRow(ersteSpalteEndsumme + SPIELE_DIV_OFFS, spielerZeilCntr);
-	//
-	// String punkteDiffZelle1 = this.sheetHelper.getAddressFromColumnRow(ersteSpalteEndsumme + PUNKTE_DIV_OFFS,
-	// spielerZeilCntr - 1);
-	// String punkteDiffZelle2 = this.sheetHelper.getAddressFromColumnRow(ersteSpalteEndsumme + PUNKTE_DIV_OFFS,
-	// spielerZeilCntr);
-	// String punkteGewonnenZelle1 = this.sheetHelper
-	// .getAddressFromColumnRow(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, spielerZeilCntr - 1);
-	// String punkteGewonnenZelle2 = this.sheetHelper
-	// .getAddressFromColumnRow(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, spielerZeilCntr);
-	//
-	// // ' "=IF(AND(I" & currLine & "=I" & currLine-1 & ";F" & currLine & "=F" & currLine-1 & ";G" & currLine &
-	// // "=G" & currLine-1 & ");B" & currLine-1 & ";" & teamCntr & ")"
-	//
-	// // =WENN(UND(AH76=AH77;AJ76=AJ77;AM76=AM77;AK76=AK77);C76;C76 + 1)
-	//
-	// String formula = "=IF(AND(" + summeSpielGewonnenZelle1 + "=" + summeSpielGewonnenZelle2 + ";"
-	// + summeSpielDiffZelle1 + "=" + summeSpielDiffZelle2 + ";" + punkteDiffZelle1 + "="
-	// + punkteDiffZelle2 + ";" + punkteGewonnenZelle1 + "=" + punkteGewonnenZelle2 + ");"
-	// + ranglisteAdressPlusEinPlatz + ";" + ranglisteAdressPlusEinPlatz + "+1)";
-	// this.sheetHelper.setFormulaInCell(xSheet, RANGLISTE_SPALTE, spielerZeilCntr, formula);
-	// }
-	// }
-	//
-	// private int anzSpielTageSpalte() {
-	// int ersteSpalteEndsumme = ersteSpalteEndsumme();
-	// return ersteSpalteEndsumme + ANZAHL_SPALTEN_IN_SUMME;
-	// }
-	//
-	// /**
-	// * Anzahl gespielte Spieltage<br>
-	// * =ZÄHLENWENN(D4:AG4;"<>")/6
-	// */
-	// private void updateAnzSpieltageSpalte() {
-	// int ersteSpalteEndsumme = ersteSpalteEndsumme();
-	// int anzSpieltageSpalte = anzSpielTageSpalte();
-	// int letzteSpieltagLetzteSpalte = ersteSpalteEndsumme - 1;
-	// int letzteZeile = letzteSpielerZeile();
-	//
-	// for (int spielerZeilCntr = ERSTE_DATEN_ZEILE; spielerZeilCntr <= letzteZeile; spielerZeilCntr++) {
-	// String ersteSpielTagErsteZelle = this.sheetHelper.getAddressFromColumnRow(ERSTE_SPIELTAG_SPALTE,
-	// spielerZeilCntr);
-	// String letzteSpielTagLetzteZelle = this.sheetHelper.getAddressFromColumnRow(letzteSpieltagLetzteSpalte,
-	// spielerZeilCntr);
-	//
-	// String formula = "=COUNTIF(" + ersteSpielTagErsteZelle + ":" + letzteSpielTagLetzteZelle + ";\"<>\")/"
-	// + ANZAHL_SPALTEN_IN_SUMME;
-	// this.sheetHelper.setFormulaInCell(getEndranglisteSheet(), anzSpieltageSpalte, spielerZeilCntr, formula);
-	// }
-	// }
-	//
+	private int anzSpielTageSpalte() throws GenerateException {
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		return ersteSpalteEndsumme + ANZAHL_SPALTEN_IN_SUMME;
+	}
+
+	/**
+	 * Anzahl gespielte Spieltage<br>
+	 * =ZÄHLENWENN(D4:AG4;"<>")/6
+	 *
+	 * @throws GenerateException
+	 */
+	private void updateAnzSpieltageSpalte() throws GenerateException {
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		int letzteSpieltagLetzteSpalte = ersteSpalteEndsumme - 1;
+		int letzteZeile = getLetzteDatenZeile();
+
+		Position ersteSpielTagErsteZelle = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE);
+		Position letzteSpielTagLetzteZelle = Position.from(letzteSpieltagLetzteSpalte, ERSTE_DATEN_ZEILE);
+
+		String formula = "=COUNTIF(" + ersteSpielTagErsteZelle.getAddress() + ":"
+				+ letzteSpielTagLetzteZelle.getAddress() + ";\"<>\")/" + ANZAHL_SPALTEN_IN_SUMME;
+
+		// letzte Spalte ist anzahl spieltage
+		StringCellValue formulaVal = StringCellValue
+				.from(getSheet(), Position.from(anzSpielTageSpalte(), ERSTE_DATEN_ZEILE)).setValue(formula)
+				.setFillAutoDown(letzteZeile);
+
+		this.getSheetHelper().setFormulaInCell(formulaVal);
+
+		// Spalte formatieren
+		CellProperties celColumProp = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setHoriJustify(CellHoriJustify.CENTER);
+		this.getSheetHelper().setColumnProperties(this.getSheet(), anzSpielTageSpalte(), celColumProp);
+
+		// Daten
+		RangePosition rangPos = RangePosition.from(formulaVal.getPos(), formulaVal.getFillAuto());
+		CellProperties celRangeProp = CellProperties.from()
+				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder());
+		this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangPos, celRangeProp);
+	}
+
 	private void updateEndSummenSpalten() throws GenerateException {
 		List<Integer> spielerNrList = this.spielerSpalte.getSpielerNrList();
 		for (int spielerNr : spielerNrList) {
@@ -455,8 +310,8 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	@Override
-	public int letzteDatenZeile() throws GenerateException {
-		return this.spielerSpalte.letzteDatenZeile();
+	public int getLetzteDatenZeile() throws GenerateException {
+		return this.spielerSpalte.getLetzteDatenZeile();
 	}
 
 	@Override

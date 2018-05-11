@@ -123,7 +123,7 @@ abstract public class AbstractRanglisteFormatter {
 	public void formatDatenGeradeUngerade() throws GenerateException {
 		SpielerSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.letzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 		int letzteSpalte = this.iRanglisteSheet.getObject().getLetzteSpalte();
 
 		IPropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
@@ -157,7 +157,7 @@ abstract public class AbstractRanglisteFormatter {
 		SpielerSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.letzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 
 		// summe spalten spiele
 		// +,-,div
