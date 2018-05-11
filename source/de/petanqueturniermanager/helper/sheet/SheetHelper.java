@@ -580,7 +580,7 @@ public class SheetHelper {
 			xPropSet.setPropertyValue(key, val);
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
-			logger.error(e.getMessage(), e);
+			logger.error("Property '" + key + "' = '" + val + "'\r" + e.getMessage(), e);
 		}
 	}
 

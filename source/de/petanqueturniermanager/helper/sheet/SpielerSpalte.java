@@ -95,7 +95,7 @@ public class SpielerSpalte {
 	}
 
 	public void formatDaten() throws GenerateException {
-		int letzteDatenZeile = letzteDatenZeile();
+		int letzteDatenZeile = getLetzteDatenZeile();
 		if (letzteDatenZeile < this.ersteDatenZiele) {
 			// keine Daten
 			return;
@@ -142,7 +142,7 @@ public class SpielerSpalte {
 		}
 	}
 
-	public int letzteDatenZeile() throws GenerateException {
+	public int getLetzteDatenZeile() throws GenerateException {
 		return neachsteFreieDatenZeile() - 1;
 	}
 
@@ -281,7 +281,7 @@ public class SpielerSpalte {
 
 	public List<Integer> getSpielerNrList() throws GenerateException {
 		List<Integer> spielerNrList = new ArrayList<>();
-		int letzteZeile = this.letzteDatenZeile();
+		int letzteZeile = this.getLetzteDatenZeile();
 		XSpreadsheet sheet = getSheet();
 
 		Position posSpielerNr = Position.from(this.spielerNrSpalte, this.ersteDatenZiele);
@@ -299,7 +299,7 @@ public class SpielerSpalte {
 
 	public List<String> getSpielerNamenList() throws GenerateException {
 		List<String> spielerNamen = new ArrayList<>();
-		int letzteZeile = this.letzteDatenZeile();
+		int letzteZeile = this.getLetzteDatenZeile();
 		XSpreadsheet sheet = getSheet();
 
 		Position posSpielerName = Position.from(getSpielerNameSpalte(), this.ersteDatenZiele);
@@ -330,7 +330,7 @@ public class SpielerSpalte {
 
 	public String formulaCountSpieler() throws GenerateException {
 		String ersteZelle = Position.from(this.spielerNrSpalte, this.ersteDatenZiele).getAddress();
-		String letzteZelle = Position.from(this.spielerNrSpalte, letzteDatenZeile()).getAddress();
+		String letzteZelle = Position.from(this.spielerNrSpalte, getLetzteDatenZeile()).getAddress();
 
 		return "COUNTIF(" + ersteZelle + ":" + letzteZelle + ";\">=0\")"; // nur zahlen
 	}

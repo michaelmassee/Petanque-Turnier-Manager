@@ -12,7 +12,7 @@ public interface IRangliste extends ISheet, IEndSummeSpalten {
 
 	int getLetzteSpalte() throws GenerateException;
 
-	public int letzteDatenZeile() throws GenerateException;
+	public int getLetzteDatenZeile() throws GenerateException;
 
 	int getErsteDatenZiele() throws GenerateException;
 

@@ -124,7 +124,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 			return;
 		}
 		XSpreadsheet sheet = getSheet();
-		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			plusPunktPos.add(Position.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2), ERSTE_DATEN_ZEILE - 1));
@@ -194,7 +194,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		}
 		XSpreadsheet sheet = getSheet();
 
-		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
 
 		int nichtgespieltPlus = this.getKonfigurationSheet().getNichtGespielteRundePlus();
 		int nichtgespieltMinus = this.getKonfigurationSheet().getNichtGespielteRundeMinus();
@@ -443,7 +443,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public void clearAll() throws GenerateException {
-		int letzteDatenzeile = this.spielerSpalte.letzteDatenZeile();
+		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(),
 					letzteDatenzeile);
@@ -459,8 +459,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	// --------------------------
 
 	@Override
-	public int letzteDatenZeile() throws GenerateException {
-		return this.spielerSpalte.letzteDatenZeile();
+	public int getLetzteDatenZeile() throws GenerateException {
+		return this.spielerSpalte.getLetzteDatenZeile();
 	}
 
 	@Override

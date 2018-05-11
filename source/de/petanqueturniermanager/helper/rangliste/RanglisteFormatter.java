@@ -84,7 +84,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		}
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.letzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
 			Position posPunktePlusStart = Position.from(
