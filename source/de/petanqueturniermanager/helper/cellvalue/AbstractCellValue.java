@@ -27,6 +27,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	private String comment;
 	private int setColumnWidth;
 	private CellHoriJustify spalteHoriJustify;
+	private CellProperties columnProperties = new CellProperties();
 	private CellProperties cellProperties = new CellProperties();
 	private Position endPosMerge; // wenn vorhanden dann merge die zellen von pos bis endPosMerge
 	private FillAutoPosition fillAuto; // wenn vorhanden dann autoFill bis diese Position
@@ -125,6 +126,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		this.setColumnWidth = abstractCellValue.getSetColumnWidth();
 		this.spalteHoriJustify = abstractCellValue.getSpalteHoriJustify();
 		this.cellProperties.putAll(abstractCellValue.getCellProperties());
+		this.columnProperties.putAll(abstractCellValue.getColumnProperties());
 		return this;
 	}
 
@@ -340,5 +342,13 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	public T setBorder(TableBorder2 tableBorder2) {
 		this.cellProperties.setBorder(tableBorder2);
 		return (T) this;
+	}
+
+	public CellProperties getColumnProperties() {
+		return this.columnProperties;
+	}
+
+	public void setColumnProperties(CellProperties columnProperties) {
+		this.columnProperties = columnProperties;
 	}
 }
