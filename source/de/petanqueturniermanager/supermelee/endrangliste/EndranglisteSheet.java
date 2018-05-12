@@ -182,6 +182,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		CellProperties celRangeProp = CellProperties.from()
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder());
 		this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangPos, celRangeProp);
+
 	}
 
 	private void updateEndSummenSpalten() throws GenerateException {

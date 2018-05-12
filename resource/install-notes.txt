@@ -1,0 +1,17 @@
+
+Fehler beim Installieren von Extention
+
+* Extension Installation Could not create Java Implementation Loader
+
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+
+sudo aptitude install oracle-java8-installer
+
+* java.lang.reflect.InvocationTargetException
+
+install libreoffice-java-common
+sudo aptitude install libreoffice-java-common
+
+
+Fehler wenn Menü einträge fehlen = Translation in English fehlt
