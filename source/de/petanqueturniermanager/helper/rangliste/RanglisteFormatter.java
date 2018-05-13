@@ -96,6 +96,20 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		}
 
 		formatDatenSpielTagSpalten(rangliste.getErsteSummeSpalte());
-
 	}
+
+	@Override
+	public StringCellValue addFooter() throws GenerateException {
+		StringCellValue stringVal = super.addFooter();
+
+		IPropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+
+		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
+		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue(
+				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
+
+		return stringVal;
+	}
+
 }

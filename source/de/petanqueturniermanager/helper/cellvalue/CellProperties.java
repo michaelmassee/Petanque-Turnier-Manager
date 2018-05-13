@@ -24,6 +24,7 @@ public class CellProperties extends HashMap<String, Object> {
 	// SHRINK_TO_FIT = Boolean, Text in der Zelle wird an der Zelle Große angepasst
 	public static final String SHRINK_TO_FIT = "ShrinkToFit";
 	public static final String CELL_BACK_COLOR = "CellBackColor";
+	public static final String ROTATEANGLE = "RotateAngle";
 
 	public static CellProperties from() {
 		return new CellProperties();
@@ -133,6 +134,18 @@ public class CellProperties extends HashMap<String, Object> {
 
 	public CellProperties setWidth(int width) {
 		this.put(WIDTH, width);
+		return this;
+	}
+
+	/**
+	 * ist in inspector als Typ Long ? aber muss als int, sonnst iligalargument exception
+	 *
+	 * @param angle
+	 * @return
+	 */
+
+	public CellProperties setRotateAngle(int angle) {
+		this.put(ROTATEANGLE, new Integer(angle));
 		return this;
 	}
 

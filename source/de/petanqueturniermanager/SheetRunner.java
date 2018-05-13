@@ -13,13 +13,15 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
+import de.petanqueturniermanager.helper.msgbox.WarningBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class SheetRunner extends Thread implements Runnable {
 
 	private final XComponentContext xContext;
 	private final SheetHelper sheetHelper;
-	public static boolean isRunning = false;
+	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
+	private static SheetRunner runner = null;
 
 	public SheetRunner(XComponentContext xContext) {
 		checkNotNull(xContext);
@@ -27,10 +29,18 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		this.sheetHelper = new SheetHelper(xContext);
 	}
 
+	public final static void cancelRunner() {
+		if (runner != null) {
+			runner.interrupt();
+		}
+	}
+
 	@Override
 	public final void run() {
 		if (!SheetRunner.isRunning) {
 			SheetRunner.isRunning = true;
+			SheetRunner.runner = this;
+
 			try {
 				doRun();
 			} catch (GenerateException e) {
@@ -39,9 +49,14 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning = false;
+				SheetRunner.runner = null;
+
 				// TODO
 				// CloseConnections.closeOfficeConnection(); // bringt Nix ?!?
 			}
+		} else {
+			WarningBox warnMsg = new WarningBox(getxContext());
+			warnMsg.showOk("Abbruch", "Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.");
 		}
 	}
 

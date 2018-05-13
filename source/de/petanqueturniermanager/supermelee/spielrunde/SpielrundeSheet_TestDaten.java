@@ -14,6 +14,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
@@ -40,6 +41,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+		// clean up first
+		this.getSheetHelper().removeAllSheetsExclude(KonfigurationSheet.SHEETNAME);
 		setSpielTag(SpielTagNr.from(1));
 		generate();
 		if (this.spieltagRanglisteSheet.isErrorInSheet()) {
@@ -64,7 +67,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		this.naechsteSpielrundeSheet.setSpielTag(getSpielTag());
 
 		this.getKonfigurationSheet().setAktiveSpielRunde(1);
-		for (int spielrundeNr = 1; spielrundeNr < 5; spielrundeNr++) {
+		for (int spielrundeNr = 1; spielrundeNr < 5 && !isInterrupted(); spielrundeNr++) {
 
 			if (spielrundeNr > 1) {
 				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen();
@@ -82,7 +85,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			Position letztePos = letzteZeile(spielrundeNr);
 
 			if (letztePos != null && sheet != null) {
-				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile(); zeileCntr++) {
+				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile()
+						&& !isInterrupted(); zeileCntr++) {
 					Position pos = Position.from(ERSTE_SPALTE_ERGEBNISSE, zeileCntr);
 
 					int welchenTeamHatGewonnen = ThreadLocalRandom.current().nextInt(0, 2); // 0,1
@@ -100,7 +104,9 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			}
 		}
 
-		this.spieltagRanglisteSheet.generate();
+		if (!isInterrupted()) {
+			this.spieltagRanglisteSheet.generate();
+		}
 
 	}
 }

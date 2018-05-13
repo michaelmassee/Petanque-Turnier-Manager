@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -119,7 +120,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
 		SpielTagNr spieltagNr = getSpielTag();
-		return this.getSheetHelper().newIfNotExist(getSheetName(spieltagNr), (short) 1, "98e2d7");
+		return this.getSheetHelper().newIfNotExist(getSheetName(spieltagNr), DefaultSheetPos.SUPERMELEE_WORK, "98e2d7");
 	}
 
 	public SpielTagNr getSpielTag() throws GenerateException {

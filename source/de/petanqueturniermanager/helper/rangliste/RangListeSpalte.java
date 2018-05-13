@@ -9,6 +9,7 @@ import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
@@ -40,10 +41,15 @@ public class RangListeSpalte {
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
+		// Properties für Daten
+		CellProperties columnProperties = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(1000)
+				.setCharWeight(FontWeight.BOLD).setCharHeight(11);
+
 		StringCellValue celVal = StringCellValue
-				.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile - 1), "Platz")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(1000).setCharWeight(FontWeight.BOLD)
-				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
+				.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile - 2), "Platz")
+				.addColumnProperties(columnProperties).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(10)
+				.setCharWeight(FontWeight.NORMAL).setEndPosMerge(Position.from(this.rangListeSpalte, ersteZeile - 1));
 		this.sheetHelper.setTextInCell(celVal); // spieler nr
 	}
 
@@ -80,10 +86,9 @@ public class RangListeSpalte {
 		this.sheetHelper
 				.setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
 
-		// Alle Nummer Bold
+		// Border
 		this.sheetHelper.setPropertiesInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
-				CellProperties.from().setCharWeight(FontWeight.BOLD)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
+				CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
 	}
 
 	/**

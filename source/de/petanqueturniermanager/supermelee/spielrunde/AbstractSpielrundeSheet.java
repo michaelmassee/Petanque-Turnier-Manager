@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.msgbox.QuestionBox;
 import de.petanqueturniermanager.helper.msgbox.WarningBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
@@ -50,8 +51,6 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(AbstractSpielrundeSheet.class);
 
 	public static final String PREFIX_SHEET_NAMEN = "Spielrunde";
-	public static final short SHEET_POS = 2; // an welche Position neu einfuegen
-
 	public static final int ERSTE_DATEN_ZEILE = 2; // Zeile 3
 	public static final int ERSTE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 2;
 	public static final int ZWEITE_HEADER_ZEILE = ERSTE_HEADER_ZEILE + 1;
@@ -92,7 +91,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	}
 
 	public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, int spielrunde) throws GenerateException {
-		return getSheetHelper().newIfNotExist(getSheetName(spieltag, spielrunde), SHEET_POS);
+		return getSheetHelper().newIfNotExist(getSheetName(spieltag, spielrunde), DefaultSheetPos.SUPERMELEE_WORK);
 	}
 
 	protected KonfigurationSheet getKonfigurationSheet() {

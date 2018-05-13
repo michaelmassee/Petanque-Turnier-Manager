@@ -189,9 +189,28 @@ abstract public class AbstractRanglisteFormatter {
 		return this.sheetHelper;
 	}
 
-	protected Integer getHeaderFarbe() throws GenerateException {
+	public Integer getHeaderFarbe() throws GenerateException {
 		Integer headerColor = getPropertiesSpaltewkRef().getObject().getRanglisteHeaderFarbe();
 		return headerColor;
 	}
 
+	public StringCellValue addFooter() throws GenerateException {
+
+		SpielerSpalte spielerSpalte = getSpielerSpalteWkRef().getObject();
+
+		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenZeile();
+		StringCellValue stringVal = StringCellValue
+				.from(this.getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile))
+				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
+
+		String anzSpielerFormula = "\"Anzahl Spieler: \" & " + spielerSpalte.formulaCountSpieler();
+		getSheetHelper().setFormulaInCell(stringVal.setValue(anzSpielerFormula));
+
+		stringVal.addRowProperty(HEIGHT, 350);
+
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue(
+				"Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +"));
+
+		return stringVal;
+	}
 }

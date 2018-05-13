@@ -182,7 +182,7 @@
 					</node>
 					<!-- ****************************************************************** -->
 
-					<node oor:name="Y1" oor:op="replace">
+					<node oor:name="X1" oor:op="replace">
 						<prop oor:name="Title">
 						    <value xml:lang="en">~Configuration</value>
 							<value xml:lang="de">~Konfiguration</value>
@@ -198,13 +198,13 @@
 
 					<!-- Test Turniere -->
 					<!-- ****************************************************************** -->
-					<node oor:name="ZZ1" oor:op="replace">
+					<node oor:name="Y1" oor:op="replace">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value>private:separator</value>
 						</prop>
 					</node>
 
-					<node oor:name="ZZ2" oor:op="replace">
+					<node oor:name="Y2" oor:op="replace">
 						<prop oor:name="URL" oor:type="xs:string">
 						</prop>
 						<prop oor:name="ImageIdentifier" oor:type="xs:string">
@@ -260,6 +260,27 @@
 
 						</node>
 					</node>
+					<!-- ****************************************************************** -->
+					<!-- CANCEL Any Threads running, Verarbeitung Abbruch -->
+					<node oor:name="Z1" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value>private:separator</value>
+						</prop>
+					</node>
+					
+					<node oor:name="Z2" oor:op="replace">
+						<prop oor:name="Title">
+						    <value xml:lang="en">~Cancel Processing</value>
+							<value xml:lang="de">~Abbruch Verarbeitung</value>
+						</prop>
+						<prop oor:name="URL">
+							<value>service:de.petanqueturniermanager.Turnier?abbruch</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+					</node>					
+					
 					<!-- ****************************************************************** -->
 
 					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> 

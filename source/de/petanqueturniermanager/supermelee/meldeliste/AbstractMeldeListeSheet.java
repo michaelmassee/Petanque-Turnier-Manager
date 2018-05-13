@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -66,7 +67,6 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 	public static final int ERSTE_ZEILE_PROPERTIES = 12; // Zeile 13
 
 	public static final String SHEETNAME = "Meldeliste";
-	public static final short SHEET_POS = (short) 0;
 	public static final String SHEET_COLOR = "2544dd";
 
 	private final ErrorMessageBox errMsgBox;
@@ -119,7 +119,7 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 
 	@Override
 	public XSpreadsheet getSheet() {
-		return this.sheetHelper.newIfNotExist(SHEETNAME, SHEET_POS, SHEET_COLOR);
+		return this.sheetHelper.newIfNotExist(SHEETNAME, DefaultSheetPos.MELDELISTE, SHEET_COLOR);
 	}
 
 	public void show() {

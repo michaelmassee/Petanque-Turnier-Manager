@@ -25,10 +25,9 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	private XSpreadsheet sheet;
 	private Position pos;
 	private String comment;
-	private int setColumnWidth;
-	private CellHoriJustify spalteHoriJustify;
-	private CellProperties columnProperties = new CellProperties();
 	private CellProperties cellProperties = new CellProperties();
+	private CellProperties columnProperties = new CellProperties();
+	private CellProperties rowProperties = new CellProperties();
 	private Position endPosMerge; // wenn vorhanden dann merge die zellen von pos bis endPosMerge
 	private FillAutoPosition fillAuto; // wenn vorhanden dann autoFill bis diese Position
 
@@ -123,10 +122,9 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		this.setPos(abstractCellValue.getPos());
 		this.setEndPosMerge(abstractCellValue.getEndPosMerge());
 		this.comment = abstractCellValue.getComment();
-		this.setColumnWidth = abstractCellValue.getSetColumnWidth();
-		this.spalteHoriJustify = abstractCellValue.getSpalteHoriJustify();
 		this.cellProperties.putAll(abstractCellValue.getCellProperties());
 		this.columnProperties.putAll(abstractCellValue.getColumnProperties());
+		this.rowProperties.putAll(abstractCellValue.getRowProperties());
 		return this;
 	}
 
@@ -151,26 +149,6 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 				add("\nEndPosMerge", (this.endPosMerge!=null)?this.endPosMerge.toString():"null").
 				toString();
 		// @formatter:on
-	}
-
-	public int getSetColumnWidth() {
-		return this.setColumnWidth;
-	}
-
-	@SuppressWarnings("unchecked")
-	public T setColumnWidth(int setColumnWidth) {
-		this.setColumnWidth = setColumnWidth;
-		return (T) this;
-	}
-
-	public CellHoriJustify getSpalteHoriJustify() {
-		return this.spalteHoriJustify;
-	}
-
-	@SuppressWarnings("unchecked")
-	public T setSpalteHoriJustify(CellHoriJustify spalteHoriJustify) {
-		this.spalteHoriJustify = spalteHoriJustify;
-		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -344,11 +322,79 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		return (T) this;
 	}
 
+	/**
+	 * ist in inspector als Typ Long ? aber muss als int, sonnst iligalargument exception
+	 *
+	 * @param angle
+	 * @return
+	 */
+
+	@SuppressWarnings("unchecked")
+	public T setRotateAngle(int angle) {
+
+		this.cellProperties.setRotateAngle(angle);
+		return (T) this;
+	}
+
 	public CellProperties getColumnProperties() {
 		return this.columnProperties;
 	}
 
-	public void setColumnProperties(CellProperties columnProperties) {
+	public T setColumnProperties(CellProperties columnProperties) {
 		this.columnProperties = columnProperties;
+		return (T) this;
 	}
+
+	@SuppressWarnings("unchecked")
+	public T addColumnProperty(String key, Object val) {
+		this.columnProperties.put(key, val);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T addColumnProperties(CellProperties columnProperties) {
+		this.columnProperties.putAll(columnProperties);
+		return (T) this;
+	}
+
+	public CellProperties getRowProperties() {
+		return this.rowProperties;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T addRowProperty(String key, Object val) {
+		this.rowProperties.put(key, val);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T addRowProperties(CellProperties rowProperties) {
+		this.rowProperties.putAll(this.columnProperties);
+		return (T) this;
+	}
+
+	/**
+	 * verwende setColumnProperties(CellProperties columnProperties)
+	 *
+	 * @return
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	public T setColumnWidth(int setColumnWidth) {
+		this.addColumnProperty(CellProperties.WIDTH, setColumnWidth);
+		return (T) this;
+	}
+
+	/**
+	 * verwende setColumnProperties(CellProperties columnProperties)
+	 *
+	 * @return
+	 */
+	@Deprecated
+	@SuppressWarnings("unchecked")
+	public T setSpalteHoriJustify(CellHoriJustify spalteHoriJustify) {
+		this.addColumnProperty(CellProperties.HORI_JUSTIFY, spalteHoriJustify);
+		return (T) this;
+	}
+
 }

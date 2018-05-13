@@ -11,6 +11,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 
@@ -38,7 +39,10 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		for (int i = 1; i < 3; i++) {
+		// clean up first
+		this.getSheetHelper().removeAllSheetsExclude(KonfigurationSheet.SHEETNAME);
+
+		for (int i = 1; i <= 2 && !isInterrupted(); i++) {
 			this.spielrundeSheetTestDaten.setSpielTag(SpielTagNr.from(i));
 			this.spielrundeSheetTestDaten.generate();
 		}

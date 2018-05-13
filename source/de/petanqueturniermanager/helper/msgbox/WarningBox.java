@@ -48,6 +48,15 @@ public class WarningBox extends AbstractMessageBox {
 		return nResult;
 	}
 
+	public void showOk(String title, String message) {
+		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(),
+				MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK, title, message);
+
+		if (xMessageBox != null) {
+			xMessageBox.execute();
+		}
+	}
+
 	@Override
 	protected Logger getLogger() {
 		return logger;

@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
@@ -23,7 +24,6 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	public static final int PROPERTIESSPALTE = 0;
 	public static final int ERSTE_ZEILE_PROPERTIES = 1;
 	public static final String SHEETNAME = "Konfiguration";
-	public static final short SHEET_POS = (short) 99;
 	public static final String SHEET_COLOR = "6bf442";
 
 	private final PropertiesSpalte propertiesSpalte;
@@ -121,7 +121,7 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 
 	@Override
 	public XSpreadsheet getSheet() {
-		return getSheetHelper().newIfNotExist(SHEETNAME, SHEET_POS, SHEET_COLOR);
+		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
 
 	@Override
