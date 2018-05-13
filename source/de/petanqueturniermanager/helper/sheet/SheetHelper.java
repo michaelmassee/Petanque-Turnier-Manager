@@ -87,6 +87,15 @@ public class SheetHelper {
 		return foundSpreadsheet;
 	}
 
+	public void removeAllSheetsExclude(String sheetNameNotToRemove) {
+		XSpreadsheets sheets = this.getSheets();
+		for (String sheetName : sheets.getElementNames()) {
+			if (!sheetName.contains(sheetNameNotToRemove)) {
+				removeSheet(sheetName);
+			}
+		}
+	}
+
 	public void removeSheet(String sheetName) {
 		checkNotNull(sheetName);
 		this.sheetCache.remove(sheetName);
@@ -234,21 +243,6 @@ public class SheetHelper {
 			setCommentInCell(cellVal.getSheet(), xCell, cellVal.getComment());
 		}
 
-		XPropertySet xPropertySetColumn = null;
-		// spalte breite
-		if (cellVal.getPos() != null && cellVal.getSetColumnWidth() > 0) {
-			xPropertySetColumn = setColumnWidth(cellVal.getSheet(), cellVal.getPos(), cellVal.getSetColumnWidth());
-		}
-
-		// spalte ausrichten
-		if (cellVal.getSpalteHoriJustify() != null) {
-			if (xPropertySetColumn != null) {
-				setProperty(xPropertySetColumn, HORI_JUSTIFY, cellVal.getSpalteHoriJustify());
-			} else {
-				setColumnCellHoriJustify(cellVal.getSheet(), cellVal.getPos(), cellVal.getSpalteHoriJustify());
-			}
-		}
-
 		// fill
 		if (cellVal.getFillAuto() != null) {
 			FillAutoPosition fillAuto = cellVal.getFillAuto();
@@ -256,7 +250,18 @@ public class SheetHelper {
 					fillAuto.getFillDirection());
 		}
 
-		// Zellen Properties ?
+		// Achtung: reihenfolge nicht ändern !
+		// 1. Spalte Properties ?
+		if (!cellVal.getColumnProperties().isEmpty()) {
+			setColumnProperties(cellVal.getSheet(), cellVal.getPos().getSpalte(), cellVal.getColumnProperties());
+		}
+
+		// 2. zeile Properties ?
+		if (!cellVal.getRowProperties().isEmpty()) {
+			setRowProperties(cellVal.getSheet(), cellVal.getPos().getZeile(), cellVal.getRowProperties());
+		}
+
+		// 3. Zellen Properties ?
 		if (!cellVal.getCellProperties().isEmpty()) {
 			XPropertySet xPropSetCell = getCellPropertySet(xCell);
 			setProperties(xPropSetCell, cellVal.getCellProperties());
@@ -499,6 +504,14 @@ public class SheetHelper {
 			logger.error(e.getMessage(), e);
 		}
 		return aColumnObj;
+	}
+
+	public XPropertySet setRowProperties(XSpreadsheet sheet, int spalte, CellProperties properties) {
+		checkNotNull(sheet);
+		checkNotNull(properties);
+		XPropertySet xPropSet = getRowPropertySet(sheet, spalte);
+		setProperties(xPropSet, properties);
+		return xPropSet;
 	}
 
 	// zeile

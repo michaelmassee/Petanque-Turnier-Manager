@@ -14,6 +14,7 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
@@ -88,6 +89,14 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 
 			boolean didHandle = handleSuperMelee(action);
 
+			if (!didHandle) {
+				switch (action) {
+				case "abbruch":
+					didHandle = true;
+					SheetRunner.cancelRunner();
+					break;
+				}
+			}
 			if (!didHandle) {
 				logger.error("Unknown action: " + action);
 			}

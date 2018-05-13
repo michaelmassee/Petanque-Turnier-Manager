@@ -5,7 +5,6 @@
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
 import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
 
 import java.util.ArrayList;
@@ -19,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
-import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -33,6 +31,7 @@ import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
@@ -62,7 +61,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	public static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0, B=1
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
-	public static final short SHEET_POS = 2; // an welche Position neu einfuegen
 
 	private final SpielerSpalte spielerSpalte;
 	private final AbstractMeldeListeSheet meldeliste;
@@ -115,7 +113,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		ergebnisseEinfuegen();
 		nichtgespielteRundenFuellen();
 		this.rangListeSorter.doSort();
-		footer();
+		this.ranglisteFormatter.addFooter();
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {
@@ -126,7 +124,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		XSpreadsheet sheet = getSheet();
 		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
-		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
+		for (int spielRunde = 1; spielRunde <= anzSpielRunden && !isInterrupted(); spielRunde++) {
 			plusPunktPos.add(Position.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2), ERSTE_DATEN_ZEILE - 1));
 		}
 
@@ -204,8 +202,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		NumberCellValue punkteMinus = NumberCellValue.from(punktePlus).setValue((double) nichtgespieltMinus)
 				.setComment(null);
 
-		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letzteDatenzeile; zeileCntr++) {
-			for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
+		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letzteDatenzeile && !isInterrupted(); zeileCntr++) {
+			for (int spielRunde = 1; spielRunde <= anzSpielRunden && !isInterrupted(); spielRunde++) {
 				Position punktePlusPos = Position.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2), zeileCntr);
 				if (getSheetHelper().getIntFromCell(sheet, punktePlusPos) < 0) {
 					getSheetHelper().setValInCell(punktePlus.setPos(punktePlusPos));
@@ -231,6 +229,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 					.getSpielerSpielrundeErgebnis();
 
 			for (SpielerSpielrundeErgebnis ergebnis : ergebnisse) {
+				if (isInterrupted())
+					break;
 
 				int spielerNr = ergebnis.getSpielerNr();
 				// zeile finden
@@ -248,29 +248,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 				}
 			}
 		}
-	}
-
-	private void footer() throws GenerateException {
-
-		int ersteFooterZeile = this.spielerSpalte.neachsteFreieDatenZeile();
-		StringCellValue stringVal = StringCellValue
-				.from(this.getSheet(), Position.from(SPIELER_NR_SPALTE, ersteFooterZeile)).setCharHeight(7)
-				.setHoriJustify(CellHoriJustify.LEFT);
-
-		String anzSpielerFormula = "\"Anzahl Spieler: \" & " + this.spielerSpalte.formulaCountSpieler();
-		getSheetHelper().setFormulaInCell(stringVal.setValue(anzSpielerFormula));
-
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue(
-				"Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +"));
-
-		getSheetHelper().setRowProperty(this.getSheet(), stringVal.getPos().getZeile(), HEIGHT, 300);
-
-		int nichtgespieltPlus = this.getKonfigurationSheet().getNichtGespielteRundePlus();
-		int nichtgespieltMinus = this.getKonfigurationSheet().getNichtGespielteRundeMinus();
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue(
-				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
-		getSheetHelper().setRowProperty(this.getSheet(), stringVal.getPos().getZeile(), HEIGHT, 300);
-
 	}
 
 	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
@@ -474,7 +451,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public XSpreadsheet getSheet(SpielTagNr spielTagNr) throws GenerateException {
-		return this.getSheetHelper().newIfNotExist(getSheetName(spielTagNr), SHEET_POS);
+		return this.getSheetHelper().newIfNotExist(getSheetName(spielTagNr), DefaultSheetPos.SUPERMELEE_WORK);
 	}
 
 	public RangListeSpalte getRangListeSpalte() {

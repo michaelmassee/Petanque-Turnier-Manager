@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.cellvalue;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,8 +14,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 
 @RunWith(PowerMockRunner.class)
@@ -64,17 +62,20 @@ public class NumberCellValueTest {
 		double val = 3412;
 		String testComent = "bla bla";
 		int columnWidth = 3000;
+		int charcolor = 123465;
 
 		Position pos = Position.from(spalte, zeile);
 		StringCellValue strcellValue = StringCellValue.from(this.spreadsheetMock, pos, "" + val).setComment(testComent)
-				.setColumnWidth(columnWidth);
+				.setColumnWidth(columnWidth).addCellProperty(CellProperties.CHAR_COLOR, charcolor);
 
 		NumberCellValue numberCellValue = NumberCellValue.from(strcellValue);
 
 		assertThat(numberCellValue.getPos().getZeile()).isEqualTo(zeile);
 		assertThat(numberCellValue.getPos().getSpalte()).isEqualTo(spalte);
-		assertThat(numberCellValue.getSetColumnWidth()).isEqualTo(columnWidth);
 		assertThat(numberCellValue.getValue()).isEqualTo(val);
 		assertThat(numberCellValue.getComment()).isEqualTo(testComent);
+		assertThat(numberCellValue.getColumnProperties()).containsEntry(CellProperties.WIDTH, columnWidth);
+		assertThat(numberCellValue.getCellProperties()).containsEntry(CellProperties.CHAR_COLOR, charcolor);
+
 	}
 }

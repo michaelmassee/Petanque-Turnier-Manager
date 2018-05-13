@@ -73,7 +73,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			spielrunde = abSpielrunde;
 		}
 
-		for (; spielrunde <= aktuelleSpielrunde; spielrunde++) {
+		for (; spielrunde <= aktuelleSpielrunde && !isInterrupted(); spielrunde++) {
 			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrunde);
 			if (sheet == null) {
 				continue;

@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -23,7 +24,7 @@ public class MeldeListeSheet_New extends AbstractMeldeListeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spielTag1 = new SpielTagNr(1);
-		if (NewSheet.from(getxContext(), SHEETNAME).pos(SHEET_POS).tabColor(SHEET_COLOR).create()) {
+		if (NewSheet.from(getxContext(), SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create()) {
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
 			getKonfigurationSheet().setAktiveSpielRunde(1);

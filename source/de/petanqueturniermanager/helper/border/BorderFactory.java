@@ -46,6 +46,16 @@ public class BorderFactory {
 		return this;
 	}
 
+	public BorderFactory allBold() {
+		this.topLine = BorderFactory.boldLine();
+		this.bottomLine = BorderFactory.boldLine();
+		this.leftLine = BorderFactory.boldLine();
+		this.rightLine = BorderFactory.boldLine();
+		this.horizontalLine = BorderFactory.boldLine();
+		this.verticalLine = BorderFactory.boldLine();
+		return this;
+	}
+
 	public BorderFactory boldLn() {
 		this.forLine = BorderFactory.boldLine();
 		return this;

@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 
 public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
@@ -36,7 +37,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 	public XSpreadsheet getSheet() {
 		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME);
 		if (sheet == null) {
-			sheet = getSheetHelper().newIfNotExist(SHEETNAME, (short) 1);
+			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
 			initSheet(sheet);
 		}
 		return sheet;
