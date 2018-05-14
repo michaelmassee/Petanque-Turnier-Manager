@@ -8,7 +8,8 @@
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
-					<value xml:lang="de">Pétanque-Turnier-Manager</value>
+				    <!--  Pétanque-Turnier-Manager  -->
+					<value xml:lang="de">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -271,7 +272,7 @@
 					<node oor:name="Z2" oor:op="replace">
 						<prop oor:name="Title">
 						    <value xml:lang="en">~Cancel Processing</value>
-							<value xml:lang="de">~Abbruch Verarbeitung</value>
+							<value xml:lang="de">~Stop verarbeitung</value>
 						</prop>
 						<prop oor:name="URL">
 							<value>service:de.petanqueturniermanager.Turnier?abbruch</value>

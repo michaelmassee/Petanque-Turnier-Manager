@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
@@ -73,7 +74,8 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			spielrunde = abSpielrunde;
 		}
 
-		for (; spielrunde <= aktuelleSpielrunde && !isInterrupted(); spielrunde++) {
+		for (; spielrunde <= aktuelleSpielrunde; spielrunde++) {
+			SheetRunner.testDoCancelTask();
 			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrunde);
 			if (sheet == null) {
 				continue;

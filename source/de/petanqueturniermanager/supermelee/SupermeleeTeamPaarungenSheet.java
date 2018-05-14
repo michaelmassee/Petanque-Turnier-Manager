@@ -12,6 +12,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -34,7 +35,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		super(xContext);
 	}
 
-	public XSpreadsheet getSheet() {
+	public XSpreadsheet getSheet() throws GenerateException {
 		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME);
 		if (sheet == null) {
 			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
@@ -43,7 +44,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		return sheet;
 	}
 
-	private void initSheet(XSpreadsheet sheet) {
+	private void initSheet(XSpreadsheet sheet) throws GenerateException {
 		// leeren erstellen
 		TeamRechner teamRechner;
 
@@ -92,24 +93,24 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 	}
 
 	@Override
-	protected void doRun() {
+	protected void doRun() throws GenerateException {
 		// sheet anzeigen
 		getSheetHelper().setActiveSheet(getSheet());
 	}
 
-	public String formulaSverweisAnzDoublette(String adresseAnzSpieler) {
+	public String formulaSverweisAnzDoublette(String adresseAnzSpieler) throws GenerateException {
 		return formulaSverweis(adresseAnzSpieler, ANZ_DOUBLETTE_SPALTE);
 	}
 
-	public String formulaSverweisAnzTriplette(String adresseAnzSpieler) {
+	public String formulaSverweisAnzTriplette(String adresseAnzSpieler) throws GenerateException {
 		return formulaSverweis(adresseAnzSpieler, ANZ_TRIPLETTE_SPALTE);
 	}
 
-	public String formulaSverweisNurDoublette(String adresseAnzSpieler) {
+	public String formulaSverweisNurDoublette(String adresseAnzSpieler) throws GenerateException {
 		return formulaSverweis(adresseAnzSpieler, NUR_DOUBLETTE_SPALTE);
 	}
 
-	public String formulaSverweis(String adresseAnzSpieler, int spalte) {
+	public String formulaSverweis(String adresseAnzSpieler, int spalte) throws GenerateException {
 		// sheet vorhanden ?
 		getSheet(); // dummy aufruf
 

@@ -24,6 +24,7 @@ import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 
 public class MeldeListeSheet_TestDaten extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
@@ -43,7 +44,8 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(KonfigurationSheet.SHEETNAME);
+		this.getSheetHelper().removeAllSheetsExclude(
+				new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		generateTestDaten(SpielTagNr.from(1));
 	}
 
@@ -55,8 +57,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 				Position.from(aktuelleSpieltagSpalte, AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
-			if (isInterrupted())
-				break;
+			SheetRunner.testDoCancelTask();
 
 			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
 			int spielerZeile = this.meldeListe.getSpielerZeileNr(spieler.getNr());
@@ -85,7 +86,8 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		NumberCellValue numVal = NumberCellValue.from(meldelisteSheet,
 				Position.from(pos).spalte(aktuelleSpieltagSpalte));
 
-		for (int spielerCntr = 0; spielerCntr < testNamen.size() && !isInterrupted(); spielerCntr++) {
+		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr++) {
+			SheetRunner.testDoCancelTask();
 			sheetHelper.setTextInCell(meldelisteSheet, pos.zeilePlusEins(), testNamen.get(spielerCntr));
 			numVal.zeile(pos.getZeile());
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);

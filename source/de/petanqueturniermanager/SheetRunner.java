@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class SheetRunner extends Thread implements Runnable {
 
+	private static final String VERARBEITUNG_ABGEBROCHEN = "Verarbeitung abgebrochen";
 	private final XComponentContext xContext;
 	private final SheetHelper sheetHelper;
 	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
@@ -27,6 +28,18 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		checkNotNull(xContext);
 		this.xContext = xContext;
 		this.sheetHelper = new SheetHelper(xContext);
+	}
+
+	/**
+	 * wenn thread is interrupted dann ein Abbruch Exception werfen
+	 *
+	 * @throws GenerateException
+	 */
+
+	public static final void testDoCancelTask() throws GenerateException {
+		if (runner != null && runner.isInterrupted()) {
+			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+		}
 	}
 
 	public final static void cancelRunner() {
@@ -61,9 +74,14 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	protected void handleGenerateException(GenerateException e) {
-		getLogger().error(e.getMessage(), e);
-		ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
-		errMsg.showOk("Fehler", e.getMessage());
+		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
+			WarningBox warnMsg = new WarningBox(getxContext());
+			warnMsg.showOk("Abbruch", e.getMessage());
+		} else {
+			getLogger().error(e.getMessage(), e);
+			ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
+			errMsg.showOk("Fehler", e.getMessage());
+		}
 
 	}
 
@@ -71,7 +89,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	protected abstract void doRun() throws GenerateException;
 
-	public SheetHelper getSheetHelper() {
+	public SheetHelper getSheetHelper() throws GenerateException {
+		SheetRunner.testDoCancelTask();
 		return this.sheetHelper;
 	}
 

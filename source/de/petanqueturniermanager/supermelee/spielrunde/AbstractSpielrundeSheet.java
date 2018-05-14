@@ -264,7 +264,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		// -------------------------
 	}
 
-	private void headerSpielerNr(XSpreadsheet sheet) {
+	private void headerSpielerNr(XSpreadsheet sheet) throws GenerateException {
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		StringCellValue headerCelVal = StringCellValue.from(sheet, Position.from(pos), "#").setColumnWidth(800)
 				.setSpalteHoriJustify(CellHoriJustify.CENTER);
@@ -360,7 +360,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		}
 	}
 
-	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet sheet, boolean doubletteRunde) {
+	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet sheet, boolean doubletteRunde)
+			throws GenerateException {
 		if (doubletteRunde) {
 			// 3e Spalte Team 1
 			getSheetHelper().setColumnProperty(sheet, ERSTE_SPALTE_RUNDESPIELPLAN + 2, "IsVisible", false);
