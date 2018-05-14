@@ -115,8 +115,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		CellProperties markierung = CellProperties.from().setCellBackColor("eddfde");
 
 		for (Integer spielerNr : this.spielerSpalte.getSpielerNrList()) {
-			if (isInterrupted())
-				break;
+			SheetRunner.testDoCancelTask();
 
 			SpielTagNr spielTagNr = schlechtesteSpieltag(spielerNr);
 			int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielerNr);
@@ -137,7 +136,8 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		HashSet<Integer> spielerNummer = new HashSet<>();
 
-		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage && !isInterrupted(); spieltagCntr++) {
+		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
+			SheetRunner.testDoCancelTask();
 			List<Integer> spielerListe = this.spieltagRanglisteSheet.getSpielerNrList(SpielTagNr.from(spieltagCntr));
 			spielerNummer.addAll(spielerListe);
 		}
@@ -157,13 +157,14 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";8))";
 
-		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage && !isInterrupted(); spieltagCntr++) {
+		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
+			SheetRunner.testDoCancelTask();
 			int spieltagSummeErsteSpalte = getSpielTagErsteSummeSpalte(SpielTagNr.from(spieltagCntr));
 			Position positionSumme = Position.from(spieltagSummeErsteSpalte, ERSTE_DATEN_ZEILE);
 			StringCellValue strVal = StringCellValue.from(getSheet(), positionSumme);
 
-			for (int summeSpalteCntr = 0; summeSpalteCntr < getAnzSpaltenInSpieltag()
-					&& !isInterrupted(); summeSpalteCntr++) {
+			for (int summeSpalteCntr = 0; summeSpalteCntr < getAnzSpaltenInSpieltag(); summeSpalteCntr++) {
+				SheetRunner.testDoCancelTask();
 				String verweisAufSummeSpalte = this.spieltagRanglisteSheet.formulaSverweisAufSummeSpalte(
 						SpielTagNr.from(spieltagCntr), summeSpalteCntr, verweisAufSpalteSpielerNr);
 				strVal.setValue("IFNA(" + verweisAufSummeSpalte + ";\"\")");
@@ -239,11 +240,12 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		String[] felderList = new String[ANZAHL_SPALTEN_IN_SUMME];
 
-		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage && !isInterrupted(); spieltagCntr++) {
+		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
+			SheetRunner.testDoCancelTask();
 			if (schlechtesteSpielTag.getNr() != spieltagCntr) {
 				int ersteSpieltagSummeSpalte = ERSTE_SPIELTAG_SPALTE + ((spieltagCntr - 1) * ANZAHL_SPALTEN_IN_SUMME);
-				for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME
-						&& !isInterrupted(); summeSpalteCntr++) {
+				for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME; summeSpalteCntr++) {
+					SheetRunner.testDoCancelTask();
 					Position spielSummeSpalte = Position.from(ersteSpieltagSummeSpalte + summeSpalteCntr, spielerZeile);
 
 					if (felderList[summeSpalteCntr] == null) {
@@ -260,8 +262,8 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 
-		for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME
-				&& !isInterrupted(); summeSpalteCntr++) {
+		for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME; summeSpalteCntr++) {
+			SheetRunner.testDoCancelTask();
 
 			StringCellValue endsummeFormula = StringCellValue.from(this.getSheet(),
 					Position.from(ersteSpalteEndsumme + summeSpalteCntr, spielerZeile));
@@ -297,7 +299,8 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		XSpreadsheet sheet = getSheet();
 
-		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage && !isInterrupted(); spieltagCntr++) {
+		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
+			SheetRunner.testDoCancelTask();
 
 			SpielTagNr spielTagNr = SpielTagNr.from(spieltagCntr);
 
@@ -332,7 +335,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	@Override
-	public XSpreadsheet getSheet() {
+	public XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_ENDRANGLISTE, SHEET_COLOR);
 	}
 

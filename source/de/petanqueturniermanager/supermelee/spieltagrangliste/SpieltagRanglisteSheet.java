@@ -124,7 +124,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		XSpreadsheet sheet = getSheet();
 		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
-		for (int spielRunde = 1; spielRunde <= anzSpielRunden && !isInterrupted(); spielRunde++) {
+		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
+			SheetRunner.testDoCancelTask();
 			plusPunktPos.add(Position.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2), ERSTE_DATEN_ZEILE - 1));
 		}
 
@@ -202,8 +203,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		NumberCellValue punkteMinus = NumberCellValue.from(punktePlus).setValue((double) nichtgespieltMinus)
 				.setComment(null);
 
-		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letzteDatenzeile && !isInterrupted(); zeileCntr++) {
-			for (int spielRunde = 1; spielRunde <= anzSpielRunden && !isInterrupted(); spielRunde++) {
+		for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letzteDatenzeile; zeileCntr++) {
+			SheetRunner.testDoCancelTask();
+			for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
+				SheetRunner.testDoCancelTask();
 				Position punktePlusPos = Position.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2), zeileCntr);
 				if (getSheetHelper().getIntFromCell(sheet, punktePlusPos) < 0) {
 					getSheetHelper().setValInCell(punktePlus.setPos(punktePlusPos));
@@ -229,8 +232,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 					.getSpielerSpielrundeErgebnis();
 
 			for (SpielerSpielrundeErgebnis ergebnis : ergebnisse) {
-				if (isInterrupted())
-					break;
+				SheetRunner.testDoCancelTask();
 
 				int spielerNr = ergebnis.getSpielerNr();
 				// zeile finden
@@ -345,7 +347,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		return spielerNrlist;
 	}
 
-	public int countNumberOfSpieltage() {
+	public int countNumberOfSpieltage() throws GenerateException {
 		int anz = 0;
 
 		XSpreadsheets sheets = this.getSheetHelper().getSheets();

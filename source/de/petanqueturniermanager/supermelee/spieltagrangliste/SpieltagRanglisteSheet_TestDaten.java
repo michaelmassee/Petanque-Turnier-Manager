@@ -13,6 +13,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 
 /**
@@ -24,12 +25,13 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten
 public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet_TestDaten.class);
 
-	final SpielrundeSheet_TestDaten spielrundeSheetTestDaten;
+	private final SpielrundeSheet_TestDaten spielrundeSheetTestDaten;
+	private final KonfigurationSheet konfigurationSheet;
 
 	public SpieltagRanglisteSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
 		this.spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(xContext);
-
+		this.konfigurationSheet = new KonfigurationSheet(xContext);
 	}
 
 	@Override
@@ -40,11 +42,15 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(KonfigurationSheet.SHEETNAME);
+		this.getSheetHelper().removeAllSheetsExclude(
+				new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 
-		for (int i = 1; i <= 2 && !isInterrupted(); i++) {
-			this.spielrundeSheetTestDaten.setSpielTag(SpielTagNr.from(i));
+		for (int spieltagCntr = 1; spieltagCntr <= 5; spieltagCntr++) {
+			SheetRunner.testDoCancelTask();
+			SpielTagNr spieltagNr = SpielTagNr.from(spieltagCntr);
+			this.spielrundeSheetTestDaten.setSpielTag(spieltagNr);
 			this.spielrundeSheetTestDaten.generate();
+			this.konfigurationSheet.setAktiveSpieltag(spieltagNr);
 		}
 	}
 }

@@ -120,7 +120,7 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	@Override
-	public XSpreadsheet getSheet() {
+	public XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
 

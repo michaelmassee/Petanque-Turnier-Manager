@@ -249,8 +249,14 @@ abstract public class AbstractMeldeListeSheet extends SheetRunner
 		return SPIELER_NR_SPALTE + this.spielerSpalte.anzahlSpielerNamenSpalten();
 	}
 
+	/**
+	 *
+	 * @return spalte zum getSpielTag()
+	 * @throws GenerateException
+	 */
+
 	public int aktuelleSpieltagSpalte() throws GenerateException {
-		return spieltagSpalte(this.getKonfigurationSheet().getAktiveSpieltag());
+		return spieltagSpalte(this.getSpielTag());
 	}
 
 	public int spieltagSpalte(SpielTagNr spieltag) throws GenerateException {

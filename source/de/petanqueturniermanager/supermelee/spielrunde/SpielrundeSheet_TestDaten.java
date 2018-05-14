@@ -11,12 +11,14 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
@@ -42,7 +44,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(KonfigurationSheet.SHEETNAME);
+		this.getSheetHelper().removeAllSheetsExclude(
+				new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		setSpielTag(SpielTagNr.from(1));
 		generate();
 		if (this.spieltagRanglisteSheet.isErrorInSheet()) {
@@ -51,7 +54,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	}
 
 	/**
-	 * 5 spielrunden testdaten generieren
+	 * 4 spielrunden testdaten generieren
 	 *
 	 * @throws GenerateException
 	 */
@@ -59,15 +62,11 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 		this.meldeListeTestDatenGenerator.generateTestDaten(getSpielTag());
 		this.spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
-
-		for (int spielrunde = 1; spielrunde < 5; spielrunde++) {
-			this.getSheetHelper().removeSheet(this.getSheetName(getSpielTag(), spielrunde));
-		}
-
 		this.naechsteSpielrundeSheet.setSpielTag(getSpielTag());
+		int maxspielrundeNr = 4;
 
-		this.getKonfigurationSheet().setAktiveSpielRunde(1);
-		for (int spielrundeNr = 1; spielrundeNr < 5 && !isInterrupted(); spielrundeNr++) {
+		for (int spielrundeNr = 1; spielrundeNr <= maxspielrundeNr; spielrundeNr++) {
+			SheetRunner.testDoCancelTask();
 
 			if (spielrundeNr > 1) {
 				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen();
@@ -85,8 +84,9 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			Position letztePos = letzteZeile(spielrundeNr);
 
 			if (letztePos != null && sheet != null) {
-				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile()
-						&& !isInterrupted(); zeileCntr++) {
+				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile(); zeileCntr++) {
+					SheetRunner.testDoCancelTask();
+
 					Position pos = Position.from(ERSTE_SPALTE_ERGEBNISSE, zeileCntr);
 
 					int welchenTeamHatGewonnen = ThreadLocalRandom.current().nextInt(0, 2); // 0,1
@@ -103,10 +103,10 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 				}
 			}
 		}
+		SheetRunner.testDoCancelTask();
+		this.spieltagRanglisteSheet.generate();
 
-		if (!isInterrupted()) {
-			this.spieltagRanglisteSheet.generate();
-		}
-
+		this.getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
+		this.getKonfigurationSheet().setAktiveSpielRunde(maxspielrundeNr);
 	}
 }

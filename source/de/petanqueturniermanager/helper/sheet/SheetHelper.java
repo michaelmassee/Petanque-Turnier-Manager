@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.*;
 import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -88,9 +89,14 @@ public class SheetHelper {
 	}
 
 	public void removeAllSheetsExclude(String sheetNameNotToRemove) {
+		removeAllSheetsExclude(new String[] { sheetNameNotToRemove });
+	}
+
+	public void removeAllSheetsExclude(String[] sheetNamesNotToRemove) {
 		XSpreadsheets sheets = this.getSheets();
+		List<String> sheetNamesNotToRemoveList = java.util.Arrays.asList(sheetNamesNotToRemove);
 		for (String sheetName : sheets.getElementNames()) {
-			if (!sheetName.contains(sheetNameNotToRemove)) {
+			if (!sheetNamesNotToRemoveList.contains(sheetName)) {
 				removeSheet(sheetName);
 			}
 		}
