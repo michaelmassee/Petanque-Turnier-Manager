@@ -13,6 +13,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -32,18 +33,29 @@ abstract public class AbstractRanglisteFormatter {
 	private final WeakRefHelper<SpielerSpalte> spielerSpalteWkRef;
 	private final WeakRefHelper<IPropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
-	private final SheetHelper sheetHelper;
 
 	public AbstractRanglisteFormatter(XComponentContext xContext, SpielerSpalte spielerSpalte,
 			IPropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
 		checkNotNull(xContext);
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
-		this.sheetHelper = new SheetHelper(xContext);
 		this.spielerSpalteWkRef = new WeakRefHelper<SpielerSpalte>(spielerSpalte);
 		this.propertiesSpaltewkRef = new WeakRefHelper<IPropertiesSpalte>(propertiesSpalte);
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
 
+	}
+
+	/**
+	 * call getSheetHelper from ISheet<br>
+	 * do not assign to Variable, while getter does SheetRunner.testDoCancelTask(); <br>
+	 *
+	 * @see SheetRunner#getSheetHelper()
+	 *
+	 * @return SheetHelper
+	 * @throws GenerateException
+	 */
+	protected SheetHelper getSheetHelper() throws GenerateException {
+		return this.iRanglisteSheet.getObject().getSheetHelper();
 	}
 
 	protected TableBorder2 borderThinLeftBold() {
@@ -183,10 +195,6 @@ abstract public class AbstractRanglisteFormatter {
 
 	protected WeakRefHelper<IPropertiesSpalte> getPropertiesSpaltewkRef() {
 		return this.propertiesSpaltewkRef;
-	}
-
-	protected SheetHelper getSheetHelper() {
-		return this.sheetHelper;
 	}
 
 	public Integer getHeaderFarbe() throws GenerateException {

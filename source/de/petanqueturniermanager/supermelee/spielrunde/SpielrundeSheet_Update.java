@@ -86,7 +86,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 	public int countNumberOfSpielRunden(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
 		int anz = 0;
-		for (int rdnCntr = 1; rdnCntr < 99; rdnCntr++) {
+		for (int rdnCntr = 1; rdnCntr < 999; rdnCntr++) {
 			if (this.getSheetHelper().findByName(getSheetName(spieltag, rdnCntr)) != null) {
 				anz++;
 			} else {

@@ -9,8 +9,12 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public interface ISheet {
+
+	public SheetHelper getSheetHelper() throws GenerateException;
+
 	public XSpreadsheet getSheet() throws GenerateException;
 
 	public Logger getLogger();

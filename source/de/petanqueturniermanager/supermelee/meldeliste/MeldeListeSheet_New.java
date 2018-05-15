@@ -14,7 +14,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-public class MeldeListeSheet_New extends AbstractMeldeListeSheet {
+public class MeldeListeSheet_New extends AbstractSupermeleeMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_New.class);
 
 	public MeldeListeSheet_New(XComponentContext xContext) {

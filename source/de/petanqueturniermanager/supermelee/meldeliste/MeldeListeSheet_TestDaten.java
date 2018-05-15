@@ -29,7 +29,7 @@ import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 public class MeldeListeSheet_TestDaten extends SheetRunner {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
 
-	private final AbstractMeldeListeSheet meldeListe;
+	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 
 	public MeldeListeSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
@@ -54,7 +54,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
 		NumberCellValue numVal = NumberCellValue.from(this.meldeListe.getSheet(),
-				Position.from(aktuelleSpieltagSpalte, AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE));
+				Position.from(aktuelleSpieltagSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			SheetRunner.testDoCancelTask();
@@ -79,7 +79,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		List<String> testNamen = listeMitTestNamen();
 
 		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(),
-				AbstractMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
+				AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
 
 		int aktuelleSpieltagSpalte = this.meldeListe.spieltagSpalte(spieltag);
 

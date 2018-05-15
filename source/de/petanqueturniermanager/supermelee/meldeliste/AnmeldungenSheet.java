@@ -36,7 +36,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int LFDNR_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 
-	private final AbstractMeldeListeSheet meldeliste;
+	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private final KonfigurationSheet konfigurationSheet;
 	private SpielTagNr spielTag = null;
 

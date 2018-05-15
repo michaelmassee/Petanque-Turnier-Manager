@@ -43,7 +43,7 @@ import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 public abstract class AbstractSpielrundeSheet extends SheetRunner {
@@ -63,7 +63,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	public static final int ERSTE_SPIELERNR_SPALTE = 11; // spalte L + 5 Spalten
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
-	private final AbstractMeldeListeSheet meldeListe;
+	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 	private final KonfigurationSheet konfigurationSheet;
 	private final ErrorMessageBox errMsg;
 	private SpielTagNr spielTag = null;
@@ -81,11 +81,11 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	}
 
 	@VisibleForTesting
-	AbstractMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
+	AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
 		return new MeldeListeSheet_Update(xContext);
 	}
 
-	public AbstractMeldeListeSheet getMeldeListe() throws GenerateException {
+	public AbstractSupermeleeMeldeListeSheet getMeldeListe() throws GenerateException {
 		this.meldeListe.setSpielTag(this.getSpielTag());
 		return this.meldeListe;
 	}

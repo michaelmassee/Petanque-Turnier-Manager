@@ -37,7 +37,7 @@ import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
-import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielerSpielrundeErgebnis;
@@ -63,7 +63,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
 
 	private final SpielerSpalte spielerSpalte;
-	private final AbstractMeldeListeSheet meldeliste;
+	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final RanglisteFormatter ranglisteFormatter;
