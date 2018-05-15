@@ -23,13 +23,13 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.AbstractMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 
 public class SpielrundeSheet_UpdateTest {
 
 	SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	XComponentContext xComponentContextMock;
-	AbstractMeldeListeSheet meldeListeSheetMock;
+	AbstractSupermeleeMeldeListeSheet meldeListeSheetMock;
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	KonfigurationSheet konfigurationSheetMock;
@@ -37,7 +37,7 @@ public class SpielrundeSheet_UpdateTest {
 	@Before
 	public void setup() throws Exception {
 		this.xComponentContextMock = PowerMockito.mock(XComponentContext.class);
-		this.meldeListeSheetMock = PowerMockito.mock(AbstractMeldeListeSheet.class);
+		this.meldeListeSheetMock = PowerMockito.mock(AbstractSupermeleeMeldeListeSheet.class);
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
@@ -50,7 +50,7 @@ public class SpielrundeSheet_UpdateTest {
 			}
 
 			@Override
-			AbstractMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
+			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
 				return SpielrundeSheet_UpdateTest.this.meldeListeSheetMock;
 			}
 

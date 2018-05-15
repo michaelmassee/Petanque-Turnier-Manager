@@ -13,7 +13,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-public class MeldeListeSheet_NeuerSpieltag extends AbstractMeldeListeSheet {
+public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_NeuerSpieltag.class);
 
 	public MeldeListeSheet_NeuerSpieltag(XComponentContext xContext) {

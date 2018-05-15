@@ -15,6 +15,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
@@ -87,7 +88,6 @@ public class PropertiesSpalte {
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
-	private final SheetHelper sheetHelper;
 	private int propertiesSpalte;
 	private int erstePropertiesZeile;
 	private int headerZeile;
@@ -102,7 +102,19 @@ public class PropertiesSpalte {
 		this.erstePropertiesZeile = erstePropertiesZeile;
 		this.headerZeile = erstePropertiesZeile - 1;
 		this.sheetWkRef = new WeakRefHelper<ISheet>(sheet);
-		this.sheetHelper = new SheetHelper(xContext);
+	}
+
+	/**
+	 * call getSheetHelper from ISheet<br>
+	 * do not assign to Variable, while getter does SheetRunner.testDoCancelTask(); <br>
+	 *
+	 * @see SheetRunner#getSheetHelper()
+	 *
+	 * @return SheetHelper
+	 * @throws GenerateException
+	 */
+	private SheetHelper getSheetHelper() throws GenerateException {
+		return this.sheetWkRef.getObject().getSheetHelper();
 	}
 
 	public void doFormat() throws GenerateException {
@@ -111,11 +123,11 @@ public class PropertiesSpalte {
 		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
 		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(5500).setValue("Name")
 				.setHoriJustify(CellHoriJustify.RIGHT);
-		this.sheetHelper.setTextInCell(headerVal);
+		this.getSheetHelper().setTextInCell(headerVal);
 
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(1500).setValue("Wert")
 				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
-		this.sheetHelper.setTextInCell(wertheaderVal);
+		this.getSheetHelper().setTextInCell(wertheaderVal);
 	}
 
 	public void updateKonfigBlock() throws GenerateException {
@@ -131,7 +143,7 @@ public class PropertiesSpalte {
 				pos = Position.from(this.propertiesSpalte, this.erstePropertiesZeile + idx);
 				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null)
 						.setHoriJustify(CellHoriJustify.RIGHT);
-				this.sheetHelper.setTextInCell(celVal);
+				this.getSheetHelper().setTextInCell(celVal);
 
 				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
 
@@ -139,12 +151,12 @@ public class PropertiesSpalte {
 				switch (configProp.getType()) {
 				case STRING:
 					celVal.setValue((String) configProp.getDefaultVal());
-					this.sheetHelper.setTextInCell(celVal);
+					this.getSheetHelper().setTextInCell(celVal);
 					break;
 				case INTEGER:
 					IntegerCellValue numberCellValue = IntegerCellValue.from(celVal)
 							.setValue((Integer) configProp.getDefaultVal());
-					this.sheetHelper.setValInCell(numberCellValue);
+					this.getSheetHelper().setValInCell(numberCellValue);
 					break;
 				case COLOR:
 					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(),
@@ -167,7 +179,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		int val = -1;
 		if (pos != null) {
-			val = this.sheetHelper.getIntFromCell(sheet, pos.spaltePlusEins());
+			val = this.getSheetHelper().getIntFromCell(sheet, pos.spaltePlusEins());
 		}
 
 		if (val == -1) {
@@ -192,7 +204,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		Integer val = null;
 		if (pos != null) {
-			Object cellProperty = this.sheetHelper.getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
+			Object cellProperty = this.getSheetHelper().getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
 			if (cellProperty != null && cellProperty instanceof Integer) {
 				val = (Integer) cellProperty;
 			}
@@ -211,10 +223,10 @@ public class PropertiesSpalte {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		if (pos != null) {
-			this.sheetHelper.setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
+			this.getSheetHelper().setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
 
 			if (StringUtils.isNotEmpty(comment)) {
-				this.sheetHelper.setCommentInCell(sheet, pos, comment);
+				this.getSheetHelper().setCommentInCell(sheet, pos, comment);
 			}
 		}
 	}
@@ -229,7 +241,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		String val = null;
 		if (pos != null) {
-			val = this.sheetHelper.getTextFromCell(sheet, pos.spaltePlusEins());
+			val = this.getSheetHelper().getTextFromCell(sheet, pos.spaltePlusEins());
 		}
 
 		if (val == null) {
@@ -259,7 +271,7 @@ public class PropertiesSpalte {
 	public void writeIntProperty(String name, int newVal) throws GenerateException {
 		Position pos = getPropKeyPos(name);
 		if (pos != null) {
-			this.sheetHelper.setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
+			this.getSheetHelper().setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
 		}
 	}
 
@@ -276,7 +288,7 @@ public class PropertiesSpalte {
 		Position pos = Position.from(this.propertiesSpalte, this.erstePropertiesZeile);
 		// TODO umstellen auf uno find
 		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
-			String val = this.sheetHelper.getTextFromCell(sheet, pos);
+			String val = this.getSheetHelper().getTextFromCell(sheet, pos);
 			if (StringUtils.isNotBlank(val) && val.trim().equalsIgnoreCase(key.trim())) {
 				return pos;
 			}

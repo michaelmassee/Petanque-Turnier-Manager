@@ -20,6 +20,7 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XSortable;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -34,15 +35,27 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 public class RangListeSorter {
 
-	private final SheetHelper sheetHelper;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 	private final ErrorMessageBox errMsg;
 
 	public RangListeSorter(XComponentContext xContext, IRangliste iRanglisteSheet) {
 		checkNotNull(xContext);
-		this.sheetHelper = new SheetHelper(xContext);
+
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
 		this.errMsg = new ErrorMessageBox(xContext);
+	}
+
+	/**
+	 * call getSheetHelper from ISheet<br>
+	 * do not assign to Variable, while getter does SheetRunner.testDoCancelTask(); <br>
+	 *
+	 * @see SheetRunner#getSheetHelper()
+	 *
+	 * @return SheetHelper
+	 * @throws GenerateException
+	 */
+	private SheetHelper getSheetHelper() throws GenerateException {
+		return this.iRanglisteSheet.getObject().getSheetHelper();
 	}
 
 	protected IRangliste getIRangliste() throws GenerateException {
@@ -69,20 +82,20 @@ public class RangListeSorter {
 		StringCellValue sortSpalte = StringCellValue.from(sortlisteVal).zeile(ersteDatenZiele);
 		StringCellValue headerVal = StringCellValue.from(sortlisteVal).zeile(ersteDatenZiele - 1);
 
-		this.sheetHelper.setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
-		this.sheetHelper.setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile)
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile)
 				.setValue(summeSpielGewonnenZelle1.getAddress()));
 
-		this.sheetHelper.setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
-		this.sheetHelper.setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile)
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile)
 				.setValue(summeSpielDiffZelle1.getAddress()));
 
-		this.sheetHelper.setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
-		this.sheetHelper.setFormulaInCell(
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
+		this.getSheetHelper().setFormulaInCell(
 				sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteDiffZelle1.getAddress()));
 
-		this.sheetHelper.setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
-		this.sheetHelper.setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile)
+		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
+		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile)
 				.setValue(punkteGewonnenZelle1.getAddress()));
 
 	}
@@ -103,7 +116,7 @@ public class RangListeSorter {
 				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER)
 				.setValue("Err");
 
-		this.sheetHelper.setTextInCell(validateHeader);
+		this.getSheetHelper().setTextInCell(validateHeader);
 
 		// formula zusammenbauen
 		// --------------------------------------------------------------------------
@@ -162,11 +175,11 @@ public class RangListeSorter {
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteDatenZeile);
-		this.sheetHelper.setFormulaInCell(
+		this.getSheetHelper().setFormulaInCell(
 				platzPlatzEins.setValue(formula).zeile(ersteDatenZiele).setFillAuto(fillAutoPosition));
 
 		// Alle Nummer Bold
-		this.sheetHelper.setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+		this.getSheetHelper().setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
 				CellProperties.from().setCharWeight(FontWeight.BOLD).setCharColor(ColorHelper.CHAR_COLOR_RED));
 		// --------------------------------------------------------------------------
 	}
@@ -192,7 +205,7 @@ public class RangListeSorter {
 		Position valSpalteEnd = Position.from(validateSpalte, letzteDatenZeile);
 
 		for (int zeile = valSpalteStart.getZeile(); zeile <= valSpalteEnd.getZeile(); zeile++) {
-			String text = this.sheetHelper.getTextFromCell(sheet, Position.from(validateSpalte, zeile));
+			String text = this.getSheetHelper().getTextFromCell(sheet, Position.from(validateSpalte, zeile));
 			if (StringUtils.isNoneBlank(text)) {
 				// error
 				this.errMsg.showOk("Fehler in Spieltagrangliste", "Fehler in Zeile " + zeile);

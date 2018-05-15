@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 
@@ -25,10 +26,10 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-public class AbstractMeldeListeSheetTest {
-	private static final Logger logger = LogManager.getLogger(AbstractMeldeListeSheetTest.class);
+public class AbstractSupermeleeMeldeListeSheetTest {
+	private static final Logger logger = LogManager.getLogger(AbstractSupermeleeMeldeListeSheetTest.class);
 
-	AbstractMeldeListeSheet meldeSheet;
+	AbstractSupermeleeMeldeListeSheet meldeSheet;
 	XComponentContext xComponentContextMock;
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
@@ -41,11 +42,11 @@ public class AbstractMeldeListeSheetTest {
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
-		this.meldeSheet = new AbstractMeldeListeSheet(this.xComponentContextMock) {
+		this.meldeSheet = new AbstractSupermeleeMeldeListeSheet(this.xComponentContextMock) {
 
 			@Override
 			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
-				return AbstractMeldeListeSheetTest.this.konfigurationSheetMock;
+				return AbstractSupermeleeMeldeListeSheetTest.this.konfigurationSheetMock;
 			}
 
 			@Override
@@ -54,13 +55,13 @@ public class AbstractMeldeListeSheetTest {
 			}
 
 			@Override
-			public SheetHelper getSheetHelper() {
-				return AbstractMeldeListeSheetTest.this.sheetHelperMock;
+			public XSpreadsheet getSheet() {
+				return AbstractSupermeleeMeldeListeSheetTest.this.xSpreadsheetMock;
 			}
 
 			@Override
-			public XSpreadsheet getSheet() {
-				return AbstractMeldeListeSheetTest.this.xSpreadsheetMock;
+			public SheetHelper getSheetHelper() {
+				return AbstractSupermeleeMeldeListeSheetTest.this.sheetHelperMock;
 			}
 
 			@Override
@@ -86,7 +87,7 @@ public class AbstractMeldeListeSheetTest {
 	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) throws GenerateException {
 
 		Position headerPos = Position.from(this.meldeSheet.spieltagSpalte(SpielTagNr.from(1)),
-				AbstractMeldeListeSheet.HEADER_ZEILE);
+				AbstractSupermeleeMeldeListeSheet.HEADER_ZEILE);
 		headerList.forEach(header -> {
 			PowerMockito
 					.when(this.sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos))))
@@ -94,6 +95,34 @@ public class AbstractMeldeListeSheetTest {
 			headerPos.spaltePlusEins();
 		});
 
+	}
+
+	@Test
+	@Ignore
+	public void testTestDoppelteDaten() throws Exception {
+
+		// Baustelle
+
+		String[] spielerDoppelteNameList = new String[] { "Anna", "Heinz", "Klaus", "Heinz" };
+
+		Position spielerNrPos = Position.from(AbstractSupermeleeMeldeListeSheet.SPIELER_NR_SPALTE,
+				AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE);
+		Position spielerNamePos = Position.from(this.meldeSheet.getSpielerNameSpalte(),
+				AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE);
+
+		int zeileCntr = 0;
+		for (String spielerName : spielerDoppelteNameList) {
+			int zeile = AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE + zeileCntr;
+
+			PowerMockito.when(this.sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+					eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerName);
+
+			PowerMockito.when(this.sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+					eq(Position.from(spielerNrPos.zeile(zeile))))).thenReturn(++zeileCntr);
+		}
+
+		boolean result = this.meldeSheet.testDoppelteDaten();
+		assertThat(result).isEqualTo(true);
 	}
 
 }

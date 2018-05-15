@@ -12,6 +12,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -25,13 +26,25 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 public class RangListeSpalte {
 
 	private final int rangListeSpalte;
-	private final SheetHelper sheetHelper;
+
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
 	public RangListeSpalte(XComponentContext xContext, int rangListeSpalte, IRangliste iRanglisteSheet) {
 		this.rangListeSpalte = rangListeSpalte;
-		this.sheetHelper = new SheetHelper(xContext);
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
+	}
+
+	/**
+	 * call getSheetHelper from ISheet<br>
+	 * do not assign to Variable, while getter does SheetRunner.testDoCancelTask(); <br>
+	 *
+	 * @see SheetRunner#getSheetHelper()
+	 *
+	 * @return SheetHelper
+	 * @throws GenerateException
+	 */
+	private SheetHelper getSheetHelper() throws GenerateException {
+		return this.iRanglisteSheet.getObject().getSheetHelper();
 	}
 
 	public int getRangListeSpalte() {
@@ -50,7 +63,7 @@ public class RangListeSpalte {
 				.addColumnProperties(columnProperties).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(10)
 				.setCharWeight(FontWeight.NORMAL).setEndPosMerge(Position.from(this.rangListeSpalte, ersteZeile - 1));
-		this.sheetHelper.setTextInCell(celVal); // spieler nr
+		this.getSheetHelper().setTextInCell(celVal); // spieler nr
 	}
 
 	public void upDateRanglisteSpalte() throws GenerateException {
@@ -83,11 +96,12 @@ public class RangListeSpalte {
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteZeile);
-		this.sheetHelper
+		this.getSheetHelper()
 				.setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
 
 		// Border
-		this.sheetHelper.setPropertiesInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+		this.getSheetHelper().setPropertiesInRange(getSheet(),
+				RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
 				CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
 	}
 
