@@ -23,6 +23,9 @@ https://help.libreoffice.org/Common/Extension_Manager/de<br/>
 Öffne/Erstelle in LibreOffice eine neue Calc Datei.
 Nach erfolgreichen Installation wird im Calc, ein neuen eintrag "PétTurnMngr" im Hauptmenü hinzugefügt.
 
+[[Petanque-Turnier-Manager/doku/images/menue_eintrag.png|alt=menue_eintrag]]
+
+
 ## SpielSystem(e):
 
 ### Supermêlée
