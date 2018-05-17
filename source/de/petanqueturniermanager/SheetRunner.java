@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
+import de.petanqueturniermanager.helper.msgbox.QuestionBox;
 import de.petanqueturniermanager.helper.msgbox.WarningBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
@@ -48,6 +49,18 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		}
 	}
 
+	protected ErrorMessageBox newErrMsgBox() {
+		return new ErrorMessageBox(getxContext());
+	}
+
+	protected WarningBox newWarningBox() {
+		return new WarningBox(getxContext());
+	}
+
+	protected QuestionBox newQuestionBox() {
+		return new QuestionBox(getxContext());
+	}
+
 	@Override
 	public final void run() {
 		if (!SheetRunner.isRunning) {
@@ -68,21 +81,18 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				// CloseConnections.closeOfficeConnection(); // bringt Nix ?!?
 			}
 		} else {
-			WarningBox warnMsg = new WarningBox(getxContext());
-			warnMsg.showOk("Abbruch", "Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.");
+			newWarningBox().showOk("Abbruch",
+					"Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.");
 		}
 	}
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
-			WarningBox warnMsg = new WarningBox(getxContext());
-			warnMsg.showOk("Abbruch", e.getMessage());
+			newWarningBox().showOk("Abbruch", e.getMessage());
 		} else {
 			getLogger().error(e.getMessage(), e);
-			ErrorMessageBox errMsg = new ErrorMessageBox(getxContext());
-			errMsg.showOk("Fehler", e.getMessage());
+			newErrMsgBox().showOk("Fehler", e.getMessage());
 		}
-
 	}
 
 	public abstract Logger getLogger();

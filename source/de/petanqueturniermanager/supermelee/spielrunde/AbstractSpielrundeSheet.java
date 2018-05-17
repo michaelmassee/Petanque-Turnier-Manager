@@ -31,7 +31,6 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.msgbox.QuestionBox;
 import de.petanqueturniermanager.helper.msgbox.WarningBox;
 import de.petanqueturniermanager.helper.position.Position;
@@ -65,14 +64,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 	private final KonfigurationSheet konfigurationSheet;
-	private final ErrorMessageBox errMsg;
 	private SpielTagNr spielTag = null;
 
 	public AbstractSpielrundeSheet(XComponentContext xContext) {
 		super(xContext);
 		this.konfigurationSheet = newKonfigurationSheet(xContext);
 		this.meldeListe = initMeldeListeSheet(xContext);
-		this.errMsg = new ErrorMessageBox(getxContext());
 	}
 
 	@VisibleForTesting
@@ -105,14 +102,14 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	protected final boolean canStart(Meldungen meldungen, int aktuelleSpielrunde) throws GenerateException {
 		if (aktuelleSpielrunde < 1) {
 			this.getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
-			this.errMsg.showOk("Aktuelle Spielrunde Fehler",
+			this.newErrMsgBox().showOk("Aktuelle Spielrunde Fehler",
 					"Ungültige Spielrunde in der Meldeliste '" + aktuelleSpielrunde + "'");
 			return false;
 		}
 
 		if (meldungen.size() < 6) {
 			this.getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
-			this.errMsg.showOk("Aktuelle Spielrunde Fehler",
+			this.newErrMsgBox().showOk("Aktuelle Spielrunde Fehler",
 					"Ungültige anzahl von Meldungen '" + meldungen.size() + "' ,kleiner als 6.");
 			return false;
 		}
@@ -301,7 +298,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		checkNotNull(meldungen);
 
 		if (meldungen.spieler().size() < 4) {
-			this.errMsg.showOk("Fehler beim erstellen von Spielrunde",
+			this.newErrMsgBox().showOk("Fehler beim erstellen von Spielrunde",
 					"Kann für Spieltag " + getSpielTag().getNr() + " die Spielrunde " + neueSpielrundeNr
 							+ " nicht Auslosen. Anzahl Spieler < 4. Aktive Spieler = " + meldungen.spieler().size());
 			return;
@@ -355,7 +352,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
 			getSheetHelper().removeSheet(getSheetName(getSpielTag(), neueSpielrundeNr));
-			this.errMsg.showOk("Fehler beim Auslosen", e.getMessage());
+			this.newErrMsgBox().showOk("Fehler beim Auslosen", e.getMessage());
 			throw new RuntimeException(e); // komplett raus
 		}
 	}
@@ -386,14 +383,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 
 		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlus(3).setHoriJustify(CellHoriJustify.CENTER);
 
-		SpielTagNr spieltag = this.getKonfigurationSheet().getAktiveSpieltag();
-
 		// "Aktiv"
-		int anzAktiv = this.meldeListe.getAnzahlAktiveSpieler(spieltag);
+		int anzAktiv = this.meldeListe.getAnzahlAktiveSpieler(getSpielTag());
 		getSheetHelper().setTextInCell(propName.setEndPosMergeSpaltePlus(2).setValue("Aktiv"));
 		getSheetHelper().setValInCell(propVal.setValue((double) anzAktiv));
 
-		int anzAusg = this.meldeListe.getAusgestiegenSpieler(spieltag);
+		int anzAusg = this.meldeListe.getAusgestiegenSpieler(getSpielTag());
 		getSheetHelper().setTextInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(2).setValue("Ausgestiegen"));
 		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 

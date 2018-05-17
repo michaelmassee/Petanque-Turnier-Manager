@@ -33,7 +33,6 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -68,7 +67,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner
 	public static final String SHEETNAME = "Meldeliste";
 	public static final String SHEET_COLOR = "2544dd";
 
-	private final ErrorMessageBox errMsgBox;
 	private final SpielerSpalte spielerSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
 	private final KonfigurationSheet konfigurationSheet;
@@ -80,7 +78,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this,
 				Formation.MELEE);
 		this.supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
-		this.errMsgBox = new ErrorMessageBox(xContext);
 	}
 
 	@VisibleForTesting
@@ -315,7 +312,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner
 		HashSet<String> spielrNamenInSheet = new HashSet<>();
 
 		int spielrNr;
-		String spielrNamen;
+		String spielerName;
 		NumberCellValue errCelVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
@@ -332,8 +329,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner
 				if (spielrNrInSheet.contains(spielrNr)) {
 					// RED Color
 					this.getSheetHelper().setValInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
-					this.errMsgBox.showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr
-							+ " ist doppelt in der Meldeliste !!!");
+					this.newErrMsgBox().showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. "
+							+ spielrNr + " ist doppelt in der Meldeliste !!!");
 					return true;
 				} else {
 					spielrNrInSheet.add(spielrNr);
@@ -344,19 +341,19 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner
 			// spieler namen testen
 			// -------------------
 			// Supermelee hat nur ein name spalte
-			spielrNamen = this.getSheetHelper().getTextFromCell(xSheet,
+			spielerName = this.getSheetHelper().getTextFromCell(xSheet,
 					Position.from(this.spielerSpalte.getSpielerNameErsteSpalte(), spielerZeilecntr)); // wir trim
 																										// gemacht
 
-			if (StringUtils.isNotEmpty(spielrNamen)) {
-				if (spielrNamenInSheet.contains(spielrNamen)) {
+			if (StringUtils.isNotEmpty(spielerName)) {
+				if (spielrNamenInSheet.contains(spielerName.toLowerCase())) {
 					// RED Color
-					this.getSheetHelper().setTextInCell(errStrCelVal.setValue(spielrNamen).zeile(spielerZeilecntr));
-					this.errMsgBox.showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen "
-							+ spielrNamen + " ist doppelt in der Meldeliste !!!");
+					this.getSheetHelper().setTextInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
+					this.newErrMsgBox().showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen "
+							+ spielerName + " ist doppelt in der Meldeliste !!!");
 					return true;
 				} else {
-					spielrNamenInSheet.add(spielrNamen);
+					spielrNamenInSheet.add(spielerName.toLowerCase());
 				}
 			}
 		}
