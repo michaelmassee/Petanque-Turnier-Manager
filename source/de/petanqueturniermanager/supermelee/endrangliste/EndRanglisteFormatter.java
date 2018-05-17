@@ -77,4 +77,17 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 		formatDatenSpielTagSpalten(rangliste.getErsteSummeSpalte());
 
 	}
+
+	@Override
+	public StringCellValue addFooter() throws GenerateException {
+		StringCellValue stringVal = super.addFooter();
+
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins()
+				.setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins()
+				.setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
+
+		return stringVal;
+	}
+
 }
