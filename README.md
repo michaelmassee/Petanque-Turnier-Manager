@@ -1,10 +1,14 @@
-# Petanque-Turnier-Manager
+# Pétanque-Turnier-Manager
 
-Der Petanque Turnier Manager ist eine Offline Turnierleitung LibreOffice Calc Erweiterung/Extension.
+Der Pétanque Turnier Manager ist eine Offline Turnierleitung LibreOffice Calc Erweiterung/Extension.
 
 ## Installation:
 
-Voraussetzung ist LibreOffice Calc ab Version 5.1<br/>
+Voraussetzung:
+Oracle Java ab 1.8<br/>
+https://www.java.com/de/<br/>
+<br/>
+LibreOffice Calc ab Version 5.1, 6.0 oder höher empfohlen<br/>
 https://de.libreoffice.org/<br/>
 https://de.libreoffice.org/discover/calc/<br/>
 https://de.libreoffice.org/download/libreoffice-still/<br/>
@@ -17,7 +21,7 @@ https://help.libreoffice.org/Common/Extension_Manager/de<br/>
 
 ## Start:
 Öffne/Erstelle in LibreOffice eine neue Calc Datei.
-Nach erfolgreichen Installation wird im Calc, ein neuen eintrag im Hauptmenü "Petanque Turniermanager" hinzugefügt.
+Nach erfolgreichen Installation wird im Calc, ein neuen eintrag "PétTurnMngr" im Hauptmenü hinzugefügt.
 
 ## SpielSystem(e):
 
