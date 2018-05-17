@@ -41,14 +41,6 @@ public abstract class AbstractMessageBox {
 		} catch (Exception e) {
 			getLogger().error(e.getMessage(), e);
 		}
-
-		// finally {
-		// // make sure always to dispose the component and free the memory!
-		// if (xComponent != null) {
-		// xComponent.dispose();
-		// }
-		// }
-
 		return xMessageBoxFactory;
 	}
 

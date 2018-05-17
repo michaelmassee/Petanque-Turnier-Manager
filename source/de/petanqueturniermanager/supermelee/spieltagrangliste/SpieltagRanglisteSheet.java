@@ -86,7 +86,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 
 	@Override
 	protected void doRun() throws GenerateException {
-		this.spieltagNr = this.getKonfigurationSheet().getAktiveSpieltag();
+		setSpieltagNr(this.getKonfigurationSheet().getAktiveSpieltag());
 		generate();
 	}
 

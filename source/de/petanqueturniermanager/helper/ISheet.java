@@ -18,4 +18,5 @@ public interface ISheet {
 	public XSpreadsheet getSheet() throws GenerateException;
 
 	public Logger getLogger();
+
 }
