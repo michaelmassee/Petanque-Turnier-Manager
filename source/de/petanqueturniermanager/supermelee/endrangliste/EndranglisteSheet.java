@@ -24,6 +24,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -86,6 +87,13 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	private void upDateSheet() throws GenerateException {
+
+		int anzahlSpieltage = getAnzahlSpieltage();
+		if (anzahlSpieltage < 2) {
+			newErrMsgBox().showOk("Feher", "Ungültige anzahl von Spieltage. " + anzahlSpieltage);
+			return;
+		}
+
 		Integer headerColor = this.konfigurationSheet.getRanglisteHeaderFarbe();
 
 		spielerEinfügen();
@@ -112,7 +120,10 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void formatSchlechtesteSpieltag() throws GenerateException {
 
-		CellProperties markierung = CellProperties.from().setCellBackColor("eddfde");
+		CellProperties markierungOdd = CellProperties.from().setCellBackColor("eac3c0")
+				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
+		CellProperties markierungEven = CellProperties.from().setCellBackColor("eddfde")
+				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
 
 		for (Integer spielerNr : this.spielerSpalte.getSpielerNrList()) {
 			SheetRunner.testDoCancelTask();
@@ -126,7 +137,12 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 				RangePosition rangePos = RangePosition.from(spieltagSpalte, spielerZeile,
 						spieltagSpalte + getAnzSpaltenInSpieltag() - 1, spielerZeile);
-				this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangePos, markierung);
+				if ((spielerZeile & 1) == 0) {
+					// ungerade
+					this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangePos, markierungOdd);
+				} else {
+					this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangePos, markierungEven);
+				}
 			}
 		}
 	}
