@@ -13,6 +13,9 @@ https://de.libreoffice.org/<br/>
 https://de.libreoffice.org/discover/calc/<br/>
 https://de.libreoffice.org/download/libreoffice-still/<br/>
 
+## releases
+https://github.com/michaelmassee/Petanque-Turnier-Manager/releases
+
 ## LibreOffice Extension Instalieren:
 Die aktuelle Extension *.oxt Datei runterladen<br/>
 https://github.com/michaelmassee/Petanque-Turnier-Manager/releases<br/>
@@ -24,6 +27,9 @@ https://help.libreoffice.org/Common/Extension_Manager/de<br/>
 Nach erfolgreichen Installation wird im Calc, ein neuen eintrag "PétTurnMngr" im Hauptmenü hinzugefügt.
 
 ![menue_eintrag](https://github.com/michaelmassee/Petanque-Turnier-Manager/blob/master/doku/images/menue_eintrag.png)
+
+## Wiki
+https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki
 
 
 ## SpielSystem(e):
