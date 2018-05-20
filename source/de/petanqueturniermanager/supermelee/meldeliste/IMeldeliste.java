@@ -17,4 +17,6 @@ public interface IMeldeliste {
 
 	Meldungen getAktiveMeldungen() throws GenerateException;
 
+	Meldungen getAlleMeldungen() throws GenerateException;
+
 }

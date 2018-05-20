@@ -23,6 +23,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpie
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
@@ -118,6 +119,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			break;
 		case "anmeldungen":
 			new AnmeldungenSheet(this.m_xContext).start();
+			break;
+		case "teilnehmer":
+			new TielnehmerSheet(this.m_xContext).start();
 			break;
 		case "naechste_spieltag":
 			new MeldeListeSheet_NeuerSpieltag(this.m_xContext).start();

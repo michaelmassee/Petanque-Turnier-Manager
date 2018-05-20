@@ -19,7 +19,9 @@ import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
@@ -28,12 +30,17 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	private final SpielrundeSheet_Naechste naechsteSpielrundeSheet;
 	private final MeldeListeSheet_TestDaten meldeListeTestDatenGenerator;
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
+	private final AnmeldungenSheet anmeldungenSheet;
+	private final TielnehmerSheet tielnehmerSheet;
 
 	public SpielrundeSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
 		this.naechsteSpielrundeSheet = new SpielrundeSheet_Naechste(xContext);
 		this.meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(xContext);
 		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
+		this.anmeldungenSheet = new AnmeldungenSheet(xContext);
+		this.tielnehmerSheet = new TielnehmerSheet(xContext);
+
 	}
 
 	@Override
@@ -44,13 +51,9 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(
-				new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		this.getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		setSpielTag(SpielTagNr.from(1));
 		generate();
-		if (this.spieltagRanglisteSheet.isErrorInSheet()) {
-			return;
-		}
 	}
 
 	/**
@@ -60,9 +63,15 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	 */
 	public void generate() throws GenerateException {
 
-		this.meldeListeTestDatenGenerator.generateTestDaten(getSpielTag());
+		this.anmeldungenSheet.setSpielTag(getSpielTag());
+		this.tielnehmerSheet.setSpielTagNr(getSpielTag());
 		this.spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
 		this.naechsteSpielrundeSheet.setSpielTag(getSpielTag());
+
+		this.meldeListeTestDatenGenerator.generateTestDaten(getSpielTag());
+		this.anmeldungenSheet.generate();
+		this.tielnehmerSheet.generate();
+
 		int maxspielrundeNr = 4;
 
 		for (int spielrundeNr = 1; spielrundeNr <= maxspielrundeNr; spielrundeNr++) {
@@ -73,8 +82,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			}
 
 			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
-			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr,
-					getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
+			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 			neueSpielrunde(meldungen, spielrundeNr, true);
 
 			// ------------------------------------
@@ -108,5 +116,6 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 		this.getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
 		this.getKonfigurationSheet().setAktiveSpielRunde(maxspielrundeNr);
+		this.spieltagRanglisteSheet.isErrorInSheet();
 	}
 }

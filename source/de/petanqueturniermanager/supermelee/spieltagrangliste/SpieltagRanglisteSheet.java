@@ -97,13 +97,13 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
 		this.spielerSpalte.alleSpieltagSpielerEinfuegen();
-		ergebnisseFormulaEinfuegen(); // wegen fill down, before formatierungen
-		updateSummenSpalten();
+		this.spielerSpalte.insertHeaderInSheet(headerColor);
+		this.ranglisteFormatter.updateHeader();
 		this.rangListeSorter.insertSortValidateSpalte();
 		this.rangListeSorter.insertManuelsortSpalten();
-		this.spielerSpalte.insertHeaderInSheet(headerColor);
+		ergebnisseFormulaEinfuegen();
+		updateSummenSpalten();
 		this.spielerSpalte.formatDaten();
-		this.ranglisteFormatter.updateHeader();
 		this.getRangListeSpalte().upDateRanglisteSpalte();
 		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
 		this.ranglisteFormatter.formatDaten();
@@ -424,10 +424,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public SpielTagNr getSpieltagNr() throws GenerateException {
+		checkNotNull(this.spieltagNr);
 		return this.spieltagNr;
 	}
 
 	public void setSpieltagNr(SpielTagNr spieltagNr) {
+		checkNotNull(spieltagNr);
 		this.spieltagNr = spieltagNr;
 	}
 
@@ -440,8 +442,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		return getErsteSummeSpalte() + PUNKTE_DIV_OFFS;
 	}
 
-	public boolean isErrorInSheet() throws GenerateException {
-		return this.rangListeSorter.isErrorInSheet();
+	public void isErrorInSheet() throws GenerateException {
+		this.rangListeSorter.isErrorInSheet();
 	}
 
 	protected RangListeSorter getRangListeSorter() {

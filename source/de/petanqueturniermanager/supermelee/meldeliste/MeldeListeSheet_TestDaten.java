@@ -19,7 +19,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
@@ -44,8 +43,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(
-				new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		this.getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		generateTestDaten(SpielTagNr.from(1));
 	}
 
@@ -53,8 +51,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = this.meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(this.meldeListe.getSheet(),
-				Position.from(aktuelleSpieltagSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(this.meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			SheetRunner.testDoCancelTask();
@@ -73,28 +70,29 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	public void generateTestDaten(SpielTagNr spieltag) throws GenerateException {
 		this.meldeListe.setSpielTag(spieltag);
 		XSpreadsheet meldelisteSheet = this.meldeListe.getSheet();
-		SheetHelper sheetHelper = getSheetHelper();
-		sheetHelper.setActiveSheet(meldelisteSheet);
+		getSheetHelper().setActiveSheet(meldelisteSheet);
 
 		List<String> testNamen = listeMitTestNamen();
 
-		Position pos = Position.from(this.meldeListe.getSpielerNameSpalte(),
-				AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerName = Position.from(this.meldeListe.getSpielerNameSpalte(), AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerNr = Position.from(AbstractSupermeleeMeldeListeSheet.SPIELER_NR_SPALTE, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
 
 		int aktuelleSpieltagSpalte = this.meldeListe.spieltagSpalte(spieltag);
-
-		NumberCellValue numVal = NumberCellValue.from(meldelisteSheet,
-				Position.from(pos).spalte(aktuelleSpieltagSpalte));
+		NumberCellValue numValSpieltag = NumberCellValue.from(meldelisteSheet, Position.from(posSpielerName).spalte(aktuelleSpieltagSpalte));
+		NumberCellValue spielrNr = NumberCellValue.from(meldelisteSheet, posSpielerNr);
 
 		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr++) {
 			SheetRunner.testDoCancelTask();
-			sheetHelper.setTextInCell(meldelisteSheet, pos.zeilePlusEins(), testNamen.get(spielerCntr));
-			numVal.zeile(pos.getZeile());
+			getSheetHelper().setTextInCell(meldelisteSheet, posSpielerName.zeilePlusEins(), testNamen.get(spielerCntr));
+			numValSpieltag.zeile(posSpielerName.getZeile());
+			spielrNr.zeile(posSpielerName.getZeile());
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
-				sheetHelper.setValInCell(numVal.setValue((double) randomNum));
+				getSheetHelper().setValInCell(numValSpieltag.setValue((double) randomNum));
+				// zum test spielrnr vorgeben, mix in nr erreichen
+				getSheetHelper().setValInCell(spielrNr.setValue((double) spielerCntr + 1));
 			} else {
-				sheetHelper.setTextInCell(StringCellValue.from(numVal).setValue(""));
+				getSheetHelper().setTextInCell(StringCellValue.from(numValSpieltag).setValue(""));
 			}
 		}
 

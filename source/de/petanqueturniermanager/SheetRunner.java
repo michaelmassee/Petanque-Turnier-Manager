@@ -81,8 +81,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				// CloseConnections.closeOfficeConnection(); // bringt Nix ?!?
 			}
 		} else {
-			newWarningBox().showOk("Abbruch",
-					"Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.");
+			newWarningBox().showOk("Abbruch", "Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.");
 		}
 	}
 

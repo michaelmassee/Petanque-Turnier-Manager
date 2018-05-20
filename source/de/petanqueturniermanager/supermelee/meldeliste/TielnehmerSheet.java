@@ -1,5 +1,5 @@
 /**
-* Erstellung : 20.04.2018 / Michael Massee
+* Erstellung : 20.05.2018 / Michael Massee
 **/
 
 package de.petanqueturniermanager.supermelee.meldeliste;
@@ -29,23 +29,32 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-public class AnmeldungenSheet extends SheetRunner implements ISheet {
-	private static final Logger logger = LogManager.getLogger(AnmeldungenSheet.class);
+public class TielnehmerSheet extends SheetRunner implements ISheet {
 
-	public static final String SHEETNAME = "Anmeldungen";
+	private static final Logger logger = LogManager.getLogger(TielnehmerSheet.class);
+
+	public static final String SHEETNAME = "Teilnehmer";
 
 	public static final int ERSTE_DATEN_ZEILE = 0;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
+	public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
+
+	private static final String SHEET_COLOR = "6542f4";
 
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private final KonfigurationSheet konfigurationSheet;
-	private SpielTagNr spielTag = null;
+	private SpielTagNr spielTagNr = null;
 
-	public AnmeldungenSheet(XComponentContext xContext) {
+	public TielnehmerSheet(XComponentContext xContext) {
 		super(xContext);
 		this.meldeliste = new MeldeListeSheet_Update(xContext);
 		this.konfigurationSheet = new KonfigurationSheet(xContext);
+	}
+
+	@Override
+	public XSpreadsheet getSheet() throws GenerateException {
+		return this.getSheetHelper().newIfNotExist(getSheetName(getSpielTagNr()), DefaultSheetPos.SUPERMELEE_WORK, SHEET_COLOR);
 	}
 
 	@Override
@@ -55,21 +64,20 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		this.setSpielTag(this.konfigurationSheet.getAktiveSpieltag());
+		this.setSpielTagNr(this.konfigurationSheet.getAktiveSpieltag());
 		generate();
 	}
 
 	public void generate() throws GenerateException {
-
-		this.meldeliste.setSpielTag(this.getSpielTag());
-		getSheetHelper().removeSheet(getSheetName(this.getSpielTag()));
+		this.meldeliste.setSpielTag(this.getSpielTagNr());
+		getSheetHelper().removeSheet(getSheetName(this.getSpielTagNr()));
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
 
 		// meldeliste nach namen sortieren !
 		this.meldeliste.doSort(this.meldeliste.getSpielerNameErsteSpalte(), true);
 
-		Meldungen alleMeldungen = this.meldeliste.getAlleMeldungen();
+		Meldungen aktiveUndAusgesetztMeldungen = this.meldeliste.getAktiveUndAusgesetztMeldungen();
 
 		CellProperties celPropNr = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		NumberCellValue spierNrVal = NumberCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
@@ -80,64 +88,50 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		StringCellValue nameFormula = StringCellValue.from(getSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setShrinkToFit(true);
 
-		StringCellValue chkBox = StringCellValue.from(getSheet(), Position.from(SPIELER_NAME_SPALTE + 1, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setValue(" ");
-
 		int anzSpielerinSpalte = 40;
 		int lfndNr = 1;
-		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName, chkBox);
+		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 
-		for (Spieler spieler : alleMeldungen.getSpielerList()) {
+		for (Spieler spieler : aktiveUndAusgesetztMeldungen.getSpielerList()) {
 
 			spierNrVal.setValue((double) spieler.getNr());
 			nameFormula.setValue(this.meldeliste.formulaSverweisSpielernamen(spierNrVal.getPos().getAddress()));
 
 			this.getSheetHelper().setValInCell(spierNrVal);
 			this.getSheetHelper().setFormulaInCell(nameFormula);
-			this.getSheetHelper().setTextInCell(chkBox);
 
 			spierNrVal.zeilePlusEins();
 			nameFormula.zeilePlusEins();
-			chkBox.zeilePlusEins();
 
 			if ((lfndNr / anzSpielerinSpalte) * anzSpielerinSpalte == lfndNr) {
-				spierNrVal.spalte((lfndNr / anzSpielerinSpalte) * 4).zeile(ERSTE_DATEN_ZEILE);
+				spierNrVal.spalte((lfndNr / anzSpielerinSpalte) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
 				nameFormula.spalte(spierNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
-				chkBox.spalte(spierNrVal.getPos().getSpalte() + 2).zeile(ERSTE_DATEN_ZEILE);
-				spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName, chkBox);
+				spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 			}
 			lfndNr++;
 		}
+
 	}
 
-	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal, CellProperties celPropName, StringCellValue chkBox)
-			throws GenerateException {
+	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal, CellProperties celPropName) throws GenerateException {
 		this.getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte(), celPropNr);
 		this.getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte(), celPropName);
-		this.getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte(), celPropNr);
 		// leere spalte breite
-		this.getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte() + 1, celPropNr);
+		this.getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte() + 1, celPropNr);
 	}
 
 	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
-		checkNotNull(spieltagNr);
 		return spieltagNr.getNr() + ". Spieltag " + SHEETNAME;
 	}
 
-	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
-		SpielTagNr spieltagNr = getSpielTag();
-		return this.getSheetHelper().newIfNotExist(getSheetName(spieltagNr), DefaultSheetPos.SUPERMELEE_WORK, "98e2d7");
+	public SpielTagNr getSpielTagNr() throws GenerateException {
+		checkNotNull(this.spielTagNr, "spielTagNr == null");
+		return this.spielTagNr;
 	}
 
-	public SpielTagNr getSpielTag() throws GenerateException {
-		checkNotNull(this.spielTag);
-		return this.spielTag;
-	}
-
-	public void setSpielTag(SpielTagNr spielTag) {
-		checkNotNull(spielTag);
-		this.spielTag = spielTag;
+	public void setSpielTagNr(SpielTagNr spielTag) {
+		checkNotNull(spielTag, "spielTagNr == null");
+		this.spielTagNr = spielTag;
 	}
 
 }

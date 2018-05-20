@@ -391,10 +391,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 		try {
 			SpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr, meldungen, doubletteRunde);
 			spielRundeSheet.validateSpielerTeam(null);
-			spielerNummerEinfuegen(spielRundeSheet);
-			vertikaleErgbnisseFormulEinfuegen(spielRundeSheet);
 			headerPaarungen(sheet, spielRundeSheet);
 			headerSpielerNr(sheet);
+			spielerNummerEinfuegen(spielRundeSheet);
+			vertikaleErgbnisseFormulEinfuegen(spielRundeSheet);
 			datenformatieren(sheet, neueSpielrundeNr);
 			spielrundeProperties(sheet, neueSpielrundeNr, doubletteRunde);
 			this.getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
@@ -529,10 +529,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner {
 	}
 
 	public SpielTagNr getSpielTag() throws GenerateException {
+		checkNotNull(this.spielTag);
 		return this.spielTag;
 	}
 
 	public void setSpielTag(SpielTagNr spielTag) {
+		checkNotNull(spielTag);
 		this.spielTag = spielTag;
 	}
 
