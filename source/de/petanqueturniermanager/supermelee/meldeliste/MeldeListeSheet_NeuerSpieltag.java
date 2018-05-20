@@ -31,8 +31,7 @@ public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeS
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		getKonfigurationSheet().setAktiveSpielRunde(1);
 
-		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), HEADER_ZEILE,
-				aktuelleSpieltagSpalte(), 999);
+		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), ERSTE_HEADER_ZEILE, aktuelleSpieltagSpalte(), 999);
 		getSheetHelper().clearRange(getSheet(), cleanUpRange);
 
 		upDateSheet();

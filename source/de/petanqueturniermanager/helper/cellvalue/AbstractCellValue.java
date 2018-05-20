@@ -107,6 +107,18 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	}
 
 	/**
+	 * wenn vorhanden dann werden die zellen von pos bis endpos zusammengefasst (merge)<br>
+	 * aktuelle position plus anzahl spalten
+	 *
+	 * @return this
+	 */
+	@SuppressWarnings("unchecked")
+	public T setEndPosMergeZeilePlus(int anzZeilen) {
+		this.setEndPosMerge(Position.from(getPos()).zeilePlus(anzZeilen));
+		return (T) this;
+	}
+
+	/**
 	 * @param abstractCellValue
 	 */
 	@SuppressWarnings("unchecked")

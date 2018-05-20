@@ -52,7 +52,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 	public static final int ERSTE_DATEN_ZEILE = 2; // Zeile 3
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
-	public static final int HEADER_ZEILE = ERSTE_DATEN_ZEILE - 1; // Zeile 2
+	public static final int ERSTE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 2; // Zeile 1
+	public static final int ZWEITE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 1; // Zeile 2
 
 	public static final int SUMMEN_SPALTE_OFFSET = 2; // 2 Spalten weiter zur letzte Spieltag
 	public static final int SUMMEN_ERSTE_ZEILE = ERSTE_DATEN_ZEILE; // Zeile 3
@@ -92,7 +93,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	public int countAnzSpieltage() throws GenerateException {
 		int anzSpieltage = 0;
 		int ersteSpieltagspalteSpalte = ersteSpieltagspalteSpalte();
-		Position posHeader = Position.from(ersteSpieltagspalteSpalte, HEADER_ZEILE);
+		Position posHeader = Position.from(ersteSpieltagspalteSpalte, ZWEITE_HEADER_ZEILE);
 
 		for (int spaltecntr = 0; spaltecntr < 90; spaltecntr++) {
 			String header = this.getSheetHelper().getTextFromCell(this.getSheet(), posHeader);
@@ -126,8 +127,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 		XSpreadsheet sheet = getSheet();
 		this.getSheetHelper().setActiveSheet(sheet);
-		this.getSheetHelper().setValInCell(sheet, SPALTE_FORMATION, ZEILE_FORMATION, getFormation().getId());
-		this.getSheetHelper().setTextInCell(sheet, SPALTE_FORMATION + 1, ZEILE_FORMATION, getFormation().getBezeichnung());
 
 		// ------
 		// Header einfuegen
@@ -135,15 +134,20 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		int headerBackColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
 		this.spielerSpalte.insertHeaderInSheet(headerBackColor);
 
-		StringCellValue bezCelVal = StringCellValue.from(sheet, setzPositionSpalte(), HEADER_ZEILE, "SetzPos").setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setColumnWidth(800).setCellBackColor(headerBackColor)
-				.setBorder(BorderFactory.from().allThin().toBorder());
+		// ------
+		// Setzposition
+		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
+		StringCellValue bezCelVal = StringCellValue.from(sheet, setzPositionSpalte(), ERSTE_HEADER_ZEILE, "SPos")
+				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setCellBackColor(headerBackColor)
+				.setBorder(BorderFactory.from().allThin().toBorder()).addColumnProperties(columnProp).setEndPosMergeZeilePlus(1).setRotateAngle(27000)
+				.setVertJustify(CellVertJustify2.CENTER);
 		this.getSheetHelper().setTextInCell(bezCelVal);
+		// ------
 
 		formatSpielTagSpalte(getSpielTag());
 
 		// eventuelle luecken in spiele namen nach unten sortieren
-		lueckenEntfernen();
+		zeileOhneSpielerNamenEntfernen();
 		updateSpielerNr();
 
 		doSort(this.spielerSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
@@ -156,8 +160,10 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		checkNotNull(spieltag);
 		XSpreadsheet sheet = getSheet();
 		int hederBackColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
-		StringCellValue bezCelSpieltagVal = StringCellValue.from(sheet, spieltagSpalte(spieltag), HEADER_ZEILE, spielTagHeader(spieltag))
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setColumnWidth(2000).setCellBackColor(hederBackColor)
+		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(2000);
+
+		StringCellValue bezCelSpieltagVal = StringCellValue.from(sheet, spieltagSpalte(spieltag), ZWEITE_HEADER_ZEILE, spielTagHeader(spieltag))
+				.setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setCellBackColor(hederBackColor).addColumnProperties(columnProp)
 				.setBorder(BorderFactory.from().allThin().toBorder());
 
 		// Spieltag header
@@ -253,25 +259,25 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		return "=VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";2;0)";
 	}
 
-	public void lueckenEntfernen() throws GenerateException {
-		doSort(this.spielerSpalte.getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren,
-																		// egal ob
-		// daten oder nicht
+	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
+		doSort(this.spielerSpalte.getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = this.spielerSpalte.neachsteFreieDatenZeile();
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
 		XSpreadsheet xSheet = getSheet();
 
-		for (int spielerNrZeilecntr = letzteNrZeile; spielerNrZeilecntr >= ERSTE_DATEN_ZEILE; spielerNrZeilecntr--) {
-			String spielerNamen = this.getSheetHelper().getTextFromCell(xSheet, Position.from(this.spielerSpalte.getSpielerNameErsteSpalte(), spielerNrZeilecntr));
+		StringCellValue emptyVal = StringCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, 0)).setValue("");
+
+		for (int spielerNrZeilecntr = ERSTE_DATEN_ZEILE; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
+			Position posSpielerName = Position.from(this.spielerSpalte.getSpielerNameErsteSpalte(), spielerNrZeilecntr);
+			String spielerNamen = this.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
 			// Achtung alle durchgehen weil eventuell lücken in der nr spalte!
 			if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
 				// nr ohne spieler namen entfernen
-				this.getSheetHelper().setTextInCell(xSheet, SPIELER_NR_SPALTE, spielerNrZeilecntr, "");
+				this.getSheetHelper().setTextInCell(emptyVal.zeile(spielerNrZeilecntr));
 			}
 		}
-
 	}
 
 	public int getSpielerNameSpalte() {
@@ -440,8 +446,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
 
-		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").setSpalteHoriJustify(CellHoriJustify.RIGHT).setComment(null).setColumnWidth(3000)
-				.removeCellBackColor();
+		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000);
+		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").addColumnProperties(columnProp).setComment(null).removeCellBackColor();
 		this.getSheetHelper().setTextInCell(bezCelVal);
 
 		bezCelVal.setComment(null).setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
