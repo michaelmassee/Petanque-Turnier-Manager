@@ -156,11 +156,9 @@ public class SpielerSpalte {
 	 */
 	public int neachsteFreieDatenZeile() throws GenerateException {
 		for (int zeileCntr = 999; zeileCntr >= this.getErsteDatenZiele(); zeileCntr--) {
-			String cellText = this.getSheetHelper().getTextFromCell(this.getSheet(), Position.from(this.spielerNrSpalte, zeileCntr));
-			if (!StringUtils.isBlank(cellText)) {
-				if (NumberUtils.isParsable(cellText)) {
-					return zeileCntr + 1;
-				}
+			Integer cellNum = this.getSheetHelper().getIntFromCell(this.getSheet(), Position.from(this.spielerNrSpalte, zeileCntr));
+			if (cellNum > 0) {
+				return zeileCntr + 1;
 			}
 		}
 		return this.getErsteDatenZiele();
