@@ -8,7 +8,7 @@
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
-				    <!--  Pétanque-Turnier-Manager  -->
+					<!-- Pétanque-Turnier-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
@@ -74,6 +74,19 @@
 							</node>
 
 							<node oor:name="A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Playerlist</value>
+									<value xml:lang="de">Teilnehmer</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A5" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
@@ -81,7 +94,7 @@
 
 							<node oor:name="B1" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Current Play-Round</value>
+									<value xml:lang="en">Current Play-Round</value>
 									<value xml:lang="de">Aktuelle Spielrunde</value>
 								</prop>
 								<prop oor:name="URL">
@@ -94,7 +107,7 @@
 
 							<node oor:name="B2" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Next Play-Round</value>
+									<value xml:lang="en">Next Play-Round</value>
 									<value xml:lang="de">Nächste Spielrunde</value>
 								</prop>
 								<prop oor:name="URL">
@@ -114,7 +127,7 @@
 
 							<node oor:name="B4" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Dayranking List</value>
+									<value xml:lang="en">Dayranking List</value>
 									<value xml:lang="de">Spieltag Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
@@ -127,7 +140,7 @@
 
 							<node oor:name="B5" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Dayranking List Sort</value>
+									<value xml:lang="en">Dayranking List Sort</value>
 									<value xml:lang="de">Spieltag Rangliste Sortieren</value>
 								</prop>
 								<prop oor:name="URL">
@@ -141,7 +154,7 @@
 
 							<node oor:name="B6" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Next competition day</value>
+									<value xml:lang="en">Next competition day</value>
 									<value xml:lang="de">Nächste Spieltag</value>
 								</prop>
 								<prop oor:name="URL">
@@ -168,7 +181,7 @@
 
 							<node oor:name="C1" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Team-Pairings</value>
+									<value xml:lang="en">Team-Pairings</value>
 									<value xml:lang="de">Team-Paarungen</value>
 								</prop>
 								<prop oor:name="URL">
@@ -185,7 +198,7 @@
 
 					<node oor:name="X1" oor:op="replace">
 						<prop oor:name="Title">
-						    <value xml:lang="en">~Configuration</value>
+							<value xml:lang="en">~Configuration</value>
 							<value xml:lang="de">~Konfiguration</value>
 						</prop>
 						<prop oor:name="URL">
@@ -212,7 +225,7 @@
 							<value />
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
-						    <value xml:lang="en">Examples</value>
+							<value xml:lang="en">Examples</value>
 							<value xml:lang="de">Beispiel Turnierdaten</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
@@ -222,7 +235,7 @@
 
 							<node oor:name="A1" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Supermêlée, generate Meldeliste with 90 Meldungen</value>
+									<value xml:lang="en">Supermêlée, generate Meldeliste with 90 Meldungen</value>
 									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 90 Meldungen</value>
 								</prop>
 								<prop oor:name="URL">
@@ -235,7 +248,7 @@
 
 							<node oor:name="A2" oor:op="replace">
 								<prop oor:name="Title">
-								    <value xml:lang="en">Supermêlée, generate 1 Playday with 4 Rounds</value>
+									<value xml:lang="en">Supermêlée, generate 1 Playday with 4 Rounds</value>
 									<value xml:lang="de">Supermêlée, generiere 1 Spieltag mit 4 Spielrunden</value>
 								</prop>
 								<prop oor:name="URL">
@@ -268,10 +281,10 @@
 							<value>private:separator</value>
 						</prop>
 					</node>
-					
+
 					<node oor:name="Z2" oor:op="replace">
 						<prop oor:name="Title">
-						    <value xml:lang="en">~Cancel Processing</value>
+							<value xml:lang="en">~Cancel Processing</value>
 							<value xml:lang="de">~Stop verarbeitung</value>
 						</prop>
 						<prop oor:name="URL">
@@ -280,8 +293,8 @@
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
 						</prop>
-					</node>					
-					
+					</node>
+
 					<!-- ****************************************************************** -->
 
 					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> 

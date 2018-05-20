@@ -47,7 +47,7 @@ public class SpielerSpalte {
 
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
 	public static final int DEFAULT_SPIELER_NAME_WIDTH = 4000;
-	public static final String HEADER_SPIELER_NR = "#";
+	public static final String HEADER_SPIELER_NR = "Nr";
 	public static final String HEADER_SPIELER_NAME = "Name";
 	private final Formation formation;
 	private final int ersteDatenZiele; // Zeile 1 = 0
@@ -56,8 +56,7 @@ public class SpielerSpalte {
 	private final WeakRefHelper<ISheet> sheet;
 	private final WeakRefHelper<IMeldeliste> meldeliste;
 
-	public SpielerSpalte(XComponentContext xContext, int ersteDatenZiele, int spielerNrSpalte, ISheet sheet,
-			IMeldeliste meldeliste, Formation formation) {
+	public SpielerSpalte(XComponentContext xContext, int ersteDatenZiele, int spielerNrSpalte, ISheet sheet, IMeldeliste meldeliste, Formation formation) {
 		checkNotNull(xContext);
 		checkNotNull(sheet);
 		checkNotNull(meldeliste);
@@ -115,38 +114,29 @@ public class SpielerSpalte {
 
 		// Spieler Nr
 		// -------------------------------------
-		RangePosition spielrNrdatenRange = RangePosition.from(this.spielerNrSpalte, this.ersteDatenZiele,
-				this.spielerNrSpalte, letzteDatenZeile);
+		RangePosition spielrNrdatenRange = RangePosition.from(this.spielerNrSpalte, this.ersteDatenZiele, this.spielerNrSpalte, letzteDatenZeile);
 
-		this.getSheetHelper().setPropertiesInRange(getSheet(), spielrNrdatenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+		this.getSheetHelper().setPropertiesInRange(getSheet(), spielrNrdatenRange, CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
 		// Spieler Namen
-		RangePosition datenRange = RangePosition.from(this.spielerNameErsteSpalte, this.ersteDatenZiele,
-				this.spielerNameErsteSpalte, letzteDatenZeile);
+		RangePosition datenRange = RangePosition.from(this.spielerNameErsteSpalte, this.ersteDatenZiele, this.spielerNameErsteSpalte, letzteDatenZeile);
 
 		this.getSheetHelper().setPropertiesInRange(getSheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
 
 	}
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		StringCellValue celVal = StringCellValue
-				.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1),
-						HEADER_SPIELER_NR)
-				.setComment("Meldenummer (manuell nicht ändern)").setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCellBackColor(headerColor);
+		StringCellValue celVal = StringCellValue.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
+				.setComment("Meldenummer (manuell nicht ändern)").setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 		this.getSheetHelper().setTextInCell(celVal); // spieler nr
 
-		celVal.setColumnWidth(DEFAULT_SPIELER_NAME_WIDTH).setComment(null).spalte(this.spielerNameErsteSpalte)
-				.setValue(HEADER_SPIELER_NAME).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCellBackColor(headerColor);
+		celVal.setColumnWidth(DEFAULT_SPIELER_NAME_WIDTH).setComment(null).spalte(this.spielerNameErsteSpalte).setValue(HEADER_SPIELER_NAME)
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
 			this.getSheetHelper().setTextInCell(celVal);
@@ -166,8 +156,7 @@ public class SpielerSpalte {
 	 */
 	public int neachsteFreieDatenZeile() throws GenerateException {
 		for (int zeileCntr = 999; zeileCntr >= this.getErsteDatenZiele(); zeileCntr--) {
-			String cellText = this.getSheetHelper().getTextFromCell(this.getSheet(),
-					Position.from(this.spielerNrSpalte, zeileCntr));
+			String cellText = this.getSheetHelper().getTextFromCell(this.getSheet(), Position.from(this.spielerNrSpalte, zeileCntr));
 			if (!StringUtils.isBlank(cellText)) {
 				if (NumberUtils.isParsable(cellText)) {
 					return zeileCntr + 1;
@@ -185,8 +174,7 @@ public class SpielerSpalte {
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
 		for (int zeileCntr = 999; zeileCntr >= this.getErsteDatenZiele(); zeileCntr--) {
-			String cellText = this.getSheetHelper().getTextFromCell(this.getSheet(),
-					Position.from(this.spielerNameErsteSpalte, zeileCntr));
+			String cellText = this.getSheetHelper().getTextFromCell(this.getSheet(), Position.from(this.spielerNameErsteSpalte, zeileCntr));
 			if (!StringUtils.isBlank(cellText)) {
 				return zeileCntr;
 			}
@@ -239,8 +227,7 @@ public class SpielerSpalte {
 	}
 
 	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList) throws GenerateException {
-		NumberCellValue celValSpielerNr = NumberCellValue.from(this.getSheet(),
-				Position.from(this.spielerNrSpalte, getErsteDatenZiele()), 0);
+		NumberCellValue celValSpielerNr = NumberCellValue.from(this.getSheet(), Position.from(this.spielerNrSpalte, getErsteDatenZiele()), 0);
 
 		for (int spielrNummer : spielerNummerList) {
 			celValSpielerNr.setValue((double) spielrNummer);
@@ -249,12 +236,10 @@ public class SpielerSpalte {
 		}
 
 		// filldown formula
-		String verweisAufMeldeListeFormula = getMeldeliste()
-				.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;8))");
-		StringCellValue strCelValSpielerName = StringCellValue.from(getSheet(),
-				Position.from(this.spielerNrSpalte, getErsteDatenZiele()));
-		this.getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins()
-				.setValue(verweisAufMeldeListeFormula).setFillAutoDown(celValSpielerNr.getPos().getZeile() - 1));
+		String verweisAufMeldeListeFormula = getMeldeliste().formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;8))");
+		StringCellValue strCelValSpielerName = StringCellValue.from(getSheet(), Position.from(this.spielerNrSpalte, getErsteDatenZiele()));
+		this.getSheetHelper()
+				.setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula).setFillAutoDown(celValSpielerNr.getPos().getZeile() - 1));
 	}
 
 	public void fehlendeSpieltagSpielerEinfuegen() throws GenerateException {
@@ -271,14 +256,12 @@ public class SpielerSpalte {
 			// spieler noch nicht vorhanden
 			int freieZeile = neachsteFreieDatenZeile();
 
-			NumberCellValue celValSpielerNr = NumberCellValue.from(this.getSheet(),
-					Position.from(this.spielerNrSpalte, freieZeile), spielerNr);
+			NumberCellValue celValSpielerNr = NumberCellValue.from(this.getSheet(), Position.from(this.spielerNrSpalte, freieZeile), spielerNr);
 			this.getSheetHelper().setValInCell(celValSpielerNr);
 			String spielrNrAddress = this.getSheetHelper().getAddressFromColumnRow(celValSpielerNr.getPos());
 			String verweisAufMeldeListeFormula = getMeldeliste().formulaSverweisSpielernamen(spielrNrAddress);
 			StringCellValue strCelVal = StringCellValue.from(celValSpielerNr);
-			this.getSheetHelper().setFormulaInCell(
-					strCelVal.setShrinkToFit(true).spaltePlusEins().setValue(verweisAufMeldeListeFormula));
+			this.getSheetHelper().setFormulaInCell(strCelVal.setShrinkToFit(true).spaltePlusEins().setValue(verweisAufMeldeListeFormula));
 		}
 	}
 
@@ -290,6 +273,12 @@ public class SpielerSpalte {
 	public String getSpielrNrAddressNachSpielrNr(int spielrNr) throws GenerateException {
 		return getSpielrNrAddressNachZeile(getSpielerZeileNr(spielrNr));
 	}
+
+	/**
+	 *
+	 * @return sorted spielernr
+	 * @throws GenerateException
+	 */
 
 	public List<Integer> getSpielerNrList() throws GenerateException {
 		List<Integer> spielerNrList = new ArrayList<>();
@@ -306,9 +295,15 @@ public class SpielerSpalte {
 				}
 			}
 		}
+		java.util.Collections.sort(spielerNrList);
 		return spielerNrList;
 	}
 
+	/**
+	 *
+	 * @return sorted spielrname
+	 * @throws GenerateException
+	 */
 	public List<String> getSpielerNamenList() throws GenerateException {
 		List<String> spielerNamen = new ArrayList<>();
 		int letzteZeile = this.getLetzteDatenZeile();
@@ -324,6 +319,9 @@ public class SpielerSpalte {
 				}
 			}
 		}
+
+		java.util.Collections.sort(spielerNamen);
+
 		return spielerNamen;
 	}
 

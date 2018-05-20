@@ -132,4 +132,8 @@ public class Meldungen {
 
 	}
 
+	public final ArrayList<Spieler> getSpielerList() {
+		return this.spielerList;
+	}
+
 }
