@@ -25,6 +25,7 @@ public class CellProperties extends HashMap<String, Object> {
 	public static final String SHRINK_TO_FIT = "ShrinkToFit";
 	public static final String CELL_BACK_COLOR = "CellBackColor";
 	public static final String ROTATEANGLE = "RotateAngle";
+	public static final String IS_CELLBACKGROUND_TRANSPARENT = "IsCellBackgroundTransparent";
 
 	public static CellProperties from() {
 		return new CellProperties();
@@ -149,4 +150,8 @@ public class CellProperties extends HashMap<String, Object> {
 		return this;
 	}
 
+	public CellProperties setCellbackgroundTransparent(boolean isTransparent) {
+		this.put(IS_CELLBACKGROUND_TRANSPARENT, isTransparent);
+		return this;
+	}
 }

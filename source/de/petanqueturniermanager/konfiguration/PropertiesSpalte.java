@@ -31,8 +31,8 @@ public class PropertiesSpalte {
 
 	private static final String KONFIG_PROP_NAME_FORMATION = "Formation";
 	private static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
-	private static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
-	private static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
+	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
+	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergr. Gerade";
@@ -49,42 +49,33 @@ public class PropertiesSpalte {
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_FORMATION)
-				.setDefaultVal(4).setDescription("1=Tête,2=Doublette,3=Triplette,4=Mêlée"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM)
-				.setDefaultVal(1).setDescription("1=Supermêlée"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
-				.setDefaultVal(1).setDescription("Aktuelle Spieltag"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-				.setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_FORMATION).setDefaultVal(4).setDescription("1=Tête,2=Doublette,3=Triplette,4=Mêlée"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(1).setDescription("1=Supermêlée"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN)
-				.setDefaultVal(0).setDescription("Neu auslosen ab Spielrunde"));
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN).setDefaultVal(0).setDescription("Neu auslosen ab Spielrunde"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
-				.setDefaultVal(Integer.valueOf("e1e9f7", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(Integer.valueOf("c0d6f7", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("c0d6f7", 16))
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-				.setDefaultVal(Integer.valueOf("e6ebf4", 16)).setDescription("Spielrunde Header-Hintergrundfarbe"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
+				.setDescription("Spielrunde Header-Hintergrundfarbe"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
-				.setDefaultVal(Integer.valueOf("e1e9f7", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
 				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(Integer.valueOf("c0d6f7", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("c0d6f7", 16))
 				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
-				.setDefaultVal(Integer.valueOf("e6ebf4", 16)).setDescription("Rangliste Header-Hintergrundfarbe"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
+				.setDescription("Rangliste Header-Hintergrundfarbe"));
 
-		KONFIG_PROPERTIES
-				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS)
-						.setDefaultVal(0).setDescription("Pluspunkte nicht gespielte Runde"));
-		KONFIG_PROPERTIES
-				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS)
-						.setDefaultVal(13).setDescription("Minuspunkte nicht gespielte Runde"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS).setDefaultVal(0)
+				.setDescription("Pluspunkte nicht gespielte Runde"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS).setDefaultVal(13)
+				.setDescription("Minuspunkte nicht gespielte Runde"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -121,12 +112,10 @@ public class PropertiesSpalte {
 		XSpreadsheet propSheet = this.getPropSheet();
 		// header
 		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
-		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(5500).setValue("Name")
-				.setHoriJustify(CellHoriJustify.RIGHT);
+		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(5500).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
 		this.getSheetHelper().setTextInCell(headerVal);
 
-		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(1500).setValue("Wert")
-				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
+		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(1500).setValue("Wert").setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
 		this.getSheetHelper().setTextInCell(wertheaderVal);
 	}
 
@@ -141,8 +130,7 @@ public class PropertiesSpalte {
 			if (pos == null) {
 				// when not found insert new
 				pos = Position.from(this.propertiesSpalte, this.erstePropertiesZeile + idx);
-				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null)
-						.setHoriJustify(CellHoriJustify.RIGHT);
+				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT);
 				this.getSheetHelper().setTextInCell(celVal);
 
 				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
@@ -154,13 +142,11 @@ public class PropertiesSpalte {
 					this.getSheetHelper().setTextInCell(celVal);
 					break;
 				case INTEGER:
-					IntegerCellValue numberCellValue = IntegerCellValue.from(celVal)
-							.setValue((Integer) configProp.getDefaultVal());
+					IntegerCellValue numberCellValue = IntegerCellValue.from(celVal).setValue((Integer) configProp.getDefaultVal());
 					this.getSheetHelper().setValInCell(numberCellValue);
 					break;
 				case COLOR:
-					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(),
-							configProp.getDescription());
+					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(), configProp.getDescription());
 					break;
 				default:
 				}
