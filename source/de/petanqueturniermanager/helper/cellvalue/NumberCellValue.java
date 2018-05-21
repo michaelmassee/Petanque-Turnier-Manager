@@ -49,6 +49,10 @@ public class NumberCellValue extends AbstractCellValue<NumberCellValue, Double> 
 		return new NumberCellValue(sheet, Position.from(pos), value);
 	}
 
+	public static final NumberCellValue from(XSpreadsheet sheet, int spalte, int zeile) {
+		return new NumberCellValue(sheet, Position.from(spalte, zeile), 0);
+	}
+
 	public static final NumberCellValue from(XSpreadsheet sheet, int spalte, int zeile, double value) {
 		return new NumberCellValue(sheet, Position.from(spalte, zeile), value);
 	}

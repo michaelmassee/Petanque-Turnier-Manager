@@ -37,6 +37,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 
 	public void naechsteSpielrundeEinfuegen() throws GenerateException {
 		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		this.getMeldeListe().upDateSheet();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(meldungen, aktuelleSpielrunde)) {
@@ -51,8 +52,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			aktuelleSpielrunde--; // noch nicht vorhanden
 		}
 
-		gespieltenRundenEinlesen(meldungen, neueSpielrunde - 1,
-				this.getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
+		gespieltenRundenEinlesen(meldungen, neueSpielrunde - 1, this.getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 		neueSpielrunde(meldungen, neueSpielrunde);
 	}
 
@@ -65,8 +65,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	 * @throws GenerateException
 	 */
 
-	void gespieltenRundenEinlesen(Meldungen meldungen, int aktuelleSpielrunde, int abSpielrunde)
-			throws GenerateException {
+	void gespieltenRundenEinlesen(Meldungen meldungen, int aktuelleSpielrunde, int abSpielrunde) throws GenerateException {
 
 		int spielrunde = 1;
 

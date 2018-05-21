@@ -33,6 +33,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		this.getMeldeListe().upDateSheet();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(meldungen, aktuelleSpielrunde)) {
@@ -62,8 +63,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos,
-							ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
@@ -73,8 +73,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos,
-							ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
 				}
 				spielerNrPos.spaltePlusEins();
 			}

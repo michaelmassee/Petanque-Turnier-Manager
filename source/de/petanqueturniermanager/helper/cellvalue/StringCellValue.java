@@ -53,6 +53,10 @@ public class StringCellValue extends AbstractCellValue<StringCellValue, String> 
 		return new StringCellValue(sheet, Position.from(pos), value);
 	}
 
+	public static final StringCellValue from(XSpreadsheet sheet, int spalte, int zeile) {
+		return new StringCellValue(sheet, Position.from(spalte, zeile), "");
+	}
+
 	public static final StringCellValue from(XSpreadsheet sheet, int spalte, int zeile, String value) {
 		return new StringCellValue(sheet, Position.from(spalte, zeile), value);
 	}
@@ -61,7 +65,7 @@ public class StringCellValue extends AbstractCellValue<StringCellValue, String> 
 	 * StringUtils.isEmpty(null) = true <br>
 	 * StringUtils.isEmpty("") = true<br>
 	 * StringUtils.isEmpty(" ") = false<br>
-	 * 
+	 *
 	 * @return
 	 */
 
