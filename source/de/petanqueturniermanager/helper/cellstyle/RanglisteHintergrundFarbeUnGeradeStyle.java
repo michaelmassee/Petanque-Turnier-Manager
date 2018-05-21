@@ -7,8 +7,8 @@ package de.petanqueturniermanager.helper.cellstyle;
 public class RanglisteHintergrundFarbeUnGeradeStyle extends AbstractHintergrundFarbeStyle {
 	private static final String NAME = "RanglisteHintergrundFarbeUnGerade";
 
-	public RanglisteHintergrundFarbeUnGeradeStyle(Integer geradeColor) {
-		super(NAME, geradeColor);
+	public RanglisteHintergrundFarbeUnGeradeStyle(Integer unGeradeColor) {
+		super(NAME, unGeradeColor);
 	}
 
 }
