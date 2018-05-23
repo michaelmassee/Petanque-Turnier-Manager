@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Naechste.class);
@@ -37,19 +38,18 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 
 	public void naechsteSpielrundeEinfuegen() throws GenerateException {
 		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		this.setSpielRundeNr(SpielRundeNr.from(aktuelleSpielrunde));
 		this.getMeldeListe().upDateSheet();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 
-		if (!canStart(meldungen, aktuelleSpielrunde)) {
+		if (!canStart(meldungen)) {
 			return;
 		}
 
 		// aktuelle vorhanden ?
 		int neueSpielrunde = aktuelleSpielrunde;
-		if (getSheetHelper().findByName(getSheetName(getSpielTag(), aktuelleSpielrunde)) != null) {
+		if (getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr())) != null) {
 			neueSpielrunde++;
-		} else {
-			aktuelleSpielrunde--; // noch nicht vorhanden
 		}
 
 		gespieltenRundenEinlesen(meldungen, neueSpielrunde - 1, this.getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
@@ -60,12 +60,12 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	 * in der meldungen liste alle spieler die liste warimTeammit fuellen
 	 *
 	 * @param meldungen
-	 * @param aktuelleSpielrunde bis zu diese spielrunde
-	 * @param aktuelleSpielrunde ab diese spielrunde = default = 1
+	 * @param bisSpielrunde bis zu diese spielrunde
+	 * @param abSpielrunde ab diese spielrunde = default = 1
 	 * @throws GenerateException
 	 */
 
-	void gespieltenRundenEinlesen(Meldungen meldungen, int aktuelleSpielrunde, int abSpielrunde) throws GenerateException {
+	void gespieltenRundenEinlesen(Meldungen meldungen, int bisSpielrunde, int abSpielrunde) throws GenerateException {
 
 		int spielrunde = 1;
 
@@ -73,9 +73,9 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			spielrunde = abSpielrunde;
 		}
 
-		for (; spielrunde <= aktuelleSpielrunde; spielrunde++) {
+		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
-			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrunde);
+			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), SpielRundeNr.from(spielrunde));
 			if (sheet == null) {
 				continue;
 			}
@@ -91,7 +91,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 						if (spielerNr > -1) {
 							// team verwenden um Spieler gegenseitig ein zu tragen
 							Spieler spieler = meldungen.findSpielerByNr(spielerNr);
-							if (spieler != null) {
+							if (spieler != null) { // ist dann der fall wenn der spieler Ausgestiegen
 								try {
 									team.addSpielerWennNichtVorhanden(spieler);
 								} catch (AlgorithmenException e) {

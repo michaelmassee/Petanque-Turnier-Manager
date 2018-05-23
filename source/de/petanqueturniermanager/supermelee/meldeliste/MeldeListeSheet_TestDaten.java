@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -44,10 +45,14 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	protected void doRun() throws GenerateException {
 		// clean up first
 		this.getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
-		generateTestDaten(SpielTagNr.from(1));
+		this.meldeListe.setSpielTag(SpielTagNr.from(1));
+		testNamenEinfuegen(this.meldeListe.getSpielTag());
+		initialAktuellenSpielTagMitAktivenMeldungenFuellen(this.meldeListe.getSpielTag());
 	}
 
-	public void spielerAufAktivInaktivMischen() throws GenerateException {
+	public void spielerAufAktivInaktivMischen(SpielTagNr spielTagNr) throws GenerateException {
+		this.meldeListe.setSpielTag(spielTagNr);
+
 		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = this.meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
@@ -67,8 +72,27 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		}
 	}
 
-	public void generateTestDaten(SpielTagNr spieltag) throws GenerateException {
-		this.meldeListe.setSpielTag(spieltag);
+	public void initialAktuellenSpielTagMitAktivenMeldungenFuellen(SpielTagNr spielTagNr) throws GenerateException {
+		this.meldeListe.setSpielTag(spielTagNr);
+
+		int aktuelleSpieltagSpalte = this.meldeListe.aktuelleSpieltagSpalte();
+		NumberCellValue numVal = NumberCellValue.from(this.meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE));
+
+		int letzteDatenZeile = this.meldeListe.letzteDatenZeile();
+
+		for (int zeileCnt = AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE; zeileCnt <= letzteDatenZeile; zeileCnt++) {
+			SheetRunner.testDoCancelTask();
+
+			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
+			numVal.zeile(zeileCnt);
+			if (randomNum == 1) {
+				getSheetHelper().setValInCell(numVal.setValue((double) 1));
+			}
+		}
+	}
+
+	public void testNamenEinfuegen(SpielTagNr spielTagNr) throws GenerateException {
+		this.meldeListe.setSpielTag(spielTagNr);
 		XSpreadsheet meldelisteSheet = this.meldeListe.getSheet();
 		getSheetHelper().setActiveSheet(meldelisteSheet);
 
@@ -76,23 +100,25 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 
 		Position posSpielerName = Position.from(this.meldeListe.getSpielerNameSpalte(), AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
 		Position posSpielerNr = Position.from(AbstractSupermeleeMeldeListeSheet.SPIELER_NR_SPALTE, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
-
-		int aktuelleSpieltagSpalte = this.meldeListe.spieltagSpalte(spieltag);
-		NumberCellValue numValSpieltag = NumberCellValue.from(meldelisteSheet, Position.from(posSpielerName).spalte(aktuelleSpieltagSpalte));
 		NumberCellValue spielrNr = NumberCellValue.from(meldelisteSheet, posSpielerNr);
 
 		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr++) {
 			SheetRunner.testDoCancelTask();
-			getSheetHelper().setTextInCell(meldelisteSheet, posSpielerName.zeilePlusEins(), testNamen.get(spielerCntr));
-			numValSpieltag.zeile(posSpielerName.getZeile());
+			posSpielerName.zeilePlusEins();
+			String textFromCell = getSheetHelper().getTextFromCell(meldelisteSheet, posSpielerName);
+
+			if (StringUtils.isNotEmpty(textFromCell)) {
+				throw new GenerateException("Fehler beim füllen von Testdaten in Meldesheet. Es dürfen keine Daten vorhanden sein");
+			}
+			getSheetHelper().setTextInCell(meldelisteSheet, posSpielerName, testNamen.get(spielerCntr));
 			spielrNr.zeile(posSpielerName.getZeile());
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
-				getSheetHelper().setValInCell(numValSpieltag.setValue((double) randomNum));
 				// zum test spielrnr vorgeben, mix in nr erreichen
 				getSheetHelper().setValInCell(spielrNr.setValue((double) spielerCntr + 1));
 			} else {
-				getSheetHelper().setTextInCell(StringCellValue.from(numValSpieltag).setValue(""));
+				// andere Nummer leer
+				getSheetHelper().setTextInCell(StringCellValue.from(spielrNr).setValue(""));
 			}
 		}
 

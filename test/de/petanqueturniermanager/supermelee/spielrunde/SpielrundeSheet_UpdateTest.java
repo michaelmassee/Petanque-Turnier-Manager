@@ -22,6 +22,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 
@@ -60,11 +61,12 @@ public class SpielrundeSheet_UpdateTest {
 			}
 
 			@Override
-			public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, int spielrunde) {
+			public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, SpielRundeNr spielrunde) {
 				return SpielrundeSheet_UpdateTest.this.xSpreadsheetMock;
 			}
 		};
 		this.aktuelleSpielrundeSheet.setSpielTag(SpielTagNr.from(1));
+		this.aktuelleSpielrundeSheet.setSpielRundeNr(SpielRundeNr.from(1));
 	}
 
 	@Test
@@ -84,8 +86,7 @@ public class SpielrundeSheet_UpdateTest {
 		setupReturn_from_getIntFromCell(spielpaarungen);
 		// ----------------------------------------
 
-		List<SpielerSpielrundeErgebnis> result = this.aktuelleSpielrundeSheet.ergebnisseEinlesen(1)
-				.getSpielerSpielrundeErgebnis();
+		List<SpielerSpielrundeErgebnis> result = this.aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
 
 		// ----------------------------------------
 		// Validate
@@ -111,8 +112,7 @@ public class SpielrundeSheet_UpdateTest {
 		assertThat(result.get(14).getSpielerNr()).isEqualTo(teamABLine3[4]);
 
 		// Maximal 4 zeilen, nach der erste leere zeile sollte abgebrochen werden
-		Mockito.verify(this.sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class),
-				any(Position.class));
+		Mockito.verify(this.sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class), any(Position.class));
 
 	}
 
@@ -124,7 +124,7 @@ public class SpielrundeSheet_UpdateTest {
 		setupReturn_from_getIntFromCell(spielpaarungen);
 
 		try {
-			this.aktuelleSpielrundeSheet.ergebnisseEinlesen(8).getSpielerSpielrundeErgebnis();
+			this.aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
 			fail("Erwarte GenerateException");
 		} catch (GenerateException e) {
 			assertThat(e.getMessage()).isEqualTo("Spieler mit der Nr. 20 ist doppelt");
@@ -133,13 +133,11 @@ public class SpielrundeSheet_UpdateTest {
 	}
 
 	private void setupReturn_from_getIntFromCell(List<int[]> spielpaarungen) {
-		Position spielerNrPos = Position.from(SpielrundeSheet_Update.ERSTE_SPIELERNR_SPALTE,
-				SpielrundeSheet_Update.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(SpielrundeSheet_Update.ERSTE_SPIELERNR_SPALTE, SpielrundeSheet_Update.ERSTE_DATEN_ZEILE);
 		spielpaarungen.forEach(spielpaarung -> {
 			for (int spielerSpalte = 0; spielerSpalte < 6; spielerSpalte++) {
 				if (spielpaarung[spielerSpalte] > 0) {
-					PowerMockito.when(this.sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
-							eq(Position.from(spielerNrPos)))).thenReturn(spielpaarung[spielerSpalte]);
+					PowerMockito.when(this.sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos)))).thenReturn(spielpaarung[spielerSpalte]);
 				}
 				spielerNrPos.spaltePlusEins();
 			}
