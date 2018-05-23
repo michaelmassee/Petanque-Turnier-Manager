@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
@@ -77,7 +78,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste, Formation.MELEE);
 		this.aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xContext);
 		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
-		this.ranglisteFormatter = new RanglisteFormatter(xContext, this, ANZAHL_SPALTEN_IN_SPIELRUNDE, this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.getKonfigurationSheet());
+		this.ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.getKonfigurationSheet());
 		this.rangListeSorter = new RangListeSorter(xContext, this);
 	}
 
@@ -195,7 +196,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		// IFNA(VLOOKUP)
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			// $ = absolute wegen sortieren
-			String formulaSheetName = "$'" + this.aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), spielRunde) + "'.";
+			String formulaSheetName = "$'" + this.aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
 			{
 				// plus spalte
 				// =WENNNV(SVERWEIS(INDIREKT(ADRESSE(ZEILE();1;8));$'1.1. Spielrunde'.$S$3:$T$1003;2;0);0)

@@ -14,6 +14,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
@@ -33,19 +34,20 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		this.setSpielRundeNr(SpielRundeNr.from(aktuelleSpielrunde));
 		this.getMeldeListe().upDateSheet();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 
-		if (!canStart(meldungen, aktuelleSpielrunde)) {
+		if (!canStart(meldungen)) {
 			return;
 		}
 		neueSpielrunde(meldungen, aktuelleSpielrunde);
 	}
 
-	public SpielerSpielrundeErgebnisList ergebnisseEinlesen(int spielrunde) throws GenerateException {
+	public SpielerSpielrundeErgebnisList ergebnisseEinlesen() throws GenerateException {
 
 		SpielerSpielrundeErgebnisList spielerSpielrundeErgebnisse = new SpielerSpielrundeErgebnisList();
-		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrunde);
+		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
 
 		if (sheet == null) {
 			return spielerSpielrundeErgebnisse;
@@ -63,7 +65,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr().getNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
@@ -73,7 +75,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr().getNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
@@ -86,7 +88,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		checkNotNull(spieltag);
 		int anz = 0;
 		for (int rdnCntr = 1; rdnCntr < 999; rdnCntr++) {
-			if (this.getSheetHelper().findByName(getSheetName(spieltag, rdnCntr)) != null) {
+			if (this.getSheetHelper().findByName(getSheetName(spieltag, SpielRundeNr.from(rdnCntr))) != null) {
 				anz++;
 			} else {
 				break;

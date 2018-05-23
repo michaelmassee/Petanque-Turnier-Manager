@@ -142,11 +142,11 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 		// ------
 		// Setzposition
+		// .setEndPosMergeZeilePlus(1).setRotateAngle(27000)
 		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
-		StringCellValue bezCelVal = StringCellValue.from(sheet, setzPositionSpalte(), ERSTE_HEADER_ZEILE, "SPos")
+		StringCellValue bezCelVal = StringCellValue.from(sheet, setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setCellBackColor(headerBackColor)
-				.setBorder(BorderFactory.from().allThin().toBorder()).addColumnProperties(columnProp).setEndPosMergeZeilePlus(1).setRotateAngle(27000)
-				.setVertJustify(CellVertJustify2.CENTER);
+				.setBorder(BorderFactory.from().allThin().toBorder()).addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
 		this.getSheetHelper().setTextInCell(bezCelVal);
 		// ------
 
@@ -346,8 +346,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 				if (spielrNrInSheet.contains(spielrNr)) {
 					// RED Color
 					this.getSheetHelper().setValInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
-					this.newErrMsgBox().showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr + " ist doppelt in der Meldeliste !!!");
-					return true;
+					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr + " ist doppelt in der Meldeliste !!!");
 				} else {
 					spielrNrInSheet.add(spielrNr);
 				}
@@ -364,8 +363,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 				if (spielrNamenInSheet.contains(spielerName.toLowerCase())) {
 					// RED Color
 					this.getSheetHelper().setTextInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
-					this.newErrMsgBox().showOk("Fehler", "Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste !!!");
-					return true;
+					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste");
 				} else {
 					spielrNamenInSheet.add(spielerName.toLowerCase());
 				}

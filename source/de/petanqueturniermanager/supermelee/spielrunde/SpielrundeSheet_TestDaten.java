@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
@@ -68,7 +69,12 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		this.spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
 		this.naechsteSpielrundeSheet.setSpielTag(getSpielTag());
 
-		this.meldeListeTestDatenGenerator.generateTestDaten(getSpielTag());
+		if (getSpielTag().getNr() == 1) {
+			this.meldeListeTestDatenGenerator.testNamenEinfuegen(getSpielTag());
+		}
+
+		this.meldeListeTestDatenGenerator.initialAktuellenSpielTagMitAktivenMeldungenFuellen(getSpielTag());
+
 		this.anmeldungenSheet.generate();
 		this.tielnehmerSheet.generate();
 
@@ -76,20 +82,21 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 		for (int spielrundeNr = 1; spielrundeNr <= maxspielrundeNr; spielrundeNr++) {
 			SheetRunner.testDoCancelTask();
+			setSpielRundeNr(SpielRundeNr.from(spielrundeNr));
 
 			if (spielrundeNr > 1) {
-				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen();
+				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen(getSpielTag());
 			}
 
 			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
-			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
+			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr - 1, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 			neueSpielrunde(meldungen, spielrundeNr, true);
 
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen
 			// ------------------------------------
-			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), spielrundeNr);
-			Position letztePos = letzteZeile(spielrundeNr);
+			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
+			Position letztePos = letzteZeile();
 
 			if (letztePos != null && sheet != null) {
 				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile(); zeileCntr++) {

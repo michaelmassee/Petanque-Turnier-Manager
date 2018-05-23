@@ -7,7 +7,6 @@ package de.petanqueturniermanager.supermelee.endrangliste;
 import static com.google.common.base.Preconditions.*;
 
 import com.sun.star.table.CellHoriJustify;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
@@ -24,11 +23,9 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
-	public EndRanglisteFormatter(XComponentContext xContext, IEndRangliste rangliste, int anzSpaltenInSpieltag,
-			SpielerSpalte spielerSpalte, int ersteSpielTagSpalte, IPropertiesSpalte propertiesSpalte) {
-		super(xContext, spielerSpalte, propertiesSpalte, rangliste);
+	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, SpielerSpalte spielerSpalte, int ersteSpielTagSpalte, IPropertiesSpalte propertiesSpalte) {
+		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
-		checkNotNull(xContext);
 		this.ranglisteWkRef = new WeakRefHelper<IEndRangliste>(rangliste);
 		this.anzSpaltenInSpieltag = anzSpaltenInSpieltag;
 		this.ersteSpielTagSpalte = ersteSpielTagSpalte;
@@ -43,15 +40,12 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 		// -------------------------
 		// spieltag spalten
 		// -------------------------
-		StringCellValue spieltagheader = StringCellValue.from(getSheet(), Position.from(ERSTE_KOPFDATEN_ZEILE, 0))
-				.setCellBackColor(getHeaderFarbe())
-				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
-				.setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue spieltagheader = StringCellValue.from(getSheet(), Position.from(ERSTE_KOPFDATEN_ZEILE, 0)).setCellBackColor(getHeaderFarbe())
+				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder()).setHoriJustify(CellHoriJustify.CENTER);
 		for (int spielTag = 1; spielTag <= anzSpieltagen; spielTag++) {
 			int ersteSpalteSpieltagBlock = this.ersteSpielTagSpalte + ((spielTag - 1) * this.anzSpaltenInSpieltag);
 			// ERSTE_KOPFDATEN_ZEILE
-			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag")
-					.setEndPosMergeSpaltePlus(this.anzSpaltenInSpieltag - 1);
+			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag").setEndPosMergeSpaltePlus(this.anzSpaltenInSpieltag - 1);
 			getSheetHelper().setTextInCell(spieltagheader);
 			formatZweiteZeileSpielTagSpalten(ersteSpalteSpieltagBlock); // ZWEITE_KOPFDATEN_ZEILE
 			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock);
@@ -82,10 +76,8 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	public StringCellValue addFooter() throws GenerateException {
 		StringCellValue stringVal = super.addFooter();
 
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins()
-				.setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins()
-				.setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
+		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
 
 		return stringVal;
 	}
