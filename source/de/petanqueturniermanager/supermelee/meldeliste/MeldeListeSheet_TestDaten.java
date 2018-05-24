@@ -46,6 +46,9 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		// clean up first
 		this.getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		this.meldeListe.setSpielTag(SpielTagNr.from(1));
+		this.meldeListe.getKonfigurationSheet().setAktiveSpieltag(SpielTagNr.from(1));
+		this.meldeListe.getKonfigurationSheet().setAktiveSpielRunde(1);
+
 		testNamenEinfuegen(this.meldeListe.getSpielTag());
 		initialAktuellenSpielTagMitAktivenMeldungenFuellen(this.meldeListe.getSpielTag());
 	}

@@ -17,6 +17,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -24,15 +25,20 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -109,34 +115,97 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		this.rangListeSpalte.insertHeaderInSheet(headerColor);
 
 		updateAnzSpieltageSpalte();
-		this.endRanglisteFormatter.formatDatenGeradeUngerade();
+		formatDatenGeradeUngeradeMitStreichSpieltag();
+		// this.endRanglisteFormatter.formatDatenGeradeUngerade_Old();
 		this.rangListeSorter.doSort();
-		formatSchlechtesteSpieltag();
+		formatSchlechtesteSpieltagSpalte();
 		this.endRanglisteFormatter.addFooter();
 	}
 
-	private void formatSchlechtesteSpieltag() throws GenerateException {
+	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {
+		// gerade / ungrade hintergrund farbe
+		// CellBackColor
+		int spielerNrSpalte = this.spielerSpalte.getSpielerNrSpalte();
+		int ersteDatenZeile = this.spielerSpalte.getErsteDatenZiele();
+		int letzteDatenZeile = this.spielerSpalte.getLetzteDatenZeile();
+		int letzteSpalte = getLetzteSpalte();
 
-		CellProperties markierungOdd = CellProperties.from().setCellBackColor("eac3c0").setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
-		CellProperties markierungEven = CellProperties.from().setCellBackColor("eddfde").setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
+		Integer streichSpieltag_geradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
+		Integer streichSpieltag_unGeradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
+		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(streichSpieltag_geradeColor);
+		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(streichSpieltag_unGeradeColor);
+
+		Integer geradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbeGerade();
+		Integer unGeradeColor = this.konfigurationSheet.getRanglisteHintergrundFarbeUnGerade();
+		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
+		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
+
+		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
+
+		// Formula fuer streichspieltag
+		// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3);ISTGERADE(ZEILE()))
+		ConditionalFormatHelper.from(this, datenRange).clear().formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA)
+				.style(streichSpieltagHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRange).formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA)
+				.style(streichSpieltagHintergrundFarbeUnGeradeStyle).apply();
+
+		ConditionalFormatHelper.from(this, datenRange).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRange).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+	}
+
+	private String getFormulastreichSpieltag(boolean iseven) throws GenerateException {
+		// 13 = streichspieltag spalte
+		// -1 = offset spalten links
+		// /3 = anzahl spalten in spieltag
+		// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3;0);ISTGERADE(ZEILE()))
+		int schlechtesteSpielTageSpalte = getSchlechtesteSpielTageSpalte() + 1; // In Formula erste spalte ab 1
+		int anzSpaltenInSpieltag = getAnzSpaltenInSpieltag();
+		int anzahlSpieltage = getAnzahlSpieltage();
+
+		String isCondition = "";
+		if (iseven) {
+			isCondition = "ISEVEN";
+		} else {
+			isCondition = "ISODD";
+		}
+
+		String verweisAufStreichSpalte = "INDIRECT(ADDRESS(ROW();" + schlechtesteSpielTageSpalte + ";4))";
+		// 1. prüfen ob wert in steichspieltag spalte > 0
+		String erstePruefung = verweisAufStreichSpalte + ">0";
+		// 2. prüfen ob wert in steichspieltag spalte < anzahlSpieltage
+		String zweitePruefung = verweisAufStreichSpalte + "<" + (anzahlSpieltage + 1);
+		// 3. prüfen ob wert in steichspieltag spalte == aktuelle spalte block
+		String drittePruefung = verweisAufStreichSpalte + "=ROUNDUP((COLUMN()-" + ERSTE_SPIELTAG_SPALTE + ")/" + anzSpaltenInSpieltag + ";0)";
+		// 4. prüfen ob gerade oder ungerade zeile
+		String viertePruefung = isCondition + "(ROW())";
+		return "AND(" + erstePruefung + ";" + zweitePruefung + ";" + drittePruefung + ";" + viertePruefung + ")";
+	}
+
+	private void formatSchlechtesteSpieltagSpalte() throws GenerateException {
+		int schlechtesteSpielTageSpalte = getSchlechtesteSpielTageSpalte();
+		NumberCellValue numberCellValueSchlechtesteSpielTag = NumberCellValue.from(getSheet(), schlechtesteSpielTageSpalte, ERSTE_DATEN_ZEILE);
+
+		// Header Streichspieltag
+		Position startStreichspieltag = Position.from(getSchlechtesteSpielTageSpalte(), AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position endStreichspieltag = Position.from(startStreichspieltag).zeilePlus(2);
+
+		CellProperties columnProperties = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerStreichspieltag = StringCellValue.from(getSheet(), startStreichspieltag).setEndPosMerge(endStreichspieltag).setCharWeight(FontWeight.LIGHT)
+				.setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER).setValue("Streich").setCellBackColor(this.endRanglisteFormatter.getHeaderFarbe())
+				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Streich-Spieltag").setColumnProperties(columnProperties);
+		this.getSheetHelper().setTextInCell(headerStreichspieltag);
+		// Daten
+		RangePosition rangPos = RangePosition.from(getSchlechtesteSpielTageSpalte(), ERSTE_DATEN_ZEILE, getSchlechtesteSpielTageSpalte(), getLetzteDatenZeile());
+		CellProperties celRangeProp = CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
+				.setHoriJustify(CellHoriJustify.CENTER);
+		this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangPos, celRangeProp);
 
 		for (Integer spielerNr : this.spielerSpalte.getSpielerNrList()) {
 			SheetRunner.testDoCancelTask();
-
 			SpielTagNr spielTagNr = schlechtesteSpieltag(spielerNr);
 			int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielerNr);
-
 			if (spielTagNr != null && spielerZeile > 0) {
-				// markieren
-				int spieltagSpalte = getSpielTagErsteSummeSpalte(spielTagNr);
-
-				RangePosition rangePos = RangePosition.from(spieltagSpalte, spielerZeile, spieltagSpalte + getAnzSpaltenInSpieltag() - 1, spielerZeile);
-				if ((spielerZeile & 1) == 0) {
-					// ungerade
-					this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangePos, markierungOdd);
-				} else {
-					this.getSheetHelper().setPropertiesInRange(this.getSheet(), rangePos, markierungEven);
-				}
+				this.getSheetHelper().setValInCell(numberCellValueSchlechtesteSpielTag.zeile(spielerZeile).setValue((double) spielTagNr.getNr()));
 			}
 		}
 	}
@@ -188,6 +257,10 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		return ersteSpalteEndsumme + ANZAHL_SPALTEN_IN_SUMME;
 	}
 
+	private int getSchlechtesteSpielTageSpalte() throws GenerateException {
+		return anzSpielTageSpalte() + 1;
+	}
+
 	/**
 	 * Anzahl gespielte Spieltage<br>
 	 * =ZÄHLENWENN(D4:AG4;"<>")/6
@@ -211,13 +284,13 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		this.getSheetHelper().setFormulaInCell(formulaVal);
 
 		// Spalte formatieren
-		// Header
+		// Header AnzahlTage
 		Position start = Position.from(anzSpielTageSpalte(), AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position end = Position.from(start).zeilePlus(2);
-		StringCellValue header = StringCellValue.from(getSheet(), start).setEndPosMerge(end).setCharWeight(FontWeight.LIGHT).setRotateAngle(27000)
+		StringCellValue headerAnzTage = StringCellValue.from(getSheet(), start).setEndPosMerge(end).setCharWeight(FontWeight.LIGHT).setRotateAngle(27000)
 				.setVertJustify(CellVertJustify2.CENTER).setValue("Tage").setCellBackColor(this.endRanglisteFormatter.getHeaderFarbe())
-				.setBorder(BorderFactory.from().allBold().toBorder());
-		this.getSheetHelper().setTextInCell(header);
+				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Gespielte Tage");
+		this.getSheetHelper().setTextInCell(headerAnzTage);
 
 		// Daten
 		RangePosition rangPos = RangePosition.from(formulaVal.getPos(), formulaVal.getFillAuto());
@@ -352,8 +425,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	@Override
 	public int getLetzteSpalte() throws GenerateException {
-		// plus 1 spalte fuer spieltag
-		return getErsteSummeSpalte() + PUNKTE_DIV_OFFS + 1;
+		return getSchlechtesteSpielTageSpalte();
 	}
 
 	private int getAnzSpaltenInSpieltag() {

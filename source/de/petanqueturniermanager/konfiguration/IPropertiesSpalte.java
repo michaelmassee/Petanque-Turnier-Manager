@@ -31,6 +31,10 @@ public interface IPropertiesSpalte {
 
 	Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException;
 
+	Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException;
+
+	Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException;
+
 	Integer getRanglisteHeaderFarbe() throws GenerateException;
 
 	Integer getNichtGespielteRundePlus() throws GenerateException;

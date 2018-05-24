@@ -42,6 +42,9 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Rangliste Hintergr. Gerade";
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Rangliste Hintergr. Ungerade";
 	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste Header";
+	// Endrangliste
+	private static final String KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE = "Streich-Spieltag Hintergr. Gerade";
+	private static final String KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE = "Streich-Spieltag  Hintergr. Ungerade";
 
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS = "Nicht gespielte Runde Punkte +"; // 0
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde Punkte -"; // 13
@@ -71,6 +74,11 @@ public class PropertiesSpalte {
 				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
 				.setDescription("Rangliste Header-Hintergrundfarbe"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE).setDefaultVal(14540253)
+				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag gerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("ccc8c1", 16))
+				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag ungerade Zeilen"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS).setDefaultVal(0)
 				.setDescription("Pluspunkte nicht gespielte Runde"));
@@ -112,7 +120,7 @@ public class PropertiesSpalte {
 		XSpreadsheet propSheet = this.getPropSheet();
 		// header
 		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
-		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(5500).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
+		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(6500).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
 		this.getSheetHelper().setTextInCell(headerVal);
 
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(1500).setValue("Wert").setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
@@ -210,6 +218,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		if (pos != null) {
 			this.getSheetHelper().setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
+			this.getSheetHelper().setTextInCell(StringCellValue.from(sheet, pos, ""));
 
 			if (StringUtils.isNotEmpty(comment)) {
 				this.getSheetHelper().setCommentInCell(sheet, pos, comment);
@@ -321,6 +330,14 @@ public class PropertiesSpalte {
 
 	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
+	}
+
+	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE);
+	}
+
+	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE);
 	}
 
 	public Integer getRanglisteHeaderFarbe() throws GenerateException {
