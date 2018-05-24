@@ -27,8 +27,7 @@ public class DocumentHelper {
 	/** Returns the current XDesktop */
 	public static XDesktop getCurrentDesktop(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
-				xContext.getServiceManager());
+		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, xContext.getServiceManager());
 		Object desktop = null;
 		try {
 			desktop = xMCF.createInstanceWithContext("com.sun.star.frame.Desktop", xContext);
@@ -40,7 +39,7 @@ public class DocumentHelper {
 	}
 
 	/** Returns the current XComponent */
-	private static XComponent getCurrentComponent(XComponentContext xContext) {
+	public static XComponent getCurrentComponent(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
 		return getCurrentDesktop(xContext).getCurrentComponent();
 	}

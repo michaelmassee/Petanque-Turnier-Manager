@@ -105,6 +105,16 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	@Override
+	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
+		return this.propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
+	}
+
+	@Override
+	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
+		return this.propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
+	}
+
+	@Override
 	public Integer getRanglisteHeaderFarbe() throws GenerateException {
 		return this.propertiesSpalte.getRanglisteHeaderFarbe();
 	}
@@ -134,4 +144,5 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	public SpielSystem getSpielSystem() throws GenerateException {
 		return this.propertiesSpalte.getSpielSystem();
 	}
+
 }

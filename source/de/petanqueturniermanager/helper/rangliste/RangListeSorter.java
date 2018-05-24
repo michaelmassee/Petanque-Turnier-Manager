@@ -188,7 +188,7 @@ public class RangListeSorter {
 
 	/**
 	 * Validate Spalte prüfen
-	 * 
+	 *
 	 * @return
 	 * @throws GenerateException
 	 */
@@ -294,12 +294,13 @@ public class RangListeSorter {
 	private XCellRange getxCellRangeAlleDaten() throws GenerateException {
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
+		int letzteSpalte = getIRangliste().getLetzteSpalte();
 		XSpreadsheet sheet = getIRangliste().getSheet();
 		XCellRange xCellRange = null;
 		try {
 			if (letzteDatenZeile > ersteDatenZiele) { // daten vorhanden ?
 				// (column, row, column, row)
-				xCellRange = sheet.getCellRangeByPosition(0, ersteDatenZiele, getIRangliste().getLetzteSpalte(), letzteDatenZeile);
+				xCellRange = sheet.getCellRangeByPosition(0, ersteDatenZiele, letzteSpalte, letzteDatenZeile);
 			}
 		} catch (IndexOutOfBoundsException e) {
 			getIRangliste().getLogger().error(e.getMessage(), e);
