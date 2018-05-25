@@ -89,6 +89,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public void generate() throws GenerateException {
+
+		this.getxCalculatable().enableAutomaticCalculation(false); // speed up
 		this.meldeliste.setSpielTag(getSpieltagNr());
 		this.aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 		// neu erstellen
@@ -109,6 +111,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
 		this.ranglisteFormatter.formatDaten();
 		this.ranglisteFormatter.formatDatenGeradeUngerade();
+		this.getxCalculatable().calculateAll();
 		this.rangListeSorter.doSort();
 		this.ranglisteFormatter.addFooter();
 	}

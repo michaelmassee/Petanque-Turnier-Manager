@@ -9,12 +9,16 @@ import static com.google.common.base.Preconditions.*;
 
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.sheet.XCalculatable;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.msgbox.QuestionBox;
 import de.petanqueturniermanager.helper.msgbox.WarningBox;
+import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -25,10 +29,15 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
 	private static SheetRunner runner = null;
 
+	private final XCalculatable xCalculatable;
+
 	public SheetRunner(XComponentContext xContext) {
 		checkNotNull(xContext);
 		this.xContext = xContext;
 		this.sheetHelper = new SheetHelper(xContext);
+
+		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(this.getxContext());
+		this.xCalculatable = UnoRuntime.queryInterface(XCalculatable.class, doc);
 	}
 
 	/**
@@ -74,9 +83,9 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			} catch (Exception e) {
 				getLogger().error(e.getMessage(), e);
 			} finally {
+				this.getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 				SheetRunner.isRunning = false;
 				SheetRunner.runner = null;
-
 				// TODO
 				// CloseConnections.closeOfficeConnection(getxContext());
 			}
@@ -105,6 +114,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	public XComponentContext getxContext() {
 		return this.xContext;
+	}
+
+	public XCalculatable getxCalculatable() {
+		return this.xCalculatable;
 	}
 
 }

@@ -18,6 +18,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -29,6 +30,7 @@ import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
 
 abstract public class AbstractRanglisteFormatter {
 
+	private static final int ENDSUMME_NUMBER_WIDTH = SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH + 110;
 	public static final int ERSTE_KOPFDATEN_ZEILE = 0;
 	public static final int ZWEITE_KOPFDATEN_ZEILE = 1;
 	public static final int DRITTE_KOPFDATEN_ZEILE = 2;
@@ -89,10 +91,11 @@ abstract public class AbstractRanglisteFormatter {
 	 * @throws GenerateException
 	 */
 
-	protected void formatDritteZeileSpielTagSpalten(int ersteSummeSpalte) throws GenerateException {
+	protected void formatDritteZeileSpielTagSpalten(int ersteSummeSpalte, int spalteWidth) throws GenerateException {
 
-		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+").setSpalteHoriJustify(CellHoriJustify.CENTER)
-				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(getHeaderFarbe());
+		CellProperties columnProperties = CellProperties.from().setWidth(spalteWidth).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+").setCellBackColor(getHeaderFarbe())
+				.setColumnProperties(columnProperties);
 
 		this.getSheetHelper().setTextInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+").setComment("Summe Spiele +").setBorder(borderThinLeftBold()));
 		this.getSheetHelper().setTextInCell(
@@ -109,17 +112,18 @@ abstract public class AbstractRanglisteFormatter {
 	}
 
 	protected void formatErsteZeileSummeSpalte(int summeSpalte) throws GenerateException {
+		CellProperties columnProperties = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(summeSpalte + SPIELE_PLUS_OFFS, ERSTE_KOPFDATEN_ZEILE), "Summe")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setEndPosMergeSpaltePlus(5)
-				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder()).setCellBackColor(getHeaderFarbe());
+				.setColumnProperties(columnProperties).setEndPosMergeSpaltePlus(5).setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
+				.setCellBackColor(getHeaderFarbe());
 		this.getSheetHelper().setTextInCell(headerSumme);
-
 	}
 
 	protected void formatEndSummen(int erstEndsummeSpalte) throws GenerateException {
 		formatErsteZeileSummeSpalte(erstEndsummeSpalte); // ERSTE SPALTE
 		formatZweiteZeileSpielTagSpalten(erstEndsummeSpalte); // ZWEITE_KOPFDATEN_ZEILE
-		formatDritteZeileSpielTagSpalten(erstEndsummeSpalte);// DRITTE_KOPFDATEN_ZEILE
+		// Letzte Summe block etwas breitere Spalten
+		formatDritteZeileSpielTagSpalten(erstEndsummeSpalte, ENDSUMME_NUMBER_WIDTH);// DRITTE_KOPFDATEN_ZEILE
 	}
 
 	public void formatDatenGeradeUngerade_Old() throws GenerateException {
