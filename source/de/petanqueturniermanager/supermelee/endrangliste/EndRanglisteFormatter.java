@@ -48,7 +48,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag").setEndPosMergeSpaltePlus(this.anzSpaltenInSpieltag - 1);
 			getSheetHelper().setTextInCell(spieltagheader);
 			formatZweiteZeileSpielTagSpalten(ersteSpalteSpieltagBlock); // ZWEITE_KOPFDATEN_ZEILE
-			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock);
+			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock, SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		}
 
 		// -------------------------

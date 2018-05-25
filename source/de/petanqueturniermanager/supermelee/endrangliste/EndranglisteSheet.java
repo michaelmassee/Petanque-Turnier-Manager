@@ -91,6 +91,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void upDateSheet() throws GenerateException {
 
+		this.getxCalculatable().enableAutomaticCalculation(false); // speed up
 		int anzahlSpieltage = getAnzahlSpieltage();
 		if (anzahlSpieltage < 2) {
 			newErrMsgBox().showOk("Feher", "Ungültige anzahl von Spieltage. " + anzahlSpieltage);
@@ -105,6 +106,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		this.endRanglisteFormatter.updateHeader();
 
 		spielTageEinfuegen();
+		this.getxCalculatable().calculate();
 		updateEndSummenSpalten();
 
 		this.rangListeSorter.insertSortValidateSpalte();
@@ -115,10 +117,11 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		this.rangListeSpalte.insertHeaderInSheet(headerColor);
 
 		updateAnzSpieltageSpalte();
+		this.getxCalculatable().calculate();
 		formatDatenGeradeUngeradeMitStreichSpieltag();
-		// this.endRanglisteFormatter.formatDatenGeradeUngerade_Old();
-		this.rangListeSorter.doSort();
 		formatSchlechtesteSpieltagSpalte();
+		this.getxCalculatable().calculate();
+		this.rangListeSorter.doSort();
 		this.endRanglisteFormatter.addFooter();
 	}
 
