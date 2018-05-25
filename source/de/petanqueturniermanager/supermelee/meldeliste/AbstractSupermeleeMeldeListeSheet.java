@@ -13,6 +13,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.ConditionOperator;
@@ -62,13 +63,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	public static final int ZWEITE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 1; // Zeile 2
 
 	public static final int SUMMEN_SPALTE_OFFSET = 2; // 2 Spalten weiter zur letzte Spieltag
-	public static final int SUMMEN_ERSTE_ZEILE = ERSTE_DATEN_ZEILE; // Zeile 3
+	public static final int SUMMEN_ERSTE_ZEILE = ERSTE_DATEN_ZEILE + 5; // Zeile 3
 	public static final int SUMMEN_AKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE; // Zeile 6
 	public static final int SUMMEN_INAKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE + 1;
 	public static final int SUMMEN_AUSGESTIEGENE_ZEILE = SUMMEN_ERSTE_ZEILE + 2; // Zeile 8
 	public static final int SUMMEN_KANN_DOUBLETTE_ZEILE = SUMMEN_ERSTE_ZEILE + 7; // Zeile 10
 
-	public static final int ERSTE_ZEILE_PROPERTIES = 12; // Zeile 13
+	public static final int ERSTE_ZEILE_INFO = ERSTE_DATEN_ZEILE - 1; // Zeile 2
 
 	public static final String SHEETNAME = "Meldeliste";
 	public static final String SHEET_COLOR = "2544dd";
@@ -96,16 +97,22 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	 * @return
 	 * @throws GenerateException
 	 */
-	public int countAnzSpieltage() throws GenerateException {
+	public int countAnzSpieltageInMeldeliste() throws GenerateException {
 		int anzSpieltage = 0;
 		int ersteSpieltagspalteSpalte = ersteSpieltagSpalte();
 		Position posHeader = Position.from(ersteSpieltagspalteSpalte, ZWEITE_HEADER_ZEILE);
 
-		for (int spaltecntr = 0; spaltecntr < 90; spaltecntr++) {
+		for (int spielTagcntr = 1; spielTagcntr < 90; spielTagcntr++) {
 			String header = this.getSheetHelper().getTextFromCell(this.getSheet(), posHeader);
 
-			if (header != null && header.contains(SPIELTAG_HEADER_STR)) {
+			if (StringUtils.isEmpty(header)) {
+				break;
+			}
+
+			if (header != null && header.contains(spielTagHeader(SpielTagNr.from(spielTagcntr)))) {
 				anzSpieltage++;
+			} else {
+				break;
 			}
 			posHeader.spaltePlusEins();
 		}
@@ -126,10 +133,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	public void upDateSheet() throws GenerateException {
-
-		if (testDoppelteDaten()) {
-			return;
-		}
+		testDoppelteDaten();
 
 		XSpreadsheet sheet = getSheet();
 		this.getSheetHelper().setActiveSheet(sheet);
@@ -142,7 +146,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 		// ------
 		// Setzposition
-		// .setEndPosMergeZeilePlus(1).setRotateAngle(27000)
 		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
 		StringCellValue bezCelVal = StringCellValue.from(sheet, setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setCellBackColor(headerBackColor)
@@ -158,8 +161,31 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 		doSort(this.spielerSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
+		insertInfoSpalte();
 		this.spielerSpalte.formatDaten();
 		this.formatDaten();
+	}
+
+	/**
+	 * aktuelle Spieltag + Spielrunde infos
+	 *
+	 * @throws GenerateException
+	 */
+	private void insertInfoSpalte() throws GenerateException {
+		XSpreadsheet sheet = getSheet();
+		Position posBezeichnug = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
+
+		String formulaStrSpieltag = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2)";
+		String formulaStrSpielRunde = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2)";
+
+		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
+				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).setVertJustify(CellVertJustify2.CENTER);
+		getSheetHelper().setTextInCell(bezeichnugVal);
+		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setEndPosMergeZeilePlus(1).setComment(null).setValue(formulaStrSpieltag));
+
+		bezeichnugVal.setValue(PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE).setComment("Aktive Spielrunde").zeilePlus(2).setEndPosMergeZeilePlus(1);
+		getSheetHelper().setTextInCell(bezeichnugVal);
+		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setEndPosMergeZeilePlus(1).setComment(null).setValue(formulaStrSpielRunde));
 	}
 
 	protected void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
@@ -176,17 +202,19 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
 		this.getSheetHelper().setTextInCell(bezCelSpieltagVal);
 
-		Position start = Position.from(KonfigurationSheet.PROPERTIESSPALTE, KonfigurationSheet.ERSTE_ZEILE_PROPERTIES);
-		Position end = Position.from(start).spaltePlusEins().zeile(100);
-		String suchMatrix = start.getAddressWith$() + ":" + end.getAddressWith$();
-
 		// Aktiv / Inaktiv spieltag
 		// =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2);0)=2;"Aktiv";"")
-		String formulaStr = "IF(IFNA(VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrix + ";2);0)="
+		String formulaStr = "IF(IFNA(VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2);0)="
 				+ spieltag.getNr() + ";\"Aktiv\";\"\"";
 		StringCellValue aktivFormula = StringCellValue.from(sheet, spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr).setCharColor(ColorHelper.CHAR_COLOR_GREEN);
 		this.getSheetHelper().setFormulaInCell(aktivFormula);
 
+	}
+
+	private String suchMatrixProperty() {
+		Position start = Position.from(KonfigurationSheet.PROPERTIESSPALTE, KonfigurationSheet.ERSTE_ZEILE_PROPERTIES);
+		Position end = Position.from(start).spaltePlusEins().zeile(100);
+		return start.getAddressWith$() + ":" + end.getAddressWith$();
 	}
 
 	void formatDaten() throws GenerateException {
@@ -249,7 +277,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	public int letzteSpielTagSpalte() throws GenerateException {
-		int anzSpieltage = countAnzSpieltage();
+		int anzSpieltage = countAnzSpieltageInMeldeliste();
 		return ersteSpieltagSpalte() + (anzSpieltage - 1);
 	}
 
@@ -314,14 +342,14 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	 * prüft auf doppelte spieler nr oder namen
 	 *
 	 * @return
-	 * @throws GenerateException
+	 * @throws GenerateException wenn doppelt daten
 	 */
-	public boolean testDoppelteDaten() throws GenerateException {
+	public void testDoppelteDaten() throws GenerateException {
 		XSpreadsheet xSheet = getSheet();
 
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
 		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
-			return false; // keine Daten
+			return; // keine Daten
 		}
 
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
@@ -369,7 +397,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 				}
 			}
 		}
-		return false;
 	}
 
 	public void updateSpielerNr() throws GenerateException {
@@ -464,7 +491,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 		XSpreadsheet sheet = getSheet();
 
-		int anzSpieltage = countAnzSpieltage();
+		int anzSpieltage = countAnzSpieltageInMeldeliste();
 
 		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0, ersteSummeSpalte() + anzSpieltage + 10, 999);
 		getSheetHelper().clearRange(sheet, cleanUpRange);
