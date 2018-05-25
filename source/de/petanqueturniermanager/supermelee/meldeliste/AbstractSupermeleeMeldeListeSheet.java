@@ -610,7 +610,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	 *
 	 * @param spieltag 1 = erste spieltag
 	 * @param status = 1,2
-	 * @return "==ZÄHLENWENNS(B3:B201;"*";D3:D201;"")"
+	 * @return "==ZÄHLENWENNS(B3:B201;"<>";D3:D201;"")"
 	 * @throws GenerateException
 	 */
 	private String formulaCountSpieler(SpielTagNr spieltag, String status, int letzteZeile) throws GenerateException {
@@ -627,7 +627,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		String letzteZelleSpielTag = Position.from(spieltagSpalte, letzteZeile).getAddress();
 
 		// nur dann zählen wenn name gefüllt
-		return "COUNTIFS(" + ersteZelleName + ":" + letzteZelleName + ";\"*\";" + ersteZelleSpielTag + ":" + letzteZelleSpielTag + ";" + status + ")";
+		return "COUNTIFS(" + ersteZelleName + ":" + letzteZelleName + ";\"<>\";" + ersteZelleSpielTag + ":" + letzteZelleSpielTag + ";" + status + ")";
 	}
 
 	/**
