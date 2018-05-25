@@ -88,10 +88,10 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	}
 
 	@Test
-	public void testCountAnzSpieltage() throws Exception {
+	public void testCountAnzSpieltageInMeldeliste() throws Exception {
 		String[] header = { "Spieltag 1", "2. Spieltag", "Spieltag 3" };
 		setupReturn_from_getHeaderStringFromCell(Arrays.asList(header));
-		int result = this.meldeSheet.countAnzSpieltage();
+		int result = this.meldeSheet.countAnzSpieltageInMeldeliste();
 		assertThat(result).isEqualTo(3);
 	}
 
@@ -113,9 +113,12 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 		initReturnSpielerDaten(spielerNrNameList);
 
-		boolean result = this.meldeSheet.testDoppelteDaten();
-		assertThat(result).isEqualTo(true);
-		verify(this.errorMessageBoxMock, times(1)).showOk(any(String.class), any(String.class));
+		try {
+			this.meldeSheet.testDoppelteDaten();
+			fail("Erwarte GenerateException");
+		} catch (GenerateException exc) {
+			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Namen Heinz ist doppelt in der Meldeliste");
+		}
 	}
 
 	@Test
@@ -125,9 +128,12 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 				new SpielerNrName(12, "Heinz") };
 		initReturnSpielerDaten(spielerNrNameList);
 
-		boolean result = this.meldeSheet.testDoppelteDaten();
-		assertThat(result).isEqualTo(true);
-		verify(this.errorMessageBoxMock, times(1)).showOk(any(String.class), any(String.class));
+		try {
+			this.meldeSheet.testDoppelteDaten();
+			fail("Erwarte GenerateException");
+		} catch (GenerateException exc) {
+			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Nr. 12 ist doppelt");
+		}
 	}
 
 	@Test
@@ -138,8 +144,11 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 		initReturnSpielerDaten(spielerNrNameList);
 
-		boolean result = this.meldeSheet.testDoppelteDaten();
-		assertThat(result).isEqualTo(false);
+		try {
+			this.meldeSheet.testDoppelteDaten();
+		} catch (GenerateException exc) {
+			fail("GenerateException", exc);
+		}
 	}
 
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) {

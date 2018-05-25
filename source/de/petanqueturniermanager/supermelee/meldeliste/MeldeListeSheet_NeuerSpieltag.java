@@ -26,7 +26,7 @@ public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeS
 	}
 
 	public void naechsteSpieltag() throws GenerateException {
-		int anzSpieltage = countAnzSpieltage();
+		int anzSpieltage = countAnzSpieltageInMeldeliste();
 		getKonfigurationSheet().setAktiveSpieltag(new SpielTagNr(anzSpieltage + 1));
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		getKonfigurationSheet().setAktiveSpielRunde(1);
