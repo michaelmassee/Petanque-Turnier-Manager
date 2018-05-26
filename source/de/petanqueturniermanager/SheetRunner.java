@@ -29,15 +29,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
 	private static SheetRunner runner = null;
 
-	private final XCalculatable xCalculatable;
-
 	public SheetRunner(XComponentContext xContext) {
 		checkNotNull(xContext);
 		this.xContext = xContext;
 		this.sheetHelper = new SheetHelper(xContext);
-
-		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(this.getxContext());
-		this.xCalculatable = UnoRuntime.queryInterface(XCalculatable.class, doc);
 	}
 
 	/**
@@ -117,7 +112,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	public XCalculatable getxCalculatable() {
-		return this.xCalculatable;
+		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(this.getxContext());
+		return UnoRuntime.queryInterface(XCalculatable.class, doc);
 	}
 
 }

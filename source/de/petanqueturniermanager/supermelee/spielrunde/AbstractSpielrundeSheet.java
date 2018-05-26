@@ -568,8 +568,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeGeradeStyle).apply();
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
 
-		// ergebniss spalten mit prüfung auf >-1 <13
-		ConditionalFormatHelper.from(this, ergbenissRange).clear().formula1("-1").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().apply();
+		// ergebniss spalten mit prüfung auf >=0 <=13
+		ConditionalFormatHelper.from(this, ergbenissRange).clear().formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().apply();
 		// test if Text mit FORMULA
 		String formula = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
 		ConditionalFormatHelper.from(this, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA).styleIsFehler().apply();
