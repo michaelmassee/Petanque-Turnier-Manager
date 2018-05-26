@@ -212,7 +212,7 @@ public class SheetHelper {
 		XCell xCell = null;
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
-			xCell.setFormula(StringUtils.prependIfMissing(formula, "="));
+			xCell.setFormula(StringUtils.prependIfMissing(formula.trim(), "="));
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -252,8 +252,7 @@ public class SheetHelper {
 		// fill
 		if (cellVal.getFillAuto() != null) {
 			FillAutoPosition fillAuto = cellVal.getFillAuto();
-			fillAuto(cellVal.getSheet(), RangePosition.from(cellVal.getPos(), cellVal.getFillAuto()),
-					fillAuto.getFillDirection());
+			fillAuto(cellVal.getSheet(), RangePosition.from(cellVal.getPos(), cellVal.getFillAuto()), fillAuto.getFillDirection());
 		}
 
 		// Achtung: reihenfolge nicht ändern !
@@ -276,8 +275,7 @@ public class SheetHelper {
 
 	public void fillAuto(XSpreadsheet sheet, RangePosition rangePos, FillDirection fillDirection) {
 		try {
-			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
-					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 			XCellSeries xCellSeries = UnoRuntime.queryInterface(XCellSeries.class, xCellRange);
 			xCellSeries.fillAuto(fillDirection, 1);
 		} catch (IndexOutOfBoundsException e) {
@@ -388,8 +386,7 @@ public class SheetHelper {
 	public String getAddressFromColumnRow(Position pos) {
 		checkNotNull(pos);
 		try {
-			Object aFuncInst = this.xContext.getServiceManager()
-					.createInstanceWithContext("com.sun.star.sheet.FunctionAccess", this.xContext);
+			Object aFuncInst = this.xContext.getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess", this.xContext);
 			XFunctionAccess xFuncAcc = UnoRuntime.queryInterface(XFunctionAccess.class, aFuncInst);
 			// https://wiki.openoffice.org/wiki/Documentation/How_Tos/Calc:_ADDRESS_function
 			// put the data in a array
@@ -461,8 +458,7 @@ public class SheetHelper {
 		XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xSheet);
 		try {
 			xPropSet.setPropertyValue("TabColor", new Integer(color));
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-				| WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
@@ -470,8 +466,7 @@ public class SheetHelper {
 	public XCellRange mergeRange(XSpreadsheet sheet, RangePosition rangePosition) {
 		XCellRange xCellRange = null;
 		try {
-			xCellRange = sheet.getCellRangeByPosition(rangePosition.getStartSpalte(), rangePosition.getStartZeile(),
-					rangePosition.getEndeSpalte(), rangePosition.getEndeZeile());
+			xCellRange = sheet.getCellRangeByPosition(rangePosition.getStartSpalte(), rangePosition.getStartZeile(), rangePosition.getEndeSpalte(), rangePosition.getEndeZeile());
 			XMergeable xMerge = UnoRuntime.queryInterface(com.sun.star.util.XMergeable.class, xCellRange);
 			xMerge.merge(true);
 		} catch (IndexOutOfBoundsException e) {
@@ -597,8 +592,7 @@ public class SheetHelper {
 
 		try {
 			xPropSet.setPropertyValue(key, val);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-				| WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
 			logger.error("Property '" + key + "' = '" + val + "'\r" + e.getMessage(), e);
 		}
 	}
@@ -632,8 +626,7 @@ public class SheetHelper {
 		XCellRange xCellRange = null;
 		try {
 			// // spalte, zeile,spalte, zeile
-			xCellRange = sheet.getCellRangeByPosition(pos.getStartSpalte(), pos.getStartZeile(), pos.getEndeSpalte(),
-					pos.getEndeZeile());
+			xCellRange = sheet.getCellRangeByPosition(pos.getStartSpalte(), pos.getStartZeile(), pos.getEndeSpalte(), pos.getEndeZeile());
 
 			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
 			setProperties(xPropSet, properties);
@@ -670,8 +663,7 @@ public class SheetHelper {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCell);
 			xPropSet.setPropertyValue(Name, val);
-		} catch (IndexOutOfBoundsException | IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-				| WrappedTargetException e) {
+		} catch (IndexOutOfBoundsException | IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
 			logger.error("\n***** Fehler beim Property in Zelle:" + Name + "=" + val + " *****\n" + e.getMessage(), e);
 		}
 		return xCell;
@@ -810,11 +802,9 @@ public class SheetHelper {
 		xRangetoClear = getCellRange(xSheet, rangePos);
 		if (xRangetoClear != null) {
 			// --- Sheet operation. ---
-			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class,
-					xRangetoClear);
-			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED
-					| CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS | CellFlags.STRING | CellFlags.STYLES
-					| CellFlags.VALUE);
+			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class, xRangetoClear);
+			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED | CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS
+					| CellFlags.STRING | CellFlags.STYLES | CellFlags.VALUE);
 		}
 		return xRangetoClear;
 	}
@@ -826,8 +816,7 @@ public class SheetHelper {
 		XCellRange xCellRange = null;
 
 		try {
-			xCellRange = xSheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
-					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+			xCellRange = xSheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}

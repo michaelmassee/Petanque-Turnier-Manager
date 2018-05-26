@@ -352,6 +352,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		return this.columnProperties;
 	}
 
+	@SuppressWarnings("unchecked")
 	public T setColumnProperties(CellProperties columnProperties) {
 		this.columnProperties = columnProperties;
 		return (T) this;

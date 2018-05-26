@@ -77,8 +77,9 @@ abstract public class AbstractRanglisteFormatter {
 	 */
 	protected void formatZweiteZeileSpielTagSpalten(int ersteSummeSpalte) throws GenerateException {
 
+		CellProperties columnProperties = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(ersteSummeSpalte + SPIELE_PLUS_OFFS, ZWEITE_KOPFDATEN_ZEILE), "Spiele")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setEndPosMergeSpaltePlus(2).setCellBackColor(getHeaderFarbe());
+				.setEndPosMergeSpaltePlus(2).setCellBackColor(getHeaderFarbe()).addColumnProperties(columnProperties);
 		this.getSheetHelper().setTextInCell(headerSumme.setBorder(BorderFactory.from().allThin().boldLn().forLeft().doubleLn().forRight().toBorder()));
 		this.getSheetHelper().setTextInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("Punkte").setEndPosMergeSpaltePlus(2)
 				.setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));

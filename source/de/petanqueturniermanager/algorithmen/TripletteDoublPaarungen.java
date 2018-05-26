@@ -1,3 +1,6 @@
+/**
+ * Erstellung     : 31.08.2017 / Michael Massee
+ */
 package de.petanqueturniermanager.algorithmen;
 
 import static com.google.common.base.Preconditions.*;
@@ -13,11 +16,6 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.TeamRechner;
 
-/*
-* Paarungen.java
-* Erstellung     : 31.08.2017 / Michael Massee
-*
-*/
 public class TripletteDoublPaarungen {
 
 	static int DOUBL_SPIELER_START_NR = 10000;
@@ -47,8 +45,7 @@ public class TripletteDoublPaarungen {
 		} else {
 			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
 				// dummy spieler einfuegen
-				meldungen.addSpielerWennNichtVorhanden(
-						Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr).setSetzPos(DOUBL_SPIELER_SETZPOS));
+				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr).setSetzPos(DOUBL_SPIELER_SETZPOS));
 			}
 			teamRechner = new TeamRechner(meldungen.spieler().size());
 
@@ -75,8 +72,7 @@ public class TripletteDoublPaarungen {
 	 * @throws AlgorithmenException
 	 */
 	@VisibleForTesting
-	SpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, Meldungen meldungen)
-			throws AlgorithmenException {
+	SpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, Meldungen meldungen) throws AlgorithmenException {
 
 		SpielRunde spielrunde = null;
 		// Team nextTeam;
@@ -110,8 +106,7 @@ public class TripletteDoublPaarungen {
 		return spielrunde;
 	}
 
-	public Team findNextTeamInSpielrunde(int teamSize, Meldungen meldungen, SpielRunde spielrunde)
-			throws AlgorithmenException {
+	public Team findNextTeamInSpielrunde(int teamSize, Meldungen meldungen, SpielRunde spielrunde) throws AlgorithmenException {
 
 		checkNotNull(meldungen);
 		checkNotNull(spielrunde);
@@ -132,8 +127,7 @@ public class TripletteDoublPaarungen {
 
 		if (newTeamInRunde.size() != teamSize) {
 			newTeamInRunde.removeAlleSpieler();
-			throw new AlgorithmenException("Team " + newTeamInRunde.getNr() + " für Spielrunde " + spielrunde.getNr()
-					+ " konnte nicht zusammengestelt werden");
+			throw new AlgorithmenException("Team " + newTeamInRunde.getNr() + " für Spielrunde " + spielrunde.getNr() + " konnte nicht zusammengestelt werden");
 		}
 
 		spielrunde.validateSpielerTeam(null);
@@ -141,16 +135,14 @@ public class TripletteDoublPaarungen {
 		return newTeamInRunde;
 	}
 
-	private void teamAuffuellen(int teamSize, Meldungen meldungen, SpielRunde spielrunde, Team newTeamInRunde)
-			throws AlgorithmenException {
+	private void teamAuffuellen(int teamSize, Meldungen meldungen, SpielRunde spielrunde, Team newTeamInRunde) throws AlgorithmenException {
 		boolean konnteTauschen = true;
 		while (newTeamInRunde.size() != teamSize && meldungen.spielerOhneTeam().size() > 0 && konnteTauschen) {
 			// team noch nicht vollständig, versuche zu tauschen mit ein Spieler
 			// aus ein andere Team
 			konnteTauschen = false;
 			for (Spieler spielerOhneTeam : meldungen.spielerOhneTeam()) {
-				Spieler tauschSpieler = kannTauschenMitSpielerOhneTeam(spielerOhneTeam, newTeamInRunde,
-						spielrunde.teams());
+				Spieler tauschSpieler = kannTauschenMitSpielerOhneTeam(spielerOhneTeam, newTeamInRunde, spielrunde.teams());
 				if (tauschSpieler != null && tauschSpieler.getTeam() != null) {
 					// tausch spieler aus sein team raus nehmen
 					Team tauschTeam = tauschSpieler.getTeam();
@@ -167,8 +159,7 @@ public class TripletteDoublPaarungen {
 		spielrunde.validateSpielerTeam(null);
 	}
 
-	public Spieler kannTauschenMitSpielerOhneTeam(Spieler spielerOhneTeam, Team newTeamInRunde, List<Team> alleteams)
-			throws AlgorithmenException {
+	public Spieler kannTauschenMitSpielerOhneTeam(Spieler spielerOhneTeam, Team newTeamInRunde, List<Team> alleteams) throws AlgorithmenException {
 		checkNotNull(spielerOhneTeam);
 		checkNotNull(newTeamInRunde);
 		checkNotNull(alleteams);

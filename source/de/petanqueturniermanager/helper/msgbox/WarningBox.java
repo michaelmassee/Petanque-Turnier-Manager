@@ -16,6 +16,7 @@ public class WarningBox extends AbstractMessageBox {
 
 	private static final Logger logger = LogManager.getLogger(WarningBox.class);
 
+	@Deprecated
 	public WarningBox(XComponentContext m_xContext) {
 		super(m_xContext);
 	}
@@ -37,10 +38,10 @@ public class WarningBox extends AbstractMessageBox {
 	 * const short IGNORE = 5<br>
 	 * The user pressed the "Ignore" button.<br>
 	 */
+	@Deprecated
 	public short showYesNo(String title, String message) {
 		short nResult = 0;
-		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(),
-				MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO, title, message);
+		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(), MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO, title, message);
 
 		if (xMessageBox != null) {
 			nResult = xMessageBox.execute();
@@ -48,9 +49,9 @@ public class WarningBox extends AbstractMessageBox {
 		return nResult;
 	}
 
+	@Deprecated
 	public void showOk(String title, String message) {
-		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(),
-				MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK, title, message);
+		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(), MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK, title, message);
 
 		if (xMessageBox != null) {
 			xMessageBox.execute();
