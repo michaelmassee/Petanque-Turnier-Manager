@@ -27,9 +27,7 @@ public class ConditionalFormatHelper {
 
 	private static final String FORMULA_ISEVEN_ROW = "ISEVEN(ROW())";
 	private static final String FORMULA_ISODD_ROW = "ISODD(ROW())";
-	public static final String FORMULA_CURRENT_CELL = "INDIRECT(ADDRESS(ROW();COLUMN())";
-	// default Styles
-	public static final String STYLE_BAD = "Bad";
+	public static final String FORMULA_CURRENT_CELL = "INDIRECT(ADDRESS(ROW();COLUMN()))";
 
 	private final ISheet sheet;
 	private final RangePosition rangePos;

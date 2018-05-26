@@ -102,22 +102,44 @@ public abstract class AbstractPosition<T> {
 		this.spalte = spalte;
 	}
 
+	public String getSpalteAddressWith$() {
+		String aStr = "$";
+		aStr += getSpalteString();
+		aStr += ":$";
+		aStr += getSpalteString();
+		return aStr;
+
+	}
+
+	public String getSpalteAddress() {
+		String aStr = "";
+		aStr += getSpalteString();
+		aStr += ":";
+		aStr += getSpalteString();
+		return aStr;
+	}
+
 	public String getAddress() {
 		String aStr = "";
-		if (getColumn() > 25)
-			aStr += (char) ('A' + getColumn() / 26 - 1);
-		aStr += (char) ('A' + getColumn() % 26);
+		aStr += getSpalteString();
 		aStr += (getRow() + 1);
 		return aStr;
 	}
 
 	public String getAddressWith$() {
 		String aStr = "$";
-		if (getColumn() > 25)
-			aStr += (char) ('A' + getColumn() / 26 - 1);
-		aStr += (char) ('A' + getColumn() % 26);
+		aStr += getSpalteString();
 		aStr += "$";
 		aStr += (getRow() + 1);
+		return aStr;
+	}
+
+	public String getSpalteString() {
+		String aStr = "";
+		if (getColumn() > 25) {
+			aStr += (char) ('A' + getColumn() / 26 - 1);
+		}
+		aStr += (char) ('A' + getColumn() % 26);
 		return aStr;
 	}
 
@@ -126,8 +148,7 @@ public abstract class AbstractPosition<T> {
 		if (obj == null) {
 			return false;
 		}
-		return ((AbstractPosition<?>) obj).getSpalte() == this.getSpalte()
-				&& ((AbstractPosition<?>) obj).getZeile() == this.getZeile();
+		return ((AbstractPosition<?>) obj).getSpalte() == this.getSpalte() && ((AbstractPosition<?>) obj).getZeile() == this.getZeile();
 	}
 
 	@Override

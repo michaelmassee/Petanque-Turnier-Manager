@@ -310,7 +310,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
 		String letzteZelleAddress = Position.from(this.spielerSpalte.getSpielerNameErsteSpalte(), 999).getAddressWith$();
-		return "=VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";2;0)";
+		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";2;0)";
 	}
 
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {

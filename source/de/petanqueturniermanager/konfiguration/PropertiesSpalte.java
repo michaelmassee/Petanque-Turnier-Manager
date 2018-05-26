@@ -49,6 +49,8 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS = "Nicht gespielte Runde Punkte +"; // 0
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde Punkte -"; // 13
 
+	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
+
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
@@ -84,6 +86,9 @@ public class PropertiesSpalte {
 				.setDescription("Pluspunkte nicht gespielte Runde"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS).setDefaultVal(13)
 				.setDescription("Minuspunkte nicht gespielte Runde"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SPIELRUNDE_SPIELBAHN).setDefaultVal("X")
+				.setDescription("Spalte-Spielbahn in Spielrunde. X=Keine Spalte, L=Leere Spalte (händisch ausfüllen), N=1-n durchnummerieren"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -354,6 +359,10 @@ public class PropertiesSpalte {
 
 	public Integer getNichtGespielteRundeMinus() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS);
+	}
+
+	public String getSpielrundeSpielbahn() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN);
 	}
 
 	public Formation getFormation() throws GenerateException {

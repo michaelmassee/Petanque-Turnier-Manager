@@ -45,4 +45,6 @@ public interface IPropertiesSpalte {
 
 	SpielSystem getSpielSystem() throws GenerateException;
 
+	String getSpielrundeSpielbahn() throws GenerateException;
+
 }

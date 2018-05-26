@@ -16,12 +16,14 @@ public class QuestionBox extends AbstractMessageBox {
 
 	private static final Logger logger = LogManager.getLogger(QuestionBox.class);
 
+	@Deprecated
 	public QuestionBox(XComponentContext m_xContext) {
 		super(m_xContext);
 	}
 
 	/**
-	 * shows a question messagebox
+	 * @deprecated<br>
+	 * use MessageBox mit MessageBoxTypeEnum.QUESTION_YES_NO shows a question messagebox
 	 *
 	 * @return MessageBoxResults<br>
 	 * const short CANCEL = 0<br>
@@ -37,10 +39,10 @@ public class QuestionBox extends AbstractMessageBox {
 	 * const short IGNORE = 5<br>
 	 * The user pressed the "Ignore" button.<br>
 	 */
+	@Deprecated
 	public short showYesNo(String title, String message) {
 		short nResult = 0;
-		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(),
-				MessageBoxType.QUERYBOX, MessageBoxButtons.BUTTONS_YES_NO, title, message);
+		XMessageBox xMessageBox = this.getXMessageBoxFactory().createMessageBox(getWindowPeer(), MessageBoxType.QUERYBOX, MessageBoxButtons.BUTTONS_YES_NO, title, message);
 
 		if (xMessageBox != null) {
 			nResult = xMessageBox.execute();

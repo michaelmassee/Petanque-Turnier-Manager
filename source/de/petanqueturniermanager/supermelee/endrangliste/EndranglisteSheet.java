@@ -85,13 +85,13 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	@Override
 	protected void doRun() throws GenerateException {
 		if (NewSheet.from(getxContext(), SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().forceCreate().create()) {
+			this.getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}
 	}
 
 	private void upDateSheet() throws GenerateException {
 
-		this.getxCalculatable().enableAutomaticCalculation(false); // speed up
 		int anzahlSpieltage = getAnzahlSpieltage();
 		if (anzahlSpieltage < 2) {
 			newErrMsgBox().showOk("Feher", "Ungültige anzahl von Spieltage. " + anzahlSpieltage);

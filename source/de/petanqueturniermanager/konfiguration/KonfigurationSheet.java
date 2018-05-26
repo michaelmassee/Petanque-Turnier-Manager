@@ -145,4 +145,9 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 		return this.propertiesSpalte.getSpielSystem();
 	}
 
+	@Override
+	public String getSpielrundeSpielbahn() throws GenerateException {
+		return this.propertiesSpalte.getSpielrundeSpielbahn();
+	}
+
 }
