@@ -201,6 +201,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	private void datenErsteSpalte() throws GenerateException {
 		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
 		String spielrundeSpielbahn = this.getKonfigurationSheet().getSpielrundeSpielbahn();
+		Position letzteZeile = letzteZeile();
 
 		// header
 		// -------------------------
@@ -212,20 +213,24 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			getSheetHelper().setColumnProperties(sheet, NUMMER_SPALTE_RUNDESPIELPLAN, columnProperties);
 		} else {
 			// Spielbahn Spalte header
-			columnProperties.setWidth(900).setCharHeight(18); // Paarungen cntr
+			columnProperties.setWidth(900); // Paarungen cntr
 			Position posErsteHeaderZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
 			Integer headerColor = this.getKonfigurationSheet().getSpielRundeHeaderFarbe();
 			StringCellValue headerValue = StringCellValue.from(sheet, posErsteHeaderZelle).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
 					.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(14).setColumnProperties(columnProperties)
 					.setEndPosMergeZeilePlus(1).setValue("Bahn").setComment("Spielbahn");
 			getSheetHelper().setTextInCell(headerValue);
+
+			RangePosition nbrRange = RangePosition.from(posErsteHeaderZelle, letzteZeile.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
+			getSheetHelper().setPropertiesInRange(sheet, nbrRange, CellProperties.from().setCharHeight(16));
 		}
 
 		// Daten
-		Position letzteZeile = letzteZeile();
+
 		Position posErsteDatenZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
+		StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
 		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("N", spielrundeSpielbahn)) {
-			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle).setValue("=ROW()-" + ERSTE_DATEN_ZEILE).setFillAutoDown(letzteZeile.getZeile());
+			formulaCellValue.setValue("=ROW()-" + ERSTE_DATEN_ZEILE).setFillAutoDown(letzteZeile.getZeile());
 			getSheetHelper().setFormulaInCell(formulaCellValue);
 		}
 	}
@@ -538,7 +543,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
 		RangePosition datenRangeOhneErsteSpalteOhneErgebniss = RangePosition.from(Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE),
-				Position.from(ERSTE_SPALTE_ERGEBNISSE - 1, ERSTE_DATEN_ZEILE));
+				datenEnd.spalte(ERSTE_SPALTE_ERGEBNISSE - 1));
 
 		Integer geradeColor = this.getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
 		Integer unGeradeColor = this.getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGerade();
@@ -570,7 +575,6 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		ConditionalFormatHelper.from(this, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA).styleIsFehler().apply();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeGeradeStyle).apply();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
-
 	}
 
 	protected Position letzteZeile() throws GenerateException {
