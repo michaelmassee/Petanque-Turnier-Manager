@@ -4,8 +4,8 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
-import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.HORI_JUSTIFY;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,19 @@ import com.sun.star.container.NoSuchElementException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
-import com.sun.star.sheet.*;
+import com.sun.star.sheet.CellFlags;
+import com.sun.star.sheet.FillDirection;
+import com.sun.star.sheet.XCellAddressable;
+import com.sun.star.sheet.XCellRangesQuery;
+import com.sun.star.sheet.XCellSeries;
+import com.sun.star.sheet.XFunctionAccess;
+import com.sun.star.sheet.XSheetAnnotations;
+import com.sun.star.sheet.XSheetAnnotationsSupplier;
+import com.sun.star.sheet.XSheetOperation;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheetView;
+import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.XCell;
@@ -153,11 +165,6 @@ public class SheetHelper {
 		return null;
 	}
 
-	@Deprecated
-	public XCell setValInCell(XSpreadsheet sheet, int spalte, int zeile, double val) {
-		return setValInCell(sheet, Position.from(spalte, zeile), val);
-	}
-
 	public XCell setValInCell(NumberCellValue numberCellValue) {
 		checkNotNull(numberCellValue);
 		XCell xCell = setValInCell(numberCellValue.getSheet(), numberCellValue.getPos(), numberCellValue.getValue());
@@ -189,11 +196,6 @@ public class SheetHelper {
 		return xCell;
 	}
 
-	@Deprecated
-	public XCell setFormulaInCell(XSpreadsheet sheet, int spalte, int zeile, String formula) {
-		return setFormulaInCell(sheet, Position.from(spalte, zeile), formula);
-	}
-
 	public XCell setFormulaInCell(StringCellValue stringVal) {
 		checkNotNull(stringVal);
 
@@ -217,11 +219,6 @@ public class SheetHelper {
 			logger.error(e.getMessage(), e);
 		}
 		return xCell;
-	}
-
-	@Deprecated
-	public XCell setTextInCell(XSpreadsheet sheet, int spalte, int zeile, String val) {
-		return setTextInCell(sheet, Position.from(spalte, zeile), val);
 	}
 
 	// StringCellValue
@@ -308,11 +305,6 @@ public class SheetHelper {
 		return xCell;
 	}
 
-	@Deprecated
-	public Integer getIntFromCell(XSpreadsheet sheet, int spalte, int zeile) {
-		return getIntFromCell(sheet, new Position(spalte, zeile));
-	}
-
 	/**
 	 * @param sheet
 	 * @param spalte,column, 0 = erste spalte = A
@@ -343,14 +335,6 @@ public class SheetHelper {
 		return null;
 	}
 
-	/**
-	 * use getXTextFromCell(XSpreadsheet sheet, Position pos)
-	 */
-	@Deprecated
-	public XText getXTextFromCell(XSpreadsheet sheet, int spalte, int zeile) {
-		return getXTextFromCell(sheet, new Position(spalte, zeile));
-	}
-
 	public XText getXTextFromCell(XSpreadsheet sheet, Position pos) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
@@ -371,11 +355,6 @@ public class SheetHelper {
 		XCellAddressable xCellAddr = UnoRuntime.queryInterface(XCellAddressable.class, xCell);
 		CellAddress aAddress = xCellAddr.getCellAddress();
 		return getAddressFromColumnRow(new Position(aAddress.Column, aAddress.Row));
-	}
-
-	@Deprecated
-	public String getAddressFromColumnRow(int column, int row) {
-		return getAddressFromColumnRow(new Position(column, row));
 	}
 
 	/**

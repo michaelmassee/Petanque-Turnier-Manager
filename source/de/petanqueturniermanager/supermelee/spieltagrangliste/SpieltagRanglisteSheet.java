@@ -4,8 +4,8 @@
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
-import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -225,11 +225,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		return spieltagNr.getNr() + ". " + SHEETNAME_SUFFIX;
 	}
 
-	@Deprecated
-	public XSpreadsheet getSpieltagSheet() throws GenerateException {
-		return getSheet();
-	}
-
 	/**
 	 * @param spieltagNr = welchen Spieltag ?
 	 * @param spielrNrAdresse = die Adresse vom Spielrnr im Anfragende Sheet
@@ -388,7 +383,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(), letzteDatenzeile);
-			this.getSheetHelper().clearRange(getSpieltagSheet(), range);
+			this.getSheetHelper().clearRange(getSheet(), range);
 		}
 	}
 
