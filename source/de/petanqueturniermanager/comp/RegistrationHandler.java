@@ -67,14 +67,15 @@ public class RegistrationHandler {
 	 * Get a component factory for the implementations handled by this class.
 	 * 
 	 * <p>
-	 * This method calls all the methods of the same name from the classes listed in the
-	 * <code>RegistrationHandler.classes</code> file. <strong>This method should not be modified.</strong>
+	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
+	 * modified.</strong>
 	 * </p>
 	 * 
 	 * @param pImplementationName the name of the implementation to create.
 	 * 
 	 * @return the factory which can create the implementation.
 	 */
+	@SuppressWarnings("rawtypes")
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
 		XSingleComponentFactory xFactory = null;
 
@@ -86,6 +87,7 @@ public class RegistrationHandler {
 			if (sImplementationName.equals(clazz.getCanonicalName())) {
 				try {
 					Class[] getTypes = new Class[] { String.class };
+					@SuppressWarnings("unchecked")
 					Method getFactoryMethod = clazz.getMethod("__getComponentFactory", getTypes);
 					Object o = getFactoryMethod.invoke(null, sImplementationName);
 					xFactory = (XSingleComponentFactory) o;
@@ -103,15 +105,15 @@ public class RegistrationHandler {
 	 * Writes the services implementation informations to the UNO registry.
 	 * 
 	 * <p>
-	 * This method calls all the methods of the same name from the classes listed in the
-	 * <code>RegistrationHandler.classes</code> file. <strong>This method should not be modified.</strong>
+	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
+	 * modified.</strong>
 	 * </p>
 	 * 
 	 * @param pRegistryKey the root registry key where to write the informations.
 	 * 
-	 * @return <code>true</code> if the informations have been successfully written to the registry key,
-	 * <code>false</code> otherwise.
+	 * @return <code>true</code> if the informations have been successfully written to the registry key, <code>false</code> otherwise.
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
 
 		Class[] classes = findServicesImplementationClasses();
@@ -137,6 +139,7 @@ public class RegistrationHandler {
 	/**
 	 * @return all the UNO implementation classes.
 	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static Class[] findServicesImplementationClasses() {
 
 		ArrayList<Class> classes = new ArrayList<>();
@@ -176,7 +179,6 @@ public class RegistrationHandler {
 				in.close();
 			} catch (Exception e) {
 			}
-			;
 		}
 
 		return classes.toArray(new Class[classes.size()]);

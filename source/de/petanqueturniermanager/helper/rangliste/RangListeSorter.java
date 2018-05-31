@@ -4,8 +4,11 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
-import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_PLUS_OFFS;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -25,7 +28,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -36,13 +38,11 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 public class RangListeSorter {
 
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
-	private final ErrorMessageBox errMsg;
 
 	public RangListeSorter(XComponentContext xContext, IRangliste iRanglisteSheet) {
 		checkNotNull(xContext);
 
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
-		this.errMsg = new ErrorMessageBox(xContext);
 	}
 
 	/**
@@ -68,8 +68,9 @@ public class RangListeSorter {
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
+		CellProperties columnProperties = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue sortlisteVal = StringCellValue.from(getIRangliste().getSheet(), Position.from(getIRangliste().getManuellSortSpalte(), ersteDatenZiele - 1))
-				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER);
+				.addColumnProperties(columnProperties);
 
 		int ersteSpalteEndsumme = getIRangliste().getErsteSummeSpalte();
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteDatenZiele);
@@ -105,8 +106,9 @@ public class RangListeSorter {
 
 		XSpreadsheet sheet = getIRangliste().getSheet();
 
+		CellProperties columnProperties = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue validateHeader = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).setComment("Validate Spalte")
-				.setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setSpalteHoriJustify(CellHoriJustify.CENTER).setValue("Err");
+				.addColumnProperties(columnProperties).setValue("Err");
 
 		this.getSheetHelper().setTextInCell(validateHeader);
 

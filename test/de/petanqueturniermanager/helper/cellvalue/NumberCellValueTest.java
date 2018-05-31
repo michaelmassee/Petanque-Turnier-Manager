@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.cellvalue;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -65,8 +65,10 @@ public class NumberCellValueTest {
 		int charcolor = 123465;
 
 		Position pos = Position.from(spalte, zeile);
-		StringCellValue strcellValue = StringCellValue.from(this.spreadsheetMock, pos, "" + val).setComment(testComent)
-				.setColumnWidth(columnWidth).addCellProperty(CellProperties.CHAR_COLOR, charcolor);
+		CellProperties columnProperties = CellProperties.from().setWidth(columnWidth);
+
+		StringCellValue strcellValue = StringCellValue.from(this.spreadsheetMock, pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
+				.addCellProperty(CellProperties.CHAR_COLOR, charcolor);
 
 		NumberCellValue numberCellValue = NumberCellValue.from(strcellValue);
 

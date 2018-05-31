@@ -4,7 +4,8 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -130,12 +131,13 @@ public class SpielerSpalte {
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
+		CellProperties columnProperties = CellProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue celVal = StringCellValue.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
-				.setComment("Meldenummer (manuell nicht ändern)").setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(DEFAULT_SPALTE_NUMBER_WIDTH)
-				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
+				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
+				.setCellBackColor(headerColor);
 		this.getSheetHelper().setTextInCell(celVal); // spieler nr
 
-		celVal.setColumnWidth(DEFAULT_SPIELER_NAME_WIDTH).setComment(null).spalte(this.spielerNameErsteSpalte).setValue(HEADER_SPIELER_NAME)
+		celVal.addColumnProperties(columnProperties.setWidth(DEFAULT_SPIELER_NAME_WIDTH)).setComment(null).spalte(this.spielerNameErsteSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {

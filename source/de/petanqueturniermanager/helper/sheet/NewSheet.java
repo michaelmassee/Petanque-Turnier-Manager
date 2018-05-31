@@ -4,15 +4,17 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.sun.star.awt.MessageBoxResults;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.msgbox.WarningBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 
 public class NewSheet {
 
@@ -56,13 +58,10 @@ public class NewSheet {
 		XSpreadsheet sheet = this.sheetHelper.findByName(this.sheetName);
 		this.didCreate = false;
 		if (sheet != null) {
-			if (!this.force) {
-				WarningBox warnBox = new WarningBox(this.xContext);
-				short result = warnBox.showYesNo("Erstelle Tabelle",
-						"Tabelle '" + this.sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?");
-				if (result != MessageBoxResults.YES) {
-					return false;
-				}
+			MessageBoxResult result = MessageBox.from(xContext, MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle Tabelle")
+					.message("Tabelle '" + this.sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(force).show();
+			if (MessageBoxResult.YES != result) {
+				return false;
 			}
 			this.sheetHelper.removeSheet(this.sheetName);
 		}

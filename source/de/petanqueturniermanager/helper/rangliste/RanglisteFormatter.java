@@ -4,8 +4,8 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
-import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.TABLE_BORDER2;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -13,6 +13,7 @@ import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -45,8 +46,9 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		// -------------------------
 		// spielrunden spalten
 		// -------------------------
-		StringCellValue headerPlus = StringCellValue.from(sheet, Position.from(this.ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+")
-				.setSpalteHoriJustify(CellHoriJustify.CENTER).setColumnWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setCellBackColor(getHeaderFarbe());
+		CellProperties columnProperties = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerPlus = StringCellValue.from(sheet, Position.from(this.ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+").addColumnProperties(columnProperties)
+				.setCellBackColor(getHeaderFarbe());
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
 
 		headerPlus.setBorder(borderThinLeftBold());
@@ -58,7 +60,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 			// Runden Counter
 			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde + ". Rnd").zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1)
-					.setColumnWidth(0).setComment(null);
+					.setComment(null);
 			this.getSheetHelper().setTextInCell(headerRndCounter);
 		}
 		// -------------------------

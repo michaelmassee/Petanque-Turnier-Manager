@@ -109,11 +109,11 @@ public class BorderFactory {
 	static BorderLine2 boldLine() {
 		BorderLine2 borderLine = new BorderLine2();
 		borderLine.Color = 0; // 0x0d3472;
-		borderLine.InnerLineWidth = 18;
-		borderLine.OuterLineWidth = 18;
-		borderLine.LineDistance = 53;
+		borderLine.InnerLineWidth = 0;
+		borderLine.OuterLineWidth = 53;
+		borderLine.LineDistance = 0;
 		borderLine.LineStyle = BorderLineStyle.SOLID;
-		borderLine.LineWidth = 60; // 88
+		borderLine.LineWidth = 53;
 		return borderLine;
 	}
 

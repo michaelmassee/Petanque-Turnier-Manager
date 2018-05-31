@@ -35,7 +35,7 @@ public class FillAutoPosition extends AbstractPosition<FillAutoPosition> {
 		return new FillAutoPosition(spalte, zeile);
 	}
 
-	public static FillAutoPosition from(AbstractPosition pos) {
+	public static FillAutoPosition from(AbstractPosition<?> pos) {
 		if (pos != null) {
 			return FillAutoPosition.from(pos.getSpalte(), pos.getZeile());
 		}

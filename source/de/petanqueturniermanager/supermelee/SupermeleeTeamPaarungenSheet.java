@@ -14,6 +14,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -54,17 +55,15 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		Position pos = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE - 1);
 		int spalteBreite = 1000;
 
-		StringCellValue strVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler")
-				.setColumnWidth(spalteBreite).setSpalteHoriJustify(CellHoriJustify.CENTER);
+		CellProperties columnProperties = CellProperties.from().setWidth(spalteBreite).setHoriJustify(CellHoriJustify.CENTER);
+
+		StringCellValue strVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler").setColumnProperties(columnProperties);
 		getSheetHelper().setTextInCell(strVal);
 		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x2").setComment("Doublette Teams"));
 		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x3").setComment("Triplette Teams"));
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("Doubl")
-				.setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
-		getSheetHelper().setTextInCell(
-				strVal.spaltePlusEins().setValue("∑x2").setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("Ung")
-				.setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
+		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("Doubl").setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
+		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x2").setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
+		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("Ung").setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
 
 		for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
 			teamRechner = new TeamRechner(anSpielerCntr);
@@ -72,17 +71,14 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 			getSheetHelper().setValInCell(sheet, pos, teamRechner.getAnzSpieler());
 			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechner.getAnzDoublette());
 			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechner.getAnzTriplette());
-			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(),
-					(teamRechner.isNurDoubletteMoeglich() ? "X" : ""));
-			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(),
-					(teamRechner.isNurDoubletteMoeglich() ? "" + teamRechner.getAnzSpieler() / 2 : ""));
+			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(), (teamRechner.isNurDoubletteMoeglich() ? "X" : ""));
+			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(), (teamRechner.isNurDoubletteMoeglich() ? "" + teamRechner.getAnzSpieler() / 2 : ""));
 			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(), (teamRechner.valideAnzahlSpieler() ? "" : "X"));
 
 			if (!teamRechner.valideAnzahlSpieler()) {
 				RangePosition rangePos = new RangePosition(Position.from(pos).spalte(0), pos);
 				getSheetHelper().setPropertyInRange(sheet, rangePos, "CharColor", ColorHelper.CHAR_COLOR_RED);
-				getSheetHelper().setCommentInCell(sheet, pos, "Ungültige Anzahl Spieler = "
-						+ teamRechner.getAnzSpieler() + ".\r\nKeine Kombinationen möglich.");
+				getSheetHelper().setCommentInCell(sheet, pos, "Ungültige Anzahl Spieler = " + teamRechner.getAnzSpieler() + ".\r\nKeine Kombinationen möglich.");
 			}
 		}
 	}
@@ -118,8 +114,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		String letzteZelleAddress = Position.from(spalte, ERSTE_DATEN_ZEILE + 999).getAddressWith$();
 
 		// suchkriterium;matrix;index;sortiert
-		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
-				+ ";" + (spalte + 1) + ";0)";
+		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";" + (spalte + 1) + ";0)";
 	}
 
 }

@@ -4,7 +4,8 @@
 
 package de.petanqueturniermanager.konfiguration;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -125,10 +127,13 @@ public class PropertiesSpalte {
 		XSpreadsheet propSheet = this.getPropSheet();
 		// header
 		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
-		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(6500).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
+		CellProperties columnProperties = CellProperties.from().setWidth(6500);
+
+		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
 		this.getSheetHelper().setTextInCell(headerVal);
 
-		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).setColumnWidth(1500).setValue("Wert").setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
+		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(1500)).setValue("Wert")
+				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
 		this.getSheetHelper().setTextInCell(wertheaderVal);
 	}
 

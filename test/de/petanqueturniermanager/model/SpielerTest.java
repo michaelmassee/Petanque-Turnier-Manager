@@ -41,4 +41,23 @@ public class SpielerTest {
 		spieler3.addWarImTeamMitWennNichtVorhanden(spieler);
 		assertThat(spieler.warImTeamMit(spieler3)).isTrue();
 	}
+
+	@Test
+	public void testDeleteWarImTeam() throws Exception {
+		Spieler spieler2 = new Spieler(2);
+		Spieler spieler3 = new Spieler(3);
+		Spieler spieler4 = new Spieler(4);
+		
+		spieler.addWarImTeamMitWennNichtVorhanden(spieler2);
+		spieler.addWarImTeamMitWennNichtVorhanden(spieler3);
+		spieler.addWarImTeamMitWennNichtVorhanden(spieler4);
+		assertThat(spieler.warImTeamMit(spieler3)).isTrue();
+		assertThat(spieler.warImTeamMit(spieler2)).isTrue();
+		assertThat(spieler.warImTeamMit(spieler4)).isTrue();
+		
+		spieler.deleteWarImTeam(spieler3);
+		assertThat(spieler.warImTeamMit(spieler3)).isFalse();
+		assertThat(spieler.warImTeamMit(spieler2)).isTrue();
+		assertThat(spieler.warImTeamMit(spieler4)).isTrue();
+	}
 }
