@@ -21,7 +21,6 @@ import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.msgbox.InfoModal;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 
 /**
@@ -47,14 +46,12 @@ public class DocumentPropertiesHelper {
 		// insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.MELEE.getId());
 	}
 
-	@Deprecated
 	public void showProperties() {
-		InfoModal msgBox = new InfoModal(this.xContext);
+		// InfoModal msgBox = new InfoModal(this.xContext);
 		// String propertiesInfo = PROP_NAME_FORMATION + ": " + getIntProperty(PROP_NAME_FORMATION);
 		// msgBox.show("Konfiguration", propertiesInfo);
 	}
 
-	@Deprecated
 	public void insertIntPropertyIfNotExist(String name, int val) {
 		XPropertyContainer xpc = getXPropertyContainer();
 		try {
@@ -68,8 +65,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
-		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class,
-				DocumentHelper.getCurrentSpreadsheetDocument(this.xContext));
+		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, DocumentHelper.getCurrentSpreadsheetDocument(this.xContext));
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}
@@ -107,8 +103,7 @@ public class DocumentPropertiesHelper {
 		XPropertySet propSet = getXPropertySet();
 		try {
 			propSet.setPropertyValue(propName, "" + val);
-		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException
-				| PropertyVetoException e) {
+		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException | PropertyVetoException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}

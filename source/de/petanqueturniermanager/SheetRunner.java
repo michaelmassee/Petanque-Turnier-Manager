@@ -5,7 +5,7 @@
 
 package de.petanqueturniermanager;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.logging.log4j.Logger;
 
@@ -16,8 +16,8 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
-import de.petanqueturniermanager.helper.msgbox.QuestionBox;
-import de.petanqueturniermanager.helper.msgbox.WarningBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
@@ -57,14 +57,6 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		return new ErrorMessageBox(getxContext());
 	}
 
-	protected WarningBox newWarningBox() {
-		return new WarningBox(getxContext());
-	}
-
-	protected QuestionBox newQuestionBox() {
-		return new QuestionBox(getxContext());
-	}
-
 	@Override
 	public final void run() {
 		if (!SheetRunner.isRunning) {
@@ -82,16 +74,18 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				SheetRunner.isRunning = false;
 				SheetRunner.runner = null;
 				// TODO
+				// Funktioniert so nicht
 				// CloseConnections.closeOfficeConnection(getxContext());
 			}
 		} else {
-			newWarningBox().showOk("Abbruch", "Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.");
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message("Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.")
+					.show();
 		}
 	}
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
-			newWarningBox().showOk("Abbruch", e.getMessage());
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage()).show();
 		} else {
 			getLogger().error(e.getMessage(), e);
 			newErrMsgBox().showOk("Fehler", e.getMessage());

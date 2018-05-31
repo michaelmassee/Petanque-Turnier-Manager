@@ -10,5 +10,4 @@ public class GenerateException extends Exception {
 	public GenerateException(String msg) {
 		super(msg);
 	}
-
 }

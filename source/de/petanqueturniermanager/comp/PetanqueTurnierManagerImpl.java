@@ -44,7 +44,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
 		this.m_xContext = context;
-	};
+	}
 
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
 		XSingleComponentFactory xFactory = null;

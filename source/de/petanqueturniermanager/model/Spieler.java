@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.model;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -15,7 +16,6 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 * Erstellung     : 31.08.2017 / massee
 *
 */
-
 public class Spieler implements Comparable<Spieler> {
 	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team
 	private int nr;
@@ -101,7 +101,7 @@ public class Spieler implements Comparable<Spieler> {
 
 	public Spieler deleteWarImTeam(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		getWarImTeamMit().remove(spieler);
+		getWarImTeamMit().remove(spieler.getNr());
 		return this;
 	}
 
@@ -209,13 +209,11 @@ public class Spieler implements Comparable<Spieler> {
 	private void validatewkRefteamStatus() throws AlgorithmenException {
 		if (this.istInTeam) {
 			if (this.wkRefteam == null || this.wkRefteam.get() == null) {
-				throw new AlgorithmenException(
-						"Ungültige Status in Spieler, istIntTeam = " + this.istInTeam + " wkRefteam.get()==null");
+				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + this.istInTeam + " wkRefteam.get()==null");
 			}
 		} else {
 			if (this.wkRefteam != null && this.wkRefteam.get() != null) {
-				throw new AlgorithmenException(
-						"Ungültige Status in Spieler, istIntTeam = " + this.istInTeam + " wkRefteam.get()!=null");
+				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + this.istInTeam + " wkRefteam.get()!=null");
 			}
 		}
 	}

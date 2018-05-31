@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.cellvalue;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 
@@ -205,6 +205,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setCellProperties(CellProperties cellProperties) {
+		checkNotNull(cellProperties);
 		this.cellProperties = cellProperties;
 		return (T) this;
 	}
@@ -308,6 +309,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCellBackColor(String hexCharColor) {
+		checkNotNull(hexCharColor);
 		this.cellProperties.setCellBackColor(Integer.valueOf(hexCharColor, 16));
 		return (T) this;
 	}
@@ -343,7 +345,6 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setRotateAngle(int angle) {
-
 		this.cellProperties.setRotateAngle(angle);
 		return (T) this;
 	}
@@ -354,18 +355,22 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setColumnProperties(CellProperties columnProperties) {
+		checkNotNull(columnProperties);
 		this.columnProperties = columnProperties;
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	public T addColumnProperty(String key, Object val) {
+		checkNotNull(key);
+		checkNotNull(val);
 		this.columnProperties.put(key, val);
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	public T addColumnProperties(CellProperties columnProperties) {
+		checkNotNull(columnProperties);
 		this.columnProperties.putAll(columnProperties);
 		return (T) this;
 	}

@@ -4,8 +4,14 @@
 
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.CHAR_HEIGHT;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.CHAR_WEIGHT;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.HEIGHT;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.HORI_JUSTIFY;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.TABLE_BORDER2;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.VERT_JUSTIFY;
 
 import java.util.HashSet;
 import java.util.List;
@@ -384,7 +390,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	private void headerSpielerNr(XSpreadsheet sheet) throws GenerateException {
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
-		StringCellValue headerCelVal = StringCellValue.from(sheet, Position.from(pos), "#").setColumnWidth(800).setSpalteHoriJustify(CellHoriJustify.CENTER);
+		CellProperties columnProperties = CellProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerCelVal = StringCellValue.from(sheet, Position.from(pos), "#").addColumnProperties(columnProperties);
 		getSheetHelper().setTextInCell(headerCelVal);
 		headerCelVal.spaltePlusEins();
 

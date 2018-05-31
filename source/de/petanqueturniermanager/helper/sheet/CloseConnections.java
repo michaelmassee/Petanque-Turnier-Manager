@@ -15,7 +15,8 @@ public class CloseConnections {
 	private static final Logger logger = LogManager.getLogger(CloseConnections.class);
 
 	/**
-	 * Close alles !
+	 * TODO <br>
+	 * Close alles ! Funktioniert so nicht ?!?!?
 	 */
 	public static void closeOfficeConnection(XComponentContext xContext) {
 
