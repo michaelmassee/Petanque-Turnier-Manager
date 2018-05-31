@@ -390,29 +390,4 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		this.rowProperties.putAll(this.columnProperties);
 		return (T) this;
 	}
-
-	/**
-	 * verwende setColumnProperties(CellProperties columnProperties)
-	 *
-	 * @return
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	public T setColumnWidth(int setColumnWidth) {
-		this.addColumnProperty(CellProperties.WIDTH, setColumnWidth);
-		return (T) this;
-	}
-
-	/**
-	 * verwende setColumnProperties(CellProperties columnProperties)
-	 *
-	 * @return
-	 */
-	@Deprecated
-	@SuppressWarnings("unchecked")
-	public T setSpalteHoriJustify(CellHoriJustify spalteHoriJustify) {
-		this.addColumnProperty(CellProperties.HORI_JUSTIFY, spalteHoriJustify);
-		return (T) this;
-	}
-
 }
