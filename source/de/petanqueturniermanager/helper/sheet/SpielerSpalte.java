@@ -107,6 +107,9 @@ public class SpielerSpalte {
 	}
 
 	public void formatDaten() throws GenerateException {
+
+		this.sheet.getObject().processBoxinfo("Formatiere Spieler Spalten");
+
 		int letzteDatenZeile = getLetzteDatenZeile();
 		if (letzteDatenZeile < this.ersteDatenZiele) {
 			// keine Daten
@@ -130,6 +133,8 @@ public class SpielerSpalte {
 	}
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
+
+		this.sheet.getObject().processBoxinfo("Spieler Spalten Header");
 
 		CellProperties columnProperties = CellProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue celVal = StringCellValue.from(this.getSheet(), Position.from(this.spielerNrSpalte, this.getErsteDatenZiele() - 1), HEADER_SPIELER_NR)

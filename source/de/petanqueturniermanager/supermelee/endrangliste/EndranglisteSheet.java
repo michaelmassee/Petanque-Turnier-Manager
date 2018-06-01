@@ -4,7 +4,10 @@
 
 package de.petanqueturniermanager.supermelee.endrangliste;
 
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_MINUS_OFFS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -72,7 +75,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(XComponentContext xContext) {
-		super(xContext);
+		super(xContext, "Endrangliste");
 		this.konfigurationSheet = new KonfigurationSheet(xContext);
 		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
 		this.meldeListeSheetNew = new MeldeListeSheet_New(xContext);
@@ -126,6 +129,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {
+
+		processBoxinfo("Formatiere gerade Ungerade Zeilen");
+
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
 		int spielerNrSpalte = this.spielerSpalte.getSpielerNrSpalte();
@@ -185,6 +191,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	private void formatSchlechtesteSpieltagSpalte() throws GenerateException {
+
+		processBoxinfo("Formatiere Streichspieltag");
+
 		int schlechtesteSpielTageSpalte = getSchlechtesteSpielTageSpalte();
 		NumberCellValue numberCellValueSchlechtesteSpielTag = NumberCellValue.from(getSheet(), schlechtesteSpielTageSpalte, ERSTE_DATEN_ZEILE);
 
@@ -231,6 +240,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	private void spielTageEinfuegen() throws GenerateException {
+
+		processBoxinfo("Spieltage Einfuegen");
+
 		// verwende fill down
 		// =WENNNV(SVERWEIS(A4;$'2. Spieltag Rangliste'.$A4:$D1000;4;0);"")
 
@@ -271,6 +283,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	 * @throws GenerateException
 	 */
 	private void updateAnzSpieltageSpalte() throws GenerateException {
+
+		processBoxinfo("Aktualisiere Anzahl Spieltage Spalte");
+
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		int letzteSpieltagLetzteSpalte = ersteSpalteEndsumme - 1;
 		int letzteZeile = getLetzteDatenZeile();
@@ -303,6 +318,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	private void updateEndSummenSpalten() throws GenerateException {
+
+		processBoxinfo("Summen Spalten Aktualisieren");
+
 		List<Integer> spielerNrList = this.spielerSpalte.getSpielerNrList();
 		for (int spielerNr : spielerNrList) {
 			endSummeSpalte(spielerNr);
@@ -352,6 +370,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	}
 
 	private SpielTagNr schlechtesteSpieltag(int spielrNr) throws GenerateException {
+
 		int anzSpieltage = getAnzahlSpieltage();
 		if (anzSpieltage < 2) {
 			return null;

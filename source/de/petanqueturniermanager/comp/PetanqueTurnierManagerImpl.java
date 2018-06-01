@@ -15,6 +15,7 @@ import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
@@ -38,12 +39,13 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 public final class PetanqueTurnierManagerImpl extends WeakBase implements XServiceInfo, XJobExecutor {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierManagerImpl.class);
 
-	private final XComponentContext m_xContext;
+	private final XComponentContext xContext;
 	private static final String m_implementationName = PetanqueTurnierManagerImpl.class.getName();
 	private static final String[] m_serviceNames = { "de.petanqueturniermanager.Turnier" };
 
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
-		this.m_xContext = context;
+		this.xContext = context;
+		ProcessBox.init(context);
 	}
 
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
@@ -87,7 +89,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	public void trigger(String action) {
 		try {
 			logger.info("Trigger " + action);
-
+			ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
 			boolean didHandle = handleSuperMelee(action);
 
 			if (!didHandle) {
@@ -99,9 +101,11 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 				}
 			}
 			if (!didHandle) {
+				ProcessBox.from().fehler("ungueltige Aktion " + action);
 				logger.error("Unknown action: " + action);
 			}
 		} catch (Exception e) {
+			ProcessBox.from().fehler(e.getMessage());
 			logger.error(e.getMessage(), e);
 		}
 	}
@@ -112,58 +116,57 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		switch (action) {
 		// ------------------------------
 		case "neue_meldeliste":
-			new MeldeListeSheet_New(this.m_xContext).start();
+			new MeldeListeSheet_New(this.xContext).start();
 			break;
 		case "meldeliste":
-			new MeldeListeSheet_Update(this.m_xContext).start();
+			new MeldeListeSheet_Update(this.xContext).start();
 			break;
 		case "anmeldungen":
-			new AnmeldungenSheet(this.m_xContext).start();
+			new AnmeldungenSheet(this.xContext).start();
 			break;
 		case "teilnehmer":
-			new TielnehmerSheet(this.m_xContext).start();
+			new TielnehmerSheet(this.xContext).start();
 			break;
 		case "naechste_spieltag":
-			new MeldeListeSheet_NeuerSpieltag(this.m_xContext).start();
+			new MeldeListeSheet_NeuerSpieltag(this.xContext).start();
 			break;
 		case "meldeliste_testdaten":
-			new MeldeListeSheet_TestDaten(this.m_xContext).start();
+			new MeldeListeSheet_TestDaten(this.xContext).start();
 			break;
 		case "supermelee_teampaarungen":
-			new SupermeleeTeamPaarungenSheet(this.m_xContext).start();
+			new SupermeleeTeamPaarungenSheet(this.xContext).start();
 			break;
 		// ------------------------------
 		case "aktuelle_spielrunde":
-			new SpielrundeSheet_Update(this.m_xContext).start();
+			new SpielrundeSheet_Update(this.xContext).start();
 			break;
 		case "naechste_spielrunde":
-			new SpielrundeSheet_Naechste(this.m_xContext).start();
+			new SpielrundeSheet_Naechste(this.xContext).start();
 			break;
 		case "spielrunden_testdaten":
-			new SpielrundeSheet_TestDaten(this.m_xContext).start();
+			new SpielrundeSheet_TestDaten(this.xContext).start();
 			break;
 		// ------------------------------
 		case "spieltag_rangliste":
-			new SpieltagRanglisteSheet(this.m_xContext).start();
+			new SpieltagRanglisteSheet(this.xContext).start();
 			break;
 		case "spieltag_rangliste_sort":
-			new SpieltagRanglisteSheetSortOnly(this.m_xContext).start();
+			new SpieltagRanglisteSheetSortOnly(this.xContext).start();
 			break;
 		case "SpieltagRanglisteSheet_TestDaten":
-			new SpieltagRanglisteSheet_TestDaten(this.m_xContext).start();
+			new SpieltagRanglisteSheet_TestDaten(this.xContext).start();
 			break;
 		// ------------------------------
 		case "supermelee_endrangliste":
-			new EndranglisteSheet(this.m_xContext).start();
+			new EndranglisteSheet(this.xContext).start();
 			break;
 		// ------------------------------
 		case "konfiguration":
-			new KonfigurationSheet(this.m_xContext).start();
+			new KonfigurationSheet(this.xContext).start();
 			break;
 		default:
 			didHandle = false;
 		}
 		return didHandle;
 	}
-
 }

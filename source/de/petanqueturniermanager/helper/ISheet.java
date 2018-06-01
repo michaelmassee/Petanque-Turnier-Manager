@@ -22,4 +22,6 @@ public interface ISheet {
 
 	public XComponentContext getxContext();
 
+	public void processBoxinfo(String infoMsg);
+
 }

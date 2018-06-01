@@ -58,8 +58,9 @@ public class NewSheet {
 		XSpreadsheet sheet = this.sheetHelper.findByName(this.sheetName);
 		this.didCreate = false;
 		if (sheet != null) {
-			MessageBoxResult result = MessageBox.from(xContext, MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle Tabelle")
-					.message("Tabelle '" + this.sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(force).show();
+			this.sheetHelper.setActiveSheet(sheet);
+			MessageBoxResult result = MessageBox.from(xContext, MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + this.sheetName)
+					.message("'" + this.sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(force).show();
 			if (MessageBoxResult.YES != result) {
 				return false;
 			}

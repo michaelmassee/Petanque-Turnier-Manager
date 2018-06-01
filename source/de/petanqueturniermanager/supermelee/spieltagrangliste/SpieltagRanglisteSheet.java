@@ -72,7 +72,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	private SpielTagNr spieltagNr = null;
 
 	public SpieltagRanglisteSheet(XComponentContext xContext) {
-		super(xContext);
+		super(xContext, "Spieltag Rangliste");
 		this.meldeliste = new MeldeListeSheet_Update(xContext);
 		this.konfigurationSheet = new KonfigurationSheet(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste, Formation.MELEE);
@@ -117,6 +117,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {
+
+		processBoxinfo("Summenspalten Aktualisieren");
+
 		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 		if (anzSpielRunden < 1) {
 			return;
@@ -177,6 +180,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	private void ergebnisseFormulaEinfuegen() throws GenerateException {
+
+		processBoxinfo("Spieltag(e) Ergebnisse Einfuegen");
+
 		XSpreadsheet sheet = getSheet();
 		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 

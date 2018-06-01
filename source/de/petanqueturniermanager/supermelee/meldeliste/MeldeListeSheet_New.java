@@ -12,6 +12,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class MeldeListeSheet_New extends AbstractSupermeleeMeldeListeSheet {
@@ -27,7 +28,7 @@ public class MeldeListeSheet_New extends AbstractSupermeleeMeldeListeSheet {
 		if (NewSheet.from(getxContext(), SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create()) {
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
-			getKonfigurationSheet().setAktiveSpielRunde(1);
+			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
 			upDateSheet();
 		}
 	}

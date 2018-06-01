@@ -11,6 +11,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeSheet {
@@ -27,9 +28,9 @@ public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeS
 
 	public void naechsteSpieltag() throws GenerateException {
 		int anzSpieltage = countAnzSpieltageInMeldeliste();
-		getKonfigurationSheet().setAktiveSpieltag(new SpielTagNr(anzSpieltage + 1));
+		getKonfigurationSheet().setAktiveSpieltag(SpielTagNr.from(anzSpieltage + 1));
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
-		getKonfigurationSheet().setAktiveSpielRunde(1);
+		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
 
 		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), ERSTE_HEADER_ZEILE, aktuelleSpieltagSpalte(), 999);
 		getSheetHelper().clearRange(getSheet(), cleanUpRange);

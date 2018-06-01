@@ -3,7 +3,7 @@
 **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,8 +33,8 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 	protected void doRun() throws GenerateException {
 
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
-		int aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
-		this.setSpielRundeNr(SpielRundeNr.from(aktuelleSpielrunde));
+		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
+		this.setSpielRundeNr(aktuelleSpielrunde);
 		this.getMeldeListe().upDateSheet();
 		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 

@@ -7,6 +7,7 @@ package de.petanqueturniermanager.supermelee;
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 public class SpielTagNr {
 	private int nr;
@@ -24,6 +25,7 @@ public class SpielTagNr {
 			throw new GenerateException("Ungültige Spieltagnummer" + newNr);
 		}
 		this.nr = newNr;
+		ProcessBox.from().spielTag(this);
 		return this;
 	}
 
