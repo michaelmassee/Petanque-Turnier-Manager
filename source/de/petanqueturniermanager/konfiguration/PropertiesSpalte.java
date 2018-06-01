@@ -25,6 +25,8 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
@@ -302,20 +304,20 @@ public class PropertiesSpalte {
 		return null;
 	}
 
-	public int getAktiveSpieltag() throws GenerateException {
-		return readIntProperty(KONFIG_PROP_NAME_SPIELTAG);
+	public SpielTagNr getAktiveSpieltag() throws GenerateException {
+		return SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
 	}
 
-	public void setAktiveSpieltag(int spieltag) throws GenerateException {
-		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag);
+	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
 	}
 
-	public int getAktiveSpielRunde() throws GenerateException {
-		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE);
+	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
 	}
 
-	public void setAktiveSpielRunde(int spielrunde) throws GenerateException {
-		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde);
+	public void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
+		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {

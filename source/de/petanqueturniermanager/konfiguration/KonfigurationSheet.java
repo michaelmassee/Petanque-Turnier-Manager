@@ -14,6 +14,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
@@ -56,21 +57,21 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 
 	@Override
 	public SpielTagNr getAktiveSpieltag() throws GenerateException {
-		return new SpielTagNr(this.propertiesSpalte.getAktiveSpieltag());
+		return this.propertiesSpalte.getAktiveSpieltag();
 	}
 
 	@Override
 	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
-		this.propertiesSpalte.setAktiveSpieltag(spieltag.getNr());
+		this.propertiesSpalte.setAktiveSpieltag(spieltag);
 	}
 
 	@Override
-	public int getAktiveSpielRunde() throws GenerateException {
+	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		return this.propertiesSpalte.getAktiveSpielRunde();
 	}
 
 	@Override
-	public void setAktiveSpielRunde(int neueSpielrunde) throws GenerateException {
+	public void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
 		this.propertiesSpalte.setAktiveSpielRunde(neueSpielrunde);
 	}
 

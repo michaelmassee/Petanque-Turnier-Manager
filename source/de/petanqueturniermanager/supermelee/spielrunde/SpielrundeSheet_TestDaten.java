@@ -90,7 +90,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
 			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr - 1, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
-			neueSpielrunde(meldungen, spielrundeNr, true);
+			neueSpielrunde(meldungen, SpielRundeNr.from(spielrundeNr), true);
 
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen
@@ -122,7 +122,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		this.spieltagRanglisteSheet.generate();
 
 		this.getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
-		this.getKonfigurationSheet().setAktiveSpielRunde(maxspielrundeNr);
+		this.getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));
 		this.spieltagRanglisteSheet.isErrorInSheet();
 	}
 }

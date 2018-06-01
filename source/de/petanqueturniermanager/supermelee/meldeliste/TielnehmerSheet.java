@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,7 +47,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	private SpielTagNr spielTagNr = null;
 
 	public TielnehmerSheet(XComponentContext xContext) {
-		super(xContext);
+		super(xContext, "Teilnehmer");
 		this.meldeliste = new MeldeListeSheet_Update(xContext);
 		this.konfigurationSheet = new KonfigurationSheet(xContext);
 	}
@@ -77,6 +77,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		// meldeliste nach namen sortieren !
 		this.meldeliste.doSort(this.meldeliste.getSpielerNameErsteSpalte(), true);
 
+		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". Meldungen einlesen");
 		Meldungen aktiveUndAusgesetztMeldungen = this.meldeliste.getAktiveUndAusgesetztMeldungen();
 
 		CellProperties celPropNr = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
@@ -91,6 +92,8 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		int anzSpielerinSpalte = 40;
 		int lfndNr = 1;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
+
+		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". " + aktiveUndAusgesetztMeldungen.getSpielerList().size() + " Meldungen einfügen");
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungen.getSpielerList()) {
 
@@ -129,7 +132,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		return this.spielTagNr;
 	}
 
-	public void setSpielTagNr(SpielTagNr spielTag) {
+	public void setSpielTagNr(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag, "spielTagNr == null");
 		this.spielTagNr = spielTag;
 	}

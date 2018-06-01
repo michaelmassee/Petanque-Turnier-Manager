@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -80,7 +80,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	private SpielTagNr spielTag = null;
 
 	public AbstractSupermeleeMeldeListeSheet(XComponentContext xContext) {
-		super(xContext);
+		super(xContext, "Meldeliste");
 		this.konfigurationSheet = newKonfigurationSheet(xContext);
 		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.MELEE);
 		this.supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
@@ -133,6 +133,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	public void upDateSheet() throws GenerateException {
+		processBoxinfo("Aktualisiere Meldungen");
+
 		testDoppelteDaten();
 
 		XSpreadsheet sheet = getSheet();
@@ -190,6 +192,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 	protected void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
+
+		processBoxinfo("Formatiere Spieltagspalte");
+
 		XSpreadsheet sheet = getSheet();
 		int hederBackColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
 		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(2000);
@@ -218,6 +223,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	void formatDaten() throws GenerateException {
+
+		processBoxinfo("Formatiere Daten Spalten");
+
 		int letzteDatenZeile = this.spielerSpalte.getLetzteDatenZeile();
 
 		if (letzteDatenZeile < MIN_ANZAHL_SPIELER_ZEILEN) {
@@ -314,6 +322,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
+
+		processBoxinfo("Zeilen ohne Spielernamen entfernen");
+
 		doSort(this.spielerSpalte.getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = this.spielerSpalte.neachsteFreieDatenZeile();
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
@@ -345,6 +356,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	 * @throws GenerateException wenn doppelt daten
 	 */
 	public void testDoppelteDaten() throws GenerateException {
+		processBoxinfo("Prüfe Doppelte Daten in Meldungen");
 		XSpreadsheet xSheet = getSheet();
 
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
@@ -400,6 +412,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	public void updateSpielerNr() throws GenerateException {
+
+		processBoxinfo("Aktualisiere Spieler Nummer");
+
 		int letzteSpielZeile = this.spielerSpalte.letzteZeileMitSpielerName();
 		if (letzteSpielZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
@@ -483,6 +498,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	}
 
 	public void updateSpieltageSummenSpalten() throws GenerateException {
+
+		processBoxinfo("Aktualisiere Summen Spalten");
+
 		int letzteDatenZeile = this.spielerSpalte.getLetzteDatenZeile();
 
 		if (letzteDatenZeile < MIN_ANZAHL_SPIELER_ZEILEN) {

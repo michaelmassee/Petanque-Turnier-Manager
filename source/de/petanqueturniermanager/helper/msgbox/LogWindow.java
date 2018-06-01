@@ -32,16 +32,14 @@ public class LogWindow {
 			com.sun.star.awt.WindowDescriptor aDescriptor = new com.sun.star.awt.WindowDescriptor();
 			aDescriptor.WindowServiceName = "infobox";
 			aDescriptor.Bounds = new com.sun.star.awt.Rectangle(0, 0, 300, 200);
-			aDescriptor.WindowAttributes = com.sun.star.awt.WindowAttribute.BORDER
-					| com.sun.star.awt.WindowAttribute.MOVEABLE | com.sun.star.awt.WindowAttribute.CLOSEABLE;
+			aDescriptor.WindowAttributes = com.sun.star.awt.WindowAttribute.BORDER | com.sun.star.awt.WindowAttribute.MOVEABLE | com.sun.star.awt.WindowAttribute.CLOSEABLE;
 			aDescriptor.Type = com.sun.star.awt.WindowClass.MODALTOP;
 			aDescriptor.ParentIndex = 1;
 			aDescriptor.Parent = UnoRuntime.queryInterface(com.sun.star.awt.XWindowPeer.class, xParent);
 			//
 			// // create the info box window
 			com.sun.star.awt.XWindowPeer xPeer = xKit.createWindow(aDescriptor);
-			com.sun.star.awt.XMessageBox xInfoBox = UnoRuntime.queryInterface(com.sun.star.awt.XMessageBox.class,
-					xPeer);
+			com.sun.star.awt.XMessageBox xInfoBox = UnoRuntime.queryInterface(com.sun.star.awt.XMessageBox.class, xPeer);
 			if (xInfoBox == null) {
 				return;
 			}

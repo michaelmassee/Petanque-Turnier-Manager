@@ -18,6 +18,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
@@ -28,6 +29,13 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	private final SheetHelper sheetHelper;
 	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
 	private static SheetRunner runner = null;
+
+	private String logPrefix = null;
+
+	public SheetRunner(XComponentContext xContext, String logPrefix) {
+		this(xContext);
+		this.logPrefix = logPrefix;
+	}
 
 	public SheetRunner(XComponentContext xContext) {
 		checkNotNull(xContext);
@@ -70,9 +78,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			} catch (Exception e) {
 				getLogger().error(e.getMessage(), e);
 			} finally {
-				this.getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
-				SheetRunner.isRunning = false;
+				SheetRunner.isRunning = false; // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
+				ProcessBox.from().visible().info("**FERTIG**");
+				this.getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 				// TODO
 				// Funktioniert so nicht
 				// CloseConnections.closeOfficeConnection(getxContext());
@@ -108,6 +117,14 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	public XCalculatable getxCalculatable() {
 		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(this.getxContext());
 		return UnoRuntime.queryInterface(XCalculatable.class, doc);
+	}
+
+	public static boolean isRunning() {
+		return isRunning;
+	}
+
+	public void processBoxinfo(String infoMsg) {
+		ProcessBox.from().prefix(this.logPrefix).info(infoMsg);
 	}
 
 }

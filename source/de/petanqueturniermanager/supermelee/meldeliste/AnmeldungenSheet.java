@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +43,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	private SpielTagNr spielTag = null;
 
 	public AnmeldungenSheet(XComponentContext xContext) {
-		super(xContext);
+		super(xContext, "Anmeldungen");
 		this.meldeliste = new MeldeListeSheet_Update(xContext);
 		this.konfigurationSheet = new KonfigurationSheet(xContext);
 	}
@@ -69,6 +69,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		// meldeliste nach namen sortieren !
 		this.meldeliste.doSort(this.meldeliste.getSpielerNameErsteSpalte(), true);
 
+		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". Meldungen einlesen");
 		Meldungen alleMeldungen = this.meldeliste.getAlleMeldungen();
 
 		CellProperties celPropNr = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
@@ -87,6 +88,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		int lfndNr = 1;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName, chkBox);
 
+		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". " + alleMeldungen.getSpielerList().size() + " Spieler einfügen");
 		for (Spieler spieler : alleMeldungen.getSpielerList()) {
 
 			spierNrVal.setValue((double) spieler.getNr());

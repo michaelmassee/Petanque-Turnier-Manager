@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.msgbox;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,6 +70,10 @@ public class MessageBox extends AbstractMessageBox {
 				return MessageBoxResult.OK;
 			}
 		}
+
+		// Log window ausblenden
+		ProcessBox.from().hide();
+
 		MessageBoxResult result = null;
 		XMessageBox xMessageBox = null;
 
@@ -97,6 +101,8 @@ public class MessageBox extends AbstractMessageBox {
 			short msgBoxresult = xMessageBox.execute();
 			result = MessageBoxResult.findResult(msgBoxresult);
 		}
+
+		ProcessBox.from().visible();
 
 		return result;
 	}

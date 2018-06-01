@@ -37,6 +37,9 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 	}
 
 	public void updateHeader() throws GenerateException {
+
+		ranglisteWkRef.getObject().processBoxinfo("Formatiere Header");
+
 		ISpielTagRangliste rangliste = this.ranglisteWkRef.getObject();
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
@@ -71,6 +74,8 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 	public void formatDaten() throws GenerateException {
 
+		ranglisteWkRef.getObject().processBoxinfo("Formatiere Daten");
+
 		ISpielTagRangliste rangliste = this.ranglisteWkRef.getObject();
 		SpielerSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
 
@@ -81,12 +86,12 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
+		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder();
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
 			Position posPunktePlusStart = Position.from(this.ersteSpielRundeSpalte + ((spielRunde - 1) * this.anzSpaltenInSpielrunde), ersteDatenZeile);
 			Position posPunkteMinusEnd = Position.from(posPunktePlusStart).spaltePlusEins().zeile(letzteDatenZeile);
 			RangePosition datenRange = RangePosition.from(posPunktePlusStart, posPunkteMinusEnd);
-			TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder();
 			this.getSheetHelper().setPropertyInRange(rangliste.getSheet(), datenRange, TABLE_BORDER2, border);
 		}
 
@@ -95,6 +100,9 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 	@Override
 	public StringCellValue addFooter() throws GenerateException {
+
+		ranglisteWkRef.getObject().processBoxinfo("Fußzeile einfügen");
+
 		StringCellValue stringVal = super.addFooter();
 
 		IPropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();

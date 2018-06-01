@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.konfiguration;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
@@ -15,9 +16,9 @@ public interface IPropertiesSpalte {
 
 	void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException;
 
-	int getAktiveSpielRunde() throws GenerateException;
+	SpielRundeNr getAktiveSpielRunde() throws GenerateException;
 
-	void setAktiveSpielRunde(int neueSpielrunde) throws GenerateException;
+	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException;
 
 	Integer getSpielRundeNeuAuslosenAb() throws GenerateException;
 
