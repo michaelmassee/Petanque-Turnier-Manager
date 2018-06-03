@@ -94,8 +94,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
+			ProcessBox.from().info("Verarbeitung abgebrochen");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage()).show();
 		} else {
+			ProcessBox.from().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
 			newErrMsgBox().showOk("Fehler", e.getMessage());
 		}

@@ -2,15 +2,28 @@ package de.petanqueturniermanager.helper.msgbox;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -39,8 +52,8 @@ public class ProcessBox {
 	private static final int X_OFFSET = 50;
 	private static final int Y_OFFSET = 50;
 
-	private static final int MIN_HEIGHT = 150;
-	private static final int MIN_WIDTH = 300;
+	private static final int MIN_HEIGHT = 200;
+	private static final int MIN_WIDTH = 500;
 	private static final String TITLE = "Pétanque Turnier Manager";
 	private static ProcessBox processBox = null;
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -78,17 +91,38 @@ public class ProcessBox {
 
 	private void initBox() {
 		frame.setLayout(new GridBagLayout());
-
-		// 2 Info felder Spieltag, Spielrunde
-		initSpieltagUndSpielrundInfo(0);
+		setIcons();
 
 		// log
-		initLog(1);
+		initLog(0);
+		// 2 Info felder Spieltag, Spielrunde
+		initSpieltagUndSpielrundInfo(1);
 
 		frame.setPreferredSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 		frame.setSize(MIN_WIDTH, MIN_HEIGHT);
 		frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
 		moveInsideTopWindow();
+	}
+
+	private void setIcons() {
+
+		// icons laden
+		// https://www.flaticon.com/free-icon/podium_889537#term=winner%20podium&page=1&position=11
+
+		try {
+			BufferedImage img16 = ImageIO.read(this.getClass().getResourceAsStream("podium16x16.png"));
+			BufferedImage img24 = ImageIO.read(this.getClass().getResourceAsStream("podium24x24.png"));
+			BufferedImage img32 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
+			BufferedImage img64 = ImageIO.read(this.getClass().getResourceAsStream("podium64x64.png"));
+			BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium128x128.png"));
+			BufferedImage img256 = ImageIO.read(this.getClass().getResourceAsStream("podium256x256.png"));
+			BufferedImage img512 = ImageIO.read(this.getClass().getResourceAsStream("podium512x512.png"));
+			Image[] images = { img16, img24, img32, img64, img128, img256, img512 };
+			frame.setIconImages(java.util.Arrays.asList(images));
+		} catch (IOException e) {
+			// ignore
+		}
+
 	}
 
 	private JTextField newNumberJTextField() {
@@ -102,18 +136,59 @@ public class ProcessBox {
 	private void initSpieltagUndSpielrundInfo(int startZeile) {
 
 		// -----------------------------
-		// Header Panel
-		JPanel panel = new JPanel(new FlowLayout());
+		// Footer Panel
+		JPanel panel = new JPanel(new GridBagLayout()) {
+			@Override
+			protected void paintComponent(Graphics g) {
+				super.paintComponent(g);
+				Graphics2D g2d = (Graphics2D) g;
+				g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+				int w = getWidth();
+				int h = getHeight();
+				Color color1 = new Color(Integer.valueOf("eaf4ff", 16));
+				Color color2 = new Color(Integer.valueOf("d6e9ff", 16));
+				GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
+				g2d.setPaint(gp);
+				g2d.fillRect(0, 0, w, h);
+			}
+		};
+
 		Border raisedbevel = BorderFactory.createRaisedBevelBorder();
 		panel.setBorder(raisedbevel);
-		GridBagConstraints gridBagConstraints = new GridBagConstraints();
-		gridBagConstraints.gridy = startZeile; // zeile
-		gridBagConstraints.gridx = 0; // spalte
-		gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
-		gridBagConstraints.weightx = 0.5;
-		gridBagConstraints.insets = new Insets(5, 5, 0, 5);
-		frame.add(panel, gridBagConstraints);
+		{
+			GridBagConstraints gridBagConstraintsFrame = new GridBagConstraints();
+			gridBagConstraintsFrame.gridy = startZeile; // zeile
+			gridBagConstraintsFrame.gridx = 0; // spalte
+			gridBagConstraintsFrame.fill = GridBagConstraints.HORIZONTAL;
+			gridBagConstraintsFrame.weightx = 0.5;
+			gridBagConstraintsFrame.insets = new Insets(0, 5, 5, 5);
+			frame.add(panel, gridBagConstraintsFrame);
+		}
 		// -----------------------------
+
+		// ------------- image
+		GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
+		gridBagConstraintsPanel.gridy = 0; // zeile
+		gridBagConstraintsPanel.gridx = 0; // spalte
+
+		try {
+			BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
+			ImageIcon imageIcon = new ImageIcon(img128);
+			JLabel imageLabel = new JLabel(imageIcon);
+			imageLabel.setToolTipText("Pétanque Turnier Manager");
+			gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 30);
+			gridBagConstraintsPanel.anchor = GridBagConstraints.WEST;
+			panel.add(imageLabel, gridBagConstraintsPanel);
+			gridBagConstraintsPanel.gridx++;
+		} catch (IOException e1) {
+		}
+
+		int gridx = gridBagConstraintsPanel.gridx;
+
+		gridBagConstraintsPanel = new GridBagConstraints();
+		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 0);
+		gridBagConstraintsPanel.gridy = 0; // zeile
+		gridBagConstraintsPanel.gridx = gridx;
 
 		spieltagText = newNumberJTextField();
 		spielrundeText = newNumberJTextField();
@@ -123,10 +198,29 @@ public class ProcessBox {
 		JLabel spielrundeLabel = new JLabel("Spielrunde:");
 		spielrundeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-		panel.add(spieltagLabel);
-		panel.add(spieltagText);
-		panel.add(spielrundeLabel);
-		panel.add(spielrundeText);
+		panel.add(spieltagLabel, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++; // spalte
+		panel.add(spieltagText, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++; // spalte
+		panel.add(spielrundeLabel, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++; // spalte
+		panel.add(spielrundeText, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++; // spalte
+
+		JButton cancel = new JButton("Stop");
+		cancel.setToolTipText("Stop verarbeitung");
+		cancel.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SheetRunner.cancelRunner();
+			}
+		});
+
+		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
+		gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
+		gridBagConstraintsPanel.weightx = 0.5;
+		panel.add(cancel, gridBagConstraintsPanel);
 	}
 
 	private void initLog(int startZeile) {
@@ -178,12 +272,12 @@ public class ProcessBox {
 		return this;
 	}
 
-	public ProcessBox fehler(String logMsg) {
+	public synchronized ProcessBox fehler(String logMsg) {
 		info("Fehler: " + logMsg);
 		return this;
 	}
 
-	public ProcessBox info(String logMsg) {
+	public synchronized ProcessBox info(String logMsg) {
 		checkNotNull(logOut);
 		checkNotNull(logMsg);
 
@@ -210,6 +304,11 @@ public class ProcessBox {
 		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
 		XWindow containerWindow = currentFrame.getContainerWindow();
 		Rectangle posSize = containerWindow.getPosSize();
+
+		int state = frame.getExtendedState();
+		if (Frame.NORMAL != state) {
+			frame.setExtendedState(Frame.NORMAL);
+		}
 
 		int newXPos = frame.getX();
 		int newYPos = frame.getY();
