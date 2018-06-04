@@ -4,7 +4,6 @@
 
 package de.petanqueturniermanager.exception;
 
-@SuppressWarnings("serial")
 public class GenerateException extends Exception {
 
 	public GenerateException(String msg) {

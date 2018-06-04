@@ -250,22 +250,47 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
 		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
-		RangePosition nrNameSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, setzPositionSpalte(), letzteDatenZeile);
-		ConditionalFormatHelper.from(this, nrNameSetPosRange).clear().formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, nrNameSetPosRange).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+		// Spieler Nummer
+		// -----------------------------------------------
+		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
+		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		ConditionalFormatHelper.from(this, nrSetPosRange).clear().formulaIsText().styleIsFehler().applyNew().formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyNew().formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow()
+				.style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+		// -----------------------------------------------
 
-		// ConditionalFormat
+		// -----------------------------------------------
+		// Spieler Namen
+		// -----------------------------------------------
+		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
+		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
+				+ ")>1";
+		ConditionalFormatHelper.from(this, nameSetPosRange).clear().formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew()
+				.formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsEvenRow()
+				.style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+		// -----------------------------------------------
+
+		// -----------------------------------------------
+		// setzposition spalte
+		// -----------------------------------------------
+		RangePosition setzpositionRangePos = RangePosition.from(setzPositionSpalte(), ERSTE_DATEN_ZEILE, setzPositionSpalte(), letzteDatenZeile);
+		ConditionalFormatHelper.from(this, setzpositionRangePos).clear().formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().apply();
+		ConditionalFormatHelper.from(this, setzpositionRangePos).formulaIsText().styleIsFehler().apply();
+		// reihenfolge beachten
+		ConditionalFormatHelper.from(this, setzpositionRangePos).formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, setzpositionRangePos).formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+
+		// -----------------------------------------------
+		// Spieltag spalten
 		// prüfe wenn <0 und > 2
 		// ------------------------------
 		RangePosition spieltageRangePos = RangePosition.from(ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, spieltageRangePos).clear().formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().apply();
 		// test if Text mit FORMULA
-		String formula = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
-		ConditionalFormatHelper.from(this, spieltageRangePos).formula1(formula).operator(ConditionOperator.FORMULA).styleIsFehler().apply();
+		ConditionalFormatHelper.from(this, spieltageRangePos).formulaIsText().styleIsFehler().apply();
 		// reihenfolge beachten
-		ConditionalFormatHelper.from(this, spieltageRangePos).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, spieltageRangePos).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
-
+		ConditionalFormatHelper.from(this, spieltageRangePos).formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, spieltageRangePos).formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
 	}
 
 	/**

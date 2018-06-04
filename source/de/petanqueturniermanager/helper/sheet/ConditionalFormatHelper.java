@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.PropertyVetoException;
@@ -63,13 +63,21 @@ public class ConditionalFormatHelper {
 		return this;
 	}
 
+	public ConditionalFormatHelper formulaIsText() {
+		this.formula1 = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
+		this.conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
 	public ConditionalFormatHelper formulaIsEvenRow() {
 		this.formula1 = FORMULA_ISEVEN_ROW;
+		this.conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
 
 	public ConditionalFormatHelper formulaIsOddRow() {
 		this.formula1 = FORMULA_ISODD_ROW;
+		this.conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
 
@@ -101,6 +109,30 @@ public class ConditionalFormatHelper {
 		this.styleName = cellStyleDef.getName();
 		return this;
 	}
+
+	/**
+	 * Formatierung anwenden und properties auf default
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
+
+	public ConditionalFormatHelper applyNew() throws GenerateException {
+		apply();
+		this.doClear = false;
+		this.conditionOperator = null;
+		this.formula1 = null;
+		this.formula2 = null;
+		this.styleName = null;
+		return this;
+	}
+
+	/**
+	 * Formatierung anwenden
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
 
 	public ConditionalFormatHelper apply() throws GenerateException {
 		checkNotNull(this.conditionOperator);
