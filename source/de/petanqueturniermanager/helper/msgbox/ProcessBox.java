@@ -22,7 +22,6 @@ import java.util.Date;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -167,28 +166,27 @@ public class ProcessBox {
 		// -----------------------------
 
 		// ------------- image
+		// GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
+		// gridBagConstraintsPanel.gridy = 0; // zeile
+		// gridBagConstraintsPanel.gridx = 0; // spalte
+
+		// try {
+		// BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
+		// ImageIcon imageIcon = new ImageIcon(img128);
+		// JLabel imageLabel = new JLabel(imageIcon);
+		// imageLabel.setToolTipText("Pétanque Turnier Manager");
+		// gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 30);
+		// gridBagConstraintsPanel.anchor = GridBagConstraints.WEST;
+		// panel.add(imageLabel, gridBagConstraintsPanel);
+		// gridBagConstraintsPanel.gridx++;
+		// } catch (IOException e1) {
+		// }
+		// int gridx = gridBagConstraintsPanel.gridx;
+
 		GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
-		gridBagConstraintsPanel.gridy = 0; // zeile
-		gridBagConstraintsPanel.gridx = 0; // spalte
-
-		try {
-			BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
-			ImageIcon imageIcon = new ImageIcon(img128);
-			JLabel imageLabel = new JLabel(imageIcon);
-			imageLabel.setToolTipText("Pétanque Turnier Manager");
-			gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 30);
-			gridBagConstraintsPanel.anchor = GridBagConstraints.WEST;
-			panel.add(imageLabel, gridBagConstraintsPanel);
-			gridBagConstraintsPanel.gridx++;
-		} catch (IOException e1) {
-		}
-
-		int gridx = gridBagConstraintsPanel.gridx;
-
-		gridBagConstraintsPanel = new GridBagConstraints();
 		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 0);
 		gridBagConstraintsPanel.gridy = 0; // zeile
-		gridBagConstraintsPanel.gridx = gridx;
+		gridBagConstraintsPanel.gridx = 0;
 
 		spieltagText = newNumberJTextField();
 		spielrundeText = newNumberJTextField();
