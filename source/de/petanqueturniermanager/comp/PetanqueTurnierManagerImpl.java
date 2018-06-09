@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
@@ -29,7 +30,7 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
-import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetSortOnly;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_SortOnly;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
 
 // Jobs
@@ -155,7 +156,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			new SpieltagRanglisteSheet(this.xContext).start();
 			break;
 		case "spieltag_rangliste_sort":
-			new SpieltagRanglisteSheetSortOnly(this.xContext).start();
+			new SpieltagRanglisteSheet_SortOnly(this.xContext).start();
 			break;
 		case "SpieltagRanglisteSheet_TestDaten":
 			new SpieltagRanglisteSheet_TestDaten(this.xContext).start();
@@ -163,6 +164,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		// ------------------------------
 		case "supermelee_endrangliste":
 			new EndranglisteSheet(this.xContext).start();
+			break;
+		case "supermelee_endrangliste_sort":
+			new EndranglisteSheet_Sort(this.xContext).start();
 			break;
 		// ------------------------------
 		case "konfiguration":

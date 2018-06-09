@@ -255,9 +255,15 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		// -----------------------------------------------
 		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
 		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nrSetPosRange).clear().formulaIsText().styleIsFehler().applyNew().formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyNew().formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow()
-				.style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
+		// ------------------------------
+				formulaIsText().styleIsFehler().applyNew().
+				// ------------------------------
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				// ------------------------------
+				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -266,18 +272,28 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
 		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
 				+ ")>1";
-		ConditionalFormatHelper.from(this, nameSetPosRange).clear().formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew()
-				.formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsEvenRow()
-				.style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
+		// ------------------------------
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				// ------------------------------
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
 		// setzposition spalte
 		// -----------------------------------------------
 		RangePosition setzpositionRangePos = RangePosition.from(setzPositionSpalte(), ERSTE_DATEN_ZEILE, setzPositionSpalte(), letzteDatenZeile);
-		ConditionalFormatHelper.from(this, setzpositionRangePos).clear().formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew()
-				.formulaIsText().styleIsFehler().applyNew().formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow()
-				.style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+		ConditionalFormatHelper.from(this, setzpositionRangePos).clear().
+		// ------------------------------
+				formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsText().styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				// ------------------------------
+				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
 
 		// -----------------------------------------------
 		// Spieltag spalten
@@ -286,9 +302,15 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		// reihenfolge beachten
 		// ------------------------------
 		RangePosition spieltageRangePos = RangePosition.from(ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(), letzteDatenZeile);
-		ConditionalFormatHelper.from(this, spieltageRangePos).clear().formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew().formulaIsText()
-				.styleIsFehler().applyNew().formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow()
-				.style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+		ConditionalFormatHelper.from(this, spieltageRangePos).clear().
+		// ------------------------------
+				formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsText().styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				// ------------------------------
+				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
 	}
 
 	/**
@@ -425,7 +447,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
 					// RED Color
 					this.getSheetHelper().setTextInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
-					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste");
+					throw new GenerateException(
+							"Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste. Zeile:" + spielerZeilecntr);
 				} else {
 					spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 				}

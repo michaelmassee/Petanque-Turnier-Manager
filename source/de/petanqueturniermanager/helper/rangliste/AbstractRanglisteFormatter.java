@@ -4,9 +4,16 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
-import static com.google.common.base.Preconditions.*;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.*;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.CELL_BACK_COLOR;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.HEIGHT;
+import static de.petanqueturniermanager.helper.cellvalue.CellProperties.TABLE_BORDER2;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_PLUS_OFFS;
 
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
@@ -16,6 +23,7 @@ import com.sun.star.table.TableBorder2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -153,7 +161,7 @@ abstract public class AbstractRanglisteFormatter {
 		}
 	}
 
-	public void formatDatenGeradeUngerade() throws GenerateException {
+	public void formatDatenErrorGeradeUngerade(int validateSpalteNr) throws GenerateException {
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
@@ -172,8 +180,20 @@ abstract public class AbstractRanglisteFormatter {
 		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
 		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
-		ConditionalFormatHelper.from(sheet, datenRange).clear().formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(sheet, datenRange).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+
+		// formula when in validate spalte ein error
+		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
+		// Achtung spalte plus 1 weil A ist nicht 0 sondern 1
+		String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (validateSpalteNr + 1) + "))))>0";
+
+		ConditionalFormatHelper.from(sheet, datenRange).clear().
+		// -----------------------------
+		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
+				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyNew().
+				// ----------------------------------------------
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				// ---------------------
+				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
 	}
 
 	/**

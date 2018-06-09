@@ -111,7 +111,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		this.getRangListeSpalte().upDateRanglisteSpalte();
 		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
 		this.ranglisteFormatter.formatDaten();
-		this.ranglisteFormatter.formatDatenGeradeUngerade();
+		this.ranglisteFormatter.formatDatenErrorGeradeUngerade(rangListeSorter.validateSpalte());
 		this.getxCalculatable().calculate();
 		this.rangListeSorter.doSort();
 		this.ranglisteFormatter.addFooter();

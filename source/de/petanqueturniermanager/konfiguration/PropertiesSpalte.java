@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
@@ -305,18 +306,24 @@ public class PropertiesSpalte {
 	}
 
 	public SpielTagNr getAktiveSpieltag() throws GenerateException {
-		return SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
+		SpielTagNr spieltag = SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
+		ProcessBox.from().spielTag(spieltag);
+		return spieltag;
 	}
 
 	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+		ProcessBox.from().spielTag(spieltag);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
 	}
 
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
-		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
+		SpielRundeNr spielrunde = SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
+		ProcessBox.from().spielRunde(spielrunde);
+		return spielrunde;
 	}
 
 	public void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
+		ProcessBox.from().spielRunde(spielrunde);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
 	}
 

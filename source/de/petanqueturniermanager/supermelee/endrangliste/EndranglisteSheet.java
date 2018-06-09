@@ -29,6 +29,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeGeradeStyle;
@@ -151,15 +152,25 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
 
-		// Formula fuer streichspieltag
-		// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3);ISTGERADE(ZEILE()))
-		ConditionalFormatHelper.from(this, datenRange).clear().formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA)
-				.style(streichSpieltagHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, datenRange).formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA)
-				.style(streichSpieltagHintergrundFarbeUnGeradeStyle).apply();
+		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
+		// Achtung spalte plus 1 weil A ist nicht 0 sondern 1
+		String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (rangListeSorter.validateSpalte() + 1) + "))))>0";
 
-		ConditionalFormatHelper.from(this, datenRange).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, datenRange).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRange).clear().
+		// -----------------------------
+		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
+				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyNew().
+				// ------------------------
+				// Formula fuer streichspieltag
+				// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3);ISTGERADE(ZEILE()))
+				formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA).style(streichSpieltagHintergrundFarbeGeradeStyle).applyNew().
+				// ---------------------
+				formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA).style(streichSpieltagHintergrundFarbeUnGeradeStyle).applyNew().
+				// --------------------------
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				// ---------------------------
+				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+
 	}
 
 	private String getFormulastreichSpieltag(boolean iseven) throws GenerateException {
@@ -467,6 +478,10 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	@Override
 	public int getManuellSortSpalte() throws GenerateException {
 		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
+	}
+
+	protected RangListeSorter getRangListeSorter() {
+		return rangListeSorter;
 	}
 
 }
