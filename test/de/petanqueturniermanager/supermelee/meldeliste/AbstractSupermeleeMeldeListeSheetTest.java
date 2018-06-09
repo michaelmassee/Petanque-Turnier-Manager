@@ -4,9 +4,12 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +26,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
@@ -37,6 +41,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	XSpreadsheet xSpreadsheetMock;
 	KonfigurationSheet konfigurationSheetMock;
 	ErrorMessageBox errorMessageBoxMock;
+	ProcessBox processBoxMock;
 
 	@Before
 	public void setup() {
@@ -82,9 +87,15 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			public Logger getLogger() {
 				return logger;
 			}
+
+			@Override
+			public void processBoxinfo(String infoMsg) {
+				// do nothing here
+			}
 		};
 
 		PowerMockito.when(this.errorMessageBoxMock.showOk(any(String.class), any(String.class))).thenReturn((short) 1);
+
 	}
 
 	@Test
@@ -103,6 +114,36 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			headerPos.spaltePlusEins();
 		});
 
+	}
+
+	@Test
+	public void testTestDoppelteNamenMitUmlauten() throws Exception {
+
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Müller"), new SpielerNrName(10, "Müller") };
+
+		initReturnSpielerDaten(spielerNrNameList);
+
+		try {
+			this.meldeSheet.testDoppelteDaten();
+			fail("Erwarte GenerateException");
+		} catch (GenerateException exc) {
+			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Namen Müller ist doppelt in der Meldeliste");
+		}
+	}
+
+	@Test
+	public void testTestDoppelteNamenMitZonderZeichenundLeerstellen() throws Exception {
+
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Maja   Biene"), new SpielerNrName(10, "Maja, Biene") };
+
+		initReturnSpielerDaten(spielerNrNameList);
+
+		try {
+			this.meldeSheet.testDoppelteDaten();
+			fail("Erwarte GenerateException");
+		} catch (GenerateException exc) {
+			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Namen Maja, Biene ist doppelt in der Meldeliste");
+		}
 	}
 
 	@Test
@@ -175,6 +216,11 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		verify(this.sheetHelperMock, times(1)).setTextInCell(any(StringCellValue.class));
 	}
 
+	@Test
+	public void testCleanUpSpielerName() throws Exception {
+		String result = meldeSheet.cleanUpSpielerName(" ÄÜö # + ösX  YSDdRfÖßßäslkg .,m..,m  ");
+		assertThat(result).isEqualTo("äüöösxysddrfößßäslkgmm");
+	}
 }
 
 class SpielerNrName {

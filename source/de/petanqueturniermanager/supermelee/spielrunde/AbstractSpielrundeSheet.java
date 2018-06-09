@@ -46,6 +46,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -651,8 +652,9 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		return this.spielTag;
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) {
+	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag);
+		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 
@@ -661,8 +663,9 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		return this.spielRundeNr;
 	}
 
-	public void setSpielRundeNr(SpielRundeNr spielrunde) {
+	public void setSpielRundeNr(SpielRundeNr spielrunde) throws GenerateException {
 		checkNotNull(spielrunde);
+		ProcessBox.from().spielRunde(spielrunde);
 		this.spielRundeNr = spielrunde;
 	}
 }

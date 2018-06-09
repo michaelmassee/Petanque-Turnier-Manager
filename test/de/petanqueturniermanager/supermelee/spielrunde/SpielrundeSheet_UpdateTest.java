@@ -4,8 +4,10 @@
 
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,9 +66,17 @@ public class SpielrundeSheet_UpdateTest {
 			public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, SpielRundeNr spielrunde) {
 				return SpielrundeSheet_UpdateTest.this.xSpreadsheetMock;
 			}
+
+			@Override
+			public SpielTagNr getSpielTag() throws GenerateException {
+				return SpielTagNr.from(1);
+			}
+
+			@Override
+			public SpielRundeNr getSpielRundeNr() throws GenerateException {
+				return SpielRundeNr.from(1);
+			}
 		};
-		this.aktuelleSpielrundeSheet.setSpielTag(SpielTagNr.from(1));
-		this.aktuelleSpielrundeSheet.setSpielRundeNr(SpielRundeNr.from(1));
 	}
 
 	@Test

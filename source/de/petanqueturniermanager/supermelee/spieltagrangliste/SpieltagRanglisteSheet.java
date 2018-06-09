@@ -23,6 +23,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -433,8 +434,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		return this.spieltagNr;
 	}
 
-	public void setSpieltagNr(SpielTagNr spieltagNr) {
+	public void setSpieltagNr(SpielTagNr spieltagNr) throws GenerateException {
 		checkNotNull(spieltagNr);
+		ProcessBox.from().spielTag(spieltagNr);
 		this.spieltagNr = spieltagNr;
 	}
 
