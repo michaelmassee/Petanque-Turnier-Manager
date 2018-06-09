@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -134,6 +135,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 	public void setSpielTagNr(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag, "spielTagNr == null");
+		ProcessBox.from().spielTag(spielTag);
 		this.spielTagNr = spielTag;
 	}
 

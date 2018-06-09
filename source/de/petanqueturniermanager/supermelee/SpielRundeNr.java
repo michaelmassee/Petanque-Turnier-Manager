@@ -7,7 +7,6 @@ package de.petanqueturniermanager.supermelee;
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 public class SpielRundeNr {
 	private int nr;
@@ -25,7 +24,6 @@ public class SpielRundeNr {
 			throw new GenerateException("Ungültige Spielrundenummer" + newNr);
 		}
 		this.nr = newNr;
-		ProcessBox.from().spielRunde(this);
 		return this;
 	}
 

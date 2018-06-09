@@ -4,21 +4,30 @@
 
 package de.petanqueturniermanager.supermelee.spielrunde;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 public class SpielerSpielrundeErgebnis {
 
-	private int spielrunde;
+	private SpielRundeNr spielrunde;
 	private int spielerNr;
 	private Position positionPlusPunkte;
 	private Position positionMinusPunkte;
 	private Position positionSpielerNr;
 	private SpielRundeTeam spielRundeTeam;
 
-	public static SpielerSpielrundeErgebnis from(int spielrunde, int spielerNr, Position positionSpielerNr,
-			int ersteSpalteErgebnisse, SpielRundeTeam spielRundeTeam) {
+	public static SpielerSpielrundeErgebnis from(SpielRundeNr spielrunde, int spielerNr, Position positionSpielerNr, int ersteSpalteErgebnisse, SpielRundeTeam spielRundeTeam) {
+		checkNotNull(spielrunde, "spielrunde == null");
+		checkNotNull(positionSpielerNr, "positionSpielerNr == null");
+		checkNotNull(spielRundeTeam, "spielRundeTeam == null");
+		checkArgument(spielerNr > 0, "spielerNr=%s <1", spielerNr);
+		checkArgument(ersteSpalteErgebnisse > 0, "ersteSpalteErgebnisse=%s <1 ", ersteSpalteErgebnisse);
+
 		SpielerSpielrundeErgebnis erg = new SpielerSpielrundeErgebnis();
 		erg.setSpielrunde(spielrunde);
 		erg.setSpielerNr(spielerNr);
@@ -36,16 +45,18 @@ public class SpielerSpielrundeErgebnis {
 		return erg;
 	}
 
-	public static SpielerSpielrundeErgebnis from(int spielrunde) {
+	public static SpielerSpielrundeErgebnis from(SpielRundeNr spielrunde) {
+		checkNotNull(spielrunde);
 		SpielerSpielrundeErgebnis erg = new SpielerSpielrundeErgebnis();
 		erg.setSpielrunde(spielrunde);
 		return erg;
 	}
 
 	public static SpielerSpielrundeErgebnis from(SpielerSpielrundeErgebnis erg) {
+		checkNotNull(erg);
 		SpielerSpielrundeErgebnis ergNew = new SpielerSpielrundeErgebnis();
 		ergNew.setSpielerNr(erg.getSpielerNr());
-		ergNew.setSpielrunde(erg.getSpielerNr());
+		ergNew.setSpielrunde(erg.getSpielrunde());
 		ergNew.setPositionPlusPunkte(Position.from(erg.getPositionPlusPunkte()));
 		ergNew.setPositionMinusPunkte(Position.from(erg.getPositionMinusPunkte()));
 		ergNew.setPositionSpielerNr(Position.from(erg.getPositionSpielerNr()));
@@ -62,11 +73,11 @@ public class SpielerSpielrundeErgebnis {
 		return this;
 	}
 
-	public int getSpielrunde() {
+	public SpielRundeNr getSpielrunde() {
 		return this.spielrunde;
 	}
 
-	public SpielerSpielrundeErgebnis setSpielrunde(int spielrunde) {
+	public SpielerSpielrundeErgebnis setSpielrunde(SpielRundeNr spielrunde) {
 		this.spielrunde = spielrunde;
 		return this;
 	}

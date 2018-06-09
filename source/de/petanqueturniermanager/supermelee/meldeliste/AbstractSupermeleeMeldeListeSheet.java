@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGer
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -418,19 +419,28 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 			// spieler namen testen
 			// -------------------
 			// Supermelee hat nur ein name spalte
-			spielerName = this.getSheetHelper().getTextFromCell(xSheet, Position.from(this.spielerSpalte.getSpielerNameErsteSpalte(), spielerZeilecntr)); // wir trim
-																																							// gemacht
+			spielerName = this.getSheetHelper().getTextFromCell(xSheet, Position.from(this.spielerSpalte.getSpielerNameErsteSpalte(), spielerZeilecntr)); // wird trim gemacht
 
 			if (StringUtils.isNotEmpty(spielerName)) {
-				if (spielrNamenInSheet.contains(spielerName.toLowerCase())) {
+				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
 					// RED Color
 					this.getSheetHelper().setTextInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
 					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste");
 				} else {
-					spielrNamenInSheet.add(spielerName.toLowerCase());
+					spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 				}
 			}
 		}
+	}
+
+	/**
+	 * für ein vergleich ,.: und leerzeichen entfernen
+	 * 
+	 * @param name
+	 * @return
+	 */
+	String cleanUpSpielerName(String name) {
+		return name.replaceAll("[^a-zA-Z0-9öäüÄÖÜß]+", "").toLowerCase();
 	}
 
 	public void updateSpielerNr() throws GenerateException {
@@ -754,13 +764,14 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		return this.konfigurationSheet;
 	}
 
-	public SpielTagNr getSpielTag() throws GenerateException {
+	public final SpielTagNr getSpielTag() throws GenerateException {
 		checkNotNull(this.spielTag, "spielTag == null");
 		return this.spielTag;
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) {
+	public final void setSpielTag(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag, "spielTag == null");
+		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 

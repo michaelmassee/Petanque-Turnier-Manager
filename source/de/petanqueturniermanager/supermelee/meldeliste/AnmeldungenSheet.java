@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -137,8 +138,9 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		return this.spielTag;
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) {
+	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag);
+		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 

@@ -65,7 +65,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr().getNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
@@ -75,7 +75,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr().getNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
