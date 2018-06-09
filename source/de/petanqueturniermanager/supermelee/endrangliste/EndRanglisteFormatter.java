@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.endrangliste;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.table.CellHoriJustify;
 

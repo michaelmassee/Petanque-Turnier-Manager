@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons"
-	xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<node oor:name="AddonUI">
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
@@ -165,14 +164,33 @@
 								</prop>
 							</node>
 
-
 							<node oor:name="B7" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="B8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?supermelee_endrangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+
+							<node oor:name="B9" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Sort Final Rankinglist</value>
+									<value xml:lang="de">Endrangliste Sortieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?supermelee_endrangliste_sort</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -297,9 +315,8 @@
 
 					<!-- ****************************************************************** -->
 
-					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> 
-						<prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> </prop> <prop 
-						oor:name="Target" oor:type="xs:string"> <value>_self</value> </prop> </node> -->
+					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> <prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> 
+						</prop> <prop oor:name="Target" oor:type="xs:string"> <value>_self</value> </prop> </node> -->
 
 				</node>
 			</node>

@@ -9,9 +9,9 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 
-public class SpieltagRanglisteSheetSortOnly extends SpieltagRanglisteSheet {
+public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 
-	public SpieltagRanglisteSheetSortOnly(XComponentContext xContext) {
+	public SpieltagRanglisteSheet_SortOnly(XComponentContext xContext) {
 		super(xContext);
 	}
 

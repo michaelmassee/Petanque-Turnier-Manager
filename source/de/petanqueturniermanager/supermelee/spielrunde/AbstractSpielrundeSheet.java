@@ -584,8 +584,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle = new SpielrundeHintergrundFarbeGeradeStyle(geradeColor);
 		SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle = new SpielrundeHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
-		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebniss).clear().formulaIsEvenRow().operator(ConditionOperator.FORMULA)
-				.style(spielrundeHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebniss).clear().formulaIsEvenRow().style(spielrundeHintergrundFarbeGeradeStyle).apply();
 		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebniss).formulaIsOddRow().operator(ConditionOperator.FORMULA)
 				.style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
 
@@ -599,16 +598,16 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr).operator(ConditionOperator.FORMULA).style(fehlerStyle).apply();
 
-		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow().style(spielrundeHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow().style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
 
 		// ergebniss spalten mit prüfung auf >=0 <=13
 		ConditionalFormatHelper.from(this, ergbenissRange).clear().formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().apply();
 		// test if Text mit FORMULA
 		String formula = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
 		ConditionalFormatHelper.from(this, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA).styleIsFehler().apply();
-		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow().operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsEvenRow().style(spielrundeHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow().style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
 	}
 
 	protected Position letzteZeile() throws GenerateException {

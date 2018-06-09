@@ -95,7 +95,7 @@ public class RangListeSorter {
 
 	}
 
-	private int validateSpalte() throws GenerateException {
+	public int validateSpalte() throws GenerateException {
 		return getIRangliste().getManuellSortSpalte() + PUNKTE_DIV_OFFS;
 	}
 
