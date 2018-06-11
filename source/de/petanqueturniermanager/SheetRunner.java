@@ -15,7 +15,6 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -61,10 +60,6 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		}
 	}
 
-	protected ErrorMessageBox newErrMsgBox() {
-		return new ErrorMessageBox(getxContext());
-	}
-
 	@Override
 	public final void run() {
 		if (!SheetRunner.isRunning) {
@@ -99,7 +94,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		} else {
 			ProcessBox.from().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
-			newErrMsgBox().showOk("Fehler", e.getMessage());
+			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage()).show();
 		}
 	}
 

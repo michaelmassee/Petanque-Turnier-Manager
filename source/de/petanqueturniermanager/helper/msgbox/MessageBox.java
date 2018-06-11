@@ -67,6 +67,7 @@ public class MessageBox extends AbstractMessageBox {
 			case QUESTION_OK_CANCEL:
 			case WARN_OK_CANCEL:
 			case WARN_OK:
+			case ERROR_OK:
 				return MessageBoxResult.OK;
 			}
 		}
@@ -92,6 +93,9 @@ public class MessageBox extends AbstractMessageBox {
 			break;
 		case WARN_YES_NO:
 			xMessageBox = this.newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO);
+			break;
+		case ERROR_OK:
+			xMessageBox = this.newXMessageBox(MessageBoxType.ERRORBOX, MessageBoxButtons.BUTTONS_OK);
 			break;
 		default:
 			break;
