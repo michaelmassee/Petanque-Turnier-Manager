@@ -126,13 +126,16 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	protected final boolean canStart(Meldungen meldungen) throws GenerateException {
 		if (getSpielRundeNr().getNr() < 1) {
 			this.getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
-			this.newErrMsgBox().showOk("Aktuelle Spielrunde Fehler", "Ungültige Spielrunde in der Meldeliste '" + getSpielRundeNr().getNr() + "'");
+
+			String errorMsg = "Ungültige Spielrunde in der Meldeliste '" + getSpielRundeNr().getNr() + "'";
+			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
 			return false;
 		}
 
 		if (meldungen.size() < 6) {
 			this.getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
-			this.newErrMsgBox().showOk("Aktuelle Spielrunde Fehler", "Ungültige anzahl von Meldungen '" + meldungen.size() + "' ,kleiner als 6.");
+			String errorMsg = "Ungültige anzahl von Meldungen '" + meldungen.size() + "' ,kleiner als 6.";
+			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
 			return false;
 		}
 		return true;
@@ -498,7 +501,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
 			getSheetHelper().removeSheet(getSheetName(getSpielTag(), getSpielRundeNr()));
-			this.newErrMsgBox().showOk("Fehler beim Auslosen", e.getMessage());
+			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen").message(e.getMessage()).show();
 			throw new RuntimeException(e); // komplett raus
 		}
 	}

@@ -37,6 +37,8 @@ import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarb
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
@@ -98,7 +100,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		int anzahlSpieltage = getAnzahlSpieltage();
 		if (anzahlSpieltage < 2) {
-			newErrMsgBox().showOk("Feher", "Ungültige anzahl von Spieltage. " + anzahlSpieltage);
+			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message("Ungültige anzahl von Spieltage. " + anzahlSpieltage).show();
 			return;
 		}
 

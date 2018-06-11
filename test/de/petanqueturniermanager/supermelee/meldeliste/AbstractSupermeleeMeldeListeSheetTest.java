@@ -25,7 +25,6 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ErrorMessageBox;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -40,7 +39,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	KonfigurationSheet konfigurationSheetMock;
-	ErrorMessageBox errorMessageBoxMock;
 	ProcessBox processBoxMock;
 
 	@Before
@@ -49,14 +47,8 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
-		this.errorMessageBoxMock = PowerMockito.mock(ErrorMessageBox.class);
 
 		this.meldeSheet = new AbstractSupermeleeMeldeListeSheet(this.xComponentContextMock) {
-
-			@Override
-			protected ErrorMessageBox newErrMsgBox() {
-				return AbstractSupermeleeMeldeListeSheetTest.this.errorMessageBoxMock;
-			}
 
 			@Override
 			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
@@ -93,8 +85,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 				// do nothing here
 			}
 		};
-
-		PowerMockito.when(this.errorMessageBoxMock.showOk(any(String.class), any(String.class))).thenReturn((short) 1);
 
 	}
 
