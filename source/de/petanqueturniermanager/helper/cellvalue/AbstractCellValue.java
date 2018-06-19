@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.google.common.base.MoreObjects;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
@@ -30,11 +31,12 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	private CellProperties rowProperties = new CellProperties();
 	private Position endPosMerge; // wenn vorhanden dann merge die zellen von pos bis endPosMerge
 	private FillAutoPosition fillAuto; // wenn vorhanden dann autoFill bis diese Position
+	private boolean ueberschreiben = true; // vorhande inhalten in der zelle überschreiben ?
 
-	public AbstractCellValue() {
+	protected AbstractCellValue() {
 	}
 
-	public AbstractCellValue(XSpreadsheet sheet, Position pos) {
+	protected AbstractCellValue(XSpreadsheet sheet, Position pos) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
 		this.setSheet(sheet);
@@ -137,6 +139,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		this.cellProperties.putAll(abstractCellValue.getCellProperties());
 		this.columnProperties.putAll(abstractCellValue.getColumnProperties());
 		this.rowProperties.putAll(abstractCellValue.getRowProperties());
+		this.ueberschreiben = abstractCellValue.isUeberschreiben();
 		return this;
 	}
 
@@ -258,6 +261,12 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		return (T) this;
 	}
 
+	@SuppressWarnings("unchecked")
+	public T centerHoriJustify() {
+		this.cellProperties.setHoriJustify(CellHoriJustify.CENTER);
+		return (T) this;
+	}
+
 	/**
 	 * com.sun.star.table.CellHoriJustify.class
 	 *
@@ -277,6 +286,12 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	@SuppressWarnings("unchecked")
 	public T setShrinkToFit(boolean shrink) {
 		this.cellProperties.setShrinkToFit(shrink);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T centerVertJustify() {
+		this.cellProperties.setVertJustify(CellVertJustify2.CENTER);
 		return (T) this;
 	}
 
@@ -390,4 +405,15 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		this.rowProperties.putAll(this.columnProperties);
 		return (T) this;
 	}
+
+	public boolean isUeberschreiben() {
+		return ueberschreiben;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T nichtUeberschreiben() {
+		this.ueberschreiben = false;
+		return (T) this;
+	}
+
 }

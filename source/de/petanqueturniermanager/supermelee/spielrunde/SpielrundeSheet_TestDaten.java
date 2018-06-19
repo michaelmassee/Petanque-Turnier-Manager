@@ -36,11 +36,11 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 	public SpielrundeSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
-		this.naechsteSpielrundeSheet = new SpielrundeSheet_Naechste(xContext);
-		this.meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(xContext);
-		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
-		this.anmeldungenSheet = new AnmeldungenSheet(xContext);
-		this.tielnehmerSheet = new TielnehmerSheet(xContext);
+		naechsteSpielrundeSheet = new SpielrundeSheet_Naechste(xContext);
+		meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(xContext);
+		spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
+		anmeldungenSheet = new AnmeldungenSheet(xContext);
+		tielnehmerSheet = new TielnehmerSheet(xContext);
 
 	}
 
@@ -52,7 +52,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		setSpielTag(SpielTagNr.from(1));
 		generate();
 	}
@@ -64,19 +64,19 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	 */
 	public void generate() throws GenerateException {
 
-		this.anmeldungenSheet.setSpielTag(getSpielTag());
-		this.tielnehmerSheet.setSpielTagNr(getSpielTag());
-		this.spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
-		this.naechsteSpielrundeSheet.setSpielTag(getSpielTag());
+		anmeldungenSheet.setSpielTag(getSpielTag());
+		tielnehmerSheet.setSpielTagNr(getSpielTag());
+		spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
+		naechsteSpielrundeSheet.setSpielTag(getSpielTag());
 
 		if (getSpielTag().getNr() == 1) {
-			this.meldeListeTestDatenGenerator.testNamenEinfuegen(getSpielTag());
+			meldeListeTestDatenGenerator.testNamenEinfuegen();
 		}
 
-		this.meldeListeTestDatenGenerator.initialAktuellenSpielTagMitAktivenMeldungenFuellen(getSpielTag());
+		meldeListeTestDatenGenerator.initialAktuellenSpielTagMitAktivenMeldungenFuellen(getSpielTag());
 
-		this.anmeldungenSheet.generate();
-		this.tielnehmerSheet.generate();
+		anmeldungenSheet.generate();
+		tielnehmerSheet.generate();
 
 		int maxspielrundeNr = 4;
 
@@ -85,17 +85,17 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			setSpielRundeNr(SpielRundeNr.from(spielrundeNr));
 
 			if (spielrundeNr > 1) {
-				this.meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen(getSpielTag());
+				meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen(getSpielTag());
 			}
 
-			Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
-			this.naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr - 1, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
+			Meldungen meldungen = getMeldeListe().getAktiveMeldungen();
+			naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr - 1, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 			neueSpielrunde(meldungen, SpielRundeNr.from(spielrundeNr), true);
 
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen
 			// ------------------------------------
-			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
+			XSpreadsheet sheet = getSheet();
 			Position letztePos = letzteZeile();
 
 			if (letztePos != null && sheet != null) {
@@ -119,10 +119,10 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			}
 		}
 		SheetRunner.testDoCancelTask();
-		this.spieltagRanglisteSheet.generate();
+		spieltagRanglisteSheet.generate();
 
-		this.getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
-		this.getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));
-		this.spieltagRanglisteSheet.isErrorInSheet();
+		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
+		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));
+		spieltagRanglisteSheet.isErrorInSheet();
 	}
 }

@@ -4,10 +4,12 @@
 
 package de.petanqueturniermanager.helper.cellstyle;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
+import com.sun.star.container.XNameAccess;
+import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
@@ -29,6 +31,8 @@ public class CellStyleHelper {
 	}
 
 	public static CellStyleHelper from(ISheet sheet, AbstractCellStyleDef cellStyleDef) {
+		checkNotNull(sheet);
+		checkNotNull(cellStyleDef);
 		return new CellStyleHelper(sheet, cellStyleDef);
 	}
 
@@ -41,21 +45,19 @@ public class CellStyleHelper {
 		try {
 			XSpreadsheetDocument currentSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(this.sheet.getxContext());
 
-			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(com.sun.star.style.XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
-			com.sun.star.container.XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
-			Object aCellStylesObj;
-			aCellStylesObj = xFamiliesNA.getByName("CellStyles");
-			com.sun.star.container.XNameContainer xCellStylesNA = UnoRuntime.queryInterface(com.sun.star.container.XNameContainer.class, aCellStylesObj);
+			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
+			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
+			Object aCellStylesObj = xFamiliesNA.getByName("CellStyles");
+			XNameContainer xCellStylesNA = UnoRuntime.queryInterface(XNameContainer.class, aCellStylesObj);
 
 			Object aCellStyle = null;
 			try {
 				aCellStyle = xCellStylesNA.getByName(styleName);
 			} catch (NoSuchElementException e) {
 				// create a new cell style
-				XMultiServiceFactory xDocServiceManager = UnoRuntime.queryInterface(com.sun.star.lang.XMultiServiceFactory.class, currentSpreadsheetDocument);
+				XMultiServiceFactory xDocServiceManager = UnoRuntime.queryInterface(XMultiServiceFactory.class, currentSpreadsheetDocument);
 				aCellStyle = xDocServiceManager.createInstance("com.sun.star.style.CellStyle");
-				String aStyleName = styleName;
-				xCellStylesNA.insertByName(aStyleName, aCellStyle);
+				xCellStylesNA.insertByName(styleName, aCellStyle);
 			}
 
 			// modify properties of the (new) style
@@ -63,8 +65,6 @@ public class CellStyleHelper {
 			for (String propKey : this.cellStyleDef.getCellProperties().keySet()) {
 				xPropSet.setPropertyValue(propKey, this.cellStyleDef.getCellProperties().get(propKey));
 			}
-			// xPropSet.setPropertyValue("CellBackColor", geradeColor);
-			// xPropSet.setPropertyValue("IsCellBackgroundTransparent", Boolean.FALSE);
 		} catch (Exception e) {
 			this.sheet.getLogger().error(e.getMessage(), e);
 		}

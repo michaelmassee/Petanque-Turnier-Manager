@@ -23,7 +23,7 @@ public class NumberCellValueTest {
 
 	@Before
 	public void setup() {
-		this.spreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
+		spreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 	}
 
 	@Test
@@ -32,7 +32,7 @@ public class NumberCellValueTest {
 		int zeile = 30;
 
 		Position pos = Position.from(spalte, zeile);
-		NumberCellValue intcellValue = new NumberCellValue(this.spreadsheetMock, pos, 42);
+		NumberCellValue intcellValue = NumberCellValue.from(spreadsheetMock, pos, 42);
 		String aComment = "bla bla";
 		intcellValue.setComment(aComment);
 		assertThat(intcellValue.getValue()).isEqualTo(42);
@@ -67,8 +67,8 @@ public class NumberCellValueTest {
 		Position pos = Position.from(spalte, zeile);
 		CellProperties columnProperties = CellProperties.from().setWidth(columnWidth);
 
-		StringCellValue strcellValue = StringCellValue.from(this.spreadsheetMock, pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
-				.addCellProperty(CellProperties.CHAR_COLOR, charcolor);
+		StringCellValue strcellValue = StringCellValue.from(spreadsheetMock, pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
+				.addCellProperty(CellProperties.CHAR_COLOR, charcolor).nichtUeberschreiben();
 
 		NumberCellValue numberCellValue = NumberCellValue.from(strcellValue);
 
@@ -78,6 +78,45 @@ public class NumberCellValueTest {
 		assertThat(numberCellValue.getComment()).isEqualTo(testComent);
 		assertThat(numberCellValue.getColumnProperties()).containsEntry(CellProperties.WIDTH, columnWidth);
 		assertThat(numberCellValue.getCellProperties()).containsEntry(CellProperties.CHAR_COLOR, charcolor);
+		assertThat(numberCellValue.isUeberschreiben()).isFalse();
 
+	}
+
+	@Test
+	public void testFromXSpreadsheetIntInt() throws Exception {
+		int spalte = 12;
+		int zeile = 700;
+
+		NumberCellValue result = NumberCellValue.from(spreadsheetMock, spalte, zeile);
+		assertThat(result.getPos().getZeile()).isEqualTo(zeile);
+		assertThat(result.getPos().getRow()).isEqualTo(zeile);
+		assertThat(result.getPos().getSpalte()).isEqualTo(spalte);
+		assertThat(result.getPos().getColumn()).isEqualTo(spalte);
+	}
+
+	@Test
+	public void testFromXSpreadsheetIntIntDouble() throws Exception {
+		int spalte = 12;
+		int zeile = 700;
+		double val = 4500D;
+
+		NumberCellValue result = NumberCellValue.from(spreadsheetMock, spalte, zeile, val);
+		assertThat(result.getPos().getZeile()).isEqualTo(zeile);
+		assertThat(result.getPos().getRow()).isEqualTo(zeile);
+		assertThat(result.getPos().getSpalte()).isEqualTo(spalte);
+		assertThat(result.getPos().getColumn()).isEqualTo(spalte);
+		assertThat(result.getValue()).isEqualTo(val);
+	}
+
+	@Test
+	public void testFromXSpreadsheetPosition() throws Exception {
+		int spalte = 19;
+		int zeile = 389;
+
+		NumberCellValue result = NumberCellValue.from(spreadsheetMock, Position.from(spalte, zeile));
+		assertThat(result.getPos().getZeile()).isEqualTo(zeile);
+		assertThat(result.getPos().getRow()).isEqualTo(zeile);
+		assertThat(result.getPos().getSpalte()).isEqualTo(spalte);
+		assertThat(result.getPos().getColumn()).isEqualTo(spalte);
 	}
 }

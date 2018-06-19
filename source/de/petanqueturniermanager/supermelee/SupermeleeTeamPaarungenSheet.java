@@ -57,13 +57,15 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 
 		CellProperties columnProperties = CellProperties.from().setWidth(spalteBreite).setHoriJustify(CellHoriJustify.CENTER);
 
-		StringCellValue strVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler").setColumnProperties(columnProperties);
-		getSheetHelper().setTextInCell(strVal);
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x2").setComment("Doublette Teams"));
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x3").setComment("Triplette Teams"));
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("Doubl").setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("∑x2").setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
-		getSheetHelper().setTextInCell(strVal.spaltePlusEins().setValue("Ung").setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
+		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler").setColumnProperties(columnProperties);
+		getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Doublette Teams"));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("∑x3").setComment("Triplette Teams"));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("Doubl").setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("Ung").setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
+
+		StringCellValue strDaten = StringCellValue.from(sheet, pos);
 
 		for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
 			teamRechner = new TeamRechner(anSpielerCntr);
@@ -71,9 +73,10 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 			getSheetHelper().setValInCell(sheet, pos, teamRechner.getAnzSpieler());
 			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechner.getAnzDoublette());
 			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechner.getAnzTriplette());
-			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(), (teamRechner.isNurDoubletteMoeglich() ? "X" : ""));
-			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(), (teamRechner.isNurDoubletteMoeglich() ? "" + teamRechner.getAnzSpieler() / 2 : ""));
-			getSheetHelper().setTextInCell(sheet, pos.spaltePlusEins(), (teamRechner.valideAnzahlSpieler() ? "" : "X"));
+			strDaten.zeile(pos.getZeile()).spalte(pos.getSpalte());
+			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechner.isNurDoubletteMoeglich() ? "X" : ""));
+			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechner.isNurDoubletteMoeglich() ? "" + teamRechner.getAnzSpieler() / 2 : ""));
+			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechner.valideAnzahlSpieler() ? "" : "X"));
 
 			if (!teamRechner.valideAnzahlSpieler()) {
 				RangePosition rangePos = new RangePosition(Position.from(pos).spalte(0), pos);
