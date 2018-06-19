@@ -81,7 +81,7 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 			// Kopfzeile Spalte
 			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);
 			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setHeaderCenter(kopfZeile).create();
-			posKopfZeile.zeilePlusEins();
+			posKopfZeile.zeilePlus(2);
 		}
 	}
 
