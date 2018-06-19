@@ -89,6 +89,9 @@ public class NewSheet {
 		}
 
 		if (pageStyleDef != null) {
+			// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
+			// @see KonfigurationSheet#initPageStyles
+			// @see SheetRunner#updateKonfigurationSheet
 			PageStyleHelper.from(sheet, xContext, pageStyleDef).initDefaultFooter().create().applytoSheet();
 		}
 
