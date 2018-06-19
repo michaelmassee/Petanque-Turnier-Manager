@@ -12,17 +12,17 @@ import de.petanqueturniermanager.helper.position.Position;
 
 public class NumberCellValue extends AbstractCellValue<NumberCellValue, Double> {
 
-	public NumberCellValue() {
+	protected NumberCellValue() {
 		super();
 	}
 
-	public NumberCellValue(XSpreadsheet sheet, Position pos, int value) {
+	private NumberCellValue(XSpreadsheet sheet, Position pos, int value) {
 		this(sheet, pos, (double) value);
 	}
 
-	public NumberCellValue(XSpreadsheet sheet, Position pos, double value) {
+	private NumberCellValue(XSpreadsheet sheet, Position pos, double value) {
 		super(sheet, pos);
-		this.setValue(value);
+		setValue(value);
 	}
 
 	@Override
@@ -50,11 +50,11 @@ public class NumberCellValue extends AbstractCellValue<NumberCellValue, Double> 
 	}
 
 	public static final NumberCellValue from(XSpreadsheet sheet, int spalte, int zeile) {
-		return new NumberCellValue(sheet, Position.from(spalte, zeile), 0);
+		return NumberCellValue.from(sheet, Position.from(spalte, zeile), 0);
 	}
 
 	public static final NumberCellValue from(XSpreadsheet sheet, int spalte, int zeile, double value) {
-		return new NumberCellValue(sheet, Position.from(spalte, zeile), value);
+		return NumberCellValue.from(sheet, Position.from(spalte, zeile), value);
 	}
 
 }

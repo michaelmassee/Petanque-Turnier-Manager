@@ -39,32 +39,32 @@ public class SpielrundeSheet_UpdateTest {
 
 	@Before
 	public void setup() throws Exception {
-		this.xComponentContextMock = PowerMockito.mock(XComponentContext.class);
-		this.meldeListeSheetMock = PowerMockito.mock(AbstractSupermeleeMeldeListeSheet.class);
-		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
-		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
+		xComponentContextMock = PowerMockito.mock(XComponentContext.class);
+		meldeListeSheetMock = PowerMockito.mock(AbstractSupermeleeMeldeListeSheet.class);
+		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
+		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
+		konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
-		this.aktuelleSpielrundeSheet = new SpielrundeSheet_Update(this.xComponentContextMock) {
+		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xComponentContextMock) {
 
 			@Override
 			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
-				return SpielrundeSheet_UpdateTest.this.konfigurationSheetMock;
+				return konfigurationSheetMock;
 			}
 
 			@Override
 			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
-				return SpielrundeSheet_UpdateTest.this.meldeListeSheetMock;
+				return meldeListeSheetMock;
 			}
 
 			@Override
 			public SheetHelper getSheetHelper() {
-				return SpielrundeSheet_UpdateTest.this.sheetHelperMock;
+				return sheetHelperMock;
 			}
 
 			@Override
-			public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, SpielRundeNr spielrunde) {
-				return SpielrundeSheet_UpdateTest.this.xSpreadsheetMock;
+			public XSpreadsheet getSheet() {
+				return xSpreadsheetMock;
 			}
 
 			@Override
@@ -96,7 +96,7 @@ public class SpielrundeSheet_UpdateTest {
 		setupReturn_from_getIntFromCell(spielpaarungen);
 		// ----------------------------------------
 
-		List<SpielerSpielrundeErgebnis> result = this.aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
+		List<SpielerSpielrundeErgebnis> result = aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
 
 		// ----------------------------------------
 		// Validate
@@ -122,7 +122,7 @@ public class SpielrundeSheet_UpdateTest {
 		assertThat(result.get(14).getSpielerNr()).isEqualTo(teamABLine3[4]);
 
 		// Maximal 4 zeilen, nach der erste leere zeile sollte abgebrochen werden
-		Mockito.verify(this.sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class), any(Position.class));
+		Mockito.verify(sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class), any(Position.class));
 
 	}
 
@@ -134,7 +134,7 @@ public class SpielrundeSheet_UpdateTest {
 		setupReturn_from_getIntFromCell(spielpaarungen);
 
 		try {
-			this.aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
+			aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
 			fail("Erwarte GenerateException");
 		} catch (GenerateException e) {
 			assertThat(e.getMessage()).isEqualTo("Spieler mit der Nr. 20 ist doppelt");
@@ -143,15 +143,15 @@ public class SpielrundeSheet_UpdateTest {
 	}
 
 	private void setupReturn_from_getIntFromCell(List<int[]> spielpaarungen) {
-		Position spielerNrPos = Position.from(SpielrundeSheet_Update.ERSTE_SPIELERNR_SPALTE, SpielrundeSheet_Update.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE, AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
 		spielpaarungen.forEach(spielpaarung -> {
 			for (int spielerSpalte = 0; spielerSpalte < 6; spielerSpalte++) {
 				if (spielpaarung[spielerSpalte] > 0) {
-					PowerMockito.when(this.sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos)))).thenReturn(spielpaarung[spielerSpalte]);
+					PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos)))).thenReturn(spielpaarung[spielerSpalte]);
 				}
 				spielerNrPos.spaltePlusEins();
 			}
-			spielerNrPos.spalte(SpielrundeSheet_Update.ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
+			spielerNrPos.spalte(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
 		});
 
 	}

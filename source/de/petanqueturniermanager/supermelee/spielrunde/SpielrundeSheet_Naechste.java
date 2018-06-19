@@ -38,9 +38,9 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 
 	public void naechsteSpielrundeEinfuegen() throws GenerateException {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
-		this.setSpielRundeNr(aktuelleSpielrunde);
-		this.getMeldeListe().upDateSheet();
-		Meldungen meldungen = this.getMeldeListe().getAktiveMeldungen();
+		setSpielRundeNr(aktuelleSpielrunde);
+		getMeldeListe().upDateSheet();
+		Meldungen meldungen = getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(meldungen)) {
 			return;
@@ -52,7 +52,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			neueSpielrunde++;
 		}
 
-		gespieltenRundenEinlesen(meldungen, neueSpielrunde - 1, this.getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
+		gespieltenRundenEinlesen(meldungen, neueSpielrunde - 1, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
 		neueSpielrunde(meldungen, SpielRundeNr.from(neueSpielrunde));
 	}
 
@@ -75,7 +75,10 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
-			XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), SpielRundeNr.from(spielrunde));
+
+			// XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), SpielRundeNr.from(spielrunde));
+			XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(getSpielTag(), SpielRundeNr.from(spielrunde)));
+
 			if (sheet == null) {
 				continue;
 			}

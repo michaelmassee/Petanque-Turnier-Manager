@@ -12,17 +12,17 @@ import de.petanqueturniermanager.helper.position.Position;
 
 public class StringCellValue extends AbstractCellValue<StringCellValue, String> {
 
-	public StringCellValue() {
+	private StringCellValue() {
 		super();
 	}
 
-	public StringCellValue(XSpreadsheet sheet, Position pos, int value) {
+	private StringCellValue(XSpreadsheet sheet, Position pos, int value) {
 		this(sheet, pos, "" + value);
 	}
 
-	public StringCellValue(XSpreadsheet sheet, Position pos, String value) {
+	private StringCellValue(XSpreadsheet sheet, Position pos, String value) {
 		super(sheet, pos);
-		this.setValue(value);
+		setValue(value);
 	}
 
 	@Override
@@ -70,15 +70,15 @@ public class StringCellValue extends AbstractCellValue<StringCellValue, String> 
 	 */
 
 	public boolean isValueEmpty() {
-		return StringUtils.isEmpty(this.getValue());
+		return StringUtils.isEmpty(getValue());
 	}
 
 	public StringCellValue appendValue(String string) {
 		if (StringUtils.isNotEmpty(string)) {
-			if (this.getValue() == null) {
-				this.setValue(string);
+			if (getValue() == null) {
+				setValue(string);
 			} else {
-				this.setValue(this.getValue() + string);
+				setValue(getValue() + string);
 			}
 		}
 		return this;

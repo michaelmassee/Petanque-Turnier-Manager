@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.konfiguration;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,6 +15,9 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -27,11 +32,14 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	public static final String SHEETNAME = "Konfiguration";
 	public static final String SHEET_COLOR = "6bf442";
 
+	public static final int KONFIG_SPIELTAG_NR = 3;
+	public static final int KONFIG_SPIELTAG_KOPFZEILE = KONFIG_SPIELTAG_NR + 1;
+
 	private final PropertiesSpalte propertiesSpalte;
 
 	public KonfigurationSheet(XComponentContext xContext) {
 		super(xContext);
-		this.propertiesSpalte = new PropertiesSpalte(xContext, PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
+		propertiesSpalte = new PropertiesSpalte(xContext, PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
 		try {
 			update();
 		} catch (GenerateException e) {
@@ -51,83 +59,121 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	void update() throws GenerateException {
-		this.propertiesSpalte.updateKonfigBlock();
-		this.propertiesSpalte.doFormat();
+		propertiesSpalte.updateKonfigBlock();
+		propertiesSpalte.doFormat();
+		initSpieltagKonfigSpalten();
+	}
+
+	// Spieltag Konfiguration
+	private void initSpieltagKonfigSpalten() throws GenerateException {
+
+		// Header
+		CellProperties columnPropSpieltag = CellProperties.from().setWidth(1500);
+		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify().centerVertJustify();
+		getSheetHelper().setTextInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
+		CellProperties columnPropKopfZeile = CellProperties.from().setWidth(8000);
+		getSheetHelper().setTextInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
+
+		// Daten
+		StringCellValue nr = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify().centerVertJustify()
+				.setCharHeight(14);
+		StringCellValue kopfZeile = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
+				.centerVertJustify().nichtUeberschreiben();
+		for (int spieltagCntr = 1; spieltagCntr <= 10; spieltagCntr++) {
+			getSheetHelper().setTextInCell(nr.setValue("" + spieltagCntr).setEndPosMergeZeilePlus(1));
+			nr.zeilePlus(2);
+			// Kopfzeile Spalte
+			getSheetHelper().setTextInCell(kopfZeile.setValue(spieltagCntr + ". Spieltag").setEndPosMergeZeilePlus(1));
+			kopfZeile.zeilePlus(2);
+		}
+	}
+
+	/**
+	 *
+	 * @param spielTagNr
+	 * @return null wenn not found
+	 * @throws GenerateException
+	 */
+
+	public String getKopfZeile(SpielTagNr spielTagNr) throws GenerateException {
+		checkNotNull(spielTagNr);
+		Position posKopfzeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES + (spielTagNr.getNr() - 1));
+		return getSheetHelper().getTextFromCell(getSheet(), posKopfzeile);
 	}
 
 	@Override
 	public SpielTagNr getAktiveSpieltag() throws GenerateException {
-		return this.propertiesSpalte.getAktiveSpieltag();
+		return propertiesSpalte.getAktiveSpieltag();
 	}
 
 	@Override
 	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
-		this.propertiesSpalte.setAktiveSpieltag(spieltag);
+		propertiesSpalte.setAktiveSpieltag(spieltag);
 	}
 
 	@Override
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
-		return this.propertiesSpalte.getAktiveSpielRunde();
+		return propertiesSpalte.getAktiveSpielRunde();
 	}
 
 	@Override
 	public void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
-		this.propertiesSpalte.setAktiveSpielRunde(neueSpielrunde);
+		propertiesSpalte.setAktiveSpielRunde(neueSpielrunde);
 	}
 
 	@Override
 	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
-		return this.propertiesSpalte.getSpielRundeHintergrundFarbeGerade();
+		return propertiesSpalte.getSpielRundeHintergrundFarbeGerade();
 	}
 
 	@Override
 	public Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException {
-		return this.propertiesSpalte.getSpielRundeHintergrundFarbeUnGerade();
+		return propertiesSpalte.getSpielRundeHintergrundFarbeUnGerade();
 	}
 
 	@Override
 	public Integer getSpielRundeHeaderFarbe() throws GenerateException {
-		return this.propertiesSpalte.getSpielRundeHeaderFarbe();
+		return propertiesSpalte.getSpielRundeHeaderFarbe();
 	}
 
 	@Override
 	public Integer getSpielRundeNeuAuslosenAb() throws GenerateException {
-		return this.propertiesSpalte.getSpielRundeNeuAuslosenAb();
+		return propertiesSpalte.getSpielRundeNeuAuslosenAb();
 	}
 
 	@Override
 	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
-		return this.propertiesSpalte.getRanglisteHintergrundFarbeGerade();
+		return propertiesSpalte.getRanglisteHintergrundFarbeGerade();
 	}
 
 	@Override
 	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
-		return this.propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
+		return propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 	}
 
 	@Override
 	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
-		return this.propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
+		return propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
 	}
 
 	@Override
 	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
-		return this.propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
+		return propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
 	}
 
 	@Override
 	public Integer getRanglisteHeaderFarbe() throws GenerateException {
-		return this.propertiesSpalte.getRanglisteHeaderFarbe();
+		return propertiesSpalte.getRanglisteHeaderFarbe();
 	}
 
 	@Override
 	public Integer getNichtGespielteRundePlus() throws GenerateException {
-		return this.propertiesSpalte.getNichtGespielteRundePlus();
+		return propertiesSpalte.getNichtGespielteRundePlus();
 	}
 
 	@Override
 	public Integer getNichtGespielteRundeMinus() throws GenerateException {
-		return this.propertiesSpalte.getNichtGespielteRundeMinus();
+		return propertiesSpalte.getNichtGespielteRundeMinus();
 	}
 
 	@Override
@@ -137,18 +183,18 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 
 	@Override
 	public Formation getFormation() throws GenerateException {
-		return this.propertiesSpalte.getFormation();
+		return propertiesSpalte.getFormation();
 
 	}
 
 	@Override
 	public SpielSystem getSpielSystem() throws GenerateException {
-		return this.propertiesSpalte.getSpielSystem();
+		return propertiesSpalte.getSpielSystem();
 	}
 
 	@Override
 	public String getSpielrundeSpielbahn() throws GenerateException {
-		return this.propertiesSpalte.getSpielrundeSpielbahn();
+		return propertiesSpalte.getSpielrundeSpielbahn();
 	}
 
 }

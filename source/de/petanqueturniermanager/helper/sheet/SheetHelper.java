@@ -14,13 +14,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.assertj.core.util.Arrays;
 
-import com.sun.star.beans.Property;
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
-import com.sun.star.beans.XPropertySetInfo;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
@@ -75,11 +73,16 @@ public class SheetHelper {
 		this.xContext = xContext;
 	}
 
+	/**
+	 * @param sheetName
+	 * @return null when not found
+	 */
+
 	public XSpreadsheet findByName(String sheetName) {
 		checkNotNull(sheetName);
 
-		if (this.sheetCache.get(sheetName) != null) {
-			return this.sheetCache.get(sheetName);
+		if (sheetCache.get(sheetName) != null) {
+			return sheetCache.get(sheetName);
 		}
 
 		XSpreadsheet foundSpreadsheet = null;
@@ -96,7 +99,9 @@ public class SheetHelper {
 			}
 		}
 
-		this.sheetCache.put(sheetName, foundSpreadsheet);
+		if (foundSpreadsheet != null) {
+			sheetCache.put(sheetName, foundSpreadsheet);
+		}
 		return foundSpreadsheet;
 	}
 
@@ -105,7 +110,7 @@ public class SheetHelper {
 	}
 
 	public void removeAllSheetsExclude(String[] sheetNamesNotToRemove) {
-		XSpreadsheets sheets = this.getSheets();
+		XSpreadsheets sheets = getSheets();
 		List<String> sheetNamesNotToRemoveList = java.util.Arrays.asList(sheetNamesNotToRemove);
 		for (String sheetName : sheets.getElementNames()) {
 			if (!sheetNamesNotToRemoveList.contains(sheetName)) {
@@ -116,7 +121,7 @@ public class SheetHelper {
 
 	public void removeSheet(String sheetName) {
 		checkNotNull(sheetName);
-		this.sheetCache.remove(sheetName);
+		sheetCache.remove(sheetName);
 		XSpreadsheets sheets = getSheets();
 		try {
 			sheets.removeByName(sheetName);
@@ -132,8 +137,8 @@ public class SheetHelper {
 	public XSpreadsheet newIfNotExist(String sheetName, short pos, String tabColor) {
 		checkNotNull(sheetName);
 
-		if (this.sheetCache.get(sheetName) != null) {
-			return this.sheetCache.get(sheetName);
+		if (sheetCache.get(sheetName) != null) {
+			return sheetCache.get(sheetName);
 		}
 
 		XSpreadsheet currSpreadsheet = null;
@@ -144,11 +149,11 @@ public class SheetHelper {
 				sheets.insertNewByName(sheetName, pos);
 
 				if (tabColor != null) {
-					currSpreadsheet = this.findByName(sheetName);
+					currSpreadsheet = findByName(sheetName);
 					setTabColor(currSpreadsheet, tabColor);
 				}
 			}
-			currSpreadsheet = this.findByName(sheetName);
+			currSpreadsheet = findByName(sheetName);
 		}
 		return currSpreadsheet;
 	}
@@ -158,7 +163,7 @@ public class SheetHelper {
 	 */
 
 	public XSpreadsheets getSheets() {
-		XSpreadsheetDocument spreadsheetDoc = DocumentHelper.getCurrentSpreadsheetDocument(this.xContext);
+		XSpreadsheetDocument spreadsheetDoc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
 		if (spreadsheetDoc != null) {
 			return spreadsheetDoc.getSheets();
 		}
@@ -221,12 +226,34 @@ public class SheetHelper {
 		return xCell;
 	}
 
+	/**
+	 * nur die Zelle formatieren
+	 *
+	 * @param cellVal
+	 * @return
+	 */
+	public XCell setFormatInCell(AbstractCellValue<?, ?> cellVal) {
+		checkNotNull(cellVal);
+		checkNotNull(cellVal.getSheet());
+		checkNotNull(cellVal.getPos());
+
+		XCell xCell = null;
+		try {
+			// --- Get cell B3 by position - (column, row) ---
+			// xCell = xSheet.getCellByPosition(1, 2);
+			xCell = cellVal.getSheet().getCellByPosition(cellVal.getPos().getSpalte(), cellVal.getPos().getZeile());
+			handleAbstractCellValue(cellVal, xCell);
+		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return xCell;
+	}
+
 	// StringCellValue
 	public XCell setTextInCell(StringCellValue stringVal) {
 		checkNotNull(stringVal);
 		XCell xCell = null;
-		xCell = setTextInCell(stringVal.getSheet(), stringVal.getPos(), stringVal.getValue());
-
+		xCell = setTextInCell(stringVal.getSheet(), stringVal.getPos(), stringVal.getValue(), stringVal.isUeberschreiben());
 		handleAbstractCellValue(stringVal, xCell);
 
 		return xCell;
@@ -280,14 +307,21 @@ public class SheetHelper {
 		}
 	}
 
+	@VisibleForTesting
+	<C> C queryInterface(Class<C> clazz, Object arg) {
+		return UnoRuntime.queryInterface(clazz, arg);
+	}
+
 	/**
 	 * @param sheet
 	 * @param spalte,column, 0 = erste spalte = A
 	 * @param zeile,row, 0 = erste zeile
+	 * @param ueberschreiben, true = dann wird der vorhandene inhalt überschrieben, false = nur wenn leer dann wert schreiben. <br>
+	 * leer = null, leer string, oder nur leerzeichen
 	 * @return XCell
 	 */
-
-	public XCell setTextInCell(XSpreadsheet sheet, Position pos, String val) {
+	@VisibleForTesting
+	XCell setTextInCell(XSpreadsheet sheet, Position pos, String val, boolean ueberschreiben) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
 		checkNotNull(val);
@@ -297,8 +331,13 @@ public class SheetHelper {
 			// --- Get cell B3 by position - (column, row) ---
 			// xCell = xSheet.getCellByPosition(1, 2);
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
-			XText xText = UnoRuntime.queryInterface(XText.class, xCell);
-			xText.setString(val);
+			XText xText = queryInterface(XText.class, xCell);
+			if (ueberschreiben) {
+				xText.setString(val);
+			} else if (StringUtils.isBlank(xText.getString())) {
+				// Checks if a CharSequence is empty (""), null or whitespace only.
+				xText.setString(val);
+			}
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -365,7 +404,7 @@ public class SheetHelper {
 	public String getAddressFromColumnRow(Position pos) {
 		checkNotNull(pos);
 		try {
-			Object aFuncInst = this.xContext.getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess", this.xContext);
+			Object aFuncInst = xContext.getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess", xContext);
 			XFunctionAccess xFuncAcc = UnoRuntime.queryInterface(XFunctionAccess.class, aFuncInst);
 			// https://wiki.openoffice.org/wiki/Documentation/How_Tos/Calc:_ADDRESS_function
 			// put the data in a array
@@ -403,7 +442,7 @@ public class SheetHelper {
 	}
 
 	public void setActiveSheet(XSpreadsheet spreadsheet) {
-		XSpreadsheetView spreadsheetView = DocumentHelper.getCurrentSpreadsheetView(this.xContext);
+		XSpreadsheetView spreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
 		if (spreadsheetView != null) {
 			spreadsheetView.setActiveSheet(spreadsheet);
 		}
@@ -543,15 +582,6 @@ public class SheetHelper {
 		return xPropSet;
 	}
 
-	public void inpectPropertySet(XPropertySet xPropSet) {
-		XPropertySetInfo propertySetInfo = xPropSet.getPropertySetInfo();
-		Property[] properties = propertySetInfo.getProperties();
-		Arrays.asList(properties).forEach((property) -> {
-			System.out.println(((Property) property).Name);
-			System.out.println(((Property) property).Type);
-		});
-	}
-
 	public void setProperties(XPropertySet xPropSet, CellProperties properties) {
 		properties.forEach((key, value) -> {
 			setProperty(xPropSet, key, value);
@@ -659,7 +689,7 @@ public class SheetHelper {
 		checkNotNull(sheet);
 
 		if (header != null) {
-			setTextInCell(sheet, pos, header);
+			setTextInCell(sheet, pos, header, true);
 		}
 		setColumnCellHoriJustify(sheet, pos, CellHoriJustify.CENTER);
 		setColumnWidth(sheet, pos, width);
@@ -669,8 +699,6 @@ public class SheetHelper {
 		return setColumnCellHoriJustify(sheet, pos.getSpalte(), cellHoriJustify);
 	}
 
-	// CellVertJustify2
-	// CellHoriJustify
 	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1table_1_1CellProperties.html#ac4ecfad4d3b8fcf60e5205465fb254dd
 	public XPropertySet setColumnCellHoriJustify(XSpreadsheet sheet, int spalte, CellHoriJustify cellHoriJustify) {
 		checkNotNull(sheet);

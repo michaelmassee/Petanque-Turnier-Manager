@@ -51,6 +51,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
@@ -87,8 +88,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	public AbstractSpielrundeSheet(XComponentContext xContext) {
 		super(xContext, "Spielrunde");
-		this.konfigurationSheet = newKonfigurationSheet(xContext);
-		this.meldeListe = initMeldeListeSheet(xContext);
+		konfigurationSheet = newKonfigurationSheet(xContext);
+		meldeListe = initMeldeListeSheet(xContext);
 	}
 
 	@VisibleForTesting
@@ -102,21 +103,17 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	public AbstractSupermeleeMeldeListeSheet getMeldeListe() throws GenerateException {
-		this.meldeListe.setSpielTag(this.getSpielTag());
-		return this.meldeListe;
+		meldeListe.setSpielTag(getSpielTag());
+		return meldeListe;
 	}
 
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
-		return getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
-	}
-
-	public XSpreadsheet getSpielRundeSheet(SpielTagNr spieltag, SpielRundeNr spielrunde) throws GenerateException {
-		return getSheetHelper().newIfNotExist(getSheetName(spieltag, spielrunde), DefaultSheetPos.SUPERMELEE_WORK);
+		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
 	}
 
 	protected KonfigurationSheet getKonfigurationSheet() {
-		return this.konfigurationSheet;
+		return konfigurationSheet;
 	}
 
 	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) throws GenerateException {
@@ -125,17 +122,17 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	protected final boolean canStart(Meldungen meldungen) throws GenerateException {
 		if (getSpielRundeNr().getNr() < 1) {
-			this.getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
+			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
 
 			String errorMsg = "Ungültige Spielrunde in der Meldeliste '" + getSpielRundeNr().getNr() + "'";
-			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
 			return false;
 		}
 
 		if (meldungen.size() < 6) {
-			this.getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
+			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
 			String errorMsg = "Ungültige anzahl von Meldungen '" + meldungen.size() + "' ,kleiner als 6.";
-			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
 			return false;
 		}
 		return true;
@@ -152,7 +149,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		processBoxinfo("Vertikal Ergbniss-Spalten");
 
 		checkArgument(spielRunde.getNr() == getSpielRundeNr().getNr());
-		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
+		XSpreadsheet sheet = getSheet();
 		Position posSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position posSpielrNrFormula = Position.from(ERSTE_SPALTE_VERTIKALE_ERGEBNISSE, ERSTE_DATEN_ZEILE);
 		StringCellValue spielrNrFormula = StringCellValue.from(sheet, posSpielrNrFormula);
@@ -166,9 +163,9 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		CellProperties columnProperties = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 				.setVertJustify(CellVertJustify2.CENTER);
 		StringCellValue headerText = StringCellValue.from(sheet, ersteHeaderZeile).addColumnProperties(columnProperties);
-		this.getSheetHelper().setTextInCell(headerText.setValue("Nr"));
-		this.getSheetHelper().setTextInCell(headerText.setValue("+").spaltePlusEins());
-		this.getSheetHelper().setTextInCell(headerText.setValue("-").spaltePlusEins());
+		getSheetHelper().setTextInCell(headerText.setValue("Nr"));
+		getSheetHelper().setTextInCell(headerText.setValue("+").spaltePlusEins());
+		getSheetHelper().setTextInCell(headerText.setValue("-").spaltePlusEins());
 
 		List<Team> teams = spielRunde.teams();
 
@@ -192,7 +189,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	private void vertikaleErgbnisseEinezeileEinfuegen(Position posSpielrNr, StringCellValue spielrNrFormula, Position ergebnisPosA, Position ergebnisPosB)
 			throws GenerateException {
-		this.getSheetHelper().setFormulaInCell(spielrNrFormula.setValue(posSpielrNr.getAddressWith$()));
+		getSheetHelper().setFormulaInCell(spielrNrFormula.setValue(posSpielrNr.getAddressWith$()));
 		StringCellValue plusSpalteFormula = StringCellValue.from(spielrNrFormula).spaltePlusEins();
 		StringCellValue minusSpalteFormula = StringCellValue.from(plusSpalteFormula).spaltePlusEins();
 		// + spalte
@@ -200,8 +197,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		plusSpalteFormula.setValue("IF(" + spielrNrFormula.getPos().getAddress() + ">0;" + ergebnisPosA.getAddressWith$() + ";\"\")");
 		// - spalte
 		minusSpalteFormula.setValue("IF(" + spielrNrFormula.getPos().getAddress() + ">0;" + ergebnisPosB.getAddressWith$() + ";\"\")");
-		this.getSheetHelper().setFormulaInCell(plusSpalteFormula);
-		this.getSheetHelper().setFormulaInCell(minusSpalteFormula);
+		getSheetHelper().setFormulaInCell(plusSpalteFormula);
+		getSheetHelper().setFormulaInCell(minusSpalteFormula);
 		posSpielrNr.spaltePlusEins();
 		spielrNrFormula.zeilePlusEins();
 	}
@@ -215,8 +212,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		processBoxinfo("Erste Spalte Daten einfügen");
 
-		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
-		String spielrundeSpielbahn = this.getKonfigurationSheet().getSpielrundeSpielbahn();
+		XSpreadsheet sheet = getSheet();
+		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 		Position letzteZeile = letzteZeile();
 
 		// header
@@ -231,7 +228,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			// Spielbahn Spalte header
 			columnProperties.setWidth(900); // Paarungen cntr
 			Position posErsteHeaderZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
-			Integer headerColor = this.getKonfigurationSheet().getSpielRundeHeaderFarbe();
+			Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
 			StringCellValue headerValue = StringCellValue.from(sheet, posErsteHeaderZelle).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
 					.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(14).setColumnProperties(columnProperties)
 					.setEndPosMergeZeilePlus(1).setValue("Bahn").setComment("Spielbahn");
@@ -259,7 +256,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		HashSet<Integer> spielrNr = new HashSet<>();
 
-		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
+		XSpreadsheet sheet = getSheet();
 
 		Position posErsteSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE - 1);
 
@@ -355,7 +352,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		Position ersteHeaderZeileMerge = Position.from(ersteHeaderZeile).spalte(ERSTE_SPALTE_ERGEBNISSE - 1);
 
 		// back color
-		Integer headerFarbe = this.getKonfigurationSheet().getSpielRundeHeaderFarbe();
+		Integer headerFarbe = getKonfigurationSheet().getSpielRundeHeaderFarbe();
 		// CellBackColor
 
 		StringCellValue headerVal = StringCellValue.from(sheet, ersteHeaderZeile, "Spieltag " + spieltag.getNr() + " Spielrunde " + spielRunde.getNr())
@@ -426,10 +423,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	protected void verweisAufSpielerNamenEinfuegen(Position spielerNrPos) throws GenerateException {
 		int anzSpaltenDiv = ERSTE_SPIELERNR_SPALTE - ERSTE_SPALTE_RUNDESPIELPLAN;
 		String spielerNrAddress = spielerNrPos.getAddress();
-		String formulaVerweis = "IFNA(" + this.getMeldeListe().formulaSverweisSpielernamen(spielerNrAddress) + ";\"\")";
+		String formulaVerweis = "IFNA(" + getMeldeListe().formulaSverweisSpielernamen(spielerNrAddress) + ";\"\")";
 
-		StringCellValue val = StringCellValue.from(getSpielRundeSheet(getSpielTag(), getSpielRundeNr()), Position.from(spielerNrPos).spaltePlus(-anzSpaltenDiv), formulaVerweis)
-				.setVertJustify(CellVertJustify2.CENTER).setShrinkToFit(true).setCharHeight(12);
+		StringCellValue val = StringCellValue.from(getSheet(), Position.from(spielerNrPos).spaltePlus(-anzSpaltenDiv), formulaVerweis).setVertJustify(CellVertJustify2.CENTER)
+				.setShrinkToFit(true).setCharHeight(12);
 		getSheetHelper().setFormulaInCell(val);
 	}
 
@@ -448,32 +445,30 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			throw new GenerateException("Fehler beim erstellen von Spielrunde. Kann für Spieltag " + getSpielTag().getNr() + " die Spielrunde " + neueSpielrundeNr.getNr()
 					+ " nicht Auslosen. Anzahl Spieler < 4. Aktive Spieler = " + meldungen.spieler().size());
 		}
-
+		// -------------------------------
 		XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
-		if (sheet != null) {
-			getSheetHelper().setActiveSheet(sheet);
-			MessageBox msgbox = MessageBox.from(this.getxContext(), MessageBoxTypeEnum.WARN_YES_NO).forceOk(force).caption("Spielrunde");
-			msgbox.message("Spieltag " + this.getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?");
-			if (MessageBoxResult.NO == msgbox.show()) {
-				return;
-			}
-			// loeschen
-			getSheetHelper().setActiveSheet(this.meldeListe.getSheet());
-			getSheetHelper().removeSheet(getSheetName(getSpielTag(), getSpielRundeNr()));
-		} else {
-			String msg = "Erstelle für Spieltag " + this.getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\neine neue Spielrunde";
-			MessageBoxResult msgBoxRslt = MessageBox.from(this.getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL).forceOk(force).caption("Neue Spielrunde").message(msg).show();
+		if (sheet == null) {
+			String msg = "Erstelle für Spieltag " + getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\neine neue Spielrunde";
+			MessageBoxResult msgBoxRslt = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL).forceOk(force).caption("Neue Spielrunde").message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
+				ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 				return;
 			}
 		}
+		// wenn hier dann neu erstellen
+		if (!NewSheet.from(getxContext(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
+				.setForceCreate(force).setActiv().create().isDidCreate()) {
+			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
+			return;
+		}
+		// -------------------------------
 
 		boolean doubletteRunde = false;
 		// abfrage nur doublette runde ?
-		boolean isKannNurDoublette = this.meldeListe.isKannNurDoublette(getSpielTag());
+		boolean isKannNurDoublette = meldeListe.isKannNurDoublette(getSpielTag());
 		if (isKannNurDoublette) {
-			MessageBox msgbox = MessageBox.from(this.getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force).caption("Spielrunde Doublette");
-			msgbox.message("Für Spieltag " + this.getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\nnur Doublette Paarungen auslosen ?");
+			MessageBox msgbox = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force).caption("Spielrunde Doublette");
+			msgbox.message("Für Spieltag " + getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\nnur Doublette Paarungen auslosen ?");
 			if (MessageBoxResult.YES == msgbox.show()) {
 				doubletteRunde = true;
 			}
@@ -481,9 +476,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		if (force && isKannNurDoublette) {
 			doubletteRunde = true;
 		}
-
-		sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
-		getSheetHelper().setActiveSheet(sheet);
+		sheet = getSheet();
 		TripletteDoublPaarungen paarungen = new TripletteDoublPaarungen();
 		try {
 			SpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
@@ -495,13 +488,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			datenErsteSpalte();
 			datenformatieren(sheet);
 			spielrundeProperties(sheet, doubletteRunde);
-			this.getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
+			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(sheet, doubletteRunde);
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
 			getSheetHelper().removeSheet(getSheetName(getSpielTag(), getSpielRundeNr()));
-			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen").message(e.getMessage()).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen").message(e.getMessage()).show();
 			throw new RuntimeException(e); // komplett raus
 		}
 	}
@@ -536,11 +529,11 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlus(3).setHoriJustify(CellHoriJustify.CENTER);
 
 		// "Aktiv"
-		int anzAktiv = this.meldeListe.getAnzahlAktiveSpieler(getSpielTag());
+		int anzAktiv = meldeListe.getAnzahlAktiveSpieler(getSpielTag());
 		getSheetHelper().setTextInCell(propName.setEndPosMergeSpaltePlus(2).setValue("Aktiv"));
 		getSheetHelper().setValInCell(propVal.setValue((double) anzAktiv));
 
-		int anzAusg = this.meldeListe.getAusgestiegenSpieler(getSpielTag());
+		int anzAusg = meldeListe.getAusgestiegenSpieler(getSpielTag());
 		getSheetHelper().setTextInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(2).setValue("Ausgestiegen"));
 		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 
@@ -582,8 +575,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		RangePosition datenRangeOhneErsteSpalteOhneErgebniss = RangePosition.from(Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE),
 				datenEnd.spalte(ERSTE_SPALTE_ERGEBNISSE - 1));
 
-		Integer geradeColor = this.getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
-		Integer unGeradeColor = this.getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGerade();
+		Integer geradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
+		Integer unGeradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGerade();
 		SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle = new SpielrundeHintergrundFarbeGeradeStyle(geradeColor);
 		SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle = new SpielrundeHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
@@ -614,7 +607,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	protected Position letzteZeile() throws GenerateException {
-		XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
+		XSpreadsheet sheet = getSheet();
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
 		if (getSheetHelper().getIntFromCell(sheet, pos) == -1) {
@@ -638,7 +631,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	 */
 
 	protected void clearSheet() throws GenerateException {
-		XSpreadsheet xSheet = getSpielRundeSheet(getSpielTag(), getSpielRundeNr());
+		XSpreadsheet xSheet = getSheet();
 		Position letzteZeile = letzteZeile();
 
 		if (letzteZeile == null) {
@@ -650,8 +643,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	public SpielTagNr getSpielTag() throws GenerateException {
-		checkNotNull(this.spielTag);
-		return this.spielTag;
+		checkNotNull(spielTag);
+		return spielTag;
 	}
 
 	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
@@ -661,13 +654,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	public SpielRundeNr getSpielRundeNr() throws GenerateException {
-		checkNotNull(this.spielRundeNr);
-		return this.spielRundeNr;
+		checkNotNull(spielRundeNr);
+		return spielRundeNr;
 	}
 
 	public void setSpielRundeNr(SpielRundeNr spielrunde) throws GenerateException {
 		checkNotNull(spielrunde);
 		ProcessBox.from().spielRunde(spielrunde);
-		this.spielRundeNr = spielrunde;
+		spielRundeNr = spielrunde;
 	}
 }

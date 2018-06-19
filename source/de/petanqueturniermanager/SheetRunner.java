@@ -39,7 +39,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	public SheetRunner(XComponentContext xContext) {
 		checkNotNull(xContext);
 		this.xContext = xContext;
-		this.sheetHelper = new SheetHelper(xContext);
+		sheetHelper = new SheetHelper(xContext);
 	}
 
 	/**
@@ -65,18 +65,25 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		if (!SheetRunner.isRunning) {
 			SheetRunner.isRunning = true;
 			SheetRunner.runner = this;
+			boolean isFehler = false;
 
 			try {
 				doRun();
 			} catch (GenerateException e) {
 				handleGenerateException(e);
 			} catch (Exception e) {
+				isFehler = true;
+				ProcessBox.from().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage()).fehler("Siehe log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning = false; // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
-				ProcessBox.from().visible().info("**FERTIG**");
-				this.getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
+				if (isFehler) {
+					ProcessBox.from().visible().fehler("!! FEHLER !!");
+				} else {
+					ProcessBox.from().visible().info("**FERTIG**");
+				}
+				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 				// TODO
 				// Funktioniert so nicht
 				// CloseConnections.closeOfficeConnection(getxContext());
@@ -94,7 +101,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		} else {
 			ProcessBox.from().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
-			MessageBox.from(this.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage()).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage()).show();
 		}
 	}
 
@@ -104,15 +111,15 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	public SheetHelper getSheetHelper() throws GenerateException {
 		SheetRunner.testDoCancelTask();
-		return this.sheetHelper;
+		return sheetHelper;
 	}
 
 	public XComponentContext getxContext() {
-		return this.xContext;
+		return xContext;
 	}
 
 	public XCalculatable getxCalculatable() {
-		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(this.getxContext());
+		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(getxContext());
 		return UnoRuntime.queryInterface(XCalculatable.class, doc);
 	}
 
@@ -121,7 +128,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	public void processBoxinfo(String infoMsg) {
-		ProcessBox.from().prefix(this.logPrefix).info(infoMsg);
+		ProcessBox.from().prefix(logPrefix).info(infoMsg);
 	}
 
 }
