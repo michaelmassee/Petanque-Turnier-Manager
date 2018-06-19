@@ -76,7 +76,6 @@ public class PageStyleDef {
 				pageProperties.setFooterContent(headerFooterContent);
 			}
 		}
-
 	}
 
 	public PageStyleDef setFooterRight(String text) {
@@ -86,5 +85,9 @@ public class PageStyleDef {
 
 	public void setFooterLeft(String text) {
 		pageProperties.setFooterLeft(text);
+	}
+
+	public void setHeaderCenter(String text) {
+		pageProperties.setHeaderCenter(text);
 	}
 }

@@ -17,6 +17,8 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
+import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -25,6 +27,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte, ISheet {
+	private static final int MAX_SPIELTAG = 10;
+
 	private static final Logger logger = LogManager.getLogger(KonfigurationSheet.class);
 
 	public static final int PROPERTIESSPALTE = 0;
@@ -40,11 +44,6 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	public KonfigurationSheet(XComponentContext xContext) {
 		super(xContext);
 		propertiesSpalte = new PropertiesSpalte(xContext, PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
-		try {
-			update();
-		} catch (GenerateException e) {
-			handleGenerateException(e);
-		}
 	}
 
 	@Override
@@ -55,18 +54,39 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	@Override
 	protected void doRun() throws GenerateException {
 		getSheetHelper().setActiveSheet(getSheet());
-		update();
+		// update wird immer in SheetRunner aufgerufen
+		// update();
 	}
 
-	void update() throws GenerateException {
+	// update immer einmal in SheetRunner
+	public void update() throws GenerateException {
+		processBoxinfo("Update Konfiguration");
 		propertiesSpalte.updateKonfigBlock();
 		propertiesSpalte.doFormat();
 		initSpieltagKonfigSpalten();
+		initPageStyles();
+	}
+
+	/**
+	 * Page styles anlegen/updaten
+	 *
+	 * @throws GenerateException
+	 */
+	private void initPageStyles() throws GenerateException {
+		// default page Style
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
+
+		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES);
+		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
+			// Kopfzeile Spalte
+			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);
+			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setHeaderCenter(kopfZeile).create();
+			posKopfZeile.zeilePlusEins();
+		}
 	}
 
 	// Spieltag Konfiguration
 	private void initSpieltagKonfigSpalten() throws GenerateException {
-
 		// Header
 		CellProperties columnPropSpieltag = CellProperties.from().setWidth(1500);
 		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify().centerVertJustify();
@@ -79,7 +99,7 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 				.setCharHeight(14);
 		StringCellValue kopfZeile = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
 				.centerVertJustify().nichtUeberschreiben();
-		for (int spieltagCntr = 1; spieltagCntr <= 10; spieltagCntr++) {
+		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			getSheetHelper().setTextInCell(nr.setValue("" + spieltagCntr).setEndPosMergeZeilePlus(1));
 			nr.zeilePlus(2);
 			// Kopfzeile Spalte

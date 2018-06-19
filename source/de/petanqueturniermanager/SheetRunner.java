@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 
 public abstract class SheetRunner extends Thread implements Runnable {
 
@@ -68,6 +69,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			boolean isFehler = false;
 
 			try {
+				updateKonfigurationSheet();
 				doRun();
 			} catch (GenerateException e) {
 				handleGenerateException(e);
@@ -103,6 +105,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			getLogger().error(e.getMessage(), e);
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage()).show();
 		}
+	}
+
+	private void updateKonfigurationSheet() throws GenerateException {
+		new KonfigurationSheet(getxContext()).update();
 	}
 
 	public abstract Logger getLogger();

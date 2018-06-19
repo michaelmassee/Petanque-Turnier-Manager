@@ -66,7 +66,6 @@ public class SheetHelper {
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
 
 	private final XComponentContext xContext;
-	private final HashMap<String, XSpreadsheet> sheetCache = new HashMap<>(); // not static!
 
 	public SheetHelper(XComponentContext xContext) {
 		checkNotNull(xContext);
@@ -77,14 +76,8 @@ public class SheetHelper {
 	 * @param sheetName
 	 * @return null when not found
 	 */
-
 	public XSpreadsheet findByName(String sheetName) {
 		checkNotNull(sheetName);
-
-		if (sheetCache.get(sheetName) != null) {
-			return sheetCache.get(sheetName);
-		}
-
 		XSpreadsheet foundSpreadsheet = null;
 		XSpreadsheets sheets = getSheets();
 
@@ -97,10 +90,6 @@ public class SheetHelper {
 			} catch (NoSuchElementException | WrappedTargetException e) {
 				// ignore
 			}
-		}
-
-		if (foundSpreadsheet != null) {
-			sheetCache.put(sheetName, foundSpreadsheet);
 		}
 		return foundSpreadsheet;
 	}
@@ -121,7 +110,6 @@ public class SheetHelper {
 
 	public void removeSheet(String sheetName) {
 		checkNotNull(sheetName);
-		sheetCache.remove(sheetName);
 		XSpreadsheets sheets = getSheets();
 		try {
 			sheets.removeByName(sheetName);
@@ -136,11 +124,6 @@ public class SheetHelper {
 
 	public XSpreadsheet newIfNotExist(String sheetName, short pos, String tabColor) {
 		checkNotNull(sheetName);
-
-		if (sheetCache.get(sheetName) != null) {
-			return sheetCache.get(sheetName);
-		}
-
 		XSpreadsheet currSpreadsheet = null;
 		XSpreadsheets sheets = getSheets();
 
