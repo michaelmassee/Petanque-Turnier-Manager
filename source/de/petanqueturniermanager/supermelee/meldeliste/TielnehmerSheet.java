@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
@@ -49,13 +50,13 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 	public TielnehmerSheet(XComponentContext xContext) {
 		super(xContext, "Teilnehmer");
-		this.meldeliste = new MeldeListeSheet_Update(xContext);
-		this.konfigurationSheet = new KonfigurationSheet(xContext);
+		meldeliste = new MeldeListeSheet_Update(xContext);
+		konfigurationSheet = new KonfigurationSheet(xContext);
 	}
 
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
-		return this.getSheetHelper().newIfNotExist(getSheetName(getSpielTagNr()), DefaultSheetPos.SUPERMELEE_WORK, SHEET_COLOR);
+		return getSheetHelper().findByName(getSheetName(getSpielTagNr()));
 	}
 
 	@Override
@@ -65,21 +66,22 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		this.setSpielTagNr(this.konfigurationSheet.getAktiveSpieltag());
+		setSpielTagNr(konfigurationSheet.getAktiveSpieltag());
 		generate();
 	}
 
 	public void generate() throws GenerateException {
-		this.meldeliste.setSpielTag(this.getSpielTagNr());
-		getSheetHelper().removeSheet(getSheetName(this.getSpielTagNr()));
-		XSpreadsheet sheet = getSheet();
-		getSheetHelper().setActiveSheet(sheet);
+		meldeliste.setSpielTag(getSpielTagNr());
+
+		// wenn hier dann immer neu erstellen, force = true
+		NewSheet.from(getxContext(), getSheetName(getSpielTagNr())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
+				.setForceCreate(true).setActiv().create();
 
 		// meldeliste nach namen sortieren !
-		this.meldeliste.doSort(this.meldeliste.getSpielerNameErsteSpalte(), true);
+		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
 
 		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". Meldungen einlesen");
-		Meldungen aktiveUndAusgesetztMeldungen = this.meldeliste.getAktiveUndAusgesetztMeldungen();
+		Meldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 
 		CellProperties celPropNr = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		NumberCellValue spierNrVal = NumberCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
@@ -99,10 +101,10 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		for (Spieler spieler : aktiveUndAusgesetztMeldungen.getSpielerList()) {
 
 			spierNrVal.setValue((double) spieler.getNr());
-			nameFormula.setValue(this.meldeliste.formulaSverweisSpielernamen(spierNrVal.getPos().getAddress()));
+			nameFormula.setValue(meldeliste.formulaSverweisSpielernamen(spierNrVal.getPos().getAddress()));
 
-			this.getSheetHelper().setValInCell(spierNrVal);
-			this.getSheetHelper().setFormulaInCell(nameFormula);
+			getSheetHelper().setValInCell(spierNrVal);
+			getSheetHelper().setFormulaInCell(nameFormula);
 
 			spierNrVal.zeilePlusEins();
 			nameFormula.zeilePlusEins();
@@ -118,10 +120,10 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal, CellProperties celPropName) throws GenerateException {
-		this.getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte(), celPropNr);
-		this.getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte(), celPropName);
+		getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte(), celPropNr);
+		getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte(), celPropName);
 		// leere spalte breite
-		this.getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte() + 1, celPropNr);
+		getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte() + 1, celPropNr);
 	}
 
 	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
@@ -129,14 +131,14 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	}
 
 	public SpielTagNr getSpielTagNr() throws GenerateException {
-		checkNotNull(this.spielTagNr, "spielTagNr == null");
-		return this.spielTagNr;
+		checkNotNull(spielTagNr, "spielTagNr == null");
+		return spielTagNr;
 	}
 
 	public void setSpielTagNr(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag, "spielTagNr == null");
 		ProcessBox.from().spielTag(spielTag);
-		this.spielTagNr = spielTag;
+		spielTagNr = spielTag;
 	}
 
 }
