@@ -49,6 +49,8 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		// leeren erstellen
 		TeamRechner teamRechner;
 
+		processBoxinfo("Erstelle " + SHEETNAME);
+
 		getSheetHelper().setTabColor(sheet, "f4ca46");
 
 		// Header

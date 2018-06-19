@@ -446,8 +446,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 					+ " nicht Auslosen. Anzahl Spieler < 4. Aktive Spieler = " + meldungen.spieler().size());
 		}
 		// -------------------------------
-		XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
-		if (sheet == null) {
+		if (getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr())) != null) {
 			String msg = "Erstelle für Spieltag " + getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\neine neue Spielrunde";
 			MessageBoxResult msgBoxRslt = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL).forceOk(force).caption("Neue Spielrunde").message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
@@ -462,7 +461,6 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			return;
 		}
 		// -------------------------------
-
 		boolean doubletteRunde = false;
 		// abfrage nur doublette runde ?
 		boolean isKannNurDoublette = meldeListe.isKannNurDoublette(getSpielTag());
@@ -476,20 +474,19 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		if (force && isKannNurDoublette) {
 			doubletteRunde = true;
 		}
-		sheet = getSheet();
 		TripletteDoublPaarungen paarungen = new TripletteDoublPaarungen();
 		try {
 			SpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
 			spielRundeSheet.validateSpielerTeam(null);
-			headerPaarungen(sheet, spielRundeSheet);
-			headerSpielerNr(sheet);
+			headerPaarungen(getSheet(), spielRundeSheet);
+			headerSpielerNr(getSheet());
 			spielerNummerEinfuegen(spielRundeSheet);
 			vertikaleErgbnisseFormulEinfuegen(spielRundeSheet);
 			datenErsteSpalte();
-			datenformatieren(sheet);
-			spielrundeProperties(sheet, doubletteRunde);
+			datenformatieren(getSheet());
+			spielrundeProperties(getSheet(), doubletteRunde);
 			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
-			wennNurDoubletteRundeDannSpaltenAusblenden(sheet, doubletteRunde);
+			wennNurDoubletteRundeDannSpaltenAusblenden(getSheet(), doubletteRunde);
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());

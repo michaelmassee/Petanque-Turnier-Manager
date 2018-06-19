@@ -25,6 +25,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
+import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
@@ -81,6 +82,10 @@ public class PageStyleHelper {
 		checkNotNull(iSheet);
 		checkNotNull(pageStyleDef);
 		return new PageStyleHelper(iSheet, pageStyleDef);
+	}
+
+	public static PageStyleHelper from(KonfigurationSheet iSheet, PageStyle pageStyle) throws GenerateException {
+		return PageStyleHelper.from(iSheet, pageStyle.getName());
 	}
 
 	/**
@@ -151,6 +156,11 @@ public class PageStyleHelper {
 
 	public PageStyleHelper setFooterRight(String string) {
 		pageStyleDef.setFooterRight(string);
+		return this;
+	}
+
+	public PageStyleHelper setHeaderCenter(String string) {
+		pageStyleDef.setHeaderCenter(string);
 		return this;
 	}
 
