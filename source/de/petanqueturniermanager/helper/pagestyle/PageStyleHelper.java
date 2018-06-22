@@ -25,7 +25,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
@@ -51,12 +50,9 @@ public class PageStyleHelper {
 	}
 
 	private PageStyleHelper(XSpreadsheet sheet, XComponentContext componentContext, PageStyleDef pageStyleDef) {
-		checkNotNull(sheet);
-		checkNotNull(componentContext);
-		checkNotNull(pageStyleDef);
-		this.sheet = sheet;
-		this.componentContext = componentContext;
-		this.pageStyleDef = pageStyleDef;
+		this.sheet = checkNotNull(sheet);
+		this.componentContext = checkNotNull(componentContext);
+		this.pageStyleDef = checkNotNull(pageStyleDef);
 	}
 
 	public static PageStyleHelper from(XSpreadsheet sheet, XComponentContext componentContext, PageStyleDef pageStyleDef) throws GenerateException {
@@ -84,7 +80,7 @@ public class PageStyleHelper {
 		return new PageStyleHelper(iSheet, pageStyleDef);
 	}
 
-	public static PageStyleHelper from(KonfigurationSheet iSheet, PageStyle pageStyle) throws GenerateException {
+	public static PageStyleHelper from(ISheet iSheet, PageStyle pageStyle) throws GenerateException {
 		return PageStyleHelper.from(iSheet, pageStyle.getName());
 	}
 

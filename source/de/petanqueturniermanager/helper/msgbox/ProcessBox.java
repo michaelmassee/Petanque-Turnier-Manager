@@ -30,6 +30,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
 
@@ -65,9 +66,8 @@ public class ProcessBox {
 	private JTextField spielrundeText = null;
 
 	private ProcessBox(XComponentContext xContext) {
-		checkNotNull(xContext);
-		this.xContext = xContext;
-		this.frame = new JFrame();
+		this.xContext = checkNotNull(xContext);
+		frame = new JFrame();
 		initBox();
 	}
 
@@ -99,7 +99,7 @@ public class ProcessBox {
 
 		frame.setPreferredSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 		frame.setSize(MIN_WIDTH, MIN_HEIGHT);
-		frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 		moveInsideTopWindow();
 	}
 

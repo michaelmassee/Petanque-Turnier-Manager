@@ -38,10 +38,8 @@ public class ConditionalFormatHelper {
 	private String styleName;
 
 	private ConditionalFormatHelper(ISheet sheet, RangePosition rangePos) {
-		checkNotNull(sheet);
-		checkNotNull(rangePos);
-		this.sheet = sheet;
-		this.rangePos = rangePos;
+		this.sheet = checkNotNull(sheet);
+		this.rangePos = checkNotNull(rangePos);
 	}
 
 	public static ConditionalFormatHelper from(ISheet sheet, RangePosition rangePos) {
@@ -49,12 +47,12 @@ public class ConditionalFormatHelper {
 	}
 
 	public ConditionalFormatHelper append() {
-		this.doClear = false;
+		doClear = false;
 		return this;
 	}
 
 	public ConditionalFormatHelper clear() {
-		this.doClear = true;
+		doClear = true;
 		return this;
 	}
 
@@ -64,20 +62,20 @@ public class ConditionalFormatHelper {
 	}
 
 	public ConditionalFormatHelper formulaIsText() {
-		this.formula1 = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
-		this.conditionOperator = ConditionOperator.FORMULA;
+		formula1 = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
+		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
 
 	public ConditionalFormatHelper formulaIsEvenRow() {
-		this.formula1 = FORMULA_ISEVEN_ROW;
-		this.conditionOperator = ConditionOperator.FORMULA;
+		formula1 = FORMULA_ISEVEN_ROW;
+		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
 
 	public ConditionalFormatHelper formulaIsOddRow() {
-		this.formula1 = FORMULA_ISODD_ROW;
-		this.conditionOperator = ConditionOperator.FORMULA;
+		formula1 = FORMULA_ISODD_ROW;
+		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
 
@@ -98,61 +96,61 @@ public class ConditionalFormatHelper {
 
 	public ConditionalFormatHelper styleIsFehler() throws GenerateException {
 		FehlerStyle fehlerStyle = new FehlerStyle();
-		CellStyleHelper.from(this.sheet, fehlerStyle).apply();
-		this.styleName = fehlerStyle.getName();
+		CellStyleHelper.from(sheet, fehlerStyle).apply();
+		styleName = fehlerStyle.getName();
 		return this;
 	}
 
 	public ConditionalFormatHelper style(AbstractCellStyleDef cellStyleDef) throws GenerateException {
 		// add/update Style
-		CellStyleHelper.from(this.sheet, cellStyleDef).apply();
-		this.styleName = cellStyleDef.getName();
+		CellStyleHelper.from(sheet, cellStyleDef).apply();
+		styleName = cellStyleDef.getName();
 		return this;
 	}
 
 	/**
 	 * Formatierung anwenden und properties auf default
-	 * 
+	 *
 	 * @return
 	 * @throws GenerateException
 	 */
 
 	public ConditionalFormatHelper applyNew() throws GenerateException {
 		apply();
-		this.doClear = false;
-		this.conditionOperator = null;
-		this.formula1 = null;
-		this.formula2 = null;
-		this.styleName = null;
+		doClear = false;
+		conditionOperator = null;
+		formula1 = null;
+		formula2 = null;
+		styleName = null;
 		return this;
 	}
 
 	/**
 	 * Formatierung anwenden
-	 * 
+	 *
 	 * @return
 	 * @throws GenerateException
 	 */
 
 	public ConditionalFormatHelper apply() throws GenerateException {
-		checkNotNull(this.conditionOperator);
-		checkNotNull(this.formula1);
-		checkNotNull(this.styleName);
+		checkNotNull(conditionOperator);
+		checkNotNull(formula1);
+		checkNotNull(styleName);
 
-		XCellRange xCellRange = this.sheet.getSheetHelper().getCellRange(this.sheet.getSheet(), this.rangePos);
+		XCellRange xCellRange = sheet.getSheetHelper().getCellRange(sheet.getSheet(), rangePos);
 
 		XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xCellRange);
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
 		try {
 			xEntries = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetConditionalEntries.class, xPropSet.getPropertyValue("ConditionalFormat"));
-			if (this.doClear) {
+			if (doClear) {
 				xEntries.clear(); // clears all condition entries.
 			}
 
 			// create a condition and apply it to the range
 			// https://www.openoffice.org/api/docs/common/ref/com/sun/star/sheet/XSheetConditionalEntries.html
 			PropertyValue[] aCondition;
-			if (this.formula2 != null) {
+			if (formula2 != null) {
 				aCondition = new PropertyValue[4];
 			} else {
 				aCondition = new PropertyValue[3];
@@ -160,30 +158,30 @@ public class ConditionalFormatHelper {
 			int idx = 0;
 			aCondition[idx] = new com.sun.star.beans.PropertyValue();
 			aCondition[idx].Name = "Operator";
-			aCondition[idx].Value = this.conditionOperator;
+			aCondition[idx].Value = conditionOperator;
 
 			// string Formula1 contains the value or formula for the operation.
 			idx++;
 			aCondition[idx] = new com.sun.star.beans.PropertyValue();
 			aCondition[idx].Name = "Formula1";
-			aCondition[idx].Value = this.formula1;
+			aCondition[idx].Value = formula1;
 
 			// string Formula2 contains the second value or formula for the operation (used with ConditionOperator::BETWEEN or ConditionOperator::NOT_BETWEEN operations).
-			if (this.formula2 != null) {
+			if (formula2 != null) {
 				idx++;
 				aCondition[idx] = new com.sun.star.beans.PropertyValue();
 				aCondition[idx].Name = "Formula2";
-				aCondition[idx].Value = this.formula2;
+				aCondition[idx].Value = formula2;
 			}
 
 			idx++;
 			aCondition[idx] = new com.sun.star.beans.PropertyValue();
 			aCondition[idx].Name = "StyleName";
-			aCondition[idx].Value = this.styleName;
+			aCondition[idx].Value = styleName;
 			xEntries.addNew(aCondition);
 			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
 		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException | PropertyVetoException e) {
-			this.sheet.getLogger().error(e.getMessage(), e);
+			sheet.getLogger().error(e.getMessage(), e);
 		}
 		return this;
 	}

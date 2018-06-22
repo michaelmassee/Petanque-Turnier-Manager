@@ -8,7 +8,6 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import de.petanqueturniermanager.algorithmen.Permutations;
 import de.petanqueturniermanager.model.Spieler;
 
 public class PermutationsTest {
@@ -19,7 +18,7 @@ public class PermutationsTest {
 		ArrayList<Spieler> spieler = new ArrayList<>();
 
 		for (int i = 1; i < 10; i++) {
-			spieler.add(new Spieler(i));
+			spieler.add(Spieler.from(i));
 		}
 
 		int anzahl = 1;

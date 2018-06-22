@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.cellstyle;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 
@@ -14,18 +14,16 @@ public abstract class AbstractCellStyleDef {
 	private final CellProperties cellProperties;
 
 	public AbstractCellStyleDef(String name, CellProperties cellProperties) {
-		checkNotNull(name);
-		checkNotNull(cellProperties);
-		this.name = name;
-		this.cellProperties = cellProperties;
+		this.name = checkNotNull(name, "name == null");
+		this.cellProperties = checkNotNull(cellProperties, "cellProperties == null");
 	}
 
 	public String getName() {
-		return this.name;
+		return name;
 	}
 
 	public CellProperties getCellProperties() {
-		return this.cellProperties;
+		return cellProperties;
 	}
 
 }

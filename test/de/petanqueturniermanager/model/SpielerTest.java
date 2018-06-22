@@ -10,20 +10,18 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.petanqueturniermanager.model.Spieler;
-
 public class SpielerTest {
 
 	Spieler spieler;
 
 	@Before
 	public void setup() {
-		spieler = new Spieler(1);
+		spieler = Spieler.from(1);
 	}
 
 	@Test
 	public void testEquals() throws Exception {
-		assertTrue(new Spieler(1).equals(new Spieler(1)));
+		assertTrue(Spieler.from(1).equals(Spieler.from(1)));
 	}
 
 	@Test
@@ -44,17 +42,17 @@ public class SpielerTest {
 
 	@Test
 	public void testDeleteWarImTeam() throws Exception {
-		Spieler spieler2 = new Spieler(2);
-		Spieler spieler3 = new Spieler(3);
-		Spieler spieler4 = new Spieler(4);
-		
+		Spieler spieler2 = Spieler.from(2);
+		Spieler spieler3 = Spieler.from(3);
+		Spieler spieler4 = Spieler.from(4);
+
 		spieler.addWarImTeamMitWennNichtVorhanden(spieler2);
 		spieler.addWarImTeamMitWennNichtVorhanden(spieler3);
 		spieler.addWarImTeamMitWennNichtVorhanden(spieler4);
 		assertThat(spieler.warImTeamMit(spieler3)).isTrue();
 		assertThat(spieler.warImTeamMit(spieler2)).isTrue();
 		assertThat(spieler.warImTeamMit(spieler4)).isTrue();
-		
+
 		spieler.deleteWarImTeam(spieler3);
 		assertThat(spieler.warImTeamMit(spieler3)).isFalse();
 		assertThat(spieler.warImTeamMit(spieler2)).isTrue();

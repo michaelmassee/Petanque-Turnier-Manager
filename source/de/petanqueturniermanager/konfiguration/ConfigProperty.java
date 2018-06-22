@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.konfiguration;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ConfigProperty<V> {
 
@@ -14,14 +14,12 @@ public class ConfigProperty<V> {
 	private String description;
 
 	private ConfigProperty(ConfigPropertyType type, String key) {
-		checkNotNull(type);
-		checkNotNull(key);
-		this.type = type;
-		this.key = key;
+		this.type = checkNotNull(type);
+		this.key = checkNotNull(key);
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
-		return new ConfigProperty<V>(type, key);
+		return new ConfigProperty<>(type, key);
 	}
 
 	public String getKey() {
