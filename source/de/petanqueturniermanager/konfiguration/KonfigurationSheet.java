@@ -17,6 +17,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
@@ -65,6 +66,9 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 		propertiesSpalte.doFormat();
 		initSpieltagKonfigSpalten();
 		initPageStyles();
+
+		// anzeige in processBoxinfo
+		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde());
 	}
 
 	/**

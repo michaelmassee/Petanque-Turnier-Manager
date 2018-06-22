@@ -90,7 +90,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (NewSheet.from(getxContext(), SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().forceCreate().create().isDidCreate()) {
+		SpielTagNr spieltagNr = konfigurationSheet.getAktiveSpieltag();
+		if (NewSheet.from(getxContext(), SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().forceCreate().spielTagPageStyle(spieltagNr)
+				.create().isDidCreate()) {
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}
@@ -443,7 +445,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
-		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_ENDRANGLISTE, SHEET_COLOR);
+		return getSheetHelper().findByName(SHEETNAME);
 	}
 
 	@Override

@@ -5,9 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 * PaarungenTest.java
 * Erstellung     : 31.08.2017 / Michael Massee
 */
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,10 +38,10 @@ public class TripletteDoublPaarungenTest {
 	@Before
 	public void setup() throws AlgorithmenException {
 		// this.paarungen = new TripletteDoublPaarungen();
-		this.paarungen = spy(TripletteDoublPaarungen.class);
+		paarungen = spy(TripletteDoublPaarungen.class);
 
-		this.meldungen = newTestMeldungen(16);
-		this.teams = newTestTeams(this.meldungen);
+		meldungen = newTestMeldungen(16);
+		teams = newTestTeams(meldungen);
 	}
 
 	@Test
@@ -48,7 +52,7 @@ public class TripletteDoublPaarungenTest {
 		for (int spielrNr = 1; spielrNr < 9; spielrNr++) {
 			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 		}
-		SpielRunde spielRunde = this.paarungen.neueSpielrunde(1, meldungen);
+		SpielRunde spielRunde = paarungen.neueSpielrunde(1, meldungen);
 
 		assertThat(spielRunde.teams()).isNotEmpty();
 		assertThat(spielRunde.teams()).hasSize(4);
@@ -70,20 +74,19 @@ public class TripletteDoublPaarungenTest {
 
 		testDatenList.forEach((paarungenExpectedAnzahl) -> {
 			try {
-				this.meldungen = new Meldungen();
+				meldungen = new Meldungen();
 				for (int spielrNr = 1; spielrNr <= paarungenExpectedAnzahl.expAnzSpieler; spielrNr++) {
-					this.meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
+					meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 				}
 				for (int spielrunde = 1; spielrunde <= anzSpielrunden; spielrunde++) {
-					SpielRunde spielRunde = this.paarungen.neueSpielrunde(spielrunde, this.meldungen);
-					pruefeTeamMischungSpielrunde(paarungenExpectedAnzahl.expAnzSpieler,
-							paarungenExpectedAnzahl.expAnzDoubl, paarungenExpectedAnzahl.expAnzTriplett, spielRunde);
+					SpielRunde spielRunde = paarungen.neueSpielrunde(spielrunde, meldungen);
+					pruefeTeamMischungSpielrunde(paarungenExpectedAnzahl.expAnzSpieler, paarungenExpectedAnzahl.expAnzDoubl, paarungenExpectedAnzahl.expAnzTriplett, spielRunde);
 				}
 			} catch (AlgorithmenException e) {
 				throw new UncheckedExecutionException(e);
 			}
 		});
-		verify(this.paarungen, times(expectedCalls)).neueSpielrunde(anyInt(), any(Meldungen.class));
+		verify(paarungen, times(expectedCalls)).neueSpielrunde(anyInt(), any(Meldungen.class));
 	}
 
 	@Test
@@ -117,19 +120,17 @@ public class TripletteDoublPaarungenTest {
 		}
 	}
 
-	private void pruefeTeamMischung(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett)
-			throws AlgorithmenException {
+	private void pruefeTeamMischung(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett) throws AlgorithmenException {
 
-		this.meldungen = new Meldungen();
+		meldungen = new Meldungen();
 		for (int spielrNr = 1; spielrNr <= expAnzSpieler; spielrNr++) {
-			this.meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
+			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 		}
-		SpielRunde spielRunde = this.paarungen.neueSpielrunde(1, this.meldungen);
+		SpielRunde spielRunde = paarungen.neueSpielrunde(1, meldungen);
 		pruefeTeamMischungSpielrunde(expAnzSpieler, expAnzDoubl, expAnzTriplett, spielRunde);
 	}
 
-	private void pruefeTeamMischungSpielrunde(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett,
-			SpielRunde spielRunde) {
+	private void pruefeTeamMischungSpielrunde(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett, SpielRunde spielRunde) {
 
 		int expAnzTeams = expAnzDoubl + expAnzTriplett;
 
@@ -137,25 +138,22 @@ public class TripletteDoublPaarungenTest {
 
 		assertThat(spielRunde.teams()).isNotEmpty();
 		assertThat(spielRunde.teams()).hasSize(expAnzTeams);
-		assertThat(this.meldungen.size()).isEqualTo(expAnzSpieler);
+		assertThat(meldungen.size()).isEqualTo(expAnzSpieler);
 
 		int teamCntr = 1;
 		int anzTriplette = 0;
 		for (Team team : spielRunde.teams()) {
 			// erste teams doublette
 			if (teamCntr <= expAnzDoubl) {
-				assertThat(team.size()).as("anz spieler %d, test doublette teamNr %d", expAnzSpieler, teamCntr)
-						.isEqualTo(2);
+				assertThat(team.size()).as("anz spieler %d, test doublette teamNr %d", expAnzSpieler, teamCntr).isEqualTo(2);
 			} else {
 				// dann triplette teams
-				assertThat(team.size()).as("anz spieler %d, test triplette teamNr %d", expAnzSpieler, teamCntr)
-						.isEqualTo(3);
+				assertThat(team.size()).as("anz spieler %d, test triplette teamNr %d", expAnzSpieler, teamCntr).isEqualTo(3);
 				anzTriplette++;
 			}
 			teamCntr++;
 		}
-		assertThat(anzTriplette).as("anz spieler %d, exp anz Triplette %d", expAnzSpieler, anzTriplette)
-				.isEqualTo(expAnzTriplett);
+		assertThat(anzTriplette).as("anz spieler %d, exp anz Triplette %d", expAnzSpieler, anzTriplette).isEqualTo(expAnzTriplett);
 	}
 
 	@Test
@@ -170,11 +168,11 @@ public class TripletteDoublPaarungenTest {
 		// 10,11,12
 		Team spielerteam3 = new Team(3);
 		for (int i = 10; i < 13; i++) {
-			spielerteam3.addSpielerWennNichtVorhanden(new Spieler(i));
+			spielerteam3.addSpielerWennNichtVorhanden(Spieler.from(i));
 		}
 
 		// 11 hat mit 1,2,3 zusammen gespielt
-		Team spielerteam1 = this.teams.get(0);
+		Team spielerteam1 = teams.get(0);
 
 		Spieler spieler11_OhneTeam = spielerteam3.findSpielerByNr(11);
 		Spieler spieler1 = spielerteam1.findSpielerByNr(1);
@@ -186,7 +184,7 @@ public class TripletteDoublPaarungenTest {
 
 		spieler11_OhneTeam.deleteTeam();
 
-		Spieler result = this.paarungen.kannTauschenMitSpielerOhneTeam(spieler11_OhneTeam, spielerteam3, this.teams);
+		Spieler result = paarungen.kannTauschenMitSpielerOhneTeam(spieler11_OhneTeam, spielerteam3, teams);
 
 		assertNotNull(result);
 		assertEquals(4, result.getNr());
@@ -195,8 +193,8 @@ public class TripletteDoublPaarungenTest {
 	@Test
 	public void testFindNextTeamInSpielrunde_Einfach_next_Freie_Spieler() throws Exception {
 		SpielRunde spielrunde = new SpielRunde(1);
-		spielrunde.addTeamsWennNichtVorhanden(this.teams);
-		Team resultTeam = this.paarungen.findNextTeamInSpielrunde(3, this.meldungen, spielrunde);
+		spielrunde.addTeamsWennNichtVorhanden(teams);
+		Team resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen, spielrunde);
 		assertNotNull(resultTeam);
 		assertEquals(3, resultTeam.size());
 	}
@@ -251,23 +249,23 @@ public class TripletteDoublPaarungenTest {
 		// neue Spielrunde
 		SpielRunde spielrunde = new SpielRunde(1);
 
-		Team resultTeam = this.paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
+		Team resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
 		assertNotNull(resultTeam);
 		assertEquals(3, resultTeam.size());
 		teams2.add(resultTeam);
 
-		resultTeam = this.paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
+		resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
 		assertNotNull(resultTeam);
 		assertEquals(3, resultTeam.size());
 		teams2.add(resultTeam);
 
-		resultTeam = this.paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
+		resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
 		assertNotNull(resultTeam);
 		assertEquals(3, resultTeam.size());
 		teams2.add(resultTeam);
 
 		// letztes Team nicht so einfach muss tauschen
-		resultTeam = this.paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
+		resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
 		assertNotNull(resultTeam);
 		assertEquals(3, resultTeam.size());
 		teams2.add(resultTeam);
@@ -326,14 +324,13 @@ public class TripletteDoublPaarungenTest {
 		SpielRunde dritteRunde = buildTestRunde(3, testMeldungen, spielerNrTeamListe);
 		System.out.println(dritteRunde);
 
-		SpielRunde vierteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(4, 3, testMeldungen);
+		SpielRunde vierteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(4, 3, testMeldungen);
 		System.out.println(vierteRunde);
 		assertNotNull(vierteRunde);
 		assertEquals(4, vierteRunde.teams().size());
 	}
 
-	private SpielRunde buildTestRunde(int nr, Meldungen testMeldungen, List<Integer[]> spielerNrTeamListe)
-			throws AlgorithmenException {
+	private SpielRunde buildTestRunde(int nr, Meldungen testMeldungen, List<Integer[]> spielerNrTeamListe) throws AlgorithmenException {
 		SpielRunde spielRunde = new SpielRunde(nr);
 
 		int tmNr = 1;
@@ -366,7 +363,7 @@ public class TripletteDoublPaarungenTest {
 
 		// TODO 3 runden sind nicht immer möglich
 		for (int rundenr = 1; rundenr < 3; rundenr++) {
-			SpielRunde runde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(rundenr, 3, meldungen);
+			SpielRunde runde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(rundenr, 3, meldungen);
 			System.out.println(runde);
 			assertNotNull(runde);
 			assertEquals(4, runde.teams().size());
@@ -378,17 +375,17 @@ public class TripletteDoublPaarungenTest {
 		Meldungen meldungen = newTestMeldungen(18);
 		int anzTriplette = 6;
 
-		SpielRunde ersteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
+		SpielRunde ersteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
 		System.out.println(ersteRunde);
 		assertNotNull(ersteRunde);
 		assertEquals(anzTriplette, ersteRunde.teams().size());
 
-		SpielRunde zweiteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(2, 3, meldungen);
+		SpielRunde zweiteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(2, 3, meldungen);
 		System.out.println(zweiteRunde);
 		assertNotNull(zweiteRunde);
 		assertEquals(anzTriplette, zweiteRunde.teams().size());
 
-		SpielRunde dritteRunde = this.paarungen.generiereNeuSpielrundeMitFesteTeamGroese(3, 3, meldungen);
+		SpielRunde dritteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(3, 3, meldungen);
 		System.out.println(dritteRunde);
 		assertNotNull(dritteRunde);
 		assertEquals(anzTriplette, dritteRunde.teams().size());
@@ -409,7 +406,7 @@ public class TripletteDoublPaarungenTest {
 		Meldungen meldungen = new Meldungen();
 
 		for (int i = 1; i <= anzSpieler; i++) {
-			Spieler spieler = new Spieler(i);
+			Spieler spieler = Spieler.from(i);
 			meldungen.addSpielerWennNichtVorhanden(spieler);
 		}
 		return meldungen;

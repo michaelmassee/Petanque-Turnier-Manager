@@ -14,13 +14,16 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
+import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 
-public class SupermeleeTeamPaarungenSheet extends SheetRunner {
+public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
 
 	public static final String SHEETNAME = "Supermêlée Teams";
@@ -36,10 +39,12 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner {
 		super(xContext);
 	}
 
+	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
 		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME);
 		if (sheet == null) {
 			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
+			PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 			initSheet(sheet);
 		}
 		return sheet;

@@ -25,10 +25,8 @@ public class PageStyleDef {
 	}
 
 	public PageStyleDef(String name, PageProperties pageProperties) {
-		checkNotNull(name);
-		checkNotNull(pageProperties);
-		this.name = name;
-		this.pageProperties = pageProperties;
+		this.name = checkNotNull(name);
+		this.pageProperties = checkNotNull(pageProperties);
 	}
 
 	public String getName() {

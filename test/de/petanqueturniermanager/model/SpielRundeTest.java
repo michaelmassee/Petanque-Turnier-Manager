@@ -4,15 +4,12 @@
 
 package de.petanqueturniermanager.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
-import de.petanqueturniermanager.model.SpielRunde;
-import de.petanqueturniermanager.model.Spieler;
-import de.petanqueturniermanager.model.Team;
 
 public class SpielRundeTest {
 
@@ -20,7 +17,7 @@ public class SpielRundeTest {
 
 	@Before
 	public void setup() {
-		this.spielRunde = new SpielRunde(1);
+		spielRunde = new SpielRunde(1);
 	}
 
 	@Test
@@ -29,14 +26,14 @@ public class SpielRundeTest {
 		Team teamA = new Team(1);
 		Team teamB = new Team(2);
 
-		this.spielRunde.addTeamWennNichtVorhanden(teamA);
-		this.spielRunde.addTeamWennNichtVorhanden(teamB);
+		spielRunde.addTeamWennNichtVorhanden(teamA);
+		spielRunde.addTeamWennNichtVorhanden(teamB);
 
-		teamA.addSpielerWennNichtVorhanden(new Spieler(1));
-		teamB.addSpielerWennNichtVorhanden(new Spieler(1));
+		teamA.addSpielerWennNichtVorhanden(Spieler.from(1));
+		teamB.addSpielerWennNichtVorhanden(Spieler.from(1));
 
 		try {
-			this.spielRunde.validateSpielerTeam(null);
+			spielRunde.validateSpielerTeam(null);
 			fail("Erwarte AlgorithmenException Exception");
 		} catch (AlgorithmenException exp) {
 

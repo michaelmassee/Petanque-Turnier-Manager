@@ -25,8 +25,7 @@ public class MessageBox extends AbstractMessageBox {
 	private MessageBox(XComponentContext xContext, MessageBoxTypeEnum type) {
 		super(xContext);
 		checkNotNull(xContext);
-		checkNotNull(type);
-		this.type = type;
+		this.type = checkNotNull(type);
 	}
 
 	public static final MessageBox from(XComponentContext xContext, MessageBoxTypeEnum type) {
@@ -59,8 +58,8 @@ public class MessageBox extends AbstractMessageBox {
 	 */
 	public final MessageBoxResult show() {
 
-		if (this.forceOk) {
-			switch (this.type) {
+		if (forceOk) {
+			switch (type) {
 			case QUESTION_YES_NO:
 			case WARN_YES_NO:
 				return MessageBoxResult.YES;
@@ -78,24 +77,24 @@ public class MessageBox extends AbstractMessageBox {
 		MessageBoxResult result = null;
 		XMessageBox xMessageBox = null;
 
-		switch (this.type) {
+		switch (type) {
 		case QUESTION_YES_NO:
-			xMessageBox = this.newXMessageBox(MessageBoxType.QUERYBOX, MessageBoxButtons.BUTTONS_YES_NO);
+			xMessageBox = newXMessageBox(MessageBoxType.QUERYBOX, MessageBoxButtons.BUTTONS_YES_NO);
 			break;
 		case QUESTION_OK_CANCEL:
-			xMessageBox = this.newXMessageBox(MessageBoxType.QUERYBOX, MessageBoxButtons.BUTTONS_OK_CANCEL);
+			xMessageBox = newXMessageBox(MessageBoxType.QUERYBOX, MessageBoxButtons.BUTTONS_OK_CANCEL);
 			break;
 		case WARN_OK:
-			xMessageBox = this.newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK);
+			xMessageBox = newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK);
 			break;
 		case WARN_OK_CANCEL:
-			xMessageBox = this.newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK_CANCEL);
+			xMessageBox = newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_OK_CANCEL);
 			break;
 		case WARN_YES_NO:
-			xMessageBox = this.newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO);
+			xMessageBox = newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO);
 			break;
 		case ERROR_OK:
-			xMessageBox = this.newXMessageBox(MessageBoxType.ERRORBOX, MessageBoxButtons.BUTTONS_OK);
+			xMessageBox = newXMessageBox(MessageBoxType.ERRORBOX, MessageBoxButtons.BUTTONS_OK);
 			break;
 		default:
 			break;
@@ -112,7 +111,7 @@ public class MessageBox extends AbstractMessageBox {
 	}
 
 	private XMessageBox newXMessageBox(MessageBoxType type, int buttons) {
-		return this.getXMessageBoxFactory().createMessageBox(getWindowPeer(), type, buttons, this.caption, this.message);
+		return getXMessageBoxFactory().createMessageBox(getWindowPeer(), type, buttons, caption, message);
 	}
 
 	@Override

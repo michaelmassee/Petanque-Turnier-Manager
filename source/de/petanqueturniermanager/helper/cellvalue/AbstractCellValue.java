@@ -63,8 +63,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setSheet(XSpreadsheet sheet) {
-		checkNotNull(sheet);
-		this.sheet = sheet;
+		this.sheet = checkNotNull(sheet);
 		return (T) this;
 	}
 
@@ -208,8 +207,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setCellProperties(CellProperties cellProperties) {
-		checkNotNull(cellProperties);
-		this.cellProperties = cellProperties;
+		this.cellProperties = checkNotNull(cellProperties);
 		return (T) this;
 	}
 
@@ -370,8 +368,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T setColumnProperties(CellProperties columnProperties) {
-		checkNotNull(columnProperties);
-		this.columnProperties = columnProperties;
+		this.columnProperties = checkNotNull(columnProperties);
 		return (T) this;
 	}
 

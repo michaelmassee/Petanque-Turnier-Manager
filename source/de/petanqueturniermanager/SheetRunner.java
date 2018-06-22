@@ -38,8 +38,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	public SheetRunner(XComponentContext xContext) {
-		checkNotNull(xContext);
-		this.xContext = xContext;
+		this.xContext = checkNotNull(xContext, "xContext==null");
 		sheetHelper = new SheetHelper(xContext);
 	}
 

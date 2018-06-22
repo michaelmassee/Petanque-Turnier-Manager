@@ -33,6 +33,7 @@ import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -74,59 +75,57 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 
 	public SpieltagRanglisteSheet(XComponentContext xContext) {
 		super(xContext, "Spieltag Rangliste");
-		this.meldeliste = new MeldeListeSheet_Update(xContext);
-		this.konfigurationSheet = new KonfigurationSheet(xContext);
-		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeliste, Formation.MELEE);
-		this.aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xContext);
-		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
-		this.ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, this.spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, this.getKonfigurationSheet());
-		this.rangListeSorter = new RangListeSorter(xContext, this);
+		meldeliste = new MeldeListeSheet_Update(xContext);
+		konfigurationSheet = new KonfigurationSheet(xContext);
+		spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
+		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xContext);
+		rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
+		ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
+		rangListeSorter = new RangListeSorter(xContext, this);
 	}
 
 	@Override
 	protected void doRun() throws GenerateException {
-		setSpieltagNr(this.getKonfigurationSheet().getAktiveSpieltag());
-		this.getxCalculatable().enableAutomaticCalculation(false); // speed up
+		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
+		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		generate();
 	}
 
 	public void generate() throws GenerateException {
 
-		this.meldeliste.setSpielTag(getSpieltagNr());
-		this.aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
+		meldeliste.setSpielTag(getSpieltagNr());
+		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 		// neu erstellen
-		Integer headerColor = this.getKonfigurationSheet().getRanglisteHeaderFarbe();
+		NewSheet.from(getxContext(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
 
-		getSheetHelper().removeSheet(getSheetName(this.getSpieltagNr()));
-		XSpreadsheet sheet = getSheet();
-		getSheetHelper().setActiveSheet(sheet);
-		this.spielerSpalte.alleSpieltagSpielerEinfuegen();
-		this.spielerSpalte.insertHeaderInSheet(headerColor);
-		this.ranglisteFormatter.updateHeader();
-		this.rangListeSorter.insertSortValidateSpalte();
-		this.rangListeSorter.insertManuelsortSpalten();
+		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
+		spielerSpalte.alleSpieltagSpielerEinfuegen();
+		spielerSpalte.insertHeaderInSheet(headerColor);
+		ranglisteFormatter.updateHeader();
+		rangListeSorter.insertSortValidateSpalte();
+		rangListeSorter.insertManuelsortSpalten();
 		ergebnisseFormulaEinfuegen();
 		updateSummenSpalten();
-		this.spielerSpalte.formatDaten();
-		this.getRangListeSpalte().upDateRanglisteSpalte();
-		this.getRangListeSpalte().insertHeaderInSheet(headerColor);
-		this.ranglisteFormatter.formatDaten();
-		this.ranglisteFormatter.formatDatenErrorGeradeUngerade(rangListeSorter.validateSpalte());
-		this.getxCalculatable().calculate();
-		this.rangListeSorter.doSort();
-		this.ranglisteFormatter.addFooter();
+		spielerSpalte.formatDaten();
+		getRangListeSpalte().upDateRanglisteSpalte();
+		getRangListeSpalte().insertHeaderInSheet(headerColor);
+		ranglisteFormatter.formatDaten();
+		ranglisteFormatter.formatDatenErrorGeradeUngerade(rangListeSorter.validateSpalte());
+		getxCalculatable().calculate();
+		rangListeSorter.doSort();
+		ranglisteFormatter.addFooter();
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {
 
 		processBoxinfo("Summenspalten Aktualisieren");
 
-		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 		if (anzSpielRunden < 1) {
 			return;
 		}
 		XSpreadsheet sheet = getSheet();
-		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			SheetRunner.testDoCancelTask();
@@ -185,11 +184,11 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		processBoxinfo("Spieltag(e) Ergebnisse Einfuegen");
 
 		XSpreadsheet sheet = getSheet();
-		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 
-		int nichtgespieltPlus = this.getKonfigurationSheet().getNichtGespielteRundePlus();
-		int nichtgespieltMinus = this.getKonfigurationSheet().getNichtGespielteRundeMinus();
-		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
+		int nichtgespieltPlus = getKonfigurationSheet().getNichtGespielteRundePlus();
+		int nichtgespieltMinus = getKonfigurationSheet().getNichtGespielteRundeMinus();
+		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";8))";
 
@@ -206,7 +205,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		// IFNA(VLOOKUP)
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			// $ = absolute wegen sortieren
-			String formulaSheetName = "$'" + this.aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
+			String formulaSheetName = "$'" + aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
 			{
 				// plus spalte
 				// =WENNNV(SVERWEIS(INDIREKT(ADRESSE(ZEILE();1;8));$'1.1. Spielrunde'.$S$3:$T$1003;2;0);0)
@@ -281,7 +280,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 
 	public int getErsteSummeSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
-		int anzSpielRunden = this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(spieltag);
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(spieltag);
 		return ERSTE_SPIELRUNDE_SPALTE + (anzSpielRunden * 2);
 	}
 
@@ -302,7 +301,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		XSpreadsheet spieltagSheet = getSheet(spielTagNr);
 		if (spieltagSheet != null) {
 			for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr < 999; zeileCntr++) {
-				String cellText = this.getSheetHelper().getTextFromCell(spieltagSheet, Position.from(SPIELER_NR_SPALTE, zeileCntr));
+				String cellText = getSheetHelper().getTextFromCell(spieltagSheet, Position.from(SPIELER_NR_SPALTE, zeileCntr));
 				// Checks if a CharSequence is empty (""), null or whitespace only.
 				if (!StringUtils.isBlank(cellText)) {
 					if (NumberUtils.isParsable(cellText)) {
@@ -320,10 +319,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	public int countNumberOfSpieltage() throws GenerateException {
 		int anz = 0;
 
-		XSpreadsheets sheets = this.getSheetHelper().getSheets();
+		XSpreadsheets sheets = getSheetHelper().getSheets();
 
 		if (sheets != null && sheets.hasElements()) {
-			String[] sheetNames = this.getSheetHelper().getSheets().getElementNames();
+			String[] sheetNames = getSheetHelper().getSheets().getElementNames();
 			for (String sheetName : sheetNames) {
 				if (sheetName.contains(SHEETNAME_SUFFIX)) {
 					anz++;
@@ -349,7 +348,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 
 		SpielTagNr spieltagNr = getSpieltagNr();
 
-		for (int spielerNr : this.spielerSpalte.getSpielerNrList()) {
+		for (int spielerNr : spielerSpalte.getSpielerNrList()) {
 			SpielerSpieltagErgebnis erg = spielerErgebnisseEinlesen(spieltagNr, spielerNr);
 			if (erg != null) {
 				spielTagErgebnisse.add(erg);
@@ -360,7 +359,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public SpielerSpieltagErgebnis spielerErgebnisseEinlesen(SpielTagNr spieltag, int spielrNr) throws GenerateException {
-		int spielerZeile = this.spielerSpalte.getSpielerZeileNr(spielrNr);
+		int spielerZeile = spielerSpalte.getSpielerZeileNr(spielrNr);
 
 		if (spielerZeile < ERSTE_DATEN_ZEILE) {
 			return null;
@@ -375,22 +374,22 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		Position spielePlusSumme = Position.from(ersteSpieltagSummeSpalte, spielerZeile);
 		SpielerSpieltagErgebnis erg = SpielerSpieltagErgebnis.from(spieltag, spielrNr);
 
-		erg.setSpielPlus(this.getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme)).setPosSpielPlus(spielePlusSumme);
+		erg.setSpielPlus(getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme)).setPosSpielPlus(spielePlusSumme);
 
-		erg.setSpielMinus(this.getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme.spaltePlusEins())).setPosSpielMinus(spielePlusSumme);
+		erg.setSpielMinus(getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme.spaltePlusEins())).setPosSpielMinus(spielePlusSumme);
 
-		erg.setPunktePlus(this.getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme.spaltePlus(2))).setPosPunktePlus(spielePlusSumme);
+		erg.setPunktePlus(getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme.spaltePlus(2))).setPosPunktePlus(spielePlusSumme);
 
-		erg.setPunkteMinus(this.getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme.spaltePlusEins())).setPosPunkteMinus(spielePlusSumme);
+		erg.setPunkteMinus(getSheetHelper().getIntFromCell(spieltagSheet, spielePlusSumme.spaltePlusEins())).setPosPunkteMinus(spielePlusSumme);
 
 		return erg;
 	}
 
 	public void clearAll() throws GenerateException {
-		int letzteDatenzeile = this.spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(), letzteDatenzeile);
-			this.getSheetHelper().clearRange(getSheet(), range);
+			getSheetHelper().clearRange(getSheet(), range);
 		}
 	}
 
@@ -403,12 +402,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 
 	@Override
 	public int getLetzteDatenZeile() throws GenerateException {
-		return this.spielerSpalte.getLetzteDatenZeile();
+		return spielerSpalte.getLetzteDatenZeile();
 	}
 
 	@Override
 	public int getErsteDatenZiele() {
-		return this.spielerSpalte.getErsteDatenZiele();
+		return spielerSpalte.getErsteDatenZiele();
 	}
 
 	@Override
@@ -417,31 +416,31 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public XSpreadsheet getSheet(SpielTagNr spielTagNr) throws GenerateException {
-		return this.getSheetHelper().newIfNotExist(getSheetName(spielTagNr), DefaultSheetPos.SUPERMELEE_WORK);
+		return getSheetHelper().findByName(getSheetName(spielTagNr));
 	}
 
 	public RangListeSpalte getRangListeSpalte() {
-		return this.rangListeSpalte;
+		return rangListeSpalte;
 	}
 
 	@Override
 	public int getAnzahlRunden() throws GenerateException {
-		return this.aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		return aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 	}
 
 	public SpielTagNr getSpieltagNr() throws GenerateException {
-		checkNotNull(this.spieltagNr);
-		return this.spieltagNr;
+		checkNotNull(spieltagNr, "spieltagNr==null");
+		return spieltagNr;
 	}
 
 	public void setSpieltagNr(SpielTagNr spieltagNr) throws GenerateException {
-		checkNotNull(spieltagNr);
+		checkNotNull(spieltagNr, "spieltagNr==null");
 		ProcessBox.from().spielTag(spieltagNr);
 		this.spieltagNr = spieltagNr;
 	}
 
 	protected KonfigurationSheet getKonfigurationSheet() {
-		return this.konfigurationSheet;
+		return konfigurationSheet;
 	}
 
 	@Override
@@ -450,10 +449,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	}
 
 	public void isErrorInSheet() throws GenerateException {
-		this.rangListeSorter.isErrorInSheet();
+		rangListeSorter.isErrorInSheet();
 	}
 
 	protected RangListeSorter getRangListeSorter() {
-		return this.rangListeSorter;
+		return rangListeSorter;
 	}
 }

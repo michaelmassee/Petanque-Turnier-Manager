@@ -85,18 +85,19 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			Position pospielerNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
 			boolean zeileIstLeer = false;
-			while (!zeileIstLeer) {
-				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) {
-					Team team = new Team(1);
+			int maxcntr = 999; // sollte nicht vorkommen, endlos schleife vermeiden in fehlerfall
+			while (!zeileIstLeer && maxcntr > 0) {
+				maxcntr--;
+				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) { // Team A & B
+					Team team = new Team(1); // dummy team verwenden um Spieler gegenseitig ein zu tragen
 					for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
 						pospielerNr.spalte(ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
-						int spielerNr = getSheetHelper().getIntFromCell(sheet, pospielerNr);
-						if (spielerNr > -1) {
-							// team verwenden um Spieler gegenseitig ein zu tragen
+						int spielerNr = getSheetHelper().getIntFromCell(sheet, pospielerNr); // Spieler aus Rundeliste
+						if (spielerNr > 0) {
 							Spieler spieler = meldungen.findSpielerByNr(spielerNr);
-							if (spieler != null) { // ist dann der fall wenn der spieler Ausgestiegen
+							if (spieler != null) { // ist dann der fall wenn der spieler Ausgestiegen ist
 								try {
-									team.addSpielerWennNichtVorhanden(spieler);
+									team.addSpielerWennNichtVorhanden(spieler); // im gleichen Team = wird gegenseitig eingetragen
 								} catch (AlgorithmenException e) {
 									logger.error(e.getMessage(), e);
 									return;
