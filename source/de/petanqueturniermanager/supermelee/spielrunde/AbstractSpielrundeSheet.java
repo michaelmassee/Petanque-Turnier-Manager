@@ -83,6 +83,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 	private final KonfigurationSheet konfigurationSheet;
+
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
 
@@ -430,8 +431,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		getSheetHelper().setFormulaInCell(val);
 	}
 
-	protected void neueSpielrunde(Meldungen meldungen, SpielRundeNr aktuelleSpielrunde) throws GenerateException {
-		neueSpielrunde(meldungen, aktuelleSpielrunde, false);
+	protected void neueSpielrunde(Meldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
+		neueSpielrunde(meldungen, neueSpielrundeNr, false);
 	}
 
 	protected void neueSpielrunde(Meldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force) throws GenerateException {
@@ -621,6 +622,68 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			pos.zeilePlusEins();
 		}
 		return pos.spalte(ERSTE_SPALTE_ERGEBNISSE + 1);
+	}
+
+	/**
+	 * in der meldungen liste alle spieler die liste warimTeammit fuellen
+	 *
+	 * @param meldungen
+	 * @param bisSpielrunde bis zu diese spielrunde
+	 * @param abSpielrunde ab diese spielrunde = default = 1
+	 * @throws GenerateException
+	 */
+
+	protected void gespieltenRundenEinlesen(Meldungen meldungen, int abSpielrunde, int bisSpielrunde) throws GenerateException {
+
+		int spielrunde = 1;
+
+		if (bisSpielrunde <= abSpielrunde) {
+			return;
+		}
+
+		if (abSpielrunde > 1) {
+			spielrunde = abSpielrunde;
+		}
+
+		for (; spielrunde <= bisSpielrunde; spielrunde++) {
+			SheetRunner.testDoCancelTask();
+
+			// XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), SpielRundeNr.from(spielrunde));
+			XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(getSpielTag(), SpielRundeNr.from(spielrunde)));
+
+			if (sheet == null) {
+				continue;
+			}
+			Position pospielerNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
+
+			boolean zeileIstLeer = false;
+			int maxcntr = 999; // sollte nicht vorkommen, endlos schleife vermeiden in fehlerfall
+			while (!zeileIstLeer && maxcntr > 0) {
+				maxcntr--;
+				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) { // Team A & B
+					Team team = new Team(1); // dummy team verwenden um Spieler gegenseitig ein zu tragen
+					for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
+						pospielerNr.spalte(ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
+						int spielerNr = getSheetHelper().getIntFromCell(sheet, pospielerNr); // Spieler aus Rundeliste
+						if (spielerNr > 0) {
+							Spieler spieler = meldungen.findSpielerByNr(spielerNr);
+							if (spieler != null) { // ist dann der fall wenn der spieler Ausgestiegen ist
+								try {
+									team.addSpielerWennNichtVorhanden(spieler); // im gleichen Team = wird gegenseitig eingetragen
+								} catch (AlgorithmenException e) {
+									logger.error(e.getMessage(), e);
+									throw new GenerateException("Fehler beim einlesen der gespielten Runden. siehe log datei für details");
+								}
+							}
+						}
+					}
+				}
+				pospielerNr.zeilePlusEins().spalte(ERSTE_SPIELERNR_SPALTE);
+				if (getSheetHelper().getIntFromCell(sheet, pospielerNr) == -1) {
+					zeileIstLeer = true;
+				}
+			}
+		}
 	}
 
 	/**

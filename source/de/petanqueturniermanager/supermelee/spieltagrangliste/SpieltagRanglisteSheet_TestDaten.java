@@ -16,6 +16,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator;
 
 /**
  * generate 5 komplette spieltage
@@ -32,9 +33,9 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 
 	public SpieltagRanglisteSheet_TestDaten(XComponentContext xContext) {
 		super(xContext);
-		this.spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(xContext);
-		this.konfigurationSheet = new KonfigurationSheet(xContext);
-		this.meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(xContext);
+		spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(xContext);
+		konfigurationSheet = new KonfigurationSheet(xContext);
+		meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(xContext);
 	}
 
 	@Override
@@ -45,20 +46,24 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		this.getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 
 		for (int spieltagCntr = 1; spieltagCntr <= 5; spieltagCntr++) {
 			SheetRunner.testDoCancelTask();
 			SpielTagNr spieltagNr = SpielTagNr.from(spieltagCntr);
 
 			if (spieltagCntr > 1) {
-				this.meldeListeSheetNeuerSpieltag.setSpielTag(spieltagNr);
-				this.meldeListeSheetNeuerSpieltag.naechsteSpieltag();
+				meldeListeSheetNeuerSpieltag.setSpielTag(spieltagNr);
+				meldeListeSheetNeuerSpieltag.naechsteSpieltag();
 			}
 
-			this.spielrundeSheetTestDaten.setSpielTag(spieltagNr);
-			this.spielrundeSheetTestDaten.generate();
-			this.konfigurationSheet.setAktiveSpieltag(spieltagNr);
+			spielrundeSheetTestDaten.setSpielTag(spieltagNr);
+			spielrundeSheetTestDaten.generate();
+			konfigurationSheet.setAktiveSpieltag(spieltagNr);
+
+			// validieren
+			new SpielrundeSheet_Validator(getxContext()).validateSpieltag(spieltagNr);
+
 		}
 	}
 }

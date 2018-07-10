@@ -41,7 +41,12 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		if (!canStart(meldungen)) {
 			return;
 		}
+
+		if (aktuelleSpielrunde.getNr() > 1) {
+			gespieltenRundenEinlesen(meldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), aktuelleSpielrunde.getNr() - 1);
+		}
 		neueSpielrunde(meldungen, aktuelleSpielrunde);
+		new SpielrundeSheet_Validator(getxContext()).validateSpieltag(getSpielTag()); // validieren
 	}
 
 	public SpielerSpielrundeErgebnisList ergebnisseEinlesen() throws GenerateException {
