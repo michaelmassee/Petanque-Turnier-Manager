@@ -16,14 +16,19 @@ public class SpielRundeNr {
 	}
 
 	public int getNr() throws GenerateException {
-		return this.nr;
+		return nr;
 	}
 
 	public SpielRundeNr setNr(int newNr) throws GenerateException {
 		if (newNr < 1) {
 			throw new GenerateException("Ungültige Spielrundenummer" + newNr);
 		}
-		this.nr = newNr;
+		nr = newNr;
+		return this;
+	}
+
+	public SpielRundeNr minus(int anzahl) throws GenerateException {
+		setNr(getNr() - anzahl);
 		return this;
 	}
 
@@ -35,7 +40,7 @@ public class SpielRundeNr {
 	public String toString() {
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
-				.add("Nr", this.nr)
+				.add("Nr", nr)
 				.toString();
 		// @formatter:on
 	}

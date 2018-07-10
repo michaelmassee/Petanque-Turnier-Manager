@@ -55,6 +55,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		setSpielTag(SpielTagNr.from(1));
 		generate();
+		new SpielrundeSheet_Validator(getxContext()).validateSpieltag(getSpielTag()); // validieren
 	}
 
 	/**
@@ -89,7 +90,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			}
 
 			Meldungen meldungen = getMeldeListe().getAktiveMeldungen();
-			naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, spielrundeNr - 1, getKonfigurationSheet().getSpielRundeNeuAuslosenAb());
+			naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), spielrundeNr - 1);
 			neueSpielrunde(meldungen, SpielRundeNr.from(spielrundeNr), true);
 
 			// ------------------------------------
