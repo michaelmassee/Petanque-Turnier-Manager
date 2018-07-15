@@ -92,7 +92,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		int lfndNr = 1;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName, chkBox);
 
-		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". " + alleMeldungen.getSpielerList().size() + " Spieler einfügen");
+		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". " + alleMeldungen.size() + " Spieler einfügen");
 		for (Spieler spieler : alleMeldungen.getSpielerList()) {
 
 			spierNrVal.setValue((double) spieler.getNr());

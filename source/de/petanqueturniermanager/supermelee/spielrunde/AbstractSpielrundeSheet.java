@@ -77,6 +77,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	public static final int ERSTE_SPALTE_ERGEBNISSE = ERSTE_SPALTE_RUNDESPIELPLAN + 6;
 	public static final int EINGABE_VALIDIERUNG_SPALTE = ERSTE_SPALTE_ERGEBNISSE + 2; // rechts neben die 2 egebnis spalten
 	public static final int ERSTE_SPIELERNR_SPALTE = 11; // spalte L + 5 Spalten
+	public static final int PAARUNG_CNTR_SPALTE = ERSTE_SPIELERNR_SPALTE - 1; // Paarungen nr
 	public static final int ERSTE_SPALTE_VERTIKALE_ERGEBNISSE = ERSTE_SPIELERNR_SPALTE + 7; // rechts neben spielrnr Block +1
 
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
@@ -274,7 +275,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 				numberCellValue.getPos().spalte(ERSTE_SPIELERNR_SPALTE);
 
 				// paarung counter Spalte vor spielernr
-				StringCellValue formulaCellValue = StringCellValue.from(numberCellValue).spalte(ERSTE_SPIELERNR_SPALTE - 1).setValue("=ROW()-" + ERSTE_DATEN_ZEILE);
+				StringCellValue formulaCellValue = StringCellValue.from(numberCellValue).spalte(PAARUNG_CNTR_SPALTE).setValue("=ROW()-" + ERSTE_DATEN_ZEILE);
 				getSheetHelper().setFormulaInCell(formulaCellValue);
 
 				// Validierung für die eingabe der Ergbnisse
@@ -437,7 +438,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	protected void neueSpielrunde(Meldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force) throws GenerateException {
 		processBoxinfo("Neue Spielrunde " + neueSpielrundeNr.getNr() + " für Spieltag " + getSpielTag().getNr());
-		processBoxinfo(meldungen.getSpielerList().size() + " Meldungen");
+		processBoxinfo(meldungen.size() + " Meldungen");
 
 		checkNotNull(meldungen);
 		setSpielRundeNr(neueSpielrundeNr);
@@ -637,7 +638,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		int spielrunde = 1;
 
-		if (bisSpielrunde <= abSpielrunde) {
+		if (bisSpielrunde < abSpielrunde) {
 			return;
 		}
 
@@ -678,8 +679,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 						}
 					}
 				}
-				pospielerNr.zeilePlusEins().spalte(ERSTE_SPIELERNR_SPALTE);
+				// Spalte Paarungen Cntr Prüfen
+				pospielerNr.zeilePlusEins().spalte(PAARUNG_CNTR_SPALTE);
 				if (getSheetHelper().getIntFromCell(sheet, pospielerNr) == -1) {
+					// keine paarungen mehr vorhanden
 					zeileIstLeer = true;
 				}
 			}

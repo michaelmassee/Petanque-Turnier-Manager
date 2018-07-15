@@ -96,7 +96,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		int lfndNr = 1;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 
-		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". " + aktiveUndAusgesetztMeldungen.getSpielerList().size() + " Meldungen einfügen");
+		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". " + aktiveUndAusgesetztMeldungen.size() + " Meldungen einfügen");
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungen.getSpielerList()) {
 
