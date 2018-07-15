@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
@@ -72,5 +73,47 @@ public class MeldungenTest {
 		assertThat(meldungen.spieler()).hasSize(11);
 		meldungen.addSpielerWennNichtVorhanden(Spieler.from(22));
 		assertThat(meldungen.spieler()).hasSize(12);
+	}
+
+	@Test
+	public void testAddSpielerWennNichtVorhandenSpielerList() throws Exception {
+
+		ArrayList<Spieler> testSpielerlist = new ArrayList<>();
+		testSpielerlist.add(Spieler.from(2));
+		testSpielerlist.add(Spieler.from(3));
+		testSpielerlist.add(Spieler.from(2)); // doppelt
+		testSpielerlist.add(Spieler.from(7));
+
+		meldungen.addSpielerWennNichtVorhanden(testSpielerlist);
+		assertThat(meldungen.spieler()).hasSize(3);
+	}
+
+	@Test
+	public void testResetTeam() throws Exception {
+
+		ArrayList<Spieler> testSpielerlist = new ArrayList<>();
+		Team testTeam = new Team(3);
+		testSpielerlist.add(Spieler.from(2).setTeam(testTeam));
+		testSpielerlist.add(Spieler.from(3).setTeam(testTeam));
+		meldungen.addSpielerWennNichtVorhanden(testSpielerlist);
+
+		for (Spieler testSpieler : meldungen.getSpielerList()) {
+			assertThat(testSpieler.isIstInTeam()).isTrue();
+		}
+
+		meldungen.resetTeam();
+
+		for (Spieler testSpieler : meldungen.getSpielerList()) {
+			assertThat(testSpieler.isIstInTeam()).isFalse();
+		}
+	}
+
+	@Test
+	public void testRemoveSpieler() throws Exception {
+		Spieler testSpieler2 = Spieler.from(2);
+		meldungen.addSpielerWennNichtVorhanden(testSpieler2);
+		assertThat(meldungen.size()).isEqualTo(1);
+		meldungen.removeSpieler(Spieler.from(2)); // new instance, aber gleiche spieler nummer
+		assertThat(meldungen.size()).isEqualTo(0);
 	}
 }
