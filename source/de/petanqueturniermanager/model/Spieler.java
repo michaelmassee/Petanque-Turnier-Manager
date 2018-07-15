@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
@@ -18,34 +18,22 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 */
 public class Spieler implements Comparable<Spieler> {
 	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team
-	private int nr;
-	private final HashMap<Integer, Spieler> warImTeamMit = new HashMap<>();
+	private final int nr;
+	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
 	private boolean istInTeam = false;
 
 	private Spieler(int nr) {
 		checkArgument(nr > 0, "spieler nr <1, %d", nr);
-		setNr(nr);
+		this.nr = nr;
 	}
 
 	public int anzahlMitSpieler() {
-		return getWarImTeamMit().size();
+		return warImTeamMit.size();
 	}
 
 	public static Spieler from(int nr) {
 		return new Spieler(nr);
-	}
-
-	public static Spieler from(Spieler spieler) {
-		checkNotNull(spieler, "spieler == null");
-		return new Spieler(spieler.getNr()).copyAttr(spieler);
-	}
-
-	private Spieler copyAttr(Spieler spieler) {
-		checkNotNull(spieler, "spieler == null");
-		setzPos = spieler.getSetzPos();
-		warImTeamMit.putAll(spieler.getWarImTeamMit());
-		return this;
 	}
 
 	/**
@@ -58,9 +46,13 @@ public class Spieler implements Comparable<Spieler> {
 		return getSetzPos() > 0 && spieler.getSetzPos() > 0 && getSetzPos() == spieler.getSetzPos();
 	}
 
+	public boolean warImTeamMit(int warimTeammit) {
+		return warImTeamMit(Spieler.from(warimTeammit));
+	}
+
 	public boolean warImTeamMit(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		return gleicheSetzPos(spieler) || getWarImTeamMit().containsKey(spieler.getNr());
+		return gleicheSetzPos(spieler) || warImTeamMit.contains(spieler.getNr());
 	}
 
 	public Spieler deleteTeam() throws AlgorithmenException {
@@ -92,8 +84,8 @@ public class Spieler implements Comparable<Spieler> {
 
 	public Spieler addWarImTeamMitWennNichtVorhanden(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		if (!spieler.equals(this) && !getWarImTeamMit().containsKey(spieler.getNr())) {
-			getWarImTeamMit().put(spieler.getNr(), spieler);
+		if (!spieler.equals(this) && !warImTeamMit.contains(spieler.getNr())) {
+			warImTeamMit.add(spieler.getNr());
 			spieler.addWarImTeamMitWennNichtVorhanden(this);
 		}
 		return this;
@@ -101,7 +93,7 @@ public class Spieler implements Comparable<Spieler> {
 
 	public Spieler deleteWarImTeam(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		getWarImTeamMit().remove(spieler.getNr());
+		warImTeamMit.remove(spieler.getNr());
 		return this;
 	}
 
@@ -148,11 +140,11 @@ public class Spieler implements Comparable<Spieler> {
 	public String toString() {
 
 		String warImTeamInfo = "";
-		for (Spieler warImTeamSpieler : getWarImTeamMit().values()) {
+		for (Integer warImTeamSpielerNr : warImTeamMit) {
 			if (warImTeamInfo.length() > 0) {
 				warImTeamInfo += ",";
 			}
-			warImTeamInfo += warImTeamSpieler.getNr();
+			warImTeamInfo += warImTeamSpielerNr;
 		}
 
 		// @formatter:off
@@ -166,13 +158,13 @@ public class Spieler implements Comparable<Spieler> {
 
 	public String mitSpielerStr() {
 		String mitspielerStr = "(";
-		for (Spieler spielerWarImTeam : getWarImTeamMit().values()) {
+		for (Integer warImTeamSpielerNr : warImTeamMit) {
 
 			if (!mitspielerStr.endsWith("(")) {
 				mitspielerStr += ",";
 			}
 
-			mitspielerStr += spielerWarImTeam.getNr();
+			mitspielerStr += warImTeamSpielerNr;
 		}
 		return mitspielerStr;
 	}
@@ -183,16 +175,6 @@ public class Spieler implements Comparable<Spieler> {
 
 	public Spieler setSetzPos(int setzPos) {
 		this.setzPos = setzPos;
-		return this;
-	}
-
-	public HashMap<Integer, Spieler> getWarImTeamMit() {
-		return warImTeamMit;
-	}
-
-	public Spieler setNr(int nr) {
-		checkArgument(nr > 0, "spieler nr <1, %s", nr);
-		this.nr = nr;
 		return this;
 	}
 

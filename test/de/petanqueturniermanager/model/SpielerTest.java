@@ -25,15 +25,15 @@ public class SpielerTest {
 	}
 
 	@Test
-	public void testWarImTeam() throws Exception {
+	public void testWarImTeamsetzPos() throws Exception {
 		spieler.setSetzPos(1);
 
-		Spieler spieler2 = Spieler.from(spieler).setNr(2);
+		Spieler spieler2 = Spieler.from(2).setSetzPos(1);
 		boolean result = spieler.warImTeamMit(spieler2);
 		assertThat(result).isTrue();
 
 		// gleiche setz pos
-		Spieler spieler3 = Spieler.from(spieler).setNr(3).setSetzPos(2);
+		Spieler spieler3 = Spieler.from(3).setSetzPos(2);
 		assertThat(spieler.warImTeamMit(spieler3)).isFalse();
 
 		spieler3.addWarImTeamMitWennNichtVorhanden(spieler);

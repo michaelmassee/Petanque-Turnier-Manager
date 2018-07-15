@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.model;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +23,7 @@ public class Meldungen {
 	private final ArrayList<Spieler> spielerList;
 
 	public Meldungen() {
-		this.spielerList = new ArrayList<>();
+		spielerList = new ArrayList<>();
 	}
 
 	public Meldungen addSpielerWennNichtVorhanden(List<Spieler> spielerlist) {
@@ -38,8 +39,8 @@ public class Meldungen {
 	public Meldungen addSpielerWennNichtVorhanden(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
 
-		if (!this.spielerList.contains(spieler)) {
-			this.spielerList.add(spieler);
+		if (!spielerList.contains(spieler)) {
+			spielerList.add(spieler);
 		}
 		return this;
 	}
@@ -48,7 +49,7 @@ public class Meldungen {
 	 * Liste der Spieler nach links verschieben
 	 */
 	public Meldungen shifLeft() {
-		Collections.rotate(this.spielerList, -1);
+		Collections.rotate(spielerList, -1);
 		return this;
 	}
 
@@ -56,12 +57,12 @@ public class Meldungen {
 	 * Liste der Spieler mischen
 	 */
 	public Meldungen shuffle() {
-		Collections.shuffle(this.spielerList);
+		Collections.shuffle(spielerList);
 		return this;
 	}
 
 	public List<Spieler> spieler() {
-		return new ArrayList<>(this.spielerList);
+		return new ArrayList<>(spielerList);
 	}
 
 	/**
@@ -70,7 +71,7 @@ public class Meldungen {
 	 * @throws AlgorithmenException
 	 */
 	public Meldungen resetTeam() throws AlgorithmenException {
-		for (Spieler spielerausList : this.spielerList) {
+		for (Spieler spielerausList : spielerList) {
 			spielerausList.deleteTeam();
 		}
 		return this;
@@ -78,7 +79,7 @@ public class Meldungen {
 
 	public List<Spieler> spielerOhneTeam() throws AlgorithmenException {
 		List<Spieler> spielerOhneTeam = new ArrayList<>();
-		for (Spieler spielerausList : this.spielerList) {
+		for (Spieler spielerausList : spielerList) {
 			if (!spielerausList.isIstInTeam()) {
 				spielerOhneTeam.add(spielerausList);
 			}
@@ -87,7 +88,7 @@ public class Meldungen {
 	}
 
 	public Meldungen removeSpieler(Spieler spieler) {
-		this.spielerList.remove(spieler);
+		spielerList.remove(spieler);
 		return this;
 	}
 
@@ -98,7 +99,7 @@ public class Meldungen {
 
 	public Spieler findSpielerByNr(int nr) {
 		Spieler spieler = null;
-		for (Spieler spielerausList : this.spielerList) {
+		for (Spieler spielerausList : spielerList) {
 			if (spielerausList.getNr() == nr) {
 				spieler = spielerausList;
 				break;
@@ -108,14 +109,14 @@ public class Meldungen {
 	}
 
 	public int size() {
-		return this.spielerList.size();
+		return spielerList.size();
 	}
 
 	@Override
 	public String toString() {
 
 		String spielerNr = "[";
-		for (Spieler spielerAusTeam : this.spielerList) {
+		for (Spieler spielerAusTeam : spielerList) {
 			if (spielerNr.length() > 1) {
 				spielerNr += ",";
 			}
@@ -125,15 +126,15 @@ public class Meldungen {
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
-				.add("Anzahl", this.size())
+				.add("Anzahl", size())
 				.add("Spieler", spielerNr)
 				.toString();
 		// @formatter:on
 
 	}
 
-	public final ArrayList<Spieler> getSpielerList() {
-		return this.spielerList;
+	public final Iterable<Spieler> getSpielerList() {
+		return spielerList;
 	}
 
 }

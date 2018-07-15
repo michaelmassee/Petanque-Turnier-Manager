@@ -3,7 +3,6 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
@@ -74,7 +73,7 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 		}
 
 		Meldungen alleMeldungen = meldeliste.getAlleMeldungen();
-		processBoxinfo("Meldungen " + alleMeldungen.getSpielerList().size());
+		processBoxinfo("Meldungen " + alleMeldungen.size());
 		processBoxinfo("Spielrunden " + spielrunden.size());
 
 		validateDoppelteTeams(alleMeldungen, spielrunden);
@@ -101,16 +100,15 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 						throw new GenerateException("Spieler darf nicht null sein");
 					}
 
-					int warbereitsimTeamMitNr = validateWarImTeam(spielerAusMeldung.getWarImTeamMit(), spielerToValidate, team);
+					int warbereitsimTeamMitNr = validateWarImTeam(spielerAusMeldung, spielerToValidate, team);
 					if (warbereitsimTeamMitNr > 0) {
 						ProcessBox.from().fehler("Doppelte Auslosung gefunden in Spieltag: " + meldeliste.getSpielTag().getNr() + ", Spielrunde: " + spielrundeCntr + ", TeamNr: "
 								+ teamCntr + ", Spieler: " + spielerToValidate.getNr() + " hat bereits zusammen gespielt mit " + warbereitsimTeamMitNr);
 						fehlerCntr++;
 					}
-					// nur in die hashtable hinzufügen, nicht gegenseitig eintragen
 					for (Spieler spielerausTeam : team.spieler()) {
 						if (!spielerToValidate.equals(spielerausTeam)) {
-							spielerAusMeldung.getWarImTeamMit().put(spielerausTeam.getNr(), spielerausTeam);
+							spielerAusMeldung.addWarImTeamMitWennNichtVorhanden(spielerausTeam);
 						}
 					}
 				}
@@ -123,10 +121,10 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 
 	}
 
-	private int validateWarImTeam(HashMap<Integer, Spieler> warimTeam, Spieler spielerToValidate, Team team) throws GenerateException {
+	private int validateWarImTeam(Spieler spielerAusMeldung, Spieler spielerToValidate, Team team) throws GenerateException {
 		for (Spieler spielerausTeam : team.spieler()) {
 			if (!spielerToValidate.equals(spielerausTeam)) { // nicht sich selbst == gleiche nummer
-				if (warimTeam.containsKey(spielerausTeam.getNr())) {
+				if (spielerAusMeldung.warImTeamMit(spielerausTeam)) {
 					return spielerausTeam.getNr();
 				}
 			}

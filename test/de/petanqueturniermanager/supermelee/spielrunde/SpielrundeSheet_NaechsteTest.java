@@ -66,7 +66,7 @@ public class SpielrundeSheet_NaechsteTest {
 		}
 		spielrundeSheet.gespieltenRundenEinlesen(meldungen, 1, 1);
 
-		assertThat(meldungen.getSpielerList().size()).isEqualTo(6);
+		assertThat(meldungen.size()).isEqualTo(6);
 		assertThat(meldungen.findSpielerByNr(1)).isNull();
 		validateSpieler(meldungen, 3, 4, 8); // Team A
 		validateSpieler(meldungen, 4, 3, 8);
@@ -80,9 +80,9 @@ public class SpielrundeSheet_NaechsteTest {
 	private void validateSpieler(Meldungen meldungen, int nr, int warimTeammitA, int warimTeammitB) {
 		assertThat(meldungen.findSpielerByNr(nr)).isNotNull();
 		assertThat(meldungen.findSpielerByNr(nr)).isEqualTo(Spieler.from(nr));
-		assertThat(meldungen.findSpielerByNr(nr).getWarImTeamMit().size()).isEqualTo(2);
-		assertThat(meldungen.findSpielerByNr(nr).getWarImTeamMit()).containsValue(Spieler.from(warimTeammitA));
-		assertThat(meldungen.findSpielerByNr(nr).getWarImTeamMit()).containsValue(Spieler.from(warimTeammitB));
+		assertThat(meldungen.findSpielerByNr(nr).anzahlMitSpieler()).isEqualTo(2);
+		assertThat(meldungen.findSpielerByNr(nr).warImTeamMit(warimTeammitA));
+		assertThat(meldungen.findSpielerByNr(nr).warImTeamMit(warimTeammitB));
 
 	}
 
