@@ -218,8 +218,8 @@
 
 							<node oor:name="C3" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Validate</value>
-									<value xml:lang="de">Validate</value>
+									<value xml:lang="en">Validate competition day</value>
+									<value xml:lang="de">Spieltag Prüfen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?supermelee_validate</value>
