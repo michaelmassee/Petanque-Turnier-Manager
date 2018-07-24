@@ -71,7 +71,7 @@ public class MessageBox extends AbstractMessageBox {
 			}
 		}
 
-		// Log window ausblenden
+		// Log window ausblenden, weil wenn an der gleiche Stelle, wird dieser Dialog überdeckt
 		ProcessBox.from().hide();
 
 		MessageBoxResult result = null;
