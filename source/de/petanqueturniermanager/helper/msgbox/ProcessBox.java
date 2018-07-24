@@ -61,6 +61,7 @@ public class ProcessBox {
 	private final JFrame frame;
 	private final XComponentContext xContext;
 	private JTextArea logOut = null;
+	private JButton cancelBtn = null;
 	private String prefix = null;
 	private JTextField spieltagText = null;
 	private JTextField spielrundeText = null;
@@ -205,9 +206,10 @@ public class ProcessBox {
 		panel.add(spielrundeText, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
 
-		JButton cancel = new JButton("Stop");
-		cancel.setToolTipText("Stop verarbeitung");
-		cancel.addActionListener(new ActionListener() {
+		cancelBtn = new JButton("Stop");
+		cancelBtn.setEnabled(false);
+		cancelBtn.setToolTipText("Stop verarbeitung");
+		cancelBtn.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -218,7 +220,7 @@ public class ProcessBox {
 		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
 		gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
 		gridBagConstraintsPanel.weightx = 0.5;
-		panel.add(cancel, gridBagConstraintsPanel);
+		panel.add(cancelBtn, gridBagConstraintsPanel);
 	}
 
 	private void initLog(int startZeile) {
@@ -337,6 +339,22 @@ public class ProcessBox {
 
 	public ProcessBox toFront() {
 		frame.toFront();
+		return this;
+	}
+
+	public ProcessBox run() {
+		toFront();
+		if (cancelBtn != null) {
+			cancelBtn.setEnabled(true);
+		}
+		return this;
+	}
+
+	public ProcessBox ready() {
+		toFront();
+		if (cancelBtn != null) {
+			cancelBtn.setEnabled(false);
+		}
 		return this;
 	}
 }

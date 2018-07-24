@@ -68,6 +68,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			boolean isFehler = false;
 
 			try {
+				ProcessBox.from().run();
 				updateKonfigurationSheet();
 				doRun();
 			} catch (GenerateException e) {
@@ -80,9 +81,9 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				SheetRunner.isRunning = false; // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
 				if (isFehler) {
-					ProcessBox.from().visible().fehler("!! FEHLER !!");
+					ProcessBox.from().visible().fehler("!! FEHLER !!").ready();
 				} else {
-					ProcessBox.from().visible().info("**FERTIG**");
+					ProcessBox.from().visible().info("**FERTIG**").ready();
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 				// TODO
