@@ -58,4 +58,12 @@ public class SpielerTest {
 		assertThat(spieler.warImTeamMit(spieler2)).isTrue();
 		assertThat(spieler.warImTeamMit(spieler4)).isTrue();
 	}
+
+	@Test
+	public void testGleicheSetzPos() throws Exception {
+		Spieler spieler2 = Spieler.from(2);
+		spieler2.setSetzPos(5);
+		spieler.setSetzPos(5);
+		assertThat(spieler.gleicheSetzPos(spieler2)).isTrue();
+	}
 }
