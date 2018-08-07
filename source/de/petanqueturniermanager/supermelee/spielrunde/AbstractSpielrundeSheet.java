@@ -626,19 +626,27 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	/**
-	 * in der meldungen liste alle spieler die liste warimTeammit fuellen
+	 * in der meldungen liste alle spieler die liste warimTeammit fuellen.<br>
+	 * ggf vergangene Spieltage komplet einlesen
 	 *
 	 * @param meldungen
 	 * @param bisSpielrunde bis zu diese spielrunde
 	 * @param abSpielrunde ab diese spielrunde = default = 1
 	 * @throws GenerateException
 	 */
-
 	protected void gespieltenRundenEinlesen(Meldungen meldungen, int abSpielrunde, int bisSpielrunde) throws GenerateException {
+		SpielTagNr aktuelleSpielTag = getSpielTag();
 
+		for (int vergangeneSpieltag = aktuelleSpielTag.getNr() - 1; vergangeneSpieltag > 0; vergangeneSpieltag--) {
+			gespieltenRundenEinlesen(meldungen, SpielTagNr.from(vergangeneSpieltag), 1, 999);
+		}
+		gespieltenRundenEinlesen(meldungen, getSpielTag(), abSpielrunde, bisSpielrunde);
+	}
+
+	protected void gespieltenRundenEinlesen(Meldungen meldungen, SpielTagNr spielTagNr, int abSpielrunde, int bisSpielrunde) throws GenerateException {
 		int spielrunde = 1;
 
-		if (bisSpielrunde < abSpielrunde) {
+		if (bisSpielrunde < abSpielrunde || bisSpielrunde < 1) {
 			return;
 		}
 
@@ -646,11 +654,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			spielrunde = abSpielrunde;
 		}
 
+		ProcessBox.from().info("Meldungen von gespielten Runden einlesen. Spieltag:" + spielTagNr.getNr() + " Von Runde:" + spielrunde + " Bis Runde:" + bisSpielrunde);
+
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
 
 			// XSpreadsheet sheet = getSpielRundeSheet(getSpielTag(), SpielRundeNr.from(spielrunde));
-			XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(getSpielTag(), SpielRundeNr.from(spielrunde)));
+			XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(spielTagNr, SpielRundeNr.from(spielrunde)));
 
 			if (sheet == null) {
 				continue;
