@@ -739,8 +739,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 
 						if (nichtZusammenSpielenSpalte > -1) {
 							int nichtzusammen = getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(nichtZusammenSpielenSpalte));
-							if (nichtzusammen == 1) {
-								spieler.setSetzPos(1);
+							if (nichtzusammen > 0) {
+								spieler.setSetzPos(nichtzusammen);
 							}
 						}
 						meldung.addSpielerWennNichtVorhanden(spieler);
