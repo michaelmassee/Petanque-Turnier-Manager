@@ -39,7 +39,7 @@ public class PropertiesSpalte {
 	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
-	public static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
+	private static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergr. Gerade";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Spielrunde Hintergr. Ungerade";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Spielrunde Header";
@@ -55,6 +55,9 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde Punkte -"; // 13
 
 	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
+
+	private static final String KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE = "Anz gespielte Spieltage"; // anzahl spieltage die bei der neu auslosung eingelesen wird (hat zusammen
+																									// gespielt)
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -94,6 +97,9 @@ public class PropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SPIELRUNDE_SPIELBAHN).setDefaultVal("X")
 				.setDescription("Spalte-Spielbahn in Spielrunde. X=Keine Spalte, L=Leere Spalte (händisch ausfüllen), N=1-n durchnummerieren"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE).setDefaultVal(99)
+				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -109,8 +115,8 @@ public class PropertiesSpalte {
 
 		this.propertiesSpalte = propertiesSpalte;
 		this.erstePropertiesZeile = erstePropertiesZeile;
-		this.headerZeile = erstePropertiesZeile - 1;
-		this.sheetWkRef = new WeakRefHelper<ISheet>(sheet);
+		headerZeile = erstePropertiesZeile - 1;
+		sheetWkRef = new WeakRefHelper<>(sheet);
 	}
 
 	/**
@@ -123,25 +129,25 @@ public class PropertiesSpalte {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return this.sheetWkRef.getObject().getSheetHelper();
+		return sheetWkRef.getObject().getSheetHelper();
 	}
 
 	public void doFormat() throws GenerateException {
-		XSpreadsheet propSheet = this.getPropSheet();
+		XSpreadsheet propSheet = getPropSheet();
 		// header
-		Position posHeader = Position.from(this.propertiesSpalte, this.headerZeile);
+		Position posHeader = Position.from(propertiesSpalte, headerZeile);
 		CellProperties columnProperties = CellProperties.from().setWidth(6500);
 
 		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
-		this.getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setTextInCell(headerVal);
 
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(1500)).setValue("Wert")
 				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
-		this.getSheetHelper().setTextInCell(wertheaderVal);
+		getSheetHelper().setTextInCell(wertheaderVal);
 	}
 
 	public void updateKonfigBlock() throws GenerateException {
-		XSpreadsheet propSheet = this.getPropSheet();
+		XSpreadsheet propSheet = getPropSheet();
 
 		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
 
@@ -150,9 +156,9 @@ public class PropertiesSpalte {
 			Position pos = getPropKeyPos(configProp.getKey());
 			if (pos == null) {
 				// when not found insert new
-				pos = Position.from(this.propertiesSpalte, this.erstePropertiesZeile + idx);
+				pos = Position.from(propertiesSpalte, erstePropertiesZeile + idx);
 				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT);
-				this.getSheetHelper().setTextInCell(celVal);
+				getSheetHelper().setTextInCell(celVal);
 
 				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
 
@@ -160,11 +166,11 @@ public class PropertiesSpalte {
 				switch (configProp.getType()) {
 				case STRING:
 					celVal.setValue((String) configProp.getDefaultVal());
-					this.getSheetHelper().setTextInCell(celVal);
+					getSheetHelper().setTextInCell(celVal);
 					break;
 				case INTEGER:
 					IntegerCellValue numberCellValue = IntegerCellValue.from(celVal).setValue((Integer) configProp.getDefaultVal());
-					this.getSheetHelper().setValInCell(numberCellValue);
+					getSheetHelper().setValInCell(numberCellValue);
 					break;
 				case COLOR:
 					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(), configProp.getDescription());
@@ -186,7 +192,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		int val = -1;
 		if (pos != null) {
-			val = this.getSheetHelper().getIntFromCell(sheet, pos.spaltePlusEins());
+			val = getSheetHelper().getIntFromCell(sheet, pos.spaltePlusEins());
 		}
 
 		if (val == -1) {
@@ -211,7 +217,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		Integer val = null;
 		if (pos != null) {
-			Object cellProperty = this.getSheetHelper().getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
+			Object cellProperty = getSheetHelper().getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
 			if (cellProperty != null && cellProperty instanceof Integer) {
 				val = (Integer) cellProperty;
 			}
@@ -230,11 +236,11 @@ public class PropertiesSpalte {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		if (pos != null) {
-			this.getSheetHelper().setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
-			this.getSheetHelper().setTextInCell(StringCellValue.from(sheet, pos, ""));
+			getSheetHelper().setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
+			getSheetHelper().setTextInCell(StringCellValue.from(sheet, pos, ""));
 
 			if (StringUtils.isNotEmpty(comment)) {
-				this.getSheetHelper().setCommentInCell(sheet, pos, comment);
+				getSheetHelper().setCommentInCell(sheet, pos, comment);
 			}
 		}
 	}
@@ -249,7 +255,7 @@ public class PropertiesSpalte {
 		Position pos = getPropKeyPos(key);
 		String val = null;
 		if (pos != null) {
-			val = this.getSheetHelper().getTextFromCell(sheet, pos.spaltePlusEins());
+			val = getSheetHelper().getTextFromCell(sheet, pos.spaltePlusEins());
 		}
 
 		if (val == null) {
@@ -279,7 +285,7 @@ public class PropertiesSpalte {
 	public void writeIntProperty(String name, int newVal) throws GenerateException {
 		Position pos = getPropKeyPos(name);
 		if (pos != null) {
-			this.getSheetHelper().setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
+			getSheetHelper().setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
 		}
 	}
 
@@ -293,10 +299,10 @@ public class PropertiesSpalte {
 		checkNotNull(key);
 
 		XSpreadsheet sheet = getPropSheet();
-		Position pos = Position.from(this.propertiesSpalte, this.erstePropertiesZeile);
+		Position pos = Position.from(propertiesSpalte, erstePropertiesZeile);
 		// TODO umstellen auf uno find
 		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
-			String val = this.getSheetHelper().getTextFromCell(sheet, pos);
+			String val = getSheetHelper().getTextFromCell(sheet, pos);
 			if (StringUtils.isNotBlank(val) && val.trim().equalsIgnoreCase(key.trim())) {
 				return pos;
 			}
@@ -328,7 +334,7 @@ public class PropertiesSpalte {
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {
-		return this.sheetWkRef.getObject().getSheet();
+		return sheetWkRef.getObject().getSheet();
 	}
 
 	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
@@ -385,6 +391,16 @@ public class PropertiesSpalte {
 			return Formation.findById(formationId);
 		}
 		return null;
+	}
+
+	/**
+	 * die anzahl der Spieltage die bei der neu auslosung eingelesen werden
+	 *
+	 * @return
+	 * @throws GenerateException
+	 */
+	public Integer getAnzGespielteSpieltage() throws GenerateException {
+		return readIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE);
 	}
 
 	public SpielSystem getSpielSystem() throws GenerateException {

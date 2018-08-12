@@ -637,7 +637,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	protected void gespieltenRundenEinlesen(Meldungen meldungen, int abSpielrunde, int bisSpielrunde) throws GenerateException {
 		SpielTagNr aktuelleSpielTag = getSpielTag();
 
-		for (int vergangeneSpieltag = aktuelleSpielTag.getNr() - 1; vergangeneSpieltag > 0; vergangeneSpieltag--) {
+		Integer maxAnzGespielteSpieltage = konfigurationSheet.getAnzGespielteSpieltage();
+		int bisVergangeneSpieltag = aktuelleSpielTag.getNr() - 1 - maxAnzGespielteSpieltage;
+		if (bisVergangeneSpieltag < 0) {
+			bisVergangeneSpieltag = 0;
+		}
+
+		for (int vergangeneSpieltag = aktuelleSpielTag.getNr() - 1; vergangeneSpieltag > bisVergangeneSpieltag; vergangeneSpieltag--) {
 			gespieltenRundenEinlesen(meldungen, SpielTagNr.from(vergangeneSpieltag), 1, 999);
 		}
 		gespieltenRundenEinlesen(meldungen, getSpielTag(), abSpielrunde, bisSpielrunde);
