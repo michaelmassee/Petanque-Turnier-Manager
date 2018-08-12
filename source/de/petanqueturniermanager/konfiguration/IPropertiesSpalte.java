@@ -48,4 +48,6 @@ public interface IPropertiesSpalte {
 
 	String getSpielrundeSpielbahn() throws GenerateException;
 
+	Integer getAnzGespielteSpieltage() throws GenerateException;
+
 }

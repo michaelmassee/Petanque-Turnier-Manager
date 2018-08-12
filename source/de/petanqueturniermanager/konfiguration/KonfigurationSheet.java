@@ -221,4 +221,9 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 		return propertiesSpalte.getSpielrundeSpielbahn();
 	}
 
+	@Override
+	public Integer getAnzGespielteSpieltage() throws GenerateException {
+		return propertiesSpalte.getAnzGespielteSpieltage();
+	}
+
 }
