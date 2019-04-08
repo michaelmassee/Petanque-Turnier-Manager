@@ -90,15 +90,14 @@ public class PageStyleHelper {
 	 * @return
 	 */
 	public PageStyleHelper initDefaultFooter() {
-		pageStyleDef.setFooterLeft("Online: bc-linden.de\r\nFeedback: michael@massee.de");
-		pageStyleDef.setFooterRight("* Pétanque-Turnier-Manager *");
+		pageStyleDef.setFooterRight("* Pétanque-Turnier-Manager *\r\nmichael@massee.de");
 		return this;
 	}
 
 	public PageStyleHelper create() throws GenerateException {
 		checkNotNull(componentContext);
 		checkNotNull(pageStyleDef);
-		String styleName = pageStyleDef.getName();
+		String styleName = pageStyleDef.getPageStyleName();
 
 		try {
 			XSpreadsheetDocument currentSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(componentContext);
@@ -143,10 +142,20 @@ public class PageStyleHelper {
 	public PageStyleHelper applytoSheet() throws GenerateException {
 		XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, sheet);
 		try {
-			xPropertySet.setPropertyValue("PageStyle", pageStyleDef.getName());
+			xPropertySet.setPropertyValue("PageStyle", pageStyleDef.getPageStyleName());
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
 			logger.error(e.getMessage(), e);
 		}
+		return this;
+	}
+
+	public PageStyleHelper setFooterLeft(String string) {
+		pageStyleDef.setFooterLeft(string);
+		return this;
+	}
+
+	public PageStyleHelper setFooterCenter(String string) {
+		pageStyleDef.setFooterCenter(string);
 		return this;
 	}
 

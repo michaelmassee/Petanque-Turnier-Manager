@@ -19,6 +19,6 @@
 	<classpathentry kind="lib" path="libs/javassist-3.21.0-GA.jar"/>
 	<classpathentry kind="lib" path="libs/mockito-core-2.8.9.jar"/>
 	<classpathentry kind="lib" path="libs/objenesis-2.5.jar"/>
-	<classpathentry kind="con" path="org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.0"/>
+	<classpathentry kind="con" path="org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

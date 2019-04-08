@@ -55,9 +55,11 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde Punkte -"; // 13
 
 	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
-
 	private static final String KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE = "Anz gespielte Spieltage"; // anzahl spieltage die bei der neu auslosung eingelesen wird (hat zusammen
 																									// gespielt)
+
+	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
+	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -100,6 +102,9 @@ public class PropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE).setDefaultVal(99)
 				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -409,5 +414,13 @@ public class PropertiesSpalte {
 			return SpielSystem.findById(spielSystemId);
 		}
 		return null;
+	}
+
+	public String getFusszeileLinks() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_FUSSZEILE_LINKS);
+	}
+
+	public String getFusszeileMitte() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
 	}
 }

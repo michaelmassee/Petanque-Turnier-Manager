@@ -13,7 +13,7 @@ public class PageStyleDef {
 
 	public static final String SPIELTAG_FORMAT_NAME = "Spieltag";
 
-	private final String name;
+	private final String pageStyleName;
 	private final PageProperties pageProperties;
 
 	public PageStyleDef(SpielTagNr spielTag) throws GenerateException {
@@ -24,13 +24,13 @@ public class PageStyleDef {
 		this(name, new PageProperties());
 	}
 
-	public PageStyleDef(String name, PageProperties pageProperties) {
-		this.name = checkNotNull(name);
+	public PageStyleDef(String pageStyleName, PageProperties pageProperties) {
+		this.pageStyleName = checkNotNull(pageStyleName);
 		this.pageProperties = checkNotNull(pageProperties);
 	}
 
-	public String getName() {
-		return name;
+	public String getPageStyleName() {
+		return pageStyleName;
 	}
 
 	public PageProperties getPageProperties() {
@@ -78,6 +78,11 @@ public class PageStyleDef {
 
 	public PageStyleDef setFooterRight(String text) {
 		pageProperties.setFooterRight(text);
+		return this;
+	}
+
+	public PageStyleDef setFooterCenter(String text) {
+		pageProperties.setFooterCenter(text);
 		return this;
 	}
 

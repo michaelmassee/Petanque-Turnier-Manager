@@ -50,4 +50,7 @@ public interface IPropertiesSpalte {
 
 	Integer getAnzGespielteSpieltage() throws GenerateException;
 
+	String getFusszeileLinks() throws GenerateException;
+
+	String getFusszeileMitte() throws GenerateException;
 }
