@@ -78,13 +78,14 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	 */
 	private void initPageStyles() throws GenerateException {
 		// default page Style
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()).create().applytoSheet();
 
 		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES);
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			// Kopfzeile Spalte
 			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);
-			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setHeaderCenter(kopfZeile).create();
+			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
+					.setHeaderCenter(kopfZeile).create();
 			posKopfZeile.zeilePlus(2);
 		}
 	}
@@ -226,4 +227,13 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 		return propertiesSpalte.getAnzGespielteSpieltage();
 	}
 
+	@Override
+	public String getFusszeileLinks() throws GenerateException {
+		return propertiesSpalte.getFusszeileLinks();
+	}
+
+	@Override
+	public String getFusszeileMitte() throws GenerateException {
+		return propertiesSpalte.getFusszeileMitte();
+	}
 }

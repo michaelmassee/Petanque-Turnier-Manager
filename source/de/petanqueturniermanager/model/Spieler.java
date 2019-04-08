@@ -1,7 +1,6 @@
 package de.petanqueturniermanager.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
@@ -20,6 +19,7 @@ public class Spieler implements Comparable<Spieler> {
 	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team
 	private final int nr;
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
+	private final HashSet<Integer> gegner = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
 	private boolean istInTeam = false;
 
@@ -29,7 +29,7 @@ public class Spieler implements Comparable<Spieler> {
 	}
 
 	public int anzahlMitSpieler() {
-		return warImTeamMit.size();
+		return this.warImTeamMit.size();
 	}
 
 	public static Spieler from(int nr) {
@@ -52,28 +52,36 @@ public class Spieler implements Comparable<Spieler> {
 
 	public boolean warImTeamMit(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		return gleicheSetzPos(spieler) || warImTeamMit.contains(spieler.getNr());
+		return gleicheSetzPos(spieler) || this.warImTeamMit.contains(spieler.getNr());
 	}
 
 	public Spieler deleteTeam() throws AlgorithmenException {
-		wkRefteam = null;
+		this.wkRefteam = null;
 		setIstInTeam(false);
 		return this;
 	}
 
 	public Spieler setTeam(Team team) throws AlgorithmenException {
 		checkNotNull(team, "team == null");
-		wkRefteam = new WeakReference<>(team);
+		this.wkRefteam = new WeakReference<>(team);
 		setIstInTeam(true);
 		return this;
 	}
 
 	public Team getTeam() throws AlgorithmenException {
 		validatewkRefteamStatus();
-		if (wkRefteam != null) {
-			return wkRefteam.get();
+		if (this.wkRefteam != null) {
+			return this.wkRefteam.get();
 		}
 		return null;
+	}
+
+	public Spieler addGegner(Spieler spieler) {
+		checkNotNull(spieler, "spieler == null");
+		if (!spieler.equals(this) && !this.gegner.contains(spieler.getNr())) {
+			this.gegner.add(spieler.getNr());
+		}
+		return this;
 	}
 
 	/**
@@ -84,8 +92,8 @@ public class Spieler implements Comparable<Spieler> {
 
 	public Spieler addWarImTeamMitWennNichtVorhanden(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		if (!spieler.equals(this) && !warImTeamMit.contains(spieler.getNr())) {
-			warImTeamMit.add(spieler.getNr());
+		if (!spieler.equals(this) && !this.warImTeamMit.contains(spieler.getNr())) {
+			this.warImTeamMit.add(spieler.getNr());
 			spieler.addWarImTeamMitWennNichtVorhanden(this);
 		}
 		return this;
@@ -93,12 +101,12 @@ public class Spieler implements Comparable<Spieler> {
 
 	public Spieler deleteWarImTeam(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
-		warImTeamMit.remove(spieler.getNr());
+		this.warImTeamMit.remove(spieler.getNr());
 		return this;
 	}
 
 	public int getNr() {
-		return nr;
+		return this.nr;
 	}
 
 	@Override
@@ -140,7 +148,7 @@ public class Spieler implements Comparable<Spieler> {
 	public String toString() {
 
 		String warImTeamInfo = "";
-		for (Integer warImTeamSpielerNr : warImTeamMit) {
+		for (Integer warImTeamSpielerNr : this.warImTeamMit) {
 			if (warImTeamInfo.length() > 0) {
 				warImTeamInfo += ",";
 			}
@@ -158,7 +166,7 @@ public class Spieler implements Comparable<Spieler> {
 
 	public String mitSpielerStr() {
 		String mitspielerStr = "(";
-		for (Integer warImTeamSpielerNr : warImTeamMit) {
+		for (Integer warImTeamSpielerNr : this.warImTeamMit) {
 
 			if (!mitspielerStr.endsWith("(")) {
 				mitspielerStr += ",";
@@ -170,7 +178,7 @@ public class Spieler implements Comparable<Spieler> {
 	}
 
 	public int getSetzPos() {
-		return setzPos;
+		return this.setzPos;
 	}
 
 	public Spieler setSetzPos(int setzPos) {
@@ -180,7 +188,7 @@ public class Spieler implements Comparable<Spieler> {
 
 	public boolean isIstInTeam() throws AlgorithmenException {
 		validatewkRefteamStatus();
-		return istInTeam;
+		return this.istInTeam;
 	}
 
 	private void setIstInTeam(boolean istInTeam) throws AlgorithmenException {
@@ -189,13 +197,13 @@ public class Spieler implements Comparable<Spieler> {
 	}
 
 	private void validatewkRefteamStatus() throws AlgorithmenException {
-		if (istInTeam) {
-			if (wkRefteam == null || wkRefteam.get() == null) {
-				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + istInTeam + " wkRefteam.get()==null");
+		if (this.istInTeam) {
+			if (this.wkRefteam == null || this.wkRefteam.get() == null) {
+				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + this.istInTeam + " wkRefteam.get()==null");
 			}
 		} else {
-			if (wkRefteam != null && wkRefteam.get() != null) {
-				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + istInTeam + " wkRefteam.get()!=null");
+			if (this.wkRefteam != null && this.wkRefteam.get() != null) {
+				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + this.istInTeam + " wkRefteam.get()!=null");
 			}
 		}
 	}

@@ -1,35 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/Extensions/description.xml -->
-
-<description xmlns="http://openoffice.org/extensions/description/2006" xmlns:d="http://openoffice.org/extensions/description/2006"
-	xmlns:l="http://libreoffice.org/extensions/description/2011" xmlns:xlink="http://www.w3.org/1999/xlink">
-
-	<version value="1.22" />
-	<identifier value="de.petanqueturniermanager" />
-
-	<dependencies>
-		<l:LibreOffice-minimal-version value="6.0" d:name="LibreOffice 6.0" />
-	</dependencies>
-
+<description xmlns="http://openoffice.org/extensions/description/2006" xmlns:d="http://openoffice.org/extensions/description/2006" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<version value="1.23"/>
+	<identifier value="de.petanqueturniermanager"/>
+	<platform value="all"/>
 	<update-information>
-		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases" />
+		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases"/>
 	</update-information>
 	<publisher>
-		<name lang="en" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
 		<name lang="de" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
+		<name lang="en" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
 	</publisher>
 	<display-name>
-		<name lang="en">PetanqueTurnierManager</name>
 		<name lang="de">PetanqueTurnierManager</name>
+		<name lang="en">PetanqueTurnierManager</name>
 	</display-name>
-	<extension-description>
-		<src lang="en" xlink:href="description/desc_de.txt" />
-		<src lang="de" xlink:href="description/desc_de.txt" />
-	</extension-description>
-	<platform value="all" />
 	<icon>
-		<default xlink:href="images/podium32x32.png" />
-		<high-contrast xlink:href="images/podium512x512.png" />
+		<default xlink:href="images/podium32x32.png"/>
+		<high-contrast xlink:href="images/podium512x512.png"/>
 	</icon>
+	<extension-description>
+		<src lang="de" xlink:href="description/desc_de.txt"/>
+		<src lang="en" xlink:href="description/desc_de.txt"/>
+	</extension-description>
 </description>
