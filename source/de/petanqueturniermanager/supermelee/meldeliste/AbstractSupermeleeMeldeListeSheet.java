@@ -181,8 +181,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		XSpreadsheet sheet = getSheet();
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 
-		String formulaStrSpieltag = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2)";
-		String formulaStrSpielRunde = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2)";
+		String formulaStrSpieltag = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2;0)";
+		String formulaStrSpielRunde = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2;0)";
 
 		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
 				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).setVertJustify(CellVertJustify2.CENTER);
@@ -212,8 +212,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 		getSheetHelper().setTextInCell(bezCelSpieltagVal);
 
 		// Aktiv / Inaktiv spieltag
-		// =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2);0)=2;"Aktiv";"")
-		String formulaStr = "IF(IFNA(VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2);0)="
+		// =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
+		String formulaStr = "IF(IFNA(VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + KonfigurationSheet.SHEETNAME + "." + suchMatrixProperty() + ";2;0);0)="
 				+ spieltag.getNr() + ";\"Aktiv\";\"\"";
 		StringCellValue aktivFormula = StringCellValue.from(sheet, spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr).setCharColor(ColorHelper.CHAR_COLOR_GREEN);
 		getSheetHelper().setFormulaInCell(aktivFormula);
