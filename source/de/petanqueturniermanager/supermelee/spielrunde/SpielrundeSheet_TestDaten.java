@@ -56,6 +56,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		setSpielTag(SpielTagNr.from(1));
 		generate();
 		new SpielrundeSheet_Validator(getxContext()).validateSpieltag(getSpielTag()); // validieren
+		// sicher gehen das aktive spielrunde sheet ist activ
+		getSheetHelper().setActiveSheet(getSheet());
 	}
 
 	/**
