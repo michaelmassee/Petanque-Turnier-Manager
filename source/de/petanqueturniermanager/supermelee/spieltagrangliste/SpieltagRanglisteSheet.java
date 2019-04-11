@@ -264,11 +264,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 
 			String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
 			String letzteZelleAddress = Position.from(returnSpalte, 999).getAddressWith$();
-
-			return "VLOOKUP(" + spielrNrAdresse + ";$'" + getSheetName(spieltagNr) + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";" + (returnSpalte + 1) + // erste
-																																										// spalte =
-																																										// 1
-					";0)";
+			// erste spalte = 1
+			return "VLOOKUP(" + spielrNrAdresse + ";$'" + getSheetName(spieltagNr) + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";" + (returnSpalte + 1) + ";0)";
 		}
 		return null;
 	}
