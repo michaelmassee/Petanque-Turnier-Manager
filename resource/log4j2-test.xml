@@ -11,9 +11,10 @@
         	<Pattern>%d %p %c{1.} %m%n</Pattern>
 		</PatternLayout>
   		<Policies>
-    		<SizeBasedTriggeringPolicy size="10 KB"/>
+  		    <TimeBasedTriggeringPolicy />
+    		<SizeBasedTriggeringPolicy size="250 MB"/>
   		</Policies>
-  		<DefaultRolloverStrategy max="5" />
+  		<DefaultRolloverStrategy max="5"/>
     </RollingFile>
   </Appenders>
   <Loggers>
