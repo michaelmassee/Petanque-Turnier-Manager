@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
 public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
@@ -45,6 +46,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		if (sheet == null) {
 			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
 			PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
+			TurnierSheet.from(sheet).tabColor("f4ca46").protect();
 			initSheet(sheet);
 		}
 		return sheet;
@@ -53,10 +55,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 	private void initSheet(XSpreadsheet sheet) throws GenerateException {
 		// leeren erstellen
 		TeamRechner teamRechner;
-
 		processBoxinfo("Erstelle " + SHEETNAME);
-
-		getSheetHelper().setTabColor(sheet, "f4ca46");
 
 		// Header
 		Position pos = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE - 1);

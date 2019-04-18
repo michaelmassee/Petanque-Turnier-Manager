@@ -167,6 +167,7 @@ public class ProcessBox {
 		// -----------------------------
 
 		// ------------- image
+		// TODO ERROR/OKAY Image
 		// GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
 		// gridBagConstraintsPanel.gridy = 0; // zeile
 		// gridBagConstraintsPanel.gridx = 0; // spalte

@@ -27,10 +27,7 @@ public class TeamRechner {
 		// triplette paarung = 6 Spieler
 		int anzTriplettePaarungenGerundet = (anzSpieler / 6);
 		int anzTripletteTeams = anzTriplettePaarungenGerundet * 2;
-		// int anzSpielerIntriplette = anzTriplettePaarungenGerundet * 6;
 		int restSpielerMinusAnzSpielerIntriplette = anzSpieler - (anzTripletteTeams * 3);
-
-		// restSpielerMinusAnzSpielerIntriplette = 0 = nur Triplette, geht auf
 
 		// der rest der Spieler muss auf doublette aufgeteilt werden.
 		switch (restSpielerMinusAnzSpielerIntriplette) {
@@ -49,6 +46,7 @@ public class TeamRechner {
 
 		int anzDoubletteTeams = 0;
 
+		// TODO das geht einfacher als mit switch :-)
 		// rest = 0,4,5,8,9,13
 		switch (restSpielerMinusAnzSpielerIntriplette) {
 		case 4:
