@@ -13,15 +13,14 @@ public class RangePosition {
 	private final AbstractPosition<?> start;
 	private final AbstractPosition<?> ende;
 
-	public RangePosition(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
-		this(new Position(startSpalte, startZeile), new Position(endeSpalte, endeZeile));
+	private RangePosition(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
+		this(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
 	}
 
 	public RangePosition(AbstractPosition<?> start, AbstractPosition<?> ende) {
 		checkNotNull(start);
 		checkNotNull(ende);
-		checkArgument(start.getColumn() <= ende.getColumn(), "spalte (column) start %s > ende %s", start.getColumn(),
-				ende.getColumn());
+		checkArgument(start.getColumn() <= ende.getColumn(), "spalte (column) start %s > ende %s", start.getColumn(), ende.getColumn());
 		checkArgument(start.getRow() <= ende.getRow(), "zeile (row) start %s > ende %s", start.getRow(), ende.getRow());
 
 		this.start = start;

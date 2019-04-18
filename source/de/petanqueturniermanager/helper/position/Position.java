@@ -11,7 +11,7 @@ public class Position extends AbstractPosition<Position> {
 	 * @param zeile (row)
 	 */
 
-	public Position(int spalte, int zeile) {
+	private Position(int spalte, int zeile) {
 		super(spalte, zeile);
 	}
 

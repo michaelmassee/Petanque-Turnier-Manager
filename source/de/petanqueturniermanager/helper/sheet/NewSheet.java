@@ -28,6 +28,7 @@ public class NewSheet {
 	private boolean didCreate = false;
 	private boolean force = false;
 	private boolean setActiv = false;
+	private boolean protect = false;
 	private short pos = 1;
 	private String tabColor = null;
 	private PageStyleDef pageStyleDef = null;
@@ -84,6 +85,8 @@ public class NewSheet {
 		}
 		sheet = sheetHelper.newIfNotExist(sheetName, pos, tabColor);
 
+		TurnierSheet.from(sheet).protect(protect);
+
 		if (setActiv) {
 			sheetHelper.setActiveSheet(sheet);
 		}
@@ -108,8 +111,12 @@ public class NewSheet {
 		return this;
 	}
 
+	public NewSheet protect() {
+		protect = true;
+		return this;
+	}
+
 	public XSpreadsheet getSheet() {
 		return sheet;
 	}
-
 }

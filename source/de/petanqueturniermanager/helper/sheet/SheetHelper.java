@@ -376,7 +376,7 @@ public class SheetHelper {
 
 		XCellAddressable xCellAddr = UnoRuntime.queryInterface(XCellAddressable.class, xCell);
 		CellAddress aAddress = xCellAddr.getCellAddress();
-		return getAddressFromColumnRow(new Position(aAddress.Column, aAddress.Row));
+		return getAddressFromColumnRow(Position.from(aAddress.Column, aAddress.Row));
 	}
 
 	/**
@@ -438,8 +438,9 @@ public class SheetHelper {
 	 * @param xSheet
 	 * @param hex, 6 stellige farbcode, ohne # oder sonstige vorzeichen !
 	 */
+	@Deprecated
 	public void setTabColor(XSpreadsheet xSheet, String hex) {
-		setTabColor(xSheet, Integer.parseInt(hex, 16));
+		TurnierSheet.from(xSheet).tabColor(hex);
 	}
 
 	/**
@@ -454,14 +455,9 @@ public class SheetHelper {
 	 * @param xSheet
 	 * @param color int val. convert from hex z.b. Integer.valueOf(0x003399), Integer.parseInt("003399", 16)
 	 */
+	@Deprecated
 	public void setTabColor(XSpreadsheet xSheet, int color) {
-		checkNotNull(xSheet);
-		XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xSheet);
-		try {
-			xPropSet.setPropertyValue("TabColor", new Integer(color));
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
-			logger.error(e.getMessage(), e);
-		}
+		TurnierSheet.from(xSheet).tabColor(color);
 	}
 
 	public XCellRange mergeRange(XSpreadsheet sheet, RangePosition rangePosition) {
