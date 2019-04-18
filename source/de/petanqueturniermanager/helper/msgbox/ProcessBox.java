@@ -22,6 +22,7 @@ import java.util.Date;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -33,6 +34,9 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.XWindow;
@@ -46,6 +50,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class ProcessBox {
+	private static final Logger logger = LogManager.getLogger(ProcessBox.class);
 
 	private static final int ANZAHLSPALTEN = 1;
 
@@ -65,6 +70,14 @@ public class ProcessBox {
 	private String prefix = null;
 	private JTextField spieltagText = null;
 	private JTextField spielrundeText = null;
+
+	private JLabel statusLabel = null;
+
+	private ImageIcon imageIconWorking = null;
+	private ImageIcon imageIconReady = null;
+	private ImageIcon imageIconError = null;
+
+	private boolean isFehler = false;
 
 	private ProcessBox(XComponentContext xContext) {
 		this.xContext = checkNotNull(xContext);
@@ -119,10 +132,14 @@ public class ProcessBox {
 			BufferedImage img512 = ImageIO.read(this.getClass().getResourceAsStream("podium512x512.png"));
 			Image[] images = { img16, img24, img32, img64, img128, img256, img512 };
 			frame.setIconImages(java.util.Arrays.asList(images));
-		} catch (IOException e) {
-			// ignore
-		}
 
+			this.imageIconWorking = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update32x32.png")));
+			this.imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check32x32.png")));
+			this.imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
+
+		} catch (IOException e) {
+			logger.debug(e);
+		}
 	}
 
 	private JTextField newNumberJTextField() {
@@ -166,29 +183,21 @@ public class ProcessBox {
 		}
 		// -----------------------------
 
-		// ------------- image
-		// TODO ERROR/OKAY Image
-		// GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
-		// gridBagConstraintsPanel.gridy = 0; // zeile
-		// gridBagConstraintsPanel.gridx = 0; // spalte
-
-		// try {
-		// BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
-		// ImageIcon imageIcon = new ImageIcon(img128);
-		// JLabel imageLabel = new JLabel(imageIcon);
-		// imageLabel.setToolTipText("Pétanque Turnier Manager");
-		// gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 30);
-		// gridBagConstraintsPanel.anchor = GridBagConstraints.WEST;
-		// panel.add(imageLabel, gridBagConstraintsPanel);
-		// gridBagConstraintsPanel.gridx++;
-		// } catch (IOException e1) {
-		// }
-		// int gridx = gridBagConstraintsPanel.gridx;
-
 		GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
-		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 0);
 		gridBagConstraintsPanel.gridy = 0; // zeile
 		gridBagConstraintsPanel.gridx = 0;
+
+		// Working/ERROR/OKAY Image
+		// https://www.flaticon.com/packs/electronic-and-web-element-collection-2
+		statusLabel = new JLabel(imageIconReady);
+		statusLabel.setToolTipText("status");
+		statusLabel.setVisible(true);
+		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 30);
+		gridBagConstraintsPanel.anchor = GridBagConstraints.WEST;
+		panel.add(statusLabel, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++;
+
+		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 0);
 
 		spieltagText = newNumberJTextField();
 		spielrundeText = newNumberJTextField();
@@ -259,6 +268,7 @@ public class ProcessBox {
 	}
 
 	public ProcessBox clear() {
+		isFehler = false;
 		logOut.setText(null);
 		return this;
 	}
@@ -275,6 +285,7 @@ public class ProcessBox {
 
 	public synchronized ProcessBox fehler(String logMsg) {
 		info("Fehler: " + logMsg);
+		isFehler = true;
 		return this;
 	}
 
@@ -348,6 +359,12 @@ public class ProcessBox {
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(true);
 		}
+
+		if (statusLabel != null && imageIconWorking != null) {
+			statusLabel.setIcon(imageIconWorking);
+			statusLabel.setToolTipText("In Arbeit");
+		}
+
 		return this;
 	}
 
@@ -355,6 +372,18 @@ public class ProcessBox {
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(false);
+		}
+
+		if (isFehler) {
+			if (statusLabel != null && imageIconError != null) {
+				statusLabel.setIcon(imageIconError);
+				statusLabel.setToolTipText("Fehler");
+			}
+		} else {
+			if (statusLabel != null && imageIconReady != null) {
+				statusLabel.setIcon(imageIconReady);
+				statusLabel.setToolTipText("Fertig");
+			}
 		}
 		return this;
 	}

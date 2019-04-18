@@ -16,3 +16,5 @@ sudo aptitude install libreoffice-java-common
 
 Fehler wenn Menü einträge fehlen = Translation in English fehlt
 
+
+https://logging.apache.org/log4j/2.x/manual/appenders.html#CustomDeleteOnRollover
