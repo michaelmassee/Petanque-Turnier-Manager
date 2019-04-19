@@ -19,15 +19,14 @@ class Permutations extends AbstractIterator<Spieler[]> implements Iterable<Spiel
 	private boolean firstIteration;
 
 	public Permutations(Collection<Spieler> items) {
-		this.items = (Spieler[]) items.toArray(new Spieler[items.size()]);
+		this.items = items.toArray(new Spieler[items.size()]);
 		this.firstIteration = true;
 	}
 
 	@Override
 	protected Spieler[] computeNext() {
 		/*
-		 * http://en.wikipedia.org/wiki/Permutation Systematic generation of all
-		 * permutations
+		 * http://en.wikipedia.org/wiki/Permutation Systematic generation of all permutations
 		 */
 		// we simply return the items we just sorted as current permutation
 		if (firstIteration) {

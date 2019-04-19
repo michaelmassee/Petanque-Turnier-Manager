@@ -18,7 +18,12 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -73,9 +78,13 @@ public class ProcessBox {
 
 	private JLabel statusLabel = null;
 
-	private ImageIcon imageIconWorking = null;
 	private ImageIcon imageIconReady = null;
 	private ImageIcon imageIconError = null;
+
+	private ArrayList<ImageIcon> inworkIcons = new ArrayList<ImageIcon>();
+
+	private final ScheduledExecutorService drawInWorkIcon = Executors.newScheduledThreadPool(1);
+	private ScheduledFuture<?> drawInWorkIconScheduled;
 
 	private boolean isFehler = false;
 
@@ -133,8 +142,11 @@ public class ProcessBox {
 			Image[] images = { img16, img24, img32, img64, img128, img256, img512 };
 			frame.setIconImages(java.util.Arrays.asList(images));
 
-			this.imageIconWorking = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update32x32.png")));
-			this.imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check32x32.png")));
+			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_1.png"))));
+			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_2.png"))));
+			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_3.png"))));
+			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_4.png"))));
+			this.imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check25x32.png")));
 			this.imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
 
 		} catch (IOException e) {
@@ -359,16 +371,13 @@ public class ProcessBox {
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(true);
 		}
-
-		if (statusLabel != null && imageIconWorking != null) {
-			statusLabel.setIcon(imageIconWorking);
-			statusLabel.setToolTipText("In Arbeit");
-		}
-
+		statusLabel.setToolTipText("In Arbeit");
+		this.drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 600, TimeUnit.MILLISECONDS);
 		return this;
 	}
 
 	public ProcessBox ready() {
+		this.drawInWorkIconScheduled.cancel(true);
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(false);
@@ -387,4 +396,26 @@ public class ProcessBox {
 		}
 		return this;
 	}
+
+}
+
+class UpdateInWorkIcon implements Runnable {
+	private int inWorkImgIdx = 0;
+	private final ArrayList<ImageIcon> inworkIcons;
+	private final JLabel statusLabel;
+
+	public UpdateInWorkIcon(ArrayList<ImageIcon> inworkIcons, JLabel statusLabel) {
+		this.inworkIcons = inworkIcons;
+		this.statusLabel = statusLabel;
+	}
+
+	@Override
+	public void run() {
+		if (inWorkImgIdx >= inworkIcons.size()) {
+			inWorkImgIdx = 0;
+		}
+		statusLabel.setIcon(inworkIcons.get(inWorkImgIdx));
+		inWorkImgIdx++;
+	}
+
 }
