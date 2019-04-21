@@ -50,7 +50,7 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XMergeable;
 
-import de.petanqueturniermanager.helper.cellvalue.AbstractCellValue;
+import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -215,7 +215,7 @@ public class SheetHelper {
 	 * @param cellVal
 	 * @return
 	 */
-	public XCell setFormatInCell(AbstractCellValue<?, ?> cellVal) {
+	public XCell setFormatInCell(AbstractCellValueWithSheet<?, ?> cellVal) {
 		checkNotNull(cellVal);
 		checkNotNull(cellVal.getSheet());
 		checkNotNull(cellVal.getPos());
@@ -242,7 +242,7 @@ public class SheetHelper {
 		return xCell;
 	}
 
-	private void handleAbstractCellValue(AbstractCellValue<?, ?> cellVal, XCell xCell) {
+	private void handleAbstractCellValue(AbstractCellValueWithSheet<?, ?> cellVal, XCell xCell) {
 		checkNotNull(cellVal);
 		checkNotNull(xCell);
 

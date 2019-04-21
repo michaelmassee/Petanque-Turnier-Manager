@@ -10,14 +10,10 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.helper.position.Position;
 
-public class StringCellValue extends AbstractCellValue<StringCellValue, String> {
+public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue, String> {
 
 	private StringCellValue() {
 		super();
-	}
-
-	private StringCellValue(XSpreadsheet sheet, Position pos, int value) {
-		this(sheet, pos, "" + value);
 	}
 
 	private StringCellValue(XSpreadsheet sheet, Position pos, String value) {
@@ -26,19 +22,15 @@ public class StringCellValue extends AbstractCellValue<StringCellValue, String> 
 	}
 
 	@Override
-	protected StringCellValue copyCommonAttr(@SuppressWarnings("rawtypes") AbstractCellValue abstractCellValue) {
+	protected StringCellValue copyCommonAttr(ICellValueWithSheet<?> abstractCellValue) {
 		super.copyCommonAttr(abstractCellValue);
 		return this;
 	}
 
-	public static final StringCellValue from(NumberCellValue cellVal) {
+	public static final StringCellValue from(AbstractCellValueWithSheet<?, ?> cellVal) {
 		StringCellValue stringCellValue = new StringCellValue();
 		stringCellValue.copyCommonAttr(cellVal).setValue(cellVal.getValue().toString());
 		return stringCellValue;
-	}
-
-	public static final StringCellValue from(StringCellValue cellVal) {
-		return new StringCellValue().copyAttr(cellVal);
 	}
 
 	public static final StringCellValue from(XSpreadsheet sheet) {

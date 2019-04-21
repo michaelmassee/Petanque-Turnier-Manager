@@ -1,30 +1,12 @@
-/**
-* Erstellung : 27.03.2018 / Michael Massee
-**/
-
 package de.petanqueturniermanager.helper.cellvalue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.helper.position.Position;
 
-@RunWith(PowerMockRunner.class)
-public class NumberCellValueTest {
-
-	XSpreadsheet spreadsheetMock;
-
-	@Before
-	public void setup() {
-		spreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
-	}
+public class NumberTurnierCellValueTest {
 
 	@Test
 	public void testFromNumberCellValue() throws Exception {
@@ -32,13 +14,13 @@ public class NumberCellValueTest {
 		int zeile = 30;
 
 		Position pos = Position.from(spalte, zeile);
-		NumberCellValue intcellValue = NumberCellValue.from(spreadsheetMock, pos, 42);
+		NumberTurnierCellValue intcellValue = NumberTurnierCellValue.from(pos, 42);
 		String aComment = "bla bla";
 		intcellValue.setComment(aComment);
 		assertThat(intcellValue.getValue()).isEqualTo(42);
 		assertThat(intcellValue.getComment()).isEqualTo(aComment);
 
-		NumberCellValue intcellValueNew = NumberCellValue.from(intcellValue);
+		NumberTurnierCellValue intcellValueNew = NumberTurnierCellValue.from(intcellValue);
 		assertThat(intcellValueNew.getValue()).isEqualTo(42);
 		assertThat(intcellValueNew.getComment()).isEqualTo(aComment);
 		assertThat(intcellValueNew.getPos().getSpalte()).isEqualTo(spalte);
@@ -67,10 +49,10 @@ public class NumberCellValueTest {
 		Position pos = Position.from(spalte, zeile);
 		CellProperties columnProperties = CellProperties.from().setWidth(columnWidth);
 
-		StringCellValue strcellValue = StringCellValue.from(spreadsheetMock, pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
+		StringTurnierCellValue strcellValue = StringTurnierCellValue.from(pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
 				.addCellProperty(CellProperties.CHAR_COLOR, charcolor).nichtUeberschreiben();
 
-		NumberCellValue numberCellValue = NumberCellValue.from(strcellValue);
+		NumberTurnierCellValue numberCellValue = NumberTurnierCellValue.from(strcellValue);
 
 		assertThat(numberCellValue.getPos().getZeile()).isEqualTo(zeile);
 		assertThat(numberCellValue.getPos().getSpalte()).isEqualTo(spalte);
@@ -79,7 +61,7 @@ public class NumberCellValueTest {
 		assertThat(numberCellValue.getColumnProperties()).containsEntry(CellProperties.WIDTH, columnWidth);
 		assertThat(numberCellValue.getCellProperties()).containsEntry(CellProperties.CHAR_COLOR, charcolor);
 		assertThat(numberCellValue.isUeberschreiben()).isFalse();
-		assertThat(numberCellValue.getSheet()).isNotNull();
+
 	}
 
 	@Test
@@ -87,7 +69,7 @@ public class NumberCellValueTest {
 		int spalte = 12;
 		int zeile = 700;
 
-		NumberCellValue result = NumberCellValue.from(spreadsheetMock, spalte, zeile);
+		NumberTurnierCellValue result = NumberTurnierCellValue.from(spalte, zeile);
 		assertThat(result.getPos().getZeile()).isEqualTo(zeile);
 		assertThat(result.getPos().getRow()).isEqualTo(zeile);
 		assertThat(result.getPos().getSpalte()).isEqualTo(spalte);
@@ -100,7 +82,7 @@ public class NumberCellValueTest {
 		int zeile = 700;
 		double val = 4500D;
 
-		NumberCellValue result = NumberCellValue.from(spreadsheetMock, spalte, zeile, val);
+		NumberTurnierCellValue result = NumberTurnierCellValue.from(spalte, zeile, val);
 		assertThat(result.getPos().getZeile()).isEqualTo(zeile);
 		assertThat(result.getPos().getRow()).isEqualTo(zeile);
 		assertThat(result.getPos().getSpalte()).isEqualTo(spalte);
@@ -113,10 +95,11 @@ public class NumberCellValueTest {
 		int spalte = 19;
 		int zeile = 389;
 
-		NumberCellValue result = NumberCellValue.from(spreadsheetMock, Position.from(spalte, zeile));
+		NumberTurnierCellValue result = NumberTurnierCellValue.from(Position.from(spalte, zeile));
 		assertThat(result.getPos().getZeile()).isEqualTo(zeile);
 		assertThat(result.getPos().getRow()).isEqualTo(zeile);
 		assertThat(result.getPos().getSpalte()).isEqualTo(spalte);
 		assertThat(result.getPos().getColumn()).isEqualTo(spalte);
 	}
+
 }

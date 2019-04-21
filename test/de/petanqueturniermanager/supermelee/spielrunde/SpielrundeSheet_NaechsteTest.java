@@ -39,6 +39,16 @@ public class SpielrundeSheet_NaechsteTest {
 			public SheetHelper getSheetHelper() {
 				return sheetHelperMock;
 			}
+
+			@Override
+			public Integer getAnzGespielteSpieltage() throws GenerateException {
+				return 1;
+			}
+
+			@Override
+			public void processBoxinfo(String infoMsg) {
+				// nothing
+			}
 		};
 	}
 

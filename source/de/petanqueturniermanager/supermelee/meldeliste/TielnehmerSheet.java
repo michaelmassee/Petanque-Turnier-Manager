@@ -110,12 +110,17 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 			nameFormula.zeilePlusEins();
 
 			if ((lfndNr / anzSpielerinSpalte) * anzSpielerinSpalte == lfndNr) {
+				// Nächste Block
 				spierNrVal.spalte((lfndNr / anzSpielerinSpalte) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
 				nameFormula.spalte(spierNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
 				spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 			}
 			lfndNr++;
 		}
+
+		// Fußzeile Anzahl Spieler
+		// StringCellValue footer = StringCellValue.from();
+		// TurnierSheet.from(getSheet());
 
 	}
 

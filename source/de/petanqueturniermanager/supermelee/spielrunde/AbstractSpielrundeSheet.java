@@ -637,7 +637,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	protected void gespieltenRundenEinlesen(Meldungen meldungen, int abSpielrunde, int bisSpielrunde) throws GenerateException {
 		SpielTagNr aktuelleSpielTag = getSpielTag();
 
-		Integer maxAnzGespielteSpieltage = konfigurationSheet.getAnzGespielteSpieltage();
+		Integer maxAnzGespielteSpieltage = getAnzGespielteSpieltage();
 		int bisVergangeneSpieltag = aktuelleSpielTag.getNr() - 1 - maxAnzGespielteSpieltage;
 		if (bisVergangeneSpieltag < 0) {
 			bisVergangeneSpieltag = 0;
@@ -647,6 +647,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			gespieltenRundenEinlesen(meldungen, SpielTagNr.from(vergangeneSpieltag), 1, 999);
 		}
 		gespieltenRundenEinlesen(meldungen, getSpielTag(), abSpielrunde, bisSpielrunde);
+	}
+
+	public Integer getAnzGespielteSpieltage() throws GenerateException {
+		return konfigurationSheet.getAnzGespielteSpieltage();
 	}
 
 	protected void gespieltenRundenEinlesen(Meldungen meldungen, SpielTagNr spielTagNr, int abSpielrunde, int bisSpielrunde) throws GenerateException {
@@ -660,7 +664,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			spielrunde = abSpielrunde;
 		}
 
-		ProcessBox.from().info("Meldungen von gespielten Runden einlesen. Spieltag:" + spielTagNr.getNr() + " Von Runde:" + spielrunde + " Bis Runde:" + bisSpielrunde);
+		processBoxinfo("Meldungen von gespielten Runden einlesen. Spieltag:" + spielTagNr.getNr() + " Von Runde:" + spielrunde + " Bis Runde:" + bisSpielrunde);
 
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
