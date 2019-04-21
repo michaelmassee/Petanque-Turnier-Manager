@@ -11,7 +11,6 @@ import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.MoreObjects;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
@@ -20,10 +19,9 @@ import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 
 @SuppressWarnings("rawtypes")
-abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
+abstract public class AbstractCellValue<T extends ICellValue, V> {
 
 	private V value;
-	private XSpreadsheet sheet;
 	private Position pos;
 	private String comment;
 	private CellProperties cellProperties = new CellProperties();
@@ -36,10 +34,8 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	protected AbstractCellValue() {
 	}
 
-	protected AbstractCellValue(XSpreadsheet sheet, Position pos) {
-		checkNotNull(sheet);
+	protected AbstractCellValue(Position pos) {
 		checkNotNull(pos);
-		this.setSheet(sheet);
 		this.setPos(pos);
 	}
 
@@ -54,16 +50,6 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 	@SuppressWarnings("unchecked")
 	public T setComment(String comment) {
 		this.comment = comment;
-		return (T) this;
-	}
-
-	public XSpreadsheet getSheet() {
-		return this.sheet;
-	}
-
-	@SuppressWarnings("unchecked")
-	public T setSheet(XSpreadsheet sheet) {
-		this.sheet = checkNotNull(sheet);
 		return (T) this;
 	}
 
@@ -130,8 +116,7 @@ abstract public class AbstractCellValue<T extends AbstractCellValue, V> {
 		return (T) this;
 	}
 
-	protected AbstractCellValue copyCommonAttr(AbstractCellValue<?, ?> abstractCellValue) {
-		this.setSheet(abstractCellValue.getSheet());
+	protected AbstractCellValue copyCommonAttr(ICellValue<?> abstractCellValue) {
 		this.setPos(abstractCellValue.getPos());
 		this.setEndPosMerge(abstractCellValue.getEndPosMerge());
 		this.comment = abstractCellValue.getComment();

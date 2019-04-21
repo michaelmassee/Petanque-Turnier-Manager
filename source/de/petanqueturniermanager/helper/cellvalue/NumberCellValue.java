@@ -10,10 +10,9 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.helper.position.Position;
 
-public class NumberCellValue extends AbstractCellValue<NumberCellValue, Double> {
+public class NumberCellValue extends AbstractCellValueWithSheet<NumberCellValue, Double> {
 
 	protected NumberCellValue() {
-		super();
 	}
 
 	private NumberCellValue(XSpreadsheet sheet, Position pos, int value) {
@@ -26,7 +25,7 @@ public class NumberCellValue extends AbstractCellValue<NumberCellValue, Double> 
 	}
 
 	@Override
-	protected NumberCellValue copyCommonAttr(@SuppressWarnings("rawtypes") AbstractCellValue abstractCellValue) {
+	protected NumberCellValue copyCommonAttr(ICellValueWithSheet<?> abstractCellValue) {
 		super.copyCommonAttr(abstractCellValue);
 		return this;
 	}

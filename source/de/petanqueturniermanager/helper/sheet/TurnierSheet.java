@@ -35,7 +35,7 @@ public class TurnierSheet {
 	}
 
 	/**
-	 * Keine änderungen an sheet mehr erlaubt
+	 * Keine änderungen am sheet mehr erlaubt
 	 * 
 	 */
 	public TurnierSheet protect() {

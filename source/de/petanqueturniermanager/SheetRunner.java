@@ -133,6 +133,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		return isRunning;
 	}
 
+	// for mocking
 	public void processBoxinfo(String infoMsg) {
 		ProcessBox.from().prefix(logPrefix).info(infoMsg);
 	}

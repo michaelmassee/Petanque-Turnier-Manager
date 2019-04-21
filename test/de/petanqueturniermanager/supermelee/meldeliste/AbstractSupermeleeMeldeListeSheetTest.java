@@ -25,7 +25,6 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
@@ -39,7 +38,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	KonfigurationSheet konfigurationSheetMock;
-	ProcessBox processBoxMock;
 
 	@Before
 	public void setup() {

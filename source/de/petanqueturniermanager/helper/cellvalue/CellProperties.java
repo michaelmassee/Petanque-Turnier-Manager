@@ -9,6 +9,7 @@ import java.util.HashMap;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
+@SuppressWarnings("serial")
 public class CellProperties extends HashMap<String, Object> {
 
 	public static final String WIDTH = "Width";
