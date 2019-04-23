@@ -7,8 +7,8 @@ package de.petanqueturniermanager.helper.position;
 public class Position extends AbstractPosition<Position> {
 	/**
 	 *
-	 * @param spalte (column)
-	 * @param zeile (row)
+	 * @param spalte (column) erste Spalte = 0
+	 * @param zeile (row) erste Zeile = 0
 	 */
 
 	private Position(int spalte, int zeile) {
@@ -17,8 +17,8 @@ public class Position extends AbstractPosition<Position> {
 
 	/**
 	 *
-	 * @param spalte (column)
-	 * @param zeile (row)
+	 * @param spalte (column) erste Spalte = 0
+	 * @param zeile (row) erste Zeile = 0
 	 */
 	public static Position from(int spalte, int zeile) {
 		return new Position(spalte, zeile);

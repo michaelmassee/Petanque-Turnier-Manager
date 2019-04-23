@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.uno.XComponentContext;
@@ -41,6 +42,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 	public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
+	public static final int MAX_ANZSPIELER_IN_SPALTE = 40;
 
 	private static final String SHEET_COLOR = "6542f4";
 
@@ -92,8 +94,8 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		StringCellValue nameFormula = StringCellValue.from(getSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setShrinkToFit(true);
 
-		int anzSpielerinSpalte = 40;
-		int lfndNr = 1;
+		int spielerCntr = 1;
+		int maxAnzSpielerInSpalte = 0;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 
 		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". " + aktiveUndAusgesetztMeldungen.size() + " Meldungen einfügen");
@@ -109,19 +111,22 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 			spierNrVal.zeilePlusEins();
 			nameFormula.zeilePlusEins();
 
-			if ((lfndNr / anzSpielerinSpalte) * anzSpielerinSpalte == lfndNr) {
+			if ((spielerCntr / MAX_ANZSPIELER_IN_SPALTE) * MAX_ANZSPIELER_IN_SPALTE == spielerCntr) {
 				// Nächste Block
-				spierNrVal.spalte((lfndNr / anzSpielerinSpalte) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
+				spierNrVal.spalte((spielerCntr / MAX_ANZSPIELER_IN_SPALTE) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
 				nameFormula.spalte(spierNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
 				spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 			}
-			lfndNr++;
+			spielerCntr++;
+			if (maxAnzSpielerInSpalte < MAX_ANZSPIELER_IN_SPALTE) {
+				maxAnzSpielerInSpalte++;
+			}
 		}
 
 		// Fußzeile Anzahl Spieler
-		// StringCellValue footer = StringCellValue.from();
-		// TurnierSheet.from(getSheet());
-
+		StringCellValue footer = StringCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzSpielerInSpalte)).zeilePlusEins()
+				.setValue(aktiveUndAusgesetztMeldungen.size() + " Teilnehmer").setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD).setCharHeight(12);
+		getSheetHelper().setTextInCell(footer);
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal, CellProperties celPropName) throws GenerateException {
