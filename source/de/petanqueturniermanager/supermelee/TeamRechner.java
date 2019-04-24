@@ -86,6 +86,14 @@ public class TeamRechner {
 		return anzDoublette;
 	}
 
+	public int getAnzPaarungen() {
+		return anzDoublette + anzTriplette;
+	}
+
+	public int getAnzBahnen() {
+		return getAnzPaarungen() / 2;
+	}
+
 	public boolean isNurDoubletteMoeglich() {
 		return nurDoubletteMoeglich;
 	}
