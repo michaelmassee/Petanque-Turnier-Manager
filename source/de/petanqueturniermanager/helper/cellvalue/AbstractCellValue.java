@@ -158,13 +158,16 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T spaltePlusEins() {
-		getPos().spaltePlusEins();
+		spaltePlus(1);
 		return (T) this;
 	}
 
 	@SuppressWarnings("unchecked")
 	public T spaltePlus(int anz) {
 		getPos().spaltePlus(anz);
+		if (this.endPosMerge != null) {
+			this.endPosMerge.spaltePlus(anz);
+		}
 		return (T) this;
 	}
 
@@ -174,15 +177,30 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 		return (T) this;
 	}
 
+	/**
+	 * pos Zeile + 1, <br>
+	 * UND ! ggf endposmerge zeile +1
+	 * 
+	 * @return AbstractCellValue
+	 */
 	@SuppressWarnings("unchecked")
 	public T zeilePlusEins() {
-		getPos().zeilePlusEins();
+		zeilePlus(1);
 		return (T) this;
 	}
 
+	/**
+	 * pos Zeile + x, <br>
+	 * UND ! ggf endposmerge zeile + x
+	 * 
+	 * @return AbstractCellValue
+	 */
 	@SuppressWarnings("unchecked")
 	public T zeilePlus(int anz) {
 		getPos().zeilePlus(anz);
+		if (this.endPosMerge != null) {
+			this.endPosMerge.zeilePlus(anz);
+		}
 		return (T) this;
 	}
 
