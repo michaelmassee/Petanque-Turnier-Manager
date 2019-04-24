@@ -97,8 +97,8 @@ public class PropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS).setDefaultVal(13)
 				.setDescription("Minuspunkte nicht gespielte Runde"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SPIELRUNDE_SPIELBAHN).setDefaultVal("X")
-				.setDescription("Spalte-Spielbahn in Spielrunde. X=Keine Spalte, L=Leere Spalte (händisch ausfüllen), N=1-n durchnummerieren"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SPIELRUNDE_SPIELBAHN).setDefaultVal("X").setDescription(
+				"Spalte-Spielbahn in Spielrunde.\r\nX=Keine Spalte\r\nL=Leere Spalte (händisch ausfüllen)\r\nN=1-n durchnummerieren\r\nR(x)=Random (optional x)=letzte spielbahn"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE).setDefaultVal(99)
 				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)"));
