@@ -13,6 +13,8 @@ import static de.petanqueturniermanager.helper.cellvalue.CellProperties.HORI_JUS
 import static de.petanqueturniermanager.helper.cellvalue.CellProperties.TABLE_BORDER2;
 import static de.petanqueturniermanager.helper.cellvalue.CellProperties.VERT_JUSTIFY;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -206,8 +208,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	/**
-	 * enweder einfach ein laufende nummer, oder jenachdem was in der konfig steht die Spielbahnnummer
-	 *
+	 * enweder einfach ein laufende nummer, oder jenachdem was in der konfig steht die Spielbahnnummer<br>
+	 * property getSpielrundeSpielbahn<br>
+	 * X = nur ein laufende paarungen nummer<br>
+	 * L = Spielbahn -> leere Spalte<br>
+	 * N = Spielbahn -> durchnumeriert<br>
+	 * R = Spielbahn -> random<br>
+	 * 
 	 * @throws GenerateException
 	 */
 	private void datenErsteSpalte() throws GenerateException {
@@ -241,12 +248,45 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		}
 
 		// Daten
-
 		Position posErsteDatenZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
 		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("N", spielrundeSpielbahn)) {
+			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
 			formulaCellValue.setValue("=ROW()-" + ERSTE_DATEN_ZEILE).setFillAutoDown(letzteZeile.getZeile());
 			getSheetHelper().setFormulaInCell(formulaCellValue);
+		} else if (StringUtils.startsWithIgnoreCase(spielrundeSpielbahn, "R")) {
+			// Rx = Spielbahn -> random x = optional = max anzahl von Spielbahnen
+			// anzahl paarungen ?
+			int anzPaarungen = letzteZeile.getZeile() - ERSTE_DATEN_ZEILE + 1;
+			int letzteBahnNr = anzPaarungen;
+
+			// ist eine letzte bahnummer vorhanden ?
+			if (spielrundeSpielbahn.length() > 1) {
+				try {
+					letzteBahnNr = Integer.parseInt(spielrundeSpielbahn.substring(1).trim());
+				} catch (NumberFormatException | NullPointerException nfe) {
+					// just ignore when no number found
+				}
+			}
+
+			ArrayList<Integer> bahnnummern = new ArrayList<>();
+			// fill
+			for (int i = 1; i <= anzPaarungen; i++) {
+				if (i <= letzteBahnNr) {
+					bahnnummern.add(i);
+				} else {
+					bahnnummern.add(0); // platzhalter = spielpaarungen ohne bahnnummer
+				}
+			}
+			// mishen
+			Collections.shuffle(bahnnummern);
+			StringCellValue stringCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
+			for (Integer bahnnr : bahnnummern) {
+				if (bahnnr > 0) { // es kann sein das wir lücken haben, = teampaarungen ohne bahnnummer
+					stringCellValue.setValue(bahnnr);
+					getSheetHelper().setTextInCell(stringCellValue);
+				}
+				stringCellValue.zeilePlusEins();
+			}
 		}
 	}
 

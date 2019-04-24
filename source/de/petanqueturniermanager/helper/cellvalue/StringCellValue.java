@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.helper.cellvalue;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -19,6 +21,12 @@ public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue,
 	private StringCellValue(XSpreadsheet sheet, Position pos, String value) {
 		super(sheet, pos);
 		setValue(value);
+	}
+
+	public StringCellValue setValue(Number value) {
+		checkNotNull(value);
+		super.setValue(value.toString());
+		return this;
 	}
 
 	@Override
