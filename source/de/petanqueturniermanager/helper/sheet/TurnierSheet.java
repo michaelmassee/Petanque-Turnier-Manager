@@ -12,10 +12,14 @@ import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.IllegalArgumentException;
+import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XProtectable;
+
+import de.petanqueturniermanager.helper.position.RangePosition;
 
 /**
  * @author Michael Massee
@@ -96,4 +100,19 @@ public class TurnierSheet {
 	public TurnierSheet tabColor(String hex) {
 		return tabColor(Integer.parseInt(hex, 16));
 	}
+
+	public XCellRange getCellRangeByPosition(RangePosition range) {
+		checkNotNull(range);
+		try {
+			return xSpreadsheet.getCellRangeByPosition(range.getStartSpalte(), range.getStartZeile(), range.getEndeSpalte(), range.getEndeZeile());
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return null;
+	}
+
+	public <C> C queryInterface(Class<C> clazz) {
+		return UnoRuntime.queryInterface(clazz, xSpreadsheet);
+	}
+
 }
