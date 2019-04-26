@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.position;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.base.MoreObjects;
 
@@ -12,7 +12,7 @@ public abstract class AbstractPosition<T> {
 	private int zeile;
 	private int spalte;
 
-	public AbstractPosition() {
+	AbstractPosition() {
 	}
 
 	/**

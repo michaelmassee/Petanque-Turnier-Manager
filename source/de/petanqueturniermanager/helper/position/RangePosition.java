@@ -4,7 +4,8 @@
 
 package de.petanqueturniermanager.helper.position;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.MoreObjects;
 
@@ -13,11 +14,7 @@ public class RangePosition {
 	private final AbstractPosition<?> start;
 	private final AbstractPosition<?> ende;
 
-	private RangePosition(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
-		this(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
-	}
-
-	public RangePosition(AbstractPosition<?> start, AbstractPosition<?> ende) {
+	private RangePosition(AbstractPosition<?> start, AbstractPosition<?> ende) {
 		checkNotNull(start);
 		checkNotNull(ende);
 		checkArgument(start.getColumn() <= ende.getColumn(), "spalte (column) start %s > ende %s", start.getColumn(), ende.getColumn());
@@ -27,12 +24,20 @@ public class RangePosition {
 		this.ende = ende;
 	}
 
-	public static RangePosition from(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
-		return new RangePosition(startSpalte, startZeile, endeSpalte, endeZeile);
-	}
-
 	public static RangePosition from(AbstractPosition<?> start, AbstractPosition<?> ende) {
 		return new RangePosition(start, ende);
+	}
+
+	public static RangePosition from(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
+		return from(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
+	}
+
+	public static RangePosition from(int startSpalte, int startZeile, AbstractPosition<?> ende) {
+		return from(startSpalte, startZeile, ende.getSpalte(), ende.getZeile());
+	}
+
+	public static RangePosition from(AbstractPosition<?> start, int endeSpalte, int endeZeile) {
+		return from(start, Position.from(endeSpalte, endeZeile));
 	}
 
 	public AbstractPosition<?> getStart() {

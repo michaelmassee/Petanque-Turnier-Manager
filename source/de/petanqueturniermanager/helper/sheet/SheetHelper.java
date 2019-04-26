@@ -601,7 +601,7 @@ public class SheetHelper {
 		checkNotNull(pos);
 		checkNotNull(key);
 		checkNotNull(val);
-		CellProperties properties = new CellProperties();
+		CellProperties properties = CellProperties.from();
 		properties.put(key, val);
 		return setPropertiesInRange(sheet, pos, properties);
 	}

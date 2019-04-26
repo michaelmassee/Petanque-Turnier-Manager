@@ -18,6 +18,9 @@ public class BorderFactory {
 	BorderLine2 verticalLine = null;
 	BorderLine2 forLine = null;
 
+	private BorderFactory() {
+	}
+
 	public static final BorderFactory from() {
 		return new BorderFactory();
 	}

@@ -14,7 +14,7 @@ public class FehlerStyle extends AbstractCellStyleDef {
 		super(NAME, buildCellProperties());
 	}
 
-	static CellProperties buildCellProperties() {
+	private static CellProperties buildCellProperties() {
 		return CellProperties.from().setCellBackColor(ColorHelper.CHAR_COLOR_RED).setCellbackgroundTransparent(false);
 	}
 }

@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.helper.cellvalue;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.HashMap;
 
 import com.sun.star.table.CellHoriJustify;
@@ -27,18 +29,27 @@ public class CellProperties extends HashMap<String, Object> {
 	public static final String ROTATEANGLE = "RotateAngle";
 	public static final String IS_CELLBACKGROUND_TRANSPARENT = "IsCellBackgroundTransparent";
 
+	CellProperties() {
+	}
+
 	public static CellProperties from() {
 		return new CellProperties();
 	}
 
-	public CellProperties setBorder(TableBorder2 tableBorder2) {
-		this.put(TABLE_BORDER2, tableBorder2);
+	public static CellProperties from(String key, Object value) {
+		checkNotNull(key);
+		checkNotNull(value);
+		return CellProperties.from().put(key, value);
+	}
+
+	@Override
+	public CellProperties put(String key, Object value) {
+		super.put(key, value);
 		return this;
 	}
 
-	public CellProperties addCellProperty(String key, Object val) {
-		this.put(key, val);
-		return this;
+	public CellProperties setBorder(TableBorder2 tableBorder2) {
+		return put(TABLE_BORDER2, tableBorder2);
 	}
 
 	// list of common properties
@@ -48,8 +59,7 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setCharWeight(float fontWeight) {
-		this.put(CHAR_WEIGHT, fontWeight);
-		return this;
+		return put(CHAR_WEIGHT, fontWeight);
 	}
 
 	/**
@@ -57,7 +67,7 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setCharColor(Integer charColor) {
-		this.put(CHAR_COLOR, charColor);
+		super.put(CHAR_COLOR, charColor);
 		return this;
 	}
 
@@ -67,18 +77,15 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setCharColor(String hexCharColor) {
-		this.put(CHAR_COLOR, Integer.valueOf(hexCharColor, 16));
-		return this;
+		return put(CHAR_COLOR, Integer.valueOf(hexCharColor, 16));
 	}
 
 	public CellProperties setHeight(int height) {
-		this.put(HEIGHT, height);
-		return this;
+		return put(HEIGHT, height);
 	}
 
 	public CellProperties setCharHeight(int height) {
-		this.put(CHAR_HEIGHT, height);
-		return this;
+		return put(CHAR_HEIGHT, height);
 	}
 
 	/**
@@ -88,8 +95,7 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setHoriJustify(CellHoriJustify cellHoriJustify) {
-		this.put(HORI_JUSTIFY, cellHoriJustify);
-		return this;
+		return put(HORI_JUSTIFY, cellHoriJustify);
 	}
 
 	/**
@@ -99,8 +105,7 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setShrinkToFit(boolean shrink) {
-		this.put(SHRINK_TO_FIT, shrink);
-		return this;
+		return put(SHRINK_TO_FIT, shrink);
 	}
 
 	/**
@@ -109,13 +114,11 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setVertJustify(int vertjustify) {
-		this.put(VERT_JUSTIFY, vertjustify);
-		return this;
+		return put(VERT_JUSTIFY, vertjustify);
 	}
 
 	public CellProperties setCellBackColor(Integer color) {
-		this.put(CELL_BACK_COLOR, color);
-		return this;
+		return put(CELL_BACK_COLOR, color);
 	}
 
 	/**
@@ -124,8 +127,7 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setCellBackColor(String hexCharColor) {
-		this.put(CELL_BACK_COLOR, Integer.valueOf(hexCharColor, 16));
-		return this;
+		return put(CELL_BACK_COLOR, Integer.valueOf(hexCharColor, 16));
 	}
 
 	public CellProperties removeCellBackColor() {
@@ -134,8 +136,7 @@ public class CellProperties extends HashMap<String, Object> {
 	}
 
 	public CellProperties setWidth(int width) {
-		this.put(WIDTH, width);
-		return this;
+		return put(WIDTH, width);
 	}
 
 	/**
@@ -146,12 +147,10 @@ public class CellProperties extends HashMap<String, Object> {
 	 */
 
 	public CellProperties setRotateAngle(int angle) {
-		this.put(ROTATEANGLE, new Integer(angle));
-		return this;
+		return put(ROTATEANGLE, new Integer(angle));
 	}
 
 	public CellProperties setCellbackgroundTransparent(boolean isTransparent) {
-		this.put(IS_CELLBACKGROUND_TRANSPARENT, isTransparent);
-		return this;
+		return put(IS_CELLBACKGROUND_TRANSPARENT, isTransparent);
 	}
 }

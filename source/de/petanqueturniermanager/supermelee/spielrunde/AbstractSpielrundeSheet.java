@@ -51,6 +51,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -223,7 +224,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		XSpreadsheet sheet = getSheet();
 		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
-		Position letzteZeile = letzteZeile();
+		Position letzteZeile = letztePosition();
 
 		// header
 		// -------------------------
@@ -529,6 +530,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			spielrundeProperties(getSheet(), doubletteRunde);
 			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(getSheet(), doubletteRunde);
+			printBereichDefinieren(getSheet());
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
@@ -536,6 +538,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen").message(e.getMessage()).show();
 			throw new RuntimeException(e); // komplett raus
 		}
+	}
+
+	private void printBereichDefinieren(XSpreadsheet sheet) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		Position letzteZeile = letztePosition();
+		PrintArea.from(sheet).setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
 	}
 
 	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet sheet, boolean doubletteRunde) throws GenerateException {
@@ -561,7 +569,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		processBoxinfo("Spielrunde Properties einfügen");
 
-		Position datenEnd = letzteZeile();
+		Position datenEnd = letztePosition();
 		StringCellValue propName = StringCellValue.from(sheet, Position.from(ERSTE_SPIELERNR_SPALTE - 1, datenEnd.getZeile()));
 		propName.zeilePlus(2).setHoriJustify(CellHoriJustify.RIGHT);
 
@@ -586,7 +594,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		// gitter
 		Position datenStart = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		Position datenEnd = letzteZeile();
+		Position datenEnd = letztePosition();
 
 		// bis zur mitte mit normal gitter
 		RangePosition datenRangeErsteHaelfte = RangePosition.from(datenStart, Position.from(ERSTE_SPALTE_RUNDESPIELPLAN + 2, datenEnd.getZeile()));
@@ -645,7 +653,14 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow().style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
 	}
 
-	protected Position letzteZeile() throws GenerateException {
+	/**
+	 * rechts unten, letzte ergebniss zelle
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
+
+	protected Position letztePosition() throws GenerateException {
 		XSpreadsheet sheet = getSheet();
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
@@ -755,7 +770,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	protected void clearSheet() throws GenerateException {
 		XSpreadsheet xSheet = getSheet();
-		Position letzteZeile = letzteZeile();
+		Position letzteZeile = letztePosition();
 
 		if (letzteZeile == null) {
 			return; // keine Daten
