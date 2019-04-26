@@ -85,7 +85,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechner.valideAnzahlSpieler() ? "" : "X"));
 
 			if (!teamRechner.valideAnzahlSpieler()) {
-				RangePosition rangePos = new RangePosition(Position.from(pos).spalte(0), pos);
+				RangePosition rangePos = RangePosition.from(Position.from(pos).spalte(0), pos);
 				getSheetHelper().setPropertyInRange(sheet, rangePos, "CharColor", ColorHelper.CHAR_COLOR_RED);
 				getSheetHelper().setCommentInCell(sheet, pos, "Ungültige Anzahl Spieler = " + teamRechner.getAnzSpieler() + ".\r\nKeine Kombinationen möglich.");
 			}
