@@ -151,7 +151,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	protected void vertikaleErgbnisseFormulEinfuegen(SpielRunde spielRunde) throws GenerateException {
 
-		processBoxinfo("Vertikal Ergbniss-Spalten");
+		processBoxinfo("Vertikal Ergbnisspalten");
 
 		checkArgument(spielRunde.getNr() == getSpielRundeNr().getNr());
 		XSpreadsheet sheet = getSheet();
@@ -619,7 +619,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		RangePosition datenRangeOhneErsteSpalteOhneErgebniss = RangePosition.from(Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE),
+		RangePosition datenRangeOhneErsteSpalteOhneErgebnis = RangePosition.from(Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE),
 				datenEnd.spalte(ERSTE_SPALTE_ERGEBNISSE - 1));
 
 		Integer geradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
@@ -627,8 +627,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle = new SpielrundeHintergrundFarbeGeradeStyle(geradeColor);
 		SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle = new SpielrundeHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
-		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebniss).clear().formulaIsEvenRow().style(spielrundeHintergrundFarbeGeradeStyle).apply();
-		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebniss).formulaIsOddRow().operator(ConditionOperator.FORMULA)
+		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).clear().formulaIsEvenRow().style(spielrundeHintergrundFarbeGeradeStyle).apply();
+		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).formulaIsOddRow().operator(ConditionOperator.FORMULA)
 				.style(spielrundeHintergrundFarbeUnGeradeStyle).apply();
 
 		// erste Spalte, mit prüfung auf doppelte nummer
@@ -654,7 +654,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	/**
-	 * rechts unten, letzte ergebniss zelle
+	 * rechts unten, letzte ergebnis zelle
 	 * 
 	 * @return
 	 * @throws GenerateException
