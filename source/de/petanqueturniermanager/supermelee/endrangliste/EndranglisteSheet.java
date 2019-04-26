@@ -4,7 +4,10 @@
 
 package de.petanqueturniermanager.supermelee.endrangliste;
 
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.*;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_MINUS_OFFS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -387,16 +390,16 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		if (anzSpieltage < 2) {
 			return null;
 		}
-		List<SpielerSpieltagErgebnis> spielerSpieltagErgebniss = spielerErgebnisseEinlesen(spielrNr);
-		spielerSpieltagErgebniss.sort(new Comparator<SpielerSpieltagErgebnis>() {
+		List<SpielerSpieltagErgebnis> spielerSpieltagErgebnisse = spielerErgebnisseEinlesen(spielrNr);
+		spielerSpieltagErgebnisse.sort(new Comparator<SpielerSpieltagErgebnis>() {
 			@Override
 			public int compare(SpielerSpieltagErgebnis o1, SpielerSpieltagErgebnis o2) {
 				// schlechteste oben
 				return o1.reversedCompareTo(o2);
 			}
 		});
-		if (spielerSpieltagErgebniss.size() > 0) {
-			return spielerSpieltagErgebniss.get(0).getSpielTag();
+		if (spielerSpieltagErgebnisse.size() > 0) {
+			return spielerSpieltagErgebnisse.get(0).getSpielTag();
 		}
 		return null;
 	}
@@ -418,12 +421,12 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 			// summe vorhanden ?
 			String spielPlus = getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte, spielerZeile));
 			if (StringUtils.isNotBlank(spielPlus)) {
-				SpielerSpieltagErgebnis ergebniss = new SpielerSpieltagErgebnis(spielTagNr, spielrNr);
-				ergebniss.setSpielPlus(NumberUtils.toInt(spielPlus));
-				ergebniss.setSpielMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + SPIELE_MINUS_OFFS, spielerZeile))));
-				ergebniss.setPunktePlus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + PUNKTE_PLUS_OFFS, spielerZeile))));
-				ergebniss.setPunkteMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + PUNKTE_MINUS_OFFS, spielerZeile))));
-				spielerErgebnisse.add(ergebniss);
+				SpielerSpieltagErgebnis ergebnis = new SpielerSpieltagErgebnis(spielTagNr, spielrNr);
+				ergebnis.setSpielPlus(NumberUtils.toInt(spielPlus));
+				ergebnis.setSpielMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + SPIELE_MINUS_OFFS, spielerZeile))));
+				ergebnis.setPunktePlus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + PUNKTE_PLUS_OFFS, spielerZeile))));
+				ergebnis.setPunkteMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + PUNKTE_MINUS_OFFS, spielerZeile))));
+				spielerErgebnisse.add(ergebnis);
 			} else {
 				// nuller spieltag
 				SpielerSpieltagErgebnis nullerSpielTag = new SpielerSpieltagErgebnis(spielTagNr, spielrNr);
