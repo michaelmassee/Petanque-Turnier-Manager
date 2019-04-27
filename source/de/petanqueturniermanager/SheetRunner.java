@@ -86,9 +86,6 @@ public abstract class SheetRunner extends Thread implements Runnable {
 					ProcessBox.from().visible().info("**FERTIG**").ready();
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
-				// TODO
-				// Funktioniert so nicht
-				// CloseConnections.closeOfficeConnection(getxContext());
 			}
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message("Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.")

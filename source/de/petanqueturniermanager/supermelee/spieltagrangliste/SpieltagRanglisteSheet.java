@@ -27,6 +27,8 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
@@ -113,7 +115,15 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		ranglisteFormatter.formatDatenErrorGeradeUngerade(rangListeSorter.validateSpalte());
 		getxCalculatable().calculate();
 		rangListeSorter.doSort();
-		ranglisteFormatter.addFooter();
+		Position footerPos = ranglisteFormatter.addFooter().getPos();
+		printBereichDefinieren(footerPos);
+	}
+
+	private void printBereichDefinieren(Position footerPos) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
+		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {

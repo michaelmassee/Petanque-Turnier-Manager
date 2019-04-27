@@ -41,6 +41,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
@@ -130,7 +131,15 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		formatSchlechtesteSpieltagSpalte();
 		getxCalculatable().calculate();
 		this.rangListeSorter.doSort();
-		this.endRanglisteFormatter.addFooter();
+		Position footerPos = this.endRanglisteFormatter.addFooter().getPos();
+		printBereichDefinieren(footerPos);
+	}
+
+	private void printBereichDefinieren(Position footerPos) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
+		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {

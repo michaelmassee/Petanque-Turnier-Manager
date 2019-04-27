@@ -94,6 +94,16 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	/**
+	 * @param letzteSpalte
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public T setEndPosMergeSpalte(int letzteSpalte) {
+		this.setEndPosMerge(Position.from(getPos()).spalte(letzteSpalte));
+		return (T) this;
+	}
+
+	/**
 	 * wenn vorhanden dann werden die zellen von pos bis endpos zusammengefasst (merge)<br>
 	 * aktuelle position plus anzahl spalten
 	 *

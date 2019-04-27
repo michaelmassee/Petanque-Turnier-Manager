@@ -24,6 +24,8 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -124,15 +126,25 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 			}
 		}
 
+		int letzteSpalte = nameFormula.getPos().getSpalte();
 		// Fußzeile Anzahl Spieler
+
 		StringCellValue footer = StringCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzSpielerInSpalte)).zeilePlusEins()
-				.setValue(aktiveUndAusgesetztMeldungen.size() + " Teilnehmer").setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD).setCharHeight(12);
+				.setValue(aktiveUndAusgesetztMeldungen.size() + " Teilnehmer").setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12);
 		getSheetHelper().setTextInCell(footer);
 		TeamRechner teamRechner = new TeamRechner(aktiveUndAusgesetztMeldungen.size());
 		footer.zeilePlusEins().setValue(teamRechner.getAnzDoublette() + " Doublette / " + teamRechner.getAnzTriplette() + " Triplette");
 		getSheetHelper().setTextInCell(footer);
 		footer.zeilePlusEins().setValue(teamRechner.getAnzBahnen() + " Spielbahnen");
 		getSheetHelper().setTextInCell(footer);
+		printBereichDefinieren(footer.getPos(), letzteSpalte);
+	}
+
+	private void printBereichDefinieren(Position footerPos, int letzteSpalte) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
+		Position rechtsUnten = Position.from(letzteSpalte, footerPos.getZeile());
+		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal, CellProperties celPropName) throws GenerateException {
