@@ -23,6 +23,8 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
@@ -40,6 +42,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int ERSTE_DATEN_ZEILE = 0;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
+	public static final int MAX_ANZSPIELER_IN_SPALTE = 40;
 
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private final KonfigurationSheet konfigurationSheet;
@@ -88,8 +91,8 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		StringCellValue chkBox = StringCellValue.from(getSheet(), Position.from(SPIELER_NAME_SPALTE + 1, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setValue(" ");
 
-		int anzSpielerinSpalte = 40;
-		int lfndNr = 1;
+		int maxAnzSpielerInSpalte = 0;
+		int spielerCntr = 1;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName, chkBox);
 
 		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". " + alleMeldungen.size() + " Spieler einfügen");
@@ -106,14 +109,26 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 			nameFormula.zeilePlusEins();
 			chkBox.zeilePlusEins();
 
-			if ((lfndNr / anzSpielerinSpalte) * anzSpielerinSpalte == lfndNr) {
-				spierNrVal.spalte((lfndNr / anzSpielerinSpalte) * 4).zeile(ERSTE_DATEN_ZEILE);
+			if ((spielerCntr / MAX_ANZSPIELER_IN_SPALTE) * MAX_ANZSPIELER_IN_SPALTE == spielerCntr) {
+				spierNrVal.spalte((spielerCntr / MAX_ANZSPIELER_IN_SPALTE) * 4).zeile(ERSTE_DATEN_ZEILE);
 				nameFormula.spalte(spierNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
 				chkBox.spalte(spierNrVal.getPos().getSpalte() + 2).zeile(ERSTE_DATEN_ZEILE);
 				spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName, chkBox);
 			}
-			lfndNr++;
+			spielerCntr++;
+			if (maxAnzSpielerInSpalte < MAX_ANZSPIELER_IN_SPALTE) {
+				maxAnzSpielerInSpalte++;
+			}
 		}
+
+		printBereichDefinieren(maxAnzSpielerInSpalte - 1, nameFormula.getPos().getSpalte() + 1);
+	}
+
+	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
+		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
+		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, CellProperties celPropNr, StringCellValue nameVal, CellProperties celPropName, StringCellValue chkBox)
