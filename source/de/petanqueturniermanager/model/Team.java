@@ -4,7 +4,8 @@
 
 package de.petanqueturniermanager.model;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -114,8 +115,11 @@ public class Team implements Comparable<Team> {
 		boolean hatzusammenGespielt = false;
 
 		for (Spieler spielerAusTeam : this.spielerList) {
-			if (!spielerAusTeam.equals(spieler)) {
-				hatzusammenGespielt |= spielerAusTeam.warImTeamMit(spieler);
+			if (!spielerAusTeam.equals(spieler)) { // nicht sich selbst vergleichen
+				if (spielerAusTeam.warImTeamMit(spieler)) {
+					hatzusammenGespielt = true;
+					break;
+				}
 			}
 		}
 		return hatzusammenGespielt;

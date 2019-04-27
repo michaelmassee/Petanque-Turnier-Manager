@@ -3,7 +3,8 @@
  */
 package de.petanqueturniermanager.algorithmen;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
@@ -44,11 +45,9 @@ public class TripletteDoublPaarungen {
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 2, meldungen);
 		} else {
 			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-				// dummy spieler einfuegen
+				// dummy spieler einfuegen damit wir genau die anzahl spieler haben um triplette generieren können
 				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr).setSetzPos(DOUBL_SPIELER_SETZPOS));
 			}
-			teamRechner = new TeamRechner(meldungen.spieler().size());
-
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
 			// dummies wieder entfernen
 			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
