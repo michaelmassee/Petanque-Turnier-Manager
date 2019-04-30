@@ -92,9 +92,12 @@ public class RangListeSpalte {
 		// INDIREKT(ADRESSE(ZEILE()-1;SPALTE();8));INDIREKT(ADRESSE(ZEILE()-1;SPALTE();8))+1))
 
 		String ranglisteAdressPlusEinPlatzIndiekt = "INDIRECT(ADDRESS(ROW()-1;COLUMN();8))";
+
+		// Rangliste Logic
+		// @See RANG Function
+
 		String formula = "IF(ROW()=" + (ersteZeile + 1) + ";1;" + "IF(AND(" + indirectFormula(summeSpielGewonnenZelle1) + ";" + indirectFormula(summeSpielDiffZelle1) + ";"
-				+ indirectFormula(punkteDiffZelle1) + ";" + indirectFormula(punkteGewonnenZelle1) + ");" + ranglisteAdressPlusEinPlatzIndiekt + ";"
-				+ ranglisteAdressPlusEinPlatzIndiekt + "+1))";
+				+ indirectFormula(punkteDiffZelle1) + ";" + indirectFormula(punkteGewonnenZelle1) + ");" + ranglisteAdressPlusEinPlatzIndiekt + ";" + "ROW()-" + ersteZeile + "))";
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteZeile);
