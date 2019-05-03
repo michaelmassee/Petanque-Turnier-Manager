@@ -55,8 +55,6 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	@Override
 	protected void doRun() throws GenerateException {
 		getSheetHelper().setActiveSheet(getSheet());
-		// update wird immer in SheetRunner aufgerufen
-		// update();
 	}
 
 	// update immer einmal in SheetRunner
@@ -235,5 +233,10 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	@Override
 	public String getFusszeileMitte() throws GenerateException {
 		return propertiesSpalte.getFusszeileMitte();
+	}
+
+	@Override
+	public boolean getSpielrunde1Header() throws GenerateException {
+		return propertiesSpalte.getSpielrunde1Header();
 	}
 }

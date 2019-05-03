@@ -53,4 +53,7 @@ public interface IPropertiesSpalte {
 	String getFusszeileLinks() throws GenerateException;
 
 	String getFusszeileMitte() throws GenerateException;
+
+	boolean getSpielrunde1Header() throws GenerateException;
+
 }

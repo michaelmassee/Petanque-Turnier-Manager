@@ -59,6 +59,7 @@ public class PropertiesSpalte {
 
 	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
+	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1 Headerzeile"; // spieltag in header ?
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -104,6 +105,8 @@ public class PropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
+				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -178,6 +181,10 @@ public class PropertiesSpalte {
 				case COLOR:
 					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(), configProp.getDescription());
 					break;
+				case BOOLEAN:
+					celVal.setValue(booleanToString((Boolean) configProp.getDefaultVal()));
+					getSheetHelper().setTextInCell(celVal);
+					break;
 				default:
 				}
 			}
@@ -205,6 +212,19 @@ public class PropertiesSpalte {
 			}
 		}
 		return val;
+	}
+
+	/**
+	 *
+	 * @param name
+	 * @return defaultVal when not found
+	 * @throws GenerateException
+	 */
+	public void writeIntProperty(String name, int newVal) throws GenerateException {
+		Position pos = getPropKeyPos(name);
+		if (pos != null) {
+			getSheetHelper().setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
+		}
 	}
 
 	/**
@@ -270,6 +290,24 @@ public class PropertiesSpalte {
 		return val;
 	}
 
+	public Boolean readBooleanProperty(String key) throws GenerateException {
+		return stringToBoolean(readStringProperty(key));
+	}
+
+	private String booleanToString(boolean booleanProp) {
+		if (booleanProp) {
+			return "J";
+		}
+		return "N";
+	}
+
+	private boolean stringToBoolean(String booleanProp) {
+		if (StringUtils.isBlank(booleanProp) || StringUtils.containsIgnoreCase(booleanProp, "N")) {
+			return false;
+		}
+		return true;
+	}
+
 	private Object getDefaultProp(String key) {
 		for (ConfigProperty<?> konfigProp : KONFIG_PROPERTIES) {
 			if (konfigProp.getKey().equals(key)) {
@@ -277,19 +315,6 @@ public class PropertiesSpalte {
 			}
 		}
 		return null;
-	}
-
-	/**
-	 *
-	 * @param name
-	 * @return defaultVal when not found
-	 * @throws GenerateException
-	 */
-	public void writeIntProperty(String name, int newVal) throws GenerateException {
-		Position pos = getPropKeyPos(name);
-		if (pos != null) {
-			getSheetHelper().setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
-		}
 	}
 
 	/**
@@ -420,5 +445,12 @@ public class PropertiesSpalte {
 
 	public String getFusszeileMitte() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
+	}
+
+	/**
+	 * spieltag in header ?
+	 */
+	public boolean getSpielrunde1Header() throws GenerateException {
+		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_1_HEADER);
 	}
 }

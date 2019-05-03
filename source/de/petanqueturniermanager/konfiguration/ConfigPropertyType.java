@@ -5,5 +5,5 @@
 package de.petanqueturniermanager.konfiguration;
 
 public enum ConfigPropertyType {
-	STRING, INTEGER, COLOR
+	STRING, INTEGER, COLOR, BOOLEAN
 }

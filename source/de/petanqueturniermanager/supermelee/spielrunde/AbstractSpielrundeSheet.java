@@ -398,9 +398,14 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		Integer headerFarbe = getKonfigurationSheet().getSpielRundeHeaderFarbe();
 		// CellBackColor
 
-		StringCellValue headerVal = StringCellValue.from(sheet, ersteHeaderZeile, "Spieltag " + spieltag.getNr() + " Spielrunde " + spielRunde.getNr())
-				.addCellProperty(CHAR_WEIGHT, FontWeight.BOLD).setEndPosMerge(ersteHeaderZeileMerge).addCellProperty(HORI_JUSTIFY, CellHoriJustify.CENTER)
-				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().toBorder()).setCharHeight(13).setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe);
+		String ersteHeader = "Spielrunde " + spielRunde.getNr();
+		if (konfigurationSheet.getSpielrunde1Header()) { // spieltag in header ?
+			ersteHeader = "Spieltag " + spieltag.getNr() + " " + ersteHeader;
+		}
+
+		StringCellValue headerVal = StringCellValue.from(sheet, ersteHeaderZeile, ersteHeader).addCellProperty(CHAR_WEIGHT, FontWeight.BOLD).setEndPosMerge(ersteHeaderZeileMerge)
+				.addCellProperty(HORI_JUSTIFY, CellHoriJustify.CENTER).addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().toBorder()).setCharHeight(13)
+				.setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe);
 		getSheetHelper().setTextInCell(headerVal);
 
 		// header spielernamen
