@@ -49,8 +49,8 @@ import com.sun.star.frame.XFrame;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 

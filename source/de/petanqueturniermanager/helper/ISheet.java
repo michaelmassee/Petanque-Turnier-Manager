@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
@@ -21,6 +22,8 @@ public interface ISheet {
 	public Logger getLogger();
 
 	public XComponentContext getxContext();
+
+	public WorkingSpreadsheet getWorkingSpreadsheet();
 
 	public void processBoxinfo(String infoMsg);
 

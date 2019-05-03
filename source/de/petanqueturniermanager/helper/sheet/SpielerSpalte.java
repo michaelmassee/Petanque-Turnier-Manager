@@ -23,7 +23,6 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -57,8 +56,7 @@ public class SpielerSpalte {
 	private final WeakRefHelper<ISheet> sheet;
 	private final WeakRefHelper<IMeldeliste> meldeliste;
 
-	public SpielerSpalte(XComponentContext xContext, int ersteDatenZiele, int spielerNrSpalte, ISheet sheet, IMeldeliste meldeliste, Formation formation) {
-		checkNotNull(xContext);
+	public SpielerSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet sheet, IMeldeliste meldeliste, Formation formation) {
 		checkNotNull(sheet);
 		checkNotNull(meldeliste);
 		checkArgument(ersteDatenZiele > -1);

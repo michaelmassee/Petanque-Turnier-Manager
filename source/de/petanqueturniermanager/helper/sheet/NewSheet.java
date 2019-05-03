@@ -10,8 +10,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
@@ -24,7 +24,7 @@ public class NewSheet {
 
 	private final SheetHelper sheetHelper;
 	private final String sheetName;
-	private final XComponentContext xContext;
+	private final WorkingSpreadsheet workingSpreadsheet;
 	private boolean didCreate = false;
 	private boolean force = false;
 	private boolean setActiv = false;
@@ -34,16 +34,15 @@ public class NewSheet {
 	private PageStyleDef pageStyleDef = null;
 	private XSpreadsheet sheet = null;
 
-	private NewSheet(XComponentContext xContext, String sheetName) {
-		checkNotNull(xContext);
+	private NewSheet(WorkingSpreadsheet workingSpreadsheet, String sheetName) {
+		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		checkArgument(StringUtils.isNotBlank(sheetName));
-		this.xContext = xContext;
 		this.sheetName = sheetName;
-		sheetHelper = new SheetHelper(xContext);
+		sheetHelper = new SheetHelper(workingSpreadsheet);
 	}
 
-	public static final NewSheet from(XComponentContext xContext, String sheetName) {
-		return new NewSheet(xContext, sheetName);
+	public static final NewSheet from(WorkingSpreadsheet workingSpreadsheet, String sheetName) {
+		return new NewSheet(workingSpreadsheet, sheetName);
 	}
 
 	public NewSheet setForceCreate(boolean force) {
@@ -76,7 +75,7 @@ public class NewSheet {
 		didCreate = false;
 		if (sheet != null) {
 			sheetHelper.setActiveSheet(sheet);
-			MessageBoxResult result = MessageBox.from(xContext, MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
+			MessageBoxResult result = MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
 					.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(force).show();
 			if (MessageBoxResult.YES != result) {
 				return this;
@@ -95,7 +94,7 @@ public class NewSheet {
 			// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
 			// @see KonfigurationSheet#initPageStyles
 			// @see SheetRunner#updateKonfigurationSheet
-			PageStyleHelper.from(sheet, xContext, pageStyleDef).initDefaultFooter().create().applytoSheet();
+			PageStyleHelper.from(sheet, workingSpreadsheet, pageStyleDef).initDefaultFooter().create().applytoSheet();
 		}
 
 		didCreate = true;

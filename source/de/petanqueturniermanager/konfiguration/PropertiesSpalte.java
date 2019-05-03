@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -112,8 +111,7 @@ public class PropertiesSpalte {
 	private int erstePropertiesZeile;
 	private int headerZeile;
 
-	public PropertiesSpalte(XComponentContext xContext, int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
-		checkNotNull(xContext);
+	public PropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
 		checkNotNull(sheet);
 		checkArgument(propertiesSpalte > -1, "propertiesSpalte %s<0", propertiesSpalte);
 		checkArgument(erstePropertiesZeile > 0, "erstePropertiesZeile %s<1", erstePropertiesZeile);

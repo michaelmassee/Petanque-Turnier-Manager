@@ -13,7 +13,6 @@ import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -32,7 +31,7 @@ public class RangListeSpalte {
 
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public RangListeSpalte(XComponentContext xContext, int rangListeSpalte, IRangliste iRanglisteSheet) {
+	public RangListeSpalte(int rangListeSpalte, IRangliste iRanglisteSheet) {
 		this.rangListeSpalte = rangListeSpalte;
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
 	}

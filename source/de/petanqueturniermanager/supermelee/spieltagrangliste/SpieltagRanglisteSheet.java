@@ -18,9 +18,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -75,15 +75,15 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	private final RangListeSorter rangListeSorter;
 	private SpielTagNr spieltagNr = null;
 
-	public SpieltagRanglisteSheet(XComponentContext xContext) {
-		super(xContext, "Spieltag Rangliste");
-		meldeliste = new MeldeListeSheet_Update(xContext);
-		konfigurationSheet = new KonfigurationSheet(xContext);
-		spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
-		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xContext);
-		rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
+	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet, "Spieltag Rangliste");
+		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
+		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
+		spielerSpalte = new SpielerSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
+		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
+		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
-		rangListeSorter = new RangListeSorter(xContext, this);
+		rangListeSorter = new RangListeSorter(this);
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		meldeliste.setSpielTag(getSpieltagNr());
 		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 		// neu erstellen
-		NewSheet.from(getxContext(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
+		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		spielerSpalte.alleSpieltagSpielerEinfuegen();

@@ -13,9 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -32,9 +32,9 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 
-	public MeldeListeSheet_TestDaten(XComponentContext xContext) {
-		super(xContext);
-		meldeListe = new MeldeListeSheet_New(xContext);
+	public MeldeListeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
+		meldeListe = new MeldeListeSheet_New(workingSpreadsheet);
 	}
 
 	@Override

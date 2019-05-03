@@ -30,10 +30,10 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.TripletteDoublPaarungen;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -91,20 +91,20 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
 
-	public AbstractSpielrundeSheet(XComponentContext xContext) {
-		super(xContext, "Spielrunde");
-		konfigurationSheet = newKonfigurationSheet(xContext);
-		meldeListe = initMeldeListeSheet(xContext);
+	public AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet, "Spielrunde");
+		konfigurationSheet = newKonfigurationSheet(workingSpreadsheet);
+		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 	}
 
 	@VisibleForTesting
-	KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
-		return new KonfigurationSheet(xContext);
+	KonfigurationSheet newKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	@VisibleForTesting
-	AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
-		return new MeldeListeSheet_Update(xContext);
+	AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new MeldeListeSheet_Update(workingSpreadsheet);
 	}
 
 	public AbstractSupermeleeMeldeListeSheet getMeldeListe() throws GenerateException {
@@ -498,7 +498,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			}
 		}
 		// wenn hier dann neu erstellen
-		if (!NewSheet.from(getxContext(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
+		if (!NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
 				.setForceCreate(force).setActiv().create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return;

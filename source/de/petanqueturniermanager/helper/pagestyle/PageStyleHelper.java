@@ -19,11 +19,10 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.UnoRuntime;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -43,23 +42,23 @@ public class PageStyleHelper {
 
 	private final PageStyleDef pageStyleDef;
 	private final XSpreadsheet sheet;
-	private final XComponentContext componentContext;
+	private final WorkingSpreadsheet workingSpreadsheet;
 
 	private PageStyleHelper(ISheet iSheet, PageStyleDef pageStyleDef) throws GenerateException {
-		this(iSheet.getSheet(), iSheet.getxContext(), pageStyleDef);
+		this(iSheet.getSheet(), iSheet.getWorkingSpreadsheet(), pageStyleDef);
 	}
 
-	private PageStyleHelper(XSpreadsheet sheet, XComponentContext componentContext, PageStyleDef pageStyleDef) {
+	private PageStyleHelper(XSpreadsheet sheet, WorkingSpreadsheet workingSpreadsheet, PageStyleDef pageStyleDef) {
 		this.sheet = checkNotNull(sheet);
-		this.componentContext = checkNotNull(componentContext);
+		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.pageStyleDef = checkNotNull(pageStyleDef);
 	}
 
-	public static PageStyleHelper from(XSpreadsheet sheet, XComponentContext componentContext, PageStyleDef pageStyleDef) throws GenerateException {
+	public static PageStyleHelper from(XSpreadsheet sheet, WorkingSpreadsheet workingSpreadsheet, PageStyleDef pageStyleDef) throws GenerateException {
 		checkNotNull(sheet);
-		checkNotNull(componentContext);
+		checkNotNull(workingSpreadsheet);
 		checkNotNull(pageStyleDef);
-		return new PageStyleHelper(sheet, componentContext, pageStyleDef);
+		return new PageStyleHelper(sheet, workingSpreadsheet, pageStyleDef);
 	}
 
 	public static PageStyleHelper from(ISheet iSheet, SpielTagNr spielTag) throws GenerateException {
@@ -95,12 +94,12 @@ public class PageStyleHelper {
 	}
 
 	public PageStyleHelper create() throws GenerateException {
-		checkNotNull(componentContext);
+		checkNotNull(workingSpreadsheet);
 		checkNotNull(pageStyleDef);
 		String styleName = pageStyleDef.getPageStyleName();
 
 		try {
-			XSpreadsheetDocument currentSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(componentContext);
+			XSpreadsheetDocument currentSpreadsheetDocument = workingSpreadsheet.getWorkingSpreadsheetDocument();
 
 			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();

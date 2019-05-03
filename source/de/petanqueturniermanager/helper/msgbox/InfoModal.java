@@ -15,7 +15,7 @@ import com.sun.star.awt.XWindowPeer;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
+import de.petanqueturniermanager.comp.DocumentHelper;
 
 public class InfoModal {
 

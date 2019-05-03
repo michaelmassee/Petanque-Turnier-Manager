@@ -7,8 +7,7 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.uno.XComponentContext;
-
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -17,8 +16,8 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_NeuerSpieltag.class);
 
-	public MeldeListeSheet_NeuerSpieltag(XComponentContext xContext) {
-		super(xContext);
+	public MeldeListeSheet_NeuerSpieltag(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
 	}
 
 	@Override

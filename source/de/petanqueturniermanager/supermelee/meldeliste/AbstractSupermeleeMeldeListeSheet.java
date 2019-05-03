@@ -23,10 +23,10 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableSortField;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
-import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -83,16 +83,16 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SheetRunner impl
 	private final KonfigurationSheet konfigurationSheet;
 	private SpielTagNr spielTag = null;
 
-	public AbstractSupermeleeMeldeListeSheet(XComponentContext xContext) {
-		super(xContext, "Meldeliste");
-		konfigurationSheet = newKonfigurationSheet(xContext);
-		spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.MELEE);
-		supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(xContext);
+	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet, "Meldeliste");
+		konfigurationSheet = newKonfigurationSheet(workingSpreadsheet);
+		spielerSpalte = new SpielerSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.MELEE);
+		supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(workingSpreadsheet);
 	}
 
 	@VisibleForTesting
-	KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
-		return new KonfigurationSheet(xContext);
+	KonfigurationSheet newKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	/**

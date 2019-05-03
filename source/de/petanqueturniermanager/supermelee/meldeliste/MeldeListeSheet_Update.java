@@ -7,15 +7,14 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.uno.XComponentContext;
-
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 
 public class MeldeListeSheet_Update extends AbstractSupermeleeMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_Update.class);
 
-	public MeldeListeSheet_Update(XComponentContext xContext) {
-		super(xContext);
+	public MeldeListeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
 	}
 
 	@Override

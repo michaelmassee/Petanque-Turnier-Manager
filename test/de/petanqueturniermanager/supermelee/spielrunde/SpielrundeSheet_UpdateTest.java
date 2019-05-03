@@ -18,8 +18,8 @@ import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -30,30 +30,30 @@ import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeLi
 
 public class SpielrundeSheet_UpdateTest {
 
-	SpielrundeSheet_Update aktuelleSpielrundeSheet;
-	XComponentContext xComponentContextMock;
-	AbstractSupermeleeMeldeListeSheet meldeListeSheetMock;
-	SheetHelper sheetHelperMock;
-	XSpreadsheet xSpreadsheetMock;
-	KonfigurationSheet konfigurationSheetMock;
+	private SpielrundeSheet_Update aktuelleSpielrundeSheet;
+	private WorkingSpreadsheet workingSpreadsheetMock;
+	private AbstractSupermeleeMeldeListeSheet meldeListeSheetMock;
+	private SheetHelper sheetHelperMock;
+	private XSpreadsheet xSpreadsheetMock;
+	private KonfigurationSheet konfigurationSheetMock;
 
 	@Before
 	public void setup() throws Exception {
-		xComponentContextMock = PowerMockito.mock(XComponentContext.class);
+		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
 		meldeListeSheetMock = PowerMockito.mock(AbstractSupermeleeMeldeListeSheet.class);
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
-		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(xComponentContextMock) {
+		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheetMock) {
 
 			@Override
-			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
+			KonfigurationSheet newKonfigurationSheet(WorkingSpreadsheet xContext) {
 				return konfigurationSheetMock;
 			}
 
 			@Override
-			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(XComponentContext xContext) {
+			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(WorkingSpreadsheet xContext) {
 				return meldeListeSheetMock;
 			}
 

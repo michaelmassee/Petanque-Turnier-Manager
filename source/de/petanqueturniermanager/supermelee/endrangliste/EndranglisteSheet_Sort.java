@@ -1,14 +1,14 @@
 package de.petanqueturniermanager.supermelee.endrangliste;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 
 public class EndranglisteSheet_Sort extends EndranglisteSheet {
 
-	public EndranglisteSheet_Sort(XComponentContext xContext) {
-		super(xContext);
+	public EndranglisteSheet_Sort(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
 	}
 
 	@Override

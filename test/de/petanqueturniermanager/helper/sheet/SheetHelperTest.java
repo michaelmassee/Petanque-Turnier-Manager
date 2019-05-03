@@ -9,21 +9,21 @@ import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.text.XText;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.position.Position;
 
 public class SheetHelperTest {
 
 	private SheetHelper sheetHelper = null;
-	private XComponentContext xComponentContextMock;
 	private XSpreadsheet xSpreadsheetMock;
+	private WorkingSpreadsheet workingSpreadsheetMock;
 
 	@Before
 	public void setUp() {
-		xComponentContextMock = PowerMockito.mock(XComponentContext.class);
 		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
-		sheetHelper = new SheetHelper(xComponentContextMock);
+		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
+		sheetHelper = new SheetHelper(workingSpreadsheetMock);
 	}
 
 	@Test
@@ -36,7 +36,7 @@ public class SheetHelperTest {
 
 		XText xTextMock = PowerMockito.mock(XText.class);
 
-		sheetHelper = new SheetHelper(xComponentContextMock) {
+		sheetHelper = new SheetHelper(workingSpreadsheetMock) {
 			@Override
 			<C> C queryInterface(Class<C> clazz, Object arg) {
 				return (C) xTextMock;
