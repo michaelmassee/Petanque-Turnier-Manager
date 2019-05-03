@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.konfiguration;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,9 +21,8 @@ import com.sun.star.document.XDocumentPropertiesSupplier;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.uno.UnoRuntime;
-import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 /**
  * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
@@ -34,11 +35,11 @@ public class DocumentPropertiesHelper {
 
 	// public static final String PROP_NAME_FORMATION = "formation";
 
-	final XComponentContext xContext;
+	final WorkingSpreadsheet workingSpreadsheet;
 
 	@Deprecated
-	public DocumentPropertiesHelper(XComponentContext xContext) {
-		this.xContext = xContext;
+	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
+		this.workingSpreadsheet = checkNotNull(currentSpreadsheet);
 		initDefault();
 	}
 
@@ -65,7 +66,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
-		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, DocumentHelper.getCurrentSpreadsheetDocument(this.xContext));
+		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}

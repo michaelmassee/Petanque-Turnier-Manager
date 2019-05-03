@@ -24,9 +24,9 @@ import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
@@ -78,22 +78,22 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	private final RangListeSpalte rangListeSpalte;
 	private final RangListeSorter rangListeSorter;
 
-	public EndranglisteSheet(XComponentContext xContext) {
-		super(xContext, "Endrangliste");
-		this.konfigurationSheet = new KonfigurationSheet(xContext);
-		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
-		this.meldeListeSheetNew = new MeldeListeSheet_New(xContext);
-		this.spielerSpalte = new SpielerSpalte(xContext, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeListeSheetNew, Formation.MELEE);
+	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet, "Endrangliste");
+		this.konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
+		this.spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
+		this.meldeListeSheetNew = new MeldeListeSheet_New(workingSpreadsheet);
+		this.spielerSpalte = new SpielerSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this.meldeListeSheetNew, Formation.MELEE);
 		this.endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), this.spielerSpalte, ERSTE_SPIELTAG_SPALTE, this.konfigurationSheet);
-		this.rangListeSpalte = new RangListeSpalte(xContext, RANGLISTE_SPALTE, this);
-		this.rangListeSorter = new RangListeSorter(xContext, this);
+		this.rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
+		this.rangListeSorter = new RangListeSorter(this);
 	}
 
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spieltagNr = this.konfigurationSheet.getAktiveSpieltag();
-		if (NewSheet.from(getxContext(), SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().forceCreate().spielTagPageStyle(spieltagNr)
-				.create().isDidCreate()) {
+		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().forceCreate()
+				.spielTagPageStyle(spieltagNr).create().isDidCreate()) {
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}

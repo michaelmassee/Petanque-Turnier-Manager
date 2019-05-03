@@ -10,8 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -32,10 +32,10 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 	private final MeldeListeSheet_New meldeliste;
 	private final KonfigurationSheet konfigurationSheet;
 
-	public SpielrundeSheet_Validator(XComponentContext xContext) {
-		super(xContext);
-		meldeliste = new MeldeListeSheet_New(xContext);
-		konfigurationSheet = newKonfigurationSheet(xContext);
+	public SpielrundeSheet_Validator(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
+		meldeliste = new MeldeListeSheet_New(workingSpreadsheet);
+		konfigurationSheet = newKonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override

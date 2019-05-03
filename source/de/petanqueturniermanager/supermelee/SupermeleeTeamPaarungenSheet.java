@@ -9,9 +9,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -36,8 +36,8 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 	public static final int NUR_DOUBLETTE_ANZ_DOUBL_SPALTE = 4;
 	public static final int NICHT_VALIDE_ANZAHL_SPIELER_SPALTE = 5;
 
-	public SupermeleeTeamPaarungenSheet(XComponentContext xContext) {
-		super(xContext);
+	public SupermeleeTeamPaarungenSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
 	}
 
 	@Override

@@ -96,7 +96,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		try {
 			logger.info("Trigger " + action);
 			ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
-			boolean didHandle = handleSuperMelee(action);
+
+			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
+
+			boolean didHandle = handleSuperMelee(action, currentSpreadsheet);
 
 			if (!didHandle) {
 				switch (action) {
@@ -116,66 +119,66 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		}
 	}
 
-	private boolean handleSuperMelee(String action) {
+	private boolean handleSuperMelee(String action, WorkingSpreadsheet workingSpreadsheet) {
 		boolean didHandle = true;
 
 		switch (action) {
 		// ------------------------------
 		case "neue_meldeliste":
-			new MeldeListeSheet_New(xContext).start();
+			new MeldeListeSheet_New(workingSpreadsheet).start();
 			break;
 		case "meldeliste":
-			new MeldeListeSheet_Update(xContext).start();
+			new MeldeListeSheet_Update(workingSpreadsheet).start();
 			break;
 		case "anmeldungen":
-			new AnmeldungenSheet(xContext).start();
+			new AnmeldungenSheet(workingSpreadsheet).start();
 			break;
 		case "teilnehmer":
-			new TielnehmerSheet(xContext).start();
+			new TielnehmerSheet(workingSpreadsheet).start();
 			break;
 		case "naechste_spieltag":
-			new MeldeListeSheet_NeuerSpieltag(xContext).start();
+			new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet).start();
 			break;
 		case "meldeliste_testdaten":
-			new MeldeListeSheet_TestDaten(xContext).start();
+			new MeldeListeSheet_TestDaten(workingSpreadsheet).start();
 			break;
 		case "supermelee_teampaarungen":
-			new SupermeleeTeamPaarungenSheet(xContext).start();
+			new SupermeleeTeamPaarungenSheet(workingSpreadsheet).start();
 			break;
 		// ------------------------------
 		case "aktuelle_spielrunde":
-			new SpielrundeSheet_Update(xContext).start();
+			new SpielrundeSheet_Update(workingSpreadsheet).start();
 			break;
 		case "naechste_spielrunde":
-			new SpielrundeSheet_Naechste(xContext).start();
+			new SpielrundeSheet_Naechste(workingSpreadsheet).start();
 			break;
 		case "spielrunden_testdaten":
-			new SpielrundeSheet_TestDaten(xContext).start();
+			new SpielrundeSheet_TestDaten(workingSpreadsheet).start();
 
 			break;
 		// ------------------------------
 		case "spieltag_rangliste":
-			new SpieltagRanglisteSheet(xContext).start();
+			new SpieltagRanglisteSheet(workingSpreadsheet).start();
 			break;
 		case "spieltag_rangliste_sort":
-			new SpieltagRanglisteSheet_SortOnly(xContext).start();
+			new SpieltagRanglisteSheet_SortOnly(workingSpreadsheet).start();
 			break;
 		case "SpieltagRanglisteSheet_TestDaten":
-			new SpieltagRanglisteSheet_TestDaten(xContext).start();
+			new SpieltagRanglisteSheet_TestDaten(workingSpreadsheet).start();
 			break;
 		// ------------------------------
 		case "supermelee_endrangliste":
-			new EndranglisteSheet(xContext).start();
+			new EndranglisteSheet(workingSpreadsheet).start();
 			break;
 		case "supermelee_endrangliste_sort":
-			new EndranglisteSheet_Sort(xContext).start();
+			new EndranglisteSheet_Sort(workingSpreadsheet).start();
 			break;
 		// ------------------------------
 		case "konfiguration":
-			new KonfigurationSheet(xContext).start();
+			new KonfigurationSheet(workingSpreadsheet).start();
 			break;
 		case "supermelee_validate":
-			new SpielrundeSheet_Validator(xContext).start();
+			new SpielrundeSheet_Validator(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;

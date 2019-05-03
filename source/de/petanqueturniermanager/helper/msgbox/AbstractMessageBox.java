@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.helper.msgbox;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.XMessageBoxFactory;
@@ -14,18 +16,18 @@ import com.sun.star.uno.Exception;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
+import de.petanqueturniermanager.comp.DocumentHelper;
 
 public abstract class AbstractMessageBox {
 
-	final XComponentContext m_xContext;
+	final XComponentContext xContext;
 
 	public AbstractMessageBox(XComponentContext m_xContext) {
-		this.m_xContext = m_xContext;
+		this.xContext = checkNotNull(m_xContext);
 	}
 
 	protected XWindowPeer getWindowPeer() {
-		XWindow xParent = DocumentHelper.getCurrentFrame(this.m_xContext).getContainerWindow();
+		XWindow xParent = DocumentHelper.getCurrentFrame(this.xContext).getContainerWindow();
 		return UnoRuntime.queryInterface(XWindowPeer.class, xParent);
 	}
 
@@ -35,8 +37,7 @@ public abstract class AbstractMessageBox {
 		XToolkit xKit;
 		try {
 			// get access to the office toolkit environment
-			xKit = UnoRuntime.queryInterface(XToolkit.class, this.m_xContext.getServiceManager()
-					.createInstanceWithContext("com.sun.star.awt.Toolkit", this.m_xContext));
+			xKit = UnoRuntime.queryInterface(XToolkit.class, this.xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", this.xContext));
 			xMessageBoxFactory = UnoRuntime.queryInterface(XMessageBoxFactory.class, xKit);
 		} catch (Exception e) {
 			getLogger().error(e.getMessage(), e);

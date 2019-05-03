@@ -9,9 +9,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -34,13 +34,13 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	private final AnmeldungenSheet anmeldungenSheet;
 	private final TielnehmerSheet tielnehmerSheet;
 
-	public SpielrundeSheet_TestDaten(XComponentContext xContext) {
-		super(xContext);
-		naechsteSpielrundeSheet = new SpielrundeSheet_Naechste(xContext);
-		meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(xContext);
-		spieltagRanglisteSheet = new SpieltagRanglisteSheet(xContext);
-		anmeldungenSheet = new AnmeldungenSheet(xContext);
-		tielnehmerSheet = new TielnehmerSheet(xContext);
+	public SpielrundeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
+		naechsteSpielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheet);
+		meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(workingSpreadsheet);
+		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
+		anmeldungenSheet = new AnmeldungenSheet(workingSpreadsheet);
+		tielnehmerSheet = new TielnehmerSheet(workingSpreadsheet);
 
 	}
 
@@ -55,7 +55,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		setSpielTag(SpielTagNr.from(1));
 		generate();
-		new SpielrundeSheet_Validator(getxContext()).validateSpieltag(getSpielTag()); // validieren
+		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 		// sicher gehen das aktive spielrunde sheet ist activ
 		getSheetHelper().setActiveSheet(getSheet());
 	}

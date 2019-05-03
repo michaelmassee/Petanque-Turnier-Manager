@@ -33,8 +33,6 @@ import com.sun.star.sheet.XSheetAnnotations;
 import com.sun.star.sheet.XSheetAnnotationsSupplier;
 import com.sun.star.sheet.XSheetOperation;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
 import com.sun.star.table.CellHoriJustify;
@@ -47,9 +45,9 @@ import com.sun.star.text.XText;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.UnoRuntime;
-import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XMergeable;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -65,11 +63,10 @@ public class SheetHelper {
 
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
 
-	private final XComponentContext xContext;
+	private final WorkingSpreadsheet currentSpreadsheet;
 
-	public SheetHelper(XComponentContext xContext) {
-		checkNotNull(xContext);
-		this.xContext = xContext;
+	public SheetHelper(WorkingSpreadsheet currentSpreadsheet) {
+		this.currentSpreadsheet = checkNotNull(currentSpreadsheet);
 	}
 
 	/**
@@ -146,11 +143,7 @@ public class SheetHelper {
 	 */
 
 	public XSpreadsheets getSheets() {
-		XSpreadsheetDocument spreadsheetDoc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
-		if (spreadsheetDoc != null) {
-			return spreadsheetDoc.getSheets();
-		}
-		return null;
+		return currentSpreadsheet.getWorkingSpreadsheetDocument().getSheets();
 	}
 
 	public XCell setValInCell(NumberCellValue numberCellValue) {
@@ -290,6 +283,9 @@ public class SheetHelper {
 		}
 	}
 
+	/**
+	 * for Junit Mock
+	 */
 	@VisibleForTesting
 	<C> C queryInterface(Class<C> clazz, Object arg) {
 		return UnoRuntime.queryInterface(clazz, arg);
@@ -387,7 +383,8 @@ public class SheetHelper {
 	public String getAddressFromColumnRow(Position pos) {
 		checkNotNull(pos);
 		try {
-			Object aFuncInst = xContext.getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess", xContext);
+			Object aFuncInst = currentSpreadsheet.getxContext().getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess",
+					currentSpreadsheet.getxContext());
 			XFunctionAccess xFuncAcc = UnoRuntime.queryInterface(XFunctionAccess.class, aFuncInst);
 			// https://wiki.openoffice.org/wiki/Documentation/How_Tos/Calc:_ADDRESS_function
 			// put the data in a array
@@ -425,10 +422,7 @@ public class SheetHelper {
 	}
 
 	public void setActiveSheet(XSpreadsheet spreadsheet) {
-		XSpreadsheetView spreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
-		if (spreadsheetView != null) {
-			spreadsheetView.setActiveSheet(spreadsheet);
-		}
+		currentSpreadsheet.getWorkingSpreadsheetView().setActiveSheet(spreadsheet);
 	}
 
 	/**

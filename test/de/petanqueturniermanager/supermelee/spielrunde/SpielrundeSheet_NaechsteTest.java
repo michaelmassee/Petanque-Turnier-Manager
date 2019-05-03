@@ -9,8 +9,8 @@ import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -22,14 +22,14 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 public class SpielrundeSheet_NaechsteTest {
 
 	private SpielrundeSheet_Naechste spielrundeSheet;
-	private XComponentContext xComponentContextMock;
+	private WorkingSpreadsheet workingSpreadsheetMock;
 	private SheetHelper sheetHelperMock;
 
 	@Before
 	public void setup() {
-		xComponentContextMock = PowerMockito.mock(XComponentContext.class);
+		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		spielrundeSheet = new SpielrundeSheet_Naechste(xComponentContextMock) {
+		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
 			@Override
 			public SpielTagNr getSpielTag() throws GenerateException {
 				return SpielTagNr.from(1);

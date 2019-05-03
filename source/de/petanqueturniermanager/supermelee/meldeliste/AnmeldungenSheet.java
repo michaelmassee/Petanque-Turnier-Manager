@@ -11,9 +11,9 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -48,10 +48,10 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	private final KonfigurationSheet konfigurationSheet;
 	private SpielTagNr spielTag = null;
 
-	public AnmeldungenSheet(XComponentContext xContext) {
-		super(xContext, "Anmeldungen");
-		meldeliste = new MeldeListeSheet_Update(xContext);
-		konfigurationSheet = new KonfigurationSheet(xContext);
+	public AnmeldungenSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet, "Anmeldungen");
+		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
+		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -70,8 +70,8 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		meldeliste.setSpielTag(getSpielTag());
 
 		// wenn hier dann immer neu erstellen, force = true
-		NewSheet.from(getxContext(), getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).forceCreate()
-				.setActiv().create();
+		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
+				.forceCreate().setActiv().create();
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);

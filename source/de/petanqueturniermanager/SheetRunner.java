@@ -14,32 +14,32 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 
 public abstract class SheetRunner extends Thread implements Runnable {
 
 	private static final String VERARBEITUNG_ABGEBROCHEN = "Verarbeitung abgebrochen";
-	private final XComponentContext xContext;
+	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SheetHelper sheetHelper;
 	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
 	private static SheetRunner runner = null;
 
 	private String logPrefix = null;
 
-	public SheetRunner(XComponentContext xContext, String logPrefix) {
-		this(xContext);
+	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
+		this(workingSpreadsheet);
 		this.logPrefix = logPrefix;
 	}
 
-	public SheetRunner(XComponentContext xContext) {
-		this.xContext = checkNotNull(xContext, "xContext==null");
-		sheetHelper = new SheetHelper(xContext);
+	public SheetRunner(WorkingSpreadsheet workingSpreadsheet) {
+		this.workingSpreadsheet = checkNotNull(workingSpreadsheet, "xContext==null");
+		sheetHelper = new SheetHelper(workingSpreadsheet);
 	}
 
 	/**
@@ -105,7 +105,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	private void updateKonfigurationSheet() throws GenerateException {
-		new KonfigurationSheet(getxContext()).update();
+		new KonfigurationSheet(getWorkingSpreadsheet()).update();
 	}
 
 	public abstract Logger getLogger();
@@ -118,11 +118,11 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	public XComponentContext getxContext() {
-		return xContext;
+		return getWorkingSpreadsheet().getxContext();
 	}
 
 	public XCalculatable getxCalculatable() {
-		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(getxContext());
+		XSpreadsheetDocument doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		return UnoRuntime.queryInterface(XCalculatable.class, doc);
 	}
 
@@ -133,6 +133,13 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	// for mocking
 	public void processBoxinfo(String infoMsg) {
 		ProcessBox.from().prefix(logPrefix).info(infoMsg);
+	}
+
+	/**
+	 * @return the workingSpreadsheet
+	 */
+	public WorkingSpreadsheet getWorkingSpreadsheet() {
+		return workingSpreadsheet;
 	}
 
 }

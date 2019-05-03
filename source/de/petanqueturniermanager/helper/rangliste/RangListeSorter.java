@@ -4,7 +4,6 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_DIV_OFFS;
@@ -20,7 +19,6 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableSortField;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
-import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -39,9 +37,7 @@ public class RangListeSorter {
 
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public RangListeSorter(XComponentContext xContext, IRangliste iRanglisteSheet) {
-		checkNotNull(xContext);
-
+	public RangListeSorter(IRangliste iRanglisteSheet) {
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
 	}
 

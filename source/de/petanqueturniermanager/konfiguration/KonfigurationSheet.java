@@ -10,9 +10,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -42,9 +42,9 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 
 	private final PropertiesSpalte propertiesSpalte;
 
-	public KonfigurationSheet(XComponentContext xContext) {
-		super(xContext);
-		propertiesSpalte = new PropertiesSpalte(xContext, PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
+	public KonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
+		propertiesSpalte = new PropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
 
 	@Override

@@ -21,8 +21,8 @@ import org.junit.Test;
 import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -33,23 +33,23 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 public class AbstractSupermeleeMeldeListeSheetTest {
 	private static final Logger logger = LogManager.getLogger(AbstractSupermeleeMeldeListeSheetTest.class);
 
-	AbstractSupermeleeMeldeListeSheet meldeSheet;
-	XComponentContext xComponentContextMock;
-	SheetHelper sheetHelperMock;
-	XSpreadsheet xSpreadsheetMock;
-	KonfigurationSheet konfigurationSheetMock;
+	private AbstractSupermeleeMeldeListeSheet meldeSheet;
+	private WorkingSpreadsheet workingSpreadsheetMock;
+	private SheetHelper sheetHelperMock;
+	private XSpreadsheet xSpreadsheetMock;
+	private KonfigurationSheet konfigurationSheetMock;
 
 	@Before
 	public void setup() {
-		this.xComponentContextMock = PowerMockito.mock(XComponentContext.class);
+		this.workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
 		this.sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		this.xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		this.konfigurationSheetMock = PowerMockito.mock(KonfigurationSheet.class);
 
-		this.meldeSheet = new AbstractSupermeleeMeldeListeSheet(this.xComponentContextMock) {
+		this.meldeSheet = new AbstractSupermeleeMeldeListeSheet(workingSpreadsheetMock) {
 
 			@Override
-			KonfigurationSheet newKonfigurationSheet(XComponentContext xContext) {
+			KonfigurationSheet newKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 				return AbstractSupermeleeMeldeListeSheetTest.this.konfigurationSheetMock;
 			}
 

@@ -5,14 +5,14 @@
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 
 public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 
-	public SpieltagRanglisteSheet_SortOnly(XComponentContext xContext) {
-		super(xContext);
+	public SpieltagRanglisteSheet_SortOnly(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
 	}
 
 	@Override

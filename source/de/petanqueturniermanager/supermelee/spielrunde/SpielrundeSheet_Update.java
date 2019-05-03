@@ -9,8 +9,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Meldungen;
@@ -20,8 +20,8 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Update.class);
 
-	public SpielrundeSheet_Update(XComponentContext xContext) {
-		super(xContext);
+	public SpielrundeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 
 		gespieltenRundenEinlesen(meldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), aktuelleSpielrunde.getNr() - 1);
 		neueSpielrunde(meldungen, aktuelleSpielrunde);
-		new SpielrundeSheet_Validator(getxContext()).validateSpieltag(getSpielTag()); // validieren
+		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 		// sicher gehen das aktive spielrunde sheet ist activ
 		getSheetHelper().setActiveSheet(getSheet());
 	}

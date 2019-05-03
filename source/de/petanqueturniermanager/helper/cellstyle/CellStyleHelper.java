@@ -18,7 +18,6 @@ import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.sheet.DocumentHelper;
 
 public class CellStyleHelper {
 
@@ -43,7 +42,7 @@ public class CellStyleHelper {
 		String styleName = this.cellStyleDef.getName();
 
 		try {
-			XSpreadsheetDocument currentSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(this.sheet.getxContext());
+			XSpreadsheetDocument currentSpreadsheetDocument = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 
 			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();

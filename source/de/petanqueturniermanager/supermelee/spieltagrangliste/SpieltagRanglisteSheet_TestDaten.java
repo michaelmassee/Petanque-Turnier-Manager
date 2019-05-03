@@ -7,9 +7,8 @@ package de.petanqueturniermanager.supermelee.spieltagrangliste;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.uno.XComponentContext;
-
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -31,11 +30,11 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 	private final KonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_NeuerSpieltag meldeListeSheetNeuerSpieltag;
 
-	public SpieltagRanglisteSheet_TestDaten(XComponentContext xContext) {
-		super(xContext);
-		spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(xContext);
-		konfigurationSheet = new KonfigurationSheet(xContext);
-		meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(xContext);
+	public SpieltagRanglisteSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
+		super(workingSpreadsheet);
+		spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(workingSpreadsheet);
+		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
+		meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet);
 	}
 
 	@Override
@@ -62,7 +61,7 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 			konfigurationSheet.setAktiveSpieltag(spieltagNr);
 
 			// validieren
-			new SpielrundeSheet_Validator(getxContext()).validateSpieltag(spieltagNr);
+			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(spieltagNr);
 
 		}
 	}
