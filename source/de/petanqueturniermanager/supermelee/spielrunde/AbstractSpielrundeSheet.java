@@ -291,6 +291,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		}
 	}
 
+	/**
+	 * bereich rechts neben der tabelle
+	 * 
+	 * @param spielRunde
+	 * @throws GenerateException
+	 */
+
 	protected void spielerNummerEinfuegen(SpielRunde spielRunde) throws GenerateException {
 
 		processBoxinfo("Spieler Nummer einfügen");
@@ -368,12 +375,12 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			if (teams.get(teamCntr).spieler().size() == 2) {
 				verweisAufSpielerNamenEinfuegen(numberCellValue.getPos());
 			}
-
 		}
 
 		// conditional formatierung doppelte spieler nr
 		FehlerStyle fehlerStyle = new FehlerStyle();
-		RangePosition datenRange = RangePosition.from(posErsteSpielrNr, numberCellValue.getPos());
+		RangePosition datenRange = RangePosition.from(Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE),
+				Position.from(ERSTE_SPIELERNR_SPALTE + 5, numberCellValue.getPos().getZeile()));
 		// UND(ZÄHLENWENN($S:$S;INDIREKT(ADRESSE(ZEILE();SPALTE())))>1;INDIREKT(ADRESSE(ZEILE();SPALTE()))<>"")
 		Position posSpalteSpielrNr = Position.from(ERSTE_SPALTE_VERTIKALE_ERGEBNISSE, ERSTE_DATEN_ZEILE);
 		String conditionfindDoppelt = "COUNTIF(" + posSpalteSpielrNr.getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
