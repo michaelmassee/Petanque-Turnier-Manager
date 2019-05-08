@@ -82,6 +82,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	public static final int ERSTE_SPIELERNR_SPALTE = 11; // spalte L + 5 Spalten
 	public static final int PAARUNG_CNTR_SPALTE = ERSTE_SPIELERNR_SPALTE - 1; // Paarungen nr
 	public static final int ERSTE_SPALTE_VERTIKALE_ERGEBNISSE = ERSTE_SPIELERNR_SPALTE + 7; // rechts neben spielrnr Block +1
+	public static final int SPALTE_VERTIKALE_ERGEBNISSE_PLUS = ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 1;
+	public static final int SPALTE_VERTIKALE_ERGEBNISSE_MINUS = ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 2;
+	public static final int SPALTE_VERTIKALE_ERGEBNISSE_AB = ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 3;
+	public static final int SPALTE_VERTIKALE_ERGEBNISSE_BA_NR = ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 4; // Bahn Nr
 
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
@@ -149,7 +153,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	 * @throws GenerateException
 	 */
 
-	protected void vertikaleErgbnisseFormulEinfuegen(SpielRunde spielRunde) throws GenerateException {
+	protected void vertikaleErgbnisseFormulaEinfuegen(SpielRunde spielRunde) throws GenerateException {
 
 		processBoxinfo("Vertikal Ergbnisspalten");
 
@@ -169,8 +173,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 				.setVertJustify(CellVertJustify2.CENTER);
 		StringCellValue headerText = StringCellValue.from(sheet, ersteHeaderZeile).addColumnProperties(columnProperties);
 		getSheetHelper().setTextInCell(headerText.setValue("Nr"));
-		getSheetHelper().setTextInCell(headerText.setValue("+").spaltePlusEins());
-		getSheetHelper().setTextInCell(headerText.setValue("-").spaltePlusEins());
+		getSheetHelper().setTextInCell(headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment("Plus Punkte"));
+		getSheetHelper().setTextInCell(headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment("Minus Punkte"));
+		getSheetHelper().setTextInCell(headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment("Team")); // Team A/B
+		getSheetHelper().setTextInCell(headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment("Spielbahn Nr.")); // Bahn Nr
 
 		List<Team> teams = spielRunde.teams();
 
@@ -178,32 +184,80 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			if ((teamCntr & 1) == 0) {
 				// Team A
 				for (int spielrNr = 1; spielrNr <= 3; spielrNr++) {
-					vertikaleErgbnisseEinezeileEinfuegen(posSpielrNr, spielrNrFormula, ergebnisPosA, ergebnisPosB);
+					vertikaleErgbnisseEinezeileEinfuegen(posSpielrNr, spielrNrFormula);
 				}
 			} else {
 				// Team B
 				for (int spielrNr = 1; spielrNr <= 3; spielrNr++) {
-					vertikaleErgbnisseEinezeileEinfuegen(posSpielrNr, spielrNrFormula, ergebnisPosB, ergebnisPosA);
+					vertikaleErgbnisseEinezeileEinfuegen(posSpielrNr, spielrNrFormula);
 				}
 				posSpielrNr.zeilePlusEins().spalte(ERSTE_SPIELERNR_SPALTE);
 				ergebnisPosA.zeilePlusEins();
 				ergebnisPosB.zeilePlusEins();
 			}
 		}
+
+		// filldown
+		int letzteZeile = (ERSTE_DATEN_ZEILE + (teams.size() * 3)) - 1;
+		// + punkte
+		// (ZEILE()+3)/6) und (ZEILE())/3) = weil erste daten zeile = 3
+		// =WENN(INDIREKT(ADRESSE(ZEILE();19;8;1))>0;INDIREKT(ADRESSE(((ZEILE()+3)/6)+2;WENN(ISTUNGERADE(ABRUNDEN((ZEILE())/3)+2);8;9);8;1));"")
+		String plusminusFormula = "IF(INDIRECT(ADDRESS(ROW();%d;8;1))>0;INDIRECT(ADDRESS(((ROW( )+3)/6)+2;IF(ISODD(ROUNDDOWN((ROW())/3)+2);%d;%d);8;1));\"\")";
+		String plusPunkteFormula = String.format(plusminusFormula,
+				// erste spalte = 1 nicht 0
+				ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 1, // spielernr
+				ERSTE_SPALTE_ERGEBNISSE + 1, // Team A
+				ERSTE_SPALTE_ERGEBNISSE + 2); // Team B
+		//@formatter:off
+		StringCellValue plusSpalteFormula = StringCellValue.from(getSheet())
+				.zeile(ERSTE_DATEN_ZEILE)
+				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS)
+				.setValue(plusPunkteFormula)
+				.setFillAutoDown(letzteZeile);
+		//@formatter:on
+		getSheetHelper().setFormulaInCell(plusSpalteFormula);
+
+		// - punkte
+		String minusPunkteFormula = String.format(plusminusFormula,
+				// erste spalte = 1 nicht 0
+				ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 1, // spielernr
+				ERSTE_SPALTE_ERGEBNISSE + 2, // Team B
+				ERSTE_SPALTE_ERGEBNISSE + 1); // Team A
+		//@formatter:off
+		StringCellValue minusSpalteFormula = StringCellValue.from(getSheet())
+				.zeile(ERSTE_DATEN_ZEILE)
+				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS)
+				.setValue(minusPunkteFormula)
+				.setFillAutoDown(letzteZeile);
+		//@formatter:on
+		getSheetHelper().setFormulaInCell(minusSpalteFormula);
+
+		// Team
+		// =IF(ISODD(ROUNDDOWN((ROW())/3)+2);"A";"B")
+		//@formatter:off
+		StringCellValue teamSpalteFormula = StringCellValue.from(getSheet())
+				.zeile(ERSTE_DATEN_ZEILE)
+				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB)
+				.setValue("IF(ISODD(ROUNDDOWN((ROW())/3)+2);\"A\";\"B\")")
+				.setFillAutoDown(letzteZeile);
+		//@formatter:on
+		getSheetHelper().setFormulaInCell(teamSpalteFormula);
+
+		// Bahn
+		// =INDIREKT( ADRESSE( ABRUNDEN((ZEILE( )+3) /6)+2;1;8;1))
+		//@formatter:off
+		StringCellValue bahnSpalteFormula = StringCellValue.from(getSheet())
+				.zeile(ERSTE_DATEN_ZEILE)
+				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR)
+				.setValue("INDIRECT( ADDRESS(ROUNDDOWN((ROW( )+3) /6)+2;" + (NUMMER_SPALTE_RUNDESPIELPLAN +1) + ";8;1))")
+				.setFillAutoDown(letzteZeile);
+		//@formatter:on
+		getSheetHelper().setFormulaInCell(bahnSpalteFormula);
 	}
 
-	private void vertikaleErgbnisseEinezeileEinfuegen(Position posSpielrNr, StringCellValue spielrNrFormula, Position ergebnisPosA, Position ergebnisPosB)
-			throws GenerateException {
+	private void vertikaleErgbnisseEinezeileEinfuegen(Position posSpielrNr, StringCellValue spielrNrFormula) throws GenerateException {
 		getSheetHelper().setFormulaInCell(spielrNrFormula.setValue(posSpielrNr.getAddressWith$()));
-		StringCellValue plusSpalteFormula = StringCellValue.from(spielrNrFormula).spaltePlusEins();
-		StringCellValue minusSpalteFormula = StringCellValue.from(plusSpalteFormula).spaltePlusEins();
-		// + spalte
-		// =WENN(M6>0;A4;"")
-		plusSpalteFormula.setValue("IF(" + spielrNrFormula.getPos().getAddress() + ">0;" + ergebnisPosA.getAddressWith$() + ";\"\")");
-		// - spalte
-		minusSpalteFormula.setValue("IF(" + spielrNrFormula.getPos().getAddress() + ">0;" + ergebnisPosB.getAddressWith$() + ";\"\")");
-		getSheetHelper().setFormulaInCell(plusSpalteFormula);
-		getSheetHelper().setFormulaInCell(minusSpalteFormula);
+		// naechste spielernr
 		posSpielrNr.spaltePlusEins();
 		spielrNrFormula.zeilePlusEins();
 	}
@@ -215,7 +269,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	 * L = Spielbahn -> leere Spalte<br>
 	 * N = Spielbahn -> durchnumeriert<br>
 	 * R = Spielbahn -> random<br>
-	 * 
+	 *
 	 * @throws GenerateException
 	 */
 	private void datenErsteSpalte() throws GenerateException {
@@ -293,7 +347,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	/**
 	 * bereich rechts neben der tabelle
-	 * 
+	 *
 	 * @param spielRunde
 	 * @throws GenerateException
 	 */
@@ -419,11 +473,11 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		// -------------------------
 		Position posSpielerNamen = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ZWEITE_HEADER_ZEILE);
 		Position posSpielerNamenMerge = Position.from(posSpielerNamen).spaltePlus(2);
-		headerVal.setValue("Team 1").setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
+		headerVal.setValue("Team A").setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
 				// rechts Doppelte Linie
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().doubleLn().forRight().toBorder());
 		getSheetHelper().setTextInCell(headerVal);
-		headerVal.setValue("Team 2").setPos(posSpielerNamen.spaltePlus(3)).setEndPosMerge(posSpielerNamenMerge.spaltePlus(3)).addCellProperty(TABLE_BORDER2,
+		headerVal.setValue("Team B").setPos(posSpielerNamen.spaltePlus(3)).setEndPosMerge(posSpielerNamenMerge.spaltePlus(3)).addCellProperty(TABLE_BORDER2,
 				BorderFactory.from().allThin().toBorder());
 		getSheetHelper().setTextInCell(headerVal);
 
@@ -536,13 +590,15 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			headerPaarungen(getSheet(), spielRundeSheet);
 			headerSpielerNr(getSheet());
 			spielerNummerEinfuegen(spielRundeSheet);
-			vertikaleErgbnisseFormulEinfuegen(spielRundeSheet);
+			vertikaleErgbnisseFormulaEinfuegen(spielRundeSheet);
 			datenErsteSpalte();
 			datenformatieren(getSheet());
 			spielrundeProperties(getSheet(), doubletteRunde);
 			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(getSheet(), doubletteRunde);
 			printBereichDefinieren(getSheet());
+			// SPielrundeplan, ! nur hier instance erstellen
+			new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
@@ -667,7 +723,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	/**
 	 * rechts unten, letzte ergebnis zelle
-	 * 
+	 *
 	 * @return
 	 * @throws GenerateException
 	 */
@@ -792,7 +848,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		getSheetHelper().clearRange(xSheet, rangPos);
 	}
 
-	public SpielTagNr getSpielTag() throws GenerateException {
+	public SpielTagNr getSpielTag() {
 		checkNotNull(spielTag);
 		return spielTag;
 	}
@@ -803,7 +859,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		this.spielTag = spielTag;
 	}
 
-	public SpielRundeNr getSpielRundeNr() throws GenerateException {
+	public SpielRundeNr getSpielRundeNr() {
 		checkNotNull(spielRundeNr);
 		return spielRundeNr;
 	}

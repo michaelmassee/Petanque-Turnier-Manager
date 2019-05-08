@@ -207,8 +207,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		int ersteSpalteVertikaleErgebnisse = AbstractSpielrundeSheet.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
 		int spielrundeSheetErsteDatenzeile = AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
 		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
-		Position letztePosPlusPunkte = Position.from(ersteSpalteVertikaleErgebnisse + 1, 1000 + spielrundeSheetErsteDatenzeile);
-		Position letztePosMinusPunkte = Position.from(ersteSpalteVertikaleErgebnisse + 2, 1000 + spielrundeSheetErsteDatenzeile);
+		Position letztePosPlusPunkte = Position.from(AbstractSpielrundeSheet.SPALTE_VERTIKALE_ERGEBNISSE_PLUS, 1000 + spielrundeSheetErsteDatenzeile);
+		Position letztePosMinusPunkte = Position.from(AbstractSpielrundeSheet.SPALTE_VERTIKALE_ERGEBNISSE_MINUS + 2, 1000 + spielrundeSheetErsteDatenzeile);
 		String suchMatrixPlusPunkte = erstePos.getAddressWith$() + ":" + letztePosPlusPunkte.getAddressWith$();
 		String suchMatrixMinusPunkte = erstePos.getAddressWith$() + ":" + letztePosMinusPunkte.getAddressWith$();
 
