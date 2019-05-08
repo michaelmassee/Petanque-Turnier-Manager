@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.base.MoreObjects;
@@ -135,6 +136,15 @@ public class Meldungen {
 
 	public final Iterable<Spieler> getSpielerList() {
 		return spielerList;
+	}
+
+	public final void sortNachNummer() {
+		spielerList.sort(new Comparator<Spieler>() {
+			@Override
+			public int compare(Spieler o1, Spieler o2) {
+				return o1.compareTo(o2);
+			}
+		});
 	}
 
 }
