@@ -32,10 +32,10 @@ public class SpielrundeSheet_UpdateTest {
 
 	private SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private WorkingSpreadsheet workingSpreadsheetMock;
-	private AbstractSupermeleeMeldeListeSheet meldeListeSheetMock;
-	private SheetHelper sheetHelperMock;
-	private XSpreadsheet xSpreadsheetMock;
-	private KonfigurationSheet konfigurationSheetMock;
+	AbstractSupermeleeMeldeListeSheet meldeListeSheetMock;
+	SheetHelper sheetHelperMock;
+	XSpreadsheet xSpreadsheetMock;
+	KonfigurationSheet konfigurationSheetMock;
 
 	@Before
 	public void setup() throws Exception {
@@ -68,13 +68,21 @@ public class SpielrundeSheet_UpdateTest {
 			}
 
 			@Override
-			public SpielTagNr getSpielTag() throws GenerateException {
-				return SpielTagNr.from(1);
+			public SpielTagNr getSpielTag() {
+				try {
+					return SpielTagNr.from(1);
+				} catch (GenerateException e) {
+					throw new RuntimeException(e);
+				}
 			}
 
 			@Override
-			public SpielRundeNr getSpielRundeNr() throws GenerateException {
-				return SpielRundeNr.from(1);
+			public SpielRundeNr getSpielRundeNr() {
+				try {
+					return SpielRundeNr.from(1);
+				} catch (GenerateException e) {
+					throw new RuntimeException(e);
+				}
 			}
 		};
 	}

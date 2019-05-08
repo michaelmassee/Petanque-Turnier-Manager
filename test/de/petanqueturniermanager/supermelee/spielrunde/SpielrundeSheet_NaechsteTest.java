@@ -23,7 +23,7 @@ public class SpielrundeSheet_NaechsteTest {
 
 	private SpielrundeSheet_Naechste spielrundeSheet;
 	private WorkingSpreadsheet workingSpreadsheetMock;
-	private SheetHelper sheetHelperMock;
+	SheetHelper sheetHelperMock;
 
 	@Before
 	public void setup() {
@@ -31,8 +31,12 @@ public class SpielrundeSheet_NaechsteTest {
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
 			@Override
-			public SpielTagNr getSpielTag() throws GenerateException {
-				return SpielTagNr.from(1);
+			public SpielTagNr getSpielTag() {
+				try {
+					return SpielTagNr.from(1);
+				} catch (GenerateException e) {
+					throw new RuntimeException(e);
+				}
 			}
 
 			@Override
