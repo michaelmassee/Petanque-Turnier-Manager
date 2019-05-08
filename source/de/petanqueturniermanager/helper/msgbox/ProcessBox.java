@@ -50,6 +50,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.DocumentHelper;
+import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -71,6 +72,7 @@ public class ProcessBox {
 	private final JFrame frame;
 	private final XComponentContext xContext;
 	private JTextArea logOut = null;
+	private JButton logfileBtn = null;
 	private JButton cancelBtn = null;
 	private String prefix = null;
 	private JTextField spieltagText = null;
@@ -228,21 +230,44 @@ public class ProcessBox {
 		panel.add(spielrundeText, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
 
-		cancelBtn = new JButton("Stop");
-		cancelBtn.setEnabled(false);
-		cancelBtn.setToolTipText("Stop verarbeitung");
-		cancelBtn.addActionListener(new ActionListener() {
+		// ----------------------------------------------------------
+		{
+			logfileBtn = new JButton("Log");
+			logfileBtn.setEnabled(true);
+			logfileBtn.setToolTipText("Logdatei");
+			logfileBtn.addActionListener(new ActionListener() {
 
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				SheetRunner.cancelRunner();
-			}
-		});
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Log4J.openLogFile();
+				}
+			});
 
-		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
-		gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
-		gridBagConstraintsPanel.weightx = 0.5;
-		panel.add(cancelBtn, gridBagConstraintsPanel);
+			gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
+			gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
+			gridBagConstraintsPanel.weightx = 0.5;
+			panel.add(logfileBtn, gridBagConstraintsPanel);
+		}
+		gridBagConstraintsPanel.gridx++; // spalte
+		// ----------------------------------------------------------
+		{
+			cancelBtn = new JButton("Stop");
+			cancelBtn.setEnabled(false);
+			cancelBtn.setToolTipText("Stop verarbeitung");
+			cancelBtn.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					SheetRunner.cancelRunner();
+				}
+			});
+
+			gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
+			gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
+			gridBagConstraintsPanel.weightx = 0.5;
+			panel.add(cancelBtn, gridBagConstraintsPanel);
+		}
+		// ----------------------------------------------------------
 	}
 
 	private void initLog(int startZeile) {
