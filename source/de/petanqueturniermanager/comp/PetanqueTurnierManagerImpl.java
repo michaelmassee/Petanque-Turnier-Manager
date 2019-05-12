@@ -16,7 +16,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.konfiguration.dialog.TurnierKonfigDialog;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -99,13 +99,13 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			boolean didHandle = false;
 			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 
-			// // only Dialog
-			// switch (action) {
-			// case "turnierkonfiguration":
-			// didHandle = true;
-			// new TurnierKonfigDialog(currentSpreadsheet).createDialog();
-			// break;
-			// }
+			// only Dialog
+			switch (action) {
+			case "turnierkonfiguration":
+				didHandle = true;
+				new TurnierKonfigDialog(currentSpreadsheet).createDialog();
+				break;
+			}
 
 			if (!didHandle) {
 				ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
@@ -187,9 +187,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			new EndranglisteSheet_Sort(workingSpreadsheet).start();
 			break;
 		// ------------------------------
-		case "turnierkonfiguration":
-			new KonfigurationSheet(workingSpreadsheet).start();
-			break;
+		// case "turnierkonfiguration":
+		// new KonfigurationSheet(workingSpreadsheet).start();
+		// break;
 		case "supermelee_validate":
 			new SpielrundeSheet_Validator(workingSpreadsheet).start();
 			break;
