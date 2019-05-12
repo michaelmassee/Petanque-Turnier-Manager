@@ -95,11 +95,23 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	public void trigger(String action) {
 		try {
 			logger.info("Trigger " + action);
-			ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
 
+			boolean didHandle = false;
 			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 
-			boolean didHandle = handleSuperMelee(action, currentSpreadsheet);
+			// // only Dialog
+			// switch (action) {
+			// case "turnierkonfiguration":
+			// didHandle = true;
+			// new TurnierKonfigDialog(currentSpreadsheet).createDialog();
+			// break;
+			// }
+
+			if (!didHandle) {
+				ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
+
+				didHandle = handleSuperMelee(action, currentSpreadsheet);
+			}
 
 			if (!didHandle) {
 				switch (action) {
@@ -109,6 +121,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 					break;
 				}
 			}
+
 			if (!didHandle) {
 				ProcessBox.from().fehler("ungueltige Aktion " + action);
 				logger.error("Unknown action: " + action);
@@ -174,7 +187,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			new EndranglisteSheet_Sort(workingSpreadsheet).start();
 			break;
 		// ------------------------------
-		case "konfiguration":
+		case "turnierkonfiguration":
 			new KonfigurationSheet(workingSpreadsheet).start();
 			break;
 		case "supermelee_validate":
