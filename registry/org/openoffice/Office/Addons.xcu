@@ -239,7 +239,7 @@
 							<value xml:lang="de">~Konfiguration</value>
 						</prop>
 						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.Turnier?konfiguration</value>
+							<value>service:de.petanqueturniermanager.Turnier?turnierkonfiguration</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>

@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Frame;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -43,13 +42,9 @@ import javax.swing.text.DefaultCaret;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.awt.Rectangle;
-import com.sun.star.awt.XWindow;
-import com.sun.star.frame.XFrame;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -60,9 +55,6 @@ public class ProcessBox {
 
 	private static final int ANZAHLSPALTEN = 1;
 
-	private static final int X_OFFSET = 50;
-	private static final int Y_OFFSET = 50;
-
 	private static final int MIN_HEIGHT = 200;
 	private static final int MIN_WIDTH = 500;
 	private static final String TITLE = "Pétanque Turnier Manager";
@@ -70,7 +62,6 @@ public class ProcessBox {
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
 
 	private final JFrame frame;
-	private final XComponentContext xContext;
 	private JTextArea logOut = null;
 	private JButton logfileBtn = null;
 	private JButton cancelBtn = null;
@@ -83,16 +74,17 @@ public class ProcessBox {
 	private ImageIcon imageIconReady = null;
 	private ImageIcon imageIconError = null;
 
-	private ArrayList<ImageIcon> inworkIcons = new ArrayList<ImageIcon>();
+	private ArrayList<ImageIcon> inworkIcons = new ArrayList<>();
 
+	private final DialogTools dialogTools;
 	private final ScheduledExecutorService drawInWorkIcon = Executors.newScheduledThreadPool(1);
 	private ScheduledFuture<?> drawInWorkIconScheduled;
 
 	private boolean isFehler = false;
 
 	private ProcessBox(XComponentContext xContext) {
-		this.xContext = checkNotNull(xContext);
 		frame = new JFrame();
+		dialogTools = DialogTools.from(checkNotNull(xContext), frame);
 		initBox();
 	}
 
@@ -107,9 +99,7 @@ public class ProcessBox {
 		checkNotNull(xContext);
 		if (ProcessBox.processBox == null) {
 			ProcessBox.processBox = new ProcessBox(xContext);
-			ProcessBox.processBox.title(TITLE);
 		}
-		ProcessBox.processBox.toFront();
 		return ProcessBox.processBox;
 	}
 
@@ -125,7 +115,7 @@ public class ProcessBox {
 		frame.setPreferredSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 		frame.setSize(MIN_WIDTH, MIN_HEIGHT);
 		frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-		moveInsideTopWindow();
+		title(TITLE);
 	}
 
 	private void setIcons() {
@@ -148,8 +138,8 @@ public class ProcessBox {
 			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_2.png"))));
 			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_3.png"))));
 			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_4.png"))));
-			this.imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check25x32.png")));
-			this.imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
+			imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check25x32.png")));
+			imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
 
 		} catch (IOException e) {
 			logger.debug(e);
@@ -176,8 +166,8 @@ public class ProcessBox {
 				g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 				int w = getWidth();
 				int h = getHeight();
-				Color color1 = new Color(Integer.valueOf("eaf4ff", 16));
-				Color color2 = new Color(Integer.valueOf("d6e9ff", 16));
+				Color color1 = new Color(Integer.valueOf("eaf4ff", 16).intValue());
+				Color color2 = new Color(Integer.valueOf("d6e9ff", 16).intValue());
 				GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
 				g2d.setPaint(gp);
 				g2d.fillRect(0, 0, w, h);
@@ -345,33 +335,11 @@ public class ProcessBox {
 
 	public ProcessBox title(String title) {
 		frame.setTitle(title);
-		visible();
 		return this;
 	}
 
 	public ProcessBox moveInsideTopWindow() {
-		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
-		XWindow containerWindow = currentFrame.getContainerWindow();
-		Rectangle posSize = containerWindow.getPosSize();
-
-		int state = frame.getExtendedState();
-		if (Frame.NORMAL != state) {
-			frame.setExtendedState(Frame.NORMAL);
-		}
-
-		int newXPos = frame.getX();
-		int newYPos = frame.getY();
-		if (newXPos < posSize.X || newXPos > (posSize.X + posSize.Width)) {
-			newXPos = posSize.X + X_OFFSET;
-		}
-
-		if (newYPos < posSize.Y || newYPos > (posSize.Y + posSize.Height)) {
-			newYPos = posSize.Y + Y_OFFSET;
-		}
-
-		if (frame.getX() != newXPos || frame.getY() != newYPos) {
-			frame.setLocation(newXPos, newYPos);
-		}
+		dialogTools.moveInsideTopWindow();
 		return this;
 	}
 
@@ -397,12 +365,12 @@ public class ProcessBox {
 			cancelBtn.setEnabled(true);
 		}
 		statusLabel.setToolTipText("In Arbeit");
-		this.drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 600, TimeUnit.MILLISECONDS);
+		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 600, TimeUnit.MILLISECONDS);
 		return this;
 	}
 
 	public ProcessBox ready() {
-		this.drawInWorkIconScheduled.cancel(true);
+		drawInWorkIconScheduled.cancel(true);
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(false);

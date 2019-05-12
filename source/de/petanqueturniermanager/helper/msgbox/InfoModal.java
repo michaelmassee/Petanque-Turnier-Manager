@@ -22,18 +22,18 @@ public class InfoModal {
 	private final XComponentContext xContext;
 
 	public InfoModal(XComponentContext m_xContext) {
-		this.xContext = m_xContext;
+		xContext = m_xContext;
 	}
 
 	public short show(String sTitle, String sMessage) {
 		short result = 0;
 		try {
-			XWindow xParent = DocumentHelper.getCurrentFrame(this.xContext).getContainerWindow();
+			XWindow xParent = DocumentHelper.getCurrentFrame(xContext).getContainerWindow();
 
 			// // get access to the office toolkit environment
-			XToolkit xKit = UnoRuntime.queryInterface(XToolkit.class, this.xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", this.xContext));
+			XToolkit xKit = UnoRuntime.queryInterface(XToolkit.class, xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", xContext));
 			//
-			// describe the info box ini its parameters
+			// describe the info box in its parameters
 			WindowDescriptor aDescriptor = new com.sun.star.awt.WindowDescriptor();
 			aDescriptor.WindowServiceName = "infobox";
 			aDescriptor.Bounds = new Rectangle(0, 0, 300, 200);

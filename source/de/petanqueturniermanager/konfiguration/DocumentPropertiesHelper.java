@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.beans.IllegalTypeException;
+import com.sun.star.beans.PropertyAttribute;
 import com.sun.star.beans.PropertyExistException;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
@@ -37,14 +38,29 @@ public class DocumentPropertiesHelper {
 
 	final WorkingSpreadsheet workingSpreadsheet;
 
-	@Deprecated
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
-		this.workingSpreadsheet = checkNotNull(currentSpreadsheet);
-		initDefault();
+		workingSpreadsheet = checkNotNull(currentSpreadsheet);
+		// initDefault();
 	}
 
-	private void initDefault() {
-		// insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.MELEE.getId());
+	// private void initDefault() {
+	// // insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.MELEE.getId());
+	// insertStringPropertyIfNotExist(PROP_TURNIER_SPIELTAG1_INFO, "");
+	// }
+
+	/**
+	 * @param propTurnierSpieltag1Info
+	 * @param string
+	 */
+	public void insertStringPropertyIfNotExist(String name, String val) {
+		XPropertyContainer xpc = getXPropertyContainer();
+		try {
+			xpc.addProperty(name, PropertyAttribute.OPTIONAL, val); // PropertyAttribute.READONLY
+		} catch (PropertyExistException e) {
+			// Ignorieren
+		} catch (IllegalTypeException | IllegalArgumentException e) {
+			logger.error(e.getMessage(), e);
+		}
 	}
 
 	public void showProperties() {
@@ -54,15 +70,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	public void insertIntPropertyIfNotExist(String name, int val) {
-		XPropertyContainer xpc = getXPropertyContainer();
-		try {
-			xpc.addProperty(name, (short) 0, "" + val); // Achtung: immer als String speichern, weil Integer nicht
-														// funktioniert
-		} catch (PropertyExistException e) {
-			// Ignorieren
-		} catch (IllegalTypeException | IllegalArgumentException e) {
-			logger.error(e.getMessage(), e);
-		}
+		insertStringPropertyIfNotExist(name, "" + val);
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
@@ -77,10 +85,9 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * @param propName = name vom property
-	 * @return -1 when not found
+	 * @return null when not found
 	 */
-	@Deprecated
-	public int getIntProperty(String propName) {
+	public String getStringProperty(String propName) {
 		XPropertySet propSet = getXPropertySet();
 		Object propVal = null;
 		try {
@@ -90,7 +97,32 @@ public class DocumentPropertiesHelper {
 		}
 
 		if (propVal != null && propVal instanceof String) {
-			return NumberUtils.toInt((String) propVal, -1);
+			return (String) propVal;
+		}
+		return null;
+	}
+
+	/**
+	 * @param propName
+	 * @param val int val wird als String gespeichert
+	 */
+	public void setStringProperty(String propName, String val) {
+		XPropertySet propSet = getXPropertySet();
+		try {
+			propSet.setPropertyValue(propName, val);
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+			logger.error(e);
+		}
+	}
+
+	/**
+	 * @param propName = name vom property
+	 * @return -1 when not found
+	 */
+	public int getIntProperty(String propName) {
+		String stringProperty = getStringProperty(propName);
+		if (stringProperty != null) {
+			return NumberUtils.toInt(stringProperty, -1);
 		}
 		return -1;
 	}
@@ -99,13 +131,7 @@ public class DocumentPropertiesHelper {
 	 * @param propName
 	 * @param val int val wird als String gespeichert
 	 */
-	@Deprecated
 	public void setIntProperty(String propName, int val) {
-		XPropertySet propSet = getXPropertySet();
-		try {
-			propSet.setPropertyValue(propName, "" + val);
-		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException | PropertyVetoException e) {
-			logger.error(e.getMessage(), e);
-		}
+		setStringProperty(propName, "" + val);
 	}
 }
