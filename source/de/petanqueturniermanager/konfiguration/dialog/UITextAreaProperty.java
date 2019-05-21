@@ -17,8 +17,8 @@ import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
  */
 public class UITextAreaProperty implements UIProperty {
 
-	private static final int TEXT_HEIGHT = 50;
-	private static final int FIRSTLINE_POSY = 10;
+	private static final int TEXT_HEIGHT = 30;
+	private static final int GAP_HEIGHT = 7;
 
 	private static int propCntr = 0;
 
@@ -29,52 +29,56 @@ public class UITextAreaProperty implements UIProperty {
 	private final String defaultVal;
 	private DocumentPropertiesHelper documentPropertiesHelper;
 	private XTextComponent uITextArea;
-	private final int line;
 
-	public UITextAreaProperty(String propName, String label, String defaultVal, int line) {
+	public UITextAreaProperty(String propName, String label, String defaultVal) {
 		this.propName = checkNotNull(propName);
 		this.label = checkNotNull(label);
 		this.defaultVal = checkNotNull(defaultVal);
 		uiName = "UITextArea" + propCntr;
 		labelName = "UILabel" + propCntr++;
-		this.line = line;
+	}
+
+	public int getHeight() {
+		return TEXT_HEIGHT + GAP_HEIGHT;
 	}
 
 	@Override
 	public void initDefault(WorkingSpreadsheet currentSpreadsheet) {
 		documentPropertiesHelper = new DocumentPropertiesHelper(currentSpreadsheet);
-		documentPropertiesHelper.insertStringPropertyIfNotExist(propName, defaultVal);
+		documentPropertiesHelper.insertStringPropertyIfNotExist(getPropName(), defaultVal);
 	}
 
 	@Override
-	public void doInsert(Object dialogModel, XControlContainer xControlCont) {
-
-		// FIRSTLINE_POSY
-		int posy = (line * TEXT_HEIGHT) + FIRSTLINE_POSY;
+	public int doInsert(Object dialogModel, XControlContainer xControlCont, int posY) {
 
 		// @formatter:off
 		UILabel.from(dialogModel)
 				.name(labelName)
 				.label(label + " :")
-				.posX(3).posY(posy).width(80).height(14)
+				.posX(3).posY(posY).width(40).height(14)
 				.align(2) // Right
 				.doInsert(xControlCont);
 		// @formatter:on
 
-		String propVal = documentPropertiesHelper.getStringProperty(propName);
+		String propVal = documentPropertiesHelper.getStringProperty(getPropName());
 		// @formatter:off
 		uITextArea = UITextArea.from(dialogModel)
 				.name(uiName)
-				.posX(100).posY(posy).width(200).height(TEXT_HEIGHT)
+				.posX(45).posY(posY).width(200).height(TEXT_HEIGHT)
 				.multiLine(true).vScroll(true).hScroll(true)
 				.Text(propVal)
 				.doInsert(xControlCont);
 		// @formatter:on
+		return getHeight();
 	}
 
 	@Override
 	public void save() {
-		documentPropertiesHelper.setStringProperty(propName, uITextArea.getText());
+		documentPropertiesHelper.setStringProperty(getPropName(), uITextArea.getText());
+	}
+
+	public String getPropName() {
+		return propName;
 	}
 
 }

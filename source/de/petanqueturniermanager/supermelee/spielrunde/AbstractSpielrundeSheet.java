@@ -56,7 +56,9 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
+import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.konfiguration.dialog.SpielrundeInfoKonfigDialog;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.SpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -278,7 +280,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		XSpreadsheet sheet = getSheet();
 		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
-		Position letzteZeile = letztePosition();
+		Position letzteZeile = letzteSpielrNrPosition();
 
 		// header
 		// -------------------------
@@ -572,7 +574,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		// -------------------------------
 		boolean doubletteRunde = false;
 		// abfrage nur doublette runde ?
-		boolean isKannNurDoublette = meldeListe.isKannNurDoublette(getSpielTag());
+		boolean isKannNurDoublette = meldeListe.isKannNurDoublette(getSpielTag()).booleanValue();
 		if (isKannNurDoublette) {
 			MessageBox msgbox = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force).caption("Spielrunde Doublette");
 			msgbox.message("Für Spieltag " + getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\nnur Doublette Paarungen auslosen ?");
@@ -596,6 +598,8 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			spielrundeProperties(getSheet(), doubletteRunde);
 			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(getSheet(), doubletteRunde);
+			// TODO
+			// int anzZeilen = spielTagInfosEinfuegen();
 			printBereichDefinieren(getSheet());
 			// SPielrundeplan, ! nur hier instance erstellen
 			new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
@@ -608,9 +612,22 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		}
 	}
 
+	/**
+	 * @TODO
+	 * @return
+	 */
+	private int spielTagInfosEinfuegen() {
+		DocumentPropertiesHelper prophlpr = new DocumentPropertiesHelper(getWorkingSpreadsheet());
+		String propName = SpielrundeInfoKonfigDialog.getPropertieNameFuerSpieltag(getSpielTag());
+		String spieltagInfos = prophlpr.getStringProperty(propName);
+
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	private void printBereichDefinieren(XSpreadsheet sheet) throws GenerateException {
 		processBoxinfo("Print-Bereich");
-		Position letzteZeile = letztePosition();
+		Position letzteZeile = letzteSpielrNrPosition();
 		PrintArea.from(sheet).setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
 	}
 
@@ -637,7 +654,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		processBoxinfo("Spielrunde Properties einfügen");
 
-		Position datenEnd = letztePosition();
+		Position datenEnd = letzteSpielrNrPosition();
 		StringCellValue propName = StringCellValue.from(sheet, Position.from(ERSTE_SPIELERNR_SPALTE - 1, datenEnd.getZeile()));
 		propName.zeilePlus(2).setHoriJustify(CellHoriJustify.RIGHT);
 
@@ -662,7 +679,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 		// gitter
 		Position datenStart = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		Position datenEnd = letztePosition();
+		Position datenEnd = letzteSpielrNrPosition();
 
 		// bis zur mitte mit normal gitter
 		RangePosition datenRangeErsteHaelfte = RangePosition.from(datenStart, Position.from(ERSTE_SPALTE_RUNDESPIELPLAN + 2, datenEnd.getZeile()));
@@ -728,7 +745,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	 * @throws GenerateException
 	 */
 
-	protected Position letztePosition() throws GenerateException {
+	protected Position letzteSpielrNrPosition() throws GenerateException {
 		XSpreadsheet sheet = getSheet();
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
@@ -838,7 +855,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 
 	protected void clearSheet() throws GenerateException {
 		XSpreadsheet xSheet = getSheet();
-		Position letzteZeile = letztePosition();
+		Position letzteZeile = letzteSpielrNrPosition();
 
 		if (letzteZeile == null) {
 			return; // keine Daten

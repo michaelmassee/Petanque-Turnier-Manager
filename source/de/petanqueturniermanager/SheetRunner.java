@@ -104,7 +104,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		}
 	}
 
-	private void updateKonfigurationSheet() throws GenerateException {
+	protected void updateKonfigurationSheet() throws GenerateException {
 		new KonfigurationSheet(getWorkingSpreadsheet()).update();
 	}
 
