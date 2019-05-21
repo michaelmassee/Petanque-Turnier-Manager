@@ -29,24 +29,42 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
  *
  */
-public class TurnierKonfigDialog {
-	private static final Logger logger = LogManager.getLogger(TurnierKonfigDialog.class);
+public class SpielrundeInfoKonfigDialog {
+	private static final Logger logger = LogManager.getLogger(SpielrundeInfoKonfigDialog.class);
+
+	private static final int DIALOG_HEIGHT = 400;
+	private static final int DIALOG_WIDTH = 250;
 
 	public static final List<UITextAreaProperty> UITEXTAREAPROPERTY_LIST = new ArrayList<>();
 	static {
-		int lineCntr = 0;
-		UITEXTAREAPROPERTY_LIST.add(new UITextAreaProperty("Turnier Spieltag1 Spielrunde Info", "Spieltag 1 Spielrunde Info", "Spieltag 1 Info", lineCntr++));
-		UITEXTAREAPROPERTY_LIST.add(new UITextAreaProperty("Turnier Spieltag2 Spielrunde Info", "Spieltag 2 Spielrunde Info", "Spieltag 2 Info", lineCntr++));
+		for (int i = 1; i <= 10; i++) {
+			UITEXTAREAPROPERTY_LIST.add(new UITextAreaProperty("Spieltag " + i + " Spielrunde Info", "Spieltag " + i, "Spieltag " + i + " Info"));
+		}
 	}
 
 	final WorkingSpreadsheet currentSpreadsheet;
 
-	public TurnierKonfigDialog(WorkingSpreadsheet currentSpreadsheet) {
+	static public final String getPropertieNameFuerSpieltag(SpielTagNr spieltagNr) {
+		int idx;
+		try {
+			idx = spieltagNr.getNr() - 1;
+			if (idx >= 0 && idx <= 9) {
+				return SpielrundeInfoKonfigDialog.UITEXTAREAPROPERTY_LIST.get(idx).getPropName();
+			}
+		} catch (GenerateException e) {
+			logger.error(e);
+		}
+		return SpielrundeInfoKonfigDialog.UITEXTAREAPROPERTY_LIST.get(0).getPropName();
+	}
+
+	public SpielrundeInfoKonfigDialog(WorkingSpreadsheet currentSpreadsheet) {
 		this.currentSpreadsheet = checkNotNull(currentSpreadsheet);
 		initDefaultProperties();
 	}
@@ -73,11 +91,11 @@ public class TurnierKonfigDialog {
 		// http://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlDialogModel.html
 		xPSetDialog.setPropertyValue("PositionX", Integer.valueOf(50));
 		xPSetDialog.setPropertyValue("PositionY", Integer.valueOf(50));
-		xPSetDialog.setPropertyValue("Width", Integer.valueOf(300));
-		xPSetDialog.setPropertyValue("Height", Integer.valueOf(400));
+		xPSetDialog.setPropertyValue("Width", Integer.valueOf(DIALOG_WIDTH));
+		xPSetDialog.setPropertyValue("Height", Integer.valueOf(DIALOG_HEIGHT));
 		xPSetDialog.setPropertyValue("Moveable", Boolean.TRUE);
 		xPSetDialog.setPropertyValue("Sizeable", Boolean.TRUE);
-		xPSetDialog.setPropertyValue("Title", "Turnier Konfiguration");
+		xPSetDialog.setPropertyValue("Title", "Spielrunde Info");
 
 		// get the service manager from the dialog model
 		XMultiServiceFactory xMultiServiceFactory = UnoRuntime.queryInterface(XMultiServiceFactory.class, dialogModel);
@@ -93,20 +111,23 @@ public class TurnierKonfigDialog {
 		XDialog xDialog = UnoRuntime.queryInterface(XDialog.class, dialog);
 
 		// ---------------------------------------------------------------------------------------------------
+		int posY = 10;
 		for (UIProperty uIProperty : UITEXTAREAPROPERTY_LIST) {
-			uIProperty.doInsert(dialogModel, xControlCont);
+			posY += uIProperty.doInsert(dialogModel, xControlCont, posY);
 		}
 		// ---------------------------------------------------------------------------------------------------
 
 		// create a Ok button model and set the properties
 		{
 			String fieldname = "okBtn_FieldName";
+			int btnWidth = 50;
+			int btnHeight = 14;
 			Object okButtonModel = xMultiServiceFactory.createInstance("com.sun.star.awt.UnoControlButtonModel");
 			XPropertySet xPSetCancelButton = UnoRuntime.queryInterface(XPropertySet.class, okButtonModel);
-			xPSetCancelButton.setPropertyValue("PositionX", Integer.valueOf(80));
-			xPSetCancelButton.setPropertyValue("PositionY", Integer.valueOf(70));
-			xPSetCancelButton.setPropertyValue("Width", Integer.valueOf(50));
-			xPSetCancelButton.setPropertyValue("Height", Integer.valueOf(14));
+			xPSetCancelButton.setPropertyValue("PositionX", Integer.valueOf(DIALOG_WIDTH - btnWidth - 5));
+			xPSetCancelButton.setPropertyValue("PositionY", Integer.valueOf(DIALOG_HEIGHT - btnHeight - 5));
+			xPSetCancelButton.setPropertyValue("Width", Integer.valueOf(btnWidth));
+			xPSetCancelButton.setPropertyValue("Height", Integer.valueOf(btnHeight));
 			xPSetCancelButton.setPropertyValue("Name", fieldname);
 			xPSetCancelButton.setPropertyValue("TabIndex", Short.valueOf((short) 2));
 			xPSetCancelButton.setPropertyValue("PushButtonType", Short.valueOf((short) PushButtonType.STANDARD.getValue()));

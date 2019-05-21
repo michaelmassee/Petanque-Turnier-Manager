@@ -17,6 +17,6 @@ public interface UIProperty {
 
 	void initDefault(WorkingSpreadsheet currentSpreadsheet);
 
-	void doInsert(Object dialogModel, XControlContainer xControlCont);
+	int doInsert(Object dialogModel, XControlContainer xControlCont, int posY);
 
 }

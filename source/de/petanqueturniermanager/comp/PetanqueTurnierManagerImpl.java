@@ -16,7 +16,8 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.konfiguration.dialog.TurnierKonfigDialog;
+import de.petanqueturniermanager.konfiguration.dialog.SpielrundeInfoKonfigDialog;
+import de.petanqueturniermanager.melee.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -103,14 +104,18 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			switch (action) {
 			case "turnierkonfiguration":
 				didHandle = true;
-				new TurnierKonfigDialog(currentSpreadsheet).createDialog();
+				new SpielrundeInfoKonfigDialog(currentSpreadsheet).createDialog();
 				break;
 			}
 
 			if (!didHandle) {
 				ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
-
 				didHandle = handleSuperMelee(action, currentSpreadsheet);
+
+				if (!didHandle) {
+					didHandle = handleMelee(action, currentSpreadsheet);
+				}
+
 			}
 
 			if (!didHandle) {
@@ -198,4 +203,19 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		}
 		return didHandle;
 	}
+
+	private boolean handleMelee(String action, WorkingSpreadsheet workingSpreadsheet) {
+		boolean didHandle = true;
+
+		switch (action) {
+		// ------------------------------
+		case "koRundeAB":
+			new KoGruppeABSheet(workingSpreadsheet).start();
+			break;
+		default:
+			didHandle = false;
+		}
+		return didHandle;
+	}
+
 }

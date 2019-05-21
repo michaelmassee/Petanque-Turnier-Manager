@@ -40,13 +40,7 @@ public class DocumentPropertiesHelper {
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
 		workingSpreadsheet = checkNotNull(currentSpreadsheet);
-		// initDefault();
 	}
-
-	// private void initDefault() {
-	// // insertIntPropertyIfNotExist(PROP_NAME_FORMATION, Formation.MELEE.getId());
-	// insertStringPropertyIfNotExist(PROP_TURNIER_SPIELTAG1_INFO, "");
-	// }
 
 	/**
 	 * @param propTurnierSpieltag1Info

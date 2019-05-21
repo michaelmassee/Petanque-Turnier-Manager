@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<oor:component-data
+	oor:package="org.openoffice.Office" oor:name="Addons"
+	xmlns:oor="http://openoffice.org/2001/registry"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<node oor:name="AddonUI">
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
@@ -15,7 +18,6 @@
 				</prop>
 				<node oor:name="Submenu">
 					<!-- name= bestimmt reihenfolge im menu -->
-
 					<!-- ****************************************************************** -->
 					<!-- Supermêlée -->
 					<node oor:name="A1" oor:op="replace">
@@ -33,7 +35,7 @@
 							<value>_self</value>
 						</prop>
 						<node oor:name="Submenu">
-							<node oor:name="A1" oor:op="replace">
+							<node oor:name="A1A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">New Entrylist</value>
 									<value xml:lang="de">Neue Meldeliste</value>
@@ -46,7 +48,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A2" oor:op="replace">
+							<node oor:name="A1A2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
@@ -59,7 +61,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A3" oor:op="replace">
+							<node oor:name="A1A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Registrations</value>
 									<value xml:lang="de">Anmeldungen</value>
@@ -72,7 +74,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A4" oor:op="replace">
+							<node oor:name="A1A4" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Playerlist</value>
 									<value xml:lang="de">Teilnehmer</value>
@@ -85,13 +87,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A5" oor:op="replace">
+							<node oor:name="A1A5" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="B1" oor:op="replace">
+							<node oor:name="A1B1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Current Play-Round</value>
 									<value xml:lang="de">Aktuelle Spielrunde</value>
@@ -104,7 +106,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="B2" oor:op="replace">
+							<node oor:name="A1B2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next Play-Round</value>
 									<value xml:lang="de">Nächste Spielrunde</value>
@@ -117,14 +119,14 @@
 								</prop>
 							</node>
 
-							<node oor:name="B3" oor:op="replace">
+							<node oor:name="A1B3" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
 
-							<node oor:name="B4" oor:op="replace">
+							<node oor:name="A1B4" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List</value>
 									<value xml:lang="de">Spieltag Rangliste</value>
@@ -137,7 +139,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="B5" oor:op="replace">
+							<node oor:name="A1B5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List Sort</value>
 									<value xml:lang="de">Spieltag Rangliste Sortieren</value>
@@ -151,7 +153,7 @@
 							</node>
 
 
-							<node oor:name="B6" oor:op="replace">
+							<node oor:name="A1B6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next competition day</value>
 									<value xml:lang="de">Nächste Spieltag</value>
@@ -164,13 +166,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="B7" oor:op="replace">
+							<node oor:name="A1B7" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="B8" oor:op="replace">
+							<node oor:name="A1B8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste</value>
@@ -184,7 +186,7 @@
 							</node>
 
 
-							<node oor:name="B9" oor:op="replace">
+							<node oor:name="A1B9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste Sortieren</value>
@@ -197,13 +199,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="C1" oor:op="replace">
+							<node oor:name="A1C1" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="C2" oor:op="replace">
+							<node oor:name="A1C2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Team-Pairings</value>
 									<value xml:lang="de">Team-Paarungen</value>
@@ -216,7 +218,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="C3" oor:op="replace">
+							<node oor:name="A1C3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate competition day</value>
 									<value xml:lang="de">Spieltag Prüfen</value>
@@ -231,6 +233,44 @@
 
 						</node>
 					</node>
+
+
+					<!-- ****************************************************************** -->
+					<!-- Formé -->
+					<node oor:name="A2" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value />
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value />
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="en">Formé</value>
+							<value xml:lang="de">Formé</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- name= bestimmt reihenfolge im menu -->
+							<!-- ****************************************************************** -->
+							<!-- Formé -->
+							<node oor:name="A2A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">KO Groups AB</value>
+									<value xml:lang="de">KO Gruppe AB</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?koRundeAB</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+						</node>
+					</node>
+
 					<!-- ****************************************************************** -->
 
 					<node oor:name="X1" oor:op="replace">
@@ -334,8 +374,10 @@
 
 					<!-- ****************************************************************** -->
 
-					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> <prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> 
-						</prop> <prop oor:name="Target" oor:type="xs:string"> <value>_self</value> </prop> </node> -->
+					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value 
+						xml:lang="de">~Endrangliste</value> </prop> <prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> 
+						</prop> <prop oor:name="Target" oor:type="xs:string"> <value>_self</value> 
+						</prop> </node> -->
 
 				</node>
 			</node>
