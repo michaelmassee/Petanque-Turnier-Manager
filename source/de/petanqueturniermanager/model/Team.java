@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,15 +19,32 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 public class Team implements Comparable<Team> {
 	private final int nr;
 	private final ArrayList<Spieler> spielerList;
+	private final HashSet<Integer> gegner = new HashSet<>();
 
 	public Team(int nr) {
 		checkArgument(nr > 0, "Team Nr <1");
 		this.nr = nr;
-		this.spielerList = new ArrayList<>();
+		spielerList = new ArrayList<>();
+	}
+
+	/**
+	 * Teams gegenseitig als gegen eintragen wenn nicht vorhanden
+	 *
+	 * @param team
+	 * @return
+	 */
+
+	public Team addGegner(Team team) {
+		checkNotNull(team, "team == null");
+		if (!team.equals(this) && !gegner.contains(team.getNr())) {
+			gegner.add(team.getNr());
+			team.addGegner(this);
+		}
+		return this;
 	}
 
 	public int getNr() {
-		return this.nr;
+		return nr;
 	}
 
 	public Team addSpielerWennNichtVorhanden(List<Spieler> spielerlist) throws AlgorithmenException {
@@ -42,8 +60,8 @@ public class Team implements Comparable<Team> {
 	public Team addSpielerWennNichtVorhanden(Spieler spieler) throws AlgorithmenException {
 		checkNotNull(spieler, "spieler == null");
 
-		if (!this.spielerList.contains(spieler)) {
-			this.spielerList.add(spieler);
+		if (!spielerList.contains(spieler)) {
+			spielerList.add(spieler);
 			addMitspieler(spieler);
 			spieler.setTeam(this);
 		}
@@ -53,7 +71,7 @@ public class Team implements Comparable<Team> {
 	private Team addMitspieler(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
 
-		for (Spieler spielerausList : this.spielerList) {
+		for (Spieler spielerausList : spielerList) {
 			spielerausList.addWarImTeamMitWennNichtVorhanden(spieler);
 			spieler.addWarImTeamMitWennNichtVorhanden(spielerausList);
 		}
@@ -61,7 +79,7 @@ public class Team implements Comparable<Team> {
 	}
 
 	public int size() {
-		return this.spielerList.size();
+		return spielerList.size();
 	}
 
 	public Team removeAlleSpieler() throws AlgorithmenException {
@@ -74,9 +92,9 @@ public class Team implements Comparable<Team> {
 
 	public Team removeSpieler(Spieler spieler) throws AlgorithmenException {
 		checkNotNull(spieler, "spieler == null");
-		this.spielerList.remove(spieler);
+		spielerList.remove(spieler);
 		spieler.deleteTeam();
-		for (Spieler spielerausList : this.spielerList) {
+		for (Spieler spielerausList : spielerList) {
 			spieler.deleteWarImTeam(spielerausList);
 			spielerausList.deleteWarImTeam(spieler);
 		}
@@ -84,16 +102,16 @@ public class Team implements Comparable<Team> {
 	}
 
 	public List<Spieler> spieler() {
-		return new ArrayList<>(this.spielerList);
+		return new ArrayList<>(spielerList);
 	}
 
 	public boolean istSpielerImTeam(Spieler spieler) {
-		return this.spielerList.contains(spieler);
+		return spielerList.contains(spieler);
 	}
 
 	public Spieler findSpielerByNr(int nr) {
 		Spieler spieler = null;
-		for (Spieler spielerausList : this.spielerList) {
+		for (Spieler spielerausList : spielerList) {
 			if (spielerausList.getNr() == nr) {
 				spieler = spielerausList;
 				break;
@@ -105,7 +123,7 @@ public class Team implements Comparable<Team> {
 	public List<Spieler> listeVonSpielerOhneSpieler(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
 
-		List<Spieler> spielerteamOhneSpieler = new ArrayList<>(this.spielerList);
+		List<Spieler> spielerteamOhneSpieler = new ArrayList<>(spielerList);
 		spielerteamOhneSpieler.remove(spieler);
 		return spielerteamOhneSpieler;
 	}
@@ -114,7 +132,7 @@ public class Team implements Comparable<Team> {
 		checkNotNull(spieler, "spieler == null");
 		boolean hatzusammenGespielt = false;
 
-		for (Spieler spielerAusTeam : this.spielerList) {
+		for (Spieler spielerAusTeam : spielerList) {
 			if (!spielerAusTeam.equals(spieler)) { // nicht sich selbst vergleichen
 				if (spielerAusTeam.warImTeamMit(spieler)) {
 					hatzusammenGespielt = true;
@@ -155,14 +173,14 @@ public class Team implements Comparable<Team> {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.nr);
+		return Objects.hash(nr);
 	}
 
 	@Override
 	public String toString() {
 
 		String spielerNr = "[";
-		for (Spieler spielerAusTeam : this.spielerList) {
+		for (Spieler spielerAusTeam : spielerList) {
 			if (spielerNr.length() > 1) {
 				spielerNr += ",";
 			}
@@ -172,7 +190,7 @@ public class Team implements Comparable<Team> {
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
-				.add("nr", this.nr)
+				.add("nr", nr)
 				.add("Spieler", spielerNr)
 				.toString();
 		// @formatter:on

@@ -15,10 +15,10 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 * Erstellung     : 07.09.2017 / Michael Massee
 *
 */
-public class SpielRunde extends NrComparable<SpielRunde> implements TurnierDaten {
+public class MeleeSpielRunde extends NrComparable<MeleeSpielRunde> implements TurnierDaten {
 	private final ArrayList<Team> teams;
 
-	public SpielRunde(int nr) {
+	public MeleeSpielRunde(int nr) {
 		super(nr);
 		this.teams = new ArrayList<>();
 	}
@@ -57,14 +57,14 @@ public class SpielRunde extends NrComparable<SpielRunde> implements TurnierDaten
 		}
 	}
 
-	public SpielRunde addTeamsWennNichtVorhanden(List<Team> teams) throws AlgorithmenException {
+	public MeleeSpielRunde addTeamsWennNichtVorhanden(List<Team> teams) throws AlgorithmenException {
 		for (Team team : teams) {
 			addTeamWennNichtVorhanden(team);
 		}
 		return this;
 	}
 
-	public SpielRunde addTeamWennNichtVorhanden(Team team) throws AlgorithmenException {
+	public MeleeSpielRunde addTeamWennNichtVorhanden(Team team) throws AlgorithmenException {
 		if (!this.teams.contains(team)) {
 			validateSpielerTeam(team);
 			this.teams.add(team);
@@ -72,7 +72,7 @@ public class SpielRunde extends NrComparable<SpielRunde> implements TurnierDaten
 		return this;
 	}
 
-	public SpielRunde deleteAllTeams() throws AlgorithmenException {
+	public MeleeSpielRunde deleteAllTeams() throws AlgorithmenException {
 		for (Team team : this.teams) {
 			team.removeAlleSpieler();
 		}
@@ -80,14 +80,14 @@ public class SpielRunde extends NrComparable<SpielRunde> implements TurnierDaten
 		return this;
 	}
 
-	public SpielRunde removeSpieler(Spieler spieler) throws AlgorithmenException {
+	public MeleeSpielRunde removeSpieler(Spieler spieler) throws AlgorithmenException {
 		for (Team team : this.teams) {
 			team.removeSpieler(spieler);
 		}
 		return this;
 	}
 
-	public SpielRunde sortiereTeamsNachGroese() {
+	public MeleeSpielRunde sortiereTeamsNachGroese() {
 		this.teams.sort(new Comparator<Team>() {
 			@Override
 			public int compare(Team o1, Team o2) {
