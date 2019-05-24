@@ -12,21 +12,28 @@ import com.google.common.annotations.VisibleForTesting;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.model.Meldungen;
-import de.petanqueturniermanager.model.SpielRunde;
+import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.TeamRechner;
 
+/**
+ * Triplette Teams auffüllen mit Doublette<br>
+ * Supermelee <br>
+ * 
+ * @author Michael Massee
+ *
+ */
 public class TripletteDoublPaarungen {
 
 	static int DOUBL_SPIELER_START_NR = 10000;
 	static int DOUBL_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
 
-	public SpielRunde neueSpielrunde(int rndNr, Meldungen meldungen) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen) throws AlgorithmenException {
 		return neueSpielrunde(rndNr, meldungen, false);
 	}
 
-	public SpielRunde neueSpielrunde(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
 		TeamRechner teamRechner = new TeamRechner(meldungen.spieler().size());
@@ -40,7 +47,7 @@ public class TripletteDoublPaarungen {
 			throw new AlgorithmenException("Keine Doublette Spielrunde möglich");
 		}
 
-		SpielRunde spielRunde = null;
+		MeleeSpielRunde spielRunde = null;
 		if (nurDoublette) {
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 2, meldungen);
 		} else {
@@ -71,9 +78,9 @@ public class TripletteDoublPaarungen {
 	 * @throws AlgorithmenException
 	 */
 	@VisibleForTesting
-	SpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, Meldungen meldungen) throws AlgorithmenException {
+	MeleeSpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, Meldungen meldungen) throws AlgorithmenException {
 
-		SpielRunde spielrunde = null;
+		MeleeSpielRunde spielrunde = null;
 		// Team nextTeam;
 
 		int maxRetry = 100;
@@ -81,7 +88,7 @@ public class TripletteDoublPaarungen {
 
 		while (retryCnt < maxRetry) {
 
-			spielrunde = new SpielRunde(rndNr);
+			spielrunde = new MeleeSpielRunde(rndNr);
 			// von alle meldungen die teams löschen
 			meldungen.resetTeam();
 			meldungen.shuffle();
@@ -105,7 +112,7 @@ public class TripletteDoublPaarungen {
 		return spielrunde;
 	}
 
-	public Team findNextTeamInSpielrunde(int teamSize, Meldungen meldungen, SpielRunde spielrunde) throws AlgorithmenException {
+	public Team findNextTeamInSpielrunde(int teamSize, Meldungen meldungen, MeleeSpielRunde spielrunde) throws AlgorithmenException {
 
 		checkNotNull(meldungen);
 		checkNotNull(spielrunde);
@@ -134,7 +141,7 @@ public class TripletteDoublPaarungen {
 		return newTeamInRunde;
 	}
 
-	private void teamAuffuellen(int teamSize, Meldungen meldungen, SpielRunde spielrunde, Team newTeamInRunde) throws AlgorithmenException {
+	private void teamAuffuellen(int teamSize, Meldungen meldungen, MeleeSpielRunde spielrunde, Team newTeamInRunde) throws AlgorithmenException {
 		boolean konnteTauschen = true;
 		while (newTeamInRunde.size() != teamSize && meldungen.spielerOhneTeam().size() > 0 && konnteTauschen) {
 			// team noch nicht vollständig, versuche zu tauschen mit ein Spieler

@@ -60,7 +60,7 @@ import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.konfiguration.dialog.SpielrundeInfoKonfigDialog;
 import de.petanqueturniermanager.model.Meldungen;
-import de.petanqueturniermanager.model.SpielRunde;
+import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -155,7 +155,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	 * @throws GenerateException
 	 */
 
-	protected void vertikaleErgbnisseFormulaEinfuegen(SpielRunde spielRunde) throws GenerateException {
+	protected void vertikaleErgbnisseFormulaEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
 
 		processBoxinfo("Vertikal Ergbnisspalten");
 
@@ -354,7 +354,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	 * @throws GenerateException
 	 */
 
-	protected void spielerNummerEinfuegen(SpielRunde spielRunde) throws GenerateException {
+	protected void spielerNummerEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
 
 		processBoxinfo("Spieler Nummer einfügen");
 
@@ -445,7 +445,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		ConditionalFormatHelper.from(this, datenRange).clear().formula1(formulaFindDoppelteSpielrNr).operator(ConditionOperator.FORMULA).style(fehlerStyle).apply();
 	}
 
-	private void headerPaarungen(XSpreadsheet sheet, SpielRunde spielRunde) throws GenerateException {
+	private void headerPaarungen(XSpreadsheet sheet, MeleeSpielRunde spielRunde) throws GenerateException {
 
 		processBoxinfo("Header für Spielpaarungen");
 
@@ -587,7 +587,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		}
 		TripletteDoublPaarungen paarungen = new TripletteDoublPaarungen();
 		try {
-			SpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
+			MeleeSpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
 			spielRundeSheet.validateSpielerTeam(null);
 			headerPaarungen(getSheet(), spielRundeSheet);
 			headerSpielerNr(getSheet());

@@ -11,13 +11,13 @@ import org.junit.Test;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 
-public class SpielRundeTest {
+public class MeleeSpielRundeTest {
 
-	private SpielRunde spielRunde;
+	private MeleeSpielRunde spielRunde;
 
 	@Before
 	public void setup() {
-		spielRunde = new SpielRunde(1);
+		spielRunde = new MeleeSpielRunde(1);
 	}
 
 	@Test

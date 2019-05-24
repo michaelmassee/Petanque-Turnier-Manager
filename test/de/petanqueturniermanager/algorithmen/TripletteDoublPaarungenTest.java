@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.model.Meldungen;
-import de.petanqueturniermanager.model.SpielRunde;
+import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 
@@ -52,7 +52,7 @@ public class TripletteDoublPaarungenTest {
 		for (int spielrNr = 1; spielrNr < 9; spielrNr++) {
 			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 		}
-		SpielRunde spielRunde = paarungen.neueSpielrunde(1, meldungen);
+		MeleeSpielRunde spielRunde = paarungen.neueSpielrunde(1, meldungen);
 
 		assertThat(spielRunde.teams()).isNotEmpty();
 		assertThat(spielRunde.teams()).hasSize(4);
@@ -79,7 +79,7 @@ public class TripletteDoublPaarungenTest {
 					meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 				}
 				for (int spielrunde = 1; spielrunde <= anzSpielrunden; spielrunde++) {
-					SpielRunde spielRunde = paarungen.neueSpielrunde(spielrunde, meldungen);
+					MeleeSpielRunde spielRunde = paarungen.neueSpielrunde(spielrunde, meldungen);
 					pruefeTeamMischungSpielrunde(paarungenExpectedAnzahl.expAnzSpieler, paarungenExpectedAnzahl.expAnzDoubl, paarungenExpectedAnzahl.expAnzTriplett, spielRunde);
 				}
 			} catch (AlgorithmenException e) {
@@ -109,7 +109,7 @@ public class TripletteDoublPaarungenTest {
 		pruefeTeamMischung(31, 5, 7);
 	}
 
-	private void pruefeObeDoppelteSpielerVorhandenInSpielrunde(SpielRunde spielRunde) {
+	private void pruefeObeDoppelteSpielerVorhandenInSpielrunde(MeleeSpielRunde spielRunde) {
 		HashSet<Integer> spielrNr = new HashSet<>();
 
 		for (Team team : spielRunde.teams()) {
@@ -126,11 +126,11 @@ public class TripletteDoublPaarungenTest {
 		for (int spielrNr = 1; spielrNr <= expAnzSpieler; spielrNr++) {
 			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 		}
-		SpielRunde spielRunde = paarungen.neueSpielrunde(1, meldungen);
+		MeleeSpielRunde spielRunde = paarungen.neueSpielrunde(1, meldungen);
 		pruefeTeamMischungSpielrunde(expAnzSpieler, expAnzDoubl, expAnzTriplett, spielRunde);
 	}
 
-	private void pruefeTeamMischungSpielrunde(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett, SpielRunde spielRunde) {
+	private void pruefeTeamMischungSpielrunde(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett, MeleeSpielRunde spielRunde) {
 
 		int expAnzTeams = expAnzDoubl + expAnzTriplett;
 
@@ -192,7 +192,7 @@ public class TripletteDoublPaarungenTest {
 
 	@Test
 	public void testFindNextTeamInSpielrunde_Einfach_next_Freie_Spieler() throws Exception {
-		SpielRunde spielrunde = new SpielRunde(1);
+		MeleeSpielRunde spielrunde = new MeleeSpielRunde(1);
 		spielrunde.addTeamsWennNichtVorhanden(teams);
 		Team resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen, spielrunde);
 		assertNotNull(resultTeam);
@@ -247,7 +247,7 @@ public class TripletteDoublPaarungenTest {
 		List<Team> teams2 = new ArrayList<>();
 
 		// neue Spielrunde
-		SpielRunde spielrunde = new SpielRunde(1);
+		MeleeSpielRunde spielrunde = new MeleeSpielRunde(1);
 
 		Team resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen2, spielrunde);
 		assertNotNull(resultTeam);
@@ -305,7 +305,7 @@ public class TripletteDoublPaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 6, 1, 7 });
 		spielerNrTeamListe.add(new Integer[] { 2, 8, 4 });
 		spielerNrTeamListe.add(new Integer[] { 5, 3, 11 });
-		SpielRunde ersteRunde = buildTestRunde(1, testMeldungen, spielerNrTeamListe);
+		MeleeSpielRunde ersteRunde = buildTestRunde(1, testMeldungen, spielerNrTeamListe);
 		System.out.println(ersteRunde);
 
 		spielerNrTeamListe = new ArrayList<>();
@@ -313,7 +313,7 @@ public class TripletteDoublPaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 11, 9, 1 });
 		spielerNrTeamListe.add(new Integer[] { 12, 4, 5 });
 		spielerNrTeamListe.add(new Integer[] { 7, 8, 3 });
-		SpielRunde zweiteRunde = buildTestRunde(2, testMeldungen, spielerNrTeamListe);
+		MeleeSpielRunde zweiteRunde = buildTestRunde(2, testMeldungen, spielerNrTeamListe);
 		System.out.println(zweiteRunde);
 
 		spielerNrTeamListe = new ArrayList<>();
@@ -321,17 +321,17 @@ public class TripletteDoublPaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 5, 9, 6 });
 		spielerNrTeamListe.add(new Integer[] { 12, 8, 11 });
 		spielerNrTeamListe.add(new Integer[] { 3, 2, 1 });
-		SpielRunde dritteRunde = buildTestRunde(3, testMeldungen, spielerNrTeamListe);
+		MeleeSpielRunde dritteRunde = buildTestRunde(3, testMeldungen, spielerNrTeamListe);
 		System.out.println(dritteRunde);
 
-		SpielRunde vierteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(4, 3, testMeldungen);
+		MeleeSpielRunde vierteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(4, 3, testMeldungen);
 		System.out.println(vierteRunde);
 		assertNotNull(vierteRunde);
 		assertEquals(4, vierteRunde.teams().size());
 	}
 
-	private SpielRunde buildTestRunde(int nr, Meldungen testMeldungen, List<Integer[]> spielerNrTeamListe) throws AlgorithmenException {
-		SpielRunde spielRunde = new SpielRunde(nr);
+	private MeleeSpielRunde buildTestRunde(int nr, Meldungen testMeldungen, List<Integer[]> spielerNrTeamListe) throws AlgorithmenException {
+		MeleeSpielRunde spielRunde = new MeleeSpielRunde(nr);
 
 		int tmNr = 1;
 		for (Integer[] teamliste : spielerNrTeamListe) {
@@ -363,7 +363,7 @@ public class TripletteDoublPaarungenTest {
 
 		// TODO 3 runden sind nicht immer möglich
 		for (int rundenr = 1; rundenr < 3; rundenr++) {
-			SpielRunde runde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(rundenr, 3, meldungen);
+			MeleeSpielRunde runde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(rundenr, 3, meldungen);
 			System.out.println(runde);
 			assertNotNull(runde);
 			assertEquals(4, runde.teams().size());
@@ -375,17 +375,17 @@ public class TripletteDoublPaarungenTest {
 		Meldungen meldungen = newTestMeldungen(18);
 		int anzTriplette = 6;
 
-		SpielRunde ersteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
+		MeleeSpielRunde ersteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
 		System.out.println(ersteRunde);
 		assertNotNull(ersteRunde);
 		assertEquals(anzTriplette, ersteRunde.teams().size());
 
-		SpielRunde zweiteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(2, 3, meldungen);
+		MeleeSpielRunde zweiteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(2, 3, meldungen);
 		System.out.println(zweiteRunde);
 		assertNotNull(zweiteRunde);
 		assertEquals(anzTriplette, zweiteRunde.teams().size());
 
-		SpielRunde dritteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(3, 3, meldungen);
+		MeleeSpielRunde dritteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(3, 3, meldungen);
 		System.out.println(dritteRunde);
 		assertNotNull(dritteRunde);
 		assertEquals(anzTriplette, dritteRunde.teams().size());
