@@ -43,6 +43,14 @@ public class Team implements Comparable<Team> {
 		return this;
 	}
 
+	public boolean hatAlsGegner(Team team) {
+		checkNotNull(team, "team == null");
+		if (team.equals(this)) {
+			return false;
+		}
+		return gegner.contains(team.getNr());
+	}
+
 	public int getNr() {
 		return nr;
 	}

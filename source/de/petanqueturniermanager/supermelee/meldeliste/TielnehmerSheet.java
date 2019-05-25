@@ -33,7 +33,7 @@ import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.TeamRechner;
+import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 
 public class TielnehmerSheet extends SheetRunner implements ISheet {
 
@@ -132,7 +132,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		StringCellValue footer = StringCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzSpielerInSpalte)).zeilePlusEins()
 				.setValue(aktiveUndAusgesetztMeldungen.size() + " Teilnehmer").setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12);
 		getSheetHelper().setTextInCell(footer);
-		TeamRechner teamRechner = new TeamRechner(aktiveUndAusgesetztMeldungen.size());
+		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(aktiveUndAusgesetztMeldungen.size());
 		footer.zeilePlusEins().setValue(teamRechner.getAnzDoublette() + " Doublette / " + teamRechner.getAnzTriplette() + " Triplette");
 		getSheetHelper().setTextInCell(footer);
 		footer.zeilePlusEins().setValue(teamRechner.getAnzBahnen() + " Spielbahnen");
