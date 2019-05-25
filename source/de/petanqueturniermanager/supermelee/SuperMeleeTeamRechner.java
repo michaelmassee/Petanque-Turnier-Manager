@@ -9,7 +9,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 *
 */
 
-public class TeamRechner {
+public class SuperMeleeTeamRechner {
 
 	private final int anzSpieler;
 	private int anzTriplette;
@@ -17,7 +17,7 @@ public class TeamRechner {
 	private int anzDoublette;
 	private boolean nurDoubletteMoeglich;
 
-	public TeamRechner(int anzSpieler) {
+	public SuperMeleeTeamRechner(int anzSpieler) {
 		checkArgument(anzSpieler > 0);
 		this.anzSpieler = anzSpieler;
 		this.calcTeams();

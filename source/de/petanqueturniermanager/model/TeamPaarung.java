@@ -6,6 +6,8 @@ package de.petanqueturniermanager.model;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 
 /**
@@ -13,13 +15,26 @@ import com.google.common.base.MoreObjects;
  *
  */
 public class TeamPaarung {
-	private final Team a;
-	private final Team b;
 
+	private Team a;
+	private Optional<Team> b;
+
+	/**
+	 * wenn b = null dann freilos
+	 *
+	 * @param a
+	 * @param b
+	 */
 	public TeamPaarung(Team a, Team b) {
+		this(a, Optional.of(b));
+	}
+
+	public TeamPaarung(Team a, Optional<Team> b) {
 		checkNotNull(a);
 		checkNotNull(b);
-		checkArgument(!a.equals(b));
+		if (b.isPresent()) {
+			checkArgument(!a.equals(b.get()), "Team A == Team B");
+		}
 		this.a = a;
 		this.b = b;
 	}
@@ -29,12 +44,28 @@ public class TeamPaarung {
 	}
 
 	public Team getB() {
+		return getOptionalB().orElse(null);
+	}
+
+	public Optional<Team> getOptionalB() {
 		return b;
+	}
+
+	/**
+	 * @param b
+	 */
+	public void setB(Team b) {
+		setB(Optional.of(b));
+	}
+
+	public void setB(Optional<Team> b) {
+		checkNotNull(b);
+		this.b = b;
 	}
 
 	@Override
 	public int hashCode() {
-		return a.hashCode() + b.hashCode();
+		return a.hashCode() + b.get().hashCode();
 	}
 
 	@Override
@@ -49,7 +80,7 @@ public class TeamPaarung {
 			return false;
 		}
 		TeamPaarung teamPaarung = (TeamPaarung) obj;
-		return getA().equals(teamPaarung.getA()) && getB().equals(teamPaarung.getB());
+		return getA().equals(teamPaarung.getA()) && b.get().equals(teamPaarung.getB());
 	}
 
 	@Override
@@ -58,7 +89,7 @@ public class TeamPaarung {
 		String teamsStr = "[";
 		teamsStr += a.toString();
 		teamsStr += ",";
-		teamsStr += b.toString();
+		teamsStr += b.get().toString();
 		teamsStr += "]";
 
 		// @formatter:off

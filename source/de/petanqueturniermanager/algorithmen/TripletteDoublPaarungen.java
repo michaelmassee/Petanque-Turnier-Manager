@@ -15,7 +15,7 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
-import de.petanqueturniermanager.supermelee.TeamRechner;
+import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 
 /**
  * Triplette Teams auffüllen mit Doublette<br>
@@ -36,7 +36,7 @@ public class TripletteDoublPaarungen {
 	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
-		TeamRechner teamRechner = new TeamRechner(meldungen.spieler().size());
+		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size());
 		int anzDoubletteOrg = teamRechner.getAnzDoublette();
 
 		if (!teamRechner.valideAnzahlSpieler()) {

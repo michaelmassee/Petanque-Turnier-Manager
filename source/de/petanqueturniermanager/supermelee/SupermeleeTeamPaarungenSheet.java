@@ -54,7 +54,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 	private void initSheet(XSpreadsheet sheet) throws GenerateException {
 		// leeren erstellen
-		TeamRechner teamRechner;
+		SuperMeleeTeamRechner teamRechner;
 		processBoxinfo("Erstelle " + SHEETNAME);
 
 		// Header
@@ -74,7 +74,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		StringCellValue strDaten = StringCellValue.from(sheet, pos);
 
 		for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
-			teamRechner = new TeamRechner(anSpielerCntr);
+			teamRechner = new SuperMeleeTeamRechner(anSpielerCntr);
 			pos = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE + (anSpielerCntr - 4));
 			getSheetHelper().setValInCell(sheet, pos, teamRechner.getAnzSpieler());
 			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechner.getAnzDoublette());
