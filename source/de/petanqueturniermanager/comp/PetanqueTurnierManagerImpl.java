@@ -17,6 +17,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfiguration.dialog.SpielrundeInfoKonfigDialog;
+import de.petanqueturniermanager.melee.korunde.CadrageSheet;
 import de.petanqueturniermanager.melee.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
@@ -208,6 +209,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		boolean didHandle = true;
 
 		switch (action) {
+		// ------------------------------
+		case "cadrage":
+			new CadrageSheet(workingSpreadsheet).start();
+			break;
 		// ------------------------------
 		case "koRundeAB":
 			new KoGruppeABSheet(workingSpreadsheet).start();

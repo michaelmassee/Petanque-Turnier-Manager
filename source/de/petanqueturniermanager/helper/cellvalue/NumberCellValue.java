@@ -37,7 +37,7 @@ public class NumberCellValue extends AbstractCellValueWithSheet<NumberCellValue,
 	}
 
 	public static final NumberCellValue from(NumberCellValue cellVal) {
-		return new NumberCellValue().copyAttr(cellVal);
+		return new NumberCellValue().copyCommonAttr(cellVal).setValue(cellVal.getValue());
 	}
 
 	public static final NumberCellValue from(XSpreadsheet sheet, Position pos) {

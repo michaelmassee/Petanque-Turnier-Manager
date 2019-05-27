@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
@@ -17,6 +18,13 @@ import com.google.common.collect.ImmutableList;
 public class TeamRangliste {
 
 	private final ArrayList<Team> teamListe = new ArrayList<>();
+
+	public TeamRangliste addAll(List<Team> teamlist) {
+		for (Team team : teamlist) {
+			add(team);
+		}
+		return this;
+	}
 
 	public Team add(Team team) {
 		checkNotNull(team);
@@ -29,6 +37,20 @@ public class TeamRangliste {
 		ArrayList<Team> clone = new ArrayList<>();
 		clone.addAll(teamListe);
 		return clone;
+	}
+
+	public TeamRangliste ranglisteVonOben(int anzSpieler) {
+		TeamRangliste retListe = new TeamRangliste();
+		List<Team> sublist = teamListe.subList(0, anzSpieler);
+		retListe.addAll(sublist);
+		return retListe;
+	}
+
+	public TeamRangliste ranglisteVonLetzte(int anzSpieler) {
+		TeamRangliste retListe = new TeamRangliste();
+		List<Team> sublist = teamListe.subList(teamListe.size() - anzSpieler, teamListe.size());
+		retListe.addAll(sublist);
+		return retListe;
 	}
 
 	public ImmutableList<Team> getTeamListe() {

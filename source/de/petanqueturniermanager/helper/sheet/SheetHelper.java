@@ -158,7 +158,7 @@ public class SheetHelper {
 	}
 
 	public XCell setValInCell(XSpreadsheet sheet, Position pos, double val) {
-		checkNotNull(sheet);
+		checkNotNull(sheet, "Sheet = null");
 		checkNotNull(pos);
 		XCell xCell = null;
 		try {

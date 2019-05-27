@@ -55,7 +55,7 @@ public class KoRundeTeamPaarungen {
 					// immer noch null ? dann doppelt spielen lassen
 					teamB = teamRangListeWork.get(teamRangListeWork.size() - 1);
 					doppelteGespieltePaarungenVorhanden = true;
-					setDoppelteGespieltePaarungen(getDoppelteGespieltePaarungen() + (" " + teamA.getNr() + ":" + teamB.getNr()));
+					doppelteGespieltePaarungen += (" " + teamA.getNr() + ":" + teamB.getNr());
 				} else {
 					// team austauschen in spielrunde
 					hatgetauscht = true;

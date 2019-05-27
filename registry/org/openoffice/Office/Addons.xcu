@@ -254,8 +254,22 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<!-- Formé -->
-							<node oor:name="A2A2" oor:op="replace">
+							<!-- Cadrage -->
+							<node oor:name="A2A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Cadrage</value>
+									<value xml:lang="de">Cadrage</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?cadrage</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>								
+							</node>
+							
+							<!-- koRundeAB -->
+							<node oor:name="A2A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">KO Groups AB</value>
 									<value xml:lang="de">KO Gruppe AB</value>
