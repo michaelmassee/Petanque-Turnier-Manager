@@ -35,6 +35,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * @param workingSpreadsheet
+	 * @throws GenerateException
 	 */
 	public KoGruppeABSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "KO Gruppe AB");

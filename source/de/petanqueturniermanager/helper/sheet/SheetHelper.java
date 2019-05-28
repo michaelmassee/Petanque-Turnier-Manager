@@ -333,6 +333,7 @@ public class SheetHelper {
 		checkNotNull(sheet);
 		checkNotNull(pos);
 
+		// Convert a String to an int, returning a default value if the conversion fails.
 		return NumberUtils.toInt(getTextFromCell(sheet, pos), -1);
 	}
 
