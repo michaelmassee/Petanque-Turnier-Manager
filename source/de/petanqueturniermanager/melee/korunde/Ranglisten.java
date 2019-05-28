@@ -38,7 +38,7 @@ public class Ranglisten {
 		if (null != rangliste) {
 			getSheetHelper().setActiveSheet(rangliste);
 		} else {
-			NewSheet.from(getWorkingSpreadsheet(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+			rangliste = NewSheet.from(getWorkingSpreadsheet(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
 		processBoxinfo("Rangliste einlesen");
