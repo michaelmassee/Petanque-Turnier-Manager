@@ -32,7 +32,7 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.TripletteDoublPaarungen;
+import de.petanqueturniermanager.algorithmen.SuperMeleePaarungen;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -585,7 +585,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		if (force && isKannNurDoublette) {
 			doubletteRunde = true;
 		}
-		TripletteDoublPaarungen paarungen = new TripletteDoublPaarungen();
+		SuperMeleePaarungen paarungen = new SuperMeleePaarungen();
 		try {
 			MeleeSpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
 			spielRundeSheet.validateSpielerTeam(null);

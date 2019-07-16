@@ -15,29 +15,83 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 
 /**
  * Triplette Teams auffüllen mit Doublette<br>
  * Supermelee <br>
- * 
+ *
  * @author Michael Massee
  *
  */
-public class TripletteDoublPaarungen {
+public class SuperMeleePaarungen {
 
-	static int DOUBL_SPIELER_START_NR = 10000;
-	static int DOUBL_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
+	private static int DUMMY_SPIELER_START_NR = 10000;
+	private static int DUMMY_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
 
 	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen) throws AlgorithmenException {
 		return neueSpielrunde(rndNr, meldungen, false);
 	}
 
+	/**
+	 * Doublette spielrunde auffüllen mit Triplette
+	 *
+	 * @param rndNr
+	 * @param meldungen
+	 * @param nurTriplette
+	 * @return
+	 * @throws AlgorithmenException
+	 */
+	public MeleeSpielRunde neueSpielrundeDoubletteTriplette(int rndNr, Meldungen meldungen, boolean nurTriplette) throws AlgorithmenException {
+		checkNotNull(meldungen, "Meldungen = null");
+		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Doublette);
+
+		if (!teamRechner.valideAnzahlSpieler()) {
+			return null;
+		}
+
+		if (nurTriplette && !teamRechner.isNurTripletteMoeglich()) {
+			throw new AlgorithmenException("Keine Triplette Spielrunde möglich");
+		}
+
+		MeleeSpielRunde spielRunde = null;
+		if (nurTriplette) {
+			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
+		} else {
+			int anzDoubletteOrg = teamRechner.getAnzDoublette();
+			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
+				// dummy spieler einfuegen damit wir genau die anzahl spieler haben um triplette generieren können
+				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr).setSetzPos(DUMMY_SPIELER_SETZPOS));
+			}
+			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
+
+			// dummies wieder entfernen
+			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
+				Spieler spieler = Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr);
+				spielRunde.removeSpieler(spieler);
+				meldungen.removeSpieler(spieler);
+			}
+		}
+		spielRunde.sortiereTeamsNachGroese();
+		spielRunde.validateSpielerTeam(null);
+		return spielRunde;
+	}
+
+	/**
+	 * Triplette spielrunde auffüllen mit Doublette
+	 *
+	 * @param rndNr
+	 * @param meldungen
+	 * @param nurTriplette
+	 * @return
+	 * @throws AlgorithmenException
+	 */
+
 	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
-		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size());
-		int anzDoubletteOrg = teamRechner.getAnzDoublette();
+		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Triplette);
 
 		if (!teamRechner.valideAnzahlSpieler()) {
 			return null;
@@ -51,14 +105,15 @@ public class TripletteDoublPaarungen {
 		if (nurDoublette) {
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 2, meldungen);
 		} else {
+			int anzDoubletteOrg = teamRechner.getAnzDoublette();
 			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
 				// dummy spieler einfuegen damit wir genau die anzahl spieler haben um triplette generieren können
-				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr).setSetzPos(DOUBL_SPIELER_SETZPOS));
+				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr).setSetzPos(DUMMY_SPIELER_SETZPOS));
 			}
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
 			// dummies wieder entfernen
 			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-				Spieler spieler = Spieler.from(DOUBL_SPIELER_START_NR + doublDummyCntr);
+				Spieler spieler = Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr);
 				spielRunde.removeSpieler(spieler);
 				meldungen.removeSpieler(spieler);
 			}
