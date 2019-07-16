@@ -4,27 +4,51 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /*
 * TeamRechner.java
-*
 * Erstellung     : 11.09.2017 / Michael Massee
-*
 */
 
 public class SuperMeleeTeamRechner {
 
 	private final int anzSpieler;
-	private int anzTriplette;
 
+	private int anzTriplette;
 	private int anzDoublette;
-	private boolean nurDoubletteMoeglich;
+	private final SuperMeleeMode mode;
 
 	public SuperMeleeTeamRechner(int anzSpieler) {
-		checkArgument(anzSpieler > 0);
-		this.anzSpieler = anzSpieler;
-		this.calcTeams();
+		this(anzSpieler, SuperMeleeMode.Triplette);
 	}
 
-	private void calcTeams() {
-		// triplette paarung = 6 Spieler
+	public SuperMeleeTeamRechner(int anzSpieler, SuperMeleeMode mode) {
+		checkArgument(anzSpieler > 0);
+		this.anzSpieler = anzSpieler;
+		this.mode = mode;
+		if (valideAnzahlSpieler()) {
+			switch (mode) {
+			case Triplette:
+				calcTeamsTripletteAufuelenMitDoublete();
+				break;
+			case Doublette:
+				calcTeamsDoubletteAufuellenMitTriplette();
+				break;
+			}
+		}
+	}
+
+	private void calcTeamsDoubletteAufuellenMitTriplette() {
+		if (isNurDoubletteMoeglich()) {
+			anzTriplette = 0;
+			anzDoublette = anzSpieler / 2;
+		} else {
+			// anz triplettes kann nur 1,2,3 sein
+			anzTriplette = anzSpieler - ((int) Math.floor(anzSpieler / 4) * 4);
+			// anz doublettes ist der rest der Spieler
+			anzDoublette = (anzSpieler - (anzTriplette * 3)) / 2;
+		}
+	}
+
+	private void calcTeamsTripletteAufuelenMitDoublete() {
+		// 1 triplette paarung sind 6 Spieler
 		int anzTriplettePaarungenGerundet = (anzSpieler / 6);
 		int anzTripletteTeams = anzTriplettePaarungenGerundet * 2;
 		int restSpielerMinusAnzSpielerIntriplette = anzSpieler - (anzTripletteTeams * 3);
@@ -69,9 +93,8 @@ public class SuperMeleeTeamRechner {
 			break;
 		}
 
-		this.anzTriplette = anzTripletteTeams;
-		this.anzDoublette = anzDoubletteTeams; // max bis 5
-		this.nurDoubletteMoeglich = ((this.anzSpieler / 4) * 4) == this.anzSpieler;
+		anzTriplette = anzTripletteTeams;
+		anzDoublette = anzDoubletteTeams; // max bis 5
 	}
 
 	public int getAnzSpieler() {
@@ -94,15 +117,23 @@ public class SuperMeleeTeamRechner {
 		return getAnzPaarungen() / 2;
 	}
 
+	public boolean isNurTripletteMoeglich() {
+		return ((anzSpieler / 6) * 6) == anzSpieler;
+	}
+
 	public boolean isNurDoubletteMoeglich() {
-		return nurDoubletteMoeglich;
+		return ((anzSpieler / 4) * 4) == anzSpieler;
 	}
 
 	public int isNurDoubletteMoeglichVal() {
-		return (nurDoubletteMoeglich ? 1 : 0);
+		return (isNurDoubletteMoeglich() ? 1 : 0);
 	}
 
 	public boolean valideAnzahlSpieler() {
 		return (anzSpieler == 7 ? false : true);
+	}
+
+	public SuperMeleeMode getMode() {
+		return mode;
 	}
 }

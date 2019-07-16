@@ -6,8 +6,6 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
-import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
-
 /*
 * TeamRechnerTest.java
 *
@@ -30,8 +28,7 @@ public class SuperMeleeTeamRechnerTest {
 		for (int anzahlMeldungen = 10; anzahlMeldungen < 60; anzahlMeldungen++) {
 			teamRechner = new SuperMeleeTeamRechner(anzahlMeldungen);
 			String fehlrmldg = "Fehler beim AnzahlSpieler " + anzahlMeldungen + " ";
-			assertEquals(fehlrmldg, anzahlMeldungen,
-					teamRechner.getAnzTriplette() * 3 + teamRechner.getAnzDoublette() * 2);
+			assertEquals(fehlrmldg, anzahlMeldungen, teamRechner.getAnzTriplette() * 3 + teamRechner.getAnzDoublette() * 2);
 			if (nurDoublette.contains(anzahlMeldungen)) {
 				assertEquals(fehlrmldg, true, teamRechner.isNurDoubletteMoeglich());
 			}
@@ -53,8 +50,8 @@ public class SuperMeleeTeamRechnerTest {
 		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
 
 		teamRechner = new SuperMeleeTeamRechner(7); // INVALID !!
-		assertEquals(5, teamRechner.getAnzDoublette());
-		assertEquals(-1, teamRechner.getAnzTriplette());
+		assertEquals(0, teamRechner.getAnzDoublette());
+		assertEquals(0, teamRechner.getAnzTriplette());
 		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
 
 		teamRechner = new SuperMeleeTeamRechner(8);
@@ -125,6 +122,71 @@ public class SuperMeleeTeamRechnerTest {
 		assertEquals(0, teamRechner.getAnzDoublette());
 		assertEquals(14, teamRechner.getAnzTriplette());
 		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+	}
+
+	@Test
+	public void testCalcTeamsDoubleteAufuellenMitTriplette() throws Exception {
+		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(4, SuperMeleeMode.Doublette);
+		assertEquals(2, teamRechner.getAnzDoublette());
+		assertEquals(0, teamRechner.getAnzTriplette());
+		assertEquals(true, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(5, SuperMeleeMode.Doublette);
+		assertEquals(1, teamRechner.getAnzDoublette());
+		assertEquals(1, teamRechner.getAnzTriplette());
+		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(6, SuperMeleeMode.Doublette);
+		assertEquals(0, teamRechner.getAnzDoublette());
+		assertEquals(2, teamRechner.getAnzTriplette());
+		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(true, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(8, SuperMeleeMode.Doublette);
+		assertEquals(4, teamRechner.getAnzDoublette());
+		assertEquals(0, teamRechner.getAnzTriplette());
+		assertEquals(true, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(9, SuperMeleeMode.Doublette);
+		assertEquals(3, teamRechner.getAnzDoublette());
+		assertEquals(1, teamRechner.getAnzTriplette());
+		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(10, SuperMeleeMode.Doublette);
+		assertEquals(2, teamRechner.getAnzDoublette());
+		assertEquals(2, teamRechner.getAnzTriplette());
+		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(11, SuperMeleeMode.Doublette);
+		assertEquals(1, teamRechner.getAnzDoublette());
+		assertEquals(3, teamRechner.getAnzTriplette());
+		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(12, SuperMeleeMode.Doublette);
+		assertEquals(6, teamRechner.getAnzDoublette());
+		assertEquals(0, teamRechner.getAnzTriplette());
+		assertEquals(true, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(true, teamRechner.isNurTripletteMoeglich());
+
+		// -----------------------------
+		teamRechner = new SuperMeleeTeamRechner(13, SuperMeleeMode.Doublette);
+		assertEquals(5, teamRechner.getAnzDoublette());
+		assertEquals(1, teamRechner.getAnzTriplette());
+		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
+		assertEquals(false, teamRechner.isNurTripletteMoeglich());
 	}
 
 }
