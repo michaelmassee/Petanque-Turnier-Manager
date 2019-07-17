@@ -136,4 +136,12 @@ public class SuperMeleeTeamRechner {
 	public SuperMeleeMode getMode() {
 		return mode;
 	}
+
+	public int getAnzahlTripletteWennNurTriplette() {
+		if (isNurTripletteMoeglich()) {
+			return anzSpieler / 3;
+		}
+		return 0;
+	}
+
 }

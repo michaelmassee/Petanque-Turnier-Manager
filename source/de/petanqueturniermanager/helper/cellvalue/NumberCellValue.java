@@ -56,4 +56,9 @@ public class NumberCellValue extends AbstractCellValueWithSheet<NumberCellValue,
 		return NumberCellValue.from(sheet, Position.from(spalte, zeile), value);
 	}
 
+	public NumberCellValue setValue(Integer value) {
+		super.setValue((double) value);
+		return this;
+	}
+
 }
