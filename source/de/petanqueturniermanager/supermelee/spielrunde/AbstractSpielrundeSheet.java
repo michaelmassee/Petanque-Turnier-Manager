@@ -614,8 +614,10 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			// TODO
 			// int anzZeilen = spielTagInfosEinfuegen();
 			printBereichDefinieren(getSheet());
-			// SPielrundeplan, ! nur hier instance erstellen
-			new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
+			// Spielrundeplan, ! nur hier instance erstellen
+			if (getKonfigurationSheet().getSpielrundePlan()) {
+				new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
+			}
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());

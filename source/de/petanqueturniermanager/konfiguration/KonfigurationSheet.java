@@ -245,4 +245,9 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 		return propertiesSpalte.getSuperMeleeMode();
 	}
 
+	@Override
+	public boolean getSpielrundePlan() throws GenerateException {
+		return propertiesSpalte.getSpielrundePlan();
+	}
+
 }
