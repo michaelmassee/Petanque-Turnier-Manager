@@ -59,4 +59,6 @@ public interface IPropertiesSpalte {
 
 	SuperMeleeMode getSuperMeleeMode() throws GenerateException;
 
+	boolean getSpielrundePlan() throws GenerateException;
+
 }

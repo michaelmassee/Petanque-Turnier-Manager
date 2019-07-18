@@ -63,6 +63,7 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1 Headerzeile"; // spieltag in header ?
 
 	private static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermelee Modus"; // Default Triplette / optional Doublette
+	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -109,9 +110,11 @@ public class PropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
-				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info"));
-		KONFIG_PROPERTIES
-				.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SUPERMELEE_MODE).setDefaultVal("T").setDescription("Modus\r\nT=Triplette\\r\\nD=Doublette"));
+				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info\r\nN/J"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SUPERMELEE_MODE).setDefaultVal("T").setDescription("Modus\r\nT=Triplette\r\nD=Doublette"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_PLAN).setDefaultVal(false)
+				.setDescription("Erstelle ein Spielrunde Plan zur jeder Spielrunde\r\nN/J"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -465,5 +468,13 @@ public class PropertiesSpalte {
 	 */
 	public boolean getSpielrunde1Header() throws GenerateException {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_1_HEADER);
+	}
+
+	/**
+	 * @return
+	 * @throws GenerateException
+	 */
+	public boolean getSpielrundePlan() throws GenerateException {
+		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_PLAN);
 	}
 }
