@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
@@ -60,6 +61,8 @@ public class PropertiesSpalte {
 	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1 Headerzeile"; // spieltag in header ?
+
+	private static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermelee Modus"; // Default Triplette / optional Doublette
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -107,6 +110,8 @@ public class PropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
 				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info"));
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SUPERMELEE_MODE).setDefaultVal("T").setDescription("Modus\r\nT=Triplette\\r\\nD=Doublette"));
 	}
 
 	private final WeakRefHelper<ISheet> sheetWkRef;
@@ -419,6 +424,14 @@ public class PropertiesSpalte {
 			return Formation.findById(formationId);
 		}
 		return null;
+	}
+
+	public SuperMeleeMode getSuperMeleeMode() throws GenerateException {
+		String prop = readStringProperty(KONFIG_PROP_SUPERMELEE_MODE);
+		if (null != prop && prop.trim().equalsIgnoreCase("d")) {
+			return SuperMeleeMode.Doublette;
+		}
+		return SuperMeleeMode.Triplette;
 	}
 
 	/**

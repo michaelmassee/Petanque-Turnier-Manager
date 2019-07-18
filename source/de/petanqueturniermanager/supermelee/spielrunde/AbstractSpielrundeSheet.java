@@ -65,6 +65,7 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
@@ -571,23 +572,35 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return;
 		}
+
+		// Triplette oder Doublette Mode ?
+		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
+
 		// -------------------------------
 		boolean doubletteRunde = false;
+		boolean tripletteRunde = false;
 		// abfrage nur doublette runde ?
 		boolean isKannNurDoublette = meldeListe.isKannNurDoublette(getSpielTag()).booleanValue();
-		if (isKannNurDoublette) {
+		if (superMeleeMode == SuperMeleeMode.Triplette && isKannNurDoublette) {
 			MessageBox msgbox = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force).caption("Spielrunde Doublette");
 			msgbox.message("Für Spieltag " + getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\nnur Doublette Paarungen auslosen ?");
 			if (MessageBoxResult.YES == msgbox.show()) {
 				doubletteRunde = true;
 			}
 		}
+
 		if (force && isKannNurDoublette) {
 			doubletteRunde = true;
 		}
 		SuperMeleePaarungen paarungen = new SuperMeleePaarungen();
 		try {
-			MeleeSpielRunde spielRundeSheet = paarungen.neueSpielrunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
+			MeleeSpielRunde spielRundeSheet;
+			if (superMeleeMode == SuperMeleeMode.Triplette) {
+				spielRundeSheet = paarungen.neueSpielrundeTripletteMode(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
+			} else {
+				spielRundeSheet = paarungen.neueSpielrundeDoubletteMode(neueSpielrundeNr.getNr(), meldungen, tripletteRunde);
+			}
+
 			spielRundeSheet.validateSpielerTeam(null);
 			headerPaarungen(getSheet(), spielRundeSheet);
 			headerSpielerNr(getSheet());

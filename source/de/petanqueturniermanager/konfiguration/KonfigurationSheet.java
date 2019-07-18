@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
@@ -207,7 +208,6 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	@Override
 	public Formation getFormation() throws GenerateException {
 		return propertiesSpalte.getFormation();
-
 	}
 
 	@Override
@@ -239,4 +239,10 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	public boolean getSpielrunde1Header() throws GenerateException {
 		return propertiesSpalte.getSpielrunde1Header();
 	}
+
+	@Override
+	public SuperMeleeMode getSuperMeleeMode() throws GenerateException {
+		return propertiesSpalte.getSuperMeleeMode();
+	}
+
 }

@@ -7,6 +7,7 @@ package de.petanqueturniermanager.konfiguration;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
@@ -55,5 +56,7 @@ public interface IPropertiesSpalte {
 	String getFusszeileMitte() throws GenerateException;
 
 	boolean getSpielrunde1Header() throws GenerateException;
+
+	SuperMeleeMode getSuperMeleeMode() throws GenerateException;
 
 }
