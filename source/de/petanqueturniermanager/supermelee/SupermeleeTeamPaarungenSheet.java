@@ -38,10 +38,10 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 	public static final int NICHT_VALIDE_ANZAHL_SPIELER_SPALTE = 5;
 
 	// Doublette / Triplette
-	public static final int DOUBL_TRIPL_ANZ_DOUBLETTE_SPALTE = 6;
-	public static final int DOUBL_TRIPL_ANZ_TRIPLETTE_SPALTE = 7;
-	public static final int DOUBL_TRIPL_NUR_TRIPLETTE_SPALTE = 8;
-	public static final int DOUBL_TRIPL_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE = 9;
+	public static final int DOUBL_MODE_ANZ_DOUBLETTE_SPALTE = 6;
+	public static final int DOUBL_MODE_ANZ_TRIPLETTE_SPALTE = 7;
+	public static final int DOUBL_MODE_NUR_TRIPLETTE_SPALTE = 8;
+	public static final int DOUBL_MODE_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE = 9;
 
 	public SupermeleeTeamPaarungenSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -92,8 +92,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechnerTripletteDoublette.getAnzTriplette());
 			strDaten.zeile(pos.getZeile()).spalte(pos.getSpalte());
 			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.isNurDoubletteMoeglich() ? "X" : ""));
-			getSheetHelper().setTextInCell(
-					strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.isNurDoubletteMoeglich() ? "" + teamRechnerTripletteDoublette.getAnzSpieler() / 2 : ""));
+			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.getAnzahlDoubletteWennNurDoublette()));
 			getSheetHelper().setTextInCell(strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.valideAnzahlSpieler() ? "" : "X"));
 
 			if (!teamRechnerTripletteDoublette.valideAnzahlSpieler()) {
@@ -104,14 +103,14 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 			{ // Doublette / Triplette teams
 				SuperMeleeTeamRechner teamRechnerDoubletteTriplette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Doublette);
-				NumberCellValue nmbrVal = NumberCellValue.from(sheet, Position.from(DOUBL_TRIPL_ANZ_DOUBLETTE_SPALTE, zeile));
+				NumberCellValue nmbrVal = NumberCellValue.from(sheet, Position.from(DOUBL_MODE_ANZ_DOUBLETTE_SPALTE, zeile));
 				nmbrVal.setValue(teamRechnerDoubletteTriplette.getAnzDoublette());
 				getSheetHelper().setValInCell(nmbrVal);
-				getSheetHelper().setValInCell(nmbrVal.spalte(DOUBL_TRIPL_ANZ_TRIPLETTE_SPALTE).setValue(teamRechnerDoubletteTriplette.getAnzTriplette()));
+				getSheetHelper().setValInCell(nmbrVal.spalte(DOUBL_MODE_ANZ_TRIPLETTE_SPALTE).setValue(teamRechnerDoubletteTriplette.getAnzTriplette()));
 				getSheetHelper().setTextInCell(
-						StringCellValue.from(nmbrVal).spalte(DOUBL_TRIPL_NUR_TRIPLETTE_SPALTE).setValue(teamRechnerDoubletteTriplette.isNurTripletteMoeglich() ? "X" : ""));
+						StringCellValue.from(nmbrVal).spalte(DOUBL_MODE_NUR_TRIPLETTE_SPALTE).setValue(teamRechnerDoubletteTriplette.isNurTripletteMoeglich() ? "X" : ""));
 				getSheetHelper()
-						.setValInCell(nmbrVal.spalte(DOUBL_TRIPL_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE).setValue(teamRechnerDoubletteTriplette.getAnzahlTripletteWennNurTriplette()));
+						.setValInCell(nmbrVal.spalte(DOUBL_MODE_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE).setValue(teamRechnerDoubletteTriplette.getAnzahlTripletteWennNurTriplette()));
 			}
 		}
 	}
@@ -137,6 +136,19 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 	public String formulaSverweisNurDoublette(String adresseAnzSpieler) throws GenerateException {
 		return formulaSverweis(adresseAnzSpieler, NUR_DOUBLETTE_SPALTE);
+	}
+
+	// -----------------------------------------------------------------------------------------------------------
+	public String formulaSverweisDoubletteModeAnzDoublette(String adresseAnzSpieler) throws GenerateException {
+		return formulaSverweis(adresseAnzSpieler, DOUBL_MODE_ANZ_DOUBLETTE_SPALTE);
+	}
+
+	public String formulaSverweisAnzDoubletteModeAnzTriplette(String adresseAnzSpieler) throws GenerateException {
+		return formulaSverweis(adresseAnzSpieler, DOUBL_MODE_ANZ_TRIPLETTE_SPALTE);
+	}
+
+	public String formulaSverweisDoubletteModeNurTriplette(String adresseAnzSpieler) throws GenerateException {
+		return formulaSverweis(adresseAnzSpieler, DOUBL_MODE_NUR_TRIPLETTE_SPALTE);
 	}
 
 	public String formulaSverweis(String adresseAnzSpieler, int spalte) throws GenerateException {

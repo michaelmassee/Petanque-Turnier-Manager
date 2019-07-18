@@ -31,7 +31,7 @@ public class SuperMeleePaarungen {
 	private static int DUMMY_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
 
 	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen) throws AlgorithmenException {
-		return neueSpielrunde(rndNr, meldungen, false);
+		return neueSpielrundeTripletteMode(rndNr, meldungen, false);
 	}
 
 	/**
@@ -43,7 +43,7 @@ public class SuperMeleePaarungen {
 	 * @return
 	 * @throws AlgorithmenException
 	 */
-	public MeleeSpielRunde neueSpielrundeDoubletteTriplette(int rndNr, Meldungen meldungen, boolean nurTriplette) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrundeDoubletteMode(int rndNr, Meldungen meldungen, boolean nurTriplette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Doublette);
 
@@ -88,7 +88,7 @@ public class SuperMeleePaarungen {
 	 * @throws AlgorithmenException
 	 */
 
-	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrundeTripletteMode(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
 		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Triplette);

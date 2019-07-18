@@ -144,4 +144,11 @@ public class SuperMeleeTeamRechner {
 		return 0;
 	}
 
+	public int getAnzahlDoubletteWennNurDoublette() {
+		if (isNurDoubletteMoeglich()) {
+			return anzSpieler / 2;
+		}
+		return 0;
+	}
+
 }
