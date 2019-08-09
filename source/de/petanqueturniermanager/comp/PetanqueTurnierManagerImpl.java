@@ -17,6 +17,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
+import de.petanqueturniermanager.konfiguration.dialog.MainKonfigDialog;
 import de.petanqueturniermanager.melee.korunde.CadrageSheet;
 import de.petanqueturniermanager.melee.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
@@ -51,6 +52,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		xContext = context;
 		try {
 			ProcessBox.init(context);
+			MainKonfigDialog.init(context);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -102,12 +104,12 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 
 			// only Dialog
-			// switch (action) {
-			// case "turnierkonfiguration":
-			// didHandle = true;
-			// new SpielrundeInfoKonfigDialog(currentSpreadsheet).createDialog();
-			// break;
-			// }
+			switch (action) {
+			case "spielrundeinfokonfig":
+				didHandle = true;
+				MainKonfigDialog.from().open();
+				break;
+			}
 
 			if (!didHandle) {
 				ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
