@@ -9,7 +9,10 @@ import java.awt.Frame;
 
 import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.XWindow;
+import com.sun.star.frame.FrameActionEvent;
 import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XFrameActionListener;
+import com.sun.star.lang.EventObject;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
@@ -29,6 +32,25 @@ public class DialogTools {
 	private DialogTools(XComponentContext xContext, Frame frame) {
 		this.xContext = checkNotNull(xContext);
 		this.frame = checkNotNull(frame);
+		addFrameActionListener();
+	}
+
+	private void addFrameActionListener() {
+		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
+		currentFrame.addFrameActionListener(new XFrameActionListener() {
+			@Override
+			public void disposing(EventObject arg0) {
+				// when parent close then close this frame
+				if (null != getFrame()) {
+					getFrame().dispose();
+				}
+			}
+
+			@Override
+			public void frameAction(FrameActionEvent arg0) {
+				// nichts
+			}
+		});
 	}
 
 	public static final DialogTools from(XComponentContext xContext, Frame frame) {
@@ -59,6 +81,13 @@ public class DialogTools {
 			frame.setLocation(newXPos, newYPos);
 		}
 		return this;
+	}
+
+	/**
+	 * @return the frame
+	 */
+	public final Frame getFrame() {
+		return frame;
 	}
 
 }

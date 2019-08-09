@@ -1,8 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<oor:component-data
-	oor:package="org.openoffice.Office" oor:name="Addons"
-	xmlns:oor="http://openoffice.org/2001/registry"
-	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<node oor:name="AddonUI">
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
@@ -22,10 +19,10 @@
 					<!-- Supermêlée -->
 					<node oor:name="A1" oor:op="replace">
 						<prop oor:name="URL" oor:type="xs:string">
-							<value />
+							<value/>
 						</prop>
 						<prop oor:name="ImageIdentifier" oor:type="xs:string">
-							<value />
+							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Supermêlée</value>
@@ -239,10 +236,10 @@
 					<!-- Formé -->
 					<node oor:name="A2" oor:op="replace">
 						<prop oor:name="URL" oor:type="xs:string">
-							<value />
+							<value/>
 						</prop>
 						<prop oor:name="ImageIdentifier" oor:type="xs:string">
-							<value />
+							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Formé</value>
@@ -265,9 +262,9 @@
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
-								</prop>								
+								</prop>
 							</node>
-							
+
 							<!-- koRundeAB -->
 							<node oor:name="A2A3" oor:op="replace">
 								<prop oor:name="Title">
@@ -300,6 +297,18 @@
 						</prop>
 					</node>
 
+					<node oor:name="X2" oor:op="replace">
+						<prop oor:name="Title">
+							<value xml:lang="en">~GameInfo</value>
+							<value xml:lang="de">~SpielrundeInfo</value>
+						</prop>
+						<prop oor:name="URL">
+							<value>service:de.petanqueturniermanager.Turnier?spielrundeinfokonfig</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+					</node>
 
 					<!-- Test Turniere -->
 					<!-- ****************************************************************** -->
@@ -313,7 +322,7 @@
 						<prop oor:name="URL" oor:type="xs:string">
 						</prop>
 						<prop oor:name="ImageIdentifier" oor:type="xs:string">
-							<value />
+							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Examples</value>
@@ -388,10 +397,7 @@
 
 					<!-- ****************************************************************** -->
 
-					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value 
-						xml:lang="de">~Endrangliste</value> </prop> <prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> 
-						</prop> <prop oor:name="Target" oor:type="xs:string"> <value>_self</value> 
-						</prop> </node> -->
+					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> <prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> </prop> <prop oor:name="Target" oor:type="xs:string"> <value>_self</value> </prop> </node> -->
 
 				</node>
 			</node>
