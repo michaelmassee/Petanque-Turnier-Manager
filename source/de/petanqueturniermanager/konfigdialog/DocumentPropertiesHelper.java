@@ -2,7 +2,7 @@
 * Erstellung : 24.03.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.konfiguration;
+package de.petanqueturniermanager.konfigdialog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

@@ -10,6 +10,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.KoRundeTeamPaarungen;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -45,11 +46,6 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected void updateKonfigurationSheet() throws GenerateException {
-		// nichts tun hier
-	}
-
-	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().findByName(SHEETNAME);
 	}
@@ -82,5 +78,11 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 			getSheetHelper().setActiveSheet(getSheet());
 			spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getSheet(), teamPaarungen, spielRunde);
 		}
+	}
+
+	@Override
+	protected IKonfigurationSheet getKonfigurationSheet() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

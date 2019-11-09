@@ -16,7 +16,6 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
@@ -30,12 +29,10 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Validator.class);
 
 	private final MeldeListeSheet_New meldeliste;
-	private final KonfigurationSheet konfigurationSheet;
 
 	public SpielrundeSheet_Validator(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_New(workingSpreadsheet);
-		konfigurationSheet = newKonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -51,7 +48,7 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 		// Flag für Team in Spieler ??? + weakref zum Team ? ist problem ? anders lösen
 		// immer nur mit eine !!! globale liste von spieler instancen arbeiten ???? prüfen !
 
-		SpielTagNr spielTagNr = konfigurationSheet.getAktiveSpieltag();
+		SpielTagNr spielTagNr = getKonfigurationSheet().getAktiveSpieltag();
 		validateSpieltag(spielTagNr);
 	}
 

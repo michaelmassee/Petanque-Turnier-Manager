@@ -1,7 +1,7 @@
 /**
  * Erstellung 12.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfiguration.dialog;
+package de.petanqueturniermanager.konfigdialog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -9,7 +9,6 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XTextComponent;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
 
 /**
  * @author Michael Massee

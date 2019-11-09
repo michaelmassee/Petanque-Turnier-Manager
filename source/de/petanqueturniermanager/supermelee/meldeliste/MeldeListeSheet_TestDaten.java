@@ -15,19 +15,21 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 
-public class MeldeListeSheet_TestDaten extends SheetRunner {
+public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
@@ -45,10 +47,10 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { SuperMeleeKonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		meldeListe.setSpielTag(SpielTagNr.from(1));
-		meldeListe.getKonfigurationSheet().setAktiveSpieltag(SpielTagNr.from(1));
-		meldeListe.getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
+		meldeListe.setAktiveSpieltag(SpielTagNr.from(1));
+		meldeListe.setAktiveSpielRunde(SpielRundeNr.from(1));
 
 		testNamenEinfuegen();
 		initialAktuellenSpielTagMitAktivenMeldungenFuellen(meldeListe.getSpielTag());
@@ -60,7 +62,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			SheetRunner.testDoCancelTask();
@@ -80,11 +82,11 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 		meldeListe.setSpielTag(spielTagNr);
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
 		int letzteDatenZeile = meldeListe.letzteDatenZeile();
 
-		for (int zeileCnt = AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE; zeileCnt <= letzteDatenZeile; zeileCnt++) {
+		for (int zeileCnt = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeileCnt <= letzteDatenZeile; zeileCnt++) {
 			SheetRunner.testDoCancelTask();
 
 			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
@@ -108,8 +110,8 @@ public class MeldeListeSheet_TestDaten extends SheetRunner {
 
 		List<String> testNamen = listeMitTestNamen();
 
-		Position posSpielerName = Position.from(meldeListe.getSpielerNameSpalte(), AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
-		Position posSpielerNr = Position.from(AbstractSupermeleeMeldeListeSheet.SPIELER_NR_SPALTE, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerName = Position.from(meldeListe.getSpielerNameSpalte(), MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		NumberCellValue spielrNr = NumberCellValue.from(meldelisteSheet, posSpielerNr);
 		StringCellValue spielrNamen = StringCellValue.from(meldelisteSheet, posSpielerName);
 

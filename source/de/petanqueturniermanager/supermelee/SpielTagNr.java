@@ -15,15 +15,15 @@ public class SpielTagNr {
 		setNr(newNr);
 	}
 
-	public int getNr() throws GenerateException {
-		return this.nr;
+	public int getNr() {
+		return nr;
 	}
 
 	public SpielTagNr setNr(int newNr) throws GenerateException {
 		if (newNr < 1) {
 			throw new GenerateException("Ungültige Spieltagnummer" + newNr);
 		}
-		this.nr = newNr;
+		nr = newNr;
 		return this;
 	}
 
@@ -35,7 +35,7 @@ public class SpielTagNr {
 	public String toString() {
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
-				.add("Nr", this.nr)
+				.add("Nr", nr)
 				.toString();
 		// @formatter:on
 	}

@@ -283,6 +283,43 @@
 					</node>
 
 					<!-- ****************************************************************** -->
+					<!-- Liga Jeder gegen Jede-->
+					<node oor:name="A3" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="en">Liga</value>
+							<value xml:lang="de">Liga</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- name= bestimmt reihenfolge im menu -->
+							<!-- ****************************************************************** -->
+							<!-- Cadrage -->
+							<node oor:name="A3A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">new Entrylist</value>
+									<value xml:lang="de">Neue Meldeliste</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_neue_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+						</node>
+					</node>
+
+					<!-- ****************************************************************** -->					
+					
 
 					<node oor:name="X1" oor:op="replace">
 						<prop oor:name="Title">
@@ -291,19 +328,6 @@
 						</prop>
 						<prop oor:name="URL">
 							<value>service:de.petanqueturniermanager.Turnier?turnierkonfiguration</value>
-						</prop>
-						<prop oor:name="Target" oor:type="xs:string">
-							<value>_self</value>
-						</prop>
-					</node>
-
-					<node oor:name="X2" oor:op="replace">
-						<prop oor:name="Title">
-							<value xml:lang="en">~GameInfo</value>
-							<value xml:lang="de">~SpielrundeInfo</value>
-						</prop>
-						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.Turnier?spielrundeinfokonfig</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -396,8 +420,6 @@
 					</node>
 
 					<!-- ****************************************************************** -->
-
-					<!-- <node oor:name="G1" oor:op="replace"> <prop oor:name="Title"> <value xml:lang="de">~Endrangliste</value> </prop> <prop oor:name="URL"> <value>service:de.petanqueturniermanager.Turnier?mittelhessenrunde_endrangliste</value> </prop> <prop oor:name="Target" oor:type="xs:string"> <value>_self</value> </prop> </node> -->
 
 				</node>
 			</node>

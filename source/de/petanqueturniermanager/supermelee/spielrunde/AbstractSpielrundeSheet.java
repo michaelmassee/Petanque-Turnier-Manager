@@ -56,9 +56,8 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
-import de.petanqueturniermanager.konfiguration.DocumentPropertiesHelper;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
-import de.petanqueturniermanager.konfiguration.dialog.SpielrundeInfoKonfigDialog;
+import de.petanqueturniermanager.konfigdialog.DocumentPropertiesHelper;
+import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.SpielrundeInfoKonfigDialog;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -66,10 +65,11 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeMode;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
-public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISheet {
+public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(AbstractSpielrundeSheet.class);
 
@@ -93,20 +93,13 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
-	private final KonfigurationSheet konfigurationSheet;
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
 
 	public AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spielrunde");
-		konfigurationSheet = newKonfigurationSheet(workingSpreadsheet);
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
-	}
-
-	@VisibleForTesting
-	KonfigurationSheet newKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
-		return new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	@VisibleForTesting
@@ -124,11 +117,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
 	}
 
-	protected KonfigurationSheet getKonfigurationSheet() {
-		return konfigurationSheet;
-	}
-
-	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) throws GenerateException {
+	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
 		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
 	}
 
@@ -463,7 +452,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 		// CellBackColor
 
 		String ersteHeader = "Spielrunde " + spielRunde.getNr();
-		if (konfigurationSheet.getSpielrunde1Header()) { // spieltag in header ?
+		if (getKonfigurationSheet().getSpielrunde1Header()) { // spieltag in header ?
 			ersteHeader = "Spieltag " + spieltag.getNr() + " " + ersteHeader;
 		}
 
@@ -628,7 +617,9 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	/**
-	 * @TODO
+	 * @TODO<br>
+	 * SpieltagInfos aus Properties einfuegen. Infos was gespeilt wird, etc ....
+	 *
 	 * @return
 	 */
 	private int spielTagInfosEinfuegen() {
@@ -805,7 +796,7 @@ public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISh
 	}
 
 	public Integer getAnzGespielteSpieltage() throws GenerateException {
-		return konfigurationSheet.getAnzGespielteSpieltage();
+		return getKonfigurationSheet().getAnzGespielteSpieltage();
 	}
 
 	protected void gespieltenRundenEinlesen(Meldungen meldungen, SpielTagNr spielTagNr, int abSpielrunde, int bisSpielrunde) throws GenerateException {

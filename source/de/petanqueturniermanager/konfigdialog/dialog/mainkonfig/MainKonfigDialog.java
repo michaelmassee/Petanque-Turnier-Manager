@@ -1,12 +1,13 @@
 /**
  * Erstellung 30.07.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfiguration.dialog;
+package de.petanqueturniermanager.konfigdialog.dialog.mainkonfig;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import de.petanqueturniermanager.helper.msgbox.DialogTools;
  *
  */
 public class MainKonfigDialog {
+	// Baustelle
 
 	private static final Logger logger = LogManager.getLogger(MainKonfigDialog.class);
 
@@ -44,9 +46,6 @@ public class MainKonfigDialog {
 
 	// weil problemen mit uno classloader + reflection, wird hier eine static liste verwendet
 	private static List<ConfigPanel> configPanelList = new ArrayList<>();
-	static {
-		configPanelList.add(new SpielrundenKonfigPanel());
-	}
 
 	private JFrame frame;
 	private JSplitPane splitPane;
@@ -59,6 +58,7 @@ public class MainKonfigDialog {
 	}
 
 	private MainKonfigDialog(XComponentContext xContext) {
+		frame = new JFrame();
 		dialogTools = DialogTools.from(checkNotNull(xContext), frame);
 		initBox();
 	}
@@ -83,48 +83,57 @@ public class MainKonfigDialog {
 
 	@VisibleForTesting
 	void initBox() {
-		frame = new JFrame();
 		frame.setPreferredSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 		frame.setSize(MIN_WIDTH, MIN_HEIGHT);
 		frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-		frame.setLayout(new BorderLayout());
+		frame.setLayout(new GridBagLayout());
 		frame.setAlwaysOnTop(true);
 		title(TITLE);
 		initTree();
 		initContent();
 		initSplitPane();
+		initconfigPanelList();
+	}
+
+	private void initconfigPanelList() {
+		configPanelList.add(new SpielrundenKonfigPanel(content));
 	}
 
 	private void initSplitPane() {
-		splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		splitPane.setLeftComponent(tree);
 		splitPane.setRightComponent(content);
 		splitPane.setDividerLocation(100);
-		splitPane.setPreferredSize(new Dimension(500, 300));
-
-		frame.add(splitPane, BorderLayout.CENTER);
+		GridBagConstraints gbconstr = new GridBagConstraints();
+		gbconstr.gridx = 0;
+		gbconstr.gridy = 0;
+		gbconstr.weightx = 0.5;
+		gbconstr.weighty = 0.5;
+		gbconstr.fill = GridBagConstraints.BOTH;
+		frame.add(splitPane, gbconstr);
 	}
 
 	private void initContent() {
 		content = new JPanel();
-		Dimension minimumSize = new Dimension(100, 50);
-		content.setMinimumSize(minimumSize);
+		// Dimension minimumSize = new Dimension(100, 50);
+		// content.setMinimumSize(minimumSize);
 	}
 
 	private void initTree() {
 		logger.info("Init Tree " + configPanelList.size() + " panels");
 		Border raisedbevel = BorderFactory.createRaisedBevelBorder();
-		Dimension minimumSize = new Dimension(100, 50);
+		// Dimension minimumSize = new Dimension(100, 50);
 
 		DefaultMutableTreeNode top = new DefaultMutableTreeNode("Konfiguration");
 		tree = new JTree(top);
-		tree.setRootVisible(false);
+		tree.setRootVisible(true);
 		tree.setBorder(raisedbevel);
-		tree.setMinimumSize(minimumSize);
+		// tree.setMinimumSize(minimumSize);
 
 		for (ConfigPanel pnl : configPanelList) {
-			top.add(new DefaultMutableTreeNode(pnl.getLabel()));
+			top.add(new DefaultMutableTreeNode(pnl));
 		}
+		tree.addTreeSelectionListener(new MainKonfigTreeSelectionListner(tree));
 	}
 
 	public MainKonfigDialog open() {

@@ -1,7 +1,7 @@
 /**
  * Erstellung 03.08.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfiguration.dialog;
+package de.petanqueturniermanager.konfigdialog.dialog.mainkonfig;
 
 /**
  * @author Michael Massee
@@ -9,4 +9,6 @@ package de.petanqueturniermanager.konfiguration.dialog;
  */
 public interface ConfigPanel {
 	String getLabel();
+
+	void drawContent();
 }

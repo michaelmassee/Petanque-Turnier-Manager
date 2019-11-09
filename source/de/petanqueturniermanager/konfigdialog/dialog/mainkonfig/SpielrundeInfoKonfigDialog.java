@@ -1,7 +1,7 @@
 /**
  * Erstellung 08.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfiguration.dialog;
+package de.petanqueturniermanager.konfigdialog.dialog.mainkonfig;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -29,7 +29,8 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.konfigdialog.UIProperty;
+import de.petanqueturniermanager.konfigdialog.UITextAreaProperty;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
@@ -53,13 +54,9 @@ public class SpielrundeInfoKonfigDialog {
 
 	static public final String getPropertieNameFuerSpieltag(SpielTagNr spieltagNr) {
 		int idx;
-		try {
-			idx = spieltagNr.getNr() - 1;
-			if (idx >= 0 && idx <= 9) {
-				return SpielrundeInfoKonfigDialog.UITEXTAREAPROPERTY_LIST.get(idx).getPropName();
-			}
-		} catch (GenerateException e) {
-			logger.error(e);
+		idx = spieltagNr.getNr() - 1;
+		if (idx >= 0 && idx <= 9) {
+			return SpielrundeInfoKonfigDialog.UITEXTAREAPROPERTY_LIST.get(idx).getPropName();
 		}
 		return SpielrundeInfoKonfigDialog.UITEXTAREAPROPERTY_LIST.get(0).getPropName();
 	}

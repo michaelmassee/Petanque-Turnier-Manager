@@ -2,7 +2,7 @@
 * Erstellung : 22.03.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.supermelee.meldeliste;
+package de.petanqueturniermanager.basesheet.meldeliste;
 
 public enum Formation {
 

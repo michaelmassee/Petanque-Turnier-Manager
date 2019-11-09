@@ -17,10 +17,10 @@ public enum SpielrundeGespielt {
 	}
 
 	public int getId() {
-		return this.id;
+		return id;
 	}
 
-	static SpielrundeGespielt findById(int id) {
+	public static SpielrundeGespielt findById(int id) {
 		for (SpielrundeGespielt spielrundegespielt : values()) {
 			if (spielrundegespielt.getId() == id) {
 				return spielrundegespielt;

@@ -14,13 +14,13 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 
 public abstract class SheetRunner extends Thread implements Runnable {
 
@@ -104,8 +104,12 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		}
 	}
 
-	protected void updateKonfigurationSheet() throws GenerateException {
-		new KonfigurationSheet(getWorkingSpreadsheet()).update();
+	protected abstract IKonfigurationSheet getKonfigurationSheet();
+
+	private void updateKonfigurationSheet() throws GenerateException {
+		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
+		checkNotNull(konfigurationSheet, "IKonfigurationSheet == null");
+		konfigurationSheet.update();
 	}
 
 	public abstract Logger getLogger();
