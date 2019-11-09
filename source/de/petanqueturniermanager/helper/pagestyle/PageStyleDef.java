@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.sun.star.sheet.XHeaderFooterContent;
 import com.sun.star.uno.UnoRuntime;
 
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -16,7 +15,7 @@ public class PageStyleDef {
 	private final String pageStyleName;
 	private final PageProperties pageProperties;
 
-	public PageStyleDef(SpielTagNr spielTag) throws GenerateException {
+	public PageStyleDef(SpielTagNr spielTag) {
 		this(SPIELTAG_FORMAT_NAME + " " + spielTag.getNr(), new PageProperties());
 	}
 

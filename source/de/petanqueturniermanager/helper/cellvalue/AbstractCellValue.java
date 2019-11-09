@@ -190,7 +190,7 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	/**
 	 * pos Zeile + 1, <br>
 	 * UND ! ggf endposmerge zeile +1
-	 * 
+	 *
 	 * @return AbstractCellValue
 	 */
 	@SuppressWarnings("unchecked")
@@ -202,7 +202,7 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	/**
 	 * pos Zeile + x, <br>
 	 * UND ! ggf endposmerge zeile + x
-	 * 
+	 *
 	 * @return AbstractCellValue
 	 */
 	@SuppressWarnings("unchecked")
@@ -412,7 +412,7 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 
 	@SuppressWarnings("unchecked")
 	public T addRowProperties(CellProperties rowProperties) {
-		this.rowProperties.putAll(this.columnProperties);
+		this.rowProperties.putAll(rowProperties);
 		return (T) this;
 	}
 

@@ -6,6 +6,8 @@ import java.util.HashSet;
 
 import org.junit.Test;
 
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
+
 /*
 * TeamRechnerTest.java
 *

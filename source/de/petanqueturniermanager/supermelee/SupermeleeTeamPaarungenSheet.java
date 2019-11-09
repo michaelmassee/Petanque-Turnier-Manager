@@ -23,6 +23,8 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);

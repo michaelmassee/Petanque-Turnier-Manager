@@ -16,7 +16,6 @@ import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.UnoRuntime;
 
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 
 public class CellStyleHelper {
@@ -35,11 +34,11 @@ public class CellStyleHelper {
 		return new CellStyleHelper(sheet, cellStyleDef);
 	}
 
-	public CellStyleHelper apply() throws GenerateException {
-		checkNotNull(this.sheet);
-		checkNotNull(this.cellStyleDef);
+	public CellStyleHelper apply() {
+		checkNotNull(sheet);
+		checkNotNull(cellStyleDef);
 
-		String styleName = this.cellStyleDef.getName();
+		String styleName = cellStyleDef.getName();
 
 		try {
 			XSpreadsheetDocument currentSpreadsheetDocument = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
@@ -61,11 +60,11 @@ public class CellStyleHelper {
 
 			// modify properties of the (new) style
 			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, aCellStyle);
-			for (String propKey : this.cellStyleDef.getCellProperties().keySet()) {
-				xPropSet.setPropertyValue(propKey, this.cellStyleDef.getCellProperties().get(propKey));
+			for (String propKey : cellStyleDef.getCellProperties().keySet()) {
+				xPropSet.setPropertyValue(propKey, cellStyleDef.getCellProperties().get(propKey));
 			}
 		} catch (Exception e) {
-			this.sheet.getLogger().error(e.getMessage(), e);
+			sheet.getLogger().error(e.getMessage(), e);
 		}
 		return this;
 	}

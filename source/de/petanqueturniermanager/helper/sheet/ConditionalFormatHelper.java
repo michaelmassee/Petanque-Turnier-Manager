@@ -94,14 +94,14 @@ public class ConditionalFormatHelper {
 		return this;
 	}
 
-	public ConditionalFormatHelper styleIsFehler() throws GenerateException {
+	public ConditionalFormatHelper styleIsFehler() {
 		FehlerStyle fehlerStyle = new FehlerStyle();
 		CellStyleHelper.from(sheet, fehlerStyle).apply();
 		styleName = fehlerStyle.getName();
 		return this;
 	}
 
-	public ConditionalFormatHelper style(AbstractCellStyleDef cellStyleDef) throws GenerateException {
+	public ConditionalFormatHelper style(AbstractCellStyleDef cellStyleDef) {
 		// add/update Style
 		CellStyleHelper.from(sheet, cellStyleDef).apply();
 		styleName = cellStyleDef.getName();

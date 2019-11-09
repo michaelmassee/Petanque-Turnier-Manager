@@ -21,7 +21,6 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
@@ -35,6 +34,7 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
 abstract public class AbstractRanglisteFormatter {
 
@@ -44,14 +44,14 @@ abstract public class AbstractRanglisteFormatter {
 	public static final int DRITTE_KOPFDATEN_ZEILE = 2;
 
 	private final WeakRefHelper<SpielerSpalte> spielerSpalteWkRef;
-	private final WeakRefHelper<IPropertiesSpalte> propertiesSpaltewkRef;
+	private final WeakRefHelper<ISuperMeleePropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public AbstractRanglisteFormatter(SpielerSpalte spielerSpalte, IPropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
+	public AbstractRanglisteFormatter(SpielerSpalte spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
 		this.spielerSpalteWkRef = new WeakRefHelper<SpielerSpalte>(spielerSpalte);
-		this.propertiesSpaltewkRef = new WeakRefHelper<IPropertiesSpalte>(propertiesSpalte);
+		this.propertiesSpaltewkRef = new WeakRefHelper<ISuperMeleePropertiesSpalte>(propertiesSpalte);
 		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
 
 	}
@@ -141,7 +141,7 @@ abstract public class AbstractRanglisteFormatter {
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 		int letzteSpalte = this.iRanglisteSheet.getObject().getLetzteSpalte();
 
-		IPropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
 		Integer geradeColor = propertiesSpalte.getRanglisteHintergrundFarbeGerade();
@@ -173,7 +173,7 @@ abstract public class AbstractRanglisteFormatter {
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 		int letzteSpalte = sheet.getLetzteSpalte();
 
-		IPropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
 		Integer geradeColor = propertiesSpalte.getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 
@@ -231,7 +231,7 @@ abstract public class AbstractRanglisteFormatter {
 		return this.spielerSpalteWkRef;
 	}
 
-	protected WeakRefHelper<IPropertiesSpalte> getPropertiesSpaltewkRef() {
+	protected WeakRefHelper<ISuperMeleePropertiesSpalte> getPropertiesSpaltewkRef() {
 		return this.propertiesSpaltewkRef;
 	}
 

@@ -24,7 +24,7 @@ import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XSortable;
 
-import de.petanqueturniermanager.basesheet.konfiguration.PropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
@@ -51,9 +51,10 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet implements IMeldeliste, Runnable, ISheet, IMitSpielerSpalte, MeldeListeKonstanten {
 	private static final String SPIELTAG_HEADER_STR = "Spieltag";
@@ -118,10 +119,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		return anzSpieltage;
 	}
 
-	public Formation getFormation() throws GenerateException {
-		return getKonfigurationSheet().getFormation();
-	}
-
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.MELDELISTE, SHEET_COLOR);
@@ -177,17 +174,17 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		XSpreadsheet sheet = getSheet();
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 
-		String formulaStrSpieltag = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + SuperMeleeKonfigurationSheet.SHEETNAME + "." + suchMatrixProperty()
+		String formulaStrSpieltag = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "." + suchMatrixProperty()
 				+ ";2;0)";
-		String formulaStrSpielRunde = "VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + SuperMeleeKonfigurationSheet.SHEETNAME + "." + suchMatrixProperty()
-				+ ";2;0)";
+		String formulaStrSpielRunde = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
+				+ suchMatrixProperty() + ";2;0)";
 
-		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
+		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
 				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).setVertJustify(CellVertJustify2.CENTER);
 		getSheetHelper().setTextInCell(bezeichnugVal);
 		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpieltag));
 
-		bezeichnugVal.setValue(PropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE).setComment("Aktive Spielrunde").zeilePlus(2);
+		bezeichnugVal.setValue(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE).setComment("Aktive Spielrunde").zeilePlus(2);
 		getSheetHelper().setTextInCell(bezeichnugVal);
 		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpielRunde));
 	}
@@ -211,7 +208,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		// Aktiv / Inaktiv spieltag
 		// =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
-		String formulaStr = "IF(IFNA(VLOOKUP(\"" + PropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + SuperMeleeKonfigurationSheet.SHEETNAME + "." + suchMatrixProperty()
+		String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "." + suchMatrixProperty()
 				+ ";2;0);0)=" + spieltag.getNr() + ";\"Aktiv\";\"\"";
 		StringCellValue aktivFormula = StringCellValue.from(sheet, spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr).setCharColor(ColorHelper.CHAR_COLOR_GREEN);
 		getSheetHelper().setFormulaInCell(aktivFormula);

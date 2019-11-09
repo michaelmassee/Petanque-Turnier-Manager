@@ -15,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -25,9 +26,8 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
@@ -47,7 +47,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		getSheetHelper().removeAllSheetsExclude(new String[] { SuperMeleeKonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { IKonfigurationKonstanten.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 		meldeListe.setSpielTag(SpielTagNr.from(1));
 		meldeListe.setAktiveSpieltag(SpielTagNr.from(1));
 		meldeListe.setAktiveSpielRunde(SpielRundeNr.from(1));

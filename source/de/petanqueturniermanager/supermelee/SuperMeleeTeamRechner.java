@@ -2,6 +2,8 @@ package de.petanqueturniermanager.supermelee;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
+
 /*
 * TeamRechner.java
 * Erstellung     : 11.09.2017 / Michael Massee

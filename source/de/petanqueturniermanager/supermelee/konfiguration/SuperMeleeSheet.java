@@ -1,7 +1,7 @@
 /**
  * Erstellung 08.11.2019 / Michael Massee
  */
-package de.petanqueturniermanager.supermelee;
+package de.petanqueturniermanager.supermelee.konfiguration;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;

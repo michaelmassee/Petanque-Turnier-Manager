@@ -11,7 +11,6 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -20,6 +19,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
 public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
@@ -28,7 +28,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int ersteSpielRundeSpalte;
 
 	public RanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, SpielerSpalte spielerSpalte, int ersteSpielRundeSpalte,
-			IPropertiesSpalte propertiesSpalte) {
+			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
 		this.ranglisteWkRef = new WeakRefHelper<ISpielTagRangliste>(rangliste);
@@ -105,7 +105,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		StringCellValue stringVal = super.addFooter();
 
-		IPropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();

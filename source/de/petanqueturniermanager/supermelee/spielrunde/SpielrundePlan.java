@@ -29,7 +29,7 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
@@ -159,7 +159,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		getSheetHelper().setTextInCell(header.spaltePlusEins().setValue("Bahn"));
 	}
 
-	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) throws GenerateException {
+	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) {
 		String spielRundeSheetName = "$'" + aktuelleSpielrundeSheet.getSheetName(spielTag, spielRundeNr) + "'.";
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (spielerNr.getSpalte() + 1) + ";8))";
 

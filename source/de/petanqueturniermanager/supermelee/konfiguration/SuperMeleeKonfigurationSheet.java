@@ -2,7 +2,7 @@
 * Erstellung : 06.05.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.supermelee;
+package de.petanqueturniermanager.supermelee.konfiguration;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -12,10 +12,8 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.basesheet.konfiguration.PropertiesSpalte;
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -26,27 +24,27 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
-public class SuperMeleeKonfigurationSheet extends SheetRunner implements IPropertiesSpalte, ISheet, IKonfigurationSheet {
+public class SuperMeleeKonfigurationSheet extends SheetRunner implements ISuperMeleePropertiesSpalte, ISheet, IKonfigurationSheet, IKonfigurationKonstanten {
 	private static final int MAX_SPIELTAG = 10;
 
 	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
 	public static final int PROPERTIESSPALTE = 0;
 	public static final int ERSTE_ZEILE_PROPERTIES = 1;
-	public static final String SHEETNAME = "Konfiguration";
-	public static final String SHEET_COLOR = "6bf442";
 
 	public static final int KONFIG_SPIELTAG_NR = 3;
 	public static final int KONFIG_SPIELTAG_KOPFZEILE = KONFIG_SPIELTAG_NR + 1;
 
-	private final PropertiesSpalte propertiesSpalte;
+	private final SuperMeleePropertiesSpalte propertiesSpalte;
 
 	// Package weil nur in SuperMeleeSheet verwendet werden darf
 	SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
-		propertiesSpalte = new PropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
+		propertiesSpalte = new SuperMeleePropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
 
 	@Override
@@ -205,11 +203,6 @@ public class SuperMeleeKonfigurationSheet extends SheetRunner implements IProper
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
-	}
-
-	@Override
-	public Formation getFormation() throws GenerateException {
-		return propertiesSpalte.getFormation();
 	}
 
 	@Override

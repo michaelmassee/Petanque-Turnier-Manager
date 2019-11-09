@@ -15,8 +15,8 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
-import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * Triplette Teams auffüllen mit Doublette<br>

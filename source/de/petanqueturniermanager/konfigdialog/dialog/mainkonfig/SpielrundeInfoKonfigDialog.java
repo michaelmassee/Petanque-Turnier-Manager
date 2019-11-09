@@ -8,9 +8,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XButton;
@@ -38,7 +35,6 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  *
  */
 public class SpielrundeInfoKonfigDialog {
-	private static final Logger logger = LogManager.getLogger(SpielrundeInfoKonfigDialog.class);
 
 	private static final int DIALOG_HEIGHT = 400;
 	private static final int DIALOG_WIDTH = 250;
