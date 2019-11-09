@@ -1,7 +1,7 @@
 /**
  * Erstellung 21.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.melee.korunde;
+package de.petanqueturniermanager.forme.korunde;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

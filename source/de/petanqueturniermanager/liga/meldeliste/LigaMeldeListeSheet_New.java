@@ -12,10 +12,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 
-public class Liga_MeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
-	private static final Logger logger = LogManager.getLogger(Liga_MeldeListeSheet_New.class);
+public class LigaMeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
+	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_New.class);
 
-	public Liga_MeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaMeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 	}
 
@@ -23,7 +23,7 @@ public class Liga_MeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
 	protected void doRun() throws GenerateException {
 		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().isDidCreate()) {
 			// getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
-			// upDateSheet();
+			upDateSheet();
 		}
 	}
 

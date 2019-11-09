@@ -19,7 +19,7 @@ public abstract class LigaSheet extends SheetRunner {
 	 * @param workingSpreadsheet
 	 */
 	public LigaSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		this(workingSpreadsheet, null);
 	}
 
 	public LigaSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {

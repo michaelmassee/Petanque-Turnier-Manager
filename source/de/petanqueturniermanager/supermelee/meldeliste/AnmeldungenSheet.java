@@ -152,7 +152,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		return spielTag;
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
+	public void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag);
 		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
