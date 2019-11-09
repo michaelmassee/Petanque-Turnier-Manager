@@ -25,6 +25,8 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -36,8 +38,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
-import de.petanqueturniermanager.supermelee.meldeliste.Formation;
-import de.petanqueturniermanager.supermelee.meldeliste.IMeldeliste;
 
 public class SpielerSpalte {
 

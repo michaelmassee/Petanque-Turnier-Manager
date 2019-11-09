@@ -20,6 +20,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -37,17 +38,16 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
-import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 
-public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpalten, ISpielTagRangliste {
+public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSummeSpalten, ISpielTagRangliste {
 
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet.class);
 
@@ -71,14 +71,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final RanglisteFormatter ranglisteFormatter;
-	private final KonfigurationSheet konfigurationSheet;
 	private final RangListeSorter rangListeSorter;
 	private SpielTagNr spieltagNr = null;
 
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spieltag Rangliste");
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
-		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
 		spielerSpalte = new SpielerSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
@@ -237,7 +235,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		}
 	}
 
-	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
+	public String getSheetName(SpielTagNr spieltagNr) {
 		return spieltagNr.getNr() + ". " + SHEETNAME_SUFFIX;
 	}
 
@@ -435,7 +433,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		return aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 	}
 
-	public SpielTagNr getSpieltagNr() throws GenerateException {
+	public SpielTagNr getSpieltagNr() {
 		checkNotNull(spieltagNr, "spieltagNr==null");
 		return spieltagNr;
 	}
@@ -444,10 +442,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements IEndSummeSpal
 		checkNotNull(spieltagNr, "spieltagNr==null");
 		ProcessBox.from().spielTag(spieltagNr);
 		this.spieltagNr = spieltagNr;
-	}
-
-	protected KonfigurationSheet getKonfigurationSheet() {
-		return konfigurationSheet;
 	}
 
 	@Override

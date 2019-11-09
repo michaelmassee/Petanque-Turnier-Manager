@@ -15,7 +15,7 @@ public class SpielRundeNr {
 		setNr(newNr);
 	}
 
-	public int getNr() throws GenerateException {
+	public int getNr() {
 		return nr;
 	}
 

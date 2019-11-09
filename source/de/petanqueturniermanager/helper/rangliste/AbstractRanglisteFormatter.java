@@ -21,6 +21,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
@@ -34,7 +35,6 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
 
 abstract public class AbstractRanglisteFormatter {
 

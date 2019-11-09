@@ -13,7 +13,6 @@ import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -29,13 +28,13 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 
-public class TielnehmerSheet extends SheetRunner implements ISheet {
+public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(TielnehmerSheet.class);
 
@@ -50,13 +49,11 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	private static final String SHEET_COLOR = "6542f4";
 
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
-	private final KonfigurationSheet konfigurationSheet;
 	private SpielTagNr spielTagNr = null;
 
 	public TielnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Teilnehmer");
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
-		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -71,7 +68,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		setSpielTagNr(konfigurationSheet.getAktiveSpieltag());
+		setSpielTagNr(getKonfigurationSheet().getAktiveSpieltag());
 		generate();
 	}
 
@@ -154,11 +151,11 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte() + 1, celPropNr);
 	}
 
-	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
+	public String getSheetName(SpielTagNr spieltagNr) {
 		return spieltagNr.getNr() + ". Spieltag " + SHEETNAME;
 	}
 
-	public SpielTagNr getSpielTagNr() throws GenerateException {
+	public SpielTagNr getSpielTagNr() {
 		checkNotNull(spielTagNr, "spielTagNr == null");
 		return spielTagNr;
 	}

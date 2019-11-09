@@ -16,10 +16,11 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
-import de.petanqueturniermanager.konfiguration.dialog.MainKonfigDialog;
+import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog;
+import de.petanqueturniermanager.liga.meldeliste.Liga_MeldeListeSheet_New;
 import de.petanqueturniermanager.melee.korunde.CadrageSheet;
 import de.petanqueturniermanager.melee.korunde.KoGruppeABSheet;
+import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheetStarter;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -103,20 +104,16 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			boolean didHandle = false;
 			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 
-			// only Dialog
-			switch (action) {
-			case "spielrundeinfokonfig":
-				didHandle = true;
-				MainKonfigDialog.from().open();
-				break;
-			}
-
 			if (!didHandle) {
 				ProcessBox.from().visible().clearWennNotRunning().info("Start " + action);
 				didHandle = handleSuperMelee(action, currentSpreadsheet);
 
 				if (!didHandle) {
-					didHandle = handleMelee(action, currentSpreadsheet);
+					didHandle = handleMele(action, currentSpreadsheet);
+				}
+
+				if (!didHandle) {
+					didHandle = handleLiga(action, currentSpreadsheet);
 				}
 
 			}
@@ -196,7 +193,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			break;
 		// ------------------------------
 		case "turnierkonfiguration":
-			new KonfigurationSheet(workingSpreadsheet).start();
+			new SuperMeleeKonfigurationSheetStarter().start(workingSpreadsheet);
 			break;
 		case "supermelee_validate":
 			new SpielrundeSheet_Validator(workingSpreadsheet).start();
@@ -207,7 +204,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		return didHandle;
 	}
 
-	private boolean handleMelee(String action, WorkingSpreadsheet workingSpreadsheet) {
+	private boolean handleMele(String action, WorkingSpreadsheet workingSpreadsheet) {
 		boolean didHandle = true;
 
 		switch (action) {
@@ -218,6 +215,23 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		// ------------------------------
 		case "koRundeAB":
 			new KoGruppeABSheet(workingSpreadsheet).start();
+			break;
+		default:
+			didHandle = false;
+		}
+		return didHandle;
+	}
+
+	private boolean handleLiga(String action, WorkingSpreadsheet workingSpreadsheet) {
+		boolean didHandle = true;
+		if (!action.toLowerCase().startsWith("liga")) {
+			return false;
+		}
+
+		switch (action) {
+		// ------------------------------
+		case "liga_neue_meldeliste":
+			new Liga_MeldeListeSheet_New(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;

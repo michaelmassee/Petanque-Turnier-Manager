@@ -10,8 +10,9 @@ import org.apache.logging.log4j.Logger;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
@@ -23,17 +24,15 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator
  * @author michael
  *
  */
-public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
+public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet_TestDaten.class);
 
 	private final SpielrundeSheet_TestDaten spielrundeSheetTestDaten;
-	private final KonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_NeuerSpieltag meldeListeSheetNeuerSpieltag;
 
 	public SpieltagRanglisteSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 		spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(workingSpreadsheet);
-		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
 		meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet);
 	}
 
@@ -45,7 +44,7 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		getSheetHelper().removeAllSheetsExclude(new String[] { KonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { SuperMeleeKonfigurationSheet.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
 
 		for (int spieltagCntr = 1; spieltagCntr <= 5; spieltagCntr++) {
 			SheetRunner.testDoCancelTask();
@@ -58,11 +57,12 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 
 			spielrundeSheetTestDaten.setSpielTag(spieltagNr);
 			spielrundeSheetTestDaten.generate();
-			konfigurationSheet.setAktiveSpieltag(spieltagNr);
+			getKonfigurationSheet().setAktiveSpieltag(spieltagNr);
 
 			// validieren
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(spieltagNr);
 
 		}
 	}
+
 }

@@ -8,12 +8,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -27,21 +25,21 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 /**
  * eine liste von SpielerNr + Team A/B + Bahnnummer
- * 
+ *
  * @author Michael Massee
  *
  */
-public class SpielrundePlan extends SheetRunner implements ISheet {
+public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	private static final Logger LOGGER = LogManager.getLogger(SpielrundePlan.class);
 	private static final String SHEET_COLOR = "b0f442";
 
@@ -58,7 +56,6 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
 
-	private final KonfigurationSheet konfigurationSheet;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 
 	/**
@@ -66,13 +63,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	 */
 	public SpielrundePlan(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spielrundeplan");
-		konfigurationSheet = newKonfigurationSheet(workingSpreadsheet);
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
-	}
-
-	@VisibleForTesting
-	KonfigurationSheet newKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
-		return new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -80,11 +71,11 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
 	}
 
-	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) throws GenerateException {
+	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
 		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
 	}
 
-	public String getSpielrundeSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) throws GenerateException {
+	public String getSpielrundeSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
 		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + AbstractSpielrundeSheet.PREFIX_SHEET_NAMEN;
 	}
 
@@ -100,8 +91,8 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	}
 
 	public void generate(Meldungen meldungen) throws GenerateException {
-		setSpielTag(konfigurationSheet.getAktiveSpieltag());
-		setSpielRundeNr(konfigurationSheet.getAktiveSpielRunde());
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+		setSpielRundeNr(getKonfigurationSheet().getAktiveSpielRunde());
 
 		// Spielrunde sheet ?
 		processBoxinfo("Neuer Spielrundeplan " + getSpielRundeNr().getNr() + " für Spieltag " + getSpielTag().getNr());
@@ -188,7 +179,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		}
 	}
 
-	public SpielTagNr getSpielTag() throws GenerateException {
+	public SpielTagNr getSpielTag() {
 		checkNotNull(spielTag);
 		return spielTag;
 	}
@@ -199,7 +190,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		this.spielTag = spielTag;
 	}
 
-	public SpielRundeNr getSpielRundeNr() throws GenerateException {
+	public SpielRundeNr getSpielRundeNr() {
 		checkNotNull(spielRundeNr);
 		return spielRundeNr;
 	}

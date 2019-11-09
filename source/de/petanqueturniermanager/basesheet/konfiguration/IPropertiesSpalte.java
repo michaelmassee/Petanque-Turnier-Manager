@@ -2,13 +2,13 @@
 * Erstellung : 05.04.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.konfiguration;
+package de.petanqueturniermanager.basesheet.konfiguration;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeMode;
-import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public interface IPropertiesSpalte {

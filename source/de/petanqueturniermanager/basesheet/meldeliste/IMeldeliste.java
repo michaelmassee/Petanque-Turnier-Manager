@@ -2,7 +2,7 @@
 * Erstellung : 10.03.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.supermelee.meldeliste;
+package de.petanqueturniermanager.basesheet.meldeliste;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.Meldungen;

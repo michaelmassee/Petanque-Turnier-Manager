@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -25,7 +24,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
-public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet {
+public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
 
 	public static final String SHEETNAME = "Supermêlée Teams";

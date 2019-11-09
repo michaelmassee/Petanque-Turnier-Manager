@@ -54,7 +54,7 @@ public class PageStyleHelper {
 		this.pageStyleDef = checkNotNull(pageStyleDef);
 	}
 
-	public static PageStyleHelper from(XSpreadsheet sheet, WorkingSpreadsheet workingSpreadsheet, PageStyleDef pageStyleDef) throws GenerateException {
+	public static PageStyleHelper from(XSpreadsheet sheet, WorkingSpreadsheet workingSpreadsheet, PageStyleDef pageStyleDef) {
 		checkNotNull(sheet);
 		checkNotNull(workingSpreadsheet);
 		checkNotNull(pageStyleDef);
@@ -93,7 +93,7 @@ public class PageStyleHelper {
 		return this;
 	}
 
-	public PageStyleHelper create() throws GenerateException {
+	public PageStyleHelper create() {
 		checkNotNull(workingSpreadsheet);
 		checkNotNull(pageStyleDef);
 		String styleName = pageStyleDef.getPageStyleName();
@@ -138,7 +138,7 @@ public class PageStyleHelper {
 		return this;
 	}
 
-	public PageStyleHelper applytoSheet() throws GenerateException {
+	public PageStyleHelper applytoSheet() {
 		XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, sheet);
 		try {
 			xPropertySet.setPropertyValue("PageStyle", pageStyleDef.getPageStyleName());

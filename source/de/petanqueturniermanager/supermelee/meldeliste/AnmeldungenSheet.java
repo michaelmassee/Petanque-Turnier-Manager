@@ -12,7 +12,6 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -28,12 +27,12 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
-import de.petanqueturniermanager.konfiguration.KonfigurationSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 
-public class AnmeldungenSheet extends SheetRunner implements ISheet {
+public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 	private static final Logger logger = LogManager.getLogger(AnmeldungenSheet.class);
 
 	public static final String SHEETNAME = "Anmeldungen";
@@ -45,13 +44,11 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int MAX_ANZSPIELER_IN_SPALTE = 40;
 
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
-	private final KonfigurationSheet konfigurationSheet;
 	private SpielTagNr spielTag = null;
 
 	public AnmeldungenSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Anmeldungen");
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
-		konfigurationSheet = new KonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -61,7 +58,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		setSpielTag(konfigurationSheet.getAktiveSpieltag());
+		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		generate();
 	}
 
@@ -140,7 +137,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte() + 1, celPropNr);
 	}
 
-	public String getSheetName(SpielTagNr spieltagNr) throws GenerateException {
+	public String getSheetName(SpielTagNr spieltagNr) {
 		checkNotNull(spieltagNr);
 		return spieltagNr.getNr() + ". Spieltag " + SHEETNAME;
 	}
@@ -150,7 +147,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		return getSheetHelper().findByName(getSheetName(getSpielTag()));
 	}
 
-	public SpielTagNr getSpielTag() throws GenerateException {
+	public SpielTagNr getSpielTag() {
 		checkNotNull(spielTag);
 		return spielTag;
 	}

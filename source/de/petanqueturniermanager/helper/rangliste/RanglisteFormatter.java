@@ -11,6 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -19,7 +20,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-import de.petanqueturniermanager.konfiguration.IPropertiesSpalte;
 
 public class RanglisteFormatter extends AbstractRanglisteFormatter {
 

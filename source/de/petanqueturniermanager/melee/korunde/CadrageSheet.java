@@ -11,6 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.KoRundeTeamPaarungen;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -48,11 +49,6 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);
-	}
-
-	@Override
-	protected void updateKonfigurationSheet() throws GenerateException {
-		// nichts tun hier
 	}
 
 	@Override
@@ -124,6 +120,12 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 				spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getSheet(), teamPaarungen, spielRunde);
 			}
 		}
+	}
+
+	@Override
+	protected IKonfigurationSheet getKonfigurationSheet() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

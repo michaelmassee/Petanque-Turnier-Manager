@@ -2,7 +2,7 @@
 * Erstellung : 06.05.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.konfiguration;
+package de.petanqueturniermanager.supermelee;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -12,6 +12,10 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.PropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -22,16 +26,12 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeMode;
-import de.petanqueturniermanager.supermelee.meldeliste.Formation;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
-public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte, ISheet {
+public class SuperMeleeKonfigurationSheet extends SheetRunner implements IPropertiesSpalte, ISheet, IKonfigurationSheet {
 	private static final int MAX_SPIELTAG = 10;
 
-	private static final Logger logger = LogManager.getLogger(KonfigurationSheet.class);
+	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
 	public static final int PROPERTIESSPALTE = 0;
 	public static final int ERSTE_ZEILE_PROPERTIES = 1;
@@ -43,7 +43,8 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 
 	private final PropertiesSpalte propertiesSpalte;
 
-	public KonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+	// Package weil nur in SuperMeleeSheet verwendet werden darf
+	SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 		propertiesSpalte = new PropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
@@ -59,6 +60,7 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	}
 
 	// update immer einmal in SheetRunner
+	@Override
 	public void update() throws GenerateException {
 		processBoxinfo("Update Konfiguration");
 		propertiesSpalte.updateKonfigBlock();
@@ -248,6 +250,11 @@ public class KonfigurationSheet extends SheetRunner implements IPropertiesSpalte
 	@Override
 	public boolean getSpielrundePlan() throws GenerateException {
 		return propertiesSpalte.getSpielrundePlan();
+	}
+
+	@Override
+	protected IKonfigurationSheet getKonfigurationSheet() {
+		return this;
 	}
 
 }
