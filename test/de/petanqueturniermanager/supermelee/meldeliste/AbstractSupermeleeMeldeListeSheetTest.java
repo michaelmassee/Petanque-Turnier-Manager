@@ -108,7 +108,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
-			meldeSheet.testDoppelteDaten();
+			meldeSheet.testDoppelteMeldungen();
 			fail("Erwarte GenerateException");
 		} catch (GenerateException exc) {
 			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Namen Müller ist doppelt in der Meldeliste");
@@ -123,7 +123,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
-			meldeSheet.testDoppelteDaten();
+			meldeSheet.testDoppelteMeldungen();
 			fail("Erwarte GenerateException");
 		} catch (GenerateException exc) {
 			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Namen Maja, Biene ist doppelt in der Meldeliste");
@@ -139,7 +139,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
-			meldeSheet.testDoppelteDaten();
+			meldeSheet.testDoppelteMeldungen();
 			fail("Erwarte GenerateException");
 		} catch (GenerateException exc) {
 			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Namen Heinz ist doppelt in der Meldeliste");
@@ -154,7 +154,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
-			meldeSheet.testDoppelteDaten();
+			meldeSheet.testDoppelteMeldungen();
 			fail("Erwarte GenerateException");
 		} catch (GenerateException exc) {
 			assertThat(exc.getMessage()).containsOnlyOnce("Spieler Nr. 12 ist doppelt");
@@ -170,7 +170,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
-			meldeSheet.testDoppelteDaten();
+			meldeSheet.testDoppelteMeldungen();
 		} catch (GenerateException exc) {
 			fail("GenerateException", exc);
 		}

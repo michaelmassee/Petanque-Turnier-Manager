@@ -13,6 +13,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
+import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.model.Meldungen;
@@ -96,6 +98,13 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	public List<Integer> getSpielerNrList() throws GenerateException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public void upDateSheet() throws GenerateException {
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
+		processBoxinfo("Aktualisiere Meldungen");
+
+		testDoppelteMeldungen();
 	}
 
 }

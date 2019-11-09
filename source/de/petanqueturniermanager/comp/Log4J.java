@@ -35,6 +35,7 @@ public class Log4J {
 				String cmd = "gedit " + LOGFILE.getCanonicalPath();
 				Runtime.getRuntime().exec(cmd);
 			}
+			// TODO get default editor form properties file
 		} catch (IOException e) {
 			logger.error(e);
 		}

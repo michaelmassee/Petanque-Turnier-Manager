@@ -15,11 +15,11 @@ import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.forme.korunde.CadrageSheet;
+import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog;
-import de.petanqueturniermanager.liga.meldeliste.Liga_MeldeListeSheet_New;
-import de.petanqueturniermanager.melee.korunde.CadrageSheet;
-import de.petanqueturniermanager.melee.korunde.KoGruppeABSheet;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -120,6 +120,13 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 
 			if (!didHandle) {
 				switch (action) {
+
+				// ------------------------------
+				case "turnierkonfiguration":
+					// Konfiguration vorhanden ?
+					// TODO Korrekte Konfig Starten
+					new SuperMeleeKonfigurationSheetStarter().start(currentSpreadsheet);
+					break;
 				case "abbruch":
 					didHandle = true;
 					SheetRunner.cancelRunner();
@@ -191,10 +198,6 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		case "supermelee_endrangliste_sort":
 			new EndranglisteSheet_Sort(workingSpreadsheet).start();
 			break;
-		// ------------------------------
-		case "turnierkonfiguration":
-			new SuperMeleeKonfigurationSheetStarter().start(workingSpreadsheet);
-			break;
 		case "supermelee_validate":
 			new SpielrundeSheet_Validator(workingSpreadsheet).start();
 			break;
@@ -231,7 +234,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		switch (action) {
 		// ------------------------------
 		case "liga_neue_meldeliste":
-			new Liga_MeldeListeSheet_New(workingSpreadsheet).start();
+			new LigaMeldeListeSheet_New(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;

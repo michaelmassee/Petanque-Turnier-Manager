@@ -1,7 +1,7 @@
 /**
  * Erstellung 27.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.melee.korunde;
+package de.petanqueturniermanager.forme.korunde;
 
 import com.sun.star.sheet.XSpreadsheet;
 

@@ -132,7 +132,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 		processBoxinfo("Aktualisiere Meldungen");
 
-		testDoppelteDaten();
+		testDoppelteMeldungen();
 
 		XSpreadsheet sheet = getSheet();
 		getSheetHelper().setActiveSheet(sheet);
@@ -398,7 +398,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 * @return
 	 * @throws GenerateException wenn doppelt daten
 	 */
-	public void testDoppelteDaten() throws GenerateException {
+	public void testDoppelteMeldungen() throws GenerateException {
 		processBoxinfo("Prüfe Doppelte Daten in Meldungen");
 		XSpreadsheet xSheet = getSheet();
 
