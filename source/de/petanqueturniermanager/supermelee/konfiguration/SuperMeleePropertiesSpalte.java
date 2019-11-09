@@ -2,7 +2,7 @@
 * Erstellung : 05.04.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.basesheet.konfiguration;
+package de.petanqueturniermanager.supermelee.konfiguration;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -16,7 +16,6 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
@@ -30,13 +29,11 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
-public class PropertiesSpalte {
+public class SuperMeleePropertiesSpalte {
 	// private static final Logger logger = LogManager.getLogger(PropertiesSpalte.class);
 
-	private static final String KONFIG_PROP_NAME_FORMATION = "Formation";
 	private static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
 	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
@@ -70,8 +67,6 @@ public class PropertiesSpalte {
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
-		KONFIG_PROPERTIES
-				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_FORMATION).setDefaultVal(4).setDescription("1=Tête,2=Doublette,3=Triplette,4=Mêlée"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(1).setDescription("1=Supermêlée"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
@@ -124,7 +119,7 @@ public class PropertiesSpalte {
 	private int erstePropertiesZeile;
 	private int headerZeile;
 
-	public PropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
+	SuperMeleePropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
 		checkNotNull(sheet);
 		checkArgument(propertiesSpalte > -1, "propertiesSpalte %s<0", propertiesSpalte);
 		checkArgument(erstePropertiesZeile > 0, "erstePropertiesZeile %s<1", erstePropertiesZeile);
@@ -421,14 +416,6 @@ public class PropertiesSpalte {
 
 	public String getSpielrundeSpielbahn() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN);
-	}
-
-	public Formation getFormation() throws GenerateException {
-		int formationId = readIntProperty(KONFIG_PROP_NAME_FORMATION);
-		if (formationId > -1) {
-			return Formation.findById(formationId);
-		}
-		return null;
 	}
 
 	public SuperMeleeMode getSuperMeleeMode() throws GenerateException {

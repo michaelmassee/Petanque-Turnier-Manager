@@ -8,7 +8,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.table.CellHoriJustify;
 
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -16,6 +15,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
 public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 
@@ -23,7 +23,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
-	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, SpielerSpalte spielerSpalte, int ersteSpielTagSpalte, IPropertiesSpalte propertiesSpalte) {
+	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, SpielerSpalte spielerSpalte, int ersteSpielTagSpalte, ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
 		this.ranglisteWkRef = new WeakRefHelper<IEndRangliste>(rangliste);

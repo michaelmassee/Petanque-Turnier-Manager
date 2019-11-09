@@ -161,4 +161,9 @@ public abstract class AbstractPosition<T> {
 				.toString();
 		// @formatter:on
 	}
+
+	@Override
+	public int hashCode() {
+		return super.hashCode();
+	}
 }

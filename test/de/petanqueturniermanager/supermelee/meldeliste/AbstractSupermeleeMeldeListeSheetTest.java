@@ -22,14 +22,14 @@ import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class AbstractSupermeleeMeldeListeSheetTest {
 	static final Logger logger = LogManager.getLogger(AbstractSupermeleeMeldeListeSheetTest.class);
@@ -70,11 +70,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			}
 
 			@Override
-			public Formation getFormation() {
-				return Formation.MELEE;
-			}
-
-			@Override
 			public Logger getLogger() {
 				return logger;
 			}
@@ -97,7 +92,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) throws GenerateException {
 
-		Position headerPos = Position.from(meldeSheet.spieltagSpalte(SpielTagNr.from(1)), AbstractSupermeleeMeldeListeSheet.ZWEITE_HEADER_ZEILE);
+		Position headerPos = Position.from(meldeSheet.spieltagSpalte(SpielTagNr.from(1)), MeldeListeKonstanten.ZWEITE_HEADER_ZEILE);
 		headerList.forEach(header -> {
 			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos)))).thenReturn(header);
 			headerPos.spaltePlusEins();
@@ -183,11 +178,11 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) {
 
-		Position spielerNrPos = Position.from(AbstractSupermeleeMeldeListeSheet.SPIELER_NR_SPALTE, AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE);
-		Position spielerNamePos = Position.from(meldeSheet.getSpielerNameSpalte(), AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Position spielerNamePos = Position.from(meldeSheet.getSpielerNameSpalte(), MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
 		int zeileCntr = 0;
 		for (SpielerNrName spielerNrName : spielerNrnameList) {
-			int zeile = AbstractSupermeleeMeldeListeSheet.ERSTE_DATEN_ZEILE + zeileCntr;
+			int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + zeileCntr;
 			PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos.zeile(zeile))))).thenReturn(spielerNrName.nr);
 			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerNrName.name);
 			zeileCntr++;

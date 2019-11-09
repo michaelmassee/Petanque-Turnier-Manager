@@ -8,16 +8,16 @@ import java.util.List;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
+import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.model.Meldungen;
 
-abstract public class AbstractLigaMeldeListeSheet extends SheetRunner implements IMeldeliste, Runnable, ISheet, IMitSpielerSpalte, MeldeListeKonstanten {
+abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste, Runnable, ISheet, IMitSpielerSpalte, MeldeListeKonstanten {
 
 	/**
 	 * @param workingSpreadsheet

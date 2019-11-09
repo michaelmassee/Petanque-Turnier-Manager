@@ -31,8 +31,8 @@ import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 

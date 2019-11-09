@@ -118,7 +118,7 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 
 	}
 
-	private int validateWarImTeam(Spieler spielerAusMeldung, Spieler spielerToValidate, Team team) throws GenerateException {
+	private int validateWarImTeam(Spieler spielerAusMeldung, Spieler spielerToValidate, Team team) {
 		for (Spieler spielerausTeam : team.spieler()) {
 			if (!spielerToValidate.equals(spielerausTeam)) { // nicht sich selbst == gleiche nummer
 				if (spielerAusMeldung.warImTeamMit(spielerausTeam)) {

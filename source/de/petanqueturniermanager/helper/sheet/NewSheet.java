@@ -12,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -65,12 +64,12 @@ public class NewSheet {
 		return this;
 	}
 
-	public NewSheet spielTagPageStyle(SpielTagNr spielTagNr) throws GenerateException {
+	public NewSheet spielTagPageStyle(SpielTagNr spielTagNr) {
 		pageStyleDef = new PageStyleDef(spielTagNr);
 		return this;
 	}
 
-	public NewSheet create() throws GenerateException {
+	public NewSheet create() {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
 		if (sheet != null) {

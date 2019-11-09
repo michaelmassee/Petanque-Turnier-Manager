@@ -1,7 +1,7 @@
 /**
  * Erstellung 04.07.2019 / Michael Massee
  */
-package de.petanqueturniermanager.supermelee;
+package de.petanqueturniermanager.supermelee.konfiguration;
 
 /**
  * @author Michael Massee

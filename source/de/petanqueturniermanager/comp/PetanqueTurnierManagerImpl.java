@@ -20,10 +20,10 @@ import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog
 import de.petanqueturniermanager.liga.meldeliste.Liga_MeldeListeSheet_New;
 import de.petanqueturniermanager.melee.korunde.CadrageSheet;
 import de.petanqueturniermanager.melee.korunde.KoGruppeABSheet;
-import de.petanqueturniermanager.supermelee.SuperMeleeKonfigurationSheetStarter;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheetStarter;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;

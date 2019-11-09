@@ -38,7 +38,7 @@ public class RangListeSorter {
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
 	public RangListeSorter(IRangliste iRanglisteSheet) {
-		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
+		this.iRanglisteSheet = new WeakRefHelper<>(iRanglisteSheet);
 	}
 
 	/**
@@ -51,11 +51,11 @@ public class RangListeSorter {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return this.iRanglisteSheet.getObject().getSheetHelper();
+		return iRanglisteSheet.getObject().getSheetHelper();
 	}
 
-	protected IRangliste getIRangliste() throws GenerateException {
-		return this.iRanglisteSheet.getObject();
+	protected IRangliste getIRangliste() {
+		return iRanglisteSheet.getObject();
 	}
 
 	public void insertManuelsortSpalten() throws GenerateException {
@@ -77,17 +77,17 @@ public class RangListeSorter {
 		StringCellValue sortSpalte = StringCellValue.from(sortlisteVal).zeile(ersteDatenZiele);
 		StringCellValue headerVal = StringCellValue.from(sortlisteVal).zeile(ersteDatenZiele - 1);
 
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielGewonnenZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
+		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielGewonnenZelle1.getAddress()));
 
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielDiffZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
+		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielDiffZelle1.getAddress()));
 
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteDiffZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
+		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteDiffZelle1.getAddress()));
 
-		this.getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
-		this.getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteGewonnenZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
+		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteGewonnenZelle1.getAddress()));
 
 	}
 
@@ -106,7 +106,7 @@ public class RangListeSorter {
 		StringCellValue validateHeader = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).setComment("Validate Spalte")
 				.addColumnProperties(columnProperties).setValue("Err");
 
-		this.getSheetHelper().setTextInCell(validateHeader);
+		getSheetHelper().setTextInCell(validateHeader);
 
 		// formula zusammenbauen
 		// --------------------------------------------------------------------------
@@ -164,10 +164,10 @@ public class RangListeSorter {
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteDatenZeile);
-		this.getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteDatenZiele).setFillAuto(fillAutoPosition));
+		getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteDatenZiele).setFillAuto(fillAutoPosition));
 
 		// Alle Nummer Bold
-		this.getSheetHelper().setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+		getSheetHelper().setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
 				CellProperties.from().setCharWeight(FontWeight.BOLD).setCharColor(ColorHelper.CHAR_COLOR_RED));
 		// --------------------------------------------------------------------------
 	}
@@ -199,7 +199,7 @@ public class RangListeSorter {
 		Position valSpalteEnd = Position.from(validateSpalte, letzteDatenZeile);
 
 		for (int zeile = valSpalteStart.getZeile(); zeile <= valSpalteEnd.getZeile(); zeile++) {
-			String text = this.getSheetHelper().getTextFromCell(sheet, Position.from(validateSpalte, zeile));
+			String text = getSheetHelper().getTextFromCell(sheet, Position.from(validateSpalte, zeile));
 			if (StringUtils.isNoneBlank(text)) {
 				// error
 				throw new GenerateException("Fehler in Spieltagrangliste, Fehler in Zeile " + zeile);

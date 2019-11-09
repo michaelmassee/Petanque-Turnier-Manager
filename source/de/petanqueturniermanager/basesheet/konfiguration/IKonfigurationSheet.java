@@ -11,5 +11,4 @@ import de.petanqueturniermanager.exception.GenerateException;
  */
 public interface IKonfigurationSheet {
 	void update() throws GenerateException;
-
 }

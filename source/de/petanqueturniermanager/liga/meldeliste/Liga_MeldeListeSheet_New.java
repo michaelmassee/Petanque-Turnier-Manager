@@ -7,7 +7,6 @@ package de.petanqueturniermanager.liga.meldeliste;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -31,12 +30,6 @@ public class Liga_MeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
 	@Override
 	public Logger getLogger() {
 		return logger;
-	}
-
-	@Override
-	protected IKonfigurationSheet getKonfigurationSheet() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

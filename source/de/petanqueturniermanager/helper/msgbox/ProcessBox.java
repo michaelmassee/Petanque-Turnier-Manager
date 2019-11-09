@@ -46,7 +46,6 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -300,12 +299,12 @@ public class ProcessBox {
 		return this;
 	}
 
-	public ProcessBox spielTag(SpielTagNr spieltag) throws GenerateException {
+	public ProcessBox spielTag(SpielTagNr spieltag) {
 		spieltagText.setText("" + spieltag.getNr());
 		return this;
 	}
 
-	public ProcessBox spielRunde(SpielRundeNr spielrunde) throws GenerateException {
+	public ProcessBox spielRunde(SpielRundeNr spielrunde) {
 		spielrundeText.setText("" + spielrunde.getNr());
 		return this;
 	}
