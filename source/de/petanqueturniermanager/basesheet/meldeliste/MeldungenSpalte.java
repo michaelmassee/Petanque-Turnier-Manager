@@ -2,7 +2,7 @@
 * Erstellung : 10.03.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.helper.sheet;
+package de.petanqueturniermanager.basesheet.meldeliste;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -25,8 +25,6 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -36,12 +34,14 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 
-public class SpielerSpalte {
+public class MeldungenSpalte {
 
-	private static final Logger logger = LogManager.getLogger(SpielerSpalte.class);
+	private static final Logger logger = LogManager.getLogger(MeldungenSpalte.class);
 
 	private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
 
@@ -56,7 +56,7 @@ public class SpielerSpalte {
 	private final WeakRefHelper<ISheet> sheet;
 	private final WeakRefHelper<IMeldeliste> meldeliste;
 
-	public SpielerSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet sheet, IMeldeliste meldeliste, Formation formation) {
+	public MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet sheet, IMeldeliste meldeliste, Formation formation) {
 		checkNotNull(sheet);
 		checkNotNull(meldeliste);
 		checkArgument(ersteDatenZiele > -1);

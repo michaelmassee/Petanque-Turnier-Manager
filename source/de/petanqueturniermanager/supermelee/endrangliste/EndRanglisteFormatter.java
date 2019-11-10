@@ -8,12 +8,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.table.CellHoriJustify;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
-import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
@@ -23,7 +23,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
-	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, SpielerSpalte spielerSpalte, int ersteSpielTagSpalte, ISuperMeleePropertiesSpalte propertiesSpalte) {
+	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte spielerSpalte, int ersteSpielTagSpalte, ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
 		this.ranglisteWkRef = new WeakRefHelper<IEndRangliste>(rangliste);
@@ -48,7 +48,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag").setEndPosMergeSpaltePlus(this.anzSpaltenInSpieltag - 1);
 			getSheetHelper().setTextInCell(spieltagheader);
 			formatZweiteZeileSpielTagSpalten(ersteSpalteSpieltagBlock); // ZWEITE_KOPFDATEN_ZEILE
-			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock, SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
+			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock, MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		}
 
 		// -------------------------

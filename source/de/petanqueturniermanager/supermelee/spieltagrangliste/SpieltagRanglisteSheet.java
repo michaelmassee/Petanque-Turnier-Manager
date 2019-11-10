@@ -21,6 +21,7 @@ import com.sun.star.sheet.XSpreadsheets;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -37,7 +38,6 @@ import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
-import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
@@ -66,7 +66,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0, B=1
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
 
-	private final SpielerSpalte spielerSpalte;
+	private final MeldungenSpalte spielerSpalte;
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
@@ -77,7 +77,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spieltag Rangliste");
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
-		spielerSpalte = new SpielerSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
+		spielerSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
