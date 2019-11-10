@@ -4,37 +4,17 @@
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellHoriJustify;
-
-import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
-import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
-public class SuperMeleePropertiesSpalte {
-	// private static final Logger logger = LogManager.getLogger(PropertiesSpalte.class);
+public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements ISuperMeleePropertiesSpalte {
 
-	private static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
 	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
@@ -64,10 +44,7 @@ public class SuperMeleePropertiesSpalte {
 	private static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermelee Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
 
-	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
-
 	static {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(1).setDescription("1=Supermêlée"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
 
@@ -114,310 +91,102 @@ public class SuperMeleePropertiesSpalte {
 				.setDescription("Erstelle ein Spielrunde Plan zur jeder Spielrunde\r\nN/J"));
 	}
 
-	private final WeakRefHelper<ISheet> sheetWkRef;
-	private int propertiesSpalte;
-	private int erstePropertiesZeile;
-	private int headerZeile;
-
+	/**
+	 * @param propertiesSpalte
+	 * @param erstePropertiesZeile
+	 * @param sheet
+	 */
 	SuperMeleePropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
-		checkNotNull(sheet);
-		checkArgument(propertiesSpalte > -1, "propertiesSpalte %s<0", propertiesSpalte);
-		checkArgument(erstePropertiesZeile > 0, "erstePropertiesZeile %s<1", erstePropertiesZeile);
-
-		this.propertiesSpalte = propertiesSpalte;
-		this.erstePropertiesZeile = erstePropertiesZeile;
-		headerZeile = erstePropertiesZeile - 1;
-		sheetWkRef = new WeakRefHelper<>(sheet);
+		super(propertiesSpalte, erstePropertiesZeile, sheet);
 	}
 
-	/**
-	 * call getSheetHelper from ISheet<br>
-	 * do not assign to Variable, while getter does SheetRunner.testDoCancelTask(); <br>
-	 *
-	 * @see SheetRunner#getSheetHelper()
-	 *
-	 * @return SheetHelper
-	 * @throws GenerateException
-	 */
-	private SheetHelper getSheetHelper() throws GenerateException {
-		return sheetWkRef.getObject().getSheetHelper();
-	}
-
-	public void doFormat() throws GenerateException {
-		XSpreadsheet propSheet = getPropSheet();
-		// header
-		Position posHeader = Position.from(propertiesSpalte, headerZeile);
-		CellProperties columnProperties = CellProperties.from().setWidth(6500);
-
-		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
-		getSheetHelper().setTextInCell(headerVal);
-
-		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(1500)).setValue("Wert")
-				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
-		getSheetHelper().setTextInCell(wertheaderVal);
-	}
-
-	public void updateKonfigBlock() throws GenerateException {
-		XSpreadsheet propSheet = getPropSheet();
-
-		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
-
-			ConfigProperty<?> configProp = KONFIG_PROPERTIES.get(idx);
-
-			Position pos = getPropKeyPos(configProp.getKey());
-			if (pos == null) {
-				// when not found insert new
-				pos = Position.from(propertiesSpalte, erstePropertiesZeile + idx);
-				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT);
-				getSheetHelper().setTextInCell(celVal);
-
-				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
-
-				// default Val schreiben
-				switch (configProp.getType()) {
-				case STRING:
-					celVal.setValue((String) configProp.getDefaultVal());
-					getSheetHelper().setTextInCell(celVal);
-					break;
-				case INTEGER:
-					IntegerCellValue numberCellValue = IntegerCellValue.from(celVal).setValue((Integer) configProp.getDefaultVal());
-					getSheetHelper().setValInCell(numberCellValue);
-					break;
-				case COLOR:
-					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(), configProp.getDescription());
-					break;
-				case BOOLEAN:
-					celVal.setValue(booleanToString((Boolean) configProp.getDefaultVal()));
-					getSheetHelper().setTextInCell(celVal);
-					break;
-				default:
-				}
-			}
-		}
-	}
-
-	/**
-	 *
-	 * @param name
-	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
-	 * @throws GenerateException
-	 */
-	public int readIntProperty(String key) throws GenerateException {
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = getPropKeyPos(key);
-		int val = -1;
-		if (pos != null) {
-			val = getSheetHelper().getIntFromCell(sheet, pos.spaltePlusEins());
-		}
-
-		if (val == -1) {
-			Object defaultVal = getDefaultProp(key);
-			if (defaultVal != null && defaultVal instanceof Integer) {
-				val = (Integer) defaultVal;
-			}
-		}
-		return val;
-	}
-
-	/**
-	 *
-	 * @param name
-	 * @return defaultVal when not found
-	 * @throws GenerateException
-	 */
-	public void writeIntProperty(String name, int newVal) throws GenerateException {
-		Position pos = getPropKeyPos(name);
-		if (pos != null) {
-			getSheetHelper().setValInCell(getPropSheet(), pos.spaltePlusEins(), newVal);
-		}
-	}
-
-	/**
-	 * lese von der Zelle im Sheet zu diesen Property, das Property "CellBackColor"
-	 *
-	 * @param key = property
-	 * @return Integer, -1 wenn keine Farbe, null when not found
-	 * @throws GenerateException
-	 */
-
-	public Integer readCellBackColorProperty(String key) throws GenerateException {
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = getPropKeyPos(key);
-		Integer val = null;
-		if (pos != null) {
-			Object cellProperty = getSheetHelper().getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
-			if (cellProperty != null && cellProperty instanceof Integer) {
-				val = (Integer) cellProperty;
-			}
-		}
-
-		if (val == null) {
-			Object defaultVal = getDefaultProp(key);
-			if (defaultVal != null && defaultVal instanceof Integer) {
-				val = (Integer) defaultVal;
-			}
-		}
-		return val;
-	}
-
-	public void writeCellBackColorProperty(String key, Integer val, String comment) throws GenerateException {
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = getPropKeyPos(key);
-		if (pos != null) {
-			getSheetHelper().setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
-			getSheetHelper().setTextInCell(StringCellValue.from(sheet, pos, ""));
-
-			if (StringUtils.isNotEmpty(comment)) {
-				getSheetHelper().setCommentInCell(sheet, pos, comment);
-			}
-		}
-	}
-
-	/**
-	 * @param name
-	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
-	 * @throws GenerateException
-	 */
-	public String readStringProperty(String key) throws GenerateException {
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = getPropKeyPos(key);
-		String val = null;
-		if (pos != null) {
-			val = getSheetHelper().getTextFromCell(sheet, pos.spaltePlusEins());
-		}
-
-		if (val == null) {
-			Object defaultVal = getDefaultProp(key);
-			if (defaultVal != null && defaultVal instanceof String) {
-				val = (String) defaultVal;
-			}
-		}
-		return val;
-	}
-
-	public Boolean readBooleanProperty(String key) throws GenerateException {
-		return stringToBoolean(readStringProperty(key));
-	}
-
-	private String booleanToString(boolean booleanProp) {
-		if (booleanProp) {
-			return "J";
-		}
-		return "N";
-	}
-
-	private boolean stringToBoolean(String booleanProp) {
-		if (StringUtils.isBlank(booleanProp) || StringUtils.containsIgnoreCase(booleanProp, "N")) {
-			return false;
-		}
-		return true;
-	}
-
-	private Object getDefaultProp(String key) {
-		for (ConfigProperty<?> konfigProp : KONFIG_PROPERTIES) {
-			if (konfigProp.getKey().equals(key)) {
-				return konfigProp.getDefaultVal();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 *
-	 * @param name
-	 * @return null when not found
-	 * @throws GenerateException
-	 */
-	public Position getPropKeyPos(String key) throws GenerateException {
-		checkNotNull(key);
-
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = Position.from(propertiesSpalte, erstePropertiesZeile);
-		// TODO umstellen auf uno find
-		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
-			String val = getSheetHelper().getTextFromCell(sheet, pos);
-			if (StringUtils.isNotBlank(val) && val.trim().equalsIgnoreCase(key.trim())) {
-				return pos;
-			}
-			pos.zeilePlusEins();
-		}
-		return null;
-	}
-
+	@Override
 	public SpielTagNr getAktiveSpieltag() throws GenerateException {
 		SpielTagNr spieltag = SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
 		ProcessBox.from().spielTag(spieltag);
 		return spieltag;
 	}
 
+	@Override
 	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
 		ProcessBox.from().spielTag(spieltag);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
 	}
 
+	@Override
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		SpielRundeNr spielrunde = SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
 		ProcessBox.from().spielRunde(spielrunde);
 		return spielrunde;
 	}
 
+	@Override
 	public void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
 		ProcessBox.from().spielRunde(spielrunde);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
 	}
 
-	private final XSpreadsheet getPropSheet() throws GenerateException {
-		return sheetWkRef.getObject().getSheet();
-	}
-
+	@Override
 	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE);
 	}
 
+	@Override
 	public Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE);
 	}
 
+	@Override
 	public Integer getSpielRundeHeaderFarbe() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER);
 	}
 
+	@Override
 	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE);
 	}
 
+	@Override
 	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
 	}
 
+	@Override
 	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE);
 	}
 
+	@Override
 	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE);
 	}
 
+	@Override
 	public Integer getRanglisteHeaderFarbe() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER);
 	}
 
+	@Override
 	public Integer getSpielRundeNeuAuslosenAb() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN);
 	}
 
+	@Override
 	public Integer getNichtGespielteRundePlus() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS);
 	}
 
+	@Override
 	public Integer getNichtGespielteRundeMinus() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS);
 	}
 
+	@Override
 	public String getSpielrundeSpielbahn() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN);
 	}
 
+	@Override
 	public SuperMeleeMode getSuperMeleeMode() throws GenerateException {
 		String prop = readStringProperty(KONFIG_PROP_SUPERMELEE_MODE);
 		if (null != prop && prop.trim().equalsIgnoreCase("d")) {
@@ -432,22 +201,17 @@ public class SuperMeleePropertiesSpalte {
 	 * @return
 	 * @throws GenerateException
 	 */
+	@Override
 	public Integer getAnzGespielteSpieltage() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE);
 	}
 
-	public SpielSystem getSpielSystem() throws GenerateException {
-		int spielSystemId = readIntProperty(KONFIG_PROP_NAME_SPIELSYSTEM);
-		if (spielSystemId > -1) {
-			return SpielSystem.findById(spielSystemId);
-		}
-		return null;
-	}
-
+	@Override
 	public String getFusszeileLinks() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_FUSSZEILE_LINKS);
 	}
 
+	@Override
 	public String getFusszeileMitte() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
 	}
@@ -455,6 +219,7 @@ public class SuperMeleePropertiesSpalte {
 	/**
 	 * spieltag in header ?
 	 */
+	@Override
 	public boolean getSpielrunde1Header() throws GenerateException {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_1_HEADER);
 	}
@@ -463,7 +228,9 @@ public class SuperMeleePropertiesSpalte {
 	 * @return
 	 * @throws GenerateException
 	 */
+	@Override
 	public boolean getSpielrundePlan() throws GenerateException {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_PLAN);
 	}
+
 }

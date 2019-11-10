@@ -27,7 +27,8 @@ public class SpielrundenKonfigPanel extends BaseKonfigPanel {
 
 	@Override
 	public void drawContent() {
-		JPanel content = getContent();
+		// Baustelle
+		// JPanel content = getContent();
 
 	}
 }

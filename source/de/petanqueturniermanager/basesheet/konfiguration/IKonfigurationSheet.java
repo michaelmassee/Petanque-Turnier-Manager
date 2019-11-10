@@ -4,11 +4,12 @@
 package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 
 /**
  * @author Michael Massee
  *
  */
-public interface IKonfigurationSheet {
+public interface IKonfigurationSheet extends ISheet, IKonfigurationKonstanten {
 	void update() throws GenerateException;
 }

@@ -184,7 +184,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		return spielTag;
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
+	public void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag);
 		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
@@ -195,7 +195,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		return spielRundeNr;
 	}
 
-	public void setSpielRundeNr(SpielRundeNr spielrunde) throws GenerateException {
+	public void setSpielRundeNr(SpielRundeNr spielrunde) {
 		checkNotNull(spielrunde);
 		ProcessBox.from().spielRunde(spielrunde);
 		spielRundeNr = spielrunde;

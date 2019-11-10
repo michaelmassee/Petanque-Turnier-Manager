@@ -8,19 +8,18 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
+import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 
 /**
  * @author Michael Massee
  *
  */
-public class LigaKonfigurationSheet extends SheetRunner implements ISheet, IKonfigurationSheet, IKonfigurationKonstanten {
+public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IKonfigurationSheet {
 
 	private static final Logger logger = LogManager.getLogger(LigaKonfigurationSheet.class);
 
@@ -54,6 +53,12 @@ public class LigaKonfigurationSheet extends SheetRunner implements ISheet, IKonf
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
+	}
+
+	@Override
+	protected IPropertiesSpalte getPropertiesSpalte() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

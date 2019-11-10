@@ -438,7 +438,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 		return spieltagNr;
 	}
 
-	public void setSpieltagNr(SpielTagNr spieltagNr) throws GenerateException {
+	public void setSpieltagNr(SpielTagNr spieltagNr) {
 		checkNotNull(spieltagNr, "spieltagNr==null");
 		ProcessBox.from().spielTag(spieltagNr);
 		this.spieltagNr = spieltagNr;

@@ -10,10 +10,10 @@ public class CloseConnections {
 	// private static final Logger logger = LogManager.getLogger(CloseConnections.class);
 
 	/**
-	 * TODO <br>
+	 * TODO Baustelle <br>
 	 * Close alles ! Funktioniert so nicht ?!?!?
 	 */
-	public static void closeOfficeConnection(XComponentContext xContext) {
+	public static void closeOfficeConnection(@SuppressWarnings("unused") XComponentContext xContext) {
 
 		// try {
 		// // XModel xModel = UnoRuntime.queryInterface(XModel.class, DocumentHelper.getCurrentComponent(xContext));

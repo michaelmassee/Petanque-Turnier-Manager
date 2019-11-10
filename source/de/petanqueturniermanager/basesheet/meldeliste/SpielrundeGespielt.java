@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.supermelee.meldeliste;
+package de.petanqueturniermanager.basesheet.meldeliste;
 
 /*
 * SpielrundeGespielt.java

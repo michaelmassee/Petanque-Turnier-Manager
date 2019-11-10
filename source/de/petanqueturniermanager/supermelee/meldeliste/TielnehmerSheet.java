@@ -160,7 +160,7 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 		return spielTagNr;
 	}
 
-	public void setSpielTagNr(SpielTagNr spielTag) throws GenerateException {
+	public void setSpielTagNr(SpielTagNr spielTag) {
 		checkNotNull(spielTag, "spielTagNr == null");
 		ProcessBox.from().spielTag(spielTag);
 		spielTagNr = spielTag;

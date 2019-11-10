@@ -4,6 +4,7 @@
 
 package de.petanqueturniermanager.liga.meldeliste;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -11,19 +12,19 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
-import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste, Runnable, IMitSpielerSpalte, MeldeListeKonstanten {
+abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste {
 
-	private final MeldungenSpalte spielerSpalte;
+	private final MeldungenSpalte meldungenSpalte;
 	private final MeldeListeHelper meldeListeHelper;
 
 	/**
@@ -31,7 +32,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
-		spielerSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.TETE);
+		meldungenSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.TETE);
 		meldeListeHelper = new MeldeListeHelper(this);
 	}
 
@@ -39,36 +40,42 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 		processBoxinfo("Aktualisiere Meldungen");
 		meldeListeHelper.testDoppelteMeldungen();
+
+		XSpreadsheet sheet = getSheet();
+		getSheetHelper().setActiveSheet(sheet);
+
+		// ------
+		// Header einfuegen
+		// ------
+		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		getMeldungenSpalte().insertHeaderInSheet(headerBackColor);
+		// --------------------- TODO doppelt code entfernen
+
 	}
 
 	@Override
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		// TODO Auto-generated method stub
-		return null;
+		return meldeListeHelper.formulaSverweisSpielernamen(spielrNrAdresse);
 	}
 
 	@Override
 	public Meldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
-		// TODO Auto-generated method stub
-		return null;
+		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	@Override
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
-		// TODO Auto-generated method stub
-		return 0;
+		return meldungenSpalte.getSpielerZeileNr(spielerNr);
 	}
 
 	@Override
 	public Meldungen getAktiveMeldungen() throws GenerateException {
-		// TODO Auto-generated method stub
-		return null;
+		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	@Override
 	public Meldungen getAlleMeldungen() throws GenerateException {
-		// TODO Auto-generated method stub
-		return null;
+		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), null);
 	}
 
 	@Override
@@ -78,55 +85,50 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public int neachsteFreieDatenZeile() throws GenerateException {
-		// TODO Auto-generated method stub
-		return 0;
+		return meldungenSpalte.neachsteFreieDatenZeile();
 	}
 
 	@Override
 	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
-		// TODO Auto-generated method stub
-
+		meldungenSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
 	}
 
 	@Override
 	public int letzteDatenZeile() throws GenerateException {
-		// TODO Auto-generated method stub
-		return 0;
+		return meldungenSpalte.getLetzteDatenZeile();
 	}
 
 	@Override
 	public int getErsteDatenZiele() {
-		// TODO Auto-generated method stub
-		return 0;
+		return meldungenSpalte.getErsteDatenZiele();
 	}
 
 	@Override
 	public List<String> getSpielerNamenList() throws GenerateException {
-		// TODO Auto-generated method stub
-		return null;
+		return meldungenSpalte.getSpielerNamenList();
 	}
 
 	@Override
 	public List<Integer> getSpielerNrList() throws GenerateException {
-		// TODO Auto-generated method stub
-		return null;
+		return meldungenSpalte.getSpielerNrList();
 	}
 
+	/**
+	 * @return the spielerSpalte
+	 */
 	@Override
-	public MeldungenSpalte getMeldungenSpalte() {
-		// TODO Auto-generated method stub
-		return null;
+	public final MeldungenSpalte getMeldungenSpalte() {
+		return meldungenSpalte;
 	}
 
 	@Override
 	public int letzteSpielTagSpalte() throws GenerateException {
-		// TODO Auto-generated method stub
-		return 0;
+		return meldeListeHelper.ersteSpieltagSpalte();
 	}
 
 	@Override
 	public int getSpielerNameSpalte() {
-		return 0;
+		return meldungenSpalte.getSpielerNameErsteSpalte();
 	}
 
 }

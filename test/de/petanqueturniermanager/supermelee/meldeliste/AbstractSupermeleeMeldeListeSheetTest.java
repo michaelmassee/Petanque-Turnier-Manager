@@ -75,7 +75,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 				// do nothing here
 			}
 		};
-
 	}
 
 	@Test
