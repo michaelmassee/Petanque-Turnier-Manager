@@ -4,12 +4,12 @@
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
-public interface ISuperMeleePropertiesSpalte {
+public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	SpielTagNr getAktiveSpieltag() throws GenerateException;
 
@@ -40,8 +40,6 @@ public interface ISuperMeleePropertiesSpalte {
 	Integer getNichtGespielteRundePlus() throws GenerateException;
 
 	Integer getNichtGespielteRundeMinus() throws GenerateException;
-
-	SpielSystem getSpielSystem() throws GenerateException;
 
 	String getSpielrundeSpielbahn() throws GenerateException;
 

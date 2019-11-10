@@ -6,6 +6,7 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,6 +25,9 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
@@ -197,4 +201,61 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		}
 	}
 
+	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
+		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
+		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), 999).getAddressWith$();
+		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";2;0)";
+	}
+
+	public Meldungen getMeldungen(SpielTagNr spieltag, List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
+		checkNotNull(spieltag, "spieltag == null");
+		Meldungen meldung = new Meldungen();
+		int letzteZeile = meldeListe.getMeldungenSpalte().getLetzteDatenZeile();
+
+		if (letzteZeile >= ERSTE_DATEN_ZEILE) {
+			// daten vorhanden
+			int nichtZusammenSpielenSpalte = setzPositionSpalte();
+			int spieltagSpalte = spieltagSpalte(spieltag);
+
+			Position posSpieltag = Position.from(spieltagSpalte, ERSTE_DATEN_ZEILE);
+			XSpreadsheet sheet = getSheet();
+
+			for (int spielerZeile = ERSTE_DATEN_ZEILE; spielerZeile <= letzteZeile; spielerZeile++) {
+
+				int isAktiv = meldeListe.getSheetHelper().getIntFromCell(sheet, posSpieltag.zeile(spielerZeile));
+				SpielrundeGespielt status = SpielrundeGespielt.findById(isAktiv);
+
+				if (spielrundeGespielt == null || spielrundeGespielt.contains(status)) {
+					int spielerNr = meldeListe.getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(SPIELER_NR_SPALTE));
+					if (spielerNr > 0) {
+						Spieler spieler = Spieler.from(spielerNr);
+
+						if (nichtZusammenSpielenSpalte > -1) {
+							int nichtzusammen = meldeListe.getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(nichtZusammenSpielenSpalte));
+							if (nichtzusammen > 0) {
+								spieler.setSetzPos(nichtzusammen);
+							}
+						}
+						meldung.addSpielerWennNichtVorhanden(spieler);
+					}
+				}
+			}
+		}
+		return meldung;
+	}
+
+	public int setzPositionSpalte() {
+		return meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte() + 1;
+	}
+
+	public int ersteSpieltagSpalte() {
+		if (setzPositionSpalte() > -1) {
+			return setzPositionSpalte() + 1;
+		}
+		return SPIELER_NR_SPALTE + meldeListe.getMeldungenSpalte().getAnzahlSpielerNamenSpalten();
+	}
+
+	public int spieltagSpalte(SpielTagNr spieltag) {
+		return ersteSpieltagSpalte() + spieltag.getNr() - 1;
+	}
 }

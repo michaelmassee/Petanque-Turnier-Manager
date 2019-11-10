@@ -107,7 +107,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		return new MeldeListeSheet_Update(workingSpreadsheet);
 	}
 
-	public AbstractSupermeleeMeldeListeSheet getMeldeListe() throws GenerateException {
+	public AbstractSupermeleeMeldeListeSheet getMeldeListe() {
 		meldeListe.setSpielTag(getSpielTag());
 		return meldeListe;
 	}
@@ -617,11 +617,12 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	/**
-	 * @TODO<br>
+	 * @TODO Baustelle<br>
 	 * SpieltagInfos aus Properties einfuegen. Infos was gespeilt wird, etc ....
 	 *
 	 * @return
 	 */
+	@SuppressWarnings("unused")
 	private int spielTagInfosEinfuegen() {
 		DocumentPropertiesHelper prophlpr = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		String propName = SpielrundeInfoKonfigDialog.getPropertieNameFuerSpieltag(getSpielTag());
@@ -876,7 +877,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		return spielTag;
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
+	public void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag);
 		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
@@ -887,7 +888,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		return spielRundeNr;
 	}
 
-	public void setSpielRundeNr(SpielRundeNr spielrunde) throws GenerateException {
+	public void setSpielRundeNr(SpielRundeNr spielrunde) {
 		checkNotNull(spielrunde);
 		ProcessBox.from().spielRunde(spielrunde);
 		spielRundeNr = spielrunde;

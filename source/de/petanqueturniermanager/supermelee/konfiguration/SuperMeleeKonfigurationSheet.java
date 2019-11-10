@@ -11,12 +11,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
+import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -26,18 +25,14 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
-public class SuperMeleeKonfigurationSheet extends SheetRunner implements ISuperMeleePropertiesSpalte, ISheet, IKonfigurationSheet, IKonfigurationKonstanten {
-	private static final int MAX_SPIELTAG = 10;
+public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
 
 	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
-	public static final int PROPERTIESSPALTE = 0;
-	public static final int ERSTE_ZEILE_PROPERTIES = 1;
-
-	public static final int KONFIG_SPIELTAG_NR = 3;
-	public static final int KONFIG_SPIELTAG_KOPFZEILE = KONFIG_SPIELTAG_NR + 1;
+	private static final int MAX_SPIELTAG = 10;
+	private static final int KONFIG_SPIELTAG_NR = 3;
+	private static final int KONFIG_SPIELTAG_KOPFZEILE = KONFIG_SPIELTAG_NR + 1;
 
 	private final SuperMeleePropertiesSpalte propertiesSpalte;
 
@@ -206,11 +201,6 @@ public class SuperMeleeKonfigurationSheet extends SheetRunner implements ISuperM
 	}
 
 	@Override
-	public SpielSystem getSpielSystem() throws GenerateException {
-		return propertiesSpalte.getSpielSystem();
-	}
-
-	@Override
 	public String getSpielrundeSpielbahn() throws GenerateException {
 		return propertiesSpalte.getSpielrundeSpielbahn();
 	}
@@ -248,6 +238,11 @@ public class SuperMeleeKonfigurationSheet extends SheetRunner implements ISuperM
 	@Override
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		return this;
+	}
+
+	@Override
+	protected IPropertiesSpalte getPropertiesSpalte() {
+		return propertiesSpalte;
 	}
 
 }
