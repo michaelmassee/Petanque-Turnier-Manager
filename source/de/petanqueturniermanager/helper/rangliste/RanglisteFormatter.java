@@ -11,13 +11,13 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.SpielerSpalte;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
@@ -27,7 +27,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int anzSpaltenInSpielrunde;
 	private final int ersteSpielRundeSpalte;
 
-	public RanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, SpielerSpalte spielerSpalte, int ersteSpielRundeSpalte,
+	public RanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte spielerSpalte, int ersteSpielRundeSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
@@ -49,7 +49,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		// -------------------------
 		// spielrunden spalten
 		// -------------------------
-		CellProperties columnProperties = CellProperties.from().setWidth(SpielerSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		CellProperties columnProperties = CellProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerPlus = StringCellValue.from(sheet, Position.from(this.ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+").addColumnProperties(columnProperties)
 				.setCellBackColor(getHeaderFarbe());
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
@@ -77,7 +77,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		ranglisteWkRef.getObject().processBoxinfo("Formatiere Daten");
 
 		ISpielTagRangliste rangliste = this.ranglisteWkRef.getObject();
-		SpielerSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
+		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
 
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {

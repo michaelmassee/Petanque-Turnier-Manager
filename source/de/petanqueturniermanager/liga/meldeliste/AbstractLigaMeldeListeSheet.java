@@ -8,24 +8,37 @@ import java.util.List;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.model.Meldungen;
 
-abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste, Runnable, ISheet, IMitSpielerSpalte, MeldeListeKonstanten {
+abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste, Runnable, IMitSpielerSpalte, MeldeListeKonstanten {
+
+	private final MeldungenSpalte spielerSpalte;
+	private final MeldeListeHelper meldeListeHelper;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, "Meldeliste");
+		spielerSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.TETE);
+		meldeListeHelper = new MeldeListeHelper(this);
+	}
+
+	public void upDateSheet() throws GenerateException {
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
+		processBoxinfo("Aktualisiere Meldungen");
+		meldeListeHelper.testDoppelteMeldungen();
 	}
 
 	@Override
@@ -60,8 +73,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public XSpreadsheet getSheet() throws GenerateException {
-		// TODO Auto-generated method stub
-		return null;
+		return meldeListeHelper.getSheet();
 	}
 
 	@Override
@@ -100,11 +112,21 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		return null;
 	}
 
-	public void upDateSheet() throws GenerateException {
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
-		processBoxinfo("Aktualisiere Meldungen");
+	@Override
+	public MeldungenSpalte getMeldungenSpalte() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-		testDoppelteMeldungen();
+	@Override
+	public int letzteSpielTagSpalte() throws GenerateException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getSpielerNameSpalte() {
+		return 0;
 	}
 
 }
