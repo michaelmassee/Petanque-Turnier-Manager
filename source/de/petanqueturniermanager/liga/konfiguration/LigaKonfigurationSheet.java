@@ -13,7 +13,10 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
@@ -23,11 +26,14 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	private static final Logger logger = LogManager.getLogger(LigaKonfigurationSheet.class);
 
+	private final LigaPropertiesSpalte propertiesSpalte;
+
 	/**
 	 * @param workingSpreadsheet
 	 */
 	public LigaKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
+		propertiesSpalte = new LigaPropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
 
 	@Override
@@ -47,7 +53,14 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	@Override
 	public void update() throws GenerateException {
-		// TODO Auto-generated method stub
+		processBoxinfo("Update Konfiguration");
+		propertiesSpalte.updateKonfigBlock();
+		propertiesSpalte.doFormat();
+		// initSpieltagKonfigSpalten();
+		// initPageStyles(); // TODO
+
+		// anzeige in processBoxinfo
+		ProcessBox.from().spielTag(SpielTagNr.from(1)).spielRunde(SpielRundeNr.from(1)).spielSystem(propertiesSpalte.getSpielSystem());
 	}
 
 	@Override
@@ -57,8 +70,7 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	@Override
 	protected IPropertiesSpalte getPropertiesSpalte() {
-		// TODO Auto-generated method stub
-		return null;
+		return propertiesSpalte;
 	}
 
 }
