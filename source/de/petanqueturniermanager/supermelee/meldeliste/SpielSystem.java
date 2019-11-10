@@ -6,7 +6,7 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 public enum SpielSystem {
 
-	SUPERMELEE(1, "Supermêlée");
+	SUPERMELEE(1, "Supermêlée"), LIGA(2, "Liga");
 
 	private final String bezeichnung;
 	private final int id;
@@ -17,16 +17,16 @@ public enum SpielSystem {
 	}
 
 	public String getBezeichnung() {
-		return this.bezeichnung;
+		return bezeichnung;
 	}
 
 	@Override
 	public String toString() {
-		return this.bezeichnung;
+		return bezeichnung;
 	}
 
 	public int getId() {
-		return this.id;
+		return id;
 	}
 
 	public static SpielSystem findById(int id) {

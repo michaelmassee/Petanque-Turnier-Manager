@@ -48,6 +48,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public class ProcessBox {
 	private static final Logger logger = LogManager.getLogger(ProcessBox.class);
@@ -67,6 +68,7 @@ public class ProcessBox {
 	private String prefix = null;
 	private JTextField spieltagText = null;
 	private JTextField spielrundeText = null;
+	private JTextField spielSystemText = null;
 
 	private JLabel statusLabel = null;
 
@@ -204,19 +206,28 @@ public class ProcessBox {
 
 		spieltagText = newNumberJTextField();
 		spielrundeText = newNumberJTextField();
+		spielSystemText = newNumberJTextField();
 
-		JLabel spieltagLabel = new JLabel("Spieltag:");
+		JLabel spieltagLabel = new JLabel("Tag:");
 		spieltagLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		JLabel spielrundeLabel = new JLabel("Spielrunde:");
+		JLabel spielrundeLabel = new JLabel("Runde:");
+		spielrundeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		JLabel spielSystemLabel = new JLabel("System:");
 		spielrundeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
 		panel.add(spieltagLabel, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
 		panel.add(spieltagText, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
+
 		panel.add(spielrundeLabel, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
 		panel.add(spielrundeText, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++; // spalte
+
+		panel.add(spielSystemLabel, gridBagConstraintsPanel);
+		gridBagConstraintsPanel.gridx++; // spalte
+		panel.add(spielSystemText, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
 
 		// ----------------------------------------------------------
@@ -296,6 +307,11 @@ public class ProcessBox {
 	public ProcessBox clear() {
 		isFehler = false;
 		logOut.setText(null);
+		return this;
+	}
+
+	public ProcessBox spielSystem(SpielSystem spielSystem) {
+		spielSystemText.setText("" + spielSystem);
 		return this;
 	}
 

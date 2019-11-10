@@ -62,7 +62,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 		initPageStyles();
 
 		// anzeige in processBoxinfo
-		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde());
+		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).spielSystem(propertiesSpalte.getSpielSystem());
 	}
 
 	/**

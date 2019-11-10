@@ -35,7 +35,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	protected static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
-	private static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
+	protected static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergr. Gerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergr. Ungerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
@@ -45,6 +45,11 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected final int erstePropertiesZeile;
 	protected final int headerZeile;
 
+	protected static void ADDSPIELSYSTEM(SpielSystem spielSystem) {
+		KONFIG_PROPERTIES.add(0,
+				ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(spielSystem.getId()).setDescription(spielSystem.name()));
+	}
+
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen"));
@@ -52,7 +57,6 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
 				.setDescription("Spielrunde Header-Hintergrundfarbe"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(1).setDescription("1=Supermêlée"));
 
 	}
 
