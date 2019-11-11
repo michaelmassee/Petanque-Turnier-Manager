@@ -3,8 +3,12 @@
  */
 package de.petanqueturniermanager.liga.konfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 /**
@@ -13,8 +17,11 @@ import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
  */
 public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaPropertiesSpalte {
 
+	private static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
+
 	static {
-		ADDSPIELSYSTEM(SpielSystem.LIGA);
+		ADDSpielsystemProp(SpielSystem.LIGA, KONFIG_PROPERTIES);
+		ADDBaseProp(KONFIG_PROPERTIES);
 	}
 
 	/**
@@ -24,6 +31,11 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	 */
 	protected LigaPropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
 		super(propertiesSpalte, erstePropertiesZeile, sheet);
+	}
+
+	@Override
+	protected List<ConfigProperty<?>> getKonfigProperties() {
+		return KONFIG_PROPERTIES;
 	}
 
 }
