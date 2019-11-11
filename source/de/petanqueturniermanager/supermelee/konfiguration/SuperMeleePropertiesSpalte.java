@@ -4,6 +4,9 @@
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -15,6 +18,13 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements ISuperMeleePropertiesSpalte {
+
+	private static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
+
+	static {
+		ADDSpielsystemProp(SpielSystem.SUPERMELEE, KONFIG_PROPERTIES);
+		ADDBaseProp(KONFIG_PROPERTIES);
+	}
 
 	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
@@ -44,10 +54,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 	private static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermelee Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
-
-	static {
-		ADDSPIELSYSTEM(SpielSystem.SUPERMELEE);
-	}
 
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
@@ -236,6 +242,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public boolean getSpielrundePlan() throws GenerateException {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_PLAN);
+	}
+
+	@Override
+	protected List<ConfigProperty<?>> getKonfigProperties() {
+		return KONFIG_PROPERTIES;
 	}
 
 }

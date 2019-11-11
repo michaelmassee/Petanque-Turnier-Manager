@@ -6,7 +6,6 @@ package de.petanqueturniermanager.basesheet.konfiguration;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -33,8 +32,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
  */
 abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
-	protected static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
-
 	protected static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergr. Gerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergr. Ungerade";
@@ -45,12 +42,12 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected final int erstePropertiesZeile;
 	protected final int headerZeile;
 
-	protected static void ADDSPIELSYSTEM(SpielSystem spielSystem) {
+	protected static void ADDSpielsystemProp(SpielSystem spielSystem, List<ConfigProperty<?>> KONFIG_PROPERTIES) {
 		KONFIG_PROPERTIES.add(0,
 				ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(spielSystem.getId()).setDescription(spielSystem.name()));
 	}
 
-	static {
+	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("c0d6f7", 16))
@@ -70,6 +67,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		this.erstePropertiesZeile = erstePropertiesZeile;
 		headerZeile = erstePropertiesZeile - 1;
 	}
+
+	abstract protected List<ConfigProperty<?>> getKonfigProperties();
 
 	/**
 	 * call getSheetHelper from ISheet<br>
@@ -101,15 +100,21 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public void updateKonfigBlock() throws GenerateException {
 		XSpreadsheet propSheet = getPropSheet();
 
-		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
+		Position nextFreepos = Position.from(propertiesSpalte, erstePropertiesZeile);
+		// TODO umstellen auf uno find
+		for (int idx = 0; idx < getKonfigProperties().size(); idx++) {
+			String val = getSheetHelper().getTextFromCell(propSheet, nextFreepos);
+			if (!StringUtils.isNotBlank(val)) {
+				break;
+			}
+			nextFreepos.zeilePlusEins();
+		}
 
-			ConfigProperty<?> configProp = KONFIG_PROPERTIES.get(idx);
-
+		for (ConfigProperty<?> configProp : getKonfigProperties()) {
 			Position pos = getPropKeyPos(configProp.getKey());
 			if (pos == null) {
 				// when not found insert new
-				pos = Position.from(propertiesSpalte, erstePropertiesZeile + idx);
-				StringCellValue celVal = StringCellValue.from(propSheet, pos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT);
+				StringCellValue celVal = StringCellValue.from(propSheet, nextFreepos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT);
 				getSheetHelper().setTextInCell(celVal);
 
 				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
@@ -133,6 +138,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 					break;
 				default:
 				}
+				nextFreepos.zeilePlusEins();
 			}
 		}
 	}
@@ -254,7 +260,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	private Object getDefaultProp(String key) {
-		for (ConfigProperty<?> konfigProp : KONFIG_PROPERTIES) {
+		for (ConfigProperty<?> konfigProp : getKonfigProperties()) {
 			if (konfigProp.getKey().equals(key)) {
 				return konfigProp.getDefaultVal();
 			}
@@ -274,7 +280,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = Position.from(propertiesSpalte, erstePropertiesZeile);
 		// TODO umstellen auf uno find
-		for (int idx = 0; idx < KONFIG_PROPERTIES.size(); idx++) {
+		for (int idx = 0; idx < getKonfigProperties().size(); idx++) {
 			String val = getSheetHelper().getTextFromCell(sheet, pos);
 			if (StringUtils.isNotBlank(val) && val.trim().equalsIgnoreCase(key.trim())) {
 				return pos;
