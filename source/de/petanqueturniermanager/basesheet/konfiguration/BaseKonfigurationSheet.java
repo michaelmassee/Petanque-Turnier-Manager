@@ -3,10 +3,17 @@
  */
 package de.petanqueturniermanager.basesheet.konfiguration;
 
+import com.sun.star.sheet.XSpreadsheet;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -17,8 +24,41 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public BaseKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+	public BaseKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
+		super(workingSpreadsheet, spielSystem);
+	}
+
+	// Wird immer von Sheetrunner aufgerufen
+	@Override
+	public final void update() throws GenerateException {
+		processBoxinfo("Update Konfiguration");
+		// validate SpielSystem
+		validateSpielSystem();
+		updateKonfigBlock();
+		doFormat();
+		updateSpielSystemKonfiguration();
+		updateSpielSystemInDocument();
+		// anzeige in processBoxinfo
+		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).turnierSystem(getTurnierSystem());
+	}
+
+	private void updateSpielSystemInDocument() {
+		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
+		docPropHelper.insertIntPropertyIfNotExist(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, getTurnierSystem().getId());
+	}
+
+	private void validateSpielSystem() throws GenerateException {
+		// Property im Document vorhanden ?
+		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
+		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM);
+		if (spielsystem > -1) {
+			TurnierSystem turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+			TurnierSystem turnierSystemAusSheet = getTurnierSystem();
+			if (turnierSystemAusDocument != null && turnierSystemAusSheet.getId() != turnierSystemAusDocument.getId()) {
+				ProcessBox.from().fehler("Dokument wurde mit Turniersystem " + turnierSystemAusDocument + " erstellt.");
+				throw new GenerateException("Turniersystem '" + getTurnierSystem() + "' stimmt nicht mit Dokument '" + turnierSystemAusDocument + "' überein");
+			}
+		}
 	}
 
 	@Override
@@ -37,13 +77,45 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
-	public final SpielSystem getSpielSystem() throws GenerateException {
-		return getPropertiesSpalte().getSpielSystem();
+	public void updateKonfigBlock() throws GenerateException {
+		getPropertiesSpalte().updateKonfigBlock();
+	}
+
+	@Override
+	public void doFormat() throws GenerateException {
+		getPropertiesSpalte().doFormat();
+	}
+
+	@Override
+	public final SpielTagNr getAktiveSpieltag() throws GenerateException {
+		return getPropertiesSpalte().getAktiveSpieltag();
+	}
+
+	@Override
+	public final void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+		getPropertiesSpalte().setAktiveSpieltag(spieltag);
+	}
+
+	@Override
+	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+		return getPropertiesSpalte().getAktiveSpielRunde();
+	}
+
+	@Override
+	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
+		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
+	}
+
+	@Override
+	public final XSpreadsheet getSheet() throws GenerateException {
+		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
 
 	/**
 	 * @return the propertiesSpalte
 	 */
 	abstract protected IPropertiesSpalte getPropertiesSpalte();
+
+	abstract protected void updateSpielSystemKonfiguration() throws GenerateException;
 
 }

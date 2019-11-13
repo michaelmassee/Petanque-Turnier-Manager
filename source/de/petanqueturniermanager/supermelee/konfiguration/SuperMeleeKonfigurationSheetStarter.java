@@ -11,7 +11,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
  */
 public class SuperMeleeKonfigurationSheetStarter {
 
-	public void start(WorkingSpreadsheet workingSpreadsheet) {
+	public static void start(WorkingSpreadsheet workingSpreadsheet) {
+		// geht nur hier weil SuperMeleeKonfigurationSheet package
 		new SuperMeleeKonfigurationSheet(workingSpreadsheet).start();
 	}
 

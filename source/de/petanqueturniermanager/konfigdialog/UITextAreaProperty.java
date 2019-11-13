@@ -9,6 +9,7 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XTextComponent;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 
 /**
  * @author Michael Massee

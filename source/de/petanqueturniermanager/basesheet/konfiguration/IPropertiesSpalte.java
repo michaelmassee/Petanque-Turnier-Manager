@@ -4,7 +4,8 @@
 package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
@@ -12,12 +13,22 @@ import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
  */
 public interface IPropertiesSpalte {
 
-	SpielSystem getSpielSystem() throws GenerateException;
+	SpielTagNr getAktiveSpieltag() throws GenerateException;
+
+	void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException;
+
+	SpielRundeNr getAktiveSpielRunde() throws GenerateException;
+
+	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException;
 
 	Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException;
 
 	Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException;
 
 	Integer getMeldeListeHeaderFarbe() throws GenerateException;
+
+	void updateKonfigBlock() throws GenerateException;
+
+	void doFormat() throws GenerateException;
 
 }

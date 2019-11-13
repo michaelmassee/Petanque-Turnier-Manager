@@ -4,14 +4,14 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-public enum SpielSystem {
+public enum TurnierSystem {
 
-	SUPERMELEE(1, "Supermêlée"), LIGA(2, "Liga");
+	SUPERMELEE(1, "Supermêlée"), LIGA(2, "Liga"), SCHWEIZER_KO(3, "Schweizer");
 
 	private final String bezeichnung;
 	private final int id;
 
-	private SpielSystem(int id, String bezeichnung) {
+	private TurnierSystem(int id, String bezeichnung) {
 		this.id = id;
 		this.bezeichnung = bezeichnung;
 	}
@@ -29,8 +29,8 @@ public enum SpielSystem {
 		return id;
 	}
 
-	public static SpielSystem findById(int id) {
-		for (SpielSystem spielsystem : values()) {
+	public static TurnierSystem findById(int id) {
+		for (TurnierSystem spielsystem : values()) {
 			if (spielsystem.getId() == id) {
 				return spielsystem;
 			}

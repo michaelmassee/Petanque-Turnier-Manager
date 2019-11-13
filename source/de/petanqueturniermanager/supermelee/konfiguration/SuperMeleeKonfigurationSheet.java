@@ -9,8 +9,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.sheet.XSpreadsheet;
-
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
@@ -18,13 +16,11 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
 
@@ -38,7 +34,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	// Package weil nur in SuperMeleeSheet verwendet werden darf
 	SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
 		propertiesSpalte = new SuperMeleePropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
 
@@ -53,16 +49,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	}
 
 	// update immer einmal in SheetRunner
+	// wird von #BaseKonfigurationSheet.update() verwendet
 	@Override
-	public void update() throws GenerateException {
-		processBoxinfo("Update Konfiguration");
-		propertiesSpalte.updateKonfigBlock();
-		propertiesSpalte.doFormat();
+	protected void updateSpielSystemKonfiguration() throws GenerateException {
 		initSpieltagKonfigSpalten();
 		initPageStyles();
-
-		// anzeige in processBoxinfo
-		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).spielSystem(propertiesSpalte.getSpielSystem());
 	}
 
 	/**
@@ -121,26 +112,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	}
 
 	@Override
-	public SpielTagNr getAktiveSpieltag() throws GenerateException {
-		return propertiesSpalte.getAktiveSpieltag();
-	}
-
-	@Override
-	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
-		propertiesSpalte.setAktiveSpieltag(spieltag);
-	}
-
-	@Override
-	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
-		return propertiesSpalte.getAktiveSpielRunde();
-	}
-
-	@Override
-	public void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
-		propertiesSpalte.setAktiveSpielRunde(neueSpielrunde);
-	}
-
-	@Override
 	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
 		return propertiesSpalte.getSpielRundeHintergrundFarbeGerade();
 	}
@@ -193,11 +164,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	@Override
 	public Integer getNichtGespielteRundeMinus() throws GenerateException {
 		return propertiesSpalte.getNichtGespielteRundeMinus();
-	}
-
-	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
-		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
 
 	@Override

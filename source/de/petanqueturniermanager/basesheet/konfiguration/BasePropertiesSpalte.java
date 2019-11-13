@@ -24,7 +24,6 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 /**
  * @author Michael Massee
@@ -32,7 +31,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
  */
 abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
-	protected static final String KONFIG_PROP_NAME_SPIELSYSTEM = "Spielsystem";
+	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergr. Gerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergr. Ungerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
@@ -41,11 +40,6 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected final int propertiesSpalte;
 	protected final int erstePropertiesZeile;
 	protected final int headerZeile;
-
-	protected static void ADDSpielsystemProp(SpielSystem spielSystem, List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(0,
-				ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELSYSTEM).setDefaultVal(spielSystem.getId()).setDescription(spielSystem.name()));
-	}
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
@@ -83,6 +77,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		return sheetWkRef.getObject().getSheetHelper();
 	}
 
+	@Override
 	public void doFormat() throws GenerateException {
 		XSpreadsheet propSheet = getPropSheet();
 		// header
@@ -97,6 +92,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		getSheetHelper().setTextInCell(wertheaderVal);
 	}
 
+	@Override
 	public void updateKonfigBlock() throws GenerateException {
 		XSpreadsheet propSheet = getPropSheet();
 
@@ -294,14 +290,14 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		return sheetWkRef.getObject().getSheet();
 	}
 
-	@Override
-	public SpielSystem getSpielSystem() throws GenerateException {
-		int spielSystemId = readIntProperty(KONFIG_PROP_NAME_SPIELSYSTEM);
-		if (spielSystemId > -1) {
-			return SpielSystem.findById(spielSystemId);
-		}
-		return null;
-	}
+	// @Override
+	// public SpielSystem getSpielSystem() throws GenerateException {
+	// int spielSystemId = readIntProperty(KONFIG_PROP_NAME_SPIELSYSTEM);
+	// if (spielSystemId > -1) {
+	// return SpielSystem.findById(spielSystemId);
+	// }
+	// return null;
+	// }
 
 	@Override
 	public Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException {

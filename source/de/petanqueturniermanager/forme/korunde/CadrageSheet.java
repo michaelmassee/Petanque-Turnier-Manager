@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -45,7 +46,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	 * @param workingSpreadsheet
 	 */
 	public CadrageSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Cadrage");
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER_KO, "Cadrage");
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);
