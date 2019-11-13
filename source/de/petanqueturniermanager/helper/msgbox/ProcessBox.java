@@ -48,7 +48,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class ProcessBox {
 	private static final Logger logger = LogManager.getLogger(ProcessBox.class);
@@ -310,7 +310,7 @@ public class ProcessBox {
 		return this;
 	}
 
-	public ProcessBox spielSystem(SpielSystem spielSystem) {
+	public ProcessBox turnierSystem(TurnierSystem spielSystem) {
 		spielSystemText.setText("" + spielSystem);
 		return this;
 	}

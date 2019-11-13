@@ -5,6 +5,7 @@ package de.petanqueturniermanager.supermelee.konfiguration;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -22,7 +23,7 @@ public abstract class SuperMeleeSheet extends SheetRunner {
 	}
 
 	public SuperMeleeSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
-		super(workingSpreadsheet, logPrefix);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, logPrefix);
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 	}
 

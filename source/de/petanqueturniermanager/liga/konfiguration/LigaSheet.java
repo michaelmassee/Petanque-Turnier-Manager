@@ -6,6 +6,7 @@ package de.petanqueturniermanager.liga.konfiguration;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -23,7 +24,7 @@ public abstract class LigaSheet extends SheetRunner {
 	}
 
 	public LigaSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
-		super(workingSpreadsheet, logPrefix);
+		super(workingSpreadsheet, TurnierSystem.LIGA, logPrefix);
 		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
 	}
 

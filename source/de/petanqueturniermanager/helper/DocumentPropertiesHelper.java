@@ -2,7 +2,7 @@
 * Erstellung : 24.03.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.konfigdialog;
+package de.petanqueturniermanager.helper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -43,8 +43,8 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param propTurnierSpieltag1Info
-	 * @param string
+	 * @param name
+	 * @param val
 	 */
 	public void insertStringPropertyIfNotExist(String name, String val) {
 		XPropertyContainer xpc = getXPropertyContainer();

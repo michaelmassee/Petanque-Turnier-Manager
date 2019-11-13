@@ -21,24 +21,27 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public abstract class SheetRunner extends Thread implements Runnable {
 
 	private static final String VERARBEITUNG_ABGEBROCHEN = "Verarbeitung abgebrochen";
 	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SheetHelper sheetHelper;
+	private final TurnierSystem turnierSystem;
 	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
 	private static SheetRunner runner = null;
 
 	private String logPrefix = null;
 
-	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
-		this(workingSpreadsheet);
+	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {
+		this(workingSpreadsheet, spielSystem);
 		this.logPrefix = logPrefix;
 	}
 
-	public SheetRunner(WorkingSpreadsheet workingSpreadsheet) {
-		this.workingSpreadsheet = checkNotNull(workingSpreadsheet, "xContext==null");
+	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
+		this.workingSpreadsheet = checkNotNull(workingSpreadsheet, "WorkingSpreadsheet==null");
+		turnierSystem = checkNotNull(spielSystem, "SpielSystem==null");
 		sheetHelper = new SheetHelper(workingSpreadsheet);
 	}
 
@@ -144,6 +147,13 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	 */
 	public WorkingSpreadsheet getWorkingSpreadsheet() {
 		return workingSpreadsheet;
+	}
+
+	/**
+	 * @return the TurnierSystem
+	 */
+	public final TurnierSystem getTurnierSystem() {
+		return turnierSystem;
 	}
 
 }

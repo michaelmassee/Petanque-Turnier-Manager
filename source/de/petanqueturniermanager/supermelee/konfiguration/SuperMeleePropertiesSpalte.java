@@ -15,14 +15,13 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.SpielSystem;
 
 public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements ISuperMeleePropertiesSpalte {
 
 	private static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
-		ADDSpielsystemProp(SpielSystem.SUPERMELEE, KONFIG_PROPERTIES);
+		// ADDSpielsystemProp(TurnierSystem.SUPERMELEE, KONFIG_PROPERTIES);
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
 

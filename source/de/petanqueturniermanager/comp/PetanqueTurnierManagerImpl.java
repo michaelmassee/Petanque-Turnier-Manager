@@ -15,6 +15,7 @@ import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationStarter;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -23,7 +24,6 @@ import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheetStarter;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
@@ -123,9 +123,8 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 
 				// ------------------------------
 				case "turnierkonfiguration":
-					// Konfiguration vorhanden ?
-					// TODO Korrekte Konfig Starten
-					new SuperMeleeKonfigurationSheetStarter().start(currentSpreadsheet);
+					// Konfiguration vorhanden ? dann starten
+					KonfigurationStarter.start(currentSpreadsheet);
 					break;
 				case "abbruch":
 					didHandle = true;

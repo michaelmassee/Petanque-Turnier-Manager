@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.TeamRangliste;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -39,7 +40,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	 * @throws GenerateException
 	 */
 	public KoGruppeABSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "KO Gruppe AB");
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER_KO, "KO Gruppe AB");
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);
