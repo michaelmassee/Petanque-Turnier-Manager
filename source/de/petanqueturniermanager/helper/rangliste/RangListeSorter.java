@@ -51,11 +51,11 @@ public class RangListeSorter {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return iRanglisteSheet.getObject().getSheetHelper();
+		return iRanglisteSheet.get().getSheetHelper();
 	}
 
 	protected IRangliste getIRangliste() {
-		return iRanglisteSheet.getObject();
+		return iRanglisteSheet.get();
 	}
 
 	public void insertManuelsortSpalten() throws GenerateException {

@@ -58,7 +58,7 @@ public class SpielRundeInSheet {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return parentSheet.getObject().getSheetHelper();
+		return parentSheet.get().getSheetHelper();
 	}
 
 }

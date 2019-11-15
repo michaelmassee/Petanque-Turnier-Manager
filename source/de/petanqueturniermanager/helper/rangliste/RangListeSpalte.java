@@ -46,7 +46,7 @@ public class RangListeSpalte {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return this.iRanglisteSheet.getObject().getSheetHelper();
+		return this.iRanglisteSheet.get().getSheetHelper();
 	}
 
 	public int getRangListeSpalte() {
@@ -55,7 +55,7 @@ public class RangListeSpalte {
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		this.iRanglisteSheet.getObject().processBoxinfo("Rangliste Header");
+		this.iRanglisteSheet.get().processBoxinfo("Rangliste Header");
 
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
@@ -70,7 +70,7 @@ public class RangListeSpalte {
 
 	public void upDateRanglisteSpalte() throws GenerateException {
 
-		this.iRanglisteSheet.getObject().processBoxinfo("Rangliste Spalte Aktualisieren");
+		this.iRanglisteSheet.get().processBoxinfo("Rangliste Spalte Aktualisieren");
 		// SummenSpalten
 		int letzteZeile = getIRanglisteSheet().getLetzteDatenZeile();
 		int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
@@ -118,7 +118,7 @@ public class RangListeSpalte {
 	}
 
 	private IRangliste getIRanglisteSheet() {
-		return this.iRanglisteSheet.getObject();
+		return this.iRanglisteSheet.get();
 	}
 
 	protected XSpreadsheet getSheet() throws GenerateException {
