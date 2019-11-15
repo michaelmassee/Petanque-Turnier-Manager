@@ -80,7 +80,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return sheetWkRef.getObject().getSheetHelper();
+		return sheetWkRef.get().getSheetHelper();
 	}
 
 	@Override
@@ -293,7 +293,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {
-		return sheetWkRef.getObject().getSheet();
+		return sheetWkRef.get().getSheet();
 	}
 
 	// @Override

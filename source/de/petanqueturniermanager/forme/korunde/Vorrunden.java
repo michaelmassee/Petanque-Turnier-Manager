@@ -95,7 +95,7 @@ public class Vorrunden {
 	 * @param string
 	 */
 	private void processBoxinfo(String string) {
-		parentSheet.getObject().processBoxinfo(string);
+		parentSheet.get().processBoxinfo(string);
 
 	}
 
@@ -103,7 +103,7 @@ public class Vorrunden {
 	 * @return
 	 */
 	private WorkingSpreadsheet getWorkingSpreadsheet() {
-		return parentSheet.getObject().getWorkingSpreadsheet();
+		return parentSheet.get().getWorkingSpreadsheet();
 	}
 
 	/**
@@ -111,7 +111,7 @@ public class Vorrunden {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return parentSheet.getObject().getSheetHelper();
+		return parentSheet.get().getSheetHelper();
 	}
 
 }

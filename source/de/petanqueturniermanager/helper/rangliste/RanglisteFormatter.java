@@ -38,9 +38,9 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 	public void updateHeader() throws GenerateException {
 
-		ranglisteWkRef.getObject().processBoxinfo("Formatiere Header");
+		ranglisteWkRef.get().processBoxinfo("Formatiere Header");
 
-		ISpielTagRangliste rangliste = this.ranglisteWkRef.getObject();
+		ISpielTagRangliste rangliste = this.ranglisteWkRef.get();
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
 			return;
@@ -74,10 +74,10 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 	public void formatDaten() throws GenerateException {
 
-		ranglisteWkRef.getObject().processBoxinfo("Formatiere Daten");
+		ranglisteWkRef.get().processBoxinfo("Formatiere Daten");
 
-		ISpielTagRangliste rangliste = this.ranglisteWkRef.getObject();
-		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
+		ISpielTagRangliste rangliste = this.ranglisteWkRef.get();
+		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().get();
 
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
@@ -101,11 +101,11 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 	@Override
 	public StringCellValue addFooter() throws GenerateException {
 
-		ranglisteWkRef.getObject().processBoxinfo("Fußzeile einfügen");
+		ranglisteWkRef.get().processBoxinfo("Fußzeile einfügen");
 
 		StringCellValue stringVal = super.addFooter();
 
-		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().get();
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();

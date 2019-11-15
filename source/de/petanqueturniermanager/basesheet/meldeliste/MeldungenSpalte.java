@@ -337,7 +337,7 @@ public class MeldungenSpalte {
 	}
 
 	private final ISheet getISheet() {
-		return sheet.getObject();
+		return sheet.get();
 	}
 
 	public static final Bldr Builder() {

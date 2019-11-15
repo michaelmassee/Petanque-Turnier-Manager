@@ -66,7 +66,7 @@ abstract public class AbstractRanglisteFormatter {
 	 * @throws GenerateException
 	 */
 	protected SheetHelper getSheetHelper() throws GenerateException {
-		return this.iRanglisteSheet.getObject().getSheetHelper();
+		return this.iRanglisteSheet.get().getSheetHelper();
 	}
 
 	protected TableBorder2 borderThinLeftBold() {
@@ -74,7 +74,7 @@ abstract public class AbstractRanglisteFormatter {
 	}
 
 	protected XSpreadsheet getSheet() throws GenerateException {
-		return this.iRanglisteSheet.getObject().getSheet();
+		return this.iRanglisteSheet.get().getSheet();
 	}
 
 	/**
@@ -136,12 +136,12 @@ abstract public class AbstractRanglisteFormatter {
 	}
 
 	public void formatDatenGeradeUngerade_Old() throws GenerateException {
-		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
+		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().get();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
-		int letzteSpalte = this.iRanglisteSheet.getObject().getLetzteSpalte();
+		int letzteSpalte = this.iRanglisteSheet.get().getLetzteSpalte();
 
-		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().get();
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
 		Integer geradeColor = propertiesSpalte.getRanglisteHintergrundFarbeGerade();
@@ -165,15 +165,15 @@ abstract public class AbstractRanglisteFormatter {
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		IRangliste sheet = this.iRanglisteSheet.getObject();
+		IRangliste sheet = this.iRanglisteSheet.get();
 
-		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
+		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().get();
 		int spielerNrSpalte = spielerSpalte.getSpielerNrSpalte();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 		int letzteSpalte = sheet.getLetzteSpalte();
 
-		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().getObject();
+		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().get();
 		Integer geradeColor = propertiesSpalte.getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 
@@ -204,7 +204,7 @@ abstract public class AbstractRanglisteFormatter {
 
 	protected void formatDatenSpielTagSpalten(int ersteSummeSpalte) throws GenerateException {
 
-		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().getObject();
+		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().get();
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
@@ -236,13 +236,13 @@ abstract public class AbstractRanglisteFormatter {
 	}
 
 	public Integer getHeaderFarbe() throws GenerateException {
-		Integer headerColor = getPropertiesSpaltewkRef().getObject().getRanglisteHeaderFarbe();
+		Integer headerColor = getPropertiesSpaltewkRef().get().getRanglisteHeaderFarbe();
 		return headerColor;
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
 
-		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().getObject();
+		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenZeile();
 		StringCellValue stringVal = StringCellValue.from(this.getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile)).setHoriJustify(CellHoriJustify.LEFT)

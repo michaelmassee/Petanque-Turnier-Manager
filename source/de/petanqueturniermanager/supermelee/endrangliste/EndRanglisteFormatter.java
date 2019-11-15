@@ -32,7 +32,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	}
 
 	public void updateHeader() throws GenerateException {
-		IEndRangliste rangliste = this.ranglisteWkRef.getObject();
+		IEndRangliste rangliste = this.ranglisteWkRef.get();
 		int anzSpieltagen = rangliste.getAnzahlSpieltage();
 		if (anzSpieltagen < 1) {
 			return;
@@ -59,7 +59,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	}
 
 	public void formatDaten() throws GenerateException {
-		IEndRangliste rangliste = this.ranglisteWkRef.getObject();
+		IEndRangliste rangliste = this.ranglisteWkRef.get();
 		int anzSpielTage = rangliste.getAnzahlSpieltage();
 		if (anzSpielTage < 1) {
 			return;
