@@ -81,13 +81,15 @@ public class DocumentPropertiesHelper {
 	 * @param propName = name vom property
 	 * @return null when not found
 	 */
-	public String getStringProperty(String propName) {
+	public String getStringProperty(String propName, boolean ignoreNotFound) {
 		XPropertySet propSet = getXPropertySet();
 		Object propVal = null;
 		try {
 			propVal = propSet.getPropertyValue(propName);
 		} catch (UnknownPropertyException | WrappedTargetException e) {
-			logger.error(e.getMessage(), e);
+			if (!ignoreNotFound) {
+				logger.error(e.getMessage(), e);
+			}
 		}
 
 		if (propVal != null && propVal instanceof String) {
@@ -114,7 +116,7 @@ public class DocumentPropertiesHelper {
 	 * @return -1 when not found
 	 */
 	public int getIntProperty(String propName) {
-		String stringProperty = getStringProperty(propName);
+		String stringProperty = getStringProperty(propName, true);
 		if (stringProperty != null) {
 			return NumberUtils.toInt(stringProperty, -1);
 		}

@@ -7,7 +7,9 @@ package de.petanqueturniermanager.liga.meldeliste;
 import java.util.Arrays;
 import java.util.List;
 
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
@@ -16,13 +18,23 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
+import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste {
+
+	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 16; // Tablle immer mit min anzahl von zeilen formatieren
 
 	private final MeldungenSpalte meldungenSpalte;
 	private final MeldeListeHelper meldeListeHelper;
@@ -32,7 +44,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
-		meldungenSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.TETE);
+		// new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.TETE);
+		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper(this);
 	}
 
@@ -51,6 +64,75 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		getMeldungenSpalte().insertHeaderInSheet(headerBackColor);
 		// --------------------- TODO doppelt code entfernen
 
+		// eventuelle luecken in spiele namen nach unten sortieren
+		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.updateMeldungenNr();
+		meldeListeHelper.doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
+		meldungenSpalte.formatDaten();
+		formatDaten();
+	}
+
+	void formatDaten() throws GenerateException {
+
+		processBoxinfo("Formatiere Daten Spalten");
+
+		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeile();
+
+		if (letzteDatenZeile < MIN_ANZAHL_MELDUNGEN_ZEILEN) {
+			letzteDatenZeile = MIN_ANZAHL_MELDUNGEN_ZEILEN;
+		}
+
+		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
+			// keine Daten
+			return;
+		}
+
+		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
+
+		getSheetHelper().setPropertiesInRange(getSheet(), datenRange,
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
+
+		// gerade / ungrade hintergrund farbe
+		// CellBackColor
+		Integer geradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade();
+		Integer unGeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
+		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(geradeColor);
+		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(unGeradeColor);
+
+		// Spieler Nummer
+		// -----------------------------------------------
+		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
+		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
+		// ------------------------------
+				formulaIsText().styleIsFehler().applyNew().
+				// ------------------------------
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				// ------------------------------
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+		// -----------------------------------------------
+
+		// -----------------------------------------------
+		// Spieler Namen
+		// -----------------------------------------------
+		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
+		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
+				+ ")>1";
+		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
+		// ------------------------------
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				// ------------------------------
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				// ------------------------------
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+		// -----------------------------------------------
+	}
+
+	public int getSpielerNameErsteSpalte() {
+		return meldungenSpalte.getSpielerNameErsteSpalte();
 	}
 
 	@Override
@@ -86,11 +168,6 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	@Override
 	public int neachsteFreieDatenZeile() throws GenerateException {
 		return meldungenSpalte.neachsteFreieDatenZeile();
-	}
-
-	@Override
-	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
-		meldungenSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
 	}
 
 	@Override

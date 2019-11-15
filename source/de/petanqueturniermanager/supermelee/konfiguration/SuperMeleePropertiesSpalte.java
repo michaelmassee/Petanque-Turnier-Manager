@@ -45,10 +45,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
 	private static final String KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE = "Anz gespielte Spieltage"; // anzahl spieltage die bei der neu auslosung eingelesen wird (hat zusammen
-																									// gespielt)
 
-	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
-	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1 Headerzeile"; // spieltag in header ?
 
 	private static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermelee Modus"; // Default Triplette / optional Doublette
@@ -91,8 +88,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE).setDefaultVal(99)
 				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
 				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info\r\nN/J"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SUPERMELEE_MODE).setDefaultVal("T").setDescription("Modus\r\nT=Triplette\r\nD=Doublette"));
@@ -214,16 +209,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public Integer getAnzGespielteSpieltage() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE);
-	}
-
-	@Override
-	public String getFusszeileLinks() throws GenerateException {
-		return readStringProperty(KONFIG_PROP_FUSSZEILE_LINKS);
-	}
-
-	@Override
-	public String getFusszeileMitte() throws GenerateException {
-		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
 	}
 
 	/**

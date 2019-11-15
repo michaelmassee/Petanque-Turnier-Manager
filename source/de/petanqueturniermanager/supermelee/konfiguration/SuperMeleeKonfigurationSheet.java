@@ -177,16 +177,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	}
 
 	@Override
-	public String getFusszeileLinks() throws GenerateException {
-		return propertiesSpalte.getFusszeileLinks();
-	}
-
-	@Override
-	public String getFusszeileMitte() throws GenerateException {
-		return propertiesSpalte.getFusszeileMitte();
-	}
-
-	@Override
 	public boolean getSpielrunde1Header() throws GenerateException {
 		return propertiesSpalte.getSpielrunde1Header();
 	}

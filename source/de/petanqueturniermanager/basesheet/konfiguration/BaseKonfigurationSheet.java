@@ -10,6 +10,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
+import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -40,6 +42,12 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 		updateSpielSystemInDocument();
 		// anzeige in processBoxinfo
 		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).turnierSystem(getTurnierSystem());
+		initPageStyles();
+	}
+
+	private void initPageStyles() throws GenerateException {
+		// default page Style
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()).create().applytoSheet();
 	}
 
 	private void updateSpielSystemInDocument() {
@@ -104,6 +112,16 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	@Override
 	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
 		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
+	}
+
+	@Override
+	public final String getFusszeileLinks() throws GenerateException {
+		return getPropertiesSpalte().getFusszeileLinks();
+	}
+
+	@Override
+	public final String getFusszeileMitte() throws GenerateException {
+		return getPropertiesSpalte().getFusszeileMitte();
 	}
 
 	@Override

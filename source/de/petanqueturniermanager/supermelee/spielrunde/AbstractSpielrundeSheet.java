@@ -626,9 +626,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	private int spielTagInfosEinfuegen() {
 		DocumentPropertiesHelper prophlpr = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		String propName = SpielrundeInfoKonfigDialog.getPropertieNameFuerSpieltag(getSpielTag());
-		String spieltagInfos = prophlpr.getStringProperty(propName);
-
-		// TODO Auto-generated method stub
+		String spieltagInfos = prophlpr.getStringProperty(propName, true);
 		return 0;
 	}
 

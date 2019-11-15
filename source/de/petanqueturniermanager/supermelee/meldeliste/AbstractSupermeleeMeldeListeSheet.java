@@ -27,10 +27,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.CellProperties;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
@@ -78,7 +77,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
-		meldungenSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.MELEE);
+		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
 		supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(workingSpreadsheet);
 		meldeListeHelper = new MeldeListeHelper(this);
 	}
@@ -149,7 +148,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		// eventuelle luecken in spiele namen nach unten sortieren
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
-		updateSpielerNr();
+		meldeListeHelper.updateMeldungenNr();
 
 		doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
@@ -240,10 +239,10 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// CellBackColor
 		Integer geradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade();
 		Integer unGeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
-		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
-		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
+		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(geradeColor);
+		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
-		// Spieler Nummer
+		// Spieler Nummer: gerade + ungerade + prufe auf doppelte nummer
 		// -----------------------------------------------
 		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
 		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
@@ -253,13 +252,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				// ------------------------------
 				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
 				// ------------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
 				// ------------------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
-		// Spieler Namen
+		// Spieler Namen: gerade + ungerade + prufe auf doppelte namen
 		// -----------------------------------------------
 		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
 		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
@@ -268,9 +267,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// ------------------------------
 				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
 				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyNew().
 				// ------------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -283,9 +282,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				// ------------------------------
 				formulaIsText().styleIsFehler().applyNew().
 				// ------------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
 				// ------------------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
 
 		// -----------------------------------------------
 		// Spieltag spalten
@@ -300,9 +299,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				// ------------------------------
 				formulaIsText().styleIsFehler().applyNew().
 				// ------------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
 				// ------------------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
 	}
 
 	/**
@@ -342,35 +341,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	@Override
 	public int getSpielerNameSpalte() {
 		return meldungenSpalte.getSpielerNameErsteSpalte();
-	}
-
-	public void updateSpielerNr() throws GenerateException {
-
-		processBoxinfo("Aktualisiere Spieler Nummer");
-
-		int letzteSpielZeile = meldungenSpalte.letzteZeileMitSpielerName();
-		if (letzteSpielZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
-			return; // keine Daten
-		}
-		XSpreadsheet xSheet = getSheet();
-		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
-
-		int letzteSpielerNr = 0;
-		int spielrNr = getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
-		if (spielrNr > -1) {
-			letzteSpielerNr = spielrNr;
-		}
-		// spieler nach Alphabet sortieren
-		doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true);
-
-		// lücken füllen
-		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
-		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
-			spielrNr = getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
-			if (spielrNr == -1) {
-				getSheetHelper().setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
-			}
-		}
 	}
 
 	public void updateSpieltageSummenSpalten() throws GenerateException {
@@ -627,11 +597,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	@Override
 	public int neachsteFreieDatenZeile() throws GenerateException {
 		return meldungenSpalte.neachsteFreieDatenZeile();
-	}
-
-	@Override
-	public void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException {
-		meldungenSpalte.spielerEinfuegenWennNichtVorhanden(spielerNr);
 	}
 
 	@Override

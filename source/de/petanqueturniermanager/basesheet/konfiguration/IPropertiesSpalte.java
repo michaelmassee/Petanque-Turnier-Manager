@@ -31,4 +31,8 @@ public interface IPropertiesSpalte {
 
 	void doFormat() throws GenerateException;
 
+	String getFusszeileLinks() throws GenerateException;
+
+	String getFusszeileMitte() throws GenerateException;
+
 }

@@ -42,7 +42,6 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
-import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
@@ -67,7 +66,6 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
 
 	private final MeldungenSpalte spielerSpalte;
-	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final RanglisteFormatter ranglisteFormatter;
@@ -76,8 +74,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spieltag Rangliste");
-		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
-		spielerSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeliste, Formation.MELEE);
+		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
@@ -92,14 +89,14 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 	}
 
 	public void generate() throws GenerateException {
-
+		MeldeListeSheet_Update meldeliste = new MeldeListeSheet_Update(getWorkingSpreadsheet());
 		meldeliste.setSpielTag(getSpieltagNr());
 		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 		// neu erstellen
 		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		spielerSpalte.alleSpieltagSpielerEinfuegen();
+		spielerSpalte.alleSpieltagSpielerAusmeldelisteEinfuegen(meldeliste);
 		spielerSpalte.insertHeaderInSheet(headerColor);
 		ranglisteFormatter.updateHeader();
 		rangListeSorter.insertSortValidateSpalte();

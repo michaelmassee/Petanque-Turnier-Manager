@@ -258,4 +258,34 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	public int spieltagSpalte(SpielTagNr spieltag) {
 		return ersteSpieltagSpalte() + spieltag.getNr() - 1;
 	}
+
+	public void updateMeldungenNr() throws GenerateException {
+
+		meldeListe.processBoxinfo("Aktualisiere Meldungen Nummer");
+
+		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
+		if (letzteSpielZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+			return; // keine Daten
+		}
+		XSpreadsheet xSheet = getSheet();
+		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
+
+		int letzteSpielerNr = 0;
+		int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
+		if (spielrNr > -1) {
+			letzteSpielerNr = spielrNr;
+		}
+		// spieler nach Alphabet sortieren
+		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true);
+
+		// lücken füllen
+		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
+		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
+			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
+			if (spielrNr == -1) {
+				meldeListe.getSheetHelper().setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
+			}
+		}
+	}
+
 }

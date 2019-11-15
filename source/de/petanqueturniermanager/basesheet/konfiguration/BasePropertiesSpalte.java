@@ -36,6 +36,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergr. Ungerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
 
+	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
+	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
+
 	protected final WeakRefHelper<ISheet> sheetWkRef;
 	protected final int propertiesSpalte;
 	protected final int erstePropertiesZeile;
@@ -48,6 +51,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
 				.setDescription("Spielrunde Header-Hintergrundfarbe"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 
 	}
 
@@ -300,18 +306,28 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	// }
 
 	@Override
-	public Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException {
+	public final Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException {
+	public final Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
 	public Integer getMeldeListeHeaderFarbe() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER);
+	}
+
+	@Override
+	public final String getFusszeileLinks() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_FUSSZEILE_LINKS);
+	}
+
+	@Override
+	public final String getFusszeileMitte() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
 	}
 
 }
