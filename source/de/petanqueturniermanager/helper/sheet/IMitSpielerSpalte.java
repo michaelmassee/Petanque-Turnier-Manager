@@ -14,9 +14,7 @@ public interface IMitSpielerSpalte {
 
 	int getSpielerZeileNr(int spielerNr) throws GenerateException;
 
-	void spielerEinfuegenWennNichtVorhanden(int spielerNr) throws GenerateException;
-
-	public int letzteDatenZeile() throws GenerateException;
+	int letzteDatenZeile() throws GenerateException;
 
 	int getErsteDatenZiele();
 

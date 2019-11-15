@@ -72,7 +72,6 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
 	private final MeldungenSpalte spielerSpalte;
-	private final MeldeListeSheet_New meldeListeSheetNew;
 	private final EndRanglisteFormatter endRanglisteFormatter;
 	private final RangListeSpalte rangListeSpalte;
 	private final RangListeSorter rangListeSorter;
@@ -80,8 +79,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Endrangliste");
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
-		meldeListeSheetNew = new MeldeListeSheet_New(workingSpreadsheet);
-		spielerSpalte = new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, meldeListeSheetNew, Formation.MELEE);
+		// (ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, meldeListeSheetNew, Formation.MELEE);
+		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
 		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte, ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSorter = new RangListeSorter(this);
@@ -254,7 +253,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			List<Integer> spielerListe = spieltagRanglisteSheet.getSpielerNrList(SpielTagNr.from(spieltagCntr));
 			spielerNummer.addAll(spielerListe);
 		}
-		spielerSpalte.alleSpielerNrEinfuegen(spielerNummer);
+		spielerSpalte.alleSpielerNrEinfuegen(spielerNummer, new MeldeListeSheet_New(getWorkingSpreadsheet()));
 	}
 
 	private int getSpielTagErsteSummeSpalte(SpielTagNr nr) {

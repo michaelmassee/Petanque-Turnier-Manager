@@ -22,7 +22,7 @@ public class KonfigurationStarter implements IKonfigurationKonstanten {
 		int turniersystemId = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM);
 		TurnierSystem turnierSystem = TurnierSystem.findById(turniersystemId);
 		if (turnierSystem != null) {
-			// leider fest verdrathen weil reflection nicht funktioniert :-(
+			// leider oldschool fest verdrathen weil reflection nicht funktioniert :-(
 			switch (turnierSystem) {
 			case LIGA:
 				LigaKonfigurationSheetStarter.start(currentSpreadsheet);
