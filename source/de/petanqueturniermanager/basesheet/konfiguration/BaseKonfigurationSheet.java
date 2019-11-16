@@ -36,21 +36,24 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 		processBoxinfo("Update Konfiguration");
 		// validate SpielSystem
 		validateSpielSystem();
-		updateKonfigBlock();
+		updateTurnierSystemKonfigBlock();
 		doFormat();
-		updateSpielSystemKonfiguration();
-		updateSpielSystemInDocument();
+		updateTurnierSystemKonfiguration();
+		updateTurnierSystemInDocument();
 		// anzeige in processBoxinfo
 		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).turnierSystem(getTurnierSystem());
 		initPageStyles();
+		initPageStylesTurnierSystem();
 	}
+
+	protected abstract void initPageStylesTurnierSystem() throws GenerateException;
 
 	private void initPageStyles() throws GenerateException {
 		// default page Style
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()).create().applytoSheet();
 	}
 
-	private void updateSpielSystemInDocument() {
+	private void updateTurnierSystemInDocument() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		docPropHelper.insertIntPropertyIfNotExist(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, getTurnierSystem().getId());
 	}
@@ -125,6 +128,11 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
+	public final boolean zeigeArbeitsSpalten() throws GenerateException {
+		return getPropertiesSpalte().zeigeArbeitsSpalten();
+	}
+
+	@Override
 	public final XSpreadsheet getSheet() throws GenerateException {
 		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
@@ -132,8 +140,10 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	/**
 	 * @return the propertiesSpalte
 	 */
-	abstract protected IPropertiesSpalte getPropertiesSpalte();
+	protected abstract IPropertiesSpalte getPropertiesSpalte();
 
-	abstract protected void updateSpielSystemKonfiguration() throws GenerateException;
+	protected abstract void updateTurnierSystemKonfiguration() throws GenerateException;
+
+	protected abstract void updateTurnierSystemKonfigBlock() throws GenerateException;
 
 }

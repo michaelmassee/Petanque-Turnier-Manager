@@ -5,7 +5,7 @@
 package de.petanqueturniermanager.helper.rangliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.TABLE_BORDER2;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -14,8 +14,8 @@ import com.sun.star.table.TableBorder2;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
@@ -31,7 +31,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
-		this.ranglisteWkRef = new WeakRefHelper<ISpielTagRangliste>(rangliste);
+		ranglisteWkRef = new WeakRefHelper<>(rangliste);
 		this.anzSpaltenInSpielrunde = anzSpaltenInSpielrunde;
 		this.ersteSpielRundeSpalte = ersteSpielRundeSpalte;
 	}
@@ -40,7 +40,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		ranglisteWkRef.get().processBoxinfo("Formatiere Header");
 
-		ISpielTagRangliste rangliste = this.ranglisteWkRef.get();
+		ISpielTagRangliste rangliste = ranglisteWkRef.get();
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
 			return;
@@ -49,22 +49,22 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		// -------------------------
 		// spielrunden spalten
 		// -------------------------
-		CellProperties columnProperties = CellProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerPlus = StringCellValue.from(sheet, Position.from(this.ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+").addColumnProperties(columnProperties)
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerPlus = StringCellValue.from(sheet, Position.from(ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+").addColumnProperties(columnProperties)
 				.setCellBackColor(getHeaderFarbe());
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
 
 		headerPlus.setBorder(borderThinLeftBold());
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
-			int plusSpalte = this.ersteSpielRundeSpalte + ((spielRunde - 1) * 2);
-			this.getSheetHelper().setTextInCell(headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
-			this.getSheetHelper().setTextInCell(headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
+			int plusSpalte = ersteSpielRundeSpalte + ((spielRunde - 1) * 2);
+			getSheetHelper().setTextInCell(headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
+			getSheetHelper().setTextInCell(headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
 
 			// Runden Counter
 			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde + ". Rnd").zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1)
 					.setComment(null);
-			this.getSheetHelper().setTextInCell(headerRndCounter);
+			getSheetHelper().setTextInCell(headerRndCounter);
 		}
 		// -------------------------
 		// summen spalten
@@ -76,8 +76,8 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		ranglisteWkRef.get().processBoxinfo("Formatiere Daten");
 
-		ISpielTagRangliste rangliste = this.ranglisteWkRef.get();
-		MeldungenSpalte spielerSpalte = this.getSpielerSpalteWkRef().get();
+		ISpielTagRangliste rangliste = ranglisteWkRef.get();
+		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
@@ -89,10 +89,10 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder();
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
-			Position posPunktePlusStart = Position.from(this.ersteSpielRundeSpalte + ((spielRunde - 1) * this.anzSpaltenInSpielrunde), ersteDatenZeile);
+			Position posPunktePlusStart = Position.from(ersteSpielRundeSpalte + ((spielRunde - 1) * anzSpaltenInSpielrunde), ersteDatenZeile);
 			Position posPunkteMinusEnd = Position.from(posPunktePlusStart).spaltePlusEins().zeile(letzteDatenZeile);
 			RangePosition datenRange = RangePosition.from(posPunktePlusStart, posPunkteMinusEnd);
-			this.getSheetHelper().setPropertyInRange(rangliste.getSheet(), datenRange, TABLE_BORDER2, border);
+			getSheetHelper().setPropertyInRange(rangliste.getSheet(), datenRange, TABLE_BORDER2, border);
 		}
 
 		formatDatenSpielTagSpalten(rangliste.getErsteSummeSpalte());
@@ -105,7 +105,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		StringCellValue stringVal = super.addFooter();
 
-		ISuperMeleePropertiesSpalte propertiesSpalte = this.getPropertiesSpaltewkRef().get();
+		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();

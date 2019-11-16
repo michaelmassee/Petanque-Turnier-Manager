@@ -5,7 +5,6 @@
 package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static de.petanqueturniermanager.helper.cellvalue.CellProperties.HORI_JUSTIFY;
 
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +48,11 @@ import com.sun.star.util.XMergeable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -499,7 +500,7 @@ public class SheetHelper {
 		return aColumnObj;
 	}
 
-	public XPropertySet setRowProperties(XSpreadsheet sheet, int spalte, CellProperties properties) {
+	public XPropertySet setRowProperties(XSpreadsheet sheet, int spalte, RowProperties properties) {
 		checkNotNull(sheet);
 		checkNotNull(properties);
 		XPropertySet xPropSet = getRowPropertySet(sheet, spalte);
@@ -527,7 +528,8 @@ public class SheetHelper {
 		return xPropSet;
 	}
 
-	public XPropertySet setColumnProperties(XSpreadsheet sheet, int spalte, CellProperties properties) {
+	// ColumnProperties
+	public XPropertySet setColumnProperties(XSpreadsheet sheet, int spalte, ColumnProperties properties) {
 		checkNotNull(sheet);
 		checkNotNull(properties);
 		XPropertySet xPropSet = getColumnPropertySet(sheet, spalte);
@@ -674,10 +676,15 @@ public class SheetHelper {
 	}
 
 	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1table_1_1CellProperties.html#ac4ecfad4d3b8fcf60e5205465fb254dd
+	/*
+	 * use setColumnProperties(sheet, spalte, ColumnProperties.from().setHoriJustify(cellHoriJustify));
+	 *
+	 * @deprecated
+	 */
 	public XPropertySet setColumnCellHoriJustify(XSpreadsheet sheet, int spalte, CellHoriJustify cellHoriJustify) {
 		checkNotNull(sheet);
 		// HoriJustify ,VertJustify ,Orientation
-		return setColumnProperty(sheet, spalte, HORI_JUSTIFY, cellHoriJustify);
+		return setColumnProperties(sheet, spalte, ColumnProperties.from().setHoriJustify(cellHoriJustify));
 	}
 
 	public XPropertySet setColumnWidth(XSpreadsheet sheet, Position pos, int width) {

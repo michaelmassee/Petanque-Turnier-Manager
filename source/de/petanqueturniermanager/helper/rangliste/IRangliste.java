@@ -6,13 +6,14 @@ package de.petanqueturniermanager.helper.rangliste;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 
-public interface IRangliste extends ISheet, IEndSummeSpalten {
+public interface IRangliste extends ISheet {
+
+	int getErsteSummeSpalte() throws GenerateException;
 
 	int getLetzteSpalte() throws GenerateException;
 
-	public int getLetzteDatenZeile() throws GenerateException;
+	int getLetzteDatenZeile() throws GenerateException;
 
 	int getErsteDatenZiele() throws GenerateException;
 

@@ -15,16 +15,16 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public interface ISheet {
 
-	public SheetHelper getSheetHelper() throws GenerateException;
+	SheetHelper getSheetHelper() throws GenerateException;
 
-	public XSpreadsheet getSheet() throws GenerateException;
+	XSpreadsheet getSheet() throws GenerateException;
 
-	public Logger getLogger();
+	Logger getLogger();
 
-	public XComponentContext getxContext();
+	XComponentContext getxContext();
 
-	public WorkingSpreadsheet getWorkingSpreadsheet();
+	WorkingSpreadsheet getWorkingSpreadsheet();
 
-	public void processBoxinfo(String infoMsg);
+	void processBoxinfo(String infoMsg);
 
 }

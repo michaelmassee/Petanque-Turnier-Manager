@@ -16,9 +16,9 @@ import com.sun.star.table.CellHoriJustify;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
@@ -31,13 +31,19 @@ import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
  */
 abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
+	private static final int MAX_LINE = 9999; // max anzahl properties
+	private static final int SPALTE_WERT_WIDTH = 1500;
+	private static final int SPALTE_NAME_WIDTH = 7000;
+
 	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
-	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergr. Gerade";
-	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergr. Ungerade";
+	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
+	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
 
 	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
+
+	private static final String KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN = "Zeige Arbeitsspalten"; // diesen Daten werden nur intern gebraucht, default = false
 
 	protected final WeakRefHelper<ISheet> sheetWkRef;
 	protected final int propertiesSpalte;
@@ -54,7 +60,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
-
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
+				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene. Default = N"));
 	}
 
 	protected BasePropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
@@ -88,12 +95,12 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		XSpreadsheet propSheet = getPropSheet();
 		// header
 		Position posHeader = Position.from(propertiesSpalte, headerZeile);
-		CellProperties columnProperties = CellProperties.from().setWidth(6500);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(SPALTE_NAME_WIDTH);
 
 		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
 		getSheetHelper().setTextInCell(headerVal);
 
-		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(1500)).setValue("Wert")
+		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(SPALTE_WERT_WIDTH)).setValue("Wert")
 				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
 		getSheetHelper().setTextInCell(wertheaderVal);
 	}
@@ -104,7 +111,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		Position nextFreepos = Position.from(propertiesSpalte, erstePropertiesZeile);
 		// TODO umstellen auf uno find
-		for (int idx = 0; idx < getKonfigProperties().size(); idx++) {
+		for (int idx = 0; idx < MAX_LINE; idx++) {
 			String val = getSheetHelper().getTextFromCell(propSheet, nextFreepos);
 			if (!StringUtils.isNotBlank(val)) {
 				break;
@@ -282,10 +289,13 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = Position.from(propertiesSpalte, erstePropertiesZeile);
 		// TODO umstellen auf uno find
-		for (int idx = 0; idx < getKonfigProperties().size(); idx++) {
+		for (int idx = 0; idx < MAX_LINE; idx++) {
 			String val = getSheetHelper().getTextFromCell(sheet, pos);
 			if (StringUtils.isNotBlank(val) && val.trim().equalsIgnoreCase(key.trim())) {
 				return pos;
+			}
+			if (StringUtils.isBlank(val)) {
+				break;
 			}
 			pos.zeilePlusEins();
 		}
@@ -295,15 +305,6 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	private final XSpreadsheet getPropSheet() throws GenerateException {
 		return sheetWkRef.get().getSheet();
 	}
-
-	// @Override
-	// public SpielSystem getSpielSystem() throws GenerateException {
-	// int spielSystemId = readIntProperty(KONFIG_PROP_NAME_SPIELSYSTEM);
-	// if (spielSystemId > -1) {
-	// return SpielSystem.findById(spielSystemId);
-	// }
-	// return null;
-	// }
 
 	@Override
 	public final Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException {
@@ -328,6 +329,11 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public final String getFusszeileMitte() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
+	}
+
+	@Override
+	public final boolean zeigeArbeitsSpalten() throws GenerateException {
+		return readBooleanProperty(KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN);
 	}
 
 }

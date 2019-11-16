@@ -36,14 +36,14 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
-		Meldungen meldungen = getMeldeListe().getAktiveMeldungen();
+		Meldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
-		if (!canStart(meldungen)) {
+		if (!canStart(aktiveMeldungen)) {
 			return;
 		}
 
-		gespieltenRundenEinlesen(meldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), aktuelleSpielrunde.getNr() - 1);
-		neueSpielrunde(meldungen, aktuelleSpielrunde);
+		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), aktuelleSpielrunde.getNr() - 1);
+		neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde);
 		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 		// sicher gehen das aktive spielrunde sheet ist activ
 		getSheetHelper().setActiveSheet(getSheet());

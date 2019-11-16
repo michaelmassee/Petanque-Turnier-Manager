@@ -125,6 +125,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 				case "turnierkonfiguration":
 					// Konfiguration vorhanden ? dann starten
 					KonfigurationStarter.start(currentSpreadsheet);
+					didHandle = true;
 					break;
 				case "abbruch":
 					didHandle = true;

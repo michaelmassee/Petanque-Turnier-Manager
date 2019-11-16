@@ -14,9 +14,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
@@ -68,7 +68,7 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		Position pos = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE - 1);
 		int spalteBreite = 1000;
 
-		CellProperties columnProperties = CellProperties.from().setWidth(spalteBreite).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteBreite).setHoriJustify(CellHoriJustify.CENTER);
 
 		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler").setColumnProperties(columnProperties);
 		getSheetHelper().setTextInCell(headerVal);

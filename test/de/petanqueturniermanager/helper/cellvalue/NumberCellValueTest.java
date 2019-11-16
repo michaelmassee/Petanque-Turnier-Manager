@@ -14,6 +14,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 
 @RunWith(PowerMockRunner.class)
@@ -65,10 +67,10 @@ public class NumberCellValueTest {
 		int charcolor = 123465;
 
 		Position pos = Position.from(spalte, zeile);
-		CellProperties columnProperties = CellProperties.from().setWidth(columnWidth);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(columnWidth);
 
 		StringCellValue strcellValue = StringCellValue.from(spreadsheetMock, pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
-				.addCellProperty(CellProperties.CHAR_COLOR, charcolor).nichtUeberschreiben();
+				.addCellProperty(ICommonProperties.CHAR_COLOR, charcolor).nichtUeberschreiben();
 
 		NumberCellValue numberCellValue = NumberCellValue.from(strcellValue);
 
@@ -76,8 +78,8 @@ public class NumberCellValueTest {
 		assertThat(numberCellValue.getPos().getSpalte()).isEqualTo(spalte);
 		assertThat(numberCellValue.getValue()).isEqualTo(val);
 		assertThat(numberCellValue.getComment()).isEqualTo(testComent);
-		assertThat(numberCellValue.getColumnProperties()).containsEntry(CellProperties.WIDTH, columnWidth);
-		assertThat(numberCellValue.getCellProperties()).containsEntry(CellProperties.CHAR_COLOR, charcolor);
+		assertThat(numberCellValue.getColumnProperties()).containsEntry(ICommonProperties.WIDTH, columnWidth);
+		assertThat(numberCellValue.getCellProperties()).containsEntry(ICommonProperties.CHAR_COLOR, charcolor);
 		assertThat(numberCellValue.isUeberschreiben()).isFalse();
 		assertThat(numberCellValue.getSheet()).isNotNull();
 	}

@@ -25,8 +25,9 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -58,13 +59,14 @@ public class RangListeSorter {
 		return iRanglisteSheet.get();
 	}
 
-	public void insertManuelsortSpalten() throws GenerateException {
+	public void insertManuelsortSpalten(boolean isVisible) throws GenerateException {
 		// sortspalten for manuell sortieren
 
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
-		CellProperties columnProperties = CellProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+				.isVisible(isVisible);
 		StringCellValue sortlisteVal = StringCellValue.from(getIRangliste().getSheet(), Position.from(getIRangliste().getManuellSortSpalte(), ersteDatenZiele - 1))
 				.addColumnProperties(columnProperties);
 
@@ -77,17 +79,18 @@ public class RangListeSorter {
 		StringCellValue sortSpalte = StringCellValue.from(sortlisteVal).zeile(ersteDatenZiele);
 		StringCellValue headerVal = StringCellValue.from(sortlisteVal).zeile(ersteDatenZiele - 1);
 
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
+		// Achtung: Header nach setFillAutoDown wegen Bug ? ausblenden der Spalte
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielGewonnenZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
 
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielDiffZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
 
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteDiffZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
 
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteGewonnenZelle1.getAddress()));
+		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
 
 	}
 
@@ -95,18 +98,12 @@ public class RangListeSorter {
 		return getIRangliste().getManuellSortSpalte() + PUNKTE_DIV_OFFS;
 	}
 
-	public void insertSortValidateSpalte() throws GenerateException {
+	public void insertSortValidateSpalte(boolean isVisible) throws GenerateException {
 
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
 		XSpreadsheet sheet = getIRangliste().getSheet();
-
-		CellProperties columnProperties = CellProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue validateHeader = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).setComment("Validate Spalte")
-				.addColumnProperties(columnProperties).setValue("Err");
-
-		getSheetHelper().setTextInCell(validateHeader);
 
 		// formula zusammenbauen
 		// --------------------------------------------------------------------------
@@ -169,6 +166,14 @@ public class RangListeSorter {
 		// Alle Nummer Bold
 		getSheetHelper().setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
 				CellProperties.from().setCharWeight(FontWeight.BOLD).setCharColor(ColorHelper.CHAR_COLOR_RED));
+		// --------------------------------------------------------------------------
+		// Header am ende, wegen Bug ? Auto Fill und ausgeblendete Spalte
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+				.isVisible(isVisible);
+		StringCellValue validateHeader = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).setComment("Validate Spalte")
+				.addColumnProperties(columnProperties).setValue("Err");
+
+		getSheetHelper().setTextInCell(validateHeader);
 		// --------------------------------------------------------------------------
 	}
 

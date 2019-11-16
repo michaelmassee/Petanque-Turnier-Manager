@@ -29,8 +29,9 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
@@ -137,7 +138,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		// ------
 		// Setzposition
-		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
+		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
 		StringCellValue bezCelVal = StringCellValue.from(sheet, meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setCellBackColor(headerBackColor)
 				.setBorder(BorderFactory.from().allThin().toBorder()).addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
@@ -188,7 +189,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		XSpreadsheet sheet = getSheet();
 		int hederBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(2000);
+		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(2000);
 
 		StringCellValue bezCelSpieltagVal = StringCellValue.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ZWEITE_HEADER_ZEILE, spielTagHeader(spieltag))
 				.setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setCellBackColor(hederBackColor).addColumnProperties(columnProp)
@@ -362,7 +363,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
 
-		CellProperties columnProp = CellProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000);
+		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000);
 		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").addColumnProperties(columnProp).setComment(null).removeCellBackColor();
 		getSheetHelper().setTextInCell(bezCelVal);
 

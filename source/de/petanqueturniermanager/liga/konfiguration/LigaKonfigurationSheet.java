@@ -15,7 +15,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
- *
  */
 public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IKonfigurationSheet {
 
@@ -52,8 +51,18 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 	}
 
 	@Override
-	protected void updateSpielSystemKonfiguration() throws GenerateException {
+	protected void updateTurnierSystemKonfiguration() throws GenerateException {
 		// TODO noch nichts hier !!!!
+	}
+
+	@Override
+	protected void updateTurnierSystemKonfigBlock() throws GenerateException {
+		propertiesSpalte.updateKonfigBlock(); // Liga + Allgemeine properties
+	}
+
+	@Override
+	protected void initPageStylesTurnierSystem() throws GenerateException {
+		// TODO noch keine
 	}
 
 }
