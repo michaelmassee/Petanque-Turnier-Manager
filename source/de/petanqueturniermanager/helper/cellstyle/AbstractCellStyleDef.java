@@ -6,7 +6,7 @@ package de.petanqueturniermanager.helper.cellstyle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 
 public abstract class AbstractCellStyleDef {
 

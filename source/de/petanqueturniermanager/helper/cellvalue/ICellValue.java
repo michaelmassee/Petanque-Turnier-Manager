@@ -3,8 +3,9 @@
  */
 package de.petanqueturniermanager.helper.cellvalue;
 
-import java.util.Map;
-
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.Position;
 
 /**
@@ -19,11 +20,11 @@ public interface ICellValue<V> {
 
 	String getComment();
 
-	Map<? extends String, ? extends Object> getCellProperties();
+	CellProperties getCellProperties();
 
-	Map<? extends String, ? extends Object> getColumnProperties();
+	ColumnProperties getColumnProperties();
 
-	Map<? extends String, ? extends Object> getRowProperties();
+	RowProperties getRowProperties();
 
 	boolean isUeberschreiben();
 

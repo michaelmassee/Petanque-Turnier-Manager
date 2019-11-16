@@ -36,9 +36,10 @@ import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -115,8 +116,9 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		getxCalculatable().calculate();
 		updateEndSummenSpalten();
 
-		rangListeSorter.insertSortValidateSpalte();
-		rangListeSorter.insertManuelsortSpalten();
+		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
+		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
+		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
 
 		endRanglisteFormatter.formatDaten();
 		rangListeSpalte.upDateRanglisteSpalte();
@@ -222,7 +224,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		Position startStreichspieltag = Position.from(getSchlechtesteSpielTageSpalte(), AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position endStreichspieltag = Position.from(startStreichspieltag).zeilePlus(2);
 
-		CellProperties columnProperties = CellProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerStreichspieltag = StringCellValue.from(getSheet(), startStreichspieltag).setEndPosMerge(endStreichspieltag).setCharWeight(FontWeight.LIGHT)
 				.setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER).setValue("Streich").setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
 				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Streich-Spieltag").setColumnProperties(columnProperties);
@@ -317,7 +319,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		String formula = "=COUNTIF(" + ersteSpielTagErsteZelle.getAddress() + ":" + letzteSpielTagLetzteZelle.getAddress() + ";\"<>\")/" + ANZAHL_SPALTEN_IN_SUMME;
 
 		// letzte Spalte ist anzahl spieltage
-		CellProperties celColumProp = CellProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties celColumProp = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue formulaVal = StringCellValue.from(getSheet(), Position.from(anzSpielTageSpalte(), ERSTE_DATEN_ZEILE)).setValue(formula).setFillAutoDown(letzteZeile)
 				.setColumnProperties(celColumProp);
 		getSheetHelper().setFormulaInCell(formulaVal);

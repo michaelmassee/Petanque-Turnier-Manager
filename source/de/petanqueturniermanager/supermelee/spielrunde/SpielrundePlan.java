@@ -16,9 +16,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -173,7 +173,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	}
 
 	private void spalteFormat(NumberCellValue nrVal) throws GenerateException {
-		CellProperties celPropNr = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(900);
+		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(900);
 		for (int i = 0; i < 3; i++) {
 			getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte() + i, celPropNr);
 		}

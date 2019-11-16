@@ -36,9 +36,9 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
-		Meldungen meldungen = getMeldeListe().getAktiveMeldungen();
+		Meldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
-		if (!canStart(meldungen)) {
+		if (!canStart(aktiveMeldungen)) {
 			return;
 		}
 
@@ -48,8 +48,8 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 			neueSpielrunde++;
 		}
 
-		gespieltenRundenEinlesen(meldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), neueSpielrunde - 1);
-		neueSpielrunde(meldungen, SpielRundeNr.from(neueSpielrunde));
+		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), neueSpielrunde - 1);
+		neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde));
 	}
 
 }

@@ -83,4 +83,5 @@ public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue,
 		}
 		return this;
 	}
+
 }

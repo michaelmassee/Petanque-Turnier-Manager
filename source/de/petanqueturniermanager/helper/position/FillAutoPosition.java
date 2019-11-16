@@ -10,7 +10,7 @@ public class FillAutoPosition extends AbstractPosition<FillAutoPosition> {
 
 	private FillDirection fillDirection = FillDirection.TO_BOTTOM; // default fill direction fuer fillAuto
 
-	public FillAutoPosition() {
+	FillAutoPosition() {
 	}
 
 	public FillAutoPosition(int spalte, int zeile) {
@@ -18,7 +18,7 @@ public class FillAutoPosition extends AbstractPosition<FillAutoPosition> {
 	}
 
 	public FillDirection getFillDirection() {
-		return this.fillDirection;
+		return fillDirection;
 	}
 
 	public FillAutoPosition setFillDirection(FillDirection fillDirection) {

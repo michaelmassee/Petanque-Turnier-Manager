@@ -35,4 +35,6 @@ public interface IPropertiesSpalte {
 
 	String getFusszeileMitte() throws GenerateException;
 
+	boolean zeigeArbeitsSpalten() throws GenerateException;
+
 }

@@ -29,9 +29,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -126,7 +127,7 @@ public class MeldungenSpalte {
 
 		getISheet().processBoxinfo("Meldungen Spalten Header");
 
-		CellProperties columnProperties = CellProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(spielerNrSpalte, getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor);
@@ -147,8 +148,9 @@ public class MeldungenSpalte {
 
 	/**
 	 * funktioniert nach spieler nr<br>
-	 * erste zeile = 0
-	 *
+	 * erste zeile = 0 <br>
+	 * Todo SLOW weil 999 zurück
+	 * 
 	 * @throws GenerateException
 	 */
 	public int neachsteFreieDatenZeile() throws GenerateException {

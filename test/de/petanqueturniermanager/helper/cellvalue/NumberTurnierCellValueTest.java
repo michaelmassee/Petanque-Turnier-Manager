@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 
 public class NumberTurnierCellValueTest {
@@ -47,10 +49,10 @@ public class NumberTurnierCellValueTest {
 		int charcolor = 123465;
 
 		Position pos = Position.from(spalte, zeile);
-		CellProperties columnProperties = CellProperties.from().setWidth(columnWidth);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(columnWidth);
 
 		StringTurnierCellValue strcellValue = StringTurnierCellValue.from(pos, "" + val).setComment(testComent).addColumnProperties(columnProperties)
-				.addCellProperty(CellProperties.CHAR_COLOR, charcolor).nichtUeberschreiben();
+				.addCellProperty(ICommonProperties.CHAR_COLOR, charcolor).nichtUeberschreiben();
 
 		NumberTurnierCellValue numberCellValue = NumberTurnierCellValue.from(strcellValue);
 
@@ -58,8 +60,8 @@ public class NumberTurnierCellValueTest {
 		assertThat(numberCellValue.getPos().getSpalte()).isEqualTo(spalte);
 		assertThat(numberCellValue.getValue()).isEqualTo(val);
 		assertThat(numberCellValue.getComment()).isEqualTo(testComent);
-		assertThat(numberCellValue.getColumnProperties()).containsEntry(CellProperties.WIDTH, columnWidth);
-		assertThat(numberCellValue.getCellProperties()).containsEntry(CellProperties.CHAR_COLOR, charcolor);
+		assertThat(numberCellValue.getColumnProperties()).containsEntry(ICommonProperties.WIDTH, columnWidth);
+		assertThat(numberCellValue.getCellProperties()).containsEntry(ICommonProperties.CHAR_COLOR, charcolor);
 		assertThat(numberCellValue.isUeberschreiben()).isFalse();
 
 	}

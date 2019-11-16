@@ -22,7 +22,7 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;

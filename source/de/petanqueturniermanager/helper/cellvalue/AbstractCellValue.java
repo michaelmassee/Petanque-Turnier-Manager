@@ -6,8 +6,6 @@ package de.petanqueturniermanager.helper.cellvalue;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.HashMap;
-
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.MoreObjects;
@@ -15,6 +13,9 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 
@@ -24,9 +25,9 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	private V value;
 	private Position pos;
 	private String comment;
-	private CellProperties cellProperties = new CellProperties();
-	private CellProperties columnProperties = new CellProperties();
-	private CellProperties rowProperties = new CellProperties();
+	private CellProperties cellProperties = CellProperties.from();
+	private ColumnProperties columnProperties = ColumnProperties.from();
+	private RowProperties rowProperties = RowProperties.from();
 	private Position endPosMerge; // wenn vorhanden dann merge die zellen von pos bis endPosMerge
 	private FillAutoPosition fillAuto; // wenn vorhanden dann autoFill bis diese Position
 	private boolean ueberschreiben = true; // vorhande inhalten in der zelle überschreiben ?
@@ -214,16 +215,6 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 		return (T) this;
 	}
 
-	public HashMap<String, Object> getCellProperties() {
-		return this.cellProperties;
-	}
-
-	@SuppressWarnings("unchecked")
-	public T setCellProperties(CellProperties cellProperties) {
-		this.cellProperties = checkNotNull(cellProperties);
-		return (T) this;
-	}
-
 	@SuppressWarnings("unchecked")
 	public T addCellProperty(String key, Object val) {
 		this.cellProperties.put(key, val);
@@ -375,15 +366,15 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 		return (T) this;
 	}
 
-	public CellProperties getColumnProperties() {
-		return this.columnProperties;
-	}
-
-	@SuppressWarnings("unchecked")
-	public T setColumnProperties(CellProperties columnProperties) {
-		this.columnProperties = checkNotNull(columnProperties);
-		return (T) this;
-	}
+	// public CellProperties getColumnProperties() {
+	// return this.columnProperties;
+	// }
+	//
+	// @SuppressWarnings("unchecked")
+	// public T setColumnProperties(CellProperties columnProperties) {
+	// this.columnProperties = checkNotNull(columnProperties);
+	// return (T) this;
+	// }
 
 	@SuppressWarnings("unchecked")
 	public T addColumnProperty(String key, Object val) {
@@ -394,14 +385,10 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public T addColumnProperties(CellProperties columnProperties) {
+	public T addColumnProperties(ColumnProperties columnProperties) {
 		checkNotNull(columnProperties);
 		this.columnProperties.putAll(columnProperties);
 		return (T) this;
-	}
-
-	public CellProperties getRowProperties() {
-		return this.rowProperties;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -411,7 +398,7 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public T addRowProperties(CellProperties rowProperties) {
+	public T addRowProperties(RowProperties rowProperties) {
 		this.rowProperties.putAll(rowProperties);
 		return (T) this;
 	}
@@ -423,6 +410,49 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	@SuppressWarnings("unchecked")
 	public T nichtUeberschreiben() {
 		this.ueberschreiben = false;
+		return (T) this;
+	}
+
+	/**
+	 * @return the columnProperties
+	 */
+	public final ColumnProperties getColumnProperties() {
+		return columnProperties;
+	}
+
+	/**
+	 * @param columnProperties
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public final T setColumnProperties(ColumnProperties columnProperties) {
+		this.columnProperties = columnProperties;
+		return (T) this;
+	}
+
+	/**
+	 * @return the rowProperties
+	 */
+	public final RowProperties getRowProperties() {
+		return rowProperties;
+	}
+
+	@SuppressWarnings("unchecked")
+	public final T setRowProperties(RowProperties rowProperties) {
+		this.rowProperties = rowProperties;
+		return (T) this;
+	}
+
+	/**
+	 * @return the cellProperties
+	 */
+	public final CellProperties getCellProperties() {
+		return cellProperties;
+	}
+
+	@SuppressWarnings("unchecked")
+	public final T setCellProperties(CellProperties cellProperties) {
+		this.cellProperties = cellProperties;
 		return (T) this;
 	}
 

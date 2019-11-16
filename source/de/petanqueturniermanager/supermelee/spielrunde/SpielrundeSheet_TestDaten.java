@@ -91,9 +91,9 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 				meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen(getSpielTag());
 			}
 
-			Meldungen meldungen = getMeldeListe().getAktiveMeldungen();
-			naechsteSpielrundeSheet.gespieltenRundenEinlesen(meldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), spielrundeNr - 1);
-			neueSpielrunde(meldungen, SpielRundeNr.from(spielrundeNr), true);
+			Meldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
+			naechsteSpielrundeSheet.gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), spielrundeNr - 1);
+			neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(spielrundeNr), true);
 
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen

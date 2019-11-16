@@ -12,6 +12,7 @@ public abstract class AbstractPosition<T> {
 	private int zeile;
 	private int spalte;
 
+	// Nur Package
 	AbstractPosition() {
 	}
 

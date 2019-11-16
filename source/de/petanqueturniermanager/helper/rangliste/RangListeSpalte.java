@@ -17,8 +17,9 @@ import com.sun.star.table.CellVertJustify2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -33,7 +34,7 @@ public class RangListeSpalte {
 
 	public RangListeSpalte(int rangListeSpalte, IRangliste iRanglisteSheet) {
 		this.rangListeSpalte = rangListeSpalte;
-		this.iRanglisteSheet = new WeakRefHelper<IRangliste>(iRanglisteSheet);
+		this.iRanglisteSheet = new WeakRefHelper<>(iRanglisteSheet);
 	}
 
 	/**
@@ -46,37 +47,37 @@ public class RangListeSpalte {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return this.iRanglisteSheet.get().getSheetHelper();
+		return iRanglisteSheet.get().getSheetHelper();
 	}
 
 	public int getRangListeSpalte() {
-		return this.rangListeSpalte;
+		return rangListeSpalte;
 	}
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		this.iRanglisteSheet.get().processBoxinfo("Rangliste Header");
+		iRanglisteSheet.get().processBoxinfo("Rangliste Header");
 
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
 		// Properties für Daten
-		CellProperties columnProperties = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(1000).setCharWeight(FontWeight.BOLD).setCharHeight(11);
+		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(1000).setCharWeight(FontWeight.BOLD).setCharHeight(11);
 
-		StringCellValue celVal = StringCellValue.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile - 2), "Platz").addColumnProperties(columnProperties)
+		StringCellValue celVal = StringCellValue.from(getSheet(), Position.from(rangListeSpalte, ersteZeile - 2), "Platz").addColumnProperties(columnProperties)
 				.setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(10)
-				.setCharWeight(FontWeight.NORMAL).setEndPosMerge(Position.from(this.rangListeSpalte, ersteZeile - 1));
-		this.getSheetHelper().setTextInCell(celVal); // spieler nr
+				.setCharWeight(FontWeight.NORMAL).setEndPosMerge(Position.from(rangListeSpalte, ersteZeile - 1));
+		getSheetHelper().setTextInCell(celVal); // spieler nr
 	}
 
 	public void upDateRanglisteSpalte() throws GenerateException {
 
-		this.iRanglisteSheet.get().processBoxinfo("Rangliste Spalte Aktualisieren");
+		iRanglisteSheet.get().processBoxinfo("Rangliste Spalte Aktualisieren");
 		// SummenSpalten
 		int letzteZeile = getIRanglisteSheet().getLetzteDatenZeile();
 		int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
-		StringCellValue platzPlatzEins = StringCellValue.from(getSheet(), Position.from(this.rangListeSpalte, ersteZeile), "x");
+		StringCellValue platzPlatzEins = StringCellValue.from(getSheet(), Position.from(rangListeSpalte, ersteZeile), "x");
 
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteZeile);
 		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteZeile);
@@ -100,10 +101,10 @@ public class RangListeSpalte {
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteZeile);
-		this.getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
+		getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
 
 		// Border
-		this.getSheetHelper().setPropertiesInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+		getSheetHelper().setPropertiesInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
 				CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()));
 	}
 
@@ -118,7 +119,7 @@ public class RangListeSpalte {
 	}
 
 	private IRangliste getIRanglisteSheet() {
-		return this.iRanglisteSheet.get();
+		return iRanglisteSheet.get();
 	}
 
 	protected XSpreadsheet getSheet() throws GenerateException {

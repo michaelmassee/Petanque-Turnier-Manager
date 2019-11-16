@@ -14,9 +14,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.pagestyle.PageStyle;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -51,37 +50,17 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	// update immer einmal in SheetRunner
 	// wird von #BaseKonfigurationSheet.update() verwendet
 	@Override
-	protected void updateSpielSystemKonfiguration() throws GenerateException {
+	protected void updateTurnierSystemKonfiguration() throws GenerateException {
 		initSpieltagKonfigSpalten();
-		initPageStyles();
-	}
-
-	/**
-	 * Page styles anlegen/updaten
-	 *
-	 * @throws GenerateException
-	 */
-	private void initPageStyles() throws GenerateException {
-		// default page Style
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()).create().applytoSheet();
-
-		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES);
-		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
-			// Kopfzeile Spalte
-			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);
-			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
-					.setHeaderCenter(kopfZeile).create();
-			posKopfZeile.zeilePlus(2);
-		}
 	}
 
 	// Spieltag Konfiguration
 	private void initSpieltagKonfigSpalten() throws GenerateException {
 		// Header
-		CellProperties columnPropSpieltag = CellProperties.from().setWidth(1500);
+		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1500);
 		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify().centerVertJustify();
 		getSheetHelper().setTextInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
-		CellProperties columnPropKopfZeile = CellProperties.from().setWidth(8000);
+		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000);
 		getSheetHelper().setTextInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
 
 		// Daten
@@ -199,6 +178,23 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	@Override
 	protected IPropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
+	}
+
+	@Override
+	protected void updateTurnierSystemKonfigBlock() throws GenerateException {
+		propertiesSpalte.updateKonfigBlock(); // SuperMelee + Allgemeine properties
+	}
+
+	@Override
+	protected void initPageStylesTurnierSystem() throws GenerateException {
+		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES);
+		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
+			// Kopfzeile Spalte
+			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);
+			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
+					.setHeaderCenter(kopfZeile).create();
+			posKopfZeile.zeilePlus(2);
+		}
 	}
 
 }

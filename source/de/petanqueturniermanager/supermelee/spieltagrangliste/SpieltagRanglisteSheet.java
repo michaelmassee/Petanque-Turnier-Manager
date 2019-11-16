@@ -36,7 +36,6 @@ import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.IEndSummeSpalten;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -46,7 +45,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 
-public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSummeSpalten, ISpielTagRangliste {
+public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTagRangliste {
 
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet.class);
 
@@ -99,8 +98,10 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements IEndSumme
 		spielerSpalte.alleSpieltagSpielerAusmeldelisteEinfuegen(meldeliste);
 		spielerSpalte.insertHeaderInSheet(headerColor);
 		ranglisteFormatter.updateHeader();
-		rangListeSorter.insertSortValidateSpalte();
-		rangListeSorter.insertManuelsortSpalten();
+
+		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
+		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
+		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
 		ergebnisseFormulaEinfuegen();
 		updateSummenSpalten();
 		spielerSpalte.formatDaten();
