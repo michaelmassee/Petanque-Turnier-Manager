@@ -54,7 +54,7 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		if (sheet == null) {
 			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
 			PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
-			TurnierSheet.from(sheet).tabColor("f4ca46").protect();
+			TurnierSheet.from(sheet, getWorkingSpreadsheet()).tabColor("f4ca46").protect();
 			initSheet(sheet);
 		}
 		return sheet;

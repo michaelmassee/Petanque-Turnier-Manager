@@ -8,7 +8,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -21,20 +24,24 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class NewSheet {
 
+	private static final Logger logger = LogManager.getLogger(NewSheet.class);
+
 	private final SheetHelper sheetHelper;
 	private final String sheetName;
-	private final WorkingSpreadsheet workingSpreadsheet;
+	private final WeakRefHelper<WorkingSpreadsheet> wkRefworkingSpreadsheet;
 	private boolean didCreate = false;
-	private boolean force = false;
+	private boolean forceOkCreateNewWhenExist = false;
 	private boolean setActiv = false;
 	private boolean protect = false;
 	private short pos = 1;
 	private String tabColor = null;
 	private PageStyleDef pageStyleDef = null;
 	private XSpreadsheet sheet = null;
+	private boolean showGrid = true;
+	private boolean createNewIfExist = true;
 
 	private NewSheet(WorkingSpreadsheet workingSpreadsheet, String sheetName) {
-		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
+		wkRefworkingSpreadsheet = new WeakRefHelper<>(checkNotNull(workingSpreadsheet));
 		checkArgument(StringUtils.isNotBlank(sheetName));
 		this.sheetName = sheetName;
 		sheetHelper = new SheetHelper(workingSpreadsheet);
@@ -45,12 +52,12 @@ public class NewSheet {
 	}
 
 	public NewSheet setForceCreate(boolean force) {
-		this.force = force;
+		forceOkCreateNewWhenExist = force;
 		return this;
 	}
 
 	public NewSheet forceCreate() {
-		force = true;
+		forceOkCreateNewWhenExist = true;
 		return this;
 	}
 
@@ -69,34 +76,64 @@ public class NewSheet {
 		return this;
 	}
 
+	public NewSheet newIfExist() {
+		createNewIfExist = true;
+		return this;
+	}
+
+	/**
+	 * wenn bereits vorhanden, dann nichts tun, sondern einfach return
+	 *
+	 * @return
+	 */
+	public NewSheet useIfExist() {
+		createNewIfExist = false;
+		return this;
+	}
+
 	public NewSheet create() {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
+
 		if (sheet != null) {
-			sheetHelper.setActiveSheet(sheet);
-			MessageBoxResult result = MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
-					.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(force).show();
-			if (MessageBoxResult.YES != result) {
+			if (createNewIfExist) {
+				MessageBoxResult result = MessageBox.from(wkRefworkingSpreadsheet.get().getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
+						.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(forceOkCreateNewWhenExist).show();
+				if (MessageBoxResult.YES != result) {
+					return this;
+				}
+				sheetHelper.removeSheet(sheetName);
+				sheet = null;
+			} else {
+				didCreate = true;
 				return this;
 			}
-			sheetHelper.removeSheet(sheetName);
-		}
-		sheet = sheetHelper.newIfNotExist(sheetName, pos, tabColor);
-
-		TurnierSheet.from(sheet).protect(protect);
-
-		if (setActiv) {
-			sheetHelper.setActiveSheet(sheet);
 		}
 
-		if (pageStyleDef != null) {
-			// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
-			// @see KonfigurationSheet#initPageStyles
-			// @see SheetRunner#updateKonfigurationSheet
-			PageStyleHelper.from(sheet, workingSpreadsheet, pageStyleDef).initDefaultFooter().create().applytoSheet();
+		if (sheet == null) {
+			try {
+				wkRefworkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
+				sheet = sheetHelper.findByName(sheetName);
+				if (!showGrid) {
+					// einmal abschalten
+					TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).toggleSheetGrid();
+				}
+			} catch (IllegalArgumentException e) {
+				logger.error(e.getMessage(), e);
+			}
 		}
 
-		didCreate = true;
+		if (sheet != null) {
+			TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).protect(protect).tabColor(tabColor);
+
+			if (pageStyleDef != null) {
+				// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
+				// @see KonfigurationSheet#initPageStyles
+				// @see SheetRunner#updateKonfigurationSheet
+				PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
+			}
+			didCreate = true;
+		}
 		return this;
 	}
 
@@ -106,6 +143,16 @@ public class NewSheet {
 
 	public NewSheet setActiv() {
 		setActiv = true;
+		return this;
+	}
+
+	public NewSheet showGrid() {
+		showGrid = true;
+		return this;
+	}
+
+	public NewSheet hideGrid() {
+		showGrid = false;
 		return this;
 	}
 

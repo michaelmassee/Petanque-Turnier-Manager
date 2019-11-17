@@ -148,7 +148,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	private void printBereichDefinieren(Position rechtsUnten) throws GenerateException {
 		processBoxinfo("Print-Bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, HEADER_ZEILE);
-		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void blockHeader(final Position ersteSpielerNr) throws GenerateException {

@@ -44,7 +44,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	@Override
 	protected void doRun() throws GenerateException {
-		getSheetHelper().setActiveSheet(getSheet());
+		getSheet();
 	}
 
 	// update immer einmal in SheetRunner

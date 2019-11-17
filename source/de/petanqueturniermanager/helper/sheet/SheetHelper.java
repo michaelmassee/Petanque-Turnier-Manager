@@ -64,10 +64,10 @@ public class SheetHelper {
 
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
 
-	private final WorkingSpreadsheet currentSpreadsheet;
+	private final WeakRefHelper<WorkingSpreadsheet> currentSpreadsheet;
 
 	public SheetHelper(WorkingSpreadsheet currentSpreadsheet) {
-		this.currentSpreadsheet = checkNotNull(currentSpreadsheet);
+		this.currentSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
 	}
 
 	/**
@@ -144,7 +144,7 @@ public class SheetHelper {
 	 */
 
 	public XSpreadsheets getSheets() {
-		return currentSpreadsheet.getWorkingSpreadsheetDocument().getSheets();
+		return currentSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets();
 	}
 
 	public XCell setValInCell(NumberCellValue numberCellValue) {
@@ -385,8 +385,8 @@ public class SheetHelper {
 	public String getAddressFromColumnRow(Position pos) {
 		checkNotNull(pos);
 		try {
-			Object aFuncInst = currentSpreadsheet.getxContext().getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess",
-					currentSpreadsheet.getxContext());
+			Object aFuncInst = currentSpreadsheet.get().getxContext().getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess",
+					currentSpreadsheet.get().getxContext());
 			XFunctionAccess xFuncAcc = UnoRuntime.queryInterface(XFunctionAccess.class, aFuncInst);
 			// https://wiki.openoffice.org/wiki/Documentation/How_Tos/Calc:_ADDRESS_function
 			// put the data in a array
@@ -423,20 +423,27 @@ public class SheetHelper {
 		return spalteNr;
 	}
 
+	/**
+	 * @deprecated use TurnierSheet.from(xSheet, currentSpreadsheet).tabColor
+	 * @param spreadsheet
+	 */
+
+	@Deprecated
 	public void setActiveSheet(XSpreadsheet spreadsheet) {
-		currentSpreadsheet.getWorkingSpreadsheetView().setActiveSheet(spreadsheet);
+		TurnierSheet.from(spreadsheet, currentSpreadsheet.get()).setActiv();
 	}
 
 	/**
 	 * 1. in google nach begriff "color chooser" suchen. -> Color chooser verwenden, hex code ohne #<br>
 	 * 2. Color chooser in Zelle verwenden-> hex code kopieren <br>
 	 *
+	 * @deprecated use TurnierSheet.from(xSheet, currentSpreadsheet).tabColor
 	 * @param xSheet
 	 * @param hex, 6 stellige farbcode, ohne # oder sonstige vorzeichen !
 	 */
 	@Deprecated
 	public void setTabColor(XSpreadsheet xSheet, String hex) {
-		TurnierSheet.from(xSheet).tabColor(hex);
+		TurnierSheet.from(xSheet, currentSpreadsheet.get()).tabColor(hex);
 	}
 
 	/**
@@ -453,7 +460,7 @@ public class SheetHelper {
 	 */
 	@Deprecated
 	public void setTabColor(XSpreadsheet xSheet, int color) {
-		TurnierSheet.from(xSheet).tabColor(color);
+		TurnierSheet.from(xSheet, currentSpreadsheet.get()).tabColor(color);
 	}
 
 	public XCellRange mergeRange(XSpreadsheet sheet, RangePosition rangePosition) {

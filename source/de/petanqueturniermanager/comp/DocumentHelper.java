@@ -5,9 +5,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.beans.PropertyVetoException;
+import com.sun.star.beans.UnknownPropertyException;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.frame.XController;
 import com.sun.star.frame.XDesktop;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XModel;
+import com.sun.star.lang.IllegalArgumentException;
+import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -47,8 +53,7 @@ public class DocumentHelper {
 	/** Returns the current frame */
 	public static XFrame getCurrentFrame(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		XModel xModel = UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
-		return xModel.getCurrentController().getFrame();
+		return getXModel(xContext).getCurrentController().getFrame();
 	}
 
 	/** Returns the current text document (if any) */
@@ -72,7 +77,30 @@ public class DocumentHelper {
 	 */
 	static XSpreadsheetView getCurrentSpreadsheetView(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		XModel xModel = UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
+		XModel xModel = getXModel(xContext);
 		return UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 	}
+
+	static XModel getXModel(XComponentContext xContext) {
+		return UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
+	}
+
+	/**
+	 * Global fuer alle Calc Documenten
+	 *
+	 * @param showGrid
+	 */
+
+	static void showGrid(XComponentContext xContext, boolean showGrid) {
+		// Funktioniert, Aber das ist Global für alle Calc Dokumenten
+		XController xController = getXModel(xContext).getCurrentController();
+		XPropertySet xProp = UnoRuntime.queryInterface(XPropertySet.class, xController);
+		try {
+			xProp.setPropertyValue("ShowGrid", showGrid);
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+			// ignore weil nicht wichtig wenn nicht funktioniert
+			// e.printStackTrace();
+		}
+	}
+
 }

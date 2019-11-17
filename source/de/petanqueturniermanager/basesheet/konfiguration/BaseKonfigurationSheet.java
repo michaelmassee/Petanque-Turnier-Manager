@@ -13,6 +13,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -134,7 +135,8 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 
 	@Override
 	public final XSpreadsheet getSheet() throws GenerateException {
-		return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
+		return NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.KONFIGURATION).setActiv().tabColor(SHEET_COLOR).useIfExist().hideGrid().create().getSheet();
+		// return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
 
 	/**

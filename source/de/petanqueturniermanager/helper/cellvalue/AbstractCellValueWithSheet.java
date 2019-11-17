@@ -23,7 +23,7 @@ public abstract class AbstractCellValueWithSheet<T extends AbstractCellValueWith
 
 	protected AbstractCellValueWithSheet(XSpreadsheet sheet, Position pos) {
 		super(pos);
-		checkNotNull(sheet);
+		checkNotNull(sheet, "sheet=null");
 		this.setSheet(sheet);
 	}
 
