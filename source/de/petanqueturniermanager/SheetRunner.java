@@ -35,7 +35,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	private String logPrefix = null;
 
 	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {
-		this(workingSpreadsheet, spielSystem);
+		this(checkNotNull(workingSpreadsheet), checkNotNull(spielSystem));
 		this.logPrefix = logPrefix;
 	}
 

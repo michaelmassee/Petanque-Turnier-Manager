@@ -125,7 +125,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		processBoxinfo("Print-Bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
-		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, ColumnProperties celPropNr, StringCellValue nameVal, ColumnProperties celPropName, StringCellValue chkBox)

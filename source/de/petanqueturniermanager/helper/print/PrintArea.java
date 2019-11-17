@@ -12,6 +12,7 @@ import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
@@ -32,8 +33,8 @@ public class PrintArea {
 		return new PrintArea(turnierSheet);
 	}
 
-	public static PrintArea from(XSpreadsheet xSpreadsheet) {
-		return new PrintArea(TurnierSheet.from(xSpreadsheet));
+	public static PrintArea from(XSpreadsheet xSpreadsheet, WorkingSpreadsheet currentSpreadsheet) {
+		return new PrintArea(TurnierSheet.from(xSpreadsheet, currentSpreadsheet));
 	}
 
 	public PrintArea setPrintArea(RangePosition range) {

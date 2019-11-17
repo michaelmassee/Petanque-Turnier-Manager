@@ -119,7 +119,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		processBoxinfo("Print-Bereich");
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
-		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {

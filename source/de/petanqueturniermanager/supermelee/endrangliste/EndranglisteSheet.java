@@ -138,7 +138,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		processBoxinfo("Print-Bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
-		PrintArea.from(getSheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {

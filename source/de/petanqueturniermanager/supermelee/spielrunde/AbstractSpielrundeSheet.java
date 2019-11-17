@@ -247,7 +247,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		getSheetHelper().setTextInCell(headerText.setValue("Nr"));
 		getSheetHelper().setTextInCell(headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment("Plus Punkte"));
 		getSheetHelper().setTextInCell(headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment("Minus Punkte"));
-		getSheetHelper().setTextInCell(headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment("Team")); // Team A/B
+		getSheetHelper().setTextInCell(headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment("Mannschaft")); // Team A/B
 		getSheetHelper().setTextInCell(headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment("Spielbahn Nr.")); // Bahn Nr
 
 	}
@@ -470,11 +470,11 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// -------------------------
 		Position posSpielerNamen = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ZWEITE_HEADER_ZEILE);
 		Position posSpielerNamenMerge = Position.from(posSpielerNamen).spaltePlus(2);
-		headerVal.setValue("Team A").setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
+		headerVal.setValue("Mannschaft A").setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
 				// rechts Doppelte Linie
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().doubleLn().forRight().toBorder());
 		getSheetHelper().setTextInCell(headerVal);
-		headerVal.setValue("Team B").setPos(posSpielerNamen.spaltePlus(3)).setEndPosMerge(posSpielerNamenMerge.spaltePlus(3)).addCellProperty(TABLE_BORDER2,
+		headerVal.setValue("Mannschaft B").setPos(posSpielerNamen.spaltePlus(3)).setEndPosMerge(posSpielerNamenMerge.spaltePlus(3)).addCellProperty(TABLE_BORDER2,
 				BorderFactory.from().allThin().toBorder());
 		getSheetHelper().setTextInCell(headerVal);
 
@@ -638,7 +638,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	private void printBereichDefinieren(XSpreadsheet sheet) throws GenerateException {
 		processBoxinfo("Print-Bereich");
 		Position letzteZeile = letzteSpielrNrPosition();
-		PrintArea.from(sheet).setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
+		PrintArea.from(sheet, getWorkingSpreadsheet()).setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
 	}
 
 	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet sheet, boolean doubletteRunde) throws GenerateException {
