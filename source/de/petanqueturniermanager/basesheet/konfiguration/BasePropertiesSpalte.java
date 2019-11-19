@@ -10,12 +10,14 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -97,11 +99,12 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		Position posHeader = Position.from(propertiesSpalte, headerZeile);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(SPALTE_NAME_WIDTH);
 
-		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT);
+		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT)
+				.setCharWeight(FontWeight.BOLD).setBorder(BorderFactory.from().allThin().toBorder());
 		getSheetHelper().setTextInCell(headerVal);
 
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(SPALTE_WERT_WIDTH)).setValue("Wert")
-				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins();
+				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins().setCharWeight(FontWeight.BOLD).setBorder(BorderFactory.from().allThin().toBorder());
 		getSheetHelper().setTextInCell(wertheaderVal);
 	}
 
@@ -123,7 +126,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 			Position pos = getPropKeyPos(configProp.getKey());
 			if (pos == null) {
 				// when not found insert new
-				StringCellValue celVal = StringCellValue.from(propSheet, nextFreepos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT);
+				StringCellValue celVal = StringCellValue.from(propSheet, nextFreepos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT)
+						.setBorder(BorderFactory.from().allThin().toBorder());
 				getSheetHelper().setTextInCell(celVal);
 
 				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
@@ -219,12 +223,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		XSpreadsheet sheet = getPropSheet();
 		Position pos = getPropKeyPos(key);
 		if (pos != null) {
-			getSheetHelper().setPropertyInCell(sheet, pos.spaltePlusEins(), "CellBackColor", val);
-			getSheetHelper().setTextInCell(StringCellValue.from(sheet, pos, ""));
-
-			if (StringUtils.isNotEmpty(comment)) {
-				getSheetHelper().setCommentInCell(sheet, pos, comment);
-			}
+			pos.spaltePlusEins();
+			StringCellValue strVal = StringCellValue.from(sheet, pos, "").setCellBackColor(val).setComment(comment).setBorder(BorderFactory.from().allThin().toBorder());
+			getSheetHelper().setTextInCell(strVal);
 		}
 	}
 
