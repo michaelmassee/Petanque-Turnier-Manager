@@ -41,7 +41,6 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 		doFormat();
 		updateTurnierSystemKonfiguration();
 		updateTurnierSystemInDocument();
-		// anzeige in processBoxinfo
 		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).turnierSystem(getTurnierSystem());
 		initPageStyles();
 		initPageStylesTurnierSystem();
@@ -136,7 +135,6 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	@Override
 	public final XSpreadsheet getSheet() throws GenerateException {
 		return NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.KONFIGURATION).setActiv().tabColor(SHEET_COLOR).useIfExist().hideGrid().create().getSheet();
-		// return getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.KONFIGURATION, SHEET_COLOR);
 	}
 
 	/**

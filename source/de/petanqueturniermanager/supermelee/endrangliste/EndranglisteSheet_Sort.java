@@ -4,6 +4,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
 public class EndranglisteSheet_Sort extends EndranglisteSheet {
 
@@ -14,8 +15,8 @@ public class EndranglisteSheet_Sort extends EndranglisteSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		XSpreadsheet sheet = getSheet();
-		getSheetHelper().setActiveSheet(sheet);
-		this.getRangListeSorter().doSort();
+		TurnierSheet.from(sheet, getWorkingSpreadsheet()).setActiv();
+		getRangListeSorter().doSort();
 	}
 
 }
