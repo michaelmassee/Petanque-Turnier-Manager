@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -32,8 +33,7 @@ public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeS
 		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
 
 		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), ERSTE_HEADER_ZEILE, aktuelleSpieltagSpalte(), 999);
-		getSheetHelper().clearRange(getSheet(), cleanUpRange);
-
+		RangeHelper.from(getSheet(), cleanUpRange).clearRange();
 		upDateSheet();
 
 	}

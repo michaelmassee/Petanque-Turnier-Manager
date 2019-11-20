@@ -37,6 +37,7 @@ import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
@@ -392,7 +393,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(), letzteDatenzeile);
-			getSheetHelper().clearRange(getSheet(), range);
+			RangeHelper.from(getSheet(), range).clearRange();
 		}
 	}
 

@@ -9,12 +9,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -35,15 +33,18 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Meldungen;
 
 public class MeldungenSpalte {
 
+	private static final int MAX_ANZ_MELDUNGEN = 999;
+
 	private static final Logger logger = LogManager.getLogger(MeldungenSpalte.class);
 
-	private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
+	// private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
 
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
 	public static final int DEFAULT_SPIELER_NAME_WIDTH = 4000;
@@ -51,8 +52,8 @@ public class MeldungenSpalte {
 	private static final String HEADER_SPIELER_NAME = "Name";
 	private final Formation formation;
 	private final int ersteDatenZiele; // Zeile 1 = 0
-	private final int spielerNrSpalte; // Spalte A=0, B=1
-	private final int spielerNameErsteSpalte;
+	private final int meldungNrSpalte; // Spalte A=0, B=1
+	private final int meldungNameSpalte;
 	private final WeakRefHelper<ISheet> sheet;
 
 	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation) {
@@ -62,8 +63,8 @@ public class MeldungenSpalte {
 		checkNotNull(formation);
 
 		this.ersteDatenZiele = ersteDatenZiele;
-		this.spielerNrSpalte = spielerNrSpalte;
-		spielerNameErsteSpalte = spielerNrSpalte + 1;
+		meldungNrSpalte = spielerNrSpalte;
+		meldungNameSpalte = spielerNrSpalte + 1;
 		sheet = new WeakRefHelper<>(iSheet);
 		this.formation = formation;
 	}
@@ -109,14 +110,14 @@ public class MeldungenSpalte {
 
 		// Spieler Nr
 		// -------------------------------------
-		RangePosition spielrNrdatenRange = RangePosition.from(spielerNrSpalte, ersteDatenZiele, spielerNrSpalte, letzteDatenZeile);
+		RangePosition spielrNrdatenRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte, letzteDatenZeile);
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange, CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
 				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
 		// Spieler Namen
-		RangePosition datenRange = RangePosition.from(spielerNameErsteSpalte, ersteDatenZiele, spielerNameErsteSpalte, letzteDatenZeile);
+		RangePosition datenRange = RangePosition.from(meldungNameSpalte, ersteDatenZiele, meldungNameSpalte, letzteDatenZeile);
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
@@ -128,12 +129,12 @@ public class MeldungenSpalte {
 		getISheet().processBoxinfo("Meldungen Spalten Header");
 
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(spielerNrSpalte, getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
+		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor);
 		getSheetHelper().setTextInCell(celVal); // spieler nr
 
-		celVal.addColumnProperties(columnProperties.setWidth(DEFAULT_SPIELER_NAME_WIDTH)).setComment(null).spalte(spielerNameErsteSpalte).setValue(HEADER_SPIELER_NAME)
+		celVal.addColumnProperties(columnProperties.setWidth(DEFAULT_SPIELER_NAME_WIDTH)).setComment(null).spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
@@ -148,17 +149,14 @@ public class MeldungenSpalte {
 
 	/**
 	 * funktioniert nach spieler nr<br>
-	 * erste zeile = 0 <br>
-	 * Todo SLOW weil 999 zurück
-	 * 
+	 * return ersteDatenzeile wenn kein vorhanden
+	 *
 	 * @throws GenerateException
 	 */
 	public int neachsteFreieDatenZeile() throws GenerateException {
-		for (int zeileCntr = 999; zeileCntr >= getErsteDatenZiele(); zeileCntr--) {
-			Integer cellNum = getSheetHelper().getIntFromCell(getXSpreadsheet(), Position.from(spielerNrSpalte, zeileCntr));
-			if (cellNum > 0) {
-				return zeileCntr + 1;
-			}
+		Position result = SearchHelper.from(getISheet()).searchLastEmptyInSpalte(RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN));
+		if (result != null) {
+			return result.getZeile();
 		}
 		return getErsteDatenZiele();
 	}
@@ -170,11 +168,10 @@ public class MeldungenSpalte {
 	 * @throws GenerateException
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
-		for (int zeileCntr = 999; zeileCntr >= getErsteDatenZiele(); zeileCntr--) {
-			String cellText = getSheetHelper().getTextFromCell(getXSpreadsheet(), Position.from(spielerNameErsteSpalte, zeileCntr));
-			if (!StringUtils.isBlank(cellText)) {
-				return zeileCntr;
-			}
+		Position resultFreieZelle = SearchHelper.from(getISheet())
+				.searchLastNotEmptyInSpalte(RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN));
+		if (resultFreieZelle != null) {
+			return resultFreieZelle.getZeile();
 		}
 		return 0;
 	}
@@ -186,28 +183,10 @@ public class MeldungenSpalte {
 	 */
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
-
-		// in Cache ?
-		Position spielerNrPosAusCache = spielerZeileNummerCache.get(spielerNr);
-		if (spielerNrPosAusCache != null) {
-			// noch korrekt ?
-			int spielrNrAusSheet = getSheetHelper().getIntFromCell(getXSpreadsheet(), spielerNrPosAusCache);
-			if (spielrNrAusSheet == spielerNr) {
-				// wert aus cache
-				return spielerNrPosAusCache.getZeile();
-			}
-		}
-
-		// neu suchen in sheet
-		for (int zeileCntr = getErsteDatenZiele(); zeileCntr < 999; zeileCntr++) {
-			Position spielerNrPos = Position.from(spielerNrSpalte, zeileCntr);
-			String cellText = getSheetHelper().getTextFromCell(getXSpreadsheet(), spielerNrPos);
-			if (!StringUtils.isBlank(cellText)) {
-				if (NumberUtils.toInt(cellText) == spielerNr) {
-					spielerZeileNummerCache.put(spielerNr, spielerNrPos);
-					return zeileCntr;
-				}
-			}
+		Position result = SearchHelper.from(getISheet()).searchNachRegExprInSpalte(RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN),
+				"" + spielerNr);
+		if (result != null) {
+			return result.getZeile();
 		}
 		return -1;
 	}
@@ -228,7 +207,7 @@ public class MeldungenSpalte {
 		checkNotNull(meldeliste);
 		checkNotNull(spielerNummerList);
 
-		NumberCellValue celValSpielerNr = NumberCellValue.from(getXSpreadsheet(), Position.from(spielerNrSpalte, getErsteDatenZiele()), 0);
+		NumberCellValue celValSpielerNr = NumberCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele()), 0);
 
 		for (int spielrNummer : spielerNummerList) {
 			celValSpielerNr.setValue((double) spielrNummer);
@@ -238,7 +217,7 @@ public class MeldungenSpalte {
 
 		// filldown formula fuer name
 		String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;8))");
-		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(), Position.from(spielerNrSpalte, getErsteDatenZiele()));
+		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele()));
 		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula).setFillAutoDown(celValSpielerNr.getPos().getZeile() - 1));
 	}
 
@@ -262,7 +241,7 @@ public class MeldungenSpalte {
 		int letzteZeile = getLetzteDatenZeile();
 		XSpreadsheet sheet = getXSpreadsheet();
 
-		Position posSpielerNr = Position.from(spielerNrSpalte, ersteDatenZiele);
+		Position posSpielerNr = Position.from(meldungNrSpalte, ersteDatenZiele);
 
 		if (letzteZeile >= ersteDatenZiele) {
 			for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
@@ -306,7 +285,7 @@ public class MeldungenSpalte {
 		String spielrAdr = null;
 		if (zeile > -1) {
 			try {
-				XCell xCell = getXSpreadsheet().getCellByPosition(spielerNrSpalte, zeile);
+				XCell xCell = getXSpreadsheet().getCellByPosition(meldungNrSpalte, zeile);
 				return getSheetHelper().getAddressFromCellAsString(xCell);
 			} catch (IndexOutOfBoundsException e) {
 				logger.error(e.getMessage(), e);
@@ -316,8 +295,8 @@ public class MeldungenSpalte {
 	}
 
 	public String formulaCountSpieler() throws GenerateException {
-		String ersteZelle = Position.from(spielerNrSpalte, ersteDatenZiele).getAddress();
-		String letzteZelle = Position.from(spielerNrSpalte, getLetzteDatenZeile()).getAddress();
+		String ersteZelle = Position.from(meldungNrSpalte, ersteDatenZiele).getAddress();
+		String letzteZelle = Position.from(meldungNrSpalte, getLetzteDatenZeile()).getAddress();
 
 		return "COUNTIF(" + ersteZelle + ":" + letzteZelle + ";\">=0\")"; // nur zahlen
 	}
@@ -327,11 +306,11 @@ public class MeldungenSpalte {
 	}
 
 	public int getSpielerNrSpalte() {
-		return spielerNrSpalte;
+		return meldungNrSpalte;
 	}
 
 	public int getSpielerNameErsteSpalte() {
-		return spielerNameErsteSpalte;
+		return meldungNameSpalte;
 	}
 
 	private final XSpreadsheet getXSpreadsheet() throws GenerateException {

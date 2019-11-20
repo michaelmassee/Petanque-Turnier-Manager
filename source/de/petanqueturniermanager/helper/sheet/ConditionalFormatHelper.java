@@ -137,7 +137,7 @@ public class ConditionalFormatHelper {
 		checkNotNull(formula1);
 		checkNotNull(styleName);
 
-		XCellRange xCellRange = sheet.getSheetHelper().getCellRange(sheet.getSheet(), rangePos);
+		XCellRange xCellRange = RangeHelper.from(sheet, rangePos).getCellRange();
 
 		XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xCellRange);
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
