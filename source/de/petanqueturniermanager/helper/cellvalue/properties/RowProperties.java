@@ -27,4 +27,9 @@ public class RowProperties extends CommonProperties<RowProperties> {
 	public RowProperties isVisible(boolean visible) {
 		return put(ISVISIBLE, visible);
 	}
+
+	public RowProperties setHeight(int height) {
+		return put(HEIGHT, height);
+	}
+
 }

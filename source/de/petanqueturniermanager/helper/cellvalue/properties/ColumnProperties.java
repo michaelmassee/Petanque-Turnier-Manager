@@ -34,4 +34,5 @@ public class ColumnProperties extends CommonProperties<ColumnProperties> {
 	public ColumnProperties isVisible(boolean visible) {
 		return put(ISVISIBLE, visible);
 	}
+
 }

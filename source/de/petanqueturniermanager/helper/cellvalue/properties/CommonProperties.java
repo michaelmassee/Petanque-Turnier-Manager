@@ -63,10 +63,6 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return put(CHAR_COLOR, Integer.valueOf(hexCharColor, 16));
 	}
 
-	public T setHeight(int height) {
-		return put(HEIGHT, height);
-	}
-
 	public T setCharHeight(int height) {
 		return put(CHAR_HEIGHT, height);
 	}

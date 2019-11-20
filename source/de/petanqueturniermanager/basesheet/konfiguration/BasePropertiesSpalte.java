@@ -13,6 +13,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
+import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -21,6 +23,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
@@ -33,6 +36,9 @@ import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
  */
 abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
+	public static final int HEADER_HEIGHT = 800;
+	public static final TableBorder2 HEADER_BORDER = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+	public static final String HEADER_BACK_COLOR = "#dedbd3";
 	private static final int MAX_LINE = 9999; // max anzahl properties
 	private static final int SPALTE_WERT_WIDTH = 1500;
 	private static final int SPALTE_NAME_WIDTH = 7000;
@@ -98,13 +104,14 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		// header
 		Position posHeader = Position.from(propertiesSpalte, headerZeile);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(SPALTE_NAME_WIDTH);
+		RowProperties rowProperties = RowProperties.from().setHeight(HEADER_HEIGHT).setVertJustify(CellVertJustify2.CENTER);
 
 		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT)
-				.setCharWeight(FontWeight.BOLD).setBorder(BorderFactory.from().allThin().toBorder());
+				.setCharWeight(FontWeight.BOLD).setBorder(HEADER_BORDER).addRowProperties(rowProperties).setCellBackColor(HEADER_BACK_COLOR);
 		getSheetHelper().setTextInCell(headerVal);
 
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(SPALTE_WERT_WIDTH)).setValue("Wert")
-				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins().setCharWeight(FontWeight.BOLD).setBorder(BorderFactory.from().allThin().toBorder());
+				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins().setCharWeight(FontWeight.BOLD).setBorder(HEADER_BORDER).setCellBackColor(HEADER_BACK_COLOR);
 		getSheetHelper().setTextInCell(wertheaderVal);
 	}
 
