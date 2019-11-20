@@ -25,6 +25,8 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RowProperties;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
@@ -119,15 +121,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public void updateKonfigBlock() throws GenerateException {
 		XSpreadsheet propSheet = getPropSheet();
 
-		Position nextFreepos = Position.from(propertiesSpalte, erstePropertiesZeile);
-		// TODO umstellen auf uno find
-		for (int idx = 0; idx < MAX_LINE; idx++) {
-			String val = getSheetHelper().getTextFromCell(propSheet, nextFreepos);
-			if (!StringUtils.isNotBlank(val)) {
-				break;
-			}
-			nextFreepos.zeilePlusEins();
-		}
+		Position nextFreepos = SearchHelper.from(sheetWkRef).searchLastEmptyInSpalte(RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE));
 
 		for (ConfigProperty<?> configProp : getKonfigProperties()) {
 			Position pos = getPropKeyPos(configProp.getKey());

@@ -22,15 +22,12 @@ import com.sun.star.container.NoSuchElementException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
-import com.sun.star.sheet.CellFlags;
 import com.sun.star.sheet.FillDirection;
 import com.sun.star.sheet.XCellAddressable;
-import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XCellSeries;
 import com.sun.star.sheet.XFunctionAccess;
 import com.sun.star.sheet.XSheetAnnotations;
 import com.sun.star.sheet.XSheetAnnotationsSupplier;
-import com.sun.star.sheet.XSheetOperation;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
@@ -787,50 +784,6 @@ public class SheetHelper {
 		// XSheetAnnotationAnchor xAnnotAnchor = UnoRuntime.queryInterface(XSheetAnnotationAnchor.class, xCell);
 		// XSheetAnnotation xAnnotation = xAnnotAnchor.getAnnotation();
 		// xAnnotation.setIsVisible(true);
-	}
-
-	public XCellRange clearRange(XSpreadsheet xSheet, RangePosition rangePos) {
-		checkNotNull(xSheet);
-		checkNotNull(rangePos);
-
-		XCellRange xRangetoClear;
-		xRangetoClear = getCellRange(xSheet, rangePos);
-		if (xRangetoClear != null) {
-			// --- Sheet operation. ---
-			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class, xRangetoClear);
-			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED | CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS
-					| CellFlags.STRING | CellFlags.STYLES | CellFlags.VALUE);
-		}
-		return xRangetoClear;
-	}
-
-	public XCellRange getCellRange(XSpreadsheet xSheet, RangePosition rangePos) {
-		checkNotNull(xSheet);
-		checkNotNull(rangePos);
-
-		XCellRange xCellRange = null;
-
-		try {
-			xCellRange = xSheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
-		} catch (IndexOutOfBoundsException e) {
-			logger.error(e.getMessage(), e);
-		}
-
-		return xCellRange;
-	}
-
-	public XCellRangesQuery getCellRangesQuery(XSpreadsheet xSheet, RangePosition rangePos) {
-		checkNotNull(xSheet);
-		checkNotNull(rangePos);
-
-		XCellRange xCellRange = null;
-		XCellRangesQuery xCellRangesQuery = null;
-
-		xCellRange = getCellRange(xSheet, rangePos);
-		if (xCellRange != null) {
-			xCellRangesQuery = UnoRuntime.queryInterface(com.sun.star.sheet.XCellRangesQuery.class, xCellRange);
-		}
-		return xCellRangesQuery;
 	}
 
 }

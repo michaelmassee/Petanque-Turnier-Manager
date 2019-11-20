@@ -264,8 +264,8 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		meldeListe.processBoxinfo("Aktualisiere Meldungen Nummer");
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		if (letzteSpielZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
-			return; // keine Daten
+		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
+			return; // nur 1 Meldung
 		}
 		XSpreadsheet xSheet = getSheet();
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten

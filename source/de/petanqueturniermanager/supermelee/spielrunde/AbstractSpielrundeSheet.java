@@ -58,6 +58,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.SpielrundeInfoKonfigDialog;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
@@ -883,7 +884,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		}
 
 		RangePosition rangPos = RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteZeile.getZeile());
-		getSheetHelper().clearRange(xSheet, rangPos);
+		RangeHelper.from(xSheet, rangPos).clearRange();
 	}
 
 	public SpielTagNr getSpielTag() {

@@ -124,7 +124,7 @@ public class NewSheet {
 		}
 
 		if (sheet != null) {
-			TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).protect(protect).tabColor(tabColor);
+			TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).protect(protect).tabColor(tabColor).setActiv(setActiv);
 
 			if (pageStyleDef != null) {
 				// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
