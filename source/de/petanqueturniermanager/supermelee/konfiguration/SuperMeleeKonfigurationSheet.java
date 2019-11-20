@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.FontWeight;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -62,7 +63,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 		// Header
 		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1500);
 		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify().centerVertJustify()
-				.setCharWeight(FontWeight.BOLD).setBorder(BorderFactory.from().allThin().toBorder());
+				.setCharWeight(FontWeight.BOLD).setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR);
 		getSheetHelper().setTextInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
 		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000);
 		getSheetHelper().setTextInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));

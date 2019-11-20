@@ -27,12 +27,12 @@ public class BorderFactory {
 
 	public TableBorder2 toBorder() {
 		TableBorder2 tableBorder = new TableBorder2();
-		tableBorder.TopLine = this.topLine;
-		tableBorder.BottomLine = this.bottomLine;
-		tableBorder.LeftLine = this.leftLine;
-		tableBorder.RightLine = this.rightLine;
-		tableBorder.HorizontalLine = this.horizontalLine;
-		tableBorder.VerticalLine = this.verticalLine;
+		tableBorder.TopLine = topLine;
+		tableBorder.BottomLine = bottomLine;
+		tableBorder.LeftLine = leftLine;
+		tableBorder.RightLine = rightLine;
+		tableBorder.HorizontalLine = horizontalLine;
+		tableBorder.VerticalLine = verticalLine;
 		tableBorder.IsTopLineValid = tableBorder.IsBottomLineValid = true;
 		tableBorder.IsLeftLineValid = tableBorder.IsRightLineValid = true;
 		tableBorder.IsDistanceValid = tableBorder.IsHorizontalLineValid = tableBorder.IsVerticalLineValid = true;
@@ -40,59 +40,64 @@ public class BorderFactory {
 	}
 
 	public BorderFactory allThin() {
-		this.topLine = BorderFactory.thinLine();
-		this.bottomLine = BorderFactory.thinLine();
-		this.leftLine = BorderFactory.thinLine();
-		this.rightLine = BorderFactory.thinLine();
-		this.horizontalLine = BorderFactory.thinLine();
-		this.verticalLine = BorderFactory.thinLine();
+		topLine = BorderFactory.thinLine();
+		bottomLine = BorderFactory.thinLine();
+		leftLine = BorderFactory.thinLine();
+		rightLine = BorderFactory.thinLine();
+		horizontalLine = BorderFactory.thinLine();
+		verticalLine = BorderFactory.thinLine();
 		return this;
 	}
 
 	public BorderFactory allBold() {
-		this.topLine = BorderFactory.boldLine();
-		this.bottomLine = BorderFactory.boldLine();
-		this.leftLine = BorderFactory.boldLine();
-		this.rightLine = BorderFactory.boldLine();
-		this.horizontalLine = BorderFactory.boldLine();
-		this.verticalLine = BorderFactory.boldLine();
+		topLine = BorderFactory.boldLine();
+		bottomLine = BorderFactory.boldLine();
+		leftLine = BorderFactory.boldLine();
+		rightLine = BorderFactory.boldLine();
+		horizontalLine = BorderFactory.boldLine();
+		verticalLine = BorderFactory.boldLine();
+		return this;
+	}
+
+	public BorderFactory thinLn() {
+		forLine = BorderFactory.thinLine();
 		return this;
 	}
 
 	public BorderFactory boldLn() {
-		this.forLine = BorderFactory.boldLine();
+		forLine = BorderFactory.boldLine();
 		return this;
 	}
 
 	public BorderFactory doubleLn() {
-		this.forLine = BorderFactory.doubleLine();
+		forLine = BorderFactory.doubleLine();
 		return this;
 	}
 
 	public BorderFactory forTop() {
-		if (this.forLine != null) {
-			this.topLine = this.forLine;
+		if (forLine != null) {
+			topLine = forLine;
 		}
 		return this;
 	}
 
 	public BorderFactory forBottom() {
-		if (this.forLine != null) {
-			this.bottomLine = this.forLine;
+		if (forLine != null) {
+			bottomLine = forLine;
 		}
 		return this;
 	}
 
 	public BorderFactory forLeft() {
-		if (this.forLine != null) {
-			this.leftLine = this.forLine;
+		if (forLine != null) {
+			leftLine = forLine;
 		}
 		return this;
 	}
 
 	public BorderFactory forRight() {
-		if (this.forLine != null) {
-			this.rightLine = this.forLine;
+		if (forLine != null) {
+			rightLine = forLine;
 		}
 		return this;
 	}

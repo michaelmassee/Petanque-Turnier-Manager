@@ -321,13 +321,15 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	/**
-	 * @param hexCharColor = ein hex wert ohne vorzeichen
+	 * @param hexCharColor = ein hex wert
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCellBackColor(String hexCharColor) {
 		checkNotNull(hexCharColor);
-		this.cellProperties.setCellBackColor(Integer.valueOf(hexCharColor, 16));
+		if (StringUtils.isNotBlank(hexCharColor)) {
+			this.cellProperties.setCellBackColor(Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
+		}
 		return (T) this;
 	}
 

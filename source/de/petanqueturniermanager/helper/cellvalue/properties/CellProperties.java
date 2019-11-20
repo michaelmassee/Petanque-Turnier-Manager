@@ -15,6 +15,10 @@ public class CellProperties extends CommonProperties<CellProperties> {
 		return new CellProperties();
 	}
 
+	public CellProperties setHeight(int height) {
+		return put(HEIGHT, height);
+	}
+
 	public static CellProperties from(String key, Object value) {
 		checkNotNull(key);
 		checkNotNull(value);
