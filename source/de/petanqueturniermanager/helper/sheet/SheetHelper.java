@@ -399,28 +399,6 @@ public class SheetHelper {
 	}
 
 	/**
-	 * @param zeileNr = 0 = erste Zeile
-	 * @param searchStr
-	 * @return spalte 0 = erste Spalte, -1 when not found
-	 */
-	public int findSpalteInZeileNachString(XSpreadsheet sheet, int zeileNr, String searchStr) {
-		checkNotNull(sheet);
-		checkNotNull(searchStr);
-
-		int spalteNr = -1;
-
-		// Primitiv search
-		for (int spalteCntr = 0; spalteCntr < 999; spalteCntr++) {
-			String text = getTextFromCell(sheet, Position.from(spalteCntr, zeileNr));
-			if (text.equals(searchStr)) {
-				spalteNr = spalteCntr;
-				break;
-			}
-		}
-		return spalteNr;
-	}
-
-	/**
 	 * @deprecated use TurnierSheet.from(xSheet, currentSpreadsheet).tabColor
 	 * @param spreadsheet
 	 */

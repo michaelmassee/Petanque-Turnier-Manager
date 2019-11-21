@@ -362,7 +362,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		Position posErsteSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE - 1);
 
-		NumberCellValue numberCellValue = NumberCellValue.from(sheet, posErsteSpielrNr, 999).addCellProperty(VERT_JUSTIFY, CellVertJustify2.CENTER);
+		NumberCellValue numberCellValue = NumberCellValue.from(sheet, posErsteSpielrNr, MeldungenSpalte.MAX_ANZ_MELDUNGEN).addCellProperty(VERT_JUSTIFY, CellVertJustify2.CENTER);
 
 		StringCellValue validateCellVal = StringCellValue.from(numberCellValue).spalte(EINGABE_VALIDIERUNG_SPALTE).setCharColor(ColorHelper.CHAR_COLOR_RED)
 				.setCharWeight(FontWeight.BOLD).setCharHeight(14).setHoriJustify(CellHoriJustify.CENTER);

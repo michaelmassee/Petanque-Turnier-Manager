@@ -359,7 +359,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		int anzSpieltage = countAnzSpieltageInMeldeliste();
 
-		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0, ersteSummeSpalte() + anzSpieltage + 10, 999);
+		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0, ersteSummeSpalte() + anzSpieltage + 10, MeldungenSpalte.MAX_ANZ_MELDUNGEN);
 		RangeHelper.from(getSheet(), cleanUpRange).clearRange();
 
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);

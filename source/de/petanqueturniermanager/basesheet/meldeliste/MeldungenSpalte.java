@@ -40,7 +40,7 @@ import de.petanqueturniermanager.model.Meldungen;
 
 public class MeldungenSpalte {
 
-	private static final int MAX_ANZ_MELDUNGEN = 999;
+	public static final int MAX_ANZ_MELDUNGEN = 999;
 
 	private static final Logger logger = LogManager.getLogger(MeldungenSpalte.class);
 
