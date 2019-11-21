@@ -288,15 +288,6 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		return ERSTE_SPIELRUNDE_SPALTE + (anzSpielRunden * 2);
 	}
 
-	// /**
-	// * @return
-	// * @throws GenerateException
-	// */
-	// @Override
-	// public List<Integer> getSpielerNrList() throws GenerateException {
-	// return getSpielerNrList(getSpieltagNr());
-	// }
-
 	public List<Integer> getSpielerNrList(SpielTagNr spielTagNr) throws GenerateException {
 		checkNotNull(spielTagNr);
 
