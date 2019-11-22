@@ -37,7 +37,7 @@ public class RangeHelper {
 
 	/**
 	 * @param sheet
-	 * @param rangePos2
+	 * @param rangePos
 	 * @return
 	 * @throws GenerateException
 	 */
@@ -47,6 +47,14 @@ public class RangeHelper {
 
 	public static RangeHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
 		return new RangeHelper(xSpreadsheet, rangePos);
+	}
+
+	/**
+	 * @param wkRefxSpreadsheet
+	 * @param rangePosition
+	 */
+	public static RangeHelper from(WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet, RangePosition rangePos) {
+		return new RangeHelper(checkNotNull(wkRefxSpreadsheet).get(), rangePos);
 	}
 
 	public RangeHelper clearRange() {

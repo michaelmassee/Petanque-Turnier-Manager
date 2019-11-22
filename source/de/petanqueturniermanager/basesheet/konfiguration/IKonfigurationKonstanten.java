@@ -9,8 +9,9 @@ package de.petanqueturniermanager.basesheet.konfiguration;
  */
 public interface IKonfigurationKonstanten {
 
-	int PROPERTIESSPALTE = 0;
-	int ERSTE_ZEILE_PROPERTIES = 1;
+	// Etwas versetzten vom Rand
+	int NAME_PROPERTIES_SPALTE = 1; // Spalte B
+	int ERSTE_ZEILE_PROPERTIES = 2; // Header = -1
 
 	String SHEETNAME = "Konfiguration";
 	String SHEET_COLOR = "6bf442";

@@ -30,15 +30,15 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
 	private static final int MAX_SPIELTAG = 10;
-	private static final int KONFIG_SPIELTAG_NR = 3;
-	private static final int KONFIG_SPIELTAG_KOPFZEILE = KONFIG_SPIELTAG_NR + 1;
+	private static final int KONFIG_SPIELTAG_NR_SPALTE = NAME_PROPERTIES_SPALTE + 3;
+	private static final int KONFIG_SPIELTAG_KOPFZEILE_SPALTE = KONFIG_SPIELTAG_NR_SPALTE + 1;
 
 	private final SuperMeleePropertiesSpalte propertiesSpalte;
 
 	// Package weil nur in SuperMeleeSheet verwendet werden darf
 	SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
-		propertiesSpalte = new SuperMeleePropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
+		propertiesSpalte = new SuperMeleePropertiesSpalte(NAME_PROPERTIES_SPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
 
 	@Override
@@ -62,16 +62,16 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	private void initSpieltagKonfigSpalten() throws GenerateException {
 		// Header
 		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1500);
-		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify().centerVertJustify()
-				.setCharWeight(FontWeight.BOLD).setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR);
+		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify()
+				.centerVertJustify().setCharWeight(FontWeight.BOLD).setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR);
 		getSheetHelper().setTextInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
 		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000);
 		getSheetHelper().setTextInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
 
 		// Daten
-		StringCellValue nr = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify().centerVertJustify()
+		StringCellValue nr = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify().centerVertJustify()
 				.setCharHeight(14).setBorder(BorderFactory.from().allThin().toBorder());
-		StringCellValue kopfZeile = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
+		StringCellValue kopfZeile = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
 				.centerVertJustify().nichtUeberschreiben().setBorder(BorderFactory.from().allThin().toBorder());
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			getSheetHelper().setTextInCell(nr.setValue("" + spieltagCntr).setEndPosMergeZeilePlus(1));
@@ -91,7 +91,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	public String getKopfZeile(SpielTagNr spielTagNr) throws GenerateException {
 		checkNotNull(spielTagNr);
-		Position posKopfzeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES + (spielTagNr.getNr() - 1));
+		Position posKopfzeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES + (spielTagNr.getNr() - 1));
 		return getSheetHelper().getTextFromCell(getSheet(), posKopfzeile);
 	}
 
@@ -192,7 +192,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
-		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE, ERSTE_ZEILE_PROPERTIES);
+		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES);
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			// Kopfzeile Spalte
 			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);

@@ -252,12 +252,6 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public T setHeight(int height) {
-		this.cellProperties.setHeight(height);
-		return (T) this;
-	}
-
-	@SuppressWarnings("unchecked")
 	public T setCharHeight(int height) {
 		this.cellProperties.setCharHeight(height);
 		return (T) this;

@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -115,6 +116,10 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(SPALTE_WERT_WIDTH)).setValue("Wert")
 				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins().setCharWeight(FontWeight.BOLD).setBorder(HEADER_BORDER).setCellBackColor(HEADER_BACK_COLOR);
 		getSheetHelper().setTextInCell(wertheaderVal);
+
+		// Rand erste Spalte A etwas schmaller
+		getSheetHelper().setColumnProperties(getPropSheet(), 0, ColumnProperties.from().setWidth(600));
+
 	}
 
 	@Override
@@ -122,39 +127,47 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		XSpreadsheet propSheet = getPropSheet();
 
 		Position nextFreepos = SearchHelper.from(sheetWkRef).searchLastEmptyInSpalte(RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE));
+		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+		StringCellValue celValKey = StringCellValue.from(propSheet).setComment(null).setHoriJustify(CellHoriJustify.RIGHT).setBorder(border)
+				.addRowProperties(RowProperties.from().setHeight(600)).setVertJustify(CellVertJustify2.CENTER);
+
+		StringCellValue celValWert = StringCellValue.from(celValKey).setHoriJustify(CellHoriJustify.CENTER);
 
 		for (ConfigProperty<?> configProp : getKonfigProperties()) {
 			Position pos = getPropKeyPos(configProp.getKey());
 			if (pos == null) {
 				// when not found insert new
-				StringCellValue celVal = StringCellValue.from(propSheet, nextFreepos, configProp.getKey()).setComment(null).setHoriJustify(CellHoriJustify.RIGHT)
-						.setBorder(BorderFactory.from().allThin().toBorder());
-				getSheetHelper().setTextInCell(celVal);
+				celValKey.setPos(nextFreepos).setValue(configProp.getKey());
+				getSheetHelper().setTextInCell(celValKey);
 
-				celVal.spaltePlusEins().setComment(configProp.getDescription()).setHoriJustify(CellHoriJustify.CENTER);
+				celValWert.setPos(nextFreepos).spaltePlusEins().setComment(configProp.getDescription());
 
 				// default Val schreiben
 				switch (configProp.getType()) {
 				case STRING:
-					celVal.setValue((String) configProp.getDefaultVal());
-					getSheetHelper().setTextInCell(celVal);
+					celValWert.setValue((String) configProp.getDefaultVal());
+					getSheetHelper().setTextInCell(celValWert);
 					break;
 				case INTEGER:
-					IntegerCellValue numberCellValue = IntegerCellValue.from(celVal).setValue((Integer) configProp.getDefaultVal());
+					IntegerCellValue numberCellValue = IntegerCellValue.from(celValWert).setValue((Integer) configProp.getDefaultVal());
 					getSheetHelper().setValInCell(numberCellValue);
 					break;
 				case COLOR:
 					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(), configProp.getDescription());
 					break;
 				case BOOLEAN:
-					celVal.setValue(booleanToString((Boolean) configProp.getDefaultVal()));
-					getSheetHelper().setTextInCell(celVal);
+					celValWert.setValue(booleanToString((Boolean) configProp.getDefaultVal()));
+					getSheetHelper().setTextInCell(celValWert);
 					break;
 				default:
 				}
 				nextFreepos.zeilePlusEins();
 			}
 		}
+
+		// Sortieren
+		RangePosition allPropRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, nextFreepos.spalte(propertiesSpalte + 1));
+		SortHelper.from(getPropSheet(), allPropRange).aufSteigendSortieren().bindFormatsToContent().doSort();
 	}
 
 	/**
