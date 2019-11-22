@@ -30,6 +30,11 @@ import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
+	/**
+	 *
+	 */
+	private static final int MIN_ANZ_SPIELER = 10;
+
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
@@ -74,6 +79,21 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 				getSheetHelper().setValInCell(numVal.setValue((double) randomNum));
 			} else {
 				getSheetHelper().setValInCell(numVal.setValue((double) 1));
+			}
+		}
+
+		if (meldeListe.getAktiveMeldungen().size() < MIN_ANZ_SPIELER) {
+			// zu wenig spieler, einfach 10 dazu
+			int cntr = MIN_ANZ_SPIELER;
+			Iterable<Spieler> spielerList = meldeListe.getInAktiveMeldungen().shuffle().getSpielerList();
+			for (Spieler spieler : spielerList) {
+				int spielerZeile = meldeListe.getSpielerZeileNr(spieler.getNr());
+				numVal.zeile(spielerZeile);
+				getSheetHelper().setValInCell(numVal.setValue((double) 1));
+				cntr--;
+				if (cntr < 0) {
+					break;
+				}
 			}
 		}
 	}

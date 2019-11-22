@@ -68,7 +68,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 
 		// wenn hier dann immer neu erstellen, force = true
 		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
-				.forceCreate().setActiv().create();
+				.forceCreate().hideGrid().setActiv().create();
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);

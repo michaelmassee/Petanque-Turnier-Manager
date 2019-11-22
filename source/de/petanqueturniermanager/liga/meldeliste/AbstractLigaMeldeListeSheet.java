@@ -156,6 +156,11 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
+	public Meldungen getInAktiveMeldungen() throws GenerateException {
+		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
+	}
+
+	@Override
 	public Meldungen getAlleMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), null);
 	}

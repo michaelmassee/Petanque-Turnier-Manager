@@ -41,7 +41,6 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Meldungen;
-import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
@@ -128,7 +127,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		processBoxinfo("Aktualisiere Meldungen");
 
 		meldeListeHelper.testDoppelteMeldungen();
-
 		TurnierSheet.from(getSheet(), getWorkingSpreadsheet()).setActiv();
 
 		// ------
@@ -157,6 +155,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		insertInfoSpalte();
 		meldungenSpalte.formatDaten();
 		formatDaten();
+
+		// TurnierSystem
+		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
 	}
 
 	/**
@@ -536,51 +537,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		return "COUNTIFS(" + ersteZelleName + ":" + letzteZelleName + ";\"<>\";" + ersteZelleSpielTag + ":" + letzteZelleSpielTag + ";" + status + ")";
 	}
 
-	/**
-	 *
-	 * @param spieltag
-	 * @param spielrundeGespielt list mit Flags. null für alle
-	 * @return
-	 * @throws GenerateException
-	 */
-
-	private Meldungen getMeldungen(SpielTagNr spieltag, List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
-		checkNotNull(spieltag, "spieltag == null");
-		Meldungen meldung = new Meldungen();
-		int letzteZeile = meldungenSpalte.getLetzteDatenZeile();
-
-		if (letzteZeile >= ERSTE_DATEN_ZEILE) {
-			// daten vorhanden
-			int nichtZusammenSpielenSpalte = meldeListeHelper.setzPositionSpalte();
-			int spieltagSpalte = meldeListeHelper.spieltagSpalte(spieltag);
-
-			Position posSpieltag = Position.from(spieltagSpalte, ERSTE_DATEN_ZEILE);
-			XSpreadsheet sheet = getSheet();
-
-			for (int spielerZeile = ERSTE_DATEN_ZEILE; spielerZeile <= letzteZeile; spielerZeile++) {
-
-				int isAktiv = getSheetHelper().getIntFromCell(sheet, posSpieltag.zeile(spielerZeile));
-				SpielrundeGespielt status = SpielrundeGespielt.findById(isAktiv);
-
-				if (spielrundeGespielt == null || spielrundeGespielt.contains(status)) {
-					int spielerNr = getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(SPIELER_NR_SPALTE));
-					if (spielerNr > 0) {
-						Spieler spieler = Spieler.from(spielerNr);
-
-						if (nichtZusammenSpielenSpalte > -1) {
-							int nichtzusammen = getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(nichtZusammenSpielenSpalte));
-							if (nichtzusammen > 0) {
-								spieler.setSetzPos(nichtzusammen);
-							}
-						}
-						meldung.addSpielerWennNichtVorhanden(spieler);
-					}
-				}
-			}
-		}
-		return meldung;
-	}
-
 	@Override
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		return meldungenSpalte.getSpielerZeileNr(spielerNr);
@@ -628,17 +584,22 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	@Override
 	public Meldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
-		return getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+		return meldeListeHelper.getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	@Override
 	public Meldungen getAktiveMeldungen() throws GenerateException {
-		return getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
+		return meldeListeHelper.getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
+	}
+
+	@Override
+	public Meldungen getInAktiveMeldungen() throws GenerateException {
+		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
 	}
 
 	@Override
 	public Meldungen getAlleMeldungen() throws GenerateException {
-		return getMeldungen(getSpielTag(), null);
+		return meldeListeHelper.getMeldungen(getSpielTag(), null);
 	}
 
 	public int getSpielerNameErsteSpalte() {
