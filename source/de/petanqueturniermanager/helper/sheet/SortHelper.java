@@ -6,9 +6,6 @@ package de.petanqueturniermanager.helper.sheet;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.TableSortField;
@@ -26,11 +23,11 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  */
 public class SortHelper {
 
-	private static final Logger logger = LogManager.getLogger(SortHelper.class);
+	// private static final Logger logger = LogManager.getLogger(SortHelper.class);
 	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
 	private final RangePosition rangePosition;
 
-	private int sortSpalte = 1; // 1 = erste spalte
+	private int sortSpalte = 0; // 0 = erste spalte
 	private boolean aufSteigendSortieren = true;
 	private boolean caseSensitive = false;
 	private boolean bindFormatsToContent = false;
@@ -53,13 +50,13 @@ public class SortHelper {
 	}
 
 	/**
-	 * default = 1 = erste Spalte
+	 * default = 0 = erste Spalte
 	 *
 	 * @param sortSpalte
 	 * @return
 	 */
 	public SortHelper spalteToSort(int sortSpalte) {
-		checkArgument(sortSpalte > 0);
+		checkArgument(sortSpalte > -1);
 		this.sortSpalte = sortSpalte;
 		return this;
 	}
@@ -76,6 +73,11 @@ public class SortHelper {
 
 	public SortHelper abSteigendSortieren() {
 		aufSteigendSortieren = false;
+		return this;
+	}
+
+	public SortHelper aufSteigendSortieren(boolean ja) {
+		aufSteigendSortieren = ja;
 		return this;
 	}
 
@@ -104,7 +106,6 @@ public class SortHelper {
 	 * Nicht Groß- / Kleinschreibung beachten, default = true
 	 */
 	public SortHelper notCaseSensitive() {
-		checkArgument(sortSpalte > 0);
 		caseSensitive = false;
 		return this;
 	}
@@ -125,7 +126,7 @@ public class SortHelper {
 
 		TableSortField[] aSortFields = new TableSortField[1];
 		TableSortField field1 = new TableSortField();
-		field1.Field = (sortSpalte - 1); // 0 = erste spalte, nur eine Spalte sortieren
+		field1.Field = sortSpalte; // 0 = erste spalte, nur eine Spalte sortieren
 		field1.IsAscending = aufSteigendSortieren;
 		field1.IsCaseSensitive = caseSensitive;
 		aSortFields[0] = field1;
