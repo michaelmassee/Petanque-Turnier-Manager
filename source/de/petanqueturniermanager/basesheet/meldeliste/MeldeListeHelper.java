@@ -73,14 +73,15 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 
 		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
 
-		TableSortField[] aSortFields = new TableSortField[1];
-		TableSortField field1 = new TableSortField();
-		field1.Field = spalteNr; // 0 = erste spalte, nur eine Spalte sortieren
-		field1.IsAscending = isAscending;
 		// Note – The FieldType member, that is used to select textual or numeric sorting in
 		// text documents is ignored in the spreadsheet application. In a spreadsheet, a cell
 		// always has a known type of text or value, which is used for sorting, with numbers
 		// sorted before text cells.
+
+		TableSortField[] aSortFields = new TableSortField[1];
+		TableSortField field1 = new TableSortField();
+		field1.Field = spalteNr; // 0 = erste spalte, nur eine Spalte sortieren
+		field1.IsAscending = isAscending;
 		aSortFields[0] = field1;
 
 		PropertyValue[] aSortDesc = new PropertyValue[2];

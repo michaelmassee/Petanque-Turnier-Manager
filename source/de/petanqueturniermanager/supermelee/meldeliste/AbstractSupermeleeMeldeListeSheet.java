@@ -39,6 +39,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -128,8 +129,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		meldeListeHelper.testDoppelteMeldungen();
 
-		XSpreadsheet sheet = getSheet();
-		getSheetHelper().setActiveSheet(sheet);
+		TurnierSheet.from(getSheet(), getWorkingSpreadsheet()).setActiv();
 
 		// ------
 		// Header einfuegen
@@ -140,7 +140,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// ------
 		// Setzposition
 		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
-		StringCellValue bezCelVal = StringCellValue.from(sheet, meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
+		StringCellValue bezCelVal = StringCellValue.from(getSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setCellBackColor(headerBackColor)
 				.setBorder(BorderFactory.from().allThin().toBorder()).addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
 		getSheetHelper().setTextInCell(bezCelVal);
@@ -211,7 +211,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	}
 
 	private String suchMatrixProperty() {
-		Position start = Position.from(IKonfigurationKonstanten.PROPERTIESSPALTE, IKonfigurationKonstanten.ERSTE_ZEILE_PROPERTIES);
+		Position start = Position.from(IKonfigurationKonstanten.NAME_PROPERTIES_SPALTE, IKonfigurationKonstanten.ERSTE_ZEILE_PROPERTIES);
 		Position end = Position.from(start).spaltePlusEins().zeile(100);
 		return start.getAddressWith$() + ":" + end.getAddressWith$();
 	}

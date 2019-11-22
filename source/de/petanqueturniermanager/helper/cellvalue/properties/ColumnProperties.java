@@ -24,6 +24,10 @@ public class ColumnProperties extends CommonProperties<ColumnProperties> {
 		return ColumnProperties.from().put(key, value);
 	}
 
+	public ColumnProperties setWidth(int width) {
+		return put(WIDTH, width);
+	}
+
 	/**
 	 * Achtung: Bug ? Wenn spalten ausgeblendet, funktioniert kein filldown mehr !
 	 *

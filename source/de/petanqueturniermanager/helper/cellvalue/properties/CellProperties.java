@@ -15,6 +15,10 @@ public class CellProperties extends CommonProperties<CellProperties> {
 		return new CellProperties();
 	}
 
+	public CellProperties setWidth(int width) {
+		return put(WIDTH, width);
+	}
+
 	public CellProperties setHeight(int height) {
 		return put(HEIGHT, height);
 	}

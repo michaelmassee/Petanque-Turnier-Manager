@@ -27,7 +27,7 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 	 */
 	LigaKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA);
-		propertiesSpalte = new LigaPropertiesSpalte(PROPERTIESSPALTE, ERSTE_ZEILE_PROPERTIES, this);
+		propertiesSpalte = new LigaPropertiesSpalte(NAME_PROPERTIES_SPALTE, ERSTE_ZEILE_PROPERTIES, this);
 	}
 
 	@Override
