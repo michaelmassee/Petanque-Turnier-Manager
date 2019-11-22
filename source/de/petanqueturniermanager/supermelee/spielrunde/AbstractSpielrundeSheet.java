@@ -563,7 +563,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		}
 		// wenn hier dann neu erstellen
 		if (!NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
-				.setForceCreate(force).setActiv().create().isDidCreate()) {
+				.setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return;
 		}

@@ -11,7 +11,10 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -24,6 +27,7 @@ import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -159,6 +163,13 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";2;0)";
 	}
 
+	/**
+	 *
+	 * @param spieltag
+	 * @param spielrundeGespielt list mit Flags. null für alle
+	 * @return
+	 * @throws GenerateException
+	 */
 	public Meldungen getMeldungen(SpielTagNr spieltag, List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
 		Meldungen meldung = new Meldungen();
@@ -238,6 +249,16 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 				meldeListe.getSheetHelper().setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
+	}
+
+	/**
+	 * @param turnierSystem
+	 * @throws GenerateException
+	 */
+	public void insertTurnierSystemInHeader(TurnierSystem turnierSystem) throws GenerateException {
+		// oben links
+		meldeListe.getSheetHelper().setTextInCell(StringCellValue.from(getSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung())
+				.setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP));
 	}
 
 }

@@ -17,6 +17,8 @@ public interface IMeldeliste extends ISheet, MeldeListeKonstanten, IMitSpielerSp
 
 	Meldungen getAktiveMeldungen() throws GenerateException;
 
+	Meldungen getInAktiveMeldungen() throws GenerateException;
+
 	Meldungen getAlleMeldungen() throws GenerateException;
 
 	MeldungenSpalte getMeldungenSpalte();
