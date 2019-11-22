@@ -11,20 +11,16 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.sun.star.beans.PropertyValue;
-import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.TableSortField;
-import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
-import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -42,61 +38,16 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	}
 
 	/**
-	 * alle sortierbare daten, ohne header !
 	 *
-	 * @return
+	 * @param spalteNr 0 = erste spalte
+	 * @param isAscending
 	 * @throws GenerateException
 	 */
-	private XCellRange getxCellRangeAlleDaten() throws GenerateException {
-		XSpreadsheet xSheet = getSheet();
-		XCellRange xCellRange = null;
-		try {
-			int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-			if (letzteSpielZeile > ERSTE_DATEN_ZEILE) { // daten vorhanden ?
-				// (column, row, column, row)
-				xCellRange = xSheet.getCellRangeByPosition(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
-			}
-		} catch (IndexOutOfBoundsException e) {
-			meldeListe.getLogger().error(e.getMessage(), e);
-			return null;
-		}
-		return xCellRange;
-	}
 
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
-
-		XCellRange xCellRange = getxCellRangeAlleDaten();
-
-		if (xCellRange == null) {
-			return;
-		}
-
-		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
-
-		// Note – The FieldType member, that is used to select textual or numeric sorting in
-		// text documents is ignored in the spreadsheet application. In a spreadsheet, a cell
-		// always has a known type of text or value, which is used for sorting, with numbers
-		// sorted before text cells.
-
-		TableSortField[] aSortFields = new TableSortField[1];
-		TableSortField field1 = new TableSortField();
-		field1.Field = spalteNr; // 0 = erste spalte, nur eine Spalte sortieren
-		field1.IsAscending = isAscending;
-		aSortFields[0] = field1;
-
-		PropertyValue[] aSortDesc = new PropertyValue[2];
-		PropertyValue propVal = new PropertyValue();
-		propVal.Name = "SortFields";
-		propVal.Value = aSortFields;
-		aSortDesc[0] = propVal;
-
-		// specifies if cell formats are moved with the contents they belong to.
-		propVal = new PropertyValue();
-		propVal.Name = "BindFormatsToContent";
-		propVal.Value = false;
-		aSortDesc[1] = propVal;
-
-		xSortable.sort(aSortDesc);
+		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
+		RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
+		SortHelper.from(getSheet(), rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
 	}
 
 	/**
