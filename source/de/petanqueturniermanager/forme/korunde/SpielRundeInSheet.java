@@ -36,7 +36,7 @@ public class SpielRundeInSheet {
 		Position posHeader = Position.from(grpCntr * 2, HEADERZEILE);
 		String gruppeLetter = String.valueOf((char) ((grpCntr + 1) + 64));
 		StringCellValue header = StringCellValue.from(spreadsheet, posHeader).setEndPosMergeSpaltePlus(1).setValue("Gruppe " + gruppeLetter);
-		getSheetHelper().setTextInCell(header);
+		getSheetHelper().setStringValueInCell(header);
 
 		Position posPaarungen = Position.from(grpCntr * 2, ERSTEZEILE);
 		for (TeamPaarung teamPaarung : spielRunde.getTeamPaarungen()) {

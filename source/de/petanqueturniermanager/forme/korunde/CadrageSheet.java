@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
@@ -53,8 +54,13 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheetHelper().findByName(SHEETNAME);
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	@Override
@@ -68,7 +74,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 		NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
-		getSheetHelper().setActiveSheet(getSheet());
+		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	/**
@@ -117,8 +123,8 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 				KoRundeTeamPaarungen teamPaarungen = new KoRundeTeamPaarungen(cadrageRangliste);
 				FormeSpielrunde spielRunde = teamPaarungen.generatSpielRunde();
 				// Paarungen
-				getSheetHelper().setActiveSheet(getSheet());
-				spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getSheet(), teamPaarungen, spielRunde);
+				getSheetHelper().setActiveSheet(getXSpreadSheet());
+				spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getXSpreadSheet(), teamPaarungen, spielRunde);
 			}
 		}
 	}

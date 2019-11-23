@@ -67,7 +67,7 @@ public class RangListeSorter {
 
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 				.isVisible(isVisible);
-		StringCellValue sortlisteVal = StringCellValue.from(getIRangliste().getSheet(), Position.from(getIRangliste().getManuellSortSpalte(), ersteDatenZiele - 1))
+		StringCellValue sortlisteVal = StringCellValue.from(getIRangliste().getXSpreadSheet(), Position.from(getIRangliste().getManuellSortSpalte(), ersteDatenZiele - 1))
 				.addColumnProperties(columnProperties);
 
 		int ersteSpalteEndsumme = getIRangliste().getErsteSummeSpalte();
@@ -81,16 +81,16 @@ public class RangListeSorter {
 
 		// Achtung: Header nach setFillAutoDown wegen Bug ? ausblenden der Spalte
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielGewonnenZelle1.getAddress()));
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("S+"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("S+"));
 
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(summeSpielDiffZelle1.getAddress()));
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("SΔ"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("SΔ"));
 
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteDiffZelle1.getAddress()));
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("PΔ"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("PΔ"));
 
 		getSheetHelper().setFormulaInCell(sortSpalte.spaltePlusEins().setFillAutoDown(letzteDatenZeile).setValue(punkteGewonnenZelle1.getAddress()));
-		getSheetHelper().setTextInCell(headerVal.spaltePlusEins().setValue("P+"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("P+"));
 
 	}
 
@@ -103,7 +103,7 @@ public class RangListeSorter {
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
-		XSpreadsheet sheet = getIRangliste().getSheet();
+		XSpreadsheet sheet = getIRangliste().getXSpreadSheet();
 
 		// formula zusammenbauen
 		// --------------------------------------------------------------------------
@@ -173,7 +173,7 @@ public class RangListeSorter {
 		StringCellValue validateHeader = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).setComment("Validate Spalte")
 				.addColumnProperties(columnProperties).setValue("Err");
 
-		getSheetHelper().setTextInCell(validateHeader);
+		getSheetHelper().setStringValueInCell(validateHeader);
 		// --------------------------------------------------------------------------
 	}
 
@@ -198,7 +198,7 @@ public class RangListeSorter {
 	public void isErrorInSheet() throws GenerateException {
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
-		XSpreadsheet sheet = getIRangliste().getSheet();
+		XSpreadsheet sheet = getIRangliste().getXSpreadSheet();
 		int validateSpalte = validateSpalte();
 		Position valSpalteStart = Position.from(validateSpalte, ersteDatenZiele);
 		Position valSpalteEnd = Position.from(validateSpalte, letzteDatenZeile);
@@ -298,7 +298,7 @@ public class RangListeSorter {
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 		int letzteSpalte = getIRangliste().getLetzteSpalte();
-		XSpreadsheet sheet = getIRangliste().getSheet();
+		XSpreadsheet sheet = getIRangliste().getXSpreadSheet();
 		XCellRange xCellRange = null;
 		try {
 			if (letzteDatenZeile > ersteDatenZiele) { // daten vorhanden ?

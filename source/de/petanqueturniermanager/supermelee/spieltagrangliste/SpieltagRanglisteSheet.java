@@ -38,6 +38,7 @@ import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
@@ -120,7 +121,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		processBoxinfo("Print-Bereich");
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
-		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	protected void updateSummenSpalten() throws GenerateException {
@@ -131,7 +132,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		if (anzSpielRunden < 1) {
 			return;
 		}
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
@@ -190,7 +191,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 
 		processBoxinfo("Spieltag(e) Ergebnisse Einfuegen");
 
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
 
 		int nichtgespieltPlus = getKonfigurationSheet().getNichtGespielteRundePlus();
@@ -360,7 +361,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 			return null;
 		}
 
-		XSpreadsheet spieltagSheet = getSheet();
+		XSpreadsheet spieltagSheet = getXSpreadSheet();
 		if (spieltagSheet == null) {
 			return null;
 		}
@@ -384,7 +385,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(), letzteDatenzeile);
-			RangeHelper.from(getSheet(), range).clearRange();
+			RangeHelper.from(getXSpreadSheet(), range).clearRange();
 		}
 	}
 
@@ -406,8 +407,13 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheet(getSpieltagNr());
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	public XSpreadsheet getSheet(SpielTagNr spielTagNr) throws GenerateException {

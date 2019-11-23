@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -77,15 +78,15 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		Meldungen alleMeldungen = meldeliste.getAlleMeldungen();
 
 		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		NumberCellValue spierNrVal = NumberCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
+		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
 
 		ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPIELER_NAME_WIDTH);
 
-		StringCellValue nameFormula = StringCellValue.from(getSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
+		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setShrinkToFit(true);
 
-		StringCellValue chkBox = StringCellValue.from(getSheet(), Position.from(SPIELER_NAME_SPALTE + 1, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
+		StringCellValue chkBox = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE + 1, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setValue(" ");
 
 		int maxAnzSpielerInSpalte = 0;
@@ -100,7 +101,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 
 			getSheetHelper().setValInCell(spierNrVal);
 			getSheetHelper().setFormulaInCell(nameFormula);
-			getSheetHelper().setTextInCell(chkBox);
+			getSheetHelper().setStringValueInCell(chkBox);
 
 			spierNrVal.zeilePlusEins();
 			nameFormula.zeilePlusEins();
@@ -125,16 +126,16 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		processBoxinfo("Print-Bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
-		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void spalteFormat(NumberCellValue nrVal, ColumnProperties celPropNr, StringCellValue nameVal, ColumnProperties celPropName, StringCellValue chkBox)
 			throws GenerateException {
-		getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte(), celPropNr);
-		getSheetHelper().setColumnProperties(getSheet(), nameVal.getPos().getSpalte(), celPropName);
-		getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte(), celPropNr);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), nrVal.getPos().getSpalte(), celPropNr);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), nameVal.getPos().getSpalte(), celPropName);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), chkBox.getPos().getSpalte(), celPropNr);
 		// leere spalte breite
-		getSheetHelper().setColumnProperties(getSheet(), chkBox.getPos().getSpalte() + 1, celPropNr);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), chkBox.getPos().getSpalte() + 1, celPropNr);
 	}
 
 	public String getSheetName(SpielTagNr spieltagNr) {
@@ -143,8 +144,13 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheetHelper().findByName(getSheetName(getSpielTag()));
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	public SpielTagNr getSpielTag() {

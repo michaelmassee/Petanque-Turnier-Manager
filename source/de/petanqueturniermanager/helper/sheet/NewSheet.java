@@ -82,7 +82,7 @@ public class NewSheet {
 	}
 
 	/**
-	 * wenn bereits vorhanden, dann nichts tun, sondern einfach return
+	 * wenn bereits vorhanden, dann nichts tun, sondern einfach return.
 	 *
 	 * @return
 	 */
@@ -91,6 +91,10 @@ public class NewSheet {
 		return this;
 	}
 
+	/**
+	 *
+	 * @return
+	 */
 	public NewSheet create() {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
@@ -106,7 +110,6 @@ public class NewSheet {
 				sheet = null;
 			} else {
 				didCreate = true;
-				return this;
 			}
 		}
 
@@ -115,24 +118,22 @@ public class NewSheet {
 				wkRefworkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
 				sheet = sheetHelper.findByName(sheetName);
 				if (!showGrid) {
-					// einmal abschalten
+					// nur bei Neu, einmal abschalten
 					TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).toggleSheetGrid();
 				}
+				TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).protect(protect).tabColor(tabColor).setActiv(setActiv);
+
+				if (pageStyleDef != null) {
+					// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
+					// @see KonfigurationSheet#initPageStyles
+					// @see SheetRunner#updateKonfigurationSheet
+					PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
+				}
+				didCreate = true;
+
 			} catch (IllegalArgumentException e) {
 				logger.error(e.getMessage(), e);
 			}
-		}
-
-		if (sheet != null) {
-			TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).protect(protect).tabColor(tabColor).setActiv(setActiv);
-
-			if (pageStyleDef != null) {
-				// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
-				// @see KonfigurationSheet#initPageStyles
-				// @see SheetRunner#updateKonfigurationSheet
-				PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
-			}
-			didCreate = true;
 		}
 		return this;
 	}

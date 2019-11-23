@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -54,7 +55,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		processBoxinfo("Aktualisiere Meldungen");
 		meldeListeHelper.testDoppelteMeldungen();
 
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		getSheetHelper().setActiveSheet(sheet);
 
 		// ------
@@ -89,7 +90,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getSheet(), datenRange,
+		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 
@@ -166,8 +167,13 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
-		return meldeListeHelper.getSheet();
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return meldeListeHelper.getXSpreadSheet();
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	@Override

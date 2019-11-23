@@ -42,7 +42,7 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	@Override
 	protected void doRun() throws GenerateException {
-		getSheetHelper().setActiveSheet(getSheet());
+		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	@Override

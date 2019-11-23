@@ -57,7 +57,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		generate();
 		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 		// sicher gehen das aktive spielrunde sheet ist activ
-		getSheetHelper().setActiveSheet(getSheet());
+		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	/**
@@ -98,7 +98,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen
 			// ------------------------------------
-			XSpreadsheet sheet = getSheet();
+			XSpreadsheet sheet = getXSpreadSheet();
 			Position letztePos = letzteSpielrNrPosition();
 
 			if (letztePos != null && sheet != null) {

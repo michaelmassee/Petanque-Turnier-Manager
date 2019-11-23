@@ -18,7 +18,7 @@ public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		getSheetHelper().setActiveSheet(sheet);
 		getRangListeSorter().doSort();
 	}

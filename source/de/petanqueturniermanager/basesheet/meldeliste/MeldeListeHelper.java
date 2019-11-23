@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
@@ -50,8 +51,10 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
-		RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
-		SortHelper.from(getSheet(), rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
+		if (letzteSpielZeile > ERSTE_DATEN_ZEILE) { // daten vorhanden
+			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
+			SortHelper.from(getXSpreadSheet(), rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
+		}
 	}
 
 	/**
@@ -62,7 +65,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	 */
 	public void testDoppelteMeldungen() throws GenerateException {
 		meldeListe.processBoxinfo("Prüfe Doppelte Daten in Meldungen");
-		XSpreadsheet xSheet = getSheet();
+		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
@@ -106,7 +109,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 			if (StringUtils.isNotEmpty(spielerName)) {
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
 					// RED Color
-					meldeListe.getSheetHelper().setTextInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
+					meldeListe.getSheetHelper().setStringValueInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
 					throw new GenerateException(
 							"Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste. Zeile:" + spielerZeilecntr);
 				}
@@ -126,8 +129,8 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		return name.replaceAll("[^a-zA-Z0-9öäüÄÖÜß]+", "").toLowerCase();
 	}
 
-	public XSpreadsheet getSheet() throws GenerateException {
-		return meldeListe.getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.MELDELISTE, SHEET_COLOR);
+	public XSpreadsheet getXSpreadSheet() {
+		return NewSheet.from(meldeListe.getWorkingSpreadsheet(), SHEETNAME).useIfExist().hideGrid().pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
 	}
 
 	public int getSpielerNameSpalte() {
@@ -142,7 +145,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
-		XSpreadsheet xSheet = getSheet();
+		XSpreadsheet xSheet = getXSpreadSheet();
 
 		StringCellValue emptyVal = StringCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, 0)).setValue("");
 
@@ -152,7 +155,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 			// Achtung alle durchgehen weil eventuell lücken in der nr spalte!
 			if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
 				// nr ohne spieler namen entfernen
-				meldeListe.getSheetHelper().setTextInCell(emptyVal.zeile(spielerNrZeilecntr));
+				meldeListe.getSheetHelper().setStringValueInCell(emptyVal.zeile(spielerNrZeilecntr));
 			}
 		}
 	}
@@ -181,7 +184,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 			int spieltagSpalte = spieltagSpalte(spieltag);
 
 			Position posSpieltag = Position.from(spieltagSpalte, ERSTE_DATEN_ZEILE);
-			XSpreadsheet sheet = getSheet();
+			XSpreadsheet sheet = getXSpreadSheet();
 
 			for (int spielerZeile = ERSTE_DATEN_ZEILE; spielerZeile <= letzteZeile; spielerZeile++) {
 
@@ -230,7 +233,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // nur 1 Meldung
 		}
-		XSpreadsheet xSheet = getSheet();
+		XSpreadsheet xSheet = getXSpreadSheet();
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
 
 		int letzteSpielerNr = 0;
@@ -257,7 +260,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	 */
 	public void insertTurnierSystemInHeader(TurnierSystem turnierSystem) throws GenerateException {
 		// oben links
-		meldeListe.getSheetHelper().setTextInCell(StringCellValue.from(getSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung())
+		meldeListe.getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung())
 				.setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP));
 	}
 

@@ -111,11 +111,11 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT)
 				.setCharWeight(FontWeight.BOLD).setBorder(HEADER_BORDER).addRowProperties(rowProperties).setCellBackColor(HEADER_BACK_COLOR);
-		getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setStringValueInCell(headerVal);
 
 		StringCellValue wertheaderVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties.setWidth(SPALTE_WERT_WIDTH)).setValue("Wert")
 				.setHoriJustify(CellHoriJustify.CENTER).spaltePlusEins().setCharWeight(FontWeight.BOLD).setBorder(HEADER_BORDER).setCellBackColor(HEADER_BACK_COLOR);
-		getSheetHelper().setTextInCell(wertheaderVal);
+		getSheetHelper().setStringValueInCell(wertheaderVal);
 
 		// Rand erste Spalte A etwas schmaller
 		getSheetHelper().setColumnProperties(getPropSheet(), 0, ColumnProperties.from().setWidth(600));
@@ -138,7 +138,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 			if (pos == null) {
 				// when not found insert new
 				celValKey.setPos(nextFreepos).setValue(configProp.getKey());
-				getSheetHelper().setTextInCell(celValKey);
+				getSheetHelper().setStringValueInCell(celValKey);
 
 				celValWert.setPos(nextFreepos).spaltePlusEins().setComment(configProp.getDescription());
 
@@ -146,7 +146,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 				switch (configProp.getType()) {
 				case STRING:
 					celValWert.setValue((String) configProp.getDefaultVal());
-					getSheetHelper().setTextInCell(celValWert);
+					getSheetHelper().setStringValueInCell(celValWert);
 					break;
 				case INTEGER:
 					IntegerCellValue numberCellValue = IntegerCellValue.from(celValWert).setValue((Integer) configProp.getDefaultVal());
@@ -157,7 +157,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 					break;
 				case BOOLEAN:
 					celValWert.setValue(booleanToString((Boolean) configProp.getDefaultVal()));
-					getSheetHelper().setTextInCell(celValWert);
+					getSheetHelper().setStringValueInCell(celValWert);
 					break;
 				default:
 				}
@@ -239,7 +239,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		if (pos != null) {
 			pos.spaltePlusEins();
 			StringCellValue strVal = StringCellValue.from(sheet, pos, "").setCellBackColor(val).setComment(comment).setBorder(BorderFactory.from().allThin().toBorder());
-			getSheetHelper().setTextInCell(strVal);
+			getSheetHelper().setStringValueInCell(strVal);
 		}
 	}
 
@@ -318,7 +318,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {
-		return sheetWkRef.get().getSheet();
+		return sheetWkRef.get().getXSpreadSheet();
 	}
 
 	@Override

@@ -45,7 +45,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		if (anzRunden < 1) {
 			return;
 		}
-		XSpreadsheet sheet = rangliste.getSheet();
+		XSpreadsheet sheet = rangliste.getXSpreadSheet();
 		// -------------------------
 		// spielrunden spalten
 		// -------------------------
@@ -58,13 +58,13 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
 			int plusSpalte = ersteSpielRundeSpalte + ((spielRunde - 1) * 2);
-			getSheetHelper().setTextInCell(headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
-			getSheetHelper().setTextInCell(headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
+			getSheetHelper().setStringValueInCell(headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
+			getSheetHelper().setStringValueInCell(headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
 
 			// Runden Counter
 			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde + ". Rnd").zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1)
 					.setComment(null);
-			getSheetHelper().setTextInCell(headerRndCounter);
+			getSheetHelper().setStringValueInCell(headerRndCounter);
 		}
 		// -------------------------
 		// summen spalten
@@ -92,7 +92,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 			Position posPunktePlusStart = Position.from(ersteSpielRundeSpalte + ((spielRunde - 1) * anzSpaltenInSpielrunde), ersteDatenZeile);
 			Position posPunkteMinusEnd = Position.from(posPunktePlusStart).spaltePlusEins().zeile(letzteDatenZeile);
 			RangePosition datenRange = RangePosition.from(posPunktePlusStart, posPunkteMinusEnd);
-			getSheetHelper().setPropertyInRange(rangliste.getSheet(), datenRange, TABLE_BORDER2, border);
+			getSheetHelper().setPropertyInRange(rangliste.getXSpreadSheet(), datenRange, TABLE_BORDER2, border);
 		}
 
 		formatDatenSpielTagSpalten(rangliste.getErsteSummeSpalte());
@@ -109,7 +109,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 
 		return stringVal;
 	}

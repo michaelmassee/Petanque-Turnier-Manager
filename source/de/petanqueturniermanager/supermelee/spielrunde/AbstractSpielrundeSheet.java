@@ -59,6 +59,7 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.SpielrundeInfoKonfigDialog;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
@@ -115,8 +116,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
@@ -125,7 +131,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	protected final boolean canStart(Meldungen meldungen) throws GenerateException {
 		if (getSpielRundeNr().getNr() < 1) {
-			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
+			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 
 			String errorMsg = "Ungültige Spielrunde in der Meldeliste '" + getSpielRundeNr().getNr() + "'";
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
@@ -133,7 +139,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		}
 
 		if (meldungen.size() < 6) {
-			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
+			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			String errorMsg = "Ungültige anzahl von Meldungen '" + meldungen.size() + "' ,kleiner als 6.";
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler").message(errorMsg).show();
 			return false;
@@ -152,7 +158,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		processBoxinfo("Vertikal Ergbnisspalten");
 
 		checkArgument(spielRunde.getNr() == getSpielRundeNr().getNr());
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		Position posSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position posSpielrNrFormula = Position.from(ERSTE_SPALTE_VERTIKALE_ERGEBNISSE, ERSTE_DATEN_ZEILE);
 		StringCellValue spielrNrFormula = StringCellValue.from(sheet, posSpielrNrFormula);
@@ -190,7 +196,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 				ERSTE_SPALTE_ERGEBNISSE + 1, // Team A
 				ERSTE_SPALTE_ERGEBNISSE + 2); // Team B
 		//@formatter:off
-		StringCellValue plusSpalteFormula = StringCellValue.from(getSheet())
+		StringCellValue plusSpalteFormula = StringCellValue.from(getXSpreadSheet())
 				.zeile(ERSTE_DATEN_ZEILE)
 				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS)
 				.setValue(plusPunkteFormula)
@@ -205,7 +211,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 				ERSTE_SPALTE_ERGEBNISSE + 2, // Team B
 				ERSTE_SPALTE_ERGEBNISSE + 1); // Team A
 		//@formatter:off
-		StringCellValue minusSpalteFormula = StringCellValue.from(getSheet())
+		StringCellValue minusSpalteFormula = StringCellValue.from(getXSpreadSheet())
 				.zeile(ERSTE_DATEN_ZEILE)
 				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS)
 				.setValue(minusPunkteFormula)
@@ -216,7 +222,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// Team
 		// =IF(ISODD(ROUNDDOWN((ROW())/3)+2);"A";"B")
 		//@formatter:off
-		StringCellValue teamSpalteFormula = StringCellValue.from(getSheet())
+		StringCellValue teamSpalteFormula = StringCellValue.from(getXSpreadSheet())
 				.zeile(ERSTE_DATEN_ZEILE)
 				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB)
 				.setValue("IF(ISODD(ROUNDDOWN((ROW())/3)+2);\"A\";\"B\")")
@@ -227,7 +233,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// Bahn
 		// =INDIREKT( ADRESSE( ABRUNDEN((ZEILE( )+3) /6)+2;1;8;1))
 		//@formatter:off
-		StringCellValue bahnSpalteFormula = StringCellValue.from(getSheet())
+		StringCellValue bahnSpalteFormula = StringCellValue.from(getXSpreadSheet())
 				.zeile(ERSTE_DATEN_ZEILE)
 				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR)
 				.setValue("INDIRECT( ADDRESS(ROUNDDOWN((ROW( )+3) /6)+2;" + (NUMMER_SPALTE_RUNDESPIELPLAN +1) + ";8;1))")
@@ -245,11 +251,11 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 				.setVertJustify(CellVertJustify2.CENTER).isVisible(getKonfigurationSheet().zeigeArbeitsSpalten());
 
 		StringCellValue headerText = StringCellValue.from(sheet, ersteHeaderZeile).addColumnProperties(columnProperties);
-		getSheetHelper().setTextInCell(headerText.setValue("Nr"));
-		getSheetHelper().setTextInCell(headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment("Plus Punkte"));
-		getSheetHelper().setTextInCell(headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment("Minus Punkte"));
-		getSheetHelper().setTextInCell(headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment("Mannschaft")); // Team A/B
-		getSheetHelper().setTextInCell(headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment("Spielbahn Nr.")); // Bahn Nr
+		getSheetHelper().setStringValueInCell(headerText.setValue("Nr"));
+		getSheetHelper().setStringValueInCell(headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment("Plus Punkte"));
+		getSheetHelper().setStringValueInCell(headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment("Minus Punkte"));
+		getSheetHelper().setStringValueInCell(headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment("Mannschaft")); // Team A/B
+		getSheetHelper().setStringValueInCell(headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment("Spielbahn Nr.")); // Bahn Nr
 
 	}
 
@@ -274,7 +280,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		processBoxinfo("Erste Spalte Daten einfügen");
 
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 		Position letzteZeile = letzteSpielrNrPosition();
 
@@ -294,7 +300,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			StringCellValue headerValue = StringCellValue.from(sheet, posErsteHeaderZelle).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
 					.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(14).setColumnProperties(columnProperties)
 					.setEndPosMergeZeilePlus(1).setValue("Bahn").setComment("Spielbahn");
-			getSheetHelper().setTextInCell(headerValue);
+			getSheetHelper().setStringValueInCell(headerValue);
 
 			RangePosition nbrRange = RangePosition.from(posErsteHeaderZelle, letzteZeile.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
 			getSheetHelper().setPropertiesInRange(sheet, nbrRange, CellProperties.from().setCharHeight(16));
@@ -336,7 +342,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			for (Integer bahnnr : bahnnummern) {
 				if (bahnnr > 0) { // es kann sein das wir lücken haben, = teampaarungen ohne bahnnummer
 					stringCellValue.setValue(bahnnr);
-					getSheetHelper().setTextInCell(stringCellValue);
+					getSheetHelper().setStringValueInCell(stringCellValue);
 				}
 				stringCellValue.zeilePlusEins();
 			}
@@ -358,7 +364,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		HashSet<Integer> spielrNr = new HashSet<>();
 
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 
 		Position posErsteSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE - 1);
 
@@ -465,7 +471,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		StringCellValue headerVal = StringCellValue.from(sheet, ersteHeaderZeile, ersteHeader).addCellProperty(CHAR_WEIGHT, FontWeight.BOLD).setEndPosMerge(ersteHeaderZeileMerge)
 				.addCellProperty(HORI_JUSTIFY, CellHoriJustify.CENTER).addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().toBorder()).setCharHeight(13)
 				.setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe);
-		getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setStringValueInCell(headerVal);
 
 		// header spielernamen
 		// -------------------------
@@ -474,10 +480,10 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		headerVal.setValue("Mannschaft A").setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
 				// rechts Doppelte Linie
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().doubleLn().forRight().toBorder());
-		getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setStringValueInCell(headerVal);
 		headerVal.setValue("Mannschaft B").setPos(posSpielerNamen.spaltePlus(3)).setEndPosMerge(posSpielerNamenMerge.spaltePlus(3)).addCellProperty(TABLE_BORDER2,
 				BorderFactory.from().allThin().toBorder());
-		getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setStringValueInCell(headerVal);
 
 		//
 		// spalten spielernamen
@@ -494,7 +500,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// header
 		Position ergebnis = Position.from(ERSTE_SPALTE_ERGEBNISSE, ERSTE_DATEN_ZEILE - 1);
 		headerVal.setValue("Ergebnis").setPos(ergebnis).setEndPosMerge(Position.from(ergebnis).spaltePlusEins());
-		getSheetHelper().setTextInCell(headerVal);
+		getSheetHelper().setStringValueInCell(headerVal);
 
 		// spielErgebnisse
 		// Spalten
@@ -514,15 +520,15 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER).isVisible(getKonfigurationSheet().zeigeArbeitsSpalten());
 		StringCellValue headerCelVal = StringCellValue.from(sheet, Position.from(pos), "#").addColumnProperties(columnProperties);
-		getSheetHelper().setTextInCell(headerCelVal);
+		getSheetHelper().setStringValueInCell(headerCelVal);
 		headerCelVal.spaltePlusEins();
 
 		for (int a = 1; a <= 3; a++) {
-			getSheetHelper().setTextInCell(headerCelVal.setValue("A" + a));
+			getSheetHelper().setStringValueInCell(headerCelVal.setValue("A" + a));
 			headerCelVal.spaltePlusEins();
 		}
 		for (int b = 1; b <= 3; b++) {
-			getSheetHelper().setTextInCell(headerCelVal.setValue("B" + b));
+			getSheetHelper().setStringValueInCell(headerCelVal.setValue("B" + b));
 			headerCelVal.spaltePlusEins();
 		}
 	}
@@ -532,8 +538,8 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		String spielerNrAddress = spielerNrPos.getAddress();
 		String formulaVerweis = "IFNA(" + getMeldeListe().formulaSverweisSpielernamen(spielerNrAddress) + ";\"\")";
 
-		StringCellValue val = StringCellValue.from(getSheet(), Position.from(spielerNrPos).spaltePlus(-anzSpaltenDiv), formulaVerweis).setVertJustify(CellVertJustify2.CENTER)
-				.setShrinkToFit(true).setCharHeight(12);
+		StringCellValue val = StringCellValue.from(getXSpreadSheet(), Position.from(spielerNrPos).spaltePlus(-anzSpaltenDiv), formulaVerweis)
+				.setVertJustify(CellVertJustify2.CENTER).setShrinkToFit(true).setCharHeight(12);
 		getSheetHelper().setFormulaInCell(val);
 	}
 
@@ -597,25 +603,25 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			}
 
 			spielRundeSheet.validateSpielerTeam(null);
-			headerPaarungen(getSheet(), spielRundeSheet);
-			headerSpielerNr(getSheet());
+			headerPaarungen(getXSpreadSheet(), spielRundeSheet);
+			headerSpielerNr(getXSpreadSheet());
 			spielerNummerEinfuegen(spielRundeSheet);
 			vertikaleErgbnisseFormulaEinfuegen(spielRundeSheet);
 			datenErsteSpalte();
-			datenformatieren(getSheet());
-			spielrundeProperties(getSheet());
+			datenformatieren(getXSpreadSheet());
+			spielrundeProperties(getXSpreadSheet());
 			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
-			wennNurDoubletteRundeDannSpaltenAusblenden(getSheet(), doubletteRunde);
+			wennNurDoubletteRundeDannSpaltenAusblenden(getXSpreadSheet(), doubletteRunde);
 			// TODO
 			// int anzZeilen = spielTagInfosEinfuegen();
-			printBereichDefinieren(getSheet());
+			printBereichDefinieren(getXSpreadSheet());
 			// Spielrundeplan, ! nur hier instance erstellen
 			if (getKonfigurationSheet().getSpielrundePlan()) {
 				new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
 			}
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
-			getSheetHelper().setActiveSheet(getMeldeListe().getSheet());
+			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			getSheetHelper().removeSheet(getSheetName(getSpielTag(), getSpielRundeNr()));
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen").message(e.getMessage()).show();
 			throw new RuntimeException(e); // komplett raus
@@ -673,18 +679,18 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		// "Aktiv"
 		int anzAktiv = meldeListe.getAnzahlAktiveSpieler(getSpielTag());
-		getSheetHelper().setTextInCell(propName.setEndPosMergeSpaltePlus(1).setValue("Aktiv :").setComment("Anzahl Spieler in diese Runde"));
+		getSheetHelper().setStringValueInCell(propName.setEndPosMergeSpaltePlus(1).setValue("Aktiv :").setComment("Anzahl Spieler in diese Runde"));
 		getSheetHelper().setValInCell(propVal.setValue((double) anzAktiv));
 
 		int anzAusg = meldeListe.getAusgestiegenSpieler(getSpielTag());
 		getSheetHelper()
-				.setTextInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Ausgestiegen :").setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
+				.setStringValueInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Ausgestiegen :").setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
 		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 
 		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
 
-		getSheetHelper().setTextInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Modus :").setComment("Supermêlée Modus"));
-		getSheetHelper().setTextInCell(StringCellValue.from(propVal).zeilePlusEins().setValue(superMeleeMode.name()));
+		getSheetHelper().setStringValueInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Modus :").setComment("Supermêlée Modus"));
+		getSheetHelper().setStringValueInCell(StringCellValue.from(propVal).zeilePlusEins().setValue(superMeleeMode.name()));
 	}
 
 	private void datenformatieren(XSpreadsheet sheet) throws GenerateException {
@@ -760,7 +766,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 */
 
 	protected Position letzteSpielrNrPosition() throws GenerateException {
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
 		if (getSheetHelper().getIntFromCell(sheet, pos) == -1) {
@@ -876,7 +882,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 */
 
 	protected void clearSheet() throws GenerateException {
-		XSpreadsheet xSheet = getSheet();
+		XSpreadsheet xSheet = getXSpreadSheet();
 		Position letzteZeile = letzteSpielrNrPosition();
 
 		if (letzteZeile == null) {

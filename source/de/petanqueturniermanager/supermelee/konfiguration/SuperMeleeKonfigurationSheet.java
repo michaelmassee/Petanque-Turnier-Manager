@@ -48,7 +48,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	@Override
 	protected void doRun() throws GenerateException {
-		getSheet();
+		getXSpreadSheet();
 	}
 
 	// update immer einmal in SheetRunner
@@ -62,22 +62,22 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	private void initSpieltagKonfigSpalten() throws GenerateException {
 		// Header
 		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1500);
-		StringCellValue header = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify()
+		StringCellValue header = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify()
 				.centerVertJustify().setCharWeight(FontWeight.BOLD).setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR);
-		getSheetHelper().setTextInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
+		getSheetHelper().setStringValueInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
 		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000);
-		getSheetHelper().setTextInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
+		getSheetHelper().setStringValueInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
 
 		// Daten
-		StringCellValue nr = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify().centerVertJustify()
+		StringCellValue nr = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify().centerVertJustify()
 				.setCharHeight(14).setBorder(BorderFactory.from().allThin().toBorder());
-		StringCellValue kopfZeile = StringCellValue.from(getSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
+		StringCellValue kopfZeile = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
 				.centerVertJustify().nichtUeberschreiben().setBorder(BorderFactory.from().allThin().toBorder());
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
-			getSheetHelper().setTextInCell(nr.setValue("" + spieltagCntr).setEndPosMergeZeilePlus(1));
+			getSheetHelper().setStringValueInCell(nr.setValue("" + spieltagCntr).setEndPosMergeZeilePlus(1));
 			nr.zeilePlus(2);
 			// Kopfzeile Spalte
-			getSheetHelper().setTextInCell(kopfZeile.setValue(spieltagCntr + ". Spieltag").setEndPosMergeZeilePlus(1));
+			getSheetHelper().setStringValueInCell(kopfZeile.setValue(spieltagCntr + ". Spieltag").setEndPosMergeZeilePlus(1));
 			kopfZeile.zeilePlus(2);
 		}
 	}
@@ -92,7 +92,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	public String getKopfZeile(SpielTagNr spielTagNr) throws GenerateException {
 		checkNotNull(spielTagNr);
 		Position posKopfzeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES + (spielTagNr.getNr() - 1));
-		return getSheetHelper().getTextFromCell(getSheet(), posKopfzeile);
+		return getSheetHelper().getTextFromCell(getXSpreadSheet(), posKopfzeile);
 	}
 
 	@Override
@@ -195,7 +195,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES);
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			// Kopfzeile Spalte
-			String kopfZeile = getSheetHelper().getTextFromCell(getSheet(), posKopfZeile);
+			String kopfZeile = getSheetHelper().getTextFromCell(getXSpreadSheet(), posKopfZeile);
 			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
 					.setHeaderCenter(kopfZeile).create();
 			posKopfZeile.zeilePlus(2);

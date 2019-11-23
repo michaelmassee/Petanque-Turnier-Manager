@@ -56,7 +56,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			}
 
 			@Override
-			public XSpreadsheet getSheet() {
+			public XSpreadsheet getXSpreadSheet() {
 				return xSpreadsheetMock;
 			}
 
