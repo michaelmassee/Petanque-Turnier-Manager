@@ -37,4 +37,5 @@ public interface IPropertiesSpalte {
 
 	boolean zeigeArbeitsSpalten() throws GenerateException;
 
+	String suchMatrixProperty();
 }

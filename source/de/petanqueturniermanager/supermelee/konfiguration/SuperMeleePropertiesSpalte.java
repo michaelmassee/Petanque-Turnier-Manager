@@ -48,7 +48,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1e Kopfzeile"; // spieltag in header ?
 
-	private static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
+	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
 
 	static {
