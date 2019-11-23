@@ -46,7 +46,7 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 			int ersteSpalteSpieltagBlock = this.ersteSpielTagSpalte + ((spielTag - 1) * this.anzSpaltenInSpieltag);
 			// ERSTE_KOPFDATEN_ZEILE
 			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag").setEndPosMergeSpaltePlus(this.anzSpaltenInSpieltag - 1);
-			getSheetHelper().setTextInCell(spieltagheader);
+			getSheetHelper().setStringValueInCell(spieltagheader);
 			formatZweiteZeileSpielTagSpalten(ersteSpalteSpieltagBlock); // ZWEITE_KOPFDATEN_ZEILE
 			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock, MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		}
@@ -76,8 +76,8 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	public StringCellValue addFooter() throws GenerateException {
 		StringCellValue stringVal = super.addFooter();
 
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
-		getSheetHelper().setTextInCell(stringVal.zeilePlusEins().setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
 
 		return stringVal;
 	}

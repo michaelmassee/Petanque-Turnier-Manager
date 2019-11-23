@@ -46,13 +46,13 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde);
 		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 		// sicher gehen das aktive spielrunde sheet ist activ
-		getSheetHelper().setActiveSheet(getSheet());
+		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	public SpielerSpielrundeErgebnisList ergebnisseEinlesen() throws GenerateException {
 
 		SpielerSpielrundeErgebnisList spielerSpielrundeErgebnisse = new SpielerSpielrundeErgebnisList();
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 
 		if (sheet == null) {
 			return spielerSpielrundeErgebnisse;

@@ -132,13 +132,13 @@ public class MeldungenSpalte {
 		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor);
-		getSheetHelper().setTextInCell(celVal); // spieler nr
+		getSheetHelper().setStringValueInCell(celVal); // spieler nr
 
 		celVal.addColumnProperties(columnProperties.setWidth(DEFAULT_SPIELER_NAME_WIDTH)).setComment(null).spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
-			getSheetHelper().setTextInCell(celVal);
+			getSheetHelper().setStringValueInCell(celVal);
 			celVal.spaltePlusEins();
 		}
 	}
@@ -314,7 +314,7 @@ public class MeldungenSpalte {
 	}
 
 	private final XSpreadsheet getXSpreadsheet() throws GenerateException {
-		return getISheet().getSheet();
+		return getISheet().getXSpreadSheet();
 	}
 
 	private final ISheet getISheet() {

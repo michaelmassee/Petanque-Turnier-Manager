@@ -43,7 +43,7 @@ public class MeldeListeHelperTest {
 			}
 
 			@Override
-			public XSpreadsheet getSheet() {
+			public XSpreadsheet getXSpreadSheet() {
 				return xSpreadsheetMock;
 			}
 		};
@@ -140,7 +140,7 @@ public class MeldeListeHelperTest {
 
 		initReturnSpielerDaten(spielerNrNameList);
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
-		verify(sheetHelperMock, times(1)).setTextInCell(any(StringCellValue.class));
+		verify(sheetHelperMock, times(1)).setStringValueInCell(any(StringCellValue.class));
 	}
 
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {

@@ -16,6 +16,7 @@ import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
+import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -96,7 +97,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		Position posHeader = Position.from(ersteSpieltagspalteSpalte, ZWEITE_HEADER_ZEILE);
 
 		for (int spielTagcntr = 1; spielTagcntr < 90; spielTagcntr++) {
-			String header = getSheetHelper().getTextFromCell(getSheet(), posHeader);
+			String header = getSheetHelper().getTextFromCell(getXSpreadSheet(), posHeader);
 
 			if (StringUtils.isEmpty(header)) {
 				break;
@@ -118,8 +119,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
-		return meldeListeHelper.getSheet();
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return meldeListeHelper.getXSpreadSheet();
 	}
 
 	public void upDateSheet() throws GenerateException {
@@ -127,7 +133,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		processBoxinfo("Aktualisiere Meldungen");
 
 		meldeListeHelper.testDoppelteMeldungen();
-		TurnierSheet.from(getSheet(), getWorkingSpreadsheet()).setActiv();
+		getTurnierSheet().setActiv();
 
 		// ------
 		// Header einfuegen
@@ -138,10 +144,10 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// ------
 		// Setzposition
 		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
-		StringCellValue bezCelVal = StringCellValue.from(getSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
+		StringCellValue bezCelVal = StringCellValue.from(getXSpreadSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.").setCellBackColor(headerBackColor)
 				.setBorder(BorderFactory.from().allThin().toBorder()).addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 		// ------
 
 		formatSpielTagSpalte(getSpielTag());
@@ -166,7 +172,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 * @throws GenerateException
 	 */
 	private void insertInfoSpalte() throws GenerateException {
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 
 		String formulaStrSpieltag = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "." + suchMatrixProperty()
@@ -174,13 +180,15 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		String formulaStrSpielRunde = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
 				+ suchMatrixProperty() + ";2;0)";
 
+		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+
 		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
-				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).setVertJustify(CellVertJustify2.CENTER);
-		getSheetHelper().setTextInCell(bezeichnugVal);
+				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).setVertJustify(CellVertJustify2.CENTER).setBorder(border);
+		getSheetHelper().setStringValueInCell(bezeichnugVal);
 		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpieltag));
 
 		bezeichnugVal.setValue(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE).setComment("Aktive Spielrunde").zeilePlus(2);
-		getSheetHelper().setTextInCell(bezeichnugVal);
+		getSheetHelper().setStringValueInCell(bezeichnugVal);
 		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpielRunde));
 	}
 
@@ -189,7 +197,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		processBoxinfo("Formatiere Spieltagspalte");
 
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 		int hederBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(2000);
 
@@ -199,7 +207,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		// Spieltag header
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
-		getSheetHelper().setTextInCell(bezCelSpieltagVal);
+		getSheetHelper().setStringValueInCell(bezCelSpieltagVal);
 
 		// Aktiv / Inaktiv spieltag
 		// =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
@@ -234,7 +242,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(), letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getSheet(), datenRange,
+		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
 				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 
@@ -245,7 +253,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(geradeColor);
 		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
-		// Spieler Nummer: gerade + ungerade + prufe auf doppelte nummer
+		// Meldung Nummer: gerade + ungerade + prufe auf doppelte nummer
+		// TODO Move this nach Meldungen
 		// -----------------------------------------------
 		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
 		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
@@ -262,6 +271,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		// -----------------------------------------------
 		// Spieler Namen: gerade + ungerade + prufe auf doppelte namen
+		// TODO Move this nach Abstract Meldungen
 		// -----------------------------------------------
 		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
 		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
@@ -356,59 +366,66 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 			letzteDatenZeile = MIN_ANZAHL_SPIELER_ZEILEN;
 		}
 
-		XSpreadsheet sheet = getSheet();
+		XSpreadsheet sheet = getXSpreadSheet();
 
 		int anzSpieltage = countAnzSpieltageInMeldeliste();
 
 		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0, ersteSummeSpalte() + anzSpieltage + 10, MeldungenSpalte.MAX_ANZ_MELDUNGEN);
-		RangeHelper.from(getSheet(), cleanUpRange).clearRange();
+		RangeHelper.from(getXSpreadSheet(), cleanUpRange).clearRange();
 
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
 
+		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+
 		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000);
 		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").addColumnProperties(columnProp).setComment(null).removeCellBackColor();
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
+
+		bezCelVal.setBorder(border);
 
 		bezCelVal.setComment(null).setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment(null).setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment("Spieler mit \"2\" im Spieltag").setValue("Ausgestiegen").zeile(SUMMEN_AUSGESTIEGENE_ZEILE);
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment("Aktive + Ausgestiegen").setValue("Anz. Spieler").zeilePlusEins();
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment("Aktive + Inaktiv + Ausgestiegen").setValue("Summe").zeilePlusEins();
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment("Triplette Mode, Doublette Teams").setValue("∑x2").zeilePlusEins();
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment("Triplette Mode, Triplette Teams").setValue("∑x3").zeilePlusEins();
-		getSheetHelper().setTextInCell(bezCelVal);
+		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment("Triplette Mode, Kann Doublette gespielt werden").setValue("Doublette");
-		getSheetHelper().setTextInCell(bezCelVal.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE));
+		getSheetHelper().setStringValueInCell(bezCelVal.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE));
 
 		bezCelVal.setComment("Triplette Mode, Anzahl Spielbahnen").setValue("Bahnen");
-		getSheetHelper().setTextInCell(bezCelVal.zeile(SUMMEN_SPIELBAHNEN));
+		getSheetHelper().setStringValueInCell(bezCelVal.zeile(SUMMEN_SPIELBAHNEN));
 
 		// ------------------------------------------------------------------------------------
 		bezCelVal.setComment("Doublette Mode, Anzahl Doublette").setValue("∑x2");
-		getSheetHelper().setTextInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_DOUBLETTE));
+		getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_DOUBLETTE));
 
 		bezCelVal.setComment("Doublette Mode, Anzahl Triplette").setValue("∑x3");
-		getSheetHelper().setTextInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_TRIPLETTE));
+		getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_TRIPLETTE));
 
 		bezCelVal.setComment("Doublette Mode, Kann Triplette gespielt werden").setValue("Triplette");
-		getSheetHelper().setTextInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE));
+		getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE));
 
 		bezCelVal.setComment("Doublette Mode,Anzahl Spielbahnen").setValue("Bahnen");
-		getSheetHelper().setTextInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN));
+		getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN));
 		// ------------------------------------------------------------------------------------
+
+		StringCellValue formula = StringCellValue.from(getXSpreadSheet()).setBorder(border);
+		ColumnProperties spalteWertProp = ColumnProperties.from().setWidth(1000).setHoriJustify(CellHoriJustify.CENTER);
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 
@@ -416,69 +433,88 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 			Position posSpieltagWerte = Position.from(ersteSummeSpalte() + spieltagCntr, SUMMEN_ERSTE_ZEILE - 1);
 
-			// Header
-			getSheetHelper().setColumnWidthAndHoriJustifyCenter(sheet, posSpieltagWerte, 1000, "Tag " + spieltagCntr);
+			// Tag Header
+			StringCellValue tagHeader = StringCellValue.from(getXSpreadSheet()).setPos(posSpieltagWerte).setBorder(border).setValue("Tag " + spieltagCntr)
+					.setColumnProperties(spalteWertProp);
+			getSheetHelper().setStringValueInCell(tagHeader);
 
 			// Summe Aktive Spieler "=ZÄHLENWENN(D3:D102;1)"
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_AKTIVE_ZEILE), "=" + formulaCountSpieler(spielTagNr, "1", letzteDatenZeile));
+			// sheet, posSpieltagWerte.zeile(SUMMEN_AKTIVE_ZEILE), "=" + formulaCountSpieler(spielTagNr, "1", letzteDatenZeile));
+			String formulaStr = formulaCountSpieler(spielTagNr, "1", letzteDatenZeile);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(SUMMEN_AKTIVE_ZEILE)).setValue(formulaStr));
 
 			// =ZÄHLENWENNS(B3:B201;"*";D3:D201;"")
 			// Summe inAktive Spieler "=ZÄHLENWENN(D3:D102;0) + ZÄHLENWENN(D3:D102;"")"
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_INAKTIVE_ZEILE),
-					"=" + formulaCountSpieler(spielTagNr, "0", letzteDatenZeile) + " + " + formulaCountSpieler(spielTagNr, "\"\"", letzteDatenZeile));
+			// getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_INAKTIVE_ZEILE),
+			// "=" + formulaCountSpieler(spielTagNr, "0", letzteDatenZeile) + " + " + formulaCountSpieler(spielTagNr, "\"\"", letzteDatenZeile));
+			formulaStr = formulaCountSpieler(spielTagNr, "0", letzteDatenZeile) + " + " + formulaCountSpieler(spielTagNr, "\"\"", letzteDatenZeile);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(SUMMEN_INAKTIVE_ZEILE)).setValue(formulaStr));
 
 			// Ausgestiegen =ZÄHLENWENN(D3:D102;2)
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_AUSGESTIEGENE_ZEILE), "=" + formulaCountSpieler(spielTagNr, "2", letzteDatenZeile));
+			// getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_AUSGESTIEGENE_ZEILE), "=" + formulaCountSpieler(spielTagNr, "2", letzteDatenZeile));
+			formulaStr = formulaCountSpieler(spielTagNr, "2", letzteDatenZeile);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(SUMMEN_AUSGESTIEGENE_ZEILE)).setValue(formulaStr));
+
 			// -----------------------------------
 			// Aktiv + Ausgestiegen
 			Position anzahlAktiveSpielerPosition = getAnzahlAktiveSpielerPosition(spielTagNr);
 			String aktivZelle = getSheetHelper().getAddressFromColumnRow(anzahlAktiveSpielerPosition);
 			String ausgestiegenZelle = getSheetHelper().getAddressFromColumnRow(getAusgestiegenSpielerPosition(spielTagNr));
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), "=" + aktivZelle + "+" + ausgestiegenZelle);
+
+			// getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), "=" + aktivZelle + "+" + ausgestiegenZelle);
+			formulaStr = aktivZelle + "+" + ausgestiegenZelle;
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeilePlusEins()).setValue(formulaStr));
 			// -----------------------------------
 			// =K7+K8+K9
 			// Aktiv + Ausgestiegen + inaktive
 			String inAktivZelle = getSheetHelper().getAddressFromColumnRow(anzahlAktiveSpielerPosition.zeilePlusEins());
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), "=" + aktivZelle + "+" + inAktivZelle + "+" + ausgestiegenZelle);
+			// getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), "=" + aktivZelle + "+" + inAktivZelle + "+" + ausgestiegenZelle);
+			formulaStr = aktivZelle + "+" + inAktivZelle + "+" + ausgestiegenZelle;
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeilePlusEins()).setValue(formulaStr));
 			// -----------------------------------
 			String anzSpielerAddr = getSheetHelper().getAddressFromColumnRow(getAnzahlAktiveSpielerPosition(spielTagNr));
 			String formulaSverweisAnzDoublette = supermeleeTeamPaarungen.formulaSverweisAnzDoublette(anzSpielerAddr);
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), formulaSverweisAnzDoublette);
-			String anzDoublZelle = getSheetHelper().getAddressFromColumnRow(posSpieltagWerte); // Position merken
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeilePlusEins()).setValue(formulaSverweisAnzDoublette));
+			String anzDoublZelle = posSpieltagWerte.getAddress(); // Position merken
 
 			String formulaSverweisAnzTriplette = supermeleeTeamPaarungen.formulaSverweisAnzTriplette(anzSpielerAddr);
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeilePlusEins(), formulaSverweisAnzTriplette);
-			String anzTriplZelle = getSheetHelper().getAddressFromColumnRow(posSpieltagWerte); // Position merken
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeilePlusEins()).setValue(formulaSverweisAnzTriplette));
+
+			String anzTriplZelle = posSpieltagWerte.getAddress(); // Position merken
 
 			String formulaSverweisNurDoublette = supermeleeTeamPaarungen.formulaSverweisNurDoublette(anzSpielerAddr);
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE), formulaSverweisNurDoublette);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(SUMMEN_KANN_DOUBLETTE_ZEILE)).setValue(formulaSverweisNurDoublette));
+
 			// -----------------------------------
 			String formulaAnzSpielbahnen = "=(" + anzDoublZelle + " + " + anzTriplZelle + ")/2";
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(SUMMEN_SPIELBAHNEN), formulaAnzSpielbahnen);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(SUMMEN_SPIELBAHNEN)).setValue(formulaAnzSpielbahnen));
 
 			// ------------------------------------------------------------------------------------
 			// Doublette mode
 			// ------------------------------------------------------------------------------------
 			String doublettModeformulaSverweisAnzDoublette = supermeleeTeamPaarungen.formulaSverweisDoubletteModeAnzDoublette(anzSpielerAddr);
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(DOUBL_MODE_ANZ_DOUBLETTE), doublettModeformulaSverweisAnzDoublette);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_ANZ_DOUBLETTE)).setValue(doublettModeformulaSverweisAnzDoublette));
+
 			String doublettteModeAnzDoublZelle = getSheetHelper().getAddressFromColumnRow(posSpieltagWerte); // Position merken
 
 			String doublettModeformulaSverweisAnzTriplette = supermeleeTeamPaarungen.formulaSverweisAnzDoubletteModeAnzTriplette(anzSpielerAddr);
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(DOUBL_MODE_ANZ_TRIPLETTE), doublettModeformulaSverweisAnzTriplette);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_ANZ_TRIPLETTE)).setValue(doublettModeformulaSverweisAnzTriplette));
+
 			String doublettteModeAnzTriplZelle = getSheetHelper().getAddressFromColumnRow(posSpieltagWerte); // Position merken
 
 			String doublettModeformulaSverweisNurTriplette = supermeleeTeamPaarungen.formulaSverweisDoubletteModeNurTriplette(anzSpielerAddr);
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE), doublettModeformulaSverweisNurTriplette);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE)).setValue(doublettModeformulaSverweisNurTriplette));
+
 			// -----------------------------------
 			String doublettModeFormulaAnzSpielbahnen = "=(" + doublettteModeAnzDoublZelle + " + " + doublettteModeAnzTriplZelle + ")/2";
-			getSheetHelper().setFormulaInCell(sheet, posSpieltagWerte.zeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN), doublettModeFormulaAnzSpielbahnen);
+			getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN)).setValue(doublettModeFormulaAnzSpielbahnen));
 
 		}
 	}
 
 	// ---------------------------------------------
 	public int getAnzahlAktiveSpieler(SpielTagNr Spieltag) throws GenerateException {
-		return getSheetHelper().getIntFromCell(getSheet(), getAnzahlAktiveSpielerPosition(Spieltag));
+		return getSheetHelper().getIntFromCell(getXSpreadSheet(), getAnzahlAktiveSpielerPosition(Spieltag));
 	}
 
 	public Position getAnzahlAktiveSpielerPosition(SpielTagNr spieltag) throws GenerateException {
@@ -487,7 +523,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	// ---------------------------------------------
 	public int getAnzahlInAktiveSpieler(SpielTagNr spieltag) throws GenerateException {
-		return getSheetHelper().getIntFromCell(getSheet(), getAnzahlInAktiveSpielerPosition(spieltag));
+		return getSheetHelper().getIntFromCell(getXSpreadSheet(), getAnzahlInAktiveSpielerPosition(spieltag));
 	}
 
 	public Position getAnzahlInAktiveSpielerPosition(SpielTagNr spieltag) throws GenerateException {
@@ -496,7 +532,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	// ---------------------------------------------
 	public int getAusgestiegenSpieler(SpielTagNr spieltag) throws GenerateException {
-		return getSheetHelper().getIntFromCell(getSheet(), getAusgestiegenSpielerPosition(spieltag));
+		return getSheetHelper().getIntFromCell(getXSpreadSheet(), getAusgestiegenSpielerPosition(spieltag));
 	}
 
 	public Position getAusgestiegenSpielerPosition(SpielTagNr spieltag) throws GenerateException {
@@ -505,7 +541,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	// ---------------------------------------------
 
 	public Boolean isKannNurDoublette(SpielTagNr Spieltag) throws GenerateException {
-		return StringUtils.isNotBlank(getSheetHelper().getTextFromCell(getSheet(), getKannNurDoublettePosition(Spieltag)));
+		return StringUtils.isNotBlank(getSheetHelper().getTextFromCell(getXSpreadSheet(), getKannNurDoublettePosition(Spieltag)));
 	}
 
 	public Position getKannNurDoublettePosition(SpielTagNr Spieltag) throws GenerateException {

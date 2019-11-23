@@ -224,10 +224,10 @@ public class SheetHelper {
 	}
 
 	// StringCellValue
-	public XCell setTextInCell(StringCellValue stringVal) {
+	public XCell setStringValueInCell(StringCellValue stringVal) {
 		checkNotNull(stringVal);
 		XCell xCell = null;
-		xCell = setTextInCell(stringVal.getSheet(), stringVal.getPos(), stringVal.getValue(), stringVal.isUeberschreiben());
+		xCell = setStringValueInCell(stringVal.getSheet(), stringVal.getPos(), stringVal.getValue(), stringVal.isUeberschreiben());
 		handleAbstractCellValue(stringVal, xCell);
 
 		return xCell;
@@ -298,7 +298,7 @@ public class SheetHelper {
 	 * @return XCell
 	 */
 	@VisibleForTesting
-	XCell setTextInCell(XSpreadsheet sheet, Position pos, String val, boolean ueberschreiben) {
+	XCell setStringValueInCell(XSpreadsheet sheet, Position pos, String val, boolean ueberschreiben) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
 		checkNotNull(val);
@@ -634,23 +634,6 @@ public class SheetHelper {
 			logger.error("\n***** Fehler beim Property in Zelle:" + Name + "=" + val + " *****\n" + e.getMessage(), e);
 		}
 		return xCell;
-	}
-
-	/**
-	 * Horizontal zentrieren und breite, optional ein überschrift
-	 *
-	 * @param sheet
-	 * @param pos
-	 * @param header = optional, wenn vorhanden dann die wird die zeile in pos verwendet
-	 */
-	public void setColumnWidthAndHoriJustifyCenter(XSpreadsheet sheet, Position pos, int width, String header) {
-		checkNotNull(sheet);
-
-		if (header != null) {
-			setTextInCell(sheet, pos, header, true);
-		}
-		setColumnCellHoriJustify(sheet, pos, CellHoriJustify.CENTER);
-		setColumnWidth(sheet, pos, width);
 	}
 
 	public XPropertySet setColumnCellHoriJustify(XSpreadsheet sheet, Position pos, CellHoriJustify cellHoriJustify) {

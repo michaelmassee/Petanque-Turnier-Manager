@@ -45,7 +45,7 @@ public class PageStyleHelper {
 	private final WorkingSpreadsheet workingSpreadsheet;
 
 	private PageStyleHelper(ISheet iSheet, PageStyleDef pageStyleDef) throws GenerateException {
-		this(iSheet.getSheet(), iSheet.getWorkingSpreadsheet(), pageStyleDef);
+		this(iSheet.getXSpreadSheet(), iSheet.getWorkingSpreadsheet(), pageStyleDef);
 	}
 
 	private PageStyleHelper(XSpreadsheet sheet, WorkingSpreadsheet workingSpreadsheet, PageStyleDef pageStyleDef) {

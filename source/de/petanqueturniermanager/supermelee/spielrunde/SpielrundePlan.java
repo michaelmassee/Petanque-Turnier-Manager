@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -67,8 +68,13 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	}
 
 	@Override
-	public XSpreadsheet getSheet() throws GenerateException {
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
@@ -103,7 +109,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 			return;
 		}
 
-		NumberCellValue spierNrVal = NumberCellValue.from(getSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
+		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCharHeight(14);
 
 		// meldeliste nach nr sortieren !
@@ -139,24 +145,24 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		Position rechtsUnten = Position.from(spierNrVal.getPos().getSpalte() + 2, ERSTE_DATEN_ZEILE + (maxAnzSpielerInSpalte - 1));
 		// Header Spielrunde
 		// CellProperties headerProp = CellProperties.from().setHoriJustify(CellHoriJustify.CENTER).setHeight(90);
-		StringCellValue spielrunde = StringCellValue.from(getSheet(), SPIELER_NR_SPALTE, HEADER_ZEILE).setEndPosMergeSpalte(rechtsUnten.getSpalte())
+		StringCellValue spielrunde = StringCellValue.from(getXSpreadSheet(), SPIELER_NR_SPALTE, HEADER_ZEILE).setEndPosMergeSpalte(rechtsUnten.getSpalte())
 				.setValue("Spielrunde " + getSpielRundeNr().getNr()).centerHoriJustify().centerVertJustify().setCharHeight(14);
-		getSheetHelper().setTextInCell(spielrunde);
+		getSheetHelper().setStringValueInCell(spielrunde);
 		printBereichDefinieren(rechtsUnten);
 	}
 
 	private void printBereichDefinieren(Position rechtsUnten) throws GenerateException {
 		processBoxinfo("Print-Bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, HEADER_ZEILE);
-		PrintArea.from(getSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void blockHeader(final Position ersteSpielerNr) throws GenerateException {
 		Position ersteHeader = Position.from(ersteSpielerNr).zeile(HEADER_ZEILE_2);
-		StringCellValue header = StringCellValue.from(getSheet(), ersteHeader).setCharWeight(FontWeight.BOLD).setCharHeight(8);
-		getSheetHelper().setTextInCell(header.setValue("Nr."));
-		getSheetHelper().setTextInCell(header.spaltePlusEins().setValue("Team"));
-		getSheetHelper().setTextInCell(header.spaltePlusEins().setValue("Bahn"));
+		StringCellValue header = StringCellValue.from(getXSpreadSheet(), ersteHeader).setCharWeight(FontWeight.BOLD).setCharHeight(8);
+		getSheetHelper().setStringValueInCell(header.setValue("Nr."));
+		getSheetHelper().setStringValueInCell(header.spaltePlusEins().setValue("Team"));
+		getSheetHelper().setStringValueInCell(header.spaltePlusEins().setValue("Bahn"));
 	}
 
 	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) {
@@ -175,7 +181,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	private void spalteFormat(NumberCellValue nrVal) throws GenerateException {
 		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(900);
 		for (int i = 0; i < 3; i++) {
-			getSheetHelper().setColumnProperties(getSheet(), nrVal.getPos().getSpalte() + i, celPropNr);
+			getSheetHelper().setColumnProperties(getXSpreadSheet(), nrVal.getPos().getSpalte() + i, celPropNr);
 		}
 	}
 

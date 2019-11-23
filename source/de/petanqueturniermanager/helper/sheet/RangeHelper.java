@@ -42,7 +42,7 @@ public class RangeHelper {
 	 * @throws GenerateException
 	 */
 	public static RangeHelper from(ISheet sheet, RangePosition rangePos) throws GenerateException {
-		return new RangeHelper(checkNotNull(sheet).getSheet(), rangePos);
+		return new RangeHelper(checkNotNull(sheet).getXSpreadSheet(), rangePos);
 	}
 
 	public static RangeHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePos) {

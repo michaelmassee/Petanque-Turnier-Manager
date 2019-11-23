@@ -42,11 +42,11 @@ public class SortHelper {
 	}
 
 	public static SortHelper from(ISheet iSheet, RangePosition rangePosition) throws GenerateException {
-		return new SortHelper(checkNotNull(iSheet).getSheet(), rangePosition);
+		return new SortHelper(checkNotNull(iSheet).getXSpreadSheet(), rangePosition);
 	}
 
 	public static SortHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePosition) throws GenerateException {
-		return new SortHelper(checkNotNull(sheetWkRef).get().getSheet(), rangePosition);
+		return new SortHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet(), rangePosition);
 	}
 
 	/**

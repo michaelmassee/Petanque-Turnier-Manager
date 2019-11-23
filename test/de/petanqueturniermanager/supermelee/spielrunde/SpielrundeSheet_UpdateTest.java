@@ -63,7 +63,7 @@ public class SpielrundeSheet_UpdateTest {
 			}
 
 			@Override
-			public XSpreadsheet getSheet() {
+			public XSpreadsheet getXSpreadSheet() {
 				return xSpreadsheetMock;
 			}
 

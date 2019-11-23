@@ -29,7 +29,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		naechsteSpielrundeEinfuegen();
 		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 		// sicher gehen das aktive spielrunde sheet ist activ
-		getSheetHelper().setActiveSheet(getSheet());
+		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	public void naechsteSpielrundeEinfuegen() throws GenerateException {

@@ -43,11 +43,11 @@ public class SearchHelper {
 	}
 
 	public static SearchHelper from(ISheet iSheet) throws GenerateException {
-		return new SearchHelper(checkNotNull(iSheet).getSheet());
+		return new SearchHelper(checkNotNull(iSheet).getXSpreadSheet());
 	}
 
 	public static SearchHelper from(WeakRefHelper<ISheet> sheetWkRef) throws GenerateException {
-		return new SearchHelper(checkNotNull(sheetWkRef).get().getSheet());
+		return new SearchHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet());
 	}
 
 	/**

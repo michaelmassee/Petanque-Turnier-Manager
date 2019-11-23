@@ -155,5 +155,4 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	public final TurnierSystem getTurnierSystem() {
 		return turnierSystem;
 	}
-
 }

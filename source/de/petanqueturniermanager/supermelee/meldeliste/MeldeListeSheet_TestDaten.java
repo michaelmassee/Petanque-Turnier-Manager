@@ -67,7 +67,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			SheetRunner.testDoCancelTask();
@@ -102,7 +102,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 		meldeListe.setSpielTag(spielTagNr);
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(meldeListe.getSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
 		int letzteDatenZeile = meldeListe.letzteDatenZeile();
 
@@ -125,7 +125,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 
 	public void testNamenEinfuegen() throws GenerateException {
 		meldeListe.setSpielTag(SpielTagNr.from(1));
-		XSpreadsheet meldelisteSheet = meldeListe.getSheet();
+		XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
 		getSheetHelper().setActiveSheet(meldelisteSheet);
 
 		List<String> testNamen = listeMitTestNamen();
@@ -144,7 +144,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 				throw new GenerateException("Fehler beim füllen von Testdaten in Meldesheet. Es dürfen keine Daten vorhanden sein");
 			}
 
-			getSheetHelper().setTextInCell(spielrNamen.setPos(posSpielerName).setValue(testNamen.get(spielerCntr)));
+			getSheetHelper().setStringValueInCell(spielrNamen.setPos(posSpielerName).setValue(testNamen.get(spielerCntr)));
 
 			spielrNr.zeile(posSpielerName.getZeile());
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
@@ -153,7 +153,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 				getSheetHelper().setValInCell(spielrNr.setValue((double) spielerCntr + 1));
 			} else {
 				// andere Nummer leer
-				getSheetHelper().setTextInCell(StringCellValue.from(spielrNr).setValue(""));
+				getSheetHelper().setStringValueInCell(StringCellValue.from(spielrNr).setValue(""));
 			}
 		}
 
