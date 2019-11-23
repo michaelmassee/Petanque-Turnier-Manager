@@ -183,9 +183,15 @@ public class MeldungenSpalte {
 	 */
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
+		// muss in komplette spalte wert stehen. Deswegen mit ^ und $
 		Position result = SearchHelper.from(getISheet()).searchNachRegExprInSpalte(RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN),
-				"" + spielerNr);
+				"^" + spielerNr + "$");
 		if (result != null) {
+			// Validieren !
+			Integer intFromCell = getSheetHelper().getIntFromCell(getXSpreadsheet(), result);
+			if (intFromCell != spielerNr) {
+				throw new GenerateException("Fehler beim Suchen von Spieler Nr. " + spielerNr + " ResultPos:" + result);
+			}
 			return result.getZeile();
 		}
 		return -1;
