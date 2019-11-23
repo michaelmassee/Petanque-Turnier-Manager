@@ -293,6 +293,19 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
+	 * Bereich mit alle Properties.<br>
+	 * Wird für Formula gebraucht
+	 *
+	 * @return
+	 */
+	@Override
+	public String suchMatrixProperty() {
+		Position start = Position.from(IKonfigurationKonstanten.NAME_PROPERTIES_SPALTE, IKonfigurationKonstanten.ERSTE_ZEILE_PROPERTIES);
+		Position end = Position.from(start).spaltePlusEins().zeile(MAX_LINE);
+		return start.getAddressWith$() + ":" + end.getAddressWith$();
+	}
+
+	/**
 	 *
 	 * @param name
 	 * @return null when not found

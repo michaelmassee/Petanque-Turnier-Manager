@@ -143,6 +143,11 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
+	@Override
+	public final String suchMatrixProperty() {
+		return getPropertiesSpalte().suchMatrixProperty();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */

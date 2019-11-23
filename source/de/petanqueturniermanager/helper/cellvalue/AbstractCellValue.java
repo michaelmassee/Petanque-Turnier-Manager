@@ -117,6 +117,16 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	/**
+	 * @param letzteZeile
+	 * @return this
+	 */
+	@SuppressWarnings("unchecked")
+	public T setEndPosMergeZeile(int letzteZeile) {
+		this.setEndPosMerge(Position.from(getPos()).zeile(letzteZeile));
+		return (T) this;
+	}
+
+	/**
 	 * @param abstractCellValue
 	 */
 	@SuppressWarnings("unchecked")
@@ -350,8 +360,9 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	/**
-	 * ist in inspector als Typ Long ? aber muss als int, sonnst iligalargument exception
-	 *
+	 * ist in inspector als Typ Long ? aber muss als int, sonnst iligalargument exception<br>
+	 * 27000 = 90 Grad
+	 * 
 	 * @param angle
 	 * @return
 	 */

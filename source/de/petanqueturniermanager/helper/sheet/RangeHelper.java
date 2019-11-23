@@ -57,6 +57,11 @@ public class RangeHelper {
 		return new RangeHelper(checkNotNull(wkRefxSpreadsheet).get(), rangePos);
 	}
 
+	/**
+	 * Alles ! wegputzen
+	 * 
+	 * @return
+	 */
 	public RangeHelper clearRange() {
 		checkNotNull(rangePos);
 
