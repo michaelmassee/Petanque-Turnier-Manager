@@ -62,10 +62,15 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 			getSheetHelper().setStringValueInCell(headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
 
 			// Runden Counter
-			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde + ". Rnd").zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1)
-					.setComment(null);
+			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde).zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setComment(null);
 			getSheetHelper().setStringValueInCell(headerRndCounter);
 		}
+		// Erste Zeile Runde
+		TableBorder2 border = BorderFactory.from().allBold().thinLn().forBottom().toBorder();
+		StringCellValue rundeHeaderBez = StringCellValue.from(sheet).zeile(ERSTE_KOPFDATEN_ZEILE).spalte(ersteSpielRundeSpalte).setEndPosMergeSpaltePlus((anzRunden * 2) - 1)
+				.setValue("Runde").setCellBackColor(getHeaderFarbe()).setBorder(border);
+		getSheetHelper().setStringValueInCell(rundeHeaderBez);
+
 		// -------------------------
 		// summen spalten
 		// -------------------------
@@ -109,7 +114,8 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();
-		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
+		getSheetHelper()
+				.setStringValueInCell(stringVal.zeilePlusEins().setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 
 		return stringVal;
 	}

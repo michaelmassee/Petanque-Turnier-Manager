@@ -154,7 +154,7 @@ public class MeldungenSpalte {
 	 * @throws GenerateException
 	 */
 	public int neachsteFreieDatenZeile() throws GenerateException {
-		Position result = SearchHelper.from(getISheet()).searchLastEmptyInSpalte(RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN));
+		Position result = SearchHelper.from(getISheet()).searchLastEmptyInSpalte(RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN));
 		if (result != null) {
 			return result.getZeile();
 		}

@@ -94,7 +94,8 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		meldeliste.setSpielTag(getSpieltagNr());
 		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 		// neu erstellen
-		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
+		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv().forceCreate().spielTagPageStyle(spieltagNr)
+				.create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		spielerSpalte.alleSpieltagSpielerAusmeldelisteEinfuegen(meldeliste);

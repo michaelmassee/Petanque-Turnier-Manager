@@ -78,16 +78,16 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		Meldungen alleMeldungen = meldeliste.getAlleMeldungen();
 
 		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
+		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
 
 		ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPIELER_NAME_WIDTH);
 
-		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setShrinkToFit(true);
+		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE))
+				.setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true);
 
-		StringCellValue chkBox = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE + 1, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setValue(" ");
+		StringCellValue chkBox = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE + 1, ERSTE_DATEN_ZEILE))
+				.setBorder(BorderFactory.from().allThin().toBorder()).setValue(" ");
 
 		int maxAnzSpielerInSpalte = 0;
 		int spielerCntr = 1;
@@ -118,8 +118,11 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 				maxAnzSpielerInSpalte++;
 			}
 		}
-
 		printBereichDefinieren(maxAnzSpielerInSpalte - 1, nameFormula.getPos().getSpalte() + 1);
+	}
+
+	private void fillSpielerNr() {
+
 	}
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
