@@ -75,7 +75,8 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spieltag Rangliste");
-		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
+		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).anzZeilenInHeader(2).formation(Formation.MELEE)
+				.build();
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
