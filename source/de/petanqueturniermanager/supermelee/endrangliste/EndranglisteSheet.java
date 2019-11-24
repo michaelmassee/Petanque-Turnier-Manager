@@ -81,8 +81,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Endrangliste");
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
-		// (ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, meldeListeSheetNew, Formation.MELEE);
-		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
+		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).anzZeilenInHeader(2).sheet(this).formation(Formation.MELEE)
+				.build();
 		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte, ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSorter = new RangListeSorter(this);

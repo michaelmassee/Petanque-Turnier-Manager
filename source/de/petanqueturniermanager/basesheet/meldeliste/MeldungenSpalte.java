@@ -54,15 +54,19 @@ public class MeldungenSpalte {
 	private final int ersteDatenZiele; // Zeile 1 = 0
 	private final int meldungNrSpalte; // Spalte A=0, B=1
 	private final int meldungNameSpalte;
+	private final int anzZeilenInHeader; // weiviele Zeilen sollen in header verwendet werden
+
 	private final WeakRefHelper<ISheet> sheet;
 
-	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation) {
+	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader) {
 		checkNotNull(iSheet);
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
+		checkArgument(anzZeilenInHeader > 0);
 		checkNotNull(formation);
 
 		this.ersteDatenZiele = ersteDatenZiele;
+		this.anzZeilenInHeader = anzZeilenInHeader;
 		meldungNrSpalte = spielerNrSpalte;
 		meldungNameSpalte = spielerNrSpalte + 1;
 		sheet = new WeakRefHelper<>(iSheet);
@@ -129,13 +133,23 @@ public class MeldungenSpalte {
 		getISheet().processBoxinfo("Meldungen Spalten Header");
 
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - 1), HEADER_SPIELER_NR)
+		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader), HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCellBackColor(headerColor);
+				.setCellBackColor(headerColor).setVertJustify(CellVertJustify2.CENTER);
+
+		if (anzZeilenInHeader > 1) {
+			celVal.setEndPosMergeZeilePlus(1);
+		}
 		getSheetHelper().setStringValueInCell(celVal); // spieler nr
+		// --------------------------------------------------------------------------------------------
 
 		celVal.addColumnProperties(columnProperties.setWidth(DEFAULT_SPIELER_NAME_WIDTH)).setComment(null).spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
+
+		if (anzZeilenInHeader > 1) {
+			// weil spalte sich geändert hat
+			celVal.setEndPosMergeZeilePlus(1);
+		}
 
 		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
 			getSheetHelper().setStringValueInCell(celVal);
@@ -341,6 +355,8 @@ public class MeldungenSpalte {
 		private Formation formation;
 		private int ersteDatenZiele;
 		private int spielerNrSpalte;
+		private int anzZeilenInHeader = 1; // default ein zeile
+
 		private ISheet iSheet;
 
 		public Bldr formation(Formation formation) {
@@ -358,13 +374,18 @@ public class MeldungenSpalte {
 			return this;
 		}
 
+		public Bldr anzZeilenInHeader(int anzZeilenInHeader) {
+			this.anzZeilenInHeader = anzZeilenInHeader;
+			return this;
+		}
+
 		public Bldr sheet(ISheet iSheet) {
 			this.iSheet = iSheet;
 			return this;
 		}
 
 		public MeldungenSpalte build() {
-			return new MeldungenSpalte(ersteDatenZiele, spielerNrSpalte, iSheet, formation);
+			return new MeldungenSpalte(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader);
 		}
 	}
 }

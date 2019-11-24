@@ -167,6 +167,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		List<Team> teams = spielRunde.teams();
 
+		// TODO Data Array verwenden
 		for (int teamCntr = 0; teamCntr < teams.size(); teamCntr++) {
 			if ((teamCntr & 1) == 0) {
 				// Team A
@@ -683,8 +684,8 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		getSheetHelper().setValInCell(propVal.setValue((double) anzAktiv));
 
 		int anzAusg = meldeListe.getAusgestiegenSpieler(getSpielTag());
-		getSheetHelper()
-				.setStringValueInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Ausgestiegen :").setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
+		getSheetHelper().setStringValueInCell(
+				propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Ausgestiegen :").setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
 		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 
 		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
