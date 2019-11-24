@@ -14,7 +14,7 @@ public class RangeDataTest {
 		assert rangeData.size() == 3;
 		assert rangeData.get(0) != null;
 		assert rangeData.get(0).getLast() != null;
-		assert rangeData.get(0).getLast().getIntVal(-1) != 10;
+		assert rangeData.get(0).getLast().getIntVal(-1) == 10;
 		assert rangeData.get(0).size() == 3;
 		RowData elem1 = rangeData.get(0);
 		assert elem1.get(0).getStringVal().equals("sadd");

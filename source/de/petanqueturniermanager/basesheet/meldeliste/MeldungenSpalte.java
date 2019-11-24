@@ -143,8 +143,14 @@ public class MeldungenSpalte {
 		}
 	}
 
+	/**
+	 * funktioniert nach meldung nr
+	 *
+	 * @return
+	 * @throws GenerateException
+	 */
 	public int getLetzteDatenZeile() throws GenerateException {
-		return neachsteFreieDatenZeile() - 1;
+		return neachsteFreieDatenOhneSpielerNrZeile() - 1;
 	}
 
 	/**
@@ -153,7 +159,7 @@ public class MeldungenSpalte {
 	 *
 	 * @throws GenerateException
 	 */
-	public int neachsteFreieDatenZeile() throws GenerateException {
+	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
 		Position result = SearchHelper.from(getISheet()).searchLastEmptyInSpalte(RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN));
 		if (result != null) {
 			return result.getZeile();

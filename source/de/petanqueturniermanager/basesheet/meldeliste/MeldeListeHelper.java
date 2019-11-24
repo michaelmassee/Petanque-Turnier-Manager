@@ -140,11 +140,17 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		return meldeListe.getSpielerNameSpalte();
 	}
 
+	/**
+	 * alle zeilen mit nummer ohne namen entfernen
+	 *
+	 * @throws GenerateException
+	 */
+
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
 		meldeListe.processBoxinfo("Zeilen ohne Spielernamen entfernen");
 
 		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
-		int letzteNrZeile = meldeListe.neachsteFreieDatenZeile();
+		int letzteNrZeile = meldeListe.neachsteFreieDatenOhneSpielerNrZeile();
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
@@ -152,7 +158,9 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 
 		StringCellValue emptyVal = StringCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, 0)).setValue("");
 
-		for (int spielerNrZeilecntr = ERSTE_DATEN_ZEILE; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
+		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
+
+		for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
 			Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerNrZeilecntr);
 			String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
 			// Achtung alle durchgehen weil eventuell lücken in der nr spalte!
@@ -246,7 +254,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		}
 
 		// Zeile erste Meldung ohne Nummer, weil ohne nummer nach unten sortiert
-		int ersteZeileOhneNummer = meldeListe.neachsteFreieDatenZeile(); // letzte Zeile ohne Spieler Nr
+		int ersteZeileOhneNummer = meldeListe.neachsteFreieDatenOhneSpielerNrZeile(); // letzte Zeile ohne Spieler Nr
 
 		// lücken füllen
 		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));

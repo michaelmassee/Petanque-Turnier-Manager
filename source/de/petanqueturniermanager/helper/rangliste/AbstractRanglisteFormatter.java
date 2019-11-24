@@ -242,7 +242,7 @@ abstract public class AbstractRanglisteFormatter {
 
 		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().get();
 
-		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenZeile();
+		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenOhneSpielerNrZeile();
 		StringCellValue stringVal = StringCellValue.from(getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile)).setHoriJustify(CellHoriJustify.LEFT)
 				.setCharHeight(8);
 

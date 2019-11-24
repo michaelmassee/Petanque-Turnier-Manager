@@ -132,13 +132,18 @@ public class MeldeListeHelperTest {
 	@Test
 	public void testZeileOhneSpielerNamenEntfernen() throws Exception {
 
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"), new SpielerNrName(10, "Petra"),
+		// Achtung: die liste wird Sortiert mit leeren namen nach unten
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"), new SpielerNrName(10, "Petra"), new SpielerNrName(12, "Heinz"),
 				// --------------------
-				new SpielerNrName(4, ""), // muss entfernt werden
+				new SpielerNrName(4, "") // muss entfernt werden
 				// --------------------
-				new SpielerNrName(12, "Heinz") };
+		};
 
 		initReturnSpielerDaten(spielerNrNameList);
+
+		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		verify(sheetHelperMock, times(1)).setStringValueInCell(any(StringCellValue.class));
 	}
@@ -154,8 +159,12 @@ public class MeldeListeHelperTest {
 			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerNrName.name);
 			zeileCntr++;
 		}
+
+		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
 		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
-		PowerMockito.when(meldungenSpalteMock.neachsteFreieDatenZeile()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
+
+		PowerMockito.when(iMeldelisteMock.neachsteFreieDatenOhneSpielerNrZeile()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
+		PowerMockito.when(meldungenSpalteMock.neachsteFreieDatenOhneSpielerNrZeile()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
 	}
 }
 

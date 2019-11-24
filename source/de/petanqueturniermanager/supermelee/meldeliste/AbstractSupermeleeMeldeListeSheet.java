@@ -656,8 +656,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	}
 
 	@Override
-	public int neachsteFreieDatenZeile() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenZeile();
+	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
+		return meldungenSpalte.neachsteFreieDatenOhneSpielerNrZeile();
 	}
 
 	@Override
@@ -731,5 +731,10 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 */
 	public int spieltagSpalte(SpielTagNr spieltagNr) {
 		return meldeListeHelper.spieltagSpalte(spieltagNr);
+	}
+
+	@Override
+	public int letzteZeileMitSpielerName() throws GenerateException {
+		return meldungenSpalte.letzteZeileMitSpielerName();
 	}
 }
