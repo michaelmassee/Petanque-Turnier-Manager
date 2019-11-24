@@ -177,8 +177,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
-	public int neachsteFreieDatenZeile() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenZeile();
+	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
+		return meldungenSpalte.neachsteFreieDatenOhneSpielerNrZeile();
 	}
 
 	@Override
@@ -217,6 +217,11 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	@Override
 	public int getSpielerNameSpalte() {
 		return meldungenSpalte.getSpielerNameErsteSpalte();
+	}
+
+	@Override
+	public int letzteZeileMitSpielerName() throws GenerateException {
+		return meldungenSpalte.letzteZeileMitSpielerName();
 	}
 
 }

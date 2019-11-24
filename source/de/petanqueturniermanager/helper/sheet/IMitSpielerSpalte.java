@@ -10,13 +10,15 @@ import de.petanqueturniermanager.exception.GenerateException;
 
 public interface IMitSpielerSpalte {
 
-	int neachsteFreieDatenZeile() throws GenerateException;
-
-	int getSpielerZeileNr(int spielerNr) throws GenerateException;
+	int getErsteDatenZiele();
 
 	int letzteDatenZeile() throws GenerateException;
 
-	int getErsteDatenZiele();
+	int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException;
+
+	int letzteZeileMitSpielerName() throws GenerateException;
+
+	int getSpielerZeileNr(int spielerNr) throws GenerateException;
 
 	List<String> getSpielerNamenList() throws GenerateException;
 
