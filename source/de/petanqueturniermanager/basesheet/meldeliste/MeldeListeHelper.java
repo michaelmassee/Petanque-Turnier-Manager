@@ -24,7 +24,10 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -141,7 +144,7 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		meldeListe.processBoxinfo("Zeilen ohne Spielernamen entfernen");
 
 		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
-		int letzteNrZeile = meldeListe.getMeldungenSpalte().neachsteFreieDatenZeile();
+		int letzteNrZeile = meldeListe.neachsteFreieDatenZeile();
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
@@ -176,31 +179,31 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	public Meldungen getMeldungen(SpielTagNr spieltag, List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
 		Meldungen meldung = new Meldungen();
+
 		int letzteZeile = meldeListe.getMeldungenSpalte().getLetzteDatenZeile();
 
 		if (letzteZeile >= ERSTE_DATEN_ZEILE) {
 			// daten vorhanden
-			int nichtZusammenSpielenSpalte = setzPositionSpalte();
 			int spieltagSpalte = spieltagSpalte(spieltag);
 
-			Position posSpieltag = Position.from(spieltagSpalte, ERSTE_DATEN_ZEILE);
-			XSpreadsheet sheet = getXSpreadSheet();
+			// Use getDataArray to get an Array off all Spieler bis SpieltagSpalte
+			RangePosition rangebisSpieltagSpalte = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, spieltagSpalte, letzteZeile);
+			RangeData meldungenDaten = RangeHelper.from(getXSpreadSheet(), rangebisSpieltagSpalte).getDataFromRange();
 
-			for (int spielerZeile = ERSTE_DATEN_ZEILE; spielerZeile <= letzteZeile; spielerZeile++) {
-
-				int isAktiv = meldeListe.getSheetHelper().getIntFromCell(sheet, posSpieltag.zeile(spielerZeile));
-				SpielrundeGespielt status = SpielrundeGespielt.findById(isAktiv);
-
+			// 0 = nr
+			// 1 = name
+			// 2 = setzpos
+			// letzte ! spalte = aktuelle Spieltag status
+			for (RowData meldungZeile : meldungenDaten) {
+				int isAktivStatus = meldungZeile.getLast().getIntVal(-1);
+				SpielrundeGespielt status = SpielrundeGespielt.findById(isAktivStatus);
 				if (spielrundeGespielt == null || spielrundeGespielt.contains(status)) {
-					int spielerNr = meldeListe.getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(SPIELER_NR_SPALTE));
+					int spielerNr = meldungZeile.get(0).getIntVal(-1);
 					if (spielerNr > 0) {
 						Spieler spieler = Spieler.from(spielerNr);
-
-						if (nichtZusammenSpielenSpalte > -1) {
-							int nichtzusammen = meldeListe.getSheetHelper().getIntFromCell(sheet, Position.from(posSpieltag).spalte(nichtZusammenSpielenSpalte));
-							if (nichtzusammen > 0) {
-								spieler.setSetzPos(nichtzusammen);
-							}
+						int nichtzusammen = meldungZeile.get(2).getIntVal(-1);
+						if (nichtzusammen > 0) {
+							spieler.setSetzPos(nichtzusammen);
 						}
 						meldung.addSpielerWennNichtVorhanden(spieler);
 					}
@@ -241,17 +244,21 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 		if (spielrNr > -1) {
 			letzteSpielerNr = spielrNr;
 		}
-		// spieler nach Alphabet sortieren
-		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true);
+
+		// Zeile erste Meldung ohne Nummer, weil ohne nummer nach unten sortiert
+		int ersteZeileOhneNummer = meldeListe.neachsteFreieDatenZeile(); // letzte Zeile ohne Spieler Nr
 
 		// lücken füllen
 		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
-		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
+		for (int spielerZeilecntr = ersteZeileOhneNummer; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr == -1) {
 				meldeListe.getSheetHelper().setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
+
+		// spieler nach Alphabet sortieren
+		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true);
 	}
 
 	/**

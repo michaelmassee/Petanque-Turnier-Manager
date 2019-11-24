@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.CellFlags;
+import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XSheetOperation;
 import com.sun.star.sheet.XSpreadsheet;
@@ -19,6 +20,7 @@ import com.sun.star.uno.UnoRuntime;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
  * @author Michael Massee
@@ -59,7 +61,7 @@ public class RangeHelper {
 
 	/**
 	 * Alles ! wegputzen
-	 * 
+	 *
 	 * @return
 	 */
 	public RangeHelper clearRange() {
@@ -74,6 +76,43 @@ public class RangeHelper {
 					| CellFlags.STRING | CellFlags.STYLES | CellFlags.VALUE);
 		}
 		return this;
+	}
+
+	private XCellRangeData getXCellRangeData() {
+		XCellRangeData xCellRangeData = null;
+		try {
+			XCellRange xCellRange = wkRefxSpreadsheet.get().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(),
+					rangePos.getEndeZeile());
+			if (xCellRange != null) {
+				xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
+			}
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return xCellRangeData;
+	}
+
+	/**
+	 * @return null when error
+	 */
+	public RangeData getDataFromRange() {
+		Object[][] data = null;
+		XCellRangeData xCellRangeData = getXCellRangeData();
+		if (xCellRangeData != null) {
+			data = xCellRangeData.getDataArray();
+		}
+		return new RangeData(data);
+	}
+
+	/**
+	 * @return null when error
+	 */
+	public XCellRangeData setDataInRange(Object[][] datalist) {
+		XCellRangeData xCellRangeData = getXCellRangeData();
+		if (xCellRangeData != null) {
+			xCellRangeData.setDataArray(datalist);
+		}
+		return xCellRangeData;
 	}
 
 	public XCellRange getCellRange() {
