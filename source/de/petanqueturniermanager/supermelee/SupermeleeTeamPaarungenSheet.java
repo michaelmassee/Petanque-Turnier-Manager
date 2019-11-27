@@ -7,22 +7,27 @@ package de.petanqueturniermanager.supermelee;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
@@ -50,6 +55,9 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+
+		// NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).hideGrid().create()
+
 		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME);
 		if (sheet == null) {
 			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
@@ -70,11 +78,10 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		processBoxinfo("Erstelle " + SHEETNAME);
 
 		// Header
+		// --------------------------------------------
 		Position pos = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE - 1);
 		int spalteBreite = 1000;
-
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteBreite).setHoriJustify(CellHoriJustify.CENTER);
-
 		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler").setColumnProperties(columnProperties);
 		getSheetHelper().setStringValueInCell(headerVal);
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Tripl/Doubl\r\nDoublette Teams"));
@@ -84,41 +91,42 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Ung").setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Doubl/Tripl\r\nDoublette Teams"));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3").setComment("Doubl/Tripl\r\nTriplette Teams"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Doubl").setComment("x= mit dieser Anzahl von Spieler kann nur Triplette gespielt werden"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Wenn nur Triplette gespielt wird, anzahl Teams."));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Tripl").setComment("x= mit dieser Anzahl von Spieler kann nur Triplette gespielt werden"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3").setComment("Wenn nur Triplette gespielt wird, anzahl Teams."));
 
-		StringCellValue strDaten = StringCellValue.from(sheet, pos);
+		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+		RangePosition rangePosHeader = RangePosition.from(0, 0, 9, 0); // 10 spalten
+		RangeProperties rangeHeaderProp = RangeProperties.from().setBorder(border).setCharWeight(FontWeight.BOLD);
+		RangeHelper.from(getXSpreadSheet(), rangePosHeader).setRangeProperties(rangeHeaderProp);
 
+		// --------------------------------------------
+
+		// Daten zusammenbauen
+		RangeData rangeData = new RangeData();
+		// for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
 		for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
-			SuperMeleeTeamRechner teamRechnerTripletteDoublette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Triplette);
-			int zeile = ERSTE_DATEN_ZEILE + (anSpielerCntr - 4);
-			pos = Position.from(ANZ_SPIELER_SPALTE, zeile);
-			getSheetHelper().setValInCell(sheet, pos, teamRechnerTripletteDoublette.getAnzSpieler());
-			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechnerTripletteDoublette.getAnzDoublette());
-			getSheetHelper().setValInCell(sheet, pos.spaltePlusEins(), teamRechnerTripletteDoublette.getAnzTriplette());
-			strDaten.zeile(pos.getZeile()).spalte(pos.getSpalte());
-			getSheetHelper().setStringValueInCell(strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.isNurDoubletteMoeglich() ? "X" : ""));
-			getSheetHelper().setStringValueInCell(strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.getAnzahlDoubletteWennNurDoublette()));
-			getSheetHelper().setStringValueInCell(strDaten.spaltePlusEins().setValue(teamRechnerTripletteDoublette.valideAnzahlSpieler() ? "" : "X"));
-
-			if (!teamRechnerTripletteDoublette.valideAnzahlSpieler()) {
-				RangePosition rangePos = RangePosition.from(Position.from(pos).spalte(0), pos);
-				getSheetHelper().setPropertyInRange(sheet, rangePos, "CharColor", ColorHelper.CHAR_COLOR_RED);
-				getSheetHelper().setCommentInCell(sheet, pos, "Ungültige Anzahl Spieler = " + teamRechnerTripletteDoublette.getAnzSpieler() + ".\r\nKeine Kombinationen möglich.");
+			RowData row = rangeData.newRow();
+			{
+				SuperMeleeTeamRechner teamRechnerTriplette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Triplette);
+				row.newInt(teamRechnerTriplette.getAnzSpieler());
+				row.newInt(teamRechnerTriplette.getAnzDoublette());
+				row.newInt(teamRechnerTriplette.getAnzTriplette());
+				row.newString(teamRechnerTriplette.isNurDoubletteMoeglich() ? "X" : "");
+				row.newInt(teamRechnerTriplette.getAnzahlDoubletteWennNurDoublette());
+				row.newString(teamRechnerTriplette.valideAnzahlSpieler() ? "" : "X");
 			}
-
-			{ // Doublette / Triplette teams
-				SuperMeleeTeamRechner teamRechnerDoubletteTriplette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Doublette);
-				NumberCellValue nmbrVal = NumberCellValue.from(sheet, Position.from(DOUBL_MODE_ANZ_DOUBLETTE_SPALTE, zeile));
-				nmbrVal.setValue(teamRechnerDoubletteTriplette.getAnzDoublette());
-				getSheetHelper().setValInCell(nmbrVal);
-				getSheetHelper().setValInCell(nmbrVal.spalte(DOUBL_MODE_ANZ_TRIPLETTE_SPALTE).setValue(teamRechnerDoubletteTriplette.getAnzTriplette()));
-				getSheetHelper().setStringValueInCell(
-						StringCellValue.from(nmbrVal).spalte(DOUBL_MODE_NUR_TRIPLETTE_SPALTE).setValue(teamRechnerDoubletteTriplette.isNurTripletteMoeglich() ? "X" : ""));
-				getSheetHelper()
-						.setValInCell(nmbrVal.spalte(DOUBL_MODE_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE).setValue(teamRechnerDoubletteTriplette.getAnzahlTripletteWennNurTriplette()));
+			{
+				SuperMeleeTeamRechner teamRechnerDoublette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Doublette);
+				row.newInt(teamRechnerDoublette.getAnzDoublette());
+				row.newInt(teamRechnerDoublette.getAnzTriplette());
+				row.newString(teamRechnerDoublette.isNurTripletteMoeglich() ? "X" : "");
+				row.newInt(teamRechnerDoublette.getAnzahlTripletteWennNurTriplette());
 			}
 		}
+
+		RangeProperties rangeProp = RangeProperties.from().setBorder(border);
+		RangePosition rangePosAlldata = RangePosition.from(0, 1, 9, rangeData.size()); // 10 spalten
+		RangeHelper.from(getXSpreadSheet(), rangePosAlldata).setDataInRange(rangeData).setRangeProperties(rangeProp);
 	}
 
 	@Override

@@ -41,37 +41,45 @@ public class RangePosition {
 	}
 
 	public AbstractPosition<?> getStart() {
-		return this.start;
+		return start;
 	}
 
 	public int getStartZeile() {
-		return this.start.getZeile();
+		return start.getZeile();
 	}
 
 	public int getStartSpalte() {
-		return this.start.getSpalte();
+		return start.getSpalte();
 	}
 
 	public AbstractPosition<?> getEnde() {
-		return this.ende;
+		return ende;
 	}
 
 	public int getEndeZeile() {
-		return this.ende.getZeile();
+		return ende.getZeile();
 	}
 
 	public int getEndeSpalte() {
-		return this.ende.getSpalte();
+		return ende.getSpalte();
 	}
 
 	@Override
 	public String toString() {
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
-				.add("\r\nStart", this.start)
-				.add("\r\nEnd", this.ende)
+				.add("\r\nStart", start)
+				.add("\r\nEnd", ende)
 				.toString();
 		// @formatter:on
+	}
+
+	public int getAnzahlZeilen() {
+		return (ende.getZeile() - start.getZeile()) + 1;
+	}
+
+	public int getAnzahlSpalten() {
+		return (ende.getSpalte() - start.getSpalte()) + 1;
 	}
 
 }
