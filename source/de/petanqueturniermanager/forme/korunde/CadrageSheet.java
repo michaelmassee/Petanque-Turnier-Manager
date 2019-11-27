@@ -74,7 +74,6 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 		NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
-		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	/**
