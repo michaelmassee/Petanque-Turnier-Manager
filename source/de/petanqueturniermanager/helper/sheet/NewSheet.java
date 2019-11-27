@@ -18,6 +18,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleDef;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -126,6 +127,9 @@ public class NewSheet {
 					// @see KonfigurationSheet#initPageStyles
 					// @see SheetRunner#updateKonfigurationSheet
 					PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
+				} else {
+					// dann nur der default, mit copyright footer
+					PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter().create().applytoSheet();
 				}
 				didCreate = true;
 
