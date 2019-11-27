@@ -19,11 +19,10 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
-import de.petanqueturniermanager.helper.pagestyle.PageStyle;
-import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -49,22 +48,22 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 	public static final int DOUBL_MODE_NUR_TRIPLETTE_SPALTE = 8;
 	public static final int DOUBL_MODE_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE = 9;
 
+	private static final String SHEET_COLOR = "f4ca46";
+
 	public SupermeleeTeamPaarungenSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
+		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR).useIfExist().create().isDidCreate()) {
+			try {
+				initSheet();
+			} catch (GenerateException e) {
+				logger.fatal(e);
+			}
+		}
 	}
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-
-		// NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).hideGrid().create()
-
 		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME);
-		if (sheet == null) {
-			sheet = getSheetHelper().newIfNotExist(SHEETNAME, DefaultSheetPos.SUPERMELEE_TEAMS);
-			PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
-			TurnierSheet.from(sheet, getWorkingSpreadsheet()).tabColor("f4ca46").protect();
-			initSheet(sheet);
-		}
 		return sheet;
 	}
 
@@ -73,8 +72,8 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
-	private void initSheet(XSpreadsheet sheet) throws GenerateException {
-		// leeren erstellen
+	private void initSheet() throws GenerateException {
+		XSpreadsheet sheet = getXSpreadSheet();
 		processBoxinfo("Erstelle " + SHEETNAME);
 
 		// Header
@@ -136,8 +135,6 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 
 	@Override
 	protected void doRun() throws GenerateException {
-		// sheet anzeigen
-		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
 
 	public String formulaSverweisAnzDoublette(String adresseAnzSpieler) throws GenerateException {

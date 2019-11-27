@@ -108,8 +108,6 @@ public class NewSheet {
 				}
 				sheetHelper.removeSheet(sheetName);
 				sheet = null;
-			} else {
-				didCreate = true;
 			}
 		}
 
