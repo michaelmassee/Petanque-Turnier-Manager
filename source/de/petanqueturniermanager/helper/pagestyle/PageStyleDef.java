@@ -10,13 +10,15 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class PageStyleDef {
 
-	public static final String SPIELTAG_FORMAT_NAME = "Spieltag";
-
 	private final String pageStyleName;
 	private final PageProperties pageProperties;
 
 	public PageStyleDef(SpielTagNr spielTag) {
-		this(SPIELTAG_FORMAT_NAME + " " + spielTag.getNr(), new PageProperties());
+		this(PageStyle.SPIELTAG.getName() + " " + spielTag.getNr(), new PageProperties());
+	}
+
+	public PageStyleDef(PageStyle pageStyle) {
+		this(pageStyle.getName(), new PageProperties());
 	}
 
 	public PageStyleDef(String name) {
