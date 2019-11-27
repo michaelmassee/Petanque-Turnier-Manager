@@ -8,7 +8,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.beans.PropertyVetoException;
+import com.sun.star.beans.UnknownPropertyException;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
+import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.CellFlags;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangesQuery;
@@ -19,6 +24,7 @@ import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
@@ -105,14 +111,35 @@ public class RangeHelper {
 	}
 
 	/**
+	 * grid in sheet schnell ! mit daten füllen<br>
+	 * !! rangeData muss genau mit rangepos übereinstimmen<br>
+	 * wenn rangedata leer dann pasiert nichts
+	 *
 	 * @return null when error
+	 * @throws GenerateException fehler wenn die größe nicht übereinstimt
 	 */
-	public XCellRangeData setDataInRange(Object[][] datalist) {
+	public RangeHelper setDataInRange(RangeData rangeData) throws GenerateException {
+
 		XCellRangeData xCellRangeData = getXCellRangeData();
 		if (xCellRangeData != null) {
-			xCellRangeData.setDataArray(datalist);
+			Object[][] dataArray = rangeData.toDataArray();
+
+			if (dataArray.length == 0 || dataArray[0].length == 0) {
+				// keine Daten
+				return this;
+			}
+
+			// array muss genau mit rangepos übereinstimmen
+			if (rangePos.getAnzahlZeilen() != dataArray.length) {
+				throw new GenerateException("Anzahl Zeilen stimmen nicht überein. range:" + rangePos.getAnzahlZeilen() + " array:" + dataArray.length);
+			}
+
+			if (rangePos.getAnzahlSpalten() != dataArray[0].length) {
+				throw new GenerateException("Anzahl Spalten stimmen nicht überein. range:" + rangePos.getAnzahlSpalten() + " array:" + dataArray[0].length);
+			}
+			xCellRangeData.setDataArray(dataArray);
 		}
-		return xCellRangeData;
+		return this;
 	}
 
 	public XCellRange getCellRange() {
@@ -138,9 +165,38 @@ public class RangeHelper {
 
 		xCellRange = getCellRange();
 		if (xCellRange != null) {
-			xCellRangesQuery = UnoRuntime.queryInterface(com.sun.star.sheet.XCellRangesQuery.class, xCellRange);
+			xCellRangesQuery = UnoRuntime.queryInterface(XCellRangesQuery.class, xCellRange);
 		}
 		return xCellRangesQuery;
+	}
+
+	public RangeHelper setRangeProperties(RangeProperties rangeProp) {
+		XPropertySet xPropSet = getColumnPropertySet();
+		rangeProp.forEach((key, value) -> {
+			setProperty(xPropSet, key, value);
+		});
+		return this;
+	}
+
+	private void setProperty(XPropertySet xPropSet, String key, Object val) {
+		checkNotNull(key);
+		checkNotNull(val);
+		checkNotNull(xPropSet);
+
+		try {
+			xPropSet.setPropertyValue(key, val);
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+			logger.error("Property '" + key + "' = '" + val + "'\r" + e.getMessage(), e);
+		}
+	}
+
+	private XPropertySet getColumnPropertySet() {
+		XPropertySet xPropSet = null;
+		XCellRange xCellRange = getCellRange();
+		if (xCellRange != null) {
+			xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
+		}
+		return xPropSet;
 	}
 
 }

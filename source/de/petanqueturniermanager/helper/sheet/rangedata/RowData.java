@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.helper.sheet.rangedata;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
@@ -15,6 +16,10 @@ import java.util.stream.Collectors;
  */
 public class RowData extends ArrayList<CellData> {
 
+	public RowData() {
+		super();
+	}
+
 	public RowData(Object[] data) {
 		super(Arrays.stream(checkNotNull(data)).map(rowdata -> {
 			return new CellData(rowdata);
@@ -23,6 +28,32 @@ public class RowData extends ArrayList<CellData> {
 
 	public CellData getLast() {
 		return get(size() - 1);
+	}
+
+	public CellData newString(String val) {
+		CellData cellData = new CellData(new String(val));
+		this.add(cellData);
+		return cellData;
+	}
+
+	public CellData newInt(int val) {
+		CellData cellData = new CellData(new Integer(val));
+		this.add(cellData);
+		return cellData;
+	}
+
+	/**
+	 * @return
+	 */
+	public Object[] toDataArray(int arraySize) {
+		checkArgument(size() <= arraySize);
+		Object[] dataArray = new Object[arraySize];
+
+		int idx = 0;
+		for (CellData cellData : this) {
+			dataArray[idx++] = cellData.getData();
+		}
+		return dataArray;
 	}
 
 }
