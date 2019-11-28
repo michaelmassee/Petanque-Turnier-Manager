@@ -43,6 +43,15 @@ public class RowData extends ArrayList<CellData> {
 	}
 
 	/**
+	 *
+	 */
+	public CellData newEmpty() {
+		CellData cellData = new CellData(new String());
+		this.add(cellData);
+		return cellData;
+	}
+
+	/**
 	 * @return
 	 */
 	public Object[] toDataArray(int arraySize) {
@@ -51,8 +60,13 @@ public class RowData extends ArrayList<CellData> {
 
 		int idx = 0;
 		for (CellData cellData : this) {
-			dataArray[idx++] = cellData.getData();
+			dataArray[idx++] = (cellData.getData() != null) ? cellData.getData() : new String();
 		}
+		// array auffuellen
+		while (idx < arraySize) {
+			dataArray[idx++] = new String();
+		}
+
 		return dataArray;
 	}
 
