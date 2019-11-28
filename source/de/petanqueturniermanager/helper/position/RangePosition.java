@@ -82,4 +82,13 @@ public class RangePosition {
 		return (ende.getSpalte() - start.getSpalte()) + 1;
 	}
 
+	/**
+	 * Der komplete Range um eine Spalte nach rechts verschieben
+	 */
+	public RangePosition spaltePlusEins() {
+		start.spaltePlusEins();
+		ende.spaltePlusEins();
+		return this;
+	}
+
 }

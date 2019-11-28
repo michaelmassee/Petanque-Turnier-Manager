@@ -22,8 +22,4 @@ public class RangeProperties extends CommonProperties<RangeProperties> {
 		return RangeProperties.from().put(key, value);
 	}
 
-	public RangeProperties setWidth(int width) {
-		return put(WIDTH, width);
-	}
-
 }

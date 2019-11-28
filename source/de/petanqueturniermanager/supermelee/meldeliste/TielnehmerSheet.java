@@ -75,6 +75,8 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		setSpielTagNr(getKonfigurationSheet().getAktiveSpieltag());
+		meldeliste.setSpielTag(getSpielTagNr());
+		meldeliste.upDateSheet();
 		generate();
 	}
 
@@ -92,13 +94,13 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 		Meldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 
 		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
+		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
 
 		ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPIELER_NAME_WIDTH);
 
-		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setShrinkToFit(true);
+		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE))
+				.setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true);
 
 		int spielerCntr = 1;
 		int maxAnzSpielerInSpalte = 0;

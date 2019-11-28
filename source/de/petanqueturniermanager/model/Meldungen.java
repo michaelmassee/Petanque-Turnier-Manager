@@ -62,6 +62,10 @@ public class Meldungen {
 		return this;
 	}
 
+	public final Iterable<Spieler> getSpielerList() {
+		return spielerList;
+	}
+
 	public List<Spieler> spieler() {
 		return new ArrayList<>(spielerList);
 	}
@@ -132,10 +136,6 @@ public class Meldungen {
 				.toString();
 		// @formatter:on
 
-	}
-
-	public final Iterable<Spieler> getSpielerList() {
-		return spielerList;
 	}
 
 	public final void sortNachNummer() {

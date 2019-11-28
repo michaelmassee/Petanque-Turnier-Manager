@@ -359,8 +359,8 @@
 
 							<node oor:name="A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Supermêlée, generate Meldeliste with 90 Meldungen</value>
-									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 90 Meldungen</value>
+									<value xml:lang="en">Supermêlée, generate Meldeliste with 100 Meldungen</value>
+									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 100 Meldungen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.Turnier?meldeliste_testdaten</value>
