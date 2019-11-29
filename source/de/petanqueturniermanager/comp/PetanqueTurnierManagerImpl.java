@@ -42,6 +42,9 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Jobs
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration
 
+// Options Page, eigene Tab !
+// https://wiki.openoffice.org/wiki/Documentation/DevGuide/Extensions/Options_Dialog
+
 public final class PetanqueTurnierManagerImpl extends WeakBase implements XServiceInfo, XJobExecutor {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierManagerImpl.class);
 
