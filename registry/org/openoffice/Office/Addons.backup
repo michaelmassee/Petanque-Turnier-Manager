@@ -3,11 +3,9 @@
 	<node oor:name="AddonUI">
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
-		
-		<!--  oor:op="fuse" -->
 
 		<node oor:name="OfficeMenuBar">
-			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
 					<!-- Pétanque-Turnier-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
@@ -229,8 +227,99 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
 						</node>
 					</node>
+
+
+					<!-- ****************************************************************** -->
+					<!-- Formé -->
+					<node oor:name="A2" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="en">Formé</value>
+							<value xml:lang="de">Formé</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- name= bestimmt reihenfolge im menu -->
+							<!-- ****************************************************************** -->
+							<!-- Cadrage -->
+							<node oor:name="A2A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Cadrage</value>
+									<value xml:lang="de">Cadrage</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?cadrage</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<!-- koRundeAB -->
+							<node oor:name="A2A3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">KO Groups AB</value>
+									<value xml:lang="de">KO Gruppe AB</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?koRundeAB</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+						</node>
+					</node>
+
+					<!-- ****************************************************************** -->
+					<!-- Liga Jeder gegen Jede-->
+					<node oor:name="A3" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="en">Liga</value>
+							<value xml:lang="de">Liga</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- name= bestimmt reihenfolge im menu -->
+							<!-- ****************************************************************** -->
+							<!-- Cadrage -->
+							<node oor:name="A3A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">new Entrylist</value>
+									<value xml:lang="de">Neue Meldeliste</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_neue_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+						</node>
+					</node>
+
+					<!-- ****************************************************************** -->					
+					
 
 					<node oor:name="X1" oor:op="replace">
 						<prop oor:name="Title">
