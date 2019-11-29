@@ -18,18 +18,28 @@ import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 
 public class SpielrundeSheet_NaechsteTest {
 
 	private SpielrundeSheet_Naechste spielrundeSheet;
 	private WorkingSpreadsheet workingSpreadsheetMock;
+	MeldeListeSheet_New MeldeListeSheet_NewMock;
 	SheetHelper sheetHelperMock;
 
 	@Before
 	public void setup() {
 		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
+		MeldeListeSheet_NewMock = PowerMockito.mock(MeldeListeSheet_New.class);
 		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
+
+			@Override
+			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+				return MeldeListeSheet_NewMock;
+			}
+
 			@Override
 			public SpielTagNr getSpielTag() {
 				try {
