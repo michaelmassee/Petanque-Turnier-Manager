@@ -8,6 +8,11 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 ## Voraussetzungen
 
+
+<img align="right" src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/libreoffice-logo.png" alt="Logo" height="120">
+
+
+
 * Libreoffice ab Version 6
 * Java ab Version 8
 
