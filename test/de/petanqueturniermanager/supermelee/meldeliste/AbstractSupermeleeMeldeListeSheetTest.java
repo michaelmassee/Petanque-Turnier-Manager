@@ -25,6 +25,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class AbstractSupermeleeMeldeListeSheetTest {
@@ -35,6 +36,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
+	SupermeleeTeamPaarungenSheet supermeleeTeamPaarungenMock;
 
 	@Before
 	public void setup() {
@@ -42,8 +44,14 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
+		supermeleeTeamPaarungenMock = PowerMockito.mock(SupermeleeTeamPaarungenSheet.class);
 
 		meldeSheet = new AbstractSupermeleeMeldeListeSheet(workingSpreadsheetMock) {
+
+			@Override
+			SupermeleeTeamPaarungenSheet initSupermeleeTeamPaarungenSheet() {
+				return supermeleeTeamPaarungenMock;
+			}
 
 			@Override
 			protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {

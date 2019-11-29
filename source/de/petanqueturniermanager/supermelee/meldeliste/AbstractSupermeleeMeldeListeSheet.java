@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
@@ -88,8 +89,14 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
 		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
-		supermeleeTeamPaarungen = new SupermeleeTeamPaarungenSheet(workingSpreadsheet);
+		supermeleeTeamPaarungen = initSupermeleeTeamPaarungenSheet();
 		meldeListeHelper = new MeldeListeHelper(this);
+	}
+
+	@VisibleForTesting
+	SupermeleeTeamPaarungenSheet initSupermeleeTeamPaarungenSheet() {
+		return new SupermeleeTeamPaarungenSheet(getWorkingSpreadsheet());
+
 	}
 
 	/**
