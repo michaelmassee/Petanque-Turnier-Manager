@@ -33,8 +33,7 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<!-- Cadrage -->
-							<node oor:name="A3A1" oor:op="fuse">
+							<node oor:name="A3A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">new Entrylist</value>
 									<value xml:lang="de">Neue Meldeliste</value>
@@ -46,7 +45,37 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<node oor:name="A3A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Refresh Entrylist</value>
+									<value xml:lang="de">Meldeliste Aktualisieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_update_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 
+							<node oor:name="A3A3" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A3A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Liga Gameplan</value>
+									<value xml:lang="de">Liga Spielplan</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_spielplan</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

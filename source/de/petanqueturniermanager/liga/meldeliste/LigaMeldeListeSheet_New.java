@@ -22,7 +22,6 @@ public class LigaMeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().isDidCreate()) {
-			// getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
 			upDateSheet();
 		}
 	}

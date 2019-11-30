@@ -7,6 +7,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
@@ -55,12 +57,12 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 	}
 
 	/**
-	 * @param hexCharColor = ein hex wert ohne vorzeichen
+	 * @param hexCharColor = ein hex wert
 	 * @return
 	 */
 
 	public T setCharColor(String hexCharColor) {
-		return put(CHAR_COLOR, Integer.valueOf(hexCharColor, 16));
+		return put(CHAR_COLOR, Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
 	}
 
 	public T setCharHeight(int height) {
@@ -102,11 +104,11 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 	}
 
 	/**
-	 * @param hexCharColor = ein hex wert ohne vorzeichen
+	 * @param hexCharColor = ein hex wert
 	 * @return
 	 */
 	public T setCellBackColor(String hexCharColor) {
-		return put(CELL_BACK_COLOR, Integer.valueOf(hexCharColor, 16));
+		return put(CELL_BACK_COLOR, Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
 	}
 
 	public T removeCellBackColor() {

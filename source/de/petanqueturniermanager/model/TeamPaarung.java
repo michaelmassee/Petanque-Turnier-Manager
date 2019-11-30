@@ -12,7 +12,6 @@ import com.google.common.base.MoreObjects;
 
 /**
  * @author Michael Massee
- *
  */
 public class TeamPaarung {
 

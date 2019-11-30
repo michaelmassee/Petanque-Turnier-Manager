@@ -14,6 +14,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public abstract class LigaSheet extends SheetRunner {
 
+	protected static final int LIGA_MELDUNG_NAME_WIDTH = 10000;
+
 	private LigaKonfigurationSheet konfigurationSheet;
 
 	/**

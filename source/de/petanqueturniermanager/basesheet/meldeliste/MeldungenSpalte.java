@@ -47,7 +47,7 @@ public class MeldungenSpalte {
 	// private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
 
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
-	public static final int DEFAULT_SPIELER_NAME_WIDTH = 4000;
+	// public static final int DEFAULT_MELDUNG_NAME_WIDTH = 4000;
 	private static final String HEADER_SPIELER_NR = "Nr";
 	private static final String HEADER_SPIELER_NAME = "Name";
 	private final Formation formation;
@@ -55,18 +55,21 @@ public class MeldungenSpalte {
 	private final int meldungNrSpalte; // Spalte A=0, B=1
 	private final int meldungNameSpalte;
 	private final int anzZeilenInHeader; // weiviele Zeilen sollen in header verwendet werden
+	private final int spalteMeldungNameWidth;
 
 	private final WeakRefHelper<ISheet> sheet;
 
-	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader) {
+	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader, int spalteMeldungNameWidth) {
 		checkNotNull(iSheet);
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
 		checkArgument(anzZeilenInHeader > 0);
 		checkNotNull(formation);
+		checkArgument(spalteMeldungNameWidth > 1);
 
 		this.ersteDatenZiele = ersteDatenZiele;
 		this.anzZeilenInHeader = anzZeilenInHeader;
+		this.spalteMeldungNameWidth = spalteMeldungNameWidth;
 		meldungNrSpalte = spielerNrSpalte;
 		meldungNameSpalte = spielerNrSpalte + 1;
 		sheet = new WeakRefHelper<>(iSheet);
@@ -143,7 +146,7 @@ public class MeldungenSpalte {
 		getSheetHelper().setStringValueInCell(celVal); // spieler nr
 		// --------------------------------------------------------------------------------------------
 
-		celVal.addColumnProperties(columnProperties.setWidth(DEFAULT_SPIELER_NAME_WIDTH)).setComment(null).spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
+		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null).spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
@@ -352,10 +355,14 @@ public class MeldungenSpalte {
 	}
 
 	public static class Bldr {
+
+		private static final int DEFAULT_MELDUNG_NAME_WIDTH = 4000;
+
 		private Formation formation;
 		private int ersteDatenZiele;
 		private int spielerNrSpalte;
 		private int anzZeilenInHeader = 1; // default ein zeile
+		private int spalteMeldungNameWidth = DEFAULT_MELDUNG_NAME_WIDTH;
 
 		private ISheet iSheet;
 
@@ -379,13 +386,18 @@ public class MeldungenSpalte {
 			return this;
 		}
 
+		public Bldr spalteMeldungNameWidth(int spalteMeldungNameWidth) {
+			this.spalteMeldungNameWidth = spalteMeldungNameWidth;
+			return this;
+		}
+
 		public Bldr sheet(ISheet iSheet) {
 			this.iSheet = iSheet;
 			return this;
 		}
 
 		public MeldungenSpalte build() {
-			return new MeldungenSpalte(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader);
+			return new MeldungenSpalte(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader, spalteMeldungNameWidth);
 		}
 	}
 }

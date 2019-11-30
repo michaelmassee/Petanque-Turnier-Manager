@@ -21,6 +21,9 @@ import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlan;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -155,7 +158,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		case "neue_meldeliste":
 			new MeldeListeSheet_New(workingSpreadsheet).start();
 			break;
-		case "meldeliste":
+		case "update_meldeliste":
 			new MeldeListeSheet_Update(workingSpreadsheet).start();
 			break;
 		case "anmeldungen":
@@ -239,6 +242,18 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		case "liga_neue_meldeliste":
 			new LigaMeldeListeSheet_New(workingSpreadsheet).start();
 			break;
+		// ------------------------------
+		case "liga_update_meldeliste":
+			new LigaMeldeListeSheet_Update(workingSpreadsheet).start();
+			break;
+		// ------------------------------
+		case "liga_testdaten_meldeliste":
+			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet).start();
+			break;
+		case "liga_spielplan":
+			new LigaSpielPlan(workingSpreadsheet).start();
+			break;
+
 		default:
 			didHandle = false;
 		}

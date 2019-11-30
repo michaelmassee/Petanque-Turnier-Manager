@@ -17,4 +17,7 @@ public class DefaultSheetPos {
 	public static final short SUPERMELEE_WORK = 3; // Spielrunden, Spieltag rangliste, Anmeldungen, Teilnehmer, etc
 
 	public static final short MELEE_WORK = 3; // Spielrunden, Spieltag rangliste, Anmeldungen, Teilnehmer, etc
+
+	public static final short LIGA_WORK = 2; // Liga Spielplan
+
 }

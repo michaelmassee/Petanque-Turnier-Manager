@@ -53,7 +53,7 @@
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?meldeliste</value>
+									<value>service:de.petanqueturniermanager.Turnier?update_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -245,70 +245,6 @@
 						</prop>
 					</node>
 
-					<!-- Test Turniere -->
-					<!-- ****************************************************************** -->
-					<node oor:name="Y1" oor:op="replace">
-						<prop oor:name="URL" oor:type="xs:string">
-							<value>private:separator</value>
-						</prop>
-					</node>
-
-					<node oor:name="Y2" oor:op="replace">
-						<prop oor:name="URL" oor:type="xs:string">
-						</prop>
-						<prop oor:name="ImageIdentifier" oor:type="xs:string">
-							<value/>
-						</prop>
-						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="en">Examples</value>
-							<value xml:lang="de">Beispiel Turnierdaten</value>
-						</prop>
-						<prop oor:name="Target" oor:type="xs:string">
-							<value>_self</value>
-						</prop>
-						<node oor:name="Submenu">
-
-							<node oor:name="A1" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Supermêlée, generate Meldeliste with 100 Meldungen</value>
-									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 100 Meldungen</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?meldeliste_testdaten</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="A2" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Supermêlée, generate 1 Playday with 4 Rounds</value>
-									<value xml:lang="de">Supermêlée, generiere 1 Spieltag mit 4 Spielrunden</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?spielrunden_testdaten</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="A3" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Supermêlée, Generate 5 Complete Playdays</value>
-									<value xml:lang="de">Supermêlée, generiere 5 Komplette Spieltagen</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?SpieltagRanglisteSheet_TestDaten</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-						</node>
-					</node>
 					<!-- ****************************************************************** -->
 					<!-- CANCEL Any Threads running, Verarbeitung Abbruch -->
 					<node oor:name="Z1" oor:op="replace">
