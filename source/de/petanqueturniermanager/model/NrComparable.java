@@ -15,7 +15,7 @@ public abstract class NrComparable<T extends TurnierDaten> implements Comparable
 	final int nr;
 
 	public NrComparable(int nr) {
-		checkArgument(nr > 0, "Team Nr <1");
+		checkArgument(nr > 0, "Nr <1");
 		this.nr = nr;
 	}
 

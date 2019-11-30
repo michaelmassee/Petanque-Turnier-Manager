@@ -23,8 +23,6 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
-import de.petanqueturniermanager.helper.pagestyle.PageStyle;
-import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -45,18 +43,15 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
-		// new MeldungenSpalte(ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, this, this, Formation.TETE);
-		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.TETE).build();
+		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH).ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
+				.sheet(this).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper(this);
 	}
 
 	public void upDateSheet() throws GenerateException {
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
 		processBoxinfo("Aktualisiere Meldungen");
+		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
 		meldeListeHelper.testDoppelteMeldungen();
-
-		XSpreadsheet sheet = getXSpreadSheet();
-		getSheetHelper().setActiveSheet(sheet);
 
 		// ------
 		// Header einfuegen
@@ -71,6 +66,9 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
 		meldungenSpalte.formatDaten();
 		formatDaten();
+
+		// TurnierSystem
+		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
 	}
 
 	void formatDaten() throws GenerateException {

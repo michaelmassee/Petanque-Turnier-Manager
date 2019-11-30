@@ -252,12 +252,11 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	/**
-	 * @param hexCharColor = ein hex wert ohne vorzeichen
-	 * @return
+	 * @param hexCharColor = ein hex wert
 	 */
 	@SuppressWarnings("unchecked")
 	public T setCharColor(String hexCharColor) {
-		this.cellProperties.setCharColor(Integer.valueOf(hexCharColor, 16));
+		this.cellProperties.setCharColor(Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
 		return (T) this;
 	}
 
@@ -362,7 +361,7 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	/**
 	 * ist in inspector als Typ Long ? aber muss als int, sonnst iligalargument exception<br>
 	 * 27000 = 90 Grad
-	 * 
+	 *
 	 * @param angle
 	 * @return
 	 */

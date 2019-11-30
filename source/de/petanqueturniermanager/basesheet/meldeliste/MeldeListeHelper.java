@@ -264,7 +264,6 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 				meldeListe.getSheetHelper().setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
-
 		// spieler nach Alphabet sortieren
 		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true);
 	}
@@ -275,8 +274,9 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	 */
 	public void insertTurnierSystemInHeader(TurnierSystem turnierSystem) throws GenerateException {
 		// oben links
-		meldeListe.getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung())
-				.setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP));
+		meldeListe.getSheetHelper()
+				.setStringValueInCell(StringCellValue.from(getXSpreadSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung()).setEndPosMergeSpaltePlus(1)
+						.setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP).setShrinkToFit(true).setCharColor("00599d"));
 	}
 
 }
