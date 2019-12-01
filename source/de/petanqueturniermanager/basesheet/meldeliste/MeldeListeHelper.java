@@ -28,8 +28,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.Spieler;
-import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -37,7 +36,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public class MeldeListeHelper implements MeldeListeKonstanten {
+public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 
 	private final IMeldeliste meldeListe;
 
@@ -184,9 +183,10 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	 * @return
 	 * @throws GenerateException
 	 */
-	public SpielerMeldungen getMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
+
+	public IMeldungen<MLDTYPE> getMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt, IMeldungen<MLDTYPE> meldungen) throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
-		SpielerMeldungen meldung = new SpielerMeldungen();
+		checkNotNull(meldungen, "meldungen == null");
 
 		int letzteZeile = meldeListe.getMeldungenSpalte().getLetzteDatenZeile();
 
@@ -206,19 +206,11 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 				int isAktivStatus = meldungZeile.getLast().getIntVal(-1);
 				SpielrundeGespielt status = SpielrundeGespielt.findById(isAktivStatus);
 				if (spielrundeGespielt == null || spielrundeGespielt.contains(status)) {
-					int spielerNr = meldungZeile.get(0).getIntVal(-1);
-					if (spielerNr > 0) {
-						Spieler spieler = Spieler.from(spielerNr);
-						int nichtzusammen = meldungZeile.get(2).getIntVal(-1);
-						if (nichtzusammen > 0) {
-							spieler.setSetzPos(nichtzusammen);
-						}
-						meldung.addSpielerWennNichtVorhanden(spieler);
-					}
+					meldungen.addNewWennNichtVorhanden(meldungZeile);
 				}
 			}
 		}
-		return meldung;
+		return meldungen;
 	}
 
 	public int setzPositionSpalte() {
