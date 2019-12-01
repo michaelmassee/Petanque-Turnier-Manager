@@ -10,20 +10,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 
-public class Team implements Comparable<Team> {
-	private final int nr;
+public class Team extends NrComparable implements IMeldung {
 	private final ArrayList<Spieler> spielerList;
 	private final HashSet<Integer> gegner = new HashSet<>();
 
 	public Team(int nr) {
-		checkArgument(nr > 0, "Team Nr <1");
-		this.nr = nr;
+		super(nr);
 		spielerList = new ArrayList<>();
 	}
 
@@ -49,10 +46,6 @@ public class Team implements Comparable<Team> {
 			return false;
 		}
 		return gegner.contains(team.getNr());
-	}
-
-	public int getNr() {
-		return nr;
 	}
 
 	public Team addSpielerWennNichtVorhanden(List<Spieler> spielerlist) throws AlgorithmenException {
@@ -149,39 +142,6 @@ public class Team implements Comparable<Team> {
 			}
 		}
 		return hatzusammenGespielt;
-	}
-
-	@Override
-	public int compareTo(Team team) {
-		if (team == null) {
-			return 1;
-		}
-		if (team.getNr() < getNr()) {
-			return 1;
-		}
-		if (team.getNr() > getNr()) {
-			return -1;
-		}
-		return 0;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof Team)) {
-			return false;
-		}
-		return getNr() == ((Team) obj).getNr();
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(nr);
 	}
 
 	@Override

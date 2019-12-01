@@ -26,7 +26,6 @@ public class JederGegenJeden {
 	// https://nrich.maths.org/1443
 	// https://www-i1.informatik.rwth-aachen.de/~algorithmus/algo36.php
 
-	// TODO umstellen auf Meldungen
 	private final List<Meldung> meldungen;
 	private final boolean freiSpiel;
 	private final int anzMeldungen;

@@ -11,7 +11,7 @@ import java.util.Objects;
 *
 */
 
-public abstract class NrComparable<T extends TurnierDaten> implements Comparable<T> {
+public abstract class NrComparable implements Comparable<NrComparable> {
 	final int nr;
 
 	public NrComparable(int nr) {
@@ -19,34 +19,43 @@ public abstract class NrComparable<T extends TurnierDaten> implements Comparable
 		this.nr = nr;
 	}
 
-	public int getNr() {
+	public final int getNr() {
 		return nr;
 	}
 
 	@Override
-	public int compareTo(T turnierDaten) {
-		if (turnierDaten.getNr() < getNr()) {
+	public final int compareTo(NrComparable nrComparable) {
+
+		if (nrComparable == null) {
 			return 1;
 		}
-		if (turnierDaten.getNr() > getNr()) {
+
+		if (nrComparable.getNr() < getNr()) {
+			return 1;
+		}
+		if (nrComparable.getNr() > getNr()) {
 			return -1;
 		}
 		return 0;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public final boolean equals(Object obj) {
+		if (obj == null) {
+			return false;
+		}
+
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof TurnierDaten)) {
+		if (!(obj instanceof NrComparable)) {
 			return false;
 		}
-		return getNr() == ((TurnierDaten) obj).getNr();
+		return getNr() == ((NrComparable) obj).getNr();
 	}
 
 	@Override
-	public int hashCode() {
+	public final int hashCode() {
 		return Objects.hash(nr);
 	}
 }
