@@ -16,7 +16,7 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -69,7 +69,7 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 			}
 		}
 
-		Meldungen alleMeldungen = meldeliste.getAlleMeldungen();
+		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
 		processBoxinfo("Meldungen " + alleMeldungen.size());
 		processBoxinfo("Spielrunden " + spielrunden.size());
 
@@ -83,7 +83,7 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 	 * @throws GenerateException
 	 */
 
-	private void validateDoppelteTeams(Meldungen alleMeldungen, List<Spielrunde> spielrunden) throws GenerateException {
+	private void validateDoppelteTeams(SpielerMeldungen alleMeldungen, List<Spielrunde> spielrunden) throws GenerateException {
 		int fehlerCntr = 0;
 		int spielrundeCntr = 0;
 		for (Spielrunde spielrunde : spielrunden) {

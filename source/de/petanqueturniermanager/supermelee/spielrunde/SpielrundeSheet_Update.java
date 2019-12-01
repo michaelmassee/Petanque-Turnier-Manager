@@ -13,7 +13,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -36,7 +36,7 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
-		Meldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
+		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(aktiveMeldungen)) {
 			return;

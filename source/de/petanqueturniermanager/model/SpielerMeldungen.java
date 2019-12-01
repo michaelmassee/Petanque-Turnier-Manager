@@ -19,15 +19,15 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 *
 */
 
-public class Meldungen {
+public class SpielerMeldungen {
 
 	private final ArrayList<Spieler> spielerList;
 
-	public Meldungen() {
+	public SpielerMeldungen() {
 		spielerList = new ArrayList<>();
 	}
 
-	public Meldungen addSpielerWennNichtVorhanden(List<Spieler> spielerlist) {
+	public SpielerMeldungen addSpielerWennNichtVorhanden(List<Spieler> spielerlist) {
 		checkNotNull(spielerlist, "spielerlist == null");
 		checkArgument(!spielerlist.isEmpty(), "spielerlist ist leer");
 
@@ -37,7 +37,7 @@ public class Meldungen {
 		return this;
 	}
 
-	public Meldungen addSpielerWennNichtVorhanden(Spieler spieler) {
+	public SpielerMeldungen addSpielerWennNichtVorhanden(Spieler spieler) {
 		checkNotNull(spieler, "spieler == null");
 
 		if (!spielerList.contains(spieler)) {
@@ -49,7 +49,7 @@ public class Meldungen {
 	/**
 	 * Liste der Spieler nach links verschieben
 	 */
-	public Meldungen shifLeft() {
+	public SpielerMeldungen shifLeft() {
 		Collections.rotate(spielerList, -1);
 		return this;
 	}
@@ -57,7 +57,7 @@ public class Meldungen {
 	/**
 	 * Liste der Spieler mischen
 	 */
-	public Meldungen shuffle() {
+	public SpielerMeldungen shuffle() {
 		Collections.shuffle(spielerList);
 		return this;
 	}
@@ -75,7 +75,7 @@ public class Meldungen {
 	 *
 	 * @throws AlgorithmenException
 	 */
-	public Meldungen resetTeam() throws AlgorithmenException {
+	public SpielerMeldungen resetTeam() throws AlgorithmenException {
 		for (Spieler spielerausList : spielerList) {
 			spielerausList.deleteTeam();
 		}
@@ -92,7 +92,7 @@ public class Meldungen {
 		return spielerOhneTeam;
 	}
 
-	public Meldungen removeSpieler(Spieler spieler) {
+	public SpielerMeldungen removeSpieler(Spieler spieler) {
 		spielerList.remove(spieler);
 		return this;
 	}

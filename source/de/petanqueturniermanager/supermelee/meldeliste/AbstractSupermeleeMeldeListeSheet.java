@@ -42,7 +42,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
@@ -693,22 +693,22 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	}
 
 	@Override
-	public Meldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
+	public SpielerMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	@Override
-	public Meldungen getAktiveMeldungen() throws GenerateException {
+	public SpielerMeldungen getAktiveMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	@Override
-	public Meldungen getInAktiveMeldungen() throws GenerateException {
+	public SpielerMeldungen getInAktiveMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
 	}
 
 	@Override
-	public Meldungen getAlleMeldungen() throws GenerateException {
+	public SpielerMeldungen getAlleMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(getSpielTag(), null);
 	}
 

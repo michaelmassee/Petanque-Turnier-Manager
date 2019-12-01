@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.liga.spielplan;
 
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,7 +19,8 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.meldeliste.AbstractLigaMeldeListeSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 
@@ -59,12 +62,14 @@ public class LigaSpielPlanSheet extends SuperMeleeSheet implements ISheet {
 		generate(meldeListe.getAlleMeldungen());
 	}
 
-	public void generate(Meldungen meldungen) {
+	public void generate(SpielerMeldungen meldungen) {
 		processBoxinfo("Neue Liga SpielPlan");
 		if (!NewSheet.from(getWorkingSpreadsheet(), SHEET_NAMEN).pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
+
+		List<Spieler> spieler = meldungen.spieler();
 
 		// new LigaSpielPlan(meldungen);
 

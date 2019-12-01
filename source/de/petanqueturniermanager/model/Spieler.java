@@ -14,7 +14,7 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 * Erstellung     : 31.08.2017 / massee
 *
 */
-public class Spieler extends NrComparable implements IMeldung {
+public class Spieler extends NrComparable {
 	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private final HashSet<Integer> gegner = new HashSet<>();

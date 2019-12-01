@@ -22,7 +22,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -64,7 +64,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 	public void spielerAufAktivInaktivMischen(SpielTagNr spielTagNr) throws GenerateException {
 		meldeListe.setSpielTag(spielTagNr);
 
-		Meldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = meldeListe.getAktiveUndAusgesetztMeldungen();
+		SpielerMeldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
 		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));

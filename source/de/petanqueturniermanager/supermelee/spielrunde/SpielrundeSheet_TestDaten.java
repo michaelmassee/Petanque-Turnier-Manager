@@ -16,7 +16,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
@@ -91,7 +91,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 				meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen(getSpielTag());
 			}
 
-			Meldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
+			SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 			naechsteSpielrundeSheet.gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), spielrundeNr - 1);
 			neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(spielrundeNr), true);
 

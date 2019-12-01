@@ -26,7 +26,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -96,7 +96,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		generate(meldeListe.getAktiveMeldungen());
 	}
 
-	public void generate(Meldungen meldungen) throws GenerateException {
+	public void generate(SpielerMeldungen meldungen) throws GenerateException {
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		setSpielRundeNr(getKonfigurationSheet().getAktiveSpielRunde());
 

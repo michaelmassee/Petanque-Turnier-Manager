@@ -4,30 +4,23 @@
 
 package de.petanqueturniermanager.supermelee;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.MoreObjects;
 
-import de.petanqueturniermanager.exception.GenerateException;
-
 public class SpielTagNr {
-	private int nr;
+	private final int nr;
 
-	public SpielTagNr(int newNr) throws GenerateException {
-		setNr(newNr);
+	public SpielTagNr(int newNr) {
+		checkArgument(newNr > -1);
+		nr = newNr;
 	}
 
 	public int getNr() {
 		return nr;
 	}
 
-	public SpielTagNr setNr(int newNr) throws GenerateException {
-		if (newNr < 1) {
-			throw new GenerateException("Ungültige Spieltagnummer" + newNr);
-		}
-		nr = newNr;
-		return this;
-	}
-
-	public static SpielTagNr from(int i) throws GenerateException {
+	public static SpielTagNr from(int i) {
 		return new SpielTagNr(i);
 	}
 

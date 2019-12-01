@@ -28,7 +28,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste {
@@ -140,7 +140,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
-	public Meldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
+	public SpielerMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
@@ -150,17 +150,17 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
-	public Meldungen getAktiveMeldungen() throws GenerateException {
+	public SpielerMeldungen getAktiveMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	@Override
-	public Meldungen getInAktiveMeldungen() throws GenerateException {
+	public SpielerMeldungen getInAktiveMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
 	}
 
 	@Override
-	public Meldungen getAlleMeldungen() throws GenerateException {
+	public SpielerMeldungen getAlleMeldungen() throws GenerateException {
 		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), null);
 	}
 

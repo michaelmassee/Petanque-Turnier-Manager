@@ -14,8 +14,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
@@ -42,11 +42,7 @@ public class SpielrundeSheet_NaechsteTest {
 
 			@Override
 			public SpielTagNr getSpielTag() {
-				try {
-					return SpielTagNr.from(1);
-				} catch (GenerateException e) {
-					throw new RuntimeException(e);
-				}
+				return SpielTagNr.from(1);
 			}
 
 			@Override
@@ -84,7 +80,7 @@ public class SpielrundeSheet_NaechsteTest {
 		}
 		PowerMockito.when(sheetHelperMock.findByName(spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1)))).thenReturn(spielTag1Runde1Mock);
 
-		Meldungen meldungen = new Meldungen();
+		SpielerMeldungen meldungen = new SpielerMeldungen();
 		for (idx = 0; idx < spielerNr.length; idx++) {
 			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielerNr[idx]));
 		}
@@ -101,7 +97,7 @@ public class SpielrundeSheet_NaechsteTest {
 		validateSpieler(meldungen, 9, 12, 6);
 	}
 
-	private void validateSpieler(Meldungen meldungen, int nr, int warimTeammitA, int warimTeammitB) {
+	private void validateSpieler(SpielerMeldungen meldungen, int nr, int warimTeammitA, int warimTeammitB) {
 		assertThat(meldungen.findSpielerByNr(nr)).isNotNull();
 		assertThat(meldungen.findSpielerByNr(nr)).isEqualTo(Spieler.from(nr));
 		assertThat(meldungen.findSpielerByNr(nr).anzahlMitSpieler()).isEqualTo(2);

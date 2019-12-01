@@ -4,35 +4,23 @@
 
 package de.petanqueturniermanager.supermelee;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.MoreObjects;
 
-import de.petanqueturniermanager.exception.GenerateException;
-
 public class SpielRundeNr {
-	private int nr;
+	private final int nr;
 
-	public SpielRundeNr(int newNr) throws GenerateException {
-		setNr(newNr);
+	public SpielRundeNr(int newNr) {
+		checkArgument(newNr > -1);
+		nr = newNr;
 	}
 
 	public int getNr() {
 		return nr;
 	}
 
-	public SpielRundeNr setNr(int newNr) throws GenerateException {
-		if (newNr < 1) {
-			throw new GenerateException("Ungültige Spielrundenummer" + newNr);
-		}
-		nr = newNr;
-		return this;
-	}
-
-	public SpielRundeNr minus(int anzahl) throws GenerateException {
-		setNr(getNr() - anzahl);
-		return this;
-	}
-
-	public static SpielRundeNr from(int i) throws GenerateException {
+	public static SpielRundeNr from(int i) {
 		return new SpielRundeNr(i);
 	}
 

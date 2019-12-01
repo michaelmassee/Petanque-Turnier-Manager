@@ -28,8 +28,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.Meldungen;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -184,9 +184,9 @@ public class MeldeListeHelper implements MeldeListeKonstanten {
 	 * @return
 	 * @throws GenerateException
 	 */
-	public Meldungen getMeldungen(SpielTagNr spieltag, List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
+	public SpielerMeldungen getMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
-		Meldungen meldung = new Meldungen();
+		SpielerMeldungen meldung = new SpielerMeldungen();
 
 		int letzteZeile = meldeListe.getMeldungenSpalte().getLetzteDatenZeile();
 

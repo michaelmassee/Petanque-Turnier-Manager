@@ -14,13 +14,13 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MeldungenTest {
+public class SpielerMeldungenTest {
 
-	Meldungen meldungen;
+	SpielerMeldungen meldungen;
 
 	@Before
 	public void setup() {
-		meldungen = new Meldungen();
+		meldungen = new SpielerMeldungen();
 	}
 
 	@Test

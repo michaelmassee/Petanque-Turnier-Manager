@@ -11,7 +11,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
@@ -30,7 +30,7 @@ public class SuperMeleePaarungen {
 	private static int DUMMY_SPIELER_START_NR = 10000;
 	private static int DUMMY_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
 
-	public MeleeSpielRunde neueSpielrunde(int rndNr, Meldungen meldungen) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrunde(int rndNr, SpielerMeldungen meldungen) throws AlgorithmenException {
 		return neueSpielrundeTripletteMode(rndNr, meldungen, false);
 	}
 
@@ -43,7 +43,7 @@ public class SuperMeleePaarungen {
 	 * @return
 	 * @throws AlgorithmenException
 	 */
-	public MeleeSpielRunde neueSpielrundeDoubletteMode(int rndNr, Meldungen meldungen, boolean nurTriplette) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrundeDoubletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurTriplette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Doublette);
 
@@ -88,7 +88,7 @@ public class SuperMeleePaarungen {
 	 * @throws AlgorithmenException
 	 */
 
-	public MeleeSpielRunde neueSpielrundeTripletteMode(int rndNr, Meldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
+	public MeleeSpielRunde neueSpielrundeTripletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
 		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Triplette);
@@ -133,7 +133,7 @@ public class SuperMeleePaarungen {
 	 * @throws AlgorithmenException
 	 */
 	@VisibleForTesting
-	MeleeSpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, Meldungen meldungen) throws AlgorithmenException {
+	MeleeSpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, SpielerMeldungen meldungen) throws AlgorithmenException {
 
 		MeleeSpielRunde spielrunde = null;
 		// Team nextTeam;
@@ -167,7 +167,7 @@ public class SuperMeleePaarungen {
 		return spielrunde;
 	}
 
-	public Team findNextTeamInSpielrunde(int teamSize, Meldungen meldungen, MeleeSpielRunde spielrunde) throws AlgorithmenException {
+	public Team findNextTeamInSpielrunde(int teamSize, SpielerMeldungen meldungen, MeleeSpielRunde spielrunde) throws AlgorithmenException {
 
 		checkNotNull(meldungen);
 		checkNotNull(spielrunde);
@@ -196,7 +196,7 @@ public class SuperMeleePaarungen {
 		return newTeamInRunde;
 	}
 
-	private void teamAuffuellen(int teamSize, Meldungen meldungen, MeleeSpielRunde spielrunde, Team newTeamInRunde) throws AlgorithmenException {
+	private void teamAuffuellen(int teamSize, SpielerMeldungen meldungen, MeleeSpielRunde spielrunde, Team newTeamInRunde) throws AlgorithmenException {
 		boolean konnteTauschen = true;
 		while (newTeamInRunde.size() != teamSize && meldungen.spielerOhneTeam().size() > 0 && konnteTauschen) {
 			// team noch nicht vollständig, versuche zu tauschen mit ein Spieler
