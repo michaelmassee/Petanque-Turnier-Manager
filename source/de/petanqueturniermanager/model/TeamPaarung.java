@@ -25,7 +25,11 @@ public class TeamPaarung {
 	 * @param b
 	 */
 	public TeamPaarung(Team a, Team b) {
-		this(a, Optional.of(b));
+		this(checkNotNull(a), (b == null) ? Optional.empty() : Optional.of(b));
+	}
+
+	public TeamPaarung(Team a) {
+		this(checkNotNull(a), Optional.empty());
 	}
 
 	public TeamPaarung(Team a, Optional<Team> b) {
@@ -64,7 +68,7 @@ public class TeamPaarung {
 
 	@Override
 	public int hashCode() {
-		return a.hashCode() + b.get().hashCode();
+		return a.hashCode() + (b.isPresent() ? b.get().hashCode() : 0);
 	}
 
 	@Override
@@ -79,7 +83,18 @@ public class TeamPaarung {
 			return false;
 		}
 		TeamPaarung teamPaarung = (TeamPaarung) obj;
-		return getA().equals(teamPaarung.getA()) && b.get().equals(teamPaarung.getB());
+		return getA().equals(teamPaarung.getA()) && bEquals(teamPaarung);
+	}
+
+	private boolean bEquals(TeamPaarung teamPaarung) {
+		if (b.isPresent() && teamPaarung.getOptionalB().isPresent()) {
+			return b.get().equals(teamPaarung.getOptionalB().get());
+		}
+
+		if (!b.isPresent() && !teamPaarung.getOptionalB().isPresent()) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -88,7 +103,7 @@ public class TeamPaarung {
 		String teamsStr = "[";
 		teamsStr += a.toString();
 		teamsStr += ",";
-		teamsStr += b.get().toString();
+		teamsStr += (b.isPresent()) ? b.get().toString() : null;
 		teamsStr += "]";
 
 		// @formatter:off

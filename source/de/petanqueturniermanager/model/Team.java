@@ -28,7 +28,7 @@ public class Team implements Comparable<Team> {
 	}
 
 	/**
-	 * Teams gegenseitig als gegen eintragen wenn nicht vorhanden
+	 * Teams gegenseitig als gegner eintragen wenn nicht vorhanden
 	 *
 	 * @param team
 	 * @return
