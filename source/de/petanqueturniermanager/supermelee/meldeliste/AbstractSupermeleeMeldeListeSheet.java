@@ -83,14 +83,14 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	private final MeldungenSpalte meldungenSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
-	private final MeldeListeHelper meldeListeHelper;
+	private final MeldeListeHelper<SpielerMeldungen> meldeListeHelper;
 	private SpielTagNr spielTag = null;
 
 	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
 		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
 		supermeleeTeamPaarungen = initSupermeleeTeamPaarungenSheet();
-		meldeListeHelper = new MeldeListeHelper(this);
+		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
 	@VisibleForTesting
@@ -694,22 +694,26 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	@Override
 	public SpielerMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+		return meldeListeHelperGetMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	@Override
 	public SpielerMeldungen getAktiveMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
+		return meldeListeHelperGetMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	@Override
 	public SpielerMeldungen getInAktiveMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
+		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
 	}
 
 	@Override
 	public SpielerMeldungen getAlleMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(getSpielTag(), null);
+		return meldeListeHelperGetMeldungen(getSpielTag(), null);
+	}
+
+	private SpielerMeldungen meldeListeHelperGetMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
+		return (SpielerMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt, new SpielerMeldungen());
 	}
 
 	public int getSpielerNameErsteSpalte() {

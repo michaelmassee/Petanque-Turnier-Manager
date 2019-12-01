@@ -11,6 +11,7 @@ import java.util.List;
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /*
 * Meldungen.java
@@ -19,12 +20,26 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 *
 */
 
-public class SpielerMeldungen {
+public class SpielerMeldungen implements IMeldungen<SpielerMeldungen> {
 
 	private final ArrayList<Spieler> spielerList;
 
 	public SpielerMeldungen() {
 		spielerList = new ArrayList<>();
+	}
+
+	@Override
+	public SpielerMeldungen addNewWennNichtVorhanden(RowData meldungZeile) {
+		int spielerNr = meldungZeile.get(0).getIntVal(-1);
+		if (spielerNr > 0) {
+			Spieler spieler = Spieler.from(spielerNr);
+			int nichtzusammen = meldungZeile.get(2).getIntVal(-1);
+			if (nichtzusammen > 0) {
+				spieler.setSetzPos(nichtzusammen);
+			}
+			this.addSpielerWennNichtVorhanden(spieler);
+		}
+		return this;
 	}
 
 	public SpielerMeldungen addSpielerWennNichtVorhanden(List<Spieler> spielerlist) {

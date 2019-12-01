@@ -36,7 +36,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 16; // Tablle immer mit min anzahl von zeilen formatieren
 
 	private final MeldungenSpalte meldungenSpalte;
-	private final MeldeListeHelper meldeListeHelper;
+	private final MeldeListeHelper<SpielerMeldungen> meldeListeHelper;
 
 	/**
 	 * @param workingSpreadsheet
@@ -45,7 +45,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		super(workingSpreadsheet, "Meldeliste");
 		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH).ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
 				.sheet(this).formation(Formation.TETE).build();
-		meldeListeHelper = new MeldeListeHelper(this);
+		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
 	public void upDateSheet() throws GenerateException {
@@ -141,7 +141,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public SpielerMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+		return (SpielerMeldungen) meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT), new SpielerMeldungen());
 	}
 
 	@Override
@@ -151,17 +151,21 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public SpielerMeldungen getAktiveMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA));
+		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA));
 	}
 
 	@Override
 	public SpielerMeldungen getInAktiveMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
+		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
 	}
 
 	@Override
 	public SpielerMeldungen getAlleMeldungen() throws GenerateException {
-		return meldeListeHelper.getMeldungen(SpielTagNr.from(1), null);
+		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), null);
+	}
+
+	private SpielerMeldungen meldeListeHelperGetMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
+		return (SpielerMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt, new SpielerMeldungen());
 	}
 
 	@Override
