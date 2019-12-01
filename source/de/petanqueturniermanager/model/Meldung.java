@@ -7,7 +7,7 @@ package de.petanqueturniermanager.model;
  * @author Michael Massee
  *
  */
-public class Meldung extends NrComparable<Meldung> implements TurnierDaten {
+public class Meldung extends NrComparable {
 
 	// entweder ein Spieler oder Team
 

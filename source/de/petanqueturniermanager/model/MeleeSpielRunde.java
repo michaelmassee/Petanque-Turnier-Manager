@@ -15,27 +15,27 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 * Erstellung     : 07.09.2017 / Michael Massee
 *
 */
-public class MeleeSpielRunde extends NrComparable<MeleeSpielRunde> implements TurnierDaten {
+public class MeleeSpielRunde extends NrComparable {
 	private final ArrayList<Team> teams;
 
 	public MeleeSpielRunde(int nr) {
 		super(nr);
-		this.teams = new ArrayList<>();
+		teams = new ArrayList<>();
 	}
 
 	public List<Team> teams() {
-		return new ArrayList<>(this.teams);
+		return new ArrayList<>(teams);
 	}
 
 	public Team newTeam() throws AlgorithmenException {
-		Team newTeam = new Team(this.teams.size() + 1);
+		Team newTeam = new Team(teams.size() + 1);
 		addTeamWennNichtVorhanden(newTeam);
 		return newTeam;
 	}
 
 	public void validateSpielerTeam(Team newTeam) throws AlgorithmenException {
 		HashSet<Integer> spielrNrSet = new HashSet<>();
-		for (Team team : this.teams) {
+		for (Team team : teams) {
 			for (Spieler spieler : team.spieler()) {
 				int spielrNr = spieler.getNr();
 				if (spielrNrSet.contains(spielrNr)) {
@@ -65,30 +65,30 @@ public class MeleeSpielRunde extends NrComparable<MeleeSpielRunde> implements Tu
 	}
 
 	public MeleeSpielRunde addTeamWennNichtVorhanden(Team team) throws AlgorithmenException {
-		if (!this.teams.contains(team)) {
+		if (!teams.contains(team)) {
 			validateSpielerTeam(team);
-			this.teams.add(team);
+			teams.add(team);
 		}
 		return this;
 	}
 
 	public MeleeSpielRunde deleteAllTeams() throws AlgorithmenException {
-		for (Team team : this.teams) {
+		for (Team team : teams) {
 			team.removeAlleSpieler();
 		}
-		this.teams.clear();
+		teams.clear();
 		return this;
 	}
 
 	public MeleeSpielRunde removeSpieler(Spieler spieler) throws AlgorithmenException {
-		for (Team team : this.teams) {
+		for (Team team : teams) {
 			team.removeSpieler(spieler);
 		}
 		return this;
 	}
 
 	public MeleeSpielRunde sortiereTeamsNachGroese() {
-		this.teams.sort(new Comparator<Team>() {
+		teams.sort(new Comparator<Team>() {
 			@Override
 			public int compare(Team o1, Team o2) {
 				if (o1.size() < o2.size())
@@ -96,7 +96,7 @@ public class MeleeSpielRunde extends NrComparable<MeleeSpielRunde> implements Tu
 				if (o1.size() > o2.size())
 					return 1;
 				return 0;
-			};
+			}
 		});
 		return this;
 	}
@@ -105,7 +105,7 @@ public class MeleeSpielRunde extends NrComparable<MeleeSpielRunde> implements Tu
 	public String toString() {
 
 		String teamsStr = "[";
-		for (Team team : this.teams) {
+		for (Team team : teams) {
 			if (teamsStr.length() > 1) {
 				teamsStr += ",";
 			}
@@ -115,7 +115,7 @@ public class MeleeSpielRunde extends NrComparable<MeleeSpielRunde> implements Tu
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
-				.add("Nr", this.nr)
+				.add("Nr", nr)
 				.add("Teams", teamsStr)
 				.toString();
 		// @formatter:on

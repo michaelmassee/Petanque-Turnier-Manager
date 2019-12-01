@@ -1,11 +1,9 @@
 package de.petanqueturniermanager.model;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
-import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 
@@ -16,17 +14,15 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 * Erstellung     : 31.08.2017 / massee
 *
 */
-public class Spieler implements Comparable<Spieler> {
+public class Spieler extends NrComparable implements IMeldung {
 	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team
-	private final int nr;
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private final HashSet<Integer> gegner = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
 	private boolean istInTeam = false;
 
 	private Spieler(int nr) {
-		checkArgument(nr > 0, "spieler nr <1, %d", nr);
-		this.nr = nr;
+		super(nr);
 	}
 
 	public int anzahlMitSpieler() {
@@ -111,45 +107,6 @@ public class Spieler implements Comparable<Spieler> {
 		checkNotNull(spieler, "spieler == null");
 		warImTeamMit.remove(spieler.getNr());
 		return this;
-	}
-
-	public int getNr() {
-		return nr;
-	}
-
-	@Override
-	public int compareTo(Spieler spieler) {
-		if (spieler == null) {
-			return 1;
-		}
-
-		if (spieler.getNr() < getNr()) {
-			return 1;
-		}
-		if (spieler.getNr() > getNr()) {
-			return -1;
-		}
-		return 0;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-
-		if (obj == this) {
-			return true;
-		}
-		if (!(obj instanceof Spieler)) {
-			return false;
-		}
-		return getNr() == ((Spieler) obj).getNr();
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(getNr());
 	}
 
 	@Override

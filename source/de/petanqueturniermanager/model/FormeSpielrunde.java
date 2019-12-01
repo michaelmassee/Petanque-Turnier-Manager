@@ -16,7 +16,7 @@ import com.google.common.collect.ImmutableList;
  * @author Michael Massee
  *
  */
-public class FormeSpielrunde extends NrComparable<FormeSpielrunde> implements TurnierDaten {
+public class FormeSpielrunde extends NrComparable {
 
 	final private ArrayList<TeamPaarung> teamPaarungen = new ArrayList<>();
 

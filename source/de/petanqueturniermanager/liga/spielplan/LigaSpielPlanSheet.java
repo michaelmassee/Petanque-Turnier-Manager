@@ -25,7 +25,7 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
  * @author Michael Massee
  *
  */
-public class LigaSpielPlan extends SuperMeleeSheet implements ISheet {
+public class LigaSpielPlanSheet extends SuperMeleeSheet implements ISheet {
 
 	private static final Logger LOGGER = LogManager.getLogger(SpielrundePlan.class);
 	private static final String SHEET_COLOR = "b0f442";
@@ -34,7 +34,7 @@ public class LigaSpielPlan extends SuperMeleeSheet implements ISheet {
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public LigaSpielPlan(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaSpielPlanSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 	}
 
@@ -65,6 +65,9 @@ public class LigaSpielPlan extends SuperMeleeSheet implements ISheet {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
+
+		// new LigaSpielPlan(meldungen);
+
 	}
 
 }

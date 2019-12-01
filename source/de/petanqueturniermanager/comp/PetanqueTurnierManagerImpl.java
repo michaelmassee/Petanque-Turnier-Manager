@@ -23,7 +23,7 @@ import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
-import de.petanqueturniermanager.liga.spielplan.LigaSpielPlan;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -251,7 +251,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet).start();
 			break;
 		case "liga_spielplan":
-			new LigaSpielPlan(workingSpreadsheet).start();
+			new LigaSpielPlanSheet(workingSpreadsheet).start();
 			break;
 
 		default:
