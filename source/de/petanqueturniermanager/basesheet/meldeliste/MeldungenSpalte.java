@@ -36,7 +36,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 
 public class MeldungenSpalte {
 
@@ -223,7 +223,7 @@ public class MeldungenSpalte {
 	public void alleSpieltagSpielerAusmeldelisteEinfuegen(IMeldeliste meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		// spieler einfuegen wenn nicht vorhanden
-		Meldungen meldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
+		SpielerMeldungen meldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 		HashSet<Integer> spielerNummerList = new HashSet<>();
 		meldungen.spieler().forEach((spieler) -> {
 			spielerNummerList.add(spieler.getNr());

@@ -33,7 +33,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
@@ -81,7 +81,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
 
 		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". Meldungen einlesen");
-		Meldungen alleMeldungen = meldeliste.getAlleMeldungen();
+		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
 		filleBereichNew(alleMeldungen);
 
 	}
@@ -92,7 +92,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 	 * @param alleMeldungen
 	 * @throws GenerateException
 	 */
-	private void filleBereichNew(Meldungen alleMeldungen) throws GenerateException {
+	private void filleBereichNew(SpielerMeldungen alleMeldungen) throws GenerateException {
 
 		if (alleMeldungen.size() < 1) {
 			processBoxinfo("Keine Meldungen vorhanden !");

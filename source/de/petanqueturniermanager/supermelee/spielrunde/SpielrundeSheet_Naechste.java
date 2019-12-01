@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
@@ -36,7 +36,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
-		Meldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
+		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(aktiveMeldungen)) {
 			return;

@@ -61,7 +61,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.SpielrundeInfoKonfigDialog;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
@@ -129,7 +129,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
 	}
 
-	protected final boolean canStart(Meldungen meldungen) throws GenerateException {
+	protected final boolean canStart(SpielerMeldungen meldungen) throws GenerateException {
 		if (getSpielRundeNr().getNr() < 1) {
 			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 
@@ -544,11 +544,11 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		getSheetHelper().setFormulaInCell(val);
 	}
 
-	protected void neueSpielrunde(Meldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
+	protected void neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
 		neueSpielrunde(meldungen, neueSpielrundeNr, false);
 	}
 
-	protected void neueSpielrunde(Meldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force) throws GenerateException {
+	protected void neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force) throws GenerateException {
 		processBoxinfo("Neue Spielrunde " + neueSpielrundeNr.getNr() + " für Spieltag " + getSpielTag().getNr());
 		processBoxinfo(meldungen.size() + " Meldungen");
 
@@ -795,7 +795,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 * @param abSpielrunde ab diese spielrunde = default = 1
 	 * @throws GenerateException
 	 */
-	protected void gespieltenRundenEinlesen(Meldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde) throws GenerateException {
+	protected void gespieltenRundenEinlesen(SpielerMeldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde) throws GenerateException {
 		SpielTagNr aktuelleSpielTag = getSpielTag();
 
 		Integer maxAnzGespielteSpieltage = getAnzGespielteSpieltage();
@@ -822,7 +822,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 * @throws GenerateException
 	 */
 
-	protected void gespieltenRundenEinlesen(Meldungen aktiveMeldungen, SpielTagNr spielTagNr, int abSpielrunde, int bisSpielrunde) throws GenerateException {
+	protected void gespieltenRundenEinlesen(SpielerMeldungen aktiveMeldungen, SpielTagNr spielTagNr, int abSpielrunde, int bisSpielrunde) throws GenerateException {
 		int spielrunde = 1;
 
 		if (bisSpielrunde < abSpielrunde || bisSpielrunde < 1) {

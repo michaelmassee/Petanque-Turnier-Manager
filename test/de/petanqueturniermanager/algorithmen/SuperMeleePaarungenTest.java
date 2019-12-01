@@ -24,7 +24,7 @@ import org.junit.Test;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
-import de.petanqueturniermanager.model.Meldungen;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.Team;
@@ -33,7 +33,7 @@ public class SuperMeleePaarungenTest {
 
 	SuperMeleePaarungen paarungen;
 	List<Team> teams;
-	Meldungen meldungen;
+	SpielerMeldungen meldungen;
 
 	@Before
 	public void setup() throws AlgorithmenException {
@@ -47,7 +47,7 @@ public class SuperMeleePaarungenTest {
 	@Test
 	public void testNurDoubletteOhneFesteTeamGroese() throws Exception {
 
-		Meldungen meldungen = new Meldungen();
+		SpielerMeldungen meldungen = new SpielerMeldungen();
 
 		for (int spielrNr = 1; spielrNr < 9; spielrNr++) {
 			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
@@ -74,7 +74,7 @@ public class SuperMeleePaarungenTest {
 
 		testDatenList.forEach((paarungenExpectedAnzahl) -> {
 			try {
-				meldungen = new Meldungen();
+				meldungen = new SpielerMeldungen();
 				for (int spielrNr = 1; spielrNr <= paarungenExpectedAnzahl.expAnzSpieler; spielrNr++) {
 					meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 				}
@@ -86,7 +86,7 @@ public class SuperMeleePaarungenTest {
 				throw new UncheckedExecutionException(e);
 			}
 		});
-		verify(paarungen, times(expectedCalls)).neueSpielrunde(anyInt(), any(Meldungen.class));
+		verify(paarungen, times(expectedCalls)).neueSpielrunde(anyInt(), any(SpielerMeldungen.class));
 	}
 
 	@Test
@@ -122,7 +122,7 @@ public class SuperMeleePaarungenTest {
 
 	private void pruefeTeamMischung(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett) throws AlgorithmenException {
 
-		meldungen = new Meldungen();
+		meldungen = new SpielerMeldungen();
 		for (int spielrNr = 1; spielrNr <= expAnzSpieler; spielrNr++) {
 			meldungen.addSpielerWennNichtVorhanden(Spieler.from(spielrNr));
 		}
@@ -217,7 +217,7 @@ public class SuperMeleePaarungenTest {
 
 		// erste runde [1,2,3] [4,5,6] [7,8,9] [10,11,12]
 
-		Meldungen meldungen2 = newTestMeldungen(12);
+		SpielerMeldungen meldungen2 = newTestMeldungen(12);
 
 		// erste runde team 1 bis 4
 		// hat jeder mit jeder gespielt
@@ -298,7 +298,7 @@ public class SuperMeleePaarungenTest {
 			// SpielRunde{Nr=3, Teams=[Team{nr=1, Spieler=[4,10,7]},Team{nr=2, Spieler=[5,9,6]},Team{nr=3,Spieler=[12,8,11]},Team{nr=4, Spieler=[3,2,1]}]}
 			// @formatter:on
 	
-			Meldungen testMeldungen = newTestMeldungen(16);
+			SpielerMeldungen testMeldungen = newTestMeldungen(16);
 	
 			List<Integer[]> spielerNrTeamListe = new ArrayList<>();
 			spielerNrTeamListe.add(new Integer[] { 9, 12, 10 });
@@ -330,7 +330,7 @@ public class SuperMeleePaarungenTest {
 			assertEquals(4, vierteRunde.teams().size());
 		}
 
-	private MeleeSpielRunde buildTestRunde(int nr, Meldungen testMeldungen, List<Integer[]> spielerNrTeamListe) throws AlgorithmenException {
+	private MeleeSpielRunde buildTestRunde(int nr, SpielerMeldungen testMeldungen, List<Integer[]> spielerNrTeamListe) throws AlgorithmenException {
 		MeleeSpielRunde spielRunde = new MeleeSpielRunde(nr);
 
 		int tmNr = 1;
@@ -342,7 +342,7 @@ public class SuperMeleePaarungenTest {
 		return spielRunde;
 	}
 
-	private Team buildTestTeam(int nr, Meldungen testMeldungen, Integer[] spielerNr) throws AlgorithmenException {
+	private Team buildTestTeam(int nr, SpielerMeldungen testMeldungen, Integer[] spielerNr) throws AlgorithmenException {
 		Team team = new Team(nr);
 
 		for (Integer splnr : spielerNr) {
@@ -359,7 +359,7 @@ public class SuperMeleePaarungenTest {
 			// 18 spieler = 6 runden
 			// 24 spieler = 8 runden
 	
-			Meldungen meldungen = newTestMeldungen(12);
+			SpielerMeldungen meldungen = newTestMeldungen(12);
 	
 			// TODO 3 runden sind nicht immer möglich
 			for (int rundenr = 1; rundenr < 3; rundenr++) {
@@ -372,7 +372,7 @@ public class SuperMeleePaarungenTest {
 
 	@Test
 		public void testNeueSpielrundeTripletteMode_18() throws Exception {
-			Meldungen meldungen = newTestMeldungen(18);
+			SpielerMeldungen meldungen = newTestMeldungen(18);
 			int anzTriplette = 6;
 	
 			MeleeSpielRunde ersteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
@@ -402,8 +402,8 @@ public class SuperMeleePaarungenTest {
 	
 		}
 
-	private Meldungen newTestMeldungen(int anzSpieler) {
-		Meldungen meldungen = new Meldungen();
+	private SpielerMeldungen newTestMeldungen(int anzSpieler) {
+		SpielerMeldungen meldungen = new SpielerMeldungen();
 
 		for (int i = 1; i <= anzSpieler; i++) {
 			Spieler spieler = Spieler.from(i);
@@ -412,7 +412,7 @@ public class SuperMeleePaarungenTest {
 		return meldungen;
 	}
 
-	private List<Team> newTestTeams(Meldungen meldungen) throws AlgorithmenException {
+	private List<Team> newTestTeams(SpielerMeldungen meldungen) throws AlgorithmenException {
 
 		ArrayList<Team> teams = new ArrayList<>();
 

@@ -69,20 +69,12 @@ public class SpielrundeSheet_UpdateTest {
 
 			@Override
 			public SpielTagNr getSpielTag() {
-				try {
-					return SpielTagNr.from(1);
-				} catch (GenerateException e) {
-					throw new RuntimeException(e);
-				}
+				return SpielTagNr.from(1);
 			}
 
 			@Override
 			public SpielRundeNr getSpielRundeNr() {
-				try {
-					return SpielRundeNr.from(1);
-				} catch (GenerateException e) {
-					throw new RuntimeException(e);
-				}
+				return SpielRundeNr.from(1);
 			}
 		};
 	}
