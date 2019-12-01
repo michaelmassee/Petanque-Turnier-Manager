@@ -60,10 +60,10 @@ public class JederGegenJeden {
 			// restliche paarungen
 			int anzPaarungren = (letzteMeldungNr / 2);
 			for (int teamPaarungcntr = 1; teamPaarungcntr < anzPaarungren; teamPaarungcntr++) {
-				int idxMeldungA = (rundenCntr + teamPaarungcntr) % anzRndn;
-				idxMeldungA = (idxMeldungA < 1) ? anzRndn + idxMeldungA : idxMeldungA;
-				int idxMeldungB = (rundenCntr - teamPaarungcntr) % anzRndn;
-				idxMeldungB = (idxMeldungB < 1) ? anzRndn + idxMeldungB : idxMeldungB;
+				int moduloA = (rundenCntr + teamPaarungcntr) % anzRndn;
+				int idxMeldungA = (moduloA < 1) ? anzRndn + moduloA : moduloA;
+				int moduloB = (rundenCntr - teamPaarungcntr) % anzRndn;
+				int idxMeldungB = (moduloB < 1) ? anzRndn + moduloB : moduloB;
 
 				runde.add(newTeamPaarung(idxMeldungA - 1, idxMeldungB - 1));
 			}
