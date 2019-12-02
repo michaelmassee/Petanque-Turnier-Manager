@@ -18,7 +18,7 @@ public class LigaSpielPlan {
 
 	private final List<List<TeamPaarung>> spielPlan;
 
-	public LigaSpielPlan(List<Meldung> meldungen) {
+	public LigaSpielPlan(TeamMeldungen meldungen) {
 		checkNotNull(meldungen);
 		spielPlan = new JederGegenJeden(meldungen).generate();
 	}
@@ -27,9 +27,11 @@ public class LigaSpielPlan {
 		return spielPlan;
 	}
 
-	public List<List<TeamPaarung>> getSpielSchuflePlan() {
-		Collections.shuffle(spielPlan);
-		return spielPlan;
+	public LigaSpielPlan schufflePlan() {
+		for (int i = 0; i < 5; i++) { // 5 mal durchmischen
+			Collections.shuffle(spielPlan);
+		}
+		return this;
 	}
 
 }

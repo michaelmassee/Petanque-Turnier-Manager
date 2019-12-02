@@ -23,8 +23,8 @@ public class MeleeSpielRundeTest {
 	@Test
 	public void testValidateSpielerTeam() throws Exception {
 
-		Team teamA = new Team(1);
-		Team teamB = new Team(2);
+		Team teamA = Team.from(1);
+		Team teamB = Team.from(2);
 
 		spielRunde.addTeamWennNichtVorhanden(teamA);
 		spielRunde.addTeamWennNichtVorhanden(teamB);

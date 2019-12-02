@@ -26,19 +26,19 @@ public class KoRundeTeamPaarungenTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testConstructorUngeradeAnzahlGeneratSpielRunde() throws Exception {
 		TeamRangliste teamRangliste = new TeamRangliste();
-		teamRangliste.add(new Team(1));
-		teamRangliste.add(new Team(2));
-		teamRangliste.add(new Team(3));
+		teamRangliste.add(Team.from(1));
+		teamRangliste.add(Team.from(2));
+		teamRangliste.add(Team.from(3));
 		new KoRundeTeamPaarungen(teamRangliste);
 	}
 
 	@Test
 	public void testGeneratSpielRundeOhneGegner() throws Exception {
 		TeamRangliste teamRangliste = new TeamRangliste();
-		Team teamA = teamRangliste.add(new Team(1));
-		Team teamB = teamRangliste.add(new Team(2));
-		Team teamC = teamRangliste.add(new Team(3));
-		Team teamD = teamRangliste.add(new Team(4));
+		Team teamA = teamRangliste.add(Team.from(1));
+		Team teamB = teamRangliste.add(Team.from(2));
+		Team teamC = teamRangliste.add(Team.from(3));
+		Team teamD = teamRangliste.add(Team.from(4));
 		KoRundeTeamPaarungen paarungen = new KoRundeTeamPaarungen(teamRangliste);
 		assertThat(paarungen.getTeamRangListe().size()).isEqualTo(4);
 
@@ -58,10 +58,10 @@ public class KoRundeTeamPaarungenTest {
 	@Test
 	public void testGeneratSpielRundeMitGegner() throws Exception {
 		TeamRangliste teamRangliste = new TeamRangliste();
-		Team teamA = teamRangliste.add(new Team(1));
-		Team teamB = teamRangliste.add(new Team(2));
-		Team teamC = teamRangliste.add(new Team(3));
-		Team teamD = teamRangliste.add(new Team(4));
+		Team teamA = teamRangliste.add(Team.from(1));
+		Team teamB = teamRangliste.add(Team.from(2));
+		Team teamC = teamRangliste.add(Team.from(3));
+		Team teamD = teamRangliste.add(Team.from(4));
 
 		teamA.addGegner(teamD);
 		KoRundeTeamPaarungen paarungen = new KoRundeTeamPaarungen(teamRangliste);
@@ -78,10 +78,10 @@ public class KoRundeTeamPaarungenTest {
 	@Test
 	public void testGeneratSpielRundeMitGegnerMussTauschen() throws Exception {
 		TeamRangliste teamRangliste = new TeamRangliste();
-		Team teamA = teamRangliste.add(new Team(1));
-		Team teamB = teamRangliste.add(new Team(2));
-		Team teamC = teamRangliste.add(new Team(3));
-		Team teamD = teamRangliste.add(new Team(4));
+		Team teamA = teamRangliste.add(Team.from(1));
+		Team teamB = teamRangliste.add(Team.from(2));
+		Team teamC = teamRangliste.add(Team.from(3));
+		Team teamD = teamRangliste.add(Team.from(4));
 
 		teamB.addGegner(teamC); // = 2 Paarungen was nicht geht
 
@@ -99,10 +99,10 @@ public class KoRundeTeamPaarungenTest {
 	@Test
 	public void testGeneratSpielRundeMitDoppelte() throws Exception {
 		TeamRangliste teamRangliste = new TeamRangliste();
-		Team teamA = teamRangliste.add(new Team(1));
-		Team teamB = teamRangliste.add(new Team(2));
-		Team teamC = teamRangliste.add(new Team(3));
-		Team teamD = teamRangliste.add(new Team(4));
+		Team teamA = teamRangliste.add(Team.from(1));
+		Team teamB = teamRangliste.add(Team.from(2));
+		Team teamC = teamRangliste.add(Team.from(3));
+		Team teamD = teamRangliste.add(Team.from(4));
 
 		teamA.addGegner(teamC);
 		teamB.addGegner(teamC);

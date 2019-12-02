@@ -69,12 +69,12 @@ public class Vorrunden {
 					// Team Nr ?
 					Integer cellNumTeamA = getSheetHelper().getIntFromCell(vorRunden, Position.from(spalteCnt, zeileCntr));
 					if (cellNumTeamA > 0) {
-						final Team teamA = new Team(cellNumTeamA);
+						final Team teamA = Team.from(cellNumTeamA);
 						Team teamA_AusListe = teamList.stream().filter(team -> teamA.equals(team)).findFirst().orElse(null);
 						if (teamA_AusListe != null) {
 							Integer cellNumTeamB = getSheetHelper().getIntFromCell(vorRunden, Position.from(spalteCnt + 1, zeileCntr));
 							if (cellNumTeamB > 0) {
-								final Team teamB = new Team(cellNumTeamB);
+								final Team teamB = Team.from(cellNumTeamB);
 								Team teamB_AusListe = teamList.stream().filter(team -> teamB.equals(team)).findFirst().orElse(null);
 								if (teamB_AusListe != null) {
 									teamB_AusListe.addGegner(teamA_AusListe); // gegenseitig eintragen als gegner

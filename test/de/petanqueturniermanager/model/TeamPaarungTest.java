@@ -10,8 +10,8 @@ public class TeamPaarungTest {
 
 	@Test
 	public void testTeamPaarungmit2Teams() throws Exception {
-		Team teamA = new Team(1);
-		Team teamB = new Team(2);
+		Team teamA = Team.from(1);
+		Team teamB = Team.from(2);
 
 		TeamPaarung paarung = new TeamPaarung(teamA, teamB);
 		assertThat(paarung.getA()).isEqualTo(teamA);
@@ -21,7 +21,7 @@ public class TeamPaarungTest {
 
 	@Test
 	public void testTeamPaarungmitNull() throws Exception {
-		Team teamA = new Team(1);
+		Team teamA = Team.from(1);
 		TeamPaarung paarung = new TeamPaarung(teamA, Optional.empty());
 		assertThat(paarung.getA()).isEqualTo(teamA);
 		assertThat(paarung.getB()).isNull();
@@ -29,7 +29,7 @@ public class TeamPaarungTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testTeamPaarungmitEqual() throws Exception {
-		Team teamA = new Team(1);
+		Team teamA = Team.from(1);
 		new TeamPaarung(teamA, teamA);
 	}
 

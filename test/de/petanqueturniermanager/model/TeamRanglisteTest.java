@@ -11,17 +11,17 @@ public class TeamRanglisteTest {
 
 		TeamRangliste liste = new TeamRangliste();
 
-		liste.add(new Team(1));
+		liste.add(Team.from(1));
 		assertThat(liste.getTeamListe()).hasSize(1);
-		liste.add(new Team(2));
+		liste.add(Team.from(2));
 		assertThat(liste.getTeamListe()).hasSize(2);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testAddDoubleTeams() throws Exception {
 		TeamRangliste liste = new TeamRangliste();
-		liste.add(new Team(1));
-		liste.add(new Team(1));
+		liste.add(Team.from(1));
+		liste.add(Team.from(1));
 	}
 
 }

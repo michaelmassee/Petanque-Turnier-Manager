@@ -7,19 +7,19 @@ package de.petanqueturniermanager.basesheet.meldeliste;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.IMitSpielerSpalte;
-import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.model.IMeldungen;
 
-public interface IMeldeliste extends ISheet, MeldeListeKonstanten, IMitSpielerSpalte {
+public interface IMeldeliste<T> extends ISheet, MeldeListeKonstanten, IMitSpielerSpalte {
 
 	String formulaSverweisSpielernamen(String spielrNrAdresse);
 
-	SpielerMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException;
+	IMeldungen<T> getAktiveUndAusgesetztMeldungen() throws GenerateException;
 
-	SpielerMeldungen getAktiveMeldungen() throws GenerateException;
+	IMeldungen<T> getAktiveMeldungen() throws GenerateException;
 
-	SpielerMeldungen getInAktiveMeldungen() throws GenerateException;
+	IMeldungen<T> getInAktiveMeldungen() throws GenerateException;
 
-	SpielerMeldungen getAlleMeldungen() throws GenerateException;
+	IMeldungen<T> getAlleMeldungen() throws GenerateException;
 
 	MeldungenSpalte getMeldungenSpalte();
 

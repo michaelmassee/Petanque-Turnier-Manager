@@ -11,7 +11,7 @@ public class TeamTest {
 
 	@Before
 	public void init() throws Exception {
-		team = new Team(1);
+		team = Team.from(1);
 		Spieler a = Spieler.from(1);
 		Spieler b = Spieler.from(2);
 		Spieler c = Spieler.from(3);

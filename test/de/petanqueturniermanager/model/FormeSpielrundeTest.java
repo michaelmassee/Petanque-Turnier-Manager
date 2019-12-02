@@ -10,13 +10,13 @@ public class FormeSpielrundeTest {
 	public void testAddPaarungWennNichtVorhanden() throws Exception {
 
 		FormeSpielrunde spielRunde = new FormeSpielrunde(1);
-		TeamPaarung teamPaarung = new TeamPaarung(new Team(1), new Team(2));
+		TeamPaarung teamPaarung = new TeamPaarung(Team.from(1), Team.from(2));
 		spielRunde.addPaarungWennNichtVorhanden(teamPaarung);
 		assertThat(spielRunde.getTeamPaarungen()).isNotEmpty().hasSize(1);
 		spielRunde.addPaarungWennNichtVorhanden(teamPaarung);
 		assertThat(spielRunde.getTeamPaarungen()).isNotEmpty().hasSize(1);
 
-		teamPaarung = new TeamPaarung(new Team(3), new Team(4));
+		teamPaarung = new TeamPaarung(Team.from(3), Team.from(4));
 		spielRunde.addPaarungWennNichtVorhanden(teamPaarung);
 		assertThat(spielRunde.getTeamPaarungen()).isNotEmpty().hasSize(2);
 	}
@@ -24,10 +24,10 @@ public class FormeSpielrundeTest {
 	@Test
 	public void testGetAundBTeams() throws Exception {
 		FormeSpielrunde spielRunde = new FormeSpielrunde(1);
-		Team team1 = new Team(1);
-		Team team2 = new Team(2);
-		Team team3 = new Team(3);
-		Team team4 = new Team(4);
+		Team team1 = Team.from(1);
+		Team team2 = Team.from(2);
+		Team team3 = Team.from(3);
+		Team team4 = Team.from(4);
 		TeamPaarung teamPaarung = new TeamPaarung(team1, team2);
 		spielRunde.addPaarungWennNichtVorhanden(teamPaarung);
 		teamPaarung = new TeamPaarung(team3, team4);
@@ -41,10 +41,10 @@ public class FormeSpielrundeTest {
 	@Test
 	public void testFindTeamPaarung() throws Exception {
 		FormeSpielrunde spielRunde = new FormeSpielrunde(1);
-		Team team1 = new Team(1);
-		Team team2 = new Team(2);
-		Team team3 = new Team(3);
-		Team team4 = new Team(4);
+		Team team1 = Team.from(1);
+		Team team2 = Team.from(2);
+		Team team3 = Team.from(3);
+		Team team4 = Team.from(4);
 		TeamPaarung teamPaarung = new TeamPaarung(team1, team2);
 		spielRunde.addPaarungWennNichtVorhanden(teamPaarung);
 		teamPaarung = new TeamPaarung(team3, team4);

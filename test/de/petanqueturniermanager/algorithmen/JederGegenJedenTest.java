@@ -2,13 +2,12 @@ package de.petanqueturniermanager.algorithmen;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
-import de.petanqueturniermanager.model.Meldung;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 
 public class JederGegenJedenTest {
@@ -24,14 +23,13 @@ public class JederGegenJedenTest {
 		assertThat(new JederGegenJeden(newMeldungenList(8)).anzRunden()).isEqualTo(7);
 	}
 
-	private List<Meldung> newMeldungenList(int anz) {
-		ArrayList<Meldung> meldungen = new ArrayList<>();
-
+	private TeamMeldungen newMeldungenList(int anz) {
+		TeamMeldungen teamMeldungen = new TeamMeldungen();
 		for (int i = 0; i < anz; i++) {
-			meldungen.add(new Meldung(i + 1));
+			teamMeldungen.addTeamWennNichtVorhanden(Team.from(i + 1));
 		}
 
-		return meldungen;
+		return teamMeldungen;
 	}
 
 	@Test
@@ -74,7 +72,7 @@ public class JederGegenJedenTest {
 	}
 
 	private TeamPaarung newTeamPaarung(Integer a, Integer b) {
-		return new TeamPaarung(new Team(a), (b == null) ? null : new Team(b));
+		return new TeamPaarung(Team.from(a), (b == null) ? null : Team.from(b));
 	}
 
 }

@@ -31,7 +31,7 @@ public class SpielerMeldungenTest {
 		}
 		assertEquals(10, meldungen.spieler().size());
 
-		Team testTeam = new Team(1);
+		Team testTeam = Team.from(1);
 		meldungen.findSpielerByNr(1).setTeam(testTeam);
 		meldungen.findSpielerByNr(2).setTeam(testTeam);
 
@@ -92,7 +92,7 @@ public class SpielerMeldungenTest {
 	public void testResetTeam() throws Exception {
 
 		ArrayList<Spieler> testSpielerlist = new ArrayList<>();
-		Team testTeam = new Team(3);
+		Team testTeam = Team.from(3);
 		testSpielerlist.add(Spieler.from(2).setTeam(testTeam));
 		testSpielerlist.add(Spieler.from(3).setTeam(testTeam));
 		meldungen.addSpielerWennNichtVorhanden(testSpielerlist);

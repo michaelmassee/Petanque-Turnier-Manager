@@ -61,9 +61,9 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.SpielrundeInfoKonfigDialog;
-import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -851,7 +851,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			while (!zeileIstLeer && maxcntr > 0) {
 				maxcntr--;
 				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) { // Team A & B
-					Team team = new Team(1); // dummy team verwenden um Spieler gegenseitig ein zu tragen
+					Team team = Team.from(1); // dummy team verwenden um Spieler gegenseitig ein zu tragen
 					for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
 						pospielerNr.spalte(ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
 						int spielerNr = getSheetHelper().getIntFromCell(sheet, pospielerNr); // Spieler aus Rundeliste
