@@ -28,7 +28,7 @@ public class MeleeSpielRunde extends NrComparable {
 	}
 
 	public Team newTeam() throws AlgorithmenException {
-		Team newTeam = new Team(teams.size() + 1);
+		Team newTeam = Team.from(teams.size() + 1);
 		addTeamWennNichtVorhanden(newTeam);
 		return newTeam;
 	}

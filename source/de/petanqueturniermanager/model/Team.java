@@ -19,9 +19,13 @@ public class Team extends NrComparable {
 	private final ArrayList<Spieler> spielerList;
 	private final HashSet<Integer> gegner = new HashSet<>();
 
-	public Team(int nr) {
+	private Team(int nr) {
 		super(nr);
 		spielerList = new ArrayList<>();
+	}
+
+	public static Team from(int nr) {
+		return new Team(nr);
 	}
 
 	/**

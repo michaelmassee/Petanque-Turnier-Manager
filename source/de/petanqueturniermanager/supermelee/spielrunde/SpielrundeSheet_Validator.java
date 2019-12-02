@@ -16,8 +16,8 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -154,14 +154,14 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 					break;
 				}
 				// Team A = 3 spalten
-				Team teamA = new Team(teamCntr++);
+				Team teamA = Team.from(teamCntr++);
 				for (int spalteOffsetTeamA = 0; spalteOffsetTeamA < 3; spalteOffsetTeamA++) {
 					nextSpielerInTeam(spieltag, posSpielrNr, spielrNrSet, teamA);
 				}
 				teamList.add(teamA);
 
 				// Team B = 3 spalten
-				Team teamB = new Team(teamCntr++);
+				Team teamB = Team.from(teamCntr++);
 				for (int spalteOffsetTeamB = 0; spalteOffsetTeamB < 3; spalteOffsetTeamB++) {
 					nextSpielerInTeam(spieltag, posSpielrNr, spielrNrSet, teamB);
 				}

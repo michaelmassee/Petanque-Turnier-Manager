@@ -49,7 +49,7 @@ import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
-abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet implements IMeldeliste {
+abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet implements IMeldeliste<SpielerMeldungen> {
 	private static final String SPIELTAG_HEADER_STR = "Spieltag";
 
 	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0

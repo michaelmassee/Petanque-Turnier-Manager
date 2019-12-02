@@ -12,8 +12,8 @@ import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import de.petanqueturniermanager.model.Meldung;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 
 /**
@@ -26,15 +26,15 @@ public class JederGegenJeden {
 	// https://nrich.maths.org/1443
 	// https://www-i1.informatik.rwth-aachen.de/~algorithmus/algo36.php
 
-	private final List<Meldung> meldungen;
+	private final List<Team> meldungen;
 	private final boolean freiSpiel;
 	private final int anzMeldungen;
 
-	public JederGegenJeden(List<Meldung> meldungen) {
+	public JederGegenJeden(TeamMeldungen meldungen) {
 		checkNotNull(meldungen);
-		this.meldungen = Collections.unmodifiableList(meldungen);
-		freiSpiel = IsEvenOrOdd.IsOdd(meldungen.size());
-		anzMeldungen = meldungen.size();
+		this.meldungen = Collections.unmodifiableList(meldungen.teams());
+		anzMeldungen = meldungen.teams().size();
+		freiSpiel = IsEvenOrOdd.IsOdd(anzMeldungen);
 	}
 
 	@VisibleForTesting
@@ -71,13 +71,13 @@ public class JederGegenJeden {
 	}
 
 	private TeamPaarung newTeamPaarung(int idxMeldungA, int idxMeldungB) {
-		Team teamA = new Team(meldungen.get(idxMeldungA).getNr());
+		Team teamA = meldungen.get(idxMeldungA);
 		Optional<Team> teamB;
 
 		if (freiSpiel && idxMeldungB >= anzMeldungen) {
 			teamB = Optional.empty();
 		} else {
-			teamB = Optional.of(new Team(meldungen.get(idxMeldungB).getNr()));
+			teamB = Optional.of(meldungen.get(idxMeldungB));
 		}
 		TeamPaarung ret = new TeamPaarung(teamA, teamB);
 		return ret;

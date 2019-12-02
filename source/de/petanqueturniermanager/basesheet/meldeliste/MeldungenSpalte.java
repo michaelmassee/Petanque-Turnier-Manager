@@ -220,10 +220,10 @@ public class MeldungenSpalte {
 		return -1;
 	}
 
-	public void alleSpieltagSpielerAusmeldelisteEinfuegen(IMeldeliste meldeliste) throws GenerateException {
+	public void alleSpieltagSpielerAusmeldelisteEinfuegen(IMeldeliste<SpielerMeldungen> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		// spieler einfuegen wenn nicht vorhanden
-		SpielerMeldungen meldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
+		SpielerMeldungen meldungen = (SpielerMeldungen) meldeliste.getAktiveUndAusgesetztMeldungen();
 		HashSet<Integer> spielerNummerList = new HashSet<>();
 		meldungen.spieler().forEach((spieler) -> {
 			spielerNummerList.add(spieler.getNr());

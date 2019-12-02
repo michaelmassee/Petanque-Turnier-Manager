@@ -48,7 +48,7 @@ public class Ranglisten {
 			mxCntr++; // no endless loop !
 			Integer cellNumTeam = getSheetHelper().getIntFromCell(rangliste, teamNrPos);
 			if (cellNumTeam > 0) {
-				teamList.add(new Team(cellNumTeam));
+				teamList.add(Team.from(cellNumTeam));
 			} else {
 				break;
 			}
