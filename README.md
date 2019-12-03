@@ -6,7 +6,7 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 # Installation
 
 
-## Voraussetzungen
+## - Voraussetzungen -
 
 
 <img align="right" src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/libreoffice-logo.png" alt="Logo" height="120">
@@ -17,11 +17,11 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 * [Java ab Version 8](https://www.java.com/de/download/help/sysreq.xml)
 
 
-## Java Installieren
+## - Java Installieren -
 
 [Download Oracle Java ab 8](https://www.java.com/de/download/manual.jsp)
 
-## Libreoffice Installieren
+## - Libreoffice Installieren -
 
 LibreOffice Calc ab Version 6.0 oder höher<br>
 [Download LibreOffice](https://de.libreoffice.org/download/libreoffice-fresh/)
@@ -40,5 +40,5 @@ Calc Starten und ein leeres Kalkulationsblatt erstellen.<br>
 Oben im Menü "PétTurnMngr" die Funktionen zum generieren von Turniere verwenden.<br><br>
 ![menue](https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/menue_eintrag.png)
 
-## Wiki
+# Wiki
 [weitere Infos](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki)
