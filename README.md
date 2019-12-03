@@ -31,7 +31,7 @@ LibreOffice Calc ab Version 6.0 oder höher<br>
 Jeweils die aktuellste Version von [hier](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
 herunterladen. (PetanqueTurnierManager-vx.xx.oxt)<br>
 
-Dann diese Anleitung *[So installieren Sie eine Extension](https://help.libreoffice.org/Common/Extension_Manager/de#So_installieren_Sie_eine_Extension)* folgen zum Installieren.
+Dann diese Anleitung "*[So installieren Sie eine Extension](https://help.libreoffice.org/Common/Extension_Manager/de#So_installieren_Sie_eine_Extension)*" folgen zum Installieren.
 
 # Verwendung
 
