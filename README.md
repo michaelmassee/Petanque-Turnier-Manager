@@ -37,7 +37,7 @@ Dann diese Anleitung "*[So installieren Sie eine Extension](https://help.libreof
 # Verwendung
 
 Calc Starten und ein leeres Kalkulationsblatt erstellen.<br>
-Oben im Menü "PétTurnMngr" die Funktionen zum generieren von Turniere verwenden.<br><br>
+Oben in der Menüleiste "PétTurnMngr", die Funktionen zum generieren von Turniere verwenden.<br><br>
 ![menue](https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/menu_windows_2_v20.1.png)
 
 # Wiki
