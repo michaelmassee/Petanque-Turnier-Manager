@@ -13,12 +13,9 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 
 
-* Libreoffice ab Version 6
-* Java ab Version 8
+* [Libreoffice ab Version 6](https://de.libreoffice.org/get-help/system-requirements/)
+* [Java ab Version 8](https://www.java.com/de/download/help/sysreq.xml)
 
-Systemanforderungen für:<br>
-* [Libreoffice](https://de.libreoffice.org/get-help/system-requirements/)<br>
-* [Java](https://www.java.com/de/download/help/sysreq.xml)
 
 ## Java Installieren
 
