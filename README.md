@@ -26,7 +26,7 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 LibreOffice Calc ab Version 6.0 oder höher<br>
 [Download LibreOffice](https://de.libreoffice.org/download/libreoffice-fresh/)
 
-## - Turnierleitungssoftware Plugin Installieren -
+## - Turnierleitung Extension Installieren -
 
 Jeweils die aktuellste Version von [hier](https://github.com/michaelmassee/Petanque-Turnier-Manager/releases)
 herunterladen. (PetanqueTurnierManager-vx.xx.oxt)<br>
