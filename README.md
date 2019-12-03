@@ -5,11 +5,12 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 # Installation
 
-
 ## - Voraussetzungen -
 
-
-<img align="right" src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/libreoffice-logo.png" alt="Logo" height="120">
+<img style="position:absolute;right: 1px;top: 200px;height: 100px;"
+    align="right"
+    height="100px"
+    src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/libreoffice-logo.png" alt="Logo">
 
 
 
