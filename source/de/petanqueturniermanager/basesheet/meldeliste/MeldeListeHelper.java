@@ -92,13 +92,16 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 			// Spieler nr testen
 			// -------------------
 			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
-			if (spielrNr > -1) {
+			if (spielrNr > 0) {
 				if (spielrNrInSheet.contains(spielrNr)) {
 					// RED Color
 					meldeListe.getSheetHelper().setValInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
 					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr + " ist doppelt in der Meldeliste !!!");
 				}
 				spielrNrInSheet.add(spielrNr);
+			} else {
+				// nr ist ungültig einfach löschen
+				meldeListe.getSheetHelper().clearValInCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			}
 
 			// -------------------

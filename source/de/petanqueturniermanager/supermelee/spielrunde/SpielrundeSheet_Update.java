@@ -43,10 +43,11 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		}
 
 		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), aktuelleSpielrunde.getNr() - 1);
-		neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde);
-		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
-		// sicher gehen das aktive spielrunde sheet ist activ
-		getSheetHelper().setActiveSheet(getXSpreadSheet());
+		if (neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde)) {
+			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
+			// sicher gehen das aktive spielrunde sheet ist activ
+			getSheetHelper().setActiveSheet(getXSpreadSheet());
+		}
 	}
 
 	public SpielerSpielrundeErgebnisList ergebnisseEinlesen() throws GenerateException {

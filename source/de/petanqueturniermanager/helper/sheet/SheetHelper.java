@@ -747,4 +747,16 @@ public class SheetHelper {
 		// xAnnotation.setIsVisible(true);
 	}
 
+	/**
+	 * Cellinhalt löschen
+	 *
+	 * @param xSheet
+	 * @param from
+	 */
+	public void clearValInCell(XSpreadsheet sheet, Position pos) {
+		checkNotNull(sheet, "Sheet = null");
+		checkNotNull(pos);
+		setStringValueInCell(sheet, pos, "", true);
+	}
+
 }

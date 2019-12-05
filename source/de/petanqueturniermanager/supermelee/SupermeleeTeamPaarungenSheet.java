@@ -135,6 +135,8 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 
 	@Override
 	protected void doRun() throws GenerateException {
+		// set visible
+		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
 	}
 
 	public String formulaSverweisAnzDoublette(String adresseAnzSpieler) throws GenerateException {
