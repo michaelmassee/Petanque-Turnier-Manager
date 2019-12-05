@@ -14,7 +14,6 @@ import org.powermock.api.mockito.PowerMockito;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
@@ -145,7 +144,7 @@ public class MeldeListeHelperTest {
 		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
 
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
-		verify(sheetHelperMock, times(1)).setStringValueInCell(any(StringCellValue.class));
+		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
 	}
 
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {
