@@ -21,6 +21,10 @@ public class SuperMeleeTeamRechner {
 		this(anzSpieler, SuperMeleeMode.Triplette);
 	}
 
+	/**
+	 * @param anzSpieler
+	 * @param mode
+	 */
 	public SuperMeleeTeamRechner(int anzSpieler, SuperMeleeMode mode) {
 		checkArgument(anzSpieler > 0);
 		this.anzSpieler = anzSpieler;

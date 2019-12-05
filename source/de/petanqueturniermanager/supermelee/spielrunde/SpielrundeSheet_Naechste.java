@@ -26,20 +26,21 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
-		naechsteSpielrundeEinfuegen();
-		new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
-		// sicher gehen das aktive spielrunde sheet ist activ
-		getSheetHelper().setActiveSheet(getXSpreadSheet());
+		if (naechsteSpielrundeEinfuegen()) {
+			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
+			// sicher gehen das aktive spielrunde sheet ist activ
+			getSheetHelper().setActiveSheet(getXSpreadSheet());
+		}
 	}
 
-	public void naechsteSpielrundeEinfuegen() throws GenerateException {
+	public boolean naechsteSpielrundeEinfuegen() throws GenerateException {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(aktiveMeldungen)) {
-			return;
+			return false;
 		}
 
 		// aktuelle vorhanden ?
@@ -49,7 +50,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		}
 
 		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), neueSpielrunde - 1);
-		neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde));
+		return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde));
 	}
 
 }

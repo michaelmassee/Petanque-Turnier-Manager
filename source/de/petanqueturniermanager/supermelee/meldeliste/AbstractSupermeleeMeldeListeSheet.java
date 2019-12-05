@@ -614,14 +614,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	}
 	// ---------------------------------------------
 
-	public Boolean isKannNurDoublette(SpielTagNr Spieltag) throws GenerateException {
-		return StringUtils.isNotBlank(getSheetHelper().getTextFromCell(getXSpreadSheet(), getKannNurDoublettePosition(Spieltag)));
+	public Boolean isKannNurDoubletteInTripletteMode(SpielTagNr Spieltag) throws GenerateException {
+		return StringUtils.isNotBlank(getSheetHelper().getTextFromCell(getXSpreadSheet(), getKannNurDoubletteInTripletteModePosition(Spieltag)));
 	}
 
-	public Position getKannNurDoublettePosition(SpielTagNr Spieltag) throws GenerateException {
+	public Position getKannNurDoubletteInTripletteModePosition(SpielTagNr Spieltag) throws GenerateException {
 		return Position.from(ersteSummeSpalte() + Spieltag.getNr(), TRIPL_MODE_SUMMEN_KANN_DOUBLETTE_ZEILE);
 	}
-	// ---------------------------------------------
 
 	/**
 	 *

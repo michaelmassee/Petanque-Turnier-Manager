@@ -67,6 +67,7 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
@@ -544,15 +545,25 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		getSheetHelper().setFormulaInCell(val);
 	}
 
-	protected void neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
-		neueSpielrunde(meldungen, neueSpielrundeNr, false);
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
+		return neueSpielrunde(meldungen, neueSpielrundeNr, false);
 	}
 
-	protected void neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force) throws GenerateException {
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force) throws GenerateException {
+		checkNotNull(meldungen);
+
 		processBoxinfo("Neue Spielrunde " + neueSpielrundeNr.getNr() + " für Spieltag " + getSpielTag().getNr());
 		processBoxinfo(meldungen.size() + " Meldungen");
 
-		checkNotNull(meldungen);
+		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
+		SuperMeleeTeamRechner superMeleeTeamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), superMeleeMode);
+
+		if (!superMeleeTeamRechner.valideAnzahlSpieler()) {
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Spielrunde")
+					.message(superMeleeTeamRechner.getAnzSpieler() + " Meldungen, ist eine ungültige Anzahl. Meldeliste Prüfen").show();
+			return false;
+		}
+
 		setSpielRundeNr(neueSpielrundeNr);
 
 		if (meldungen.spieler().size() < 4) {
@@ -565,35 +576,37 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			MessageBoxResult msgBoxRslt = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL).forceOk(force).caption("Neue Spielrunde").message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
 				ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
-				return;
+				return false;
 			}
 		}
 		// wenn hier dann neu erstellen
 		if (!NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
 				.setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
-			return;
+			return false;
 		}
 
 		// Triplette oder Doublette Mode ?
-		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
 
 		// -------------------------------
 		boolean doubletteRunde = false;
 		boolean tripletteRunde = false;
+		boolean isKannNurDoublette = superMeleeTeamRechner.isNurDoubletteMoeglich();
 		// abfrage nur doublette runde ?
-		boolean isKannNurDoublette = meldeListe.isKannNurDoublette(getSpielTag()).booleanValue();
 		if (superMeleeMode == SuperMeleeMode.Triplette && isKannNurDoublette) {
 			MessageBox msgbox = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force).caption("Spielrunde Doublette");
 			msgbox.message("Für Spieltag " + getSpielTag().getNr() + "\r\nSpielrunde " + neueSpielrundeNr.getNr() + "\r\nnur Doublette Paarungen auslosen ?");
 			if (MessageBoxResult.YES == msgbox.show()) {
 				doubletteRunde = true;
 			}
+		} else if (superMeleeMode == SuperMeleeMode.Doublette && isKannNurDoublette) {
+			doubletteRunde = true;
 		}
 
 		if (force && isKannNurDoublette) {
 			doubletteRunde = true;
 		}
+
 		SuperMeleePaarungen paarungen = new SuperMeleePaarungen();
 		try {
 			MeleeSpielRunde spielRundeSheet;
@@ -627,6 +640,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen").message(e.getMessage()).show();
 			throw new RuntimeException(e); // komplett raus
 		}
+		return true;
 	}
 
 	/**
@@ -852,6 +866,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 				maxcntr--;
 				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) { // Team A & B
 					Team team = Team.from(1); // dummy team verwenden um Spieler gegenseitig ein zu tragen
+					// 3 spalten
 					for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
 						pospielerNr.spalte(ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
 						int spielerNr = getSheetHelper().getIntFromCell(sheet, pospielerNr); // Spieler aus Rundeliste

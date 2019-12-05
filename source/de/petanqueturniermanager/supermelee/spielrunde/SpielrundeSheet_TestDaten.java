@@ -93,7 +93,9 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 			SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 			naechsteSpielrundeSheet.gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), spielrundeNr - 1);
-			neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(spielrundeNr), true);
+			if (!neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(spielrundeNr), true)) {
+				return; // raus wenn nicht erstellt
+			}
 
 			// ------------------------------------
 			// spiel test ergebnisse einfuegen
