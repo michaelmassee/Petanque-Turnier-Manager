@@ -158,17 +158,18 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 		}
 		XSpreadsheet xSheet = getXSpreadSheet();
 
-		StringCellValue emptyVal = StringCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, 0)).setValue("");
+		// StringCellValue emptyVal = StringCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, 0)).setValue("");
+		Position posEmptyVal = Position.from(SPIELER_NR_SPALTE, 0);
 
 		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
 
 		for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
 			Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerNrZeilecntr);
 			String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
-			// Achtung alle durchgehen weil eventuell lücken in der nr spalte!
 			if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
 				// nr ohne spieler namen entfernen
-				meldeListe.getSheetHelper().setStringValueInCell(emptyVal.zeile(spielerNrZeilecntr));
+				meldeListe.getSheetHelper().clearValInCell(xSheet, posEmptyVal.zeile(spielerNrZeilecntr));
+				// meldeListe.getSheetHelper().setStringValueInCell(emptyVal.zeile(spielerNrZeilecntr));
 			}
 		}
 	}
