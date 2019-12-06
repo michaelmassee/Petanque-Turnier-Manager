@@ -272,6 +272,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				// ------------------------------
 				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
 				// ------------------------------
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew(). // nr muss >0 und <999 sein
+				// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
 				// ------------------------------
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();

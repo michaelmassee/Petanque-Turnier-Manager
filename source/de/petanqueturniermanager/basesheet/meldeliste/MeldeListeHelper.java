@@ -163,13 +163,15 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 
 		int letzteZeileMitSpielerName = meldeListe.letzteZeileMitSpielerName(); // erst ab zeilen ohne namen anfangen
 
-		for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
-			Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerNrZeilecntr);
-			String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
-			if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
-				// nr ohne spieler namen entfernen
-				meldeListe.getSheetHelper().clearValInCell(xSheet, posEmptyVal.zeile(spielerNrZeilecntr));
-				// meldeListe.getSheetHelper().setStringValueInCell(emptyVal.zeile(spielerNrZeilecntr));
+		if (letzteZeileMitSpielerName > 0) {
+			for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
+				Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerNrZeilecntr);
+				String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
+				if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
+					// nr ohne spieler namen entfernen
+					meldeListe.getSheetHelper().clearValInCell(xSheet, posEmptyVal.zeile(spielerNrZeilecntr));
+					// meldeListe.getSheetHelper().setStringValueInCell(emptyVal.zeile(spielerNrZeilecntr));
+				}
 			}
 		}
 	}
