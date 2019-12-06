@@ -99,6 +99,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(geradeColor);
 		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(unGeradeColor);
 
+		// TODO Doppelte Code
 		// Spieler Nummer
 		// -----------------------------------------------
 		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
@@ -109,11 +110,15 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 				// ------------------------------
 				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
 				// ------------------------------
+				// eigentlich musste 0 = Fehler sein wird es aber nicht
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew(). // nr muss >0 und <999 sein
+				// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
 				// ------------------------------
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
 		// -----------------------------------------------
 
+		// TODO Doppelte Code
 		// -----------------------------------------------
 		// Spieler Namen
 		// -----------------------------------------------

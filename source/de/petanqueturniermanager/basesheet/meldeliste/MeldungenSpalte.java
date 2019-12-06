@@ -44,10 +44,7 @@ public class MeldungenSpalte {
 
 	private static final Logger logger = LogManager.getLogger(MeldungenSpalte.class);
 
-	// private final HashMap<Integer, Position> spielerZeileNummerCache = new HashMap<>();
-
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
-	// public static final int DEFAULT_MELDUNG_NAME_WIDTH = 4000;
 	private static final String HEADER_SPIELER_NR = "Nr";
 	private static final String HEADER_SPIELER_NAME = "Name";
 	private final Formation formation;

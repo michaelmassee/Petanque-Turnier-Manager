@@ -36,7 +36,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesS
 
 abstract public class AbstractRanglisteFormatter {
 
-	private static final int ENDSUMME_NUMBER_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH + 110;
+	public static final int ENDSUMME_NUMBER_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH + 110;
 	public static final int ERSTE_KOPFDATEN_ZEILE = 0;
 	public static final int ZWEITE_KOPFDATEN_ZEILE = 1;
 	public static final int DRITTE_KOPFDATEN_ZEILE = 2;

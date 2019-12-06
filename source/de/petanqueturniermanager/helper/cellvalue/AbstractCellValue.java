@@ -71,14 +71,15 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	/**
-	 * wenn vorhanden dan werden die zellen von pos bis endpos zusammengefasst (merge)
+	 * wenn vorhanden dan werden die zellen von pos bis endpos zusammengefasst (merge)<br>
+	 * zum löschen = null
 	 *
 	 * @param endPosMerge darf null sein
 	 * @return this
 	 */
 	@SuppressWarnings("unchecked")
 	public T setEndPosMerge(Position endPosMerge) {
-		this.endPosMerge = Position.from(endPosMerge);
+		this.endPosMerge = Position.from(endPosMerge); // wenn null dann return null
 		return (T) this;
 	}
 
