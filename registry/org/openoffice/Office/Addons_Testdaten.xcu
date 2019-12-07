@@ -86,7 +86,7 @@
 
 							<node oor:name="A6" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Liga, generate Meldeliste</value>
+									<value xml:lang="en">Liga, generate Teamlist</value>
 									<value xml:lang="de">Liga, generiere Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
@@ -96,7 +96,18 @@
 									<value>_self</value>
 								</prop>
 							</node>
-
+							<node oor:name="A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Liga, Gameplan</value>
+									<value xml:lang="de">Liga, Spielplan</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_spielplan_testdaten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 
 						</node>
 					</node>

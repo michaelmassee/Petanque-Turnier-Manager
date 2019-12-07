@@ -24,6 +24,7 @@ import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -253,7 +254,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		case "liga_spielplan":
 			new LigaSpielPlanSheet(workingSpreadsheet).start();
 			break;
-
+		case "liga_spielplan_testdaten":
+			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet).start();
+			break;
 		default:
 			didHandle = false;
 		}

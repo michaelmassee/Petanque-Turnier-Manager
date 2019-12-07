@@ -237,4 +237,11 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	private int letzteSpielZeile() throws GenerateException {
 		return SearchHelper.from(getXSpreadSheet()).searchLastNotEmptyInSpalte(RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999)).getZeile();
 	}
+
+	/**
+	 * @return the meldeListe
+	 */
+	protected final LigaMeldeListeSheet_Update getMeldeListe() {
+		return meldeListe;
+	}
 }
