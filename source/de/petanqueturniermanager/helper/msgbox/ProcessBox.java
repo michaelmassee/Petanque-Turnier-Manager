@@ -56,7 +56,7 @@ public class ProcessBox {
 	private static final int ANZAHLSPALTEN = 1;
 
 	private static final int MIN_HEIGHT = 200;
-	private static final int MIN_WIDTH = 500;
+	private static final int MIN_WIDTH = 550;
 	private static final String TITLE = "Pétanque Turnier Manager";
 	private static ProcessBox processBox = null;
 	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -135,10 +135,12 @@ public class ProcessBox {
 			Image[] images = { img16, img24, img32, img64, img128, img256, img512 };
 			frame.setIconImages(java.util.Arrays.asList(images));
 
-			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_1.png"))));
-			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_2.png"))));
-			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_3.png"))));
-			inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("update25x25_4.png"))));
+			// https://loading.io/
+			// https://ezgif.com/
+			for (int i = 0; i < 31; i++) {
+				inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("spinner/frame-" + i + ".png"))));
+			}
+
 			imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check25x32.png")));
 			imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
 
@@ -380,7 +382,8 @@ public class ProcessBox {
 			cancelBtn.setEnabled(true);
 		}
 		statusLabel.setToolTipText("In Arbeit");
-		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 600, TimeUnit.MILLISECONDS);
+		// drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 600, TimeUnit.MILLISECONDS);
+		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 100, TimeUnit.MILLISECONDS);
 		return this;
 	}
 
