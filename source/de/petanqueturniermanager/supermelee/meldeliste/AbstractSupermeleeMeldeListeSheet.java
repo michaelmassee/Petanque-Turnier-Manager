@@ -187,6 +187,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 */
 	private void insertInfoSpalte() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
+		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 
 		String formulaStrSpieltag = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
@@ -197,7 +199,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 
 		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
-				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).setVertJustify(CellVertJustify2.CENTER).setBorder(border);
+				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).centerVertJustify().setBorder(border).setCellBackColor(headerBackColor);
+
 		getSheetHelper().setStringValueInCell(bezeichnugVal);
 		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpieltag));
 
@@ -370,6 +373,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		processBoxinfo("Aktualisiere Summen Spalten");
 
+		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeile();
 
 		if (letzteDatenZeile < MIN_ANZAHL_SPIELER_ZEILEN) {
@@ -393,7 +398,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").setComment(null).removeCellBackColor();
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setBorder(border);
+		bezCelVal.setBorder(border).setCellBackColor(headerBackColor);
 
 		// ------------------------------------------------------------------------------------
 		// public static final int SUMMEN_AKTIVE_ZEILE = SUMMEN_ERSTE_ZEILE; // Zeile 6
@@ -474,7 +479,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// ------------------------------------------------------------------------------------
 
 		StringCellValue formula = StringCellValue.from(getXSpreadSheet()).setBorder(border);
-		ColumnProperties spalteWertProp = ColumnProperties.from().setWidth(1000).centerJustify().margin(CELL_MARGIN);
+		ColumnProperties spalteWertProp = ColumnProperties.from().setWidth(1200).centerJustify().margin(CELL_MARGIN);
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 
@@ -484,7 +489,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 			// Tag Header
 			StringCellValue tagHeader = StringCellValue.from(getXSpreadSheet()).setPos(posSpieltagWerte).setBorder(border).setValue("Tag " + spieltagCntr)
-					.setColumnProperties(spalteWertProp);
+					.setColumnProperties(spalteWertProp).setCellBackColor(headerBackColor);
 			getSheetHelper().setStringValueInCell(tagHeader);
 
 			// ------------------------------------------------------------------------------------
