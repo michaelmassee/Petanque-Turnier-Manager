@@ -382,7 +382,6 @@ public class ProcessBox {
 			cancelBtn.setEnabled(true);
 		}
 		statusLabel.setToolTipText("In Arbeit");
-		// drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 600, TimeUnit.MILLISECONDS);
 		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 100, TimeUnit.MILLISECONDS);
 		return this;
 	}
@@ -409,6 +408,7 @@ public class ProcessBox {
 	}
 
 }
+// Animatide gifs are not working !
 
 class UpdateInWorkIcon implements Runnable {
 	private int inWorkImgIdx = 0;

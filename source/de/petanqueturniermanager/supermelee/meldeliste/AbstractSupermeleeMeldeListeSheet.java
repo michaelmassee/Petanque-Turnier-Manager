@@ -213,7 +213,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		int hederBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(2000);
+		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER).setWidth(2000).margin(CELL_MARGIN);
 
 		StringCellValue bezCelSpieltagVal = StringCellValue.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ZWEITE_HEADER_ZEILE, spielTagHeader(spieltag))
 				.setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setCellBackColor(hederBackColor).addColumnProperties(columnProp)
@@ -387,7 +387,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 
-		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000);
+		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000).margin(CELL_MARGIN);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), posBezeichnug.getSpalte(), columnProp);
 
 		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").setComment(null).removeCellBackColor();
@@ -474,7 +474,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// ------------------------------------------------------------------------------------
 
 		StringCellValue formula = StringCellValue.from(getXSpreadSheet()).setBorder(border);
-		ColumnProperties spalteWertProp = ColumnProperties.from().setWidth(1000).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties spalteWertProp = ColumnProperties.from().setWidth(1000).centerJustify().margin(CELL_MARGIN);
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 

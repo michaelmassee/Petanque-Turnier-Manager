@@ -687,24 +687,27 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		processBoxinfo("Spielrunde Properties einfügen");
 
 		Position datenEnd = letzteSpielrNrPosition();
-		StringCellValue propName = StringCellValue.from(sheet, Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, datenEnd.getZeile() + 1));
-		propName.zeilePlus(2).setHoriJustify(CellHoriJustify.RIGHT).setBorder(BorderFactory.from().allThin().toBorder());
 
-		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlus(2).setHoriJustify(CellHoriJustify.LEFT).setBorder(BorderFactory.from().allThin().toBorder());
+		CellProperties cellPropBez = CellProperties.from().margin(150).setHoriJustify(CellHoriJustify.RIGHT).setVertJustify(CellVertJustify2.CENTER)
+				.setBorder(BorderFactory.from().allThin().toBorder());
+
+		StringCellValue propName = StringCellValue.from(sheet, Position.from(NUMMER_SPALTE_RUNDESPIELPLAN + 1, datenEnd.getZeile() + 1)).setCellProperties(cellPropBez);
+		propName.zeilePlus(2);
+
+		NumberCellValue propVal = NumberCellValue.from(propName).spaltePlusEins().setHoriJustify(CellHoriJustify.LEFT).setBorder(BorderFactory.from().allThin().toBorder());
 
 		// "Aktiv"
 		int anzAktiv = meldeListe.getAnzahlAktiveSpieler(getSpielTag());
-		getSheetHelper().setStringValueInCell(propName.setEndPosMergeSpaltePlus(1).setValue("Aktiv :").setComment("Anzahl Spieler in diese Runde"));
+		getSheetHelper().setStringValueInCell(propName.setValue("Aktiv :").setComment("Anzahl Spieler in diese Runde"));
 		getSheetHelper().setValInCell(propVal.setValue((double) anzAktiv));
 
 		int anzAusg = meldeListe.getAusgestiegenSpieler(getSpielTag());
-		getSheetHelper().setStringValueInCell(
-				propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Ausgestiegen :").setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
+		getSheetHelper().setStringValueInCell(propName.zeilePlusEins().setValue("Ausgestiegen :").setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
 		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 
 		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
 
-		getSheetHelper().setStringValueInCell(propName.zeilePlusEins().setEndPosMergeSpaltePlus(1).setValue("Modus :").setComment("Supermêlée Modus"));
+		getSheetHelper().setStringValueInCell(propName.zeilePlusEins().setValue("Modus :").setComment("Supermêlée Modus"));
 		getSheetHelper().setStringValueInCell(StringCellValue.from(propVal).zeilePlusEins().setValue(superMeleeMode.name()));
 	}
 

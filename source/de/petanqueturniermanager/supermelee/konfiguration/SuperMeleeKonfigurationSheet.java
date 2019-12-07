@@ -61,16 +61,16 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	// Spieltag Konfiguration
 	private void initSpieltagKonfigSpalten() throws GenerateException {
 		// Header
-		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1500);
-		StringCellValue header = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES - 1)).centerHoriJustify()
-				.centerVertJustify().setCharWeight(FontWeight.BOLD).setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR);
-		getSheetHelper().setStringValueInCell(header.setValue("Spieltag").setColumnProperties(columnPropSpieltag));
-		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000);
+		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1700).margin(BasePropertiesSpalte.PROP_CELL_MARGIN).centerJustify();
+		StringCellValue header = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES - 1)).setCharWeight(FontWeight.BOLD)
+				.setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR).addColumnProperties(columnPropSpieltag);
+		getSheetHelper().setStringValueInCell(header.setValue("Spieltag"));
+		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000).centerJustify();
 		getSheetHelper().setStringValueInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
 
 		// Daten
-		StringCellValue nr = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify().centerVertJustify()
-				.setCharHeight(14).setBorder(BorderFactory.from().allThin().toBorder());
+		StringCellValue nr = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
+				.centerVertJustify().setCharHeight(14).setBorder(BorderFactory.from().allThin().toBorder());
 		StringCellValue kopfZeile = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
 				.centerVertJustify().nichtUeberschreiben().setBorder(BorderFactory.from().allThin().toBorder());
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
