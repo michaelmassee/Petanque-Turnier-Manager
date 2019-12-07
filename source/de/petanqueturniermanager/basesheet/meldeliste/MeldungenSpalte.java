@@ -44,7 +44,7 @@ public class MeldungenSpalte {
 
 	private static final Logger logger = LogManager.getLogger(MeldungenSpalte.class);
 
-	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 700;
+	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 800;
 	private static final String HEADER_SPIELER_NR = "Nr";
 	private static final String HEADER_SPIELER_NAME = "Name";
 	private final Formation formation;
@@ -132,7 +132,8 @@ public class MeldungenSpalte {
 
 		getISheet().processBoxinfo("Meldungen Spalten Header");
 
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+				.setVertJustify(CellVertJustify2.CENTER).margin(MeldeListeKonstanten.CELL_MARGIN);
 		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader), HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
 				.setCellBackColor(headerColor).setVertJustify(CellVertJustify2.CENTER);
@@ -229,7 +230,7 @@ public class MeldungenSpalte {
 		alleSpielerNrEinfuegen(spielerNummerList, meldeliste);
 	}
 
-	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList, IMeldeliste meldeliste) throws GenerateException {
+	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList, IMeldeliste<SpielerMeldungen> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		checkNotNull(spielerNummerList);
 
@@ -242,7 +243,7 @@ public class MeldungenSpalte {
 		}
 
 		// filldown formula fuer name
-		String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;8))");
+		String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;4))");
 		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele()));
 		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula).setFillAutoDown(celValSpielerNr.getPos().getZeile() - 1));
 	}

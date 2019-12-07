@@ -10,6 +10,7 @@ import java.util.HashMap;
 import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 /**
@@ -70,6 +71,24 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 	}
 
 	/**
+	 * horizontal und vertikal center
+	 *
+	 * @return
+	 */
+	public T centerJustify() {
+		centerHoriJustify();
+		return centerVertJustify();
+	}
+
+	public T centerHoriJustify() {
+		return put(HORI_JUSTIFY, CellHoriJustify.CENTER);
+	}
+
+	public T centerVertJustify() {
+		return put(VERT_JUSTIFY, CellVertJustify2.CENTER);
+	}
+
+	/**
 	 * com.sun.star.table.CellHoriJustify.class
 	 *
 	 * @param cellHoriJustify CellHoriJustify
@@ -127,6 +146,29 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 
 	public T setCellbackgroundTransparent(boolean isTransparent) {
 		return put(IS_CELLBACKGROUND_TRANSPARENT, isTransparent);
+	}
+
+	public T topMargin(int margin) {
+		return put(TOP_MARGIN, new Integer(margin));
+	}
+
+	public T bottomMargin(int margin) {
+		return put(BOTTOM_MARGIN, new Integer(margin));
+	}
+
+	public T leftMargin(int margin) {
+		return put(LEFT_MARGIN, new Integer(margin));
+	}
+
+	public T rightMargin(int margin) {
+		return put(RIGHT_MARGIN, new Integer(margin));
+	}
+
+	public T margin(int margin) {
+		topMargin(margin);
+		bottomMargin(margin);
+		leftMargin(margin);
+		return rightMargin(margin);
 	}
 
 }

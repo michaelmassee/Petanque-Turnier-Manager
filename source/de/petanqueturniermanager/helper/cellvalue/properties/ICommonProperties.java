@@ -25,4 +25,9 @@ public interface ICommonProperties {
 	String ROTATEANGLE = "RotateAngle";
 	String IS_CELLBACKGROUND_TRANSPARENT = "IsCellBackgroundTransparent";
 
+	String TOP_MARGIN = "ParaTopMargin";
+	String BOTTOM_MARGIN = "ParaBottomMargin";
+	String LEFT_MARGIN = "ParaLeftMargin";
+	String RIGHT_MARGIN = "ParaRightMargin";
+
 }

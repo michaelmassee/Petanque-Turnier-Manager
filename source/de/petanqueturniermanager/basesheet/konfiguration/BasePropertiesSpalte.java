@@ -39,6 +39,7 @@ import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
  */
 abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
+	public static final int PROP_CELL_MARGIN = 150;
 	public static final int HEADER_HEIGHT = 800;
 	public static final TableBorder2 HEADER_BORDER = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 	public static final String HEADER_BACK_COLOR = "#dedbd3";
@@ -106,7 +107,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		XSpreadsheet propSheet = getPropSheet();
 		// header
 		Position posHeader = Position.from(propertiesSpalte, headerZeile);
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(SPALTE_NAME_WIDTH);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(SPALTE_NAME_WIDTH).margin(PROP_CELL_MARGIN);
 		RowProperties rowProperties = RowProperties.from().setHeight(HEADER_HEIGHT).setVertJustify(CellVertJustify2.CENTER);
 
 		StringCellValue headerVal = StringCellValue.from(propSheet, posHeader).addColumnProperties(columnProperties).setValue("Name").setHoriJustify(CellHoriJustify.RIGHT)
