@@ -23,7 +23,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
-import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 
 public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
 
@@ -44,7 +43,7 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		getSheetHelper().removeAllSheetsExclude(new String[] { IKonfigurationKonstanten.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { IKonfigurationKonstanten.SHEETNAME });
 		testNamenEinfuegen();
 	}
 
