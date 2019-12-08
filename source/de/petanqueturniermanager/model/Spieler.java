@@ -109,26 +109,6 @@ public class Spieler extends NrComparable {
 		return this;
 	}
 
-	@Override
-	public String toString() {
-
-		String warImTeamInfo = "";
-		for (Integer warImTeamSpielerNr : warImTeamMit) {
-			if (warImTeamInfo.length() > 0) {
-				warImTeamInfo += ",";
-			}
-			warImTeamInfo += warImTeamSpielerNr;
-		}
-
-		// @formatter:off
-		return MoreObjects.toStringHelper(this)
-				.add("nr", getNr())
-				.add("\nwarImTeamMit", warImTeamInfo)
-				.toString();
-		// @formatter:on
-
-	}
-
 	public String mitSpielerStr() {
 		String mitspielerStr = "(";
 		for (Integer warImTeamSpielerNr : warImTeamMit) {
@@ -171,6 +151,26 @@ public class Spieler extends NrComparable {
 				throw new AlgorithmenException("Ungültige Status in Spieler, istIntTeam = " + istInTeam + " wkRefteam.get()!=null");
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+
+		String warImTeamInfo = "";
+		for (Integer warImTeamSpielerNr : warImTeamMit) {
+			if (warImTeamInfo.length() > 0) {
+				warImTeamInfo += ",";
+			}
+			warImTeamInfo += warImTeamSpielerNr;
+		}
+
+		// @formatter:off
+		return MoreObjects.toStringHelper(this)
+				.add("nr", getNr())
+				.add("\nwarImTeamMit", warImTeamInfo)
+				.toString();
+		// @formatter:on
+
 	}
 
 }

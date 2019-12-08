@@ -23,6 +23,10 @@ public class TeamMeldungen implements IMeldungen<TeamMeldungen> {
 		teamList = new ArrayList<>();
 	}
 
+	public boolean isValid() {
+		return (teamList != null) && teamList.size() > 3;
+	}
+
 	@Override
 	public TeamMeldungen addNewWennNichtVorhanden(RowData meldungZeile) {
 		int teamNr = meldungZeile.get(0).getIntVal(-1);
