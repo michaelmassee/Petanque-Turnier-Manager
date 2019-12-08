@@ -14,6 +14,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -21,6 +22,8 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -35,6 +38,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
 import de.petanqueturniermanager.model.LigaSpielPlan;
+import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
@@ -109,7 +113,12 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
-		processBoxinfo("Neue Liga SpielPlan");
+		if (!meldungen.isValid()) {
+			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan").message("Ungültige anzahl von Melungen").show();
+			return;
+		}
+
 		if (!NewSheet.from(getWorkingSpreadsheet(), SHEET_NAMEN).pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid().tabColor(SHEET_COLOR).create()
 				.isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
@@ -124,8 +133,8 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde);
 		insertSpieltageDaten(spielPlanHRunde);
 		insertFormulaTeamNamen();
+		insertFormulaPunkte();
 		formatieren();
-
 	}
 
 	private void formatieren() throws GenerateException {
@@ -191,7 +200,13 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		}
 		Position startPos = Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
 		RangeHelper.from(getXSpreadSheet(), rangeData.getRangePosition(startPos)).setDataInRange(rangeData)
-				.setRangeProperties(RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder()));
+				.setRangeProperties(RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+
+		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
+		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).isVisible(zeigeArbeitsSpalten);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_A_NR_SPALTE, spalteBreite);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_B_NR_SPALTE, spalteBreite);
+
 	}
 
 	private void insertSpieltageDaten(List<List<TeamPaarung>> spielPlanHRunde) throws GenerateException {
@@ -216,6 +231,32 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
 		Position startPos = Position.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
 		RangeHelper.from(getXSpreadSheet(), rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
+	}
+
+	private void insertFormulaPunkte() throws GenerateException {
+		int letzteSpielZeile = letzteSpielZeile();
+
+		// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
+		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
+		{
+			String formulaHeimPunkteStr = "IF(" + Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
+					+ Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
+
+			StringCellValue formulaHeimPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaHeimPunkteStr)
+					.setPos(Position.from(PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+			getSheetHelper().setFormulaInCell(formulaHeimPunkte);
+		}
+
+		// ------------------------------------------------------------------------------------
+		{
+			String formulaGastPunkteStr = "IF(" + Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
+					+ Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
+
+			StringCellValue formulaGastPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaGastPunkteStr)
+					.setPos(Position.from(PUNKTE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+			getSheetHelper().setFormulaInCell(formulaGastPunkte);
+		}
+
 	}
 
 	private void insertFormulaTeamNamen() throws GenerateException {
@@ -243,5 +284,37 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	 */
 	protected final LigaMeldeListeSheet_Update getMeldeListe() {
 		return meldeListe;
+	}
+
+	/**
+	 * @param list
+	 * @throws GenerateException
+	 */
+	public void spielErgebnisseEinlesen(List<List<List<SpielErgebnis>>> list) throws GenerateException {
+		RangeData rangeData = new RangeData();
+
+		for (List<List<SpielErgebnis>> runde : list) {
+			for (List<SpielErgebnis> begegnung : runde) {
+				RowData ergebnisseRow = rangeData.newRow();
+				int spieleTeamA = 0;
+				int spieleTeamB = 0;
+				int spielPunkteA = 0;
+				int spielPunkteB = 0;
+
+				for (SpielErgebnis erg : begegnung) {
+					spieleTeamA += erg.siegA() ? 1 : 0;
+					spieleTeamB += erg.siegB() ? 1 : 0;
+					spielPunkteA += erg.getSpielPunkteA();
+					spielPunkteB += erg.getSpielPunkteB();
+				}
+				ergebnisseRow.newInt(spieleTeamA);
+				ergebnisseRow.newInt(spieleTeamB);
+				ergebnisseRow.newInt(spielPunkteA);
+				ergebnisseRow.newInt(spielPunkteB);
+			}
+		}
+		// --------------------
+		Position startPosSpiele = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
+		RangeHelper.from(getXSpreadSheet(), rangeData.getRangePosition(startPosSpiele)).setDataInRange(rangeData);
 	}
 }

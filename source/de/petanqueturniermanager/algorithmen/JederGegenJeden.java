@@ -10,8 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
@@ -37,16 +35,24 @@ public class JederGegenJeden {
 		freiSpiel = IsEvenOrOdd.IsOdd(anzMeldungen);
 	}
 
-	@VisibleForTesting
-	int anzRunden() {
+	public int anzRunden() {
 		return (freiSpiel) ? anzMeldungen : anzMeldungen - 1;
+	}
+
+	public int letzteMeldungNr() {
+		return (freiSpiel) ? anzMeldungen + 1 : anzMeldungen;
+	}
+
+	public int anzPaarungen() {
+		return letzteMeldungNr() / 2;
 	}
 
 	public List<List<TeamPaarung>> generate() {
 		List<List<TeamPaarung>> result = new ArrayList<>();
 
 		int anzRndn = anzRunden();
-		int letzteMeldungNr = (freiSpiel) ? anzMeldungen + 1 : anzMeldungen;
+		int letzteMeldungNr = letzteMeldungNr();
+		int anzPaarungren = anzPaarungen();
 
 		for (int rundenCntr = 1; rundenCntr <= anzRndn; rundenCntr++) {
 
@@ -57,7 +63,6 @@ public class JederGegenJeden {
 			runde.add(newTeamPaarung(rundenCntr - 1, letzteMeldungNr - 1));
 
 			// restliche paarungen
-			int anzPaarungren = (letzteMeldungNr / 2);
 			for (int teamPaarungcntr = 1; teamPaarungcntr < anzPaarungren; teamPaarungcntr++) {
 				int moduloA = (rundenCntr + teamPaarungcntr) % anzRndn;
 				int idxMeldungA = (moduloA < 1) ? anzRndn + moduloA : moduloA;
