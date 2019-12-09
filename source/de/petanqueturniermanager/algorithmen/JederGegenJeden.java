@@ -60,7 +60,13 @@ public class JederGegenJeden {
 			result.add(runde);
 
 			// letzte Teampaarung ist einfach nach schema F
-			runde.add(newTeamPaarung(rundenCntr - 1, letzteMeldungNr - 1));
+			// wegen heim und gast je nach runde umdrehen, nur wenn kein freispiel
+			// bei freispiel nicht drehen sondern rehenfolge bleibt
+			if (IsEvenOrOdd.IsOdd(rundenCntr) || freiSpiel) {
+				runde.add(newTeamPaarung(rundenCntr - 1, letzteMeldungNr - 1));
+			} else {
+				runde.add(newTeamPaarung(letzteMeldungNr - 1, rundenCntr - 1));
+			}
 
 			// restliche paarungen
 			for (int teamPaarungcntr = 1; teamPaarungcntr < anzPaarungren; teamPaarungcntr++) {

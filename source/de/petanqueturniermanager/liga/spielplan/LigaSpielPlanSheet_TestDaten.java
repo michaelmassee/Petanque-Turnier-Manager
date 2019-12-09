@@ -56,9 +56,6 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 		// ein begegnung sind:
 		// Runde1 = 1x Tete + 2 x Doublette
 		// Runde2 = 1 x Doublette + 1 x Triplette
-		// 1 Siegpunkt
-		// sind 5 Spiele
-		// sind max (13x5)+ (12x5) 65+10=125 Spielpunkte
 
 		ArrayList<List<List<SpielErgebnis>>> result = new ArrayList<>();
 
