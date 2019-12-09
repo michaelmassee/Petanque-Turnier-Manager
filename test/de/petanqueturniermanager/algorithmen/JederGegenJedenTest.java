@@ -39,15 +39,14 @@ public class JederGegenJedenTest {
 
 		TeamPaarung[] expRunde1 = new TeamPaarung[] { newTeamPaarung(1, 6), newTeamPaarung(2, 5), newTeamPaarung(3, 4) };
 		assertThat(result.get(0)).containsExactly(expRunde1);
-		TeamPaarung[] expRunde2 = new TeamPaarung[] { newTeamPaarung(2, 6), newTeamPaarung(3, 1), newTeamPaarung(4, 5) };
+		TeamPaarung[] expRunde2 = new TeamPaarung[] { newTeamPaarung(6, 2), newTeamPaarung(3, 1), newTeamPaarung(4, 5) };
 		assertThat(result.get(1)).containsExactly(expRunde2);
 		TeamPaarung[] expRunde3 = new TeamPaarung[] { newTeamPaarung(3, 6), newTeamPaarung(4, 2), newTeamPaarung(5, 1) };
 		assertThat(result.get(2)).containsExactly(expRunde3);
-		TeamPaarung[] expRunde4 = new TeamPaarung[] { newTeamPaarung(4, 6), newTeamPaarung(5, 3), newTeamPaarung(1, 2) };
+		TeamPaarung[] expRunde4 = new TeamPaarung[] { newTeamPaarung(6, 4), newTeamPaarung(5, 3), newTeamPaarung(1, 2) };
 		assertThat(result.get(3)).containsExactly(expRunde4);
 		TeamPaarung[] expRunde5 = new TeamPaarung[] { newTeamPaarung(5, 6), newTeamPaarung(1, 4), newTeamPaarung(2, 3) };
 		assertThat(result.get(4)).containsExactly(expRunde5);
-
 	}
 
 	@Test

@@ -93,7 +93,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		assertThat(result).isEqualTo(3);
 	}
 
-	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) throws GenerateException {
+	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) {
 
 		Position headerPos = Position.from(meldeSheet.spieltagSpalte(SpielTagNr.from(1)), MeldeListeKonstanten.ZWEITE_HEADER_ZEILE);
 		headerList.forEach(header -> {

@@ -13,7 +13,7 @@ import com.google.common.base.MoreObjects;
 /**
  * @author Michael Massee
  */
-public class TeamPaarung {
+public class TeamPaarung implements Cloneable {
 
 	private Team a;
 	private Optional<Team> b;
@@ -40,6 +40,17 @@ public class TeamPaarung {
 		}
 		this.a = a;
 		this.b = b;
+	}
+
+	/**
+	 * nur wenn B vorhanden dann A<->B Tauschen
+	 */
+	public void flipTeams() {
+		if (b.isPresent()) {
+			Team oldA = a;
+			a = b.get();
+			setB(oldA);
+		}
 	}
 
 	public Team getA() {
@@ -111,6 +122,14 @@ public class TeamPaarung {
 				.add("Teams", teamsStr)
 				.toString();
 		// @formatter:on
+	}
+
+	@Override
+	public Object clone() {
+		if (b.isPresent()) {
+			return new TeamPaarung(Team.from(a.nr), Team.from(b.get().nr));
+		}
+		return new TeamPaarung(Team.from(a.nr));
 	}
 
 }

@@ -14,6 +14,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -126,8 +127,9 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		}
 
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
-		List<List<TeamPaarung>> spielPlanHRunde = ligaSpielPlan.schufflePlan().getSpielPlan();
-		List<List<TeamPaarung>> spielPlanRRunde = ligaSpielPlan.schufflePlan().getSpielPlan();
+		// nur einmal schufflePlan ! damit beim wechsel von hr nach rr keine 2 x hintereinander
+		List<List<TeamPaarung>> spielPlanHRunde = ligaSpielPlan.schufflePlan().getSpielPlanClone();
+		List<List<TeamPaarung>> spielPlanRRunde = ligaSpielPlan.flipTeams().getSpielPlanClone();
 
 		insertDatenHeaderUndSpalteBreite();
 		insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde);
@@ -192,7 +194,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		// hin und rr runde
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
-
+				SheetRunner.testDoCancelTask();
 				RowData teamPaarungData = rangeData.newRow();
 				teamPaarungData.newInt(teamPaarung.getA().getNr());
 				teamPaarungData.newInt(teamPaarung.getOptionalB().isPresent() ? teamPaarung.getB().getNr() : 0);
@@ -295,6 +297,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
 		for (List<List<SpielErgebnis>> runde : list) {
 			for (List<SpielErgebnis> begegnung : runde) {
+				SheetRunner.testDoCancelTask();
 				RowData ergebnisseRow = rangeData.newRow();
 				int spieleTeamA = 0;
 				int spieleTeamB = 0;
