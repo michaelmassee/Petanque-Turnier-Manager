@@ -133,36 +133,9 @@ abstract public class AbstractRanglisteFormatter {
 		formatDritteZeileSpielTagSpalten(erstEndsummeSpalte, ENDSUMME_NUMBER_WIDTH);// DRITTE_KOPFDATEN_ZEILE
 	}
 
-	public void formatDatenGeradeUngerade_Old() throws GenerateException {
-		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().get();
-		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
-		int letzteSpalte = iRanglisteSheet.get().getLetzteSpalte();
-
-		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
-		// gerade / ungrade hintergrund farbe
-		// CellBackColor
-		Integer geradeColor = propertiesSpalte.getRanglisteHintergrundFarbeGerade();
-		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
-
-		for (int zeileCntr = ersteDatenZeile; zeileCntr <= letzteDatenZeile; zeileCntr++) {
-			RangePosition datenRange = RangePosition.from(0, zeileCntr, letzteSpalte, zeileCntr);
-			if ((zeileCntr & 1) == 0) {
-				if (unGeradeColor != null) {
-					getSheetHelper().setPropertyInRange(getSheet(), datenRange, ICommonProperties.CELL_BACK_COLOR, unGeradeColor);
-				}
-			} else {
-				if (geradeColor != null) {
-					getSheetHelper().setPropertyInRange(getSheet(), datenRange, ICommonProperties.CELL_BACK_COLOR, geradeColor);
-				}
-			}
-		}
-	}
-
 	public void formatDatenErrorGeradeUngerade(int validateSpalteNr) throws GenerateException {
 
 		// gerade / ungrade hintergrund farbe
-		// CellBackColor
 		IRangliste sheet = iRanglisteSheet.get();
 
 		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().get();

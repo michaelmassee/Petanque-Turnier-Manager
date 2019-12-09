@@ -27,15 +27,16 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 
 public class MeldungenSpalte {
@@ -234,18 +235,18 @@ public class MeldungenSpalte {
 		checkNotNull(meldeliste);
 		checkNotNull(spielerNummerList);
 
-		NumberCellValue celValSpielerNr = NumberCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele()), 0);
+		RangeData spielrNrData = new RangeData();
+		spielerNummerList.stream().forEachOrdered(nr -> {
+			spielrNrData.newRow().newInt(nr);
+		});
 
-		for (int spielrNummer : spielerNummerList) {
-			celValSpielerNr.setValue((double) spielrNummer);
-			getSheetHelper().setValInCell(celValSpielerNr);
-			celValSpielerNr.zeilePlusEins();
-		}
+		Position startPosNr = Position.from(meldungNrSpalte, getErsteDatenZiele());
+		RangeHelper.from(getISheet(), spielrNrData.getRangePosition(startPosNr)).setDataInRange(spielrNrData);
 
 		// filldown formula fuer name
 		String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;4))");
 		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele()));
-		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula).setFillAutoDown(celValSpielerNr.getPos().getZeile() - 1));
+		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula).setFillAutoDown(getLetzteDatenZeile()));
 	}
 
 	/**
