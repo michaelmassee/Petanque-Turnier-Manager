@@ -13,16 +13,19 @@ import de.petanqueturniermanager.model.TeamRangliste;
 
 public class KoRundeTeamPaarungenTest {
 
+	@SuppressWarnings("unused")
 	@Test(expected = IllegalArgumentException.class)
 	public void testConstructorEmptyGeneratSpielRunde() throws Exception {
 		new KoRundeTeamPaarungen(new TeamRangliste());
 	}
 
+	@SuppressWarnings("unused")
 	@Test(expected = NullPointerException.class)
 	public void testConstructorNull() throws Exception {
 		new KoRundeTeamPaarungen(null);
 	}
 
+	@SuppressWarnings("unused")
 	@Test(expected = IllegalArgumentException.class)
 	public void testConstructorUngeradeAnzahlGeneratSpielRunde() throws Exception {
 		TeamRangliste teamRangliste = new TeamRangliste();

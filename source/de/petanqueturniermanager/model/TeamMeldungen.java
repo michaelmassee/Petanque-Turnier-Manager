@@ -59,6 +59,11 @@ public class TeamMeldungen implements IMeldungen<TeamMeldungen> {
 		return teamList;
 	}
 
+	@Override
+	public List<IMeldung> getMeldungen() {
+		return new ArrayList<>(teamList);
+	}
+
 	public List<Team> teams() {
 		return new ArrayList<>(teamList);
 	}

@@ -39,6 +39,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
@@ -66,7 +67,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0, B=1
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
 
-	private final MeldungenSpalte spielerSpalte;
+	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final RanglisteFormatter ranglisteFormatter;

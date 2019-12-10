@@ -38,9 +38,9 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 
-	private final IMeldeliste meldeListe;
+	private final IMeldeliste<MLDTYPE> meldeListe;
 
-	public MeldeListeHelper(IMeldeliste newMeldeListe) {
+	public MeldeListeHelper(IMeldeliste<MLDTYPE> newMeldeListe) {
 		meldeListe = checkNotNull(newMeldeListe);
 	}
 
