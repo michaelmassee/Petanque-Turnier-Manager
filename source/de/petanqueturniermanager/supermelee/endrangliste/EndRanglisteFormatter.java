@@ -15,6 +15,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
 public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
@@ -23,16 +24,17 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
-	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte spielerSpalte, int ersteSpielTagSpalte, ISuperMeleePropertiesSpalte propertiesSpalte) {
+	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielTagSpalte,
+			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
-		this.ranglisteWkRef = new WeakRefHelper<IEndRangliste>(rangliste);
+		ranglisteWkRef = new WeakRefHelper<>(rangliste);
 		this.anzSpaltenInSpieltag = anzSpaltenInSpieltag;
 		this.ersteSpielTagSpalte = ersteSpielTagSpalte;
 	}
 
 	public void updateHeader() throws GenerateException {
-		IEndRangliste rangliste = this.ranglisteWkRef.get();
+		IEndRangliste rangliste = ranglisteWkRef.get();
 		int anzSpieltagen = rangliste.getAnzahlSpieltage();
 		if (anzSpieltagen < 1) {
 			return;
@@ -43,9 +45,9 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 		StringCellValue spieltagheader = StringCellValue.from(getSheet(), Position.from(ERSTE_KOPFDATEN_ZEILE, 0)).setCellBackColor(getHeaderFarbe())
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder()).setHoriJustify(CellHoriJustify.CENTER);
 		for (int spielTag = 1; spielTag <= anzSpieltagen; spielTag++) {
-			int ersteSpalteSpieltagBlock = this.ersteSpielTagSpalte + ((spielTag - 1) * this.anzSpaltenInSpieltag);
+			int ersteSpalteSpieltagBlock = ersteSpielTagSpalte + ((spielTag - 1) * anzSpaltenInSpieltag);
 			// ERSTE_KOPFDATEN_ZEILE
-			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag").setEndPosMergeSpaltePlus(this.anzSpaltenInSpieltag - 1);
+			spieltagheader.spalte(ersteSpalteSpieltagBlock).setValue(spielTag + ". Spieltag").setEndPosMergeSpaltePlus(anzSpaltenInSpieltag - 1);
 			getSheetHelper().setStringValueInCell(spieltagheader);
 			formatZweiteZeileSpielTagSpalten(ersteSpalteSpieltagBlock); // ZWEITE_KOPFDATEN_ZEILE
 			formatDritteZeileSpielTagSpalten(ersteSpalteSpieltagBlock, MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
@@ -59,13 +61,13 @@ public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
 	}
 
 	public void formatDaten() throws GenerateException {
-		IEndRangliste rangliste = this.ranglisteWkRef.get();
+		IEndRangliste rangliste = ranglisteWkRef.get();
 		int anzSpielTage = rangliste.getAnzahlSpieltage();
 		if (anzSpielTage < 1) {
 			return;
 		}
 		for (int spielTag = 1; spielTag <= anzSpielTage; spielTag++) {
-			int ersteSpalteSpieltagBlock = this.ersteSpielTagSpalte + ((spielTag - 1) * this.anzSpaltenInSpieltag);
+			int ersteSpalteSpieltagBlock = ersteSpielTagSpalte + ((spielTag - 1) * anzSpaltenInSpieltag);
 			formatDatenSpielTagSpalten(ersteSpalteSpieltagBlock);
 		}
 		formatDatenSpielTagSpalten(rangliste.getErsteSummeSpalte());

@@ -37,9 +37,9 @@ import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.model.IMeldungen;
 
-public class MeldungenSpalte {
+public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 
 	public static final int MAX_ANZ_MELDUNGEN = 999;
 
@@ -219,19 +219,19 @@ public class MeldungenSpalte {
 		return -1;
 	}
 
-	public void alleSpieltagSpielerAusmeldelisteEinfuegen(IMeldeliste<SpielerMeldungen> meldeliste) throws GenerateException {
+	public void alleSpieltagSpielerAusmeldelisteEinfuegen(IMeldeliste<MLDTYPE> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		// spieler einfuegen wenn nicht vorhanden
-		SpielerMeldungen meldungen = (SpielerMeldungen) meldeliste.getAktiveUndAusgesetztMeldungen();
+		IMeldungen<MLDTYPE> meldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 		HashSet<Integer> spielerNummerList = new HashSet<>();
-		meldungen.spieler().forEach((spieler) -> {
-			spielerNummerList.add(spieler.getNr());
+		meldungen.getMeldungen().forEach((meldung) -> {
+			spielerNummerList.add(meldung.getNr());
 		});
 
 		alleSpielerNrEinfuegen(spielerNummerList, meldeliste);
 	}
 
-	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList, IMeldeliste<SpielerMeldungen> meldeliste) throws GenerateException {
+	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList, IMeldeliste<MLDTYPE> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		checkNotNull(spielerNummerList);
 
@@ -395,8 +395,8 @@ public class MeldungenSpalte {
 			return this;
 		}
 
-		public MeldungenSpalte build() {
-			return new MeldungenSpalte(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader, spalteMeldungNameWidth);
+		public <T> MeldungenSpalte<T> build() {
+			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader, spalteMeldungNameWidth);
 		}
 	}
 }

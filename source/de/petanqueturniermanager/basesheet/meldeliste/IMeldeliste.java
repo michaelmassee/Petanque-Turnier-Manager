@@ -21,7 +21,7 @@ public interface IMeldeliste<T> extends ISheet, MeldeListeKonstanten, IMitSpiele
 
 	IMeldungen<T> getAlleMeldungen() throws GenerateException;
 
-	MeldungenSpalte getMeldungenSpalte();
+	MeldungenSpalte<T> getMeldungenSpalte();
 
 	int letzteSpielTagSpalte() throws GenerateException;
 

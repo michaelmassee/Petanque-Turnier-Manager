@@ -81,7 +81,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	public static final int ERSTE_ZEILE_INFO = ERSTE_DATEN_ZEILE - 1; // Zeile 2
 
-	private final MeldungenSpalte meldungenSpalte;
+	private final MeldungenSpalte<SpielerMeldungen> meldungenSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
 	private final MeldeListeHelper<SpielerMeldungen> meldeListeHelper;
 	private SpielTagNr spielTag = null;
@@ -738,7 +738,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 * @return the spielerSpalte
 	 */
 	@Override
-	public final MeldungenSpalte getMeldungenSpalte() {
+	public final MeldungenSpalte<SpielerMeldungen> getMeldungenSpalte() {
 		return meldungenSpalte;
 	}
 

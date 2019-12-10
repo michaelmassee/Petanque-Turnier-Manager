@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.model;
 
+import java.util.List;
+
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
@@ -11,5 +13,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  */
 public interface IMeldungen<T> {
 	T addNewWennNichtVorhanden(RowData meldungZeile);
+
+	List<IMeldung> getMeldungen();
 
 }

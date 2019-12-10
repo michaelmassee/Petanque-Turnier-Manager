@@ -27,6 +27,7 @@ public class TeamPaarungTest {
 		assertThat(paarung.getB()).isNull();
 	}
 
+	@SuppressWarnings("unused")
 	@Test(expected = IllegalArgumentException.class)
 	public void testTeamPaarungmitEqual() throws Exception {
 		Team teamA = Team.from(1);

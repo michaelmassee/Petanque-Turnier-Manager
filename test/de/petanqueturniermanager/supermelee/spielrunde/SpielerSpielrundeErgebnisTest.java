@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
@@ -43,7 +42,7 @@ public class SpielerSpielrundeErgebnisTest {
 		validateSpielrundeErg(copy);
 	}
 
-	private SpielerSpielrundeErgebnis newTestSpielerSpielrundeErgebnisTeamB() throws GenerateException {
+	private SpielerSpielrundeErgebnis newTestSpielerSpielrundeErgebnisTeamB() {
 		SpielRundeNr spielrunde = SpielRundeNr.from(3);
 		int spielerNr = 22;
 		Position positionSpielerNr = Position.from(8, 20);
@@ -52,7 +51,7 @@ public class SpielerSpielrundeErgebnisTest {
 		return SpielerSpielrundeErgebnis.from(spielrunde, spielerNr, positionSpielerNr, ersteSpalteErgebnisse, spielRundeTeam);
 	}
 
-	private void validateSpielrundeErg(SpielerSpielrundeErgebnis spielerSpielrundeErgebnis) throws GenerateException {
+	private void validateSpielrundeErg(SpielerSpielrundeErgebnis spielerSpielrundeErgebnis) {
 		assertThat(spielerSpielrundeErgebnis.getPositionMinusPunkte()).isNotNull(); // Linker spalte
 		assertThat(spielerSpielrundeErgebnis.getPositionMinusPunkte().getSpalte()).isEqualTo(5);
 		assertThat(spielerSpielrundeErgebnis.getPositionMinusPunkte().getZeile()).isEqualTo(20);

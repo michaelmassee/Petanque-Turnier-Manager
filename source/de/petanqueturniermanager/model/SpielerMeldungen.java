@@ -81,6 +81,11 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen> {
 		return spielerList;
 	}
 
+	@Override
+	public List<IMeldung> getMeldungen() {
+		return new ArrayList<>(spielerList);
+	}
+
 	public List<Spieler> spieler() {
 		return new ArrayList<>(spielerList);
 	}

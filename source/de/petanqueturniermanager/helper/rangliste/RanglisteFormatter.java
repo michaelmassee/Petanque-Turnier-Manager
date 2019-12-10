@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
 public class RanglisteFormatter extends AbstractRanglisteFormatter {
@@ -27,7 +28,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 	private final int anzSpaltenInSpielrunde;
 	private final int ersteSpielRundeSpalte;
 
-	public RanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte spielerSpalte, int ersteSpielRundeSpalte,
+	public RanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielRundeSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
@@ -82,7 +83,7 @@ public class RanglisteFormatter extends AbstractRanglisteFormatter {
 		ranglisteWkRef.get().processBoxinfo("Formatiere Daten");
 
 		ISpielTagRangliste rangliste = ranglisteWkRef.get();
-		MeldungenSpalte spielerSpalte = getSpielerSpalteWkRef().get();
+		MeldungenSpalte<SpielerMeldungen> spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {

@@ -53,6 +53,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SummenSpalten;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
@@ -73,7 +74,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	public static final String SHEET_COLOR = "d637e8";
 
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
-	private final MeldungenSpalte spielerSpalte;
+	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
 	private final EndRanglisteFormatter endRanglisteFormatter;
 	private final RangListeSpalte rangListeSpalte;
 	private final RangListeSorter rangListeSorter;

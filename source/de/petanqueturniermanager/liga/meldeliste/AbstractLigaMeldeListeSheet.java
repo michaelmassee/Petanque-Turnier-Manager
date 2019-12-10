@@ -35,14 +35,14 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 16; // Tablle immer mit min anzahl von zeilen formatieren
 
-	private final MeldungenSpalte meldungenSpalte;
+	private final MeldungenSpalte<TeamMeldungen> meldungenSpalte;
 	private final MeldeListeHelper<TeamMeldungen> meldeListeHelper;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Meldeliste");
+		super(workingSpreadsheet, "Liga-Meldeliste");
 		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH).ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
 				.sheet(this).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
@@ -156,12 +156,13 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
-		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA));
+		return getAlleMeldungen();
 	}
 
 	@Override
 	public TeamMeldungen getInAktiveMeldungen() throws GenerateException {
-		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
+		// leer, gibt es nicht
+		return new TeamMeldungen();
 	}
 
 	@Override
@@ -212,7 +213,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 * @return the spielerSpalte
 	 */
 	@Override
-	public final MeldungenSpalte getMeldungenSpalte() {
+	public final MeldungenSpalte<TeamMeldungen> getMeldungenSpalte() {
 		return meldungenSpalte;
 	}
 

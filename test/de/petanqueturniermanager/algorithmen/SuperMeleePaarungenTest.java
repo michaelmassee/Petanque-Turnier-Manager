@@ -305,6 +305,7 @@ public class SuperMeleePaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 6, 1, 7 });
 		spielerNrTeamListe.add(new Integer[] { 2, 8, 4 });
 		spielerNrTeamListe.add(new Integer[] { 5, 3, 11 });
+		@SuppressWarnings("unused")
 		MeleeSpielRunde ersteRunde = buildTestRunde(1, testMeldungen, spielerNrTeamListe);
 		// System.out.println(ersteRunde);
 
@@ -313,6 +314,7 @@ public class SuperMeleePaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 11, 9, 1 });
 		spielerNrTeamListe.add(new Integer[] { 12, 4, 5 });
 		spielerNrTeamListe.add(new Integer[] { 7, 8, 3 });
+		@SuppressWarnings("unused")
 		MeleeSpielRunde zweiteRunde = buildTestRunde(2, testMeldungen, spielerNrTeamListe);
 		// System.out.println(zweiteRunde);
 
@@ -321,6 +323,7 @@ public class SuperMeleePaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 5, 9, 6 });
 		spielerNrTeamListe.add(new Integer[] { 12, 8, 11 });
 		spielerNrTeamListe.add(new Integer[] { 3, 2, 1 });
+		@SuppressWarnings("unused")
 		MeleeSpielRunde dritteRunde = buildTestRunde(3, testMeldungen, spielerNrTeamListe);
 		// System.out.println(dritteRunde);
 

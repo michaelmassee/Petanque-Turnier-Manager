@@ -16,15 +16,17 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 
 public class MeldeListeHelperTest {
-	private MeldeListeHelper meldeListeHelper;
+	private MeldeListeHelper<SpielerMeldungen> meldeListeHelper;
 
-	private IMeldeliste iMeldelisteMock;
+	private IMeldeliste<SpielerMeldungen> iMeldelisteMock;
 	private SheetHelper sheetHelperMock;
-	private MeldungenSpalte meldungenSpalteMock;
+	private MeldungenSpalte<SpielerMeldungen> meldungenSpalteMock;
 	XSpreadsheet xSpreadsheetMock;
 
+	@SuppressWarnings("unchecked")
 	@Before
 	public void init() throws GenerateException {
 		iMeldelisteMock = PowerMockito.mock(IMeldeliste.class);
@@ -35,7 +37,7 @@ public class MeldeListeHelperTest {
 		PowerMockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
 		PowerMockito.when(iMeldelisteMock.getSheetHelper()).thenReturn(sheetHelperMock);
 
-		meldeListeHelper = new MeldeListeHelper(iMeldelisteMock) {
+		meldeListeHelper = new MeldeListeHelper<SpielerMeldungen>(iMeldelisteMock) {
 			@Override
 			public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 				// nichts

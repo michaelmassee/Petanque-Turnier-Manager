@@ -15,7 +15,7 @@ import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 
-public class Team extends NrComparable {
+public class Team extends NrComparable implements IMeldung {
 	private final ArrayList<Spieler> spielerList;
 	private final HashSet<Integer> gegner = new HashSet<>();
 
