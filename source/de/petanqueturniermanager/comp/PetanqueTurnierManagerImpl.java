@@ -19,10 +19,10 @@ import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationStarter;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.MainKonfigDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
@@ -60,7 +60,6 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		xContext = context;
 		try {
 			ProcessBox.init(context);
-			MainKonfigDialog.init(context);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -253,6 +252,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			break;
 		case "liga_spielplan":
 			new LigaSpielPlanSheet(workingSpreadsheet).start();
+			break;
+		case "liga_rangliste":
+			new LigaRanglisteSheet(workingSpreadsheet).start();
 			break;
 		case "liga_spielplan_testdaten":
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet).start();

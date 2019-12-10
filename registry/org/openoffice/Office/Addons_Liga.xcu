@@ -76,6 +76,19 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							
+							<node oor:name="A3A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Liga Ranking</value>
+									<value xml:lang="de">Liga Rangliste</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_rangliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>							
 						</node>
 					</node>
 					<!-- ****************************************************************** -->
