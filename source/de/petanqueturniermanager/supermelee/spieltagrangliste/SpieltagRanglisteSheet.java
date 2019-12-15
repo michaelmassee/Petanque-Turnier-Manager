@@ -100,7 +100,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 				.create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		spielerSpalte.alleSpieltagSpielerAusmeldelisteEinfuegen(meldeliste);
+		spielerSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);
 		spielerSpalte.insertHeaderInSheet(headerColor);
 		ranglisteFormatter.updateHeader();
 

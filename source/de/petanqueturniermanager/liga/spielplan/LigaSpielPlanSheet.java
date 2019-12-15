@@ -55,18 +55,18 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	public static final String SHEET_NAMEN = "Liga Spielplan";
 
 	private static final int ERSTE_SPIELTAG_HEADER_ZEILE = 0; // Zeile 0
-	private static final int ERSTE_SPIELTAG_DATEN_ZEILE = ERSTE_SPIELTAG_HEADER_ZEILE + 2; // Zeile 2
+	public static final int ERSTE_SPIELTAG_DATEN_ZEILE = ERSTE_SPIELTAG_HEADER_ZEILE + 2; // Zeile 2
 	private static final int SPIEL_NR_SPALTE = 0; // Spalte A
 	private static final int KW_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int DATUM_SPALTE = KW_SPALTE + 1;
 	private static final int NAME_A_SPALTE = DATUM_SPALTE + 1;
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
-	private static final int PUNKTE_A_SPALTE = NAME_B_SPALTE + 1;
-	private static final int PUNKTE_B_SPALTE = PUNKTE_A_SPALTE + 1;
-	private static final int SPIELE_A_SPALTE = PUNKTE_B_SPALTE + 1;
-	private static final int SPIELE_B_SPALTE = SPIELE_A_SPALTE + 1;
-	private static final int SPIELPNKT_A_SPALTE = SPIELE_B_SPALTE + 1;
-	private static final int SPIELPNKT_B_SPALTE = SPIELPNKT_A_SPALTE + 1;
+	public static final int PUNKTE_A_SPALTE = NAME_B_SPALTE + 1;
+	public static final int PUNKTE_B_SPALTE = PUNKTE_A_SPALTE + 1;
+	public static final int SPIELE_A_SPALTE = PUNKTE_B_SPALTE + 1;
+	public static final int SPIELE_B_SPALTE = SPIELE_A_SPALTE + 1;
+	public static final int SPIELPNKT_A_SPALTE = SPIELE_B_SPALTE + 1;
+	public static final int SPIELPNKT_B_SPALTE = SPIELPNKT_A_SPALTE + 1;
 
 	private static final int PUNKTE_NR_WIDTH = AbstractRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
 
@@ -74,8 +74,8 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	private static final String NR_RUECKRUNDE_PREFIX = "RR-";
 
 	// Arbeitsspalten
-	private static final int TEAM_A_NR_SPALTE = 14; // Zeile 0
-	private static final int TEAM_B_NR_SPALTE = TEAM_A_NR_SPALTE + 1; // Zeile 0
+	public static final int TEAM_A_NR_SPALTE = 14; // Zeile 0
+	public static final int TEAM_B_NR_SPALTE = TEAM_A_NR_SPALTE + 1; // Zeile 0
 
 	private final LigaMeldeListeSheet_Update meldeListe;
 

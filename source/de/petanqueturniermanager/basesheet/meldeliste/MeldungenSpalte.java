@@ -219,7 +219,7 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 		return -1;
 	}
 
-	public void alleSpieltagSpielerAusmeldelisteEinfuegen(IMeldeliste<MLDTYPE> meldeliste) throws GenerateException {
+	public void alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(IMeldeliste<MLDTYPE> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		// spieler einfuegen wenn nicht vorhanden
 		IMeldungen<MLDTYPE> meldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
@@ -227,13 +227,16 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 		meldungen.getMeldungen().forEach((meldung) -> {
 			spielerNummerList.add(meldung.getNr());
 		});
-
 		alleSpielerNrEinfuegen(spielerNummerList, meldeliste);
 	}
 
 	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList, IMeldeliste<MLDTYPE> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		checkNotNull(spielerNummerList);
+
+		if (spielerNummerList.isEmpty()) {
+			return; // nichts zu tun
+		}
 
 		RangeData spielrNrData = new RangeData();
 		spielerNummerList.stream().forEachOrdered(nr -> {

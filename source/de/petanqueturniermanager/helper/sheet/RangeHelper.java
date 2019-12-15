@@ -15,6 +15,7 @@ import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.CellFlags;
+import com.sun.star.sheet.XArrayFormulaRange;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XSheetOperation;
@@ -157,7 +158,13 @@ public class RangeHelper {
 		return xCellRange;
 	}
 
-	public XCellRangesQuery getCellRangesQuery() {
+	/**
+	 * not used
+	 *
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	private XCellRangesQuery getCellRangesQuery() {
 		checkNotNull(rangePos);
 
 		XCellRange xCellRange = null;
@@ -171,10 +178,17 @@ public class RangeHelper {
 	}
 
 	public RangeHelper setRangeProperties(RangeProperties rangeProp) {
-		XPropertySet xPropSet = getColumnPropertySet();
+		XPropertySet xPropSet = getPropertySet();
 		rangeProp.forEach((key, value) -> {
 			setProperty(xPropSet, key, value);
 		});
+		return this;
+	}
+
+	public RangeHelper setArrayFormula(String formula) {
+		XCellRange xCellRange = getCellRange();
+		XArrayFormulaRange xArrayFormula = UnoRuntime.queryInterface(XArrayFormulaRange.class, xCellRange);
+		xArrayFormula.setArrayFormula(formula);
 		return this;
 	}
 
@@ -190,7 +204,7 @@ public class RangeHelper {
 		}
 	}
 
-	private XPropertySet getColumnPropertySet() {
+	public XPropertySet getPropertySet() {
 		XPropertySet xPropSet = null;
 		XCellRange xCellRange = getCellRange();
 		if (xCellRange != null) {

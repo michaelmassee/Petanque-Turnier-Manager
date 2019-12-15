@@ -4,7 +4,6 @@
 
 package de.petanqueturniermanager.liga.meldeliste;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.sun.star.sheet.ConditionOperator;
@@ -146,7 +145,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public TeamMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
-		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+		return getAlleMeldungen();
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public class SortHelper {
 
 	// private static final Logger logger = LogManager.getLogger(SortHelper.class);
 	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
-	private final RangePosition rangePosition;
+	private final RangePosition rangePositionToSort;
 
 	private int sortSpalte = 0; // 0 = erste spalte
 	private boolean aufSteigendSortieren = true;
@@ -34,7 +34,7 @@ public class SortHelper {
 
 	private SortHelper(XSpreadsheet xSpreadsheet, RangePosition rangePosition) {
 		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
-		this.rangePosition = checkNotNull(rangePosition);
+		rangePositionToSort = checkNotNull(rangePosition);
 	}
 
 	public static SortHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePosition) {
@@ -112,12 +112,12 @@ public class SortHelper {
 
 	public SortHelper doSort() {
 
-		XCellRange xCellRange = RangeHelper.from(wkRefxSpreadsheet, rangePosition).getCellRange();
-		if (xCellRange == null) {
+		XCellRange xCellRangeToSort = RangeHelper.from(wkRefxSpreadsheet, rangePositionToSort).getCellRange();
+		if (xCellRangeToSort == null) {
 			return this;
 		}
 
-		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
+		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRangeToSort);
 
 		// Note – The FieldType member, that is used to select textual or numeric sorting in
 		// text documents is ignored in the spreadsheet application. In a spreadsheet, a cell
