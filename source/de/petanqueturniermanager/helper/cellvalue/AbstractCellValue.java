@@ -354,6 +354,12 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public T setFillAutoDownZeilePlus(int anzZeile) {
+		this.fillAuto = FillAutoPosition.from(getPos()).zeilePlus(anzZeile);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
 	public T setBorder(TableBorder2 tableBorder2) {
 		this.cellProperties.setBorder(tableBorder2);
 		return (T) this;

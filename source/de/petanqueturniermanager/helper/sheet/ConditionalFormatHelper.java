@@ -13,7 +13,6 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
-import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
@@ -126,7 +125,8 @@ public class ConditionalFormatHelper {
 	}
 
 	/**
-	 * Formatierung anwenden
+	 * Formatierung anwenden<br>
+	 * Fehler wenn irgend ein Sheet hat ein Lock
 	 *
 	 * @return
 	 * @throws GenerateException
@@ -137,9 +137,7 @@ public class ConditionalFormatHelper {
 		checkNotNull(formula1);
 		checkNotNull(styleName);
 
-		XCellRange xCellRange = RangeHelper.from(sheet, rangePos).getCellRange();
-
-		XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, xCellRange);
+		XPropertySet xPropSet = RangeHelper.from(sheet, rangePos).getPropertySet();
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
 		try {
 			xEntries = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetConditionalEntries.class, xPropSet.getPropertyValue("ConditionalFormat"));
