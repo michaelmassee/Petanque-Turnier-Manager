@@ -33,34 +33,36 @@ public class SearchHelper {
 
 	private static final Logger logger = LogManager.getLogger(SearchHelper.class);
 	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
+	private final RangePosition rangePos;
 
-	private SearchHelper(XSpreadsheet xSpreadsheet) {
+	private SearchHelper(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
 		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
+		checkNotNull(rangePos.getStart());
+		checkNotNull(rangePos.getEnde());
+		this.rangePos = checkNotNull(rangePos);
 	}
 
-	public static SearchHelper from(XSpreadsheet xSpreadsheet) {
-		return new SearchHelper(xSpreadsheet);
+	public static SearchHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
+		return new SearchHelper(xSpreadsheet, rangePos);
 	}
 
-	public static SearchHelper from(ISheet iSheet) throws GenerateException {
-		return new SearchHelper(checkNotNull(iSheet).getXSpreadSheet());
+	public static SearchHelper from(ISheet iSheet, RangePosition rangePos) throws GenerateException {
+		return new SearchHelper(checkNotNull(iSheet).getXSpreadSheet(), rangePos);
 	}
 
-	public static SearchHelper from(WeakRefHelper<ISheet> sheetWkRef) throws GenerateException {
-		return new SearchHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet());
+	public static SearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) throws GenerateException {
+		return new SearchHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet(), rangePos);
 	}
 
 	/**
 	 * suche in der 1 Spalte von Range, nach regExpr.<br>
 	 * Achtung wenn suche nach werte fuer komplette Zelle dan mit ^ und $
-	 * 
+	 *
 	 * @param rangePos Range mit Spalte
 	 * @return wenn gefunden dann erste treffer, sonnst Null
 	 */
 
-	public Position searchNachRegExprInSpalte(RangePosition rangePos, String regExpr) {
-		checkNotNull(rangePos);
-		checkNotNull(rangePos.getStartSpalte() != rangePos.getEndeSpalte());
+	public Position searchNachRegExprInSpalte(String regExpr) {
 		checkNotNull(regExpr);
 
 		Position result = null;
@@ -86,8 +88,8 @@ public class SearchHelper {
 	 * @return wenn gefunden dann letzte Zelle, sonnst erste Zelle aus Range
 	 */
 
-	public Position searchLastEmptyInSpalte(RangePosition rangePos) {
-		Position result = searchLastNotEmptyInSpalte(rangePos);
+	public Position searchLastEmptyInSpalte() {
+		Position result = searchLastNotEmptyInSpalte();
 		if (result != null) {
 			result.zeilePlusEins();
 		} else {
@@ -103,9 +105,7 @@ public class SearchHelper {
 	 * @return wenn gefunden dann letzte Zelle, sonnst Null
 	 */
 
-	public Position searchLastNotEmptyInSpalte(RangePosition rangePos) {
-		checkNotNull(rangePos);
-		checkNotNull(rangePos.getStartSpalte() != rangePos.getEndeSpalte());
+	public Position searchLastNotEmptyInSpalte() {
 
 		Position result = null;
 		try {

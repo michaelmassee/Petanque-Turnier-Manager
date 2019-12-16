@@ -15,14 +15,18 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
@@ -44,6 +48,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 
 	private static final int ERSTE_SPIELTAG_SPALTE = TEAM_NR_SPALTE + 3; // nr + name + rangliste
 	private static final int PUNKTE_NR_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH;
+	private static final int ANZ_SUMMEN_SPALTEN = 8; // Punkte +/- Spiele +/-/Diff SpielPunkte +/-/Diff
 
 	private final MeldungenSpalte<TeamMeldungen> meldungenSpalte;
 	private final LigaMeldeListeSheet_Update meldeListe;
@@ -104,7 +109,17 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 		JederGegenJeden jederGegenJeden = new JederGegenJeden(alleMeldungen);
 		spieltageFormulaEinfuegen(jederGegenJeden);
 		summenSpaltenEinfuegen(jederGegenJeden);
+		format(jederGegenJeden);
 		doSort(jederGegenJeden);
+	}
+
+	/**
+	 * @param jederGegenJeden
+	 * @throws GenerateException
+	 */
+	private void format(JederGegenJeden jederGegenJeden) throws GenerateException {
+		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).centerJustify();
+		RangeHelper.from(getXSpreadSheet(), allDatenRange(jederGegenJeden)).setRangeProperties(rangeProp);
 	}
 
 	/**
@@ -114,17 +129,37 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 	 * @param jederGegenJeden
 	 * @throws GenerateException
 	 */
-
 	private void doSort(JederGegenJeden jederGegenJeden) throws GenerateException {
+		getxCalculatable().calculateAll(); // zum sortieren werte kalkulieren
+		RangePosition allDatenRange = allDatenRange(jederGegenJeden);
+		int punktepalte = (allDatenRange.getAnzahlSpalten() - 8);
+		int spielePluspalte = (allDatenRange.getAnzahlSpalten() - 6);
+		int spielpunkteDiffSpalte = (allDatenRange.getAnzahlSpalten() - 1);
+		int sortSpalten[] = new int[] { punktepalte, spielePluspalte, spielpunkteDiffSpalte }; // 0 = erste Spalte in Range
+		SortHelper.from(getXSpreadSheet(), allDatenRange(jederGegenJeden)).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
+	}
 
-		SortHelper.from(getXSpreadSheet(), rangePosition);
+	private RangePosition allDatenRange(JederGegenJeden jederGegenJeden) {
+		int ersteSummeSpalte = ersteSummeSpalte(jederGegenJeden);
+		return RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), anzZeilen(jederGegenJeden) + 1);
+	}
 
+	private int anzZeilen(JederGegenJeden jederGegenJeden) {
+		return (jederGegenJeden.anzPaarungen() * 2);
+	}
+
+	private int ersteSummeSpalte(JederGegenJeden jederGegenJeden) {
+		return ERSTE_SPIELTAG_SPALTE + (anzGesamtRunden(jederGegenJeden) * 6); // 6 = anzahl summen spalte pro spieltag
+	}
+
+	private int anzGesamtRunden(JederGegenJeden jederGegenJeden) {
+		return jederGegenJeden.anzRunden() * 2; // *2 weil hin und rückrunde
 	}
 
 	private void summenSpaltenEinfuegen(JederGegenJeden jederGegenJeden) throws GenerateException {
-		int anzRunden = jederGegenJeden.anzRunden() * 2; // *2 weil hin und rückrunde
+		int anzRunden = anzGesamtRunden(jederGegenJeden);
 		int anzPaarungen = jederGegenJeden.anzPaarungen();
-		int ersteSummeSpalte = ERSTE_SPIELTAG_SPALTE + (anzRunden * 6); // 6 = anzahl summen spalte pro spieltag
+		int ersteSummeSpalte = ersteSummeSpalte(jederGegenJeden);
 		int autoFillDownZeilePlus = (anzPaarungen * 2) - 1;
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH);
 
@@ -231,7 +266,8 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 		// @formatter:on
 		// RangeHelper;
 
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH);
+		boolean isvisable = getKonfigurationSheet().zeigeArbeitsSpalten();
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(isvisable);
 
 		StringCellValue spielTagFormula = StringCellValue.from(getXSpreadSheet()).setPos(startFormulaPos).setValue(formulaPunktePlus)
 				.setFillAutoDownZeilePlus((anzPaarungen * 2) - 1).addColumnProperties(columnProperties);

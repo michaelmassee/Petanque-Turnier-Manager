@@ -176,7 +176,7 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 	 * @throws GenerateException
 	 */
 	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
-		Position result = SearchHelper.from(getISheet()).searchLastEmptyInSpalte(RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN));
+		Position result = SearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN)).searchLastEmptyInSpalte();
 		if (result != null) {
 			return result.getZeile();
 		}
@@ -190,8 +190,8 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 	 * @throws GenerateException
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
-		Position resultFreieZelle = SearchHelper.from(getISheet())
-				.searchLastNotEmptyInSpalte(RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN));
+		Position resultFreieZelle = SearchHelper.from(getISheet(), RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN))
+				.searchLastNotEmptyInSpalte();
 		if (resultFreieZelle != null) {
 			return resultFreieZelle.getZeile();
 		}
@@ -206,8 +206,8 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
 		// muss in komplette spalte wert stehen. Deswegen mit ^ und $
-		Position result = SearchHelper.from(getISheet()).searchNachRegExprInSpalte(RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN),
-				"^" + spielerNr + "$");
+		Position result = SearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
+				.searchNachRegExprInSpalte("^" + spielerNr + "$");
 		if (result != null) {
 			// Validieren !
 			Integer intFromCell = getSheetHelper().getIntFromCell(getXSpreadsheet(), result);

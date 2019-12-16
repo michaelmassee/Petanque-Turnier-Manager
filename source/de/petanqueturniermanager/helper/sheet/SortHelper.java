@@ -27,10 +27,11 @@ public class SortHelper {
 	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
 	private final RangePosition rangePositionToSort;
 
-	private int sortSpalte = 0; // 0 = erste spalte
+	// private int sortSpalte = 0; // 0 = erste spalte
 	private boolean aufSteigendSortieren = true;
 	private boolean caseSensitive = false;
 	private boolean bindFormatsToContent = false;
+	private int[] sortSpalten = new int[] { 0 }; // default erste spalte
 
 	private SortHelper(XSpreadsheet xSpreadsheet, RangePosition rangePosition) {
 		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
@@ -57,7 +58,19 @@ public class SortHelper {
 	 */
 	public SortHelper spalteToSort(int sortSpalte) {
 		checkArgument(sortSpalte > -1);
-		this.sortSpalte = sortSpalte;
+		sortSpalten = new int[] { sortSpalte };
+		return this;
+	}
+
+	/**
+	 * default = 0 = erste Spalte
+	 *
+	 * @param sortSpalte
+	 * @return
+	 */
+	public SortHelper spaltenToSort(int[] sortSpalten) {
+		checkArgument(sortSpalten.length > 0);
+		this.sortSpalten = sortSpalten;
 		return this;
 	}
 
@@ -111,6 +124,8 @@ public class SortHelper {
 	}
 
 	public SortHelper doSort() {
+		checkNotNull(sortSpalten);
+		checkArgument(sortSpalten.length > 0);
 
 		XCellRange xCellRangeToSort = RangeHelper.from(wkRefxSpreadsheet, rangePositionToSort).getCellRange();
 		if (xCellRangeToSort == null) {
@@ -124,17 +139,20 @@ public class SortHelper {
 		// always has a known type of text or value, which is used for sorting, with numbers
 		// sorted before text cells.
 
-		TableSortField[] aSortFields = new TableSortField[1];
-		TableSortField field1 = new TableSortField();
-		field1.Field = sortSpalte; // 0 = erste spalte, nur eine Spalte sortieren
-		field1.IsAscending = aufSteigendSortieren;
-		field1.IsCaseSensitive = caseSensitive;
-		aSortFields[0] = field1;
+		TableSortField[] sortFields = new TableSortField[sortSpalten.length];
+
+		for (int sortSpalteIdx = 0; sortSpalteIdx < sortSpalten.length; sortSpalteIdx++) {
+			TableSortField field1 = new TableSortField();
+			field1.Field = sortSpalten[sortSpalteIdx]; // 0 = erste spalte
+			field1.IsAscending = aufSteigendSortieren;
+			field1.IsCaseSensitive = caseSensitive;
+			sortFields[sortSpalteIdx] = field1;
+		}
 
 		PropertyValue[] aSortDesc = new PropertyValue[2];
 		PropertyValue propVal = new PropertyValue();
 		propVal.Name = "SortFields";
-		propVal.Value = aSortFields;
+		propVal.Value = sortFields;
 		aSortDesc[0] = propVal;
 
 		// specifies if cell formats are moved with the contents they belong to.
