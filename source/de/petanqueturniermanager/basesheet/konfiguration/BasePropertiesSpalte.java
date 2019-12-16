@@ -127,7 +127,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public void updateKonfigBlock() throws GenerateException {
 		XSpreadsheet propSheet = getPropSheet();
 
-		Position nextFreepos = SearchHelper.from(sheetWkRef).searchLastEmptyInSpalte(RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE));
+		Position nextFreepos = SearchHelper.from(sheetWkRef, RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE)).searchLastEmptyInSpalte();
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 		StringCellValue celValKey = StringCellValue.from(propSheet).setComment(null).setHoriJustify(CellHoriJustify.RIGHT).setBorder(border)
 				.addRowProperties(RowProperties.from().setHeight(600)).setVertJustify(CellVertJustify2.CENTER);
@@ -314,21 +314,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 */
 	public Position getPropKeyPos(String key) throws GenerateException {
 		checkNotNull(key);
-
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = Position.from(propertiesSpalte, erstePropertiesZeile);
-		// TODO umstellen auf uno find
-		for (int idx = 0; idx < MAX_LINE; idx++) {
-			String val = getSheetHelper().getTextFromCell(sheet, pos);
-			if (StringUtils.isNotBlank(val) && val.trim().equalsIgnoreCase(key.trim())) {
-				return pos;
-			}
-			if (StringUtils.isBlank(val)) {
-				break;
-			}
-			pos.zeilePlusEins();
-		}
-		return null;
+		RangePosition searchRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE);
+		return SearchHelper.from(sheetWkRef, searchRange).searchNachRegExprInSpalte("(?i)" + key); // ignore case
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {

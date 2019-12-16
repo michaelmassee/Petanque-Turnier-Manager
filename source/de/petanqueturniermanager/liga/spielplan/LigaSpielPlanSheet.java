@@ -278,7 +278,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		return SearchHelper.from(getXSpreadSheet()).searchLastNotEmptyInSpalte(RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999)).getZeile();
+		return SearchHelper.from(getXSpreadSheet(), RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999)).searchLastNotEmptyInSpalte().getZeile();
 	}
 
 	/**
