@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -48,7 +49,8 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	@Override
 	protected void doRun() throws GenerateException {
-		getXSpreadSheet();
+		// nur Activ setzten
+		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
 	}
 
 	// update immer einmal in SheetRunner

@@ -135,7 +135,7 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 
 	@Override
 	public final XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.KONFIGURATION).setActiv().tabColor(SHEET_COLOR).useIfExist().hideGrid().create().getSheet();
+		return NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.KONFIGURATION).tabColor(SHEET_COLOR).useIfExist().hideGrid().create().getSheet();
 	}
 
 	@Override

@@ -100,8 +100,11 @@ public class NewSheet {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
 
+		TurnierSheet turnierSheet = TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get());
+
 		if (sheet != null) {
 			if (createNewIfExist) {
+				turnierSheet.setActiv();
 				MessageBoxResult result = MessageBox.from(wkRefworkingSpreadsheet.get().getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
 						.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(forceOkCreateNewWhenExist).show();
 				if (MessageBoxResult.YES != result) {
@@ -109,6 +112,7 @@ public class NewSheet {
 				}
 				sheetHelper.removeSheet(sheetName);
 				sheet = null;
+				turnierSheet = null;
 			}
 		}
 
@@ -116,11 +120,11 @@ public class NewSheet {
 			try {
 				wkRefworkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
 				sheet = sheetHelper.findByName(sheetName);
+				turnierSheet = TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get());
 				if (!showGrid) {
 					// nur bei Neu, einmal abschalten
-					TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).toggleSheetGrid();
+					turnierSheet.toggleSheetGrid();
 				}
-				TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get()).protect(protect).tabColor(tabColor).setActiv(setActiv);
 
 				if (pageStyleDef != null) {
 					// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
@@ -137,6 +141,11 @@ public class NewSheet {
 				logger.error(e.getMessage(), e);
 			}
 		}
+
+		if (turnierSheet != null) {
+			turnierSheet.protect(protect).tabColor(tabColor).setActiv(setActiv);
+		}
+
 		return this;
 	}
 

@@ -11,6 +11,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -42,7 +43,8 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	@Override
 	protected void doRun() throws GenerateException {
-		getSheetHelper().setActiveSheet(getXSpreadSheet());
+		// nur Activ setzten
+		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
 	}
 
 	@Override
