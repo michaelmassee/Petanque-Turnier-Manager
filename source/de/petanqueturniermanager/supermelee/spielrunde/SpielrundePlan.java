@@ -26,8 +26,8 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
@@ -109,8 +109,8 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 			return;
 		}
 
-		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCharHeight(14);
+		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCharHeight(14);
 
 		// meldeliste nach nr sortieren !
 		meldungen.sortNachNummer();
@@ -167,7 +167,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 
 	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) {
 		String spielRundeSheetName = "$'" + aktuelleSpielrundeSheet.getSheetName(spielTag, spielRundeNr) + "'.";
-		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (spielerNr.getSpalte() + 1) + ";8))";
+		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (spielerNr.getSpalte() + 1) + ";4))";
 
 		int ersteSpalteVertikaleErgebnisse = AbstractSpielrundeSheet.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
 		int spielrundeSheetErsteDatenzeile = AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;

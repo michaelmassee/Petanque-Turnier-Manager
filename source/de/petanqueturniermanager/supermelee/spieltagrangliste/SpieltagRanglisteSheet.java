@@ -201,7 +201,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		int nichtgespieltMinus = getKonfigurationSheet().getNichtGespielteRundeMinus();
 		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 
-		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";8))";
+		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
 
 		// VLOOKUP Matrix fuer plus Punkte
 		// $M$4:$O$1004

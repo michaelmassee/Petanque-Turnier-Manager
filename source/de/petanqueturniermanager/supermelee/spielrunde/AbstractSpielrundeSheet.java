@@ -191,7 +191,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// + punkte
 		// (ZEILE()+3)/6) und (ZEILE())/3) = weil erste daten zeile = 3
 		// =WENN(INDIREKT(ADRESSE(ZEILE();19;8;1))>0;INDIREKT(ADRESSE(((ZEILE()+3)/6)+2;WENN(ISTUNGERADE(ABRUNDEN((ZEILE())/3)+2);8;9);8;1));"")
-		String plusminusFormula = "IF(INDIRECT(ADDRESS(ROW();%d;8;1))>0;INDIRECT(ADDRESS(((ROW( )+3)/6)+2;IF(ISODD(ROUNDDOWN((ROW())/3)+2);%d;%d);8;1));\"\")";
+		String plusminusFormula = "IF(INDIRECT(ADDRESS(ROW();%d;4;1))>0;INDIRECT(ADDRESS(((ROW( )+3)/6)+2;IF(ISODD(ROUNDDOWN((ROW())/3)+2);%d;%d);4;1));\"\")";
 		String plusPunkteFormula = String.format(plusminusFormula,
 				// erste spalte = 1 nicht 0
 				ERSTE_SPALTE_VERTIKALE_ERGEBNISSE + 1, // spielernr
@@ -238,7 +238,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		StringCellValue bahnSpalteFormula = StringCellValue.from(getXSpreadSheet())
 				.zeile(ERSTE_DATEN_ZEILE)
 				.spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR)
-				.setValue("INDIRECT( ADDRESS(ROUNDDOWN((ROW( )+3) /6)+2;" + (NUMMER_SPALTE_RUNDESPIELPLAN +1) + ";8;1))")
+				.setValue("INDIRECT( ADDRESS(ROUNDDOWN((ROW( )+3) /6)+2;" + (NUMMER_SPALTE_RUNDESPIELPLAN +1) + ";4;1))")
 				.setFillAutoDown(letzteZeile);
 		//@formatter:on
 		getSheetHelper().setFormulaInCell(bahnSpalteFormula);
