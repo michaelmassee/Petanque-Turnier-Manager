@@ -3,6 +3,9 @@
 	<version value="2.0.2"/>
 	<identifier value="de.petanqueturniermanager"/>
 	<platform value="all"/>
+	<dependencies>
+		<OpenOffice.org-minimal-version d:name="6.0" value="6.0"/>
+	</dependencies>
 	<update-information>
 		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases"/>
 	</update-information>
@@ -15,8 +18,8 @@
 		<name lang="en">PetanqueTurnierManager</name>
 	</display-name>
 	<icon>
-		<default xlink:href="images/podium32x32.png"/>
-		<high-contrast xlink:href="images/podium512x512.png"/>
+		<default xlink:href="images/petanqueturniermanager-logo-32px.png"/>
+		<high-contrast xlink:href="images/petanqueturniermanager-logo-256px.png"/>
 	</icon>
 	<extension-description>
 		<src lang="de" xlink:href="description/desc_de.txt"/>
