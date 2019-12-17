@@ -115,7 +115,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 				didHandle = handleSuperMelee(action, currentSpreadsheet);
 
 				if (!didHandle) {
-					didHandle = handleMele(action, currentSpreadsheet);
+					didHandle = handleFormee(action, currentSpreadsheet);
 				}
 
 				if (!didHandle) {
@@ -213,7 +213,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		return didHandle;
 	}
 
-	private boolean handleMele(String action, WorkingSpreadsheet workingSpreadsheet) {
+	private boolean handleFormee(String action, WorkingSpreadsheet workingSpreadsheet) {
 		boolean didHandle = true;
 
 		switch (action) {
