@@ -91,7 +91,7 @@ public class RangListeSpalte {
 		// INDIREKT(ADRESSE(ZEILE()-1;17;8))=INDIREKT(ADRESSE(ZEILE();17;8)));
 		// INDIREKT(ADRESSE(ZEILE()-1;SPALTE();8));INDIREKT(ADRESSE(ZEILE()-1;SPALTE();8))+1))
 
-		String ranglisteAdressPlusEinPlatzIndiekt = "INDIRECT(ADDRESS(ROW()-1;COLUMN();8))";
+		String ranglisteAdressPlusEinPlatzIndiekt = "INDIRECT(ADDRESS(ROW()-1;COLUMN();4))";
 
 		// Rangliste Logic
 		// @See RANG Function
@@ -115,7 +115,7 @@ public class RangListeSpalte {
 	 * @return INDIREKT(ADRESSE(ZEILE()-1;14;8))=INDIREKT(ADRESSE(ZEILE();14;8))
 	 */
 	private String indirectFormula(Position pos) {
-		return "INDIRECT(ADDRESS(ROW()-1;" + (pos.getSpalte() + 1) + ";8))=" + "INDIRECT(ADDRESS(ROW();" + (pos.getSpalte() + 1) + ";8))";
+		return "INDIRECT(ADDRESS(ROW()-1;" + (pos.getSpalte() + 1) + ";4))=" + "INDIRECT(ADDRESS(ROW();" + (pos.getSpalte() + 1) + ";4))";
 	}
 
 	private IRangliste getIRanglisteSheet() {

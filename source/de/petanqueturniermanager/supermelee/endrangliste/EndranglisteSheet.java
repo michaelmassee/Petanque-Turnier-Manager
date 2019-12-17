@@ -274,7 +274,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		int anzSpieltage = getAnzahlSpieltage();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 
-		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";8))";
+		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 			SheetRunner.testDoCancelTask();
