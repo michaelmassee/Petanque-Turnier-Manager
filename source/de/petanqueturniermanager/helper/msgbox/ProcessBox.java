@@ -125,14 +125,14 @@ public class ProcessBox {
 		// https://www.flaticon.com/free-icon/podium_889537#term=winner%20podium&page=1&position=11
 
 		try {
-			BufferedImage img16 = ImageIO.read(this.getClass().getResourceAsStream("podium16x16.png"));
-			BufferedImage img24 = ImageIO.read(this.getClass().getResourceAsStream("podium24x24.png"));
-			BufferedImage img32 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
-			BufferedImage img64 = ImageIO.read(this.getClass().getResourceAsStream("podium64x64.png"));
-			BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium128x128.png"));
-			BufferedImage img256 = ImageIO.read(this.getClass().getResourceAsStream("podium256x256.png"));
-			BufferedImage img512 = ImageIO.read(this.getClass().getResourceAsStream("podium512x512.png"));
-			Image[] images = { img16, img24, img32, img64, img128, img256, img512 };
+			// BufferedImage img16 = ImageIO.read(this.getClass().getResourceAsStream("podium16x16.png"));
+			// BufferedImage img24 = ImageIO.read(this.getClass().getResourceAsStream("podium24x24.png"));
+			// BufferedImage img32 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
+			// BufferedImage img64 = ImageIO.read(this.getClass().getResourceAsStream("podium64x64.png"));
+			// BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium128x128.png"));
+			BufferedImage img256 = ImageIO.read(this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png"));
+			// BufferedImage img512 = ImageIO.read(this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png"));
+			Image[] images = { img256 };
 			frame.setIconImages(java.util.Arrays.asList(images));
 
 			// https://loading.io/
