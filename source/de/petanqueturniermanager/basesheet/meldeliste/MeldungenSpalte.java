@@ -274,6 +274,7 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 
 		Position posSpielerNr = Position.from(meldungNrSpalte, ersteDatenZiele);
 
+		// TODO
 		if (letzteZeile >= ersteDatenZiele) {
 			for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
 				Integer spielerNr = getSheetHelper().getIntFromCell(sheet, posSpielerNr.zeile(spielerZeile));

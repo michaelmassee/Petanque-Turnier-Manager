@@ -4,8 +4,11 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
+import java.util.List;
+
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.position.Position;
 
 public interface IRangliste extends ISheet {
 
@@ -18,5 +21,7 @@ public interface IRangliste extends ISheet {
 	int getErsteDatenZiele() throws GenerateException;
 
 	int getManuellSortSpalte() throws GenerateException;
+
+	List<Position> getRanglisteSpalten() throws GenerateException;
 
 }

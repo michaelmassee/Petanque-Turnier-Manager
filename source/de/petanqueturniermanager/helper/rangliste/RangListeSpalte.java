@@ -4,10 +4,8 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_PLUS_OFFS;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
@@ -74,34 +72,51 @@ public class RangListeSpalte {
 		iRanglisteSheet.get().processBoxinfo("Rangliste Spalte Aktualisieren");
 		// SummenSpalten
 		int letzteZeile = getIRanglisteSheet().getLetzteDatenZeile();
-		int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
+		// int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
 		StringCellValue platzPlatzEins = StringCellValue.from(getSheet(), Position.from(rangListeSpalte, ersteZeile), "x");
 
-		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteZeile);
-		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteZeile);
-		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteZeile);
-		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ersteZeile);
-
 		// =WENN(ZEILE()=4;1;WENN(UND(
-		// INDIREKT(ADRESSE(ZEILE()-1;14;8))=INDIREKT(ADRESSE(ZEILE();14;8));
-		// INDIREKT(ADRESSE(ZEILE()-1;16;8))=INDIREKT(ADRESSE(ZEILE();16;8));
-		// INDIREKT(ADRESSE(ZEILE()-1;19;8))=INDIREKT(ADRESSE(ZEILE();19;8));
-		// INDIREKT(ADRESSE(ZEILE()-1;17;8))=INDIREKT(ADRESSE(ZEILE();17;8)));
-		// INDIREKT(ADRESSE(ZEILE()-1;SPALTE();8));INDIREKT(ADRESSE(ZEILE()-1;SPALTE();8))+1))
+		// INDIREKT(ADRESSE(ZEILE()-1;12;4))=INDIREKT(ADRESSE(ZEILE();12;4));
+		// INDIREKT(ADRESSE(ZEILE()-1;14;4))=INDIREKT(ADRESSE(ZEILE();14;4));
+		// INDIREKT(ADRESSE(ZEILE()-1;17;4))=INDIREKT(ADRESSE(ZEILE();17;4));
+		// INDIREKT(ADRESSE(ZEILE()-1;15;4))=INDIREKT(ADRESSE(ZEILE();15;4)));
+		// INDIREKT(ADRESSE(ZEILE()-1;SPALTE();4));ZEILE()-3))
 
 		String ranglisteAdressPlusEinPlatzIndiekt = "INDIRECT(ADDRESS(ROW()-1;COLUMN();4))";
 
 		// Rangliste Logic
 		// @See RANG Function
 
-		String formula = "IF(ROW()=" + (ersteZeile + 1) + ";1;" + "IF(AND(" + indirectFormula(summeSpielGewonnenZelle1) + ";" + indirectFormula(summeSpielDiffZelle1) + ";"
-				+ indirectFormula(punkteDiffZelle1) + ";" + indirectFormula(punkteGewonnenZelle1) + ");" + ranglisteAdressPlusEinPlatzIndiekt + ";" + "ROW()-" + ersteZeile + "))";
+		List<Position> ranglisteSpalten = iRanglisteSheet.get().getRanglisteSpalten();
+
+		StringBuffer formulaBuff = new StringBuffer();
+		formulaBuff.append("IF(ROW()=" + (ersteZeile + 1) + ";1;" + "IF(AND(");
+
+		formulaBuff.append(ranglisteSpalten.stream().map(position -> {
+			return indirectFormula(position);
+		}).collect(Collectors.joining(";")));
+
+		formulaBuff.append(");");
+		formulaBuff.append(ranglisteAdressPlusEinPlatzIndiekt);
+		formulaBuff.append(";");
+		formulaBuff.append("ROW()-");
+		formulaBuff.append(ersteZeile);
+		formulaBuff.append("))");
+
+		// @formatter:off
+//		String formula = "IF(ROW()=" + (ersteZeile + 1) + ";1;" + "IF(AND(" +
+//				indirectFormula (summeSpielGewonnenZelle1) + ";" +
+//				indirectFormula (summeSpielDiffZelle1) + ";" +
+//				indirectFormula (punkteDiffZelle1) + ";" +
+//				indirectFormula (punkteGewonnenZelle1) + ");" +
+//				ranglisteAdressPlusEinPlatzIndiekt + ";" + "ROW()-" + ersteZeile + "))";
+		// @formatter:on
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteZeile);
-		getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formula).zeile(ersteZeile).setFillAuto(fillAutoPosition));
+		getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formulaBuff.toString()).zeile(ersteZeile).setFillAuto(fillAutoPosition));
 
 		// Border
 		getSheetHelper().setPropertiesInRange(getSheet(), RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
