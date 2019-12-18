@@ -100,9 +100,10 @@ public class NewSheet {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
 
-		TurnierSheet turnierSheet = TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get());
+		TurnierSheet turnierSheet = null;
 
 		if (sheet != null) {
+			turnierSheet = TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get());
 			if (createNewIfExist) {
 				turnierSheet.setActiv();
 				MessageBoxResult result = MessageBox.from(wkRefworkingSpreadsheet.get().getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
