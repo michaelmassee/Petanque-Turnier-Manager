@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,7 +36,10 @@ import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -299,18 +300,34 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 
 		XSpreadsheet spieltagSheet = getSheet(spielTagNr);
 		if (spieltagSheet != null) {
-			for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr < 999; zeileCntr++) {
-				String cellText = getSheetHelper().getTextFromCell(spieltagSheet, Position.from(SPIELER_NR_SPALTE, zeileCntr));
-				// Checks if a CharSequence is empty (""), null or whitespace only.
-				if (!StringUtils.isBlank(cellText)) {
-					if (NumberUtils.isParsable(cellText)) {
-						spielerNrlist.add(Integer.parseInt(cellText));
-					}
-				} else {
-					// keine weitere daten
-					break;
+			// letzte Zeile ?
+			RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
+			Position lastNotEmptyPos = SearchHelper.from(spieltagSheet, searchRange).searchLastNotEmptyInSpalte();
+
+			// daten in array einlesen
+			RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, lastNotEmptyPos.getZeile());
+			RangeData dataFromRange = RangeHelper.from(spieltagSheet, spielNrRange).getDataFromRange();
+
+			for (RowData zeile : dataFromRange) {
+				int spielerNr = zeile.get(0).getIntVal(-1);
+				if (spielerNr < 1) {
+					break; // fertig
 				}
+				spielerNrlist.add(spielerNr);
 			}
+
+			// for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr < 999; zeileCntr++) {
+			// String cellText = getSheetHelper().getTextFromCell(spieltagSheet, Position.from(SPIELER_NR_SPALTE, zeileCntr));
+			// // Checks if a CharSequence is empty (""), null or whitespace only.
+			// if (!StringUtils.isBlank(cellText)) {
+			// if (NumberUtils.isParsable(cellText)) {
+			// spielerNrlist.add(Integer.parseInt(cellText));
+			// }
+			// } else {
+			// // keine weitere daten
+			// break;
+			// }
+			// }
 		}
 		return spielerNrlist;
 	}
@@ -454,5 +471,11 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 
 	protected RangListeSorter getRangListeSorter() {
 		return rangListeSorter;
+	}
+
+	@Override
+	public List<Position> getRanglisteSpalten() throws GenerateException {
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		return getRanglisteSpalten(ersteSpalteEndsumme, ERSTE_DATEN_ZEILE);
 	}
 }
