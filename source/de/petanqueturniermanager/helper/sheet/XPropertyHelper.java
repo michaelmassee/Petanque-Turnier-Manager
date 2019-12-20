@@ -3,10 +3,11 @@ package de.petanqueturniermanager.helper.sheet;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.assertj.core.util.Arrays;
 
 import com.sun.star.beans.Property;
 import com.sun.star.beans.UnknownPropertyException;
@@ -44,8 +45,8 @@ public class XPropertyHelper {
 		XPropertySetInfo propertySetInfo = xPropertySet.getPropertySetInfo();
 		Property[] properties = propertySetInfo.getProperties();
 		Arrays.asList(properties).forEach((property) -> {
-			System.out.println(((Property) property).Name);
-			System.out.println(((Property) property).Type);
+			System.out.println(property.Name);
+			System.out.println(property.Type);
 		});
 	}
 
