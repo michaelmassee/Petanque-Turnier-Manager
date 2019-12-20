@@ -17,8 +17,8 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>org.libreoffice.ide.eclipse.core.unonature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.buildship.core.gradleprojectnature</nature>
+		<nature>org.libreoffice.ide.eclipse.core.unonature</nature>
 	</natures>
 </projectDescription>
