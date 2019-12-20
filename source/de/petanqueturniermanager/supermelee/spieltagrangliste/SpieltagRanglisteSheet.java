@@ -315,19 +315,6 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 				}
 				spielerNrlist.add(spielerNr);
 			}
-
-			// for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr < 999; zeileCntr++) {
-			// String cellText = getSheetHelper().getTextFromCell(spieltagSheet, Position.from(SPIELER_NR_SPALTE, zeileCntr));
-			// // Checks if a CharSequence is empty (""), null or whitespace only.
-			// if (!StringUtils.isBlank(cellText)) {
-			// if (NumberUtils.isParsable(cellText)) {
-			// spielerNrlist.add(Integer.parseInt(cellText));
-			// }
-			// } else {
-			// // keine weitere daten
-			// break;
-			// }
-			// }
 		}
 		return spielerNrlist;
 	}

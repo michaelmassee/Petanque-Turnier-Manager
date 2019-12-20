@@ -3,6 +3,9 @@
  */
 package de.petanqueturniermanager.liga.rangliste;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +27,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.rangliste.IRangliste;
+import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -38,24 +43,29 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  * @author Michael Massee
  *
  */
-public class LigaRanglisteSheet extends LigaSheet implements ISheet {
+public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste {
 
 	private static final Logger logger = LogManager.getLogger(LigaRanglisteSheet.class);
 	private static final String SHEETNAME = "Rangliste";
 	private static final String SHEET_COLOR = "d637e8";
 	private static final int ERSTE_DATEN_ZEILE = 2; // Zeile 3
 	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
+	public static final int RANGLISTE_SPALTE = 2; // Spalte C=2
 
 	private static final int ERSTE_SPIELTAG_SPALTE = TEAM_NR_SPALTE + 3; // nr + name + rangliste
 	private static final int PUNKTE_NR_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH;
 	private static final int ANZ_SUMMEN_SPALTEN = 8; // Punkte +/- Spiele +/-/Diff SpielPunkte +/-/Diff
+	private static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
 	private final MeldungenSpalte<TeamMeldungen> meldungenSpalte;
 	private final LigaMeldeListeSheet_Update meldeListe;
+	private JederGegenJeden jederGegenJeden;
+	private TeamMeldungen alleMeldungen;
 
 	/**
 	 * @param workingSpreadsheet
 	 * @param logPrefix
+	 * @throws GenerateException
 	 */
 	public LigaRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Liga-RanglisteSheet");
@@ -88,9 +98,11 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 	 * @throws GenerateException
 	 *
 	 */
-	private void upDateSheet() throws GenerateException {
+	public void upDateSheet() throws GenerateException {
+		alleMeldungen = meldeListe.getAlleMeldungen();
+		jederGegenJeden = new JederGegenJeden(alleMeldungen);
+
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		TeamMeldungen alleMeldungen = meldeListe.getAlleMeldungen();
 		if (!alleMeldungen.isValid()) {
 			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan").message("Ungültige anzahl von Melungen").show();
@@ -106,20 +118,20 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
-		JederGegenJeden jederGegenJeden = new JederGegenJeden(alleMeldungen);
-		spieltageFormulaEinfuegen(jederGegenJeden);
-		summenSpaltenEinfuegen(jederGegenJeden);
-		format(jederGegenJeden);
-		doSort(jederGegenJeden);
+		spieltageFormulaEinfuegen();
+		summenSpaltenEinfuegen();
+		format();
+		doSort();
+		new RangListeSpalte(RANGLISTE_SPALTE, this).upDateRanglisteSpalte();
 	}
 
 	/**
 	 * @param jederGegenJeden
 	 * @throws GenerateException
 	 */
-	private void format(JederGegenJeden jederGegenJeden) throws GenerateException {
+	private void format() throws GenerateException {
 		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).centerJustify();
-		RangeHelper.from(getXSpreadSheet(), allDatenRange(jederGegenJeden)).setRangeProperties(rangeProp);
+		RangeHelper.from(getXSpreadSheet(), allDatenRange()).setRangeProperties(rangeProp);
 	}
 
 	/**
@@ -129,37 +141,42 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 	 * @param jederGegenJeden
 	 * @throws GenerateException
 	 */
-	private void doSort(JederGegenJeden jederGegenJeden) throws GenerateException {
+	private void doSort() throws GenerateException {
 		getxCalculatable().calculateAll(); // zum sortieren werte kalkulieren
-		RangePosition allDatenRange = allDatenRange(jederGegenJeden);
-		int punktepalte = (allDatenRange.getAnzahlSpalten() - 8);
-		int spielePluspalte = (allDatenRange.getAnzahlSpalten() - 6);
-		int spielpunkteDiffSpalte = (allDatenRange.getAnzahlSpalten() - 1);
-		int sortSpalten[] = new int[] { punktepalte, spielePluspalte, spielpunkteDiffSpalte }; // 0 = erste Spalte in Range
-		SortHelper.from(getXSpreadSheet(), allDatenRange(jederGegenJeden)).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
+
+		int[] sortSpalten = getSortSpalten();
+		// erste sort spalte = erste spalte in range
+		int punktepalte = sortSpalten[0] - TEAM_NR_SPALTE;
+		int spielePluspalte = sortSpalten[1] - TEAM_NR_SPALTE;
+		int spielpunkteDiffSpalte = sortSpalten[2] - TEAM_NR_SPALTE;
+		int sortSpaltenInRange[] = new int[] { punktepalte, spielePluspalte, spielpunkteDiffSpalte }; // 0 = erste Spalte in Range
+		SortHelper.from(getXSpreadSheet(), allDatenRange()).abSteigendSortieren().spaltenToSort(sortSpaltenInRange).doSort();
 	}
 
-	private RangePosition allDatenRange(JederGegenJeden jederGegenJeden) {
-		int ersteSummeSpalte = ersteSummeSpalte(jederGegenJeden);
-		return RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), anzZeilen(jederGegenJeden) + 1);
+	private int[] getSortSpalten() throws GenerateException {
+		int punktepalte = getErsteSummeSpalte();
+		int spielePluspalte = punktepalte + 2;
+		int spielpunkteDiffSpalte = punktepalte + 7;
+		return new int[] { punktepalte, spielePluspalte, spielpunkteDiffSpalte }; // 0 = erste Spalte in Range
 	}
 
-	private int anzZeilen(JederGegenJeden jederGegenJeden) {
+	private RangePosition allDatenRange() throws GenerateException {
+		int ersteSummeSpalte = getErsteSummeSpalte();
+		return RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), anzZeilen() + 1);
+	}
+
+	private int anzZeilen() {
 		return (jederGegenJeden.anzPaarungen() * 2);
 	}
 
-	private int ersteSummeSpalte(JederGegenJeden jederGegenJeden) {
-		return ERSTE_SPIELTAG_SPALTE + (anzGesamtRunden(jederGegenJeden) * 6); // 6 = anzahl summen spalte pro spieltag
-	}
-
-	private int anzGesamtRunden(JederGegenJeden jederGegenJeden) {
+	private int anzGesamtRunden() {
 		return jederGegenJeden.anzRunden() * 2; // *2 weil hin und rückrunde
 	}
 
-	private void summenSpaltenEinfuegen(JederGegenJeden jederGegenJeden) throws GenerateException {
-		int anzRunden = anzGesamtRunden(jederGegenJeden);
+	private void summenSpaltenEinfuegen() throws GenerateException {
+		int anzRunden = anzGesamtRunden();
 		int anzPaarungen = jederGegenJeden.anzPaarungen();
-		int ersteSummeSpalte = ersteSummeSpalte(jederGegenJeden);
+		int ersteSummeSpalte = getErsteSummeSpalte();
 		int autoFillDownZeilePlus = (anzPaarungen * 2) - 1;
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH);
 
@@ -196,7 +213,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 		getSheetHelper().setFormulaInCell(summenFormulaDiffSpielPnkt);
 	}
 
-	private void spieltageFormulaEinfuegen(JederGegenJeden jederGegenJeden) throws GenerateException {
+	private void spieltageFormulaEinfuegen() throws GenerateException {
 
 		// =WENNNV(INDEX($'Liga Spielplan'.F3:F5;VERGLEICH(A3;$'Liga Spielplan'.O3:O5;0)); INDEX($'Liga Spielplan'.G3:G5;VERGLEICH(A3;$'Liga Spielplan'.P3:P5;0)))
 
@@ -281,6 +298,44 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet {
 	@Override
 	public TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	public int getErsteSummeSpalte() throws GenerateException {
+		return ERSTE_SPIELTAG_SPALTE + (anzGesamtRunden() * 6); // 6 = anzahl summen spalte pro spieltag;
+	}
+
+	@Override
+	public int getLetzteSpalte() throws GenerateException {
+		return getErsteSummeSpalte() + ANZ_SUMMEN_SPALTEN;
+	}
+
+	@Override
+	public int getLetzteDatenZeile() throws GenerateException {
+		return getErsteDatenZiele() + anzZeilen() - 1;
+	}
+
+	@Override
+	public int getErsteDatenZiele() throws GenerateException {
+		return ERSTE_DATEN_ZEILE;
+	}
+
+	@Override
+	public int getManuellSortSpalte() throws GenerateException {
+		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
+	}
+
+	@Override
+	public List<Position> getRanglisteSpalten() throws GenerateException {
+
+		int[] sortSpalten = getSortSpalten();
+		Position sort1 = Position.from(sortSpalten[0], getErsteDatenZiele());
+		Position sort2 = Position.from(sortSpalten[1], getErsteDatenZiele());
+		Position sort3 = Position.from(sortSpalten[2], getErsteDatenZiele());
+
+		Position[] arraylist = new Position[] { sort1, sort2, sort3 };
+		return Arrays.asList(arraylist);
+
 	}
 
 }
