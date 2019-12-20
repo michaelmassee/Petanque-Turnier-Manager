@@ -33,7 +33,7 @@ dependencies {
 }
 
 application {
-    // Define the main class for the application.
+    // No Main-Class, weil Extension
     mainClassName = 'PetanqueTurnierManager'
 }
 
