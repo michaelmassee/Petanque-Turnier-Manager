@@ -12,6 +12,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstante
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
 
@@ -35,6 +36,9 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 		// Meldeliste
 		new LigaMeldeListeSheet_TestDaten(getWorkingSpreadsheet()).testNamenEinfuegen();
 		generate();
+
+		// Rangliste
+		new LigaRanglisteSheet(getWorkingSpreadsheet()).upDateSheet();
 	}
 
 	/**

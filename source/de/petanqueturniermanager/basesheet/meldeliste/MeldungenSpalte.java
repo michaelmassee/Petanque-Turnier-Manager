@@ -37,6 +37,7 @@ import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.IMeldungen;
 
 public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
@@ -272,16 +273,40 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 		int letzteZeile = getLetzteDatenZeile();
 		XSpreadsheet sheet = getXSpreadsheet();
 
-		Position posSpielerNr = Position.from(meldungNrSpalte, ersteDatenZiele);
-
-		// TODO
+		// // letzte Zeile ?
+		// RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
+		// Position lastNotEmptyPos = SearchHelper.from(spieltagSheet, searchRange).searchLastNotEmptyInSpalte();
+		//
+		// // daten in array einlesen
+		// RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, lastNotEmptyPos.getZeile());
+		// RangeData dataFromRange = RangeHelper.from(spieltagSheet, spielNrRange).getDataFromRange();
+		//
+		// for (RowData zeile : dataFromRange) {
+		// int spielerNr = zeile.get(0).getIntVal(-1);
+		// if (spielerNr < 1) {
+		// break; // fertig
+		// }
+		// spielerNrlist.add(spielerNr);
+		// }
 		if (letzteZeile >= ersteDatenZiele) {
-			for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
-				Integer spielerNr = getSheetHelper().getIntFromCell(sheet, posSpielerNr.zeile(spielerZeile));
-				if (spielerNr > -1) {
-					spielerNrList.add(spielerNr);
+			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte, letzteZeile);
+			RangeData dataFromRange = RangeHelper.from(sheet, spielNrRange).getDataFromRange();
+
+			for (RowData zeile : dataFromRange) {
+				int spielerNr = zeile.get(0).getIntVal(-1);
+				if (spielerNr < 1) {
+					break; // fertig
 				}
+				spielerNrList.add(spielerNr);
 			}
+
+			// Position posSpielerNr = Position.from(meldungNrSpalte, ersteDatenZiele);
+			// for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
+			// Integer spielerNr = getSheetHelper().getIntFromCell(sheet, posSpielerNr.zeile(spielerZeile));
+			// if (spielerNr > -1) {
+			// spielerNrList.add(spielerNr);
+			// }
+			// }
 		}
 		java.util.Collections.sort(spielerNrList);
 		return spielerNrList;
