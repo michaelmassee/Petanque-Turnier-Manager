@@ -28,7 +28,6 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -42,6 +41,7 @@ import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 
 /**
@@ -68,7 +68,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	public static final int SPIELPNKT_A_SPALTE = SPIELE_B_SPALTE + 1;
 	public static final int SPIELPNKT_B_SPALTE = SPIELPNKT_A_SPALTE + 1;
 
-	private static final int PUNKTE_NR_WIDTH = AbstractRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
+	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
 
 	private static final String NR_HINRUNDE_PREFIX = "HR-";
 	private static final String NR_RUECKRUNDE_PREFIX = "RR-";

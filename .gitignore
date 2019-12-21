@@ -5,3 +5,5 @@ dist/**
 /build/
 /.gradle/
 libs/**
+.classpath
+*.classpath
