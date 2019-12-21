@@ -2,3 +2,7 @@ bin/**
 **/*.class
 dist/**
 /bin/
+/build/
+.gradle/**
+/libs/**
+/libs-test/**
