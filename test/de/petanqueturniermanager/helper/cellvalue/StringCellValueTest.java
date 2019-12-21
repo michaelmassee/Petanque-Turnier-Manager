@@ -8,21 +8,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.helper.position.Position;
 
-@RunWith(PowerMockRunner.class)
 public class StringCellValueTest {
 	XSpreadsheet spreadsheetMock;
 
 	@Before
 	public void setup() {
-		this.spreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
+		spreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 	}
 
 	@Test
@@ -31,7 +28,7 @@ public class StringCellValueTest {
 		int zeile = 30;
 
 		Position pos = Position.from(spalte, zeile);
-		NumberCellValue testNumbCellVal = NumberCellValue.from(this.spreadsheetMock, pos, 12);
+		NumberCellValue testNumbCellVal = NumberCellValue.from(spreadsheetMock, pos, 12);
 
 		StringCellValue testStrVal = StringCellValue.from(testNumbCellVal);
 		assertThat(testStrVal.getPos().getSpalte()).isEqualTo(spalte);
@@ -41,7 +38,7 @@ public class StringCellValueTest {
 	@Test
 	public void testAppendValue() throws Exception {
 		Position pos = Position.from(12, 12);
-		StringCellValue testStrVal = StringCellValue.from(this.spreadsheetMock, pos);
+		StringCellValue testStrVal = StringCellValue.from(spreadsheetMock, pos);
 		assertThat(testStrVal.getValue()).isEqualTo("");
 
 		testStrVal.appendValue("test");
