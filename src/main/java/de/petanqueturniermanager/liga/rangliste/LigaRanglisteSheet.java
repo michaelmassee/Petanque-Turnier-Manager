@@ -48,7 +48,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	private static final Logger logger = LogManager.getLogger(LigaRanglisteSheet.class);
 	private static final String SHEETNAME = "Rangliste";
 	private static final String SHEET_COLOR = "d637e8";
-	private static final int ERSTE_DATEN_ZEILE = 2; // Zeile 3
+	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
 	public static final int RANGLISTE_SPALTE = 2; // Spalte C=2
 
@@ -114,6 +114,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
+		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
@@ -122,7 +123,8 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		summenSpaltenEinfuegen();
 		format();
 		doSort();
-		new RangListeSpalte(RANGLISTE_SPALTE, this).upDateRanglisteSpalte();
+		rangListeSpalte.upDateRanglisteSpalte();
+		rangListeSpalte.insertHeaderInSheet(headerBackColor);
 	}
 
 	/**
@@ -153,6 +155,12 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		SortHelper.from(getXSpreadSheet(), allDatenRange()).abSteigendSortieren().spaltenToSort(sortSpaltenInRange).doSort();
 	}
 
+	/**
+	 * 0 = erste spalte
+	 *
+	 * @return
+	 * @throws GenerateException
+	 */
 	private int[] getSortSpalten() throws GenerateException {
 		int punktepalte = getErsteSummeSpalte();
 		int spielePluspalte = punktepalte + 2;

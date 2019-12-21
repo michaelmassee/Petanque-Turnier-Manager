@@ -2,7 +2,7 @@
 * Erstellung : 14.04.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
@@ -20,15 +20,16 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
-public class RanglisteFormatter extends AbstractRanglisteFormatter {
+public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter {
 
 	private final WeakRefHelper<ISpielTagRangliste> ranglisteWkRef;
 	private final int anzSpaltenInSpielrunde;
 	private final int ersteSpielRundeSpalte;
 
-	public RanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielRundeSpalte,
+	SpieltagRanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielRundeSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
