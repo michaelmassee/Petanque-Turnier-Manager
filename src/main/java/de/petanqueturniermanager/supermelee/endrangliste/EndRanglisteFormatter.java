@@ -13,18 +13,18 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
-public class EndRanglisteFormatter extends AbstractRanglisteFormatter {
+public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter {
 
 	private final WeakRefHelper<IEndRangliste> ranglisteWkRef;
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
-	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielTagSpalte,
+	EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielTagSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);

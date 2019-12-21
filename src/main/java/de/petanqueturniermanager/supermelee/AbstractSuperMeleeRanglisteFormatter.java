@@ -2,7 +2,7 @@
 * Erstellung : 10.05.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.supermelee;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
@@ -29,13 +29,14 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
-abstract public class AbstractRanglisteFormatter {
+abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 	public static final int ENDSUMME_NUMBER_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH + 110;
 	public static final int ERSTE_KOPFDATEN_ZEILE = 0;
@@ -46,7 +47,7 @@ abstract public class AbstractRanglisteFormatter {
 	private final WeakRefHelper<ISuperMeleePropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public AbstractRanglisteFormatter(MeldungenSpalte<SpielerMeldungen> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
+	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
 		spielerSpalteWkRef = new WeakRefHelper<>(spielerSpalte);
