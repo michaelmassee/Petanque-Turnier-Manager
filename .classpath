@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="source"/>
-	<classpathentry kind="src" path="resource"/>
-	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="src/main/resources"/>
+	<classpathentry kind="src" path="src/test/java"/>
+	<classpathentry kind="src" path="src/test/resources"/>
+	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="build"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2"/>
 	<classpathentry kind="lib" path="libs/animal-sniffer-annotations-1.18.jar"/>
 	<classpathentry kind="lib" path="libs/checker-qual-2.8.1.jar"/>
 	<classpathentry kind="lib" path="libs/commons-lang3-3.9.jar"/>
@@ -41,5 +41,6 @@
 	<classpathentry kind="lib" path="libs-test/powermock-api-support-2.0.4.jar"/>
 	<classpathentry kind="lib" path="libs-test/powermock-core-2.0.4.jar"/>
 	<classpathentry kind="lib" path="libs-test/powermock-reflect-2.0.4.jar"/>
+	<classpathentry kind="con" path="org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
