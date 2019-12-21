@@ -48,7 +48,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	private static final Logger logger = LogManager.getLogger(LigaRanglisteSheet.class);
 	private static final String SHEETNAME = "Rangliste";
 	private static final String SHEET_COLOR = "d637e8";
-	private static final int ERSTE_DATEN_ZEILE = 2; // Zeile 3
+	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
 	public static final int RANGLISTE_SPALTE = 2; // Spalte C=2
 
@@ -122,7 +122,10 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		summenSpaltenEinfuegen();
 		format();
 		doSort();
-		new RangListeSpalte(RANGLISTE_SPALTE, this).upDateRanglisteSpalte();
+
+		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
+		rangListeSpalte.upDateRanglisteSpalte();
+		rangListeSpalte.insertHeaderInSheet(headerBackColor);
 	}
 
 	/**
@@ -162,7 +165,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 	private RangePosition allDatenRange() throws GenerateException {
 		int ersteSummeSpalte = getErsteSummeSpalte();
-		return RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), anzZeilen() + 1);
+		return RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), ERSTE_DATEN_ZEILE + (anzZeilen() - 1));
 	}
 
 	private int anzZeilen() {
