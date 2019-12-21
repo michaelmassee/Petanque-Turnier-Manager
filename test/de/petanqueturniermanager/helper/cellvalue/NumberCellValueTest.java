@@ -8,9 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -18,7 +16,6 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 
-@RunWith(PowerMockRunner.class)
 public class NumberCellValueTest {
 
 	XSpreadsheet spreadsheetMock;
