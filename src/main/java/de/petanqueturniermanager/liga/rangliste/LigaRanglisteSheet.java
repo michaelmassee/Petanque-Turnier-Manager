@@ -34,6 +34,8 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -70,7 +72,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	public LigaRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Liga-RanglisteSheet");
 		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH).ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
-				.formation(Formation.TETE).build();
+				.formation(Formation.TETE).anzZeilenInHeader(2).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 	}
 
@@ -126,6 +128,96 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSpalte.upDateRanglisteSpalte();
 		rangListeSpalte.insertHeaderInSheet(headerBackColor);
+
+		insertHeader();
+	}
+
+	/**
+	 * @throws GenerateException
+	 *
+	 */
+	private void insertHeader() throws GenerateException {
+		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		int anzGesamtRunden = anzGesamtRunden();
+		RangeData data = new RangeData();
+		RowData headerZeile3 = data.newRow();
+
+		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
+			// 6 spalten pro Runde(Spieltag)
+			for (int i = 0; i < 3; i++) {
+				headerZeile3.newString("+");
+				headerZeile3.newString("-");
+			}
+		}
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// 3 header zeile
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// summen spalten
+		headerZeile3.newString("+");
+		headerZeile3.newString("-");
+		headerZeile3.newString("+");
+		headerZeile3.newString("-");
+		headerZeile3.newString("Δ"); // Spiele diff Delta Δ
+		headerZeile3.newString("+");
+		headerZeile3.newString("-");
+		headerZeile3.newString("Δ"); // Spiele diff Delta Δ
+
+		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setAllThinBorder().setCellBackColor(headerBackColor);
+		RangeHelper.from(getXSpreadSheet(), data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1))).setDataInRange(data)
+				.setRangeProperties(rangePropZeile3);
+
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// 2 header zeile
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Runden
+		Position header2Pos = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 2);
+		StringCellValue header2val = StringCellValue.from(getXSpreadSheet()).setPos(header2Pos).setEndPosMergeSpaltePlus(1).centerJustify().setAllThinBorder()
+				.setCellBackColor(headerBackColor);
+		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
+			header2val.setValue("Punkte");
+			getSheetHelper().setStringValueInCell(header2val);
+
+			header2val.spaltePlus(2);
+			header2val.setValue("Spiele");
+			getSheetHelper().setStringValueInCell(header2val);
+
+			header2val.spaltePlus(2);
+			header2val.setValue("SpPnkte");
+			getSheetHelper().setStringValueInCell(header2val);
+
+			header2val.spaltePlus(2);
+		}
+
+		// 2 header zeile
+		// Summen
+		header2val.setValue("Punkte");
+		getSheetHelper().setStringValueInCell(header2val);
+
+		header2val.spaltePlus(2);
+		header2val.setValue("Spiele").setEndPosMergeSpaltePlus(2);
+		getSheetHelper().setStringValueInCell(header2val);
+
+		header2val.spaltePlus(3);
+		header2val.setValue("SpPnkte");
+		getSheetHelper().setStringValueInCell(header2val);
+
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// 1 header zeile
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
+		Position header1Pos = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 3);
+		StringCellValue header1val = StringCellValue.from(getXSpreadSheet()).setPos(header1Pos).setEndPosMergeSpaltePlus(5).centerJustify().setAllThinBorder()
+				.setCellBackColor(headerBackColor);
+		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
+			header1val.setValue("Runde " + (rundeCntr + 1));
+			getSheetHelper().setStringValueInCell(header1val);
+			header1val.spaltePlus(6);
+		}
+
+		// 1 header zeile
+		// summen
+		header1val.setValue("Summen").setEndPosMergeSpaltePlus(7);
+		getSheetHelper().setStringValueInCell(header1val);
+
 	}
 
 	/**
