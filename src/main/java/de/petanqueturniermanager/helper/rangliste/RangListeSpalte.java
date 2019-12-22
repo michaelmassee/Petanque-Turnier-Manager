@@ -105,15 +105,6 @@ public class RangListeSpalte {
 		formulaBuff.append(ersteZeile);
 		formulaBuff.append("))");
 
-		// @formatter:off
-//		String formula = "IF(ROW()=" + (ersteZeile + 1) + ";1;" + "IF(AND(" +
-//				indirectFormula (summeSpielGewonnenZelle1) + ";" +
-//				indirectFormula (summeSpielDiffZelle1) + ";" +
-//				indirectFormula (punkteDiffZelle1) + ";" +
-//				indirectFormula (punkteGewonnenZelle1) + ");" +
-//				ranglisteAdressPlusEinPlatzIndiekt + ";" + "ROW()-" + ersteZeile + "))";
-		// @formatter:on
-
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteZeile);
 		getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formulaBuff.toString()).zeile(ersteZeile).setFillAuto(fillAutoPosition));

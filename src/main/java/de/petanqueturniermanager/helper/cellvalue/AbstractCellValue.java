@@ -268,6 +268,13 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public T centerJustify() {
+		this.centerHoriJustify();
+		this.centerVertJustify();
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
 	public T centerHoriJustify() {
 		this.cellProperties.setHoriJustify(CellHoriJustify.CENTER);
 		return (T) this;
@@ -356,6 +363,12 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	@SuppressWarnings("unchecked")
 	public T setFillAutoDownZeilePlus(int anzZeile) {
 		this.fillAuto = FillAutoPosition.from(getPos()).zeilePlus(anzZeile);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T setAllThinBorder() {
+		this.cellProperties.setAllThinBorder();
 		return (T) this;
 	}
 

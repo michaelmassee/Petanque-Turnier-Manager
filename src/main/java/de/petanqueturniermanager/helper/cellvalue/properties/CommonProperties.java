@@ -13,6 +13,8 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.helper.border.BorderFactory;
+
 /**
  * @author Michael Massee
  *
@@ -33,6 +35,11 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 	public final T remove(String key) {
 		super.remove(key);
 		return (T) this;
+	}
+
+	public T setAllThinBorder() {
+		TableBorder2 tableBorder2 = BorderFactory.from().allThin().toBorder();
+		return put(TABLE_BORDER2, tableBorder2);
 	}
 
 	public T setBorder(TableBorder2 tableBorder2) {
