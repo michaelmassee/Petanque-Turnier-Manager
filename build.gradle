@@ -34,14 +34,13 @@ dependencies {
     testImplementation 'org.powermock:powermock-api-mockito2:2.+'
 }
 
-//eclipse.classpath.file {
-//   withXml { 
-//     def node = it.asNode()
-//     node.appendNode('classpathentry', 
-//                [kind: 'con', path: 'org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2'])
-//           }
-//}
-
+eclipse.classpath.file {
+   withXml { 
+     def node = it.asNode()
+     node.appendNode('classpathentry', 
+                [kind: 'con', path: 'org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2'])
+           }
+}
 
 //application {
     // No Main-Class, weil Extension
@@ -53,7 +52,7 @@ task copyRuntimeLibs(type: Sync) {
    	into "libs"
 }
 
-task copyTestLibs(type: Sync) {
-   	from configurations.testRuntimeClasspath
-   	into "libs-test"
-}
+//task copyTestLibs(type: Sync) {
+//   	from configurations.testRuntimeClasspath
+//   	into "libs-test"
+//}
