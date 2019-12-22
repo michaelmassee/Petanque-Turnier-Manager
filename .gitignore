@@ -7,3 +7,4 @@ dist/**
 /libs/**
 /libs-test/**
 /.gradle/
+*.classpath
