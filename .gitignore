@@ -6,3 +6,4 @@ dist/**
 .gradle/**
 /libs/**
 /libs-test/**
+/.gradle/
