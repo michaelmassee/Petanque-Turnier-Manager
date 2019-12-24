@@ -25,7 +25,7 @@ eclipse.classpath.file {
    withXml { 
      def node = it.asNode()
      def alreadyExist = node.find { entry ->
-       entry.path.text().endsWith ("LibreOffice 6.2") 
+       entry.path.text().startsWith ("org.libreoffice.ide.eclipse.java.OOO_CONTAINER") 
      }
      
      if (!alreadyExist) {
