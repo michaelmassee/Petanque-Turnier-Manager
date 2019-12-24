@@ -2,7 +2,7 @@
 * Erstellung : 10.05.2018 / Michael Massee
 **/
 
-package de.petanqueturniermanager.helper.rangliste;
+package de.petanqueturniermanager.supermelee;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
@@ -12,7 +12,6 @@ import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_DIV_OF
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_MINUS_OFFS;
 import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_PLUS_OFFS;
 
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
@@ -21,21 +20,19 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.rangliste.IRangliste;
+import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
-abstract public class AbstractRanglisteFormatter {
+abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 	public static final int ENDSUMME_NUMBER_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH + 110;
 	public static final int ERSTE_KOPFDATEN_ZEILE = 0;
@@ -46,7 +43,7 @@ abstract public class AbstractRanglisteFormatter {
 	private final WeakRefHelper<ISuperMeleePropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public AbstractRanglisteFormatter(MeldungenSpalte<SpielerMeldungen> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
+	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
 		spielerSpalteWkRef = new WeakRefHelper<>(spielerSpalte);
@@ -149,23 +146,25 @@ abstract public class AbstractRanglisteFormatter {
 		Integer geradeColor = propertiesSpalte.getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 
-		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
-		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
+		GeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor).ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
 
-		// formula when in validate spalte ein error
-		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-		// Achtung spalte plus 1 weil A ist nicht 0 sondern 1
-		String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (validateSpalteNr + 1) + "))))>0";
-
-		ConditionalFormatHelper.from(sheet, datenRange).clear().
-		// -----------------------------
-		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyNew().
-				// ----------------------------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyNew().
-				// ---------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).apply();
+		// RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
+		// RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
+		//
+		// // formula when in validate spalte ein error
+		// // Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
+		// // Achtung spalte plus 1 weil A ist nicht 0 sondern 1
+		// String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (validateSpalteNr + 1) + "))))>0";
+		//
+		// ConditionalFormatHelper.from(sheet, datenRange).clear().
+		// // -----------------------------
+		// // Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
+		// formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyAndReset().reset().
+		// // ----------------------------------------------
+		// formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset().reset().
+		// // ---------------------
+		// formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndReset();
 	}
 
 	/**

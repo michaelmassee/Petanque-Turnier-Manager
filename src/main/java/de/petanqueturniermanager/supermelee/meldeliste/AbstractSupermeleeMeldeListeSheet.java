@@ -271,15 +271,15 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
 		// ------------------------------
-				formulaIsText().styleIsFehler().applyNew().
+				formulaIsText().styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew(). // nr muss >0 und <999 sein
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und <999 sein
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -291,11 +291,11 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				+ ")>1";
 		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
 		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -304,13 +304,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		RangePosition setzpositionRangePos = RangePosition.from(meldeListeHelper.setzPositionSpalte(), ERSTE_DATEN_ZEILE, meldeListeHelper.setzPositionSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, setzpositionRangePos).clear().
 		// ------------------------------
-				formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew().
+				formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formulaIsText().styleIsFehler().applyNew().
+				formulaIsText().styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 
 		// -----------------------------------------------
 		// Spieltag spalten
@@ -321,13 +321,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		RangePosition spieltageRangePos = RangePosition.from(meldeListeHelper.ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, spieltageRangePos).clear().
 		// ------------------------------
-				formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew().
+				formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formulaIsText().styleIsFehler().applyNew().
+				formulaIsText().styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 	}
 
 	/**

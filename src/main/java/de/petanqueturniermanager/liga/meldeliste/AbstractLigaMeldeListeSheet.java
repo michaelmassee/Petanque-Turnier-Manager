@@ -105,16 +105,16 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
 		// ------------------------------
-				formulaIsText().styleIsFehler().applyNew().
+				formulaIsText().styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
 				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyNew(). // nr muss >0 und <999 sein
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und <999 sein
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 		// -----------------------------------------------
 
 		// TODO Doppelte Code
@@ -126,11 +126,11 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 				+ ")>1";
 		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
 		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyNew().
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyNew().
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyNew().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyNew();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 		// -----------------------------------------------
 	}
 

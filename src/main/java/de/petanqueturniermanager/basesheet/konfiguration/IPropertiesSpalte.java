@@ -27,6 +27,12 @@ public interface IPropertiesSpalte {
 
 	Integer getMeldeListeHeaderFarbe() throws GenerateException;
 
+	Integer getRanglisteHintergrundFarbeGerade() throws GenerateException;
+
+	Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException;
+
+	Integer getRanglisteHeaderFarbe() throws GenerateException;
+
 	void updateKonfigBlock() throws GenerateException;
 
 	void doFormat() throws GenerateException;

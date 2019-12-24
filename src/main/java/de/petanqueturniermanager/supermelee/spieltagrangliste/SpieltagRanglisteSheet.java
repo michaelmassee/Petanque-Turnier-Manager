@@ -28,11 +28,9 @@ import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.rangliste.AbstractRanglisteFormatter;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
-import de.petanqueturniermanager.helper.rangliste.RanglisteFormatter;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -41,6 +39,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
@@ -71,7 +70,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
-	private final RanglisteFormatter ranglisteFormatter;
+	private final SpieltagRanglisteFormatter ranglisteFormatter;
 	private final RangListeSorter rangListeSorter;
 	private SpielTagNr spieltagNr = null;
 
@@ -81,7 +80,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
-		ranglisteFormatter = new RanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
+		ranglisteFormatter = new SpieltagRanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
 		rangListeSorter = new RangListeSorter(this);
 	}
 
@@ -124,7 +123,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
 		processBoxinfo("Print-Bereich");
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
-		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
