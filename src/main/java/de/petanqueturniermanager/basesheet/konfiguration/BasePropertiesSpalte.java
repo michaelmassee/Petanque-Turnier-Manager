@@ -43,6 +43,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final int HEADER_HEIGHT = 800;
 	public static final TableBorder2 HEADER_BORDER = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 	public static final String HEADER_BACK_COLOR = "#dedbd3";
+	public static final Integer DEFAULT_GERADE_BACK_COLOR = Integer.valueOf("e1e9f7", 16);
+	public static final Integer DEFAULT_UNGERADE__BACK_COLOR = Integer.valueOf("c0d6f7", 16);
+	public static final Integer DEFAULT_HEADER__BACK_COLOR = Integer.valueOf("e6ebf4", 16);
 	private static final int MAX_LINE = 9999; // max anzahl properties
 	private static final int SPALTE_WERT_WIDTH = 1500;
 	private static final int SPALTE_NAME_WIDTH = 7000;
@@ -51,6 +54,10 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
+
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Rangliste Hintergrund Gerade";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Rangliste Hintergrund Ungerade";
+	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste Header";
 
 	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
@@ -63,17 +70,24 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected final int headerZeile;
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("c0d6f7", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
 				.setDescription("Spielrunde Header-Hintergrundfarbe"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
 				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene. Default = N"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE).setDefaultVal(Integer.valueOf("e1e9f7", 16))
+				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("c0d6f7", 16))
+				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER).setDefaultVal(Integer.valueOf("e6ebf4", 16))
+				.setDescription("Rangliste Header-Hintergrundfarbe"));
 	}
 
 	protected BasePropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
@@ -350,6 +364,21 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public final boolean zeigeArbeitsSpalten() throws GenerateException {
 		return readBooleanProperty(KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN);
+	}
+
+	@Override
+	public Integer getRanglisteHeaderFarbe() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER);
+	}
+
+	@Override
+	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE);
+	}
+
+	@Override
+	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
 	}
 
 }

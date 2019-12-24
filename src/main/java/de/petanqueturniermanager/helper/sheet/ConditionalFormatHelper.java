@@ -114,8 +114,20 @@ public class ConditionalFormatHelper {
 	 * @throws GenerateException
 	 */
 
-	public ConditionalFormatHelper applyNew() throws GenerateException {
-		apply();
+	@Deprecated
+	public ConditionalFormatHelper applyAndResetDeprecated() throws GenerateException {
+		applyAndReset();
+		return this;
+	}
+
+	/**
+	 * properties auf default
+	 *
+	 * @return
+	 * @throws GenerateException
+	 */
+
+	public ConditionalFormatHelper reset() throws GenerateException {
 		doClear = false;
 		conditionOperator = null;
 		formula1 = null;
@@ -132,7 +144,7 @@ public class ConditionalFormatHelper {
 	 * @throws GenerateException
 	 */
 
-	public ConditionalFormatHelper apply() throws GenerateException {
+	public ConditionalFormatHelper applyAndReset() throws GenerateException {
 		checkNotNull(conditionOperator);
 		checkNotNull(formula1);
 		checkNotNull(styleName);
@@ -181,6 +193,7 @@ public class ConditionalFormatHelper {
 		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException | PropertyVetoException e) {
 			sheet.getLogger().error(e.getMessage(), e);
 		}
+		reset();
 		return this;
 	}
 

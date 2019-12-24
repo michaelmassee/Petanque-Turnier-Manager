@@ -118,16 +118,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
-		return propertiesSpalte.getRanglisteHintergrundFarbeGerade();
-	}
-
-	@Override
-	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
-		return propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
-	}
-
-	@Override
 	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
 		return propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
 	}
@@ -135,11 +125,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	@Override
 	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
 		return propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
-	}
-
-	@Override
-	public Integer getRanglisteHeaderFarbe() throws GenerateException {
-		return propertiesSpalte.getRanglisteHeaderFarbe();
 	}
 
 	@Override

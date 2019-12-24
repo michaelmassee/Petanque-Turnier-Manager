@@ -17,15 +17,9 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getSpielRundeHeaderFarbe() throws GenerateException;
 
-	Integer getRanglisteHintergrundFarbeGerade() throws GenerateException;
-
-	Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException;
-
 	Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException;
 
 	Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException;
-
-	Integer getRanglisteHeaderFarbe() throws GenerateException;
 
 	Integer getNichtGespielteRundePlus() throws GenerateException;
 
@@ -35,8 +29,10 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getAnzGespielteSpieltage() throws GenerateException;
 
+	@Override
 	String getFusszeileLinks() throws GenerateException;
 
+	@Override
 	String getFusszeileMitte() throws GenerateException;
 
 	boolean getSpielrunde1Header() throws GenerateException;

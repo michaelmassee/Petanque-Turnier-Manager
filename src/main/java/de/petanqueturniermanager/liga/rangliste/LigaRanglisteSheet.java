@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.algorithmen.JederGegenJeden;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -30,6 +31,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
@@ -118,7 +120,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		}
 
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
-		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
 		spieltageFormulaEinfuegen();
 		summenSpaltenEinfuegen();
@@ -137,7 +139,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 *
 	 */
 	private void insertHeader() throws GenerateException {
-		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		int anzGesamtRunden = anzGesamtRunden();
 		RangeData data = new RangeData();
 		RowData headerZeile3 = data.newRow();
@@ -162,7 +164,8 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		headerZeile3.newString("-");
 		headerZeile3.newString("Δ"); // Spiele diff Delta Δ
 
-		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setAllThinBorder().setCellBackColor(headerBackColor);
+		TableBorder2 borderHeader3 = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setBorder(borderHeader3).setCellBackColor(headerBackColor);
 		RangeHelper.from(getXSpreadSheet(), data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1))).setDataInRange(data)
 				.setRangeProperties(rangePropZeile3);
 
@@ -226,7 +229,10 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 */
 	private void format() throws GenerateException {
 		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).centerJustify();
-		RangeHelper.from(getXSpreadSheet(), allDatenRange()).setRangeProperties(rangeProp);
+		RangeHelper.from(this, allDatenRange()).setRangeProperties(rangeProp);
+
+		GeradeUngeradeFormatHelper.from(this, allDatenRange()).geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
+				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).apply();
 	}
 
 	/**

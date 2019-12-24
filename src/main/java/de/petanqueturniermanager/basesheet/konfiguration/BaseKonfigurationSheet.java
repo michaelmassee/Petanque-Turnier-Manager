@@ -148,6 +148,21 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return getPropertiesSpalte().suchMatrixProperty();
 	}
 
+	@Override
+	public final Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
+		return getPropertiesSpalte().getRanglisteHintergrundFarbeGerade();
+	}
+
+	@Override
+	public final Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
+		return getPropertiesSpalte().getRanglisteHintergrundFarbeUnGerade();
+	}
+
+	@Override
+	public final Integer getRanglisteHeaderFarbe() throws GenerateException {
+		return getPropertiesSpalte().getRanglisteHeaderFarbe();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */
