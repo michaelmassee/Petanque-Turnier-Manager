@@ -22,11 +22,14 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  */
 public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 
+	private final boolean mitFreispiel;
+
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public LigaSpielPlanSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaSpielPlanSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet, boolean mitFreispiel) {
 		super(workingSpreadsheet);
+		this.mitFreispiel = mitFreispiel;
 	}
 
 	@Override
@@ -34,7 +37,7 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] { IKonfigurationKonstanten.SHEETNAME });
 		// Meldeliste
-		new LigaMeldeListeSheet_TestDaten(getWorkingSpreadsheet()).testNamenEinfuegen();
+		new LigaMeldeListeSheet_TestDaten(getWorkingSpreadsheet(), (mitFreispiel) ? false : true).testNamenEinfuegen();
 		generate();
 
 		// Rangliste

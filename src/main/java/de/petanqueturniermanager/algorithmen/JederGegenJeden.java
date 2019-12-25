@@ -94,6 +94,20 @@ public class JederGegenJeden {
 		return ret;
 	}
 
+	/**
+	 * @return the freiSpiel
+	 */
+	public final boolean isFreiSpiel() {
+		return freiSpiel;
+	}
+
+	/**
+	 * @return the anzMeldungen
+	 */
+	public final int getAnzMeldungen() {
+		return anzMeldungen;
+	}
+
 }
 
 // @formatter:off

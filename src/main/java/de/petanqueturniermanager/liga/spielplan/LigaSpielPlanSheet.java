@@ -265,16 +265,19 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		int letzteSpielZeile = letzteSpielZeile();
 		// fill down fuer name
 		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
-		String formulaNameA = meldeListe.formulaSverweisSpielernamen(Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress());
+		String formulaNameA = freispielName(meldeListe.formulaSverweisSpielernamen(Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
 		StringCellValue nameAFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameA).setPos(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
 				.setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(nameAFormula);
 
-		String formulaNameB = meldeListe.formulaSverweisSpielernamen(Position.from(TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress());
+		String formulaNameB = freispielName(meldeListe.formulaSverweisSpielernamen(Position.from(TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
 		StringCellValue nameBFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameB).setPos(Position.from(NAME_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
 				.setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(nameBFormula);
+	}
 
+	private String freispielName(String formulaName) {
+		return "WENNNV(" + formulaName + ";\"Freispiel\")";
 	}
 
 	private int letzteSpielZeile() throws GenerateException {

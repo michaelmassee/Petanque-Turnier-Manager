@@ -248,7 +248,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			break;
 		// ------------------------------
 		case "liga_testdaten_meldeliste":
-			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet).start();
+			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_spielplan":
 			new LigaSpielPlanSheet(workingSpreadsheet).start();
@@ -257,7 +257,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 			new LigaRanglisteSheet(workingSpreadsheet).start();
 			break;
 		case "liga_spielplan_testdaten":
-			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet).start();
+			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, false).start();
+			break;
+		case "liga_spielplan_testdaten_mit_freispiel":
+			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, true).start();
 			break;
 		default:
 			didHandle = false;

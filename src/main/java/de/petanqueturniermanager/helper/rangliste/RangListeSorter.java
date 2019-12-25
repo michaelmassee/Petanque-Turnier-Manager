@@ -4,24 +4,13 @@
 
 package de.petanqueturniermanager.helper.rangliste;
 
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_PLUS_OFFS;
-
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.awt.FontWeight;
-import com.sun.star.beans.PropertyValue;
-import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
-import com.sun.star.table.TableSortField;
-import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
-import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
@@ -224,107 +213,6 @@ public class RangListeSorter {
 
 	public void sortHelper(RangePosition toSortRange, int[] sortSpalten) throws GenerateException {
 		SortHelper.from(getIRangliste().getXSpreadSheet(), toSortRange).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
-	}
-
-	/**
-	 * mit bestehende spalten im sheet selbst sortieren.<br>
-	 * sortieren in 2 schritten
-	 *
-	 * @throws GenerateException
-	 */
-	public void doSort_deprecated() throws GenerateException {
-		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
-
-		int ersteSpalteEndsumme = getIRangliste().getErsteSummeSpalte();
-		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteDatenZiele);
-		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteDatenZiele);
-		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteDatenZiele);
-		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ersteDatenZiele);
-
-		// spalte zeile (column, row, column, row)
-		XCellRange xCellRange = getxCellRangeAlleDaten();
-
-		if (xCellRange == null) {
-			return;
-		}
-
-		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRange);
-
-		// nur 3 felder sind sortierbar !, deswegen die 4 spalte zuerst einzel sortieren.
-		// wenn einzel sortieren dann von letzte bis erst spalte !
-		{
-			TableSortField[] aSortFields = new TableSortField[1];
-			TableSortField field4 = new TableSortField();
-			field4.Field = punkteGewonnenZelle1.getSpalte(); // 0 = erste spalte
-			field4.IsAscending = false; // false= meiste Punkte oben
-			aSortFields[0] = field4;
-
-			PropertyValue[] sortDescr = sortDescr(aSortFields);
-			xSortable.sort(sortDescr);
-		}
-
-		{
-			TableSortField[] aSortFields = new TableSortField[3]; // MAX 3 felder
-			TableSortField field1 = new TableSortField();
-			field1.Field = summeSpielGewonnenZelle1.getSpalte();
-			field1.IsAscending = false; // false = meiste Punkte oben
-			aSortFields[0] = field1;
-
-			TableSortField field2 = new TableSortField();
-			field2.Field = summeSpielDiffZelle1.getSpalte(); // 0 = erste spalte
-			field2.IsAscending = false; // false =meiste Punkte oben
-			aSortFields[1] = field2;
-
-			TableSortField field3 = new TableSortField();
-			field3.Field = punkteDiffZelle1.getSpalte(); // 0 = erste spalte
-			field3.IsAscending = false; // false = meiste Punkte oben
-			aSortFields[2] = field3;
-
-			PropertyValue[] sortDescr = sortDescr(aSortFields);
-			xSortable.sort(sortDescr);
-		}
-
-	}
-
-	@Deprecated
-	private PropertyValue[] sortDescr(TableSortField[] sortFields) {
-
-		PropertyValue[] aSortDesc = new PropertyValue[2];
-		PropertyValue propVal = new PropertyValue();
-		propVal.Name = "SortFields";
-		propVal.Value = sortFields;
-		aSortDesc[0] = propVal;
-
-		// specifies if cell formats are moved with the contents they belong to.
-		aSortDesc[1] = new PropertyValue();
-		aSortDesc[1].Name = "BindFormatsToContent";
-		aSortDesc[1].Value = false;
-
-		return aSortDesc;
-	}
-
-	/**
-	 * alle sortierbare daten, ohne header !
-	 *
-	 * @return
-	 * @throws GenerateException
-	 */
-	@Deprecated
-	private XCellRange getxCellRangeAlleDaten() throws GenerateException {
-		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
-		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
-		int letzteSpalte = getIRangliste().getLetzteSpalte();
-		XSpreadsheet sheet = getIRangliste().getXSpreadSheet();
-		XCellRange xCellRange = null;
-		try {
-			if (letzteDatenZeile > ersteDatenZiele) { // daten vorhanden ?
-				// (column, row, column, row)
-				xCellRange = sheet.getCellRangeByPosition(0, ersteDatenZiele, letzteSpalte, letzteDatenZeile);
-			}
-		} catch (IndexOutOfBoundsException e) {
-			getIRangliste().getLogger().error(e.getMessage(), e);
-		}
-		return xCellRange;
 	}
 
 }

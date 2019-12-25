@@ -108,7 +108,18 @@
 									<value>_self</value>
 								</prop>
 							</node>
-
+							<node oor:name="A8" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Liga, Gameplan odd Numbr</value>
+									<value xml:lang="de">Liga, Spielplan mit Freispiel</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.Turnier?liga_spielplan_testdaten_mit_freispiel</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 				</node>
