@@ -10,6 +10,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 
 public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue, String> {
@@ -39,6 +41,10 @@ public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue,
 		StringCellValue stringCellValue = new StringCellValue();
 		stringCellValue.copyCommonAttr(cellVal).setValue(cellVal.getValue().toString());
 		return stringCellValue;
+	}
+
+	public static StringCellValue from(ISheet iSheet, Position pos) throws GenerateException {
+		return from(checkNotNull(iSheet).getXSpreadSheet(), pos);
 	}
 
 	public static final StringCellValue from(XSpreadsheet sheet) {
