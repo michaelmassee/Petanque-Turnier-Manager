@@ -193,7 +193,15 @@ public class SheetHelper {
 		XCell xCell = null;
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
-			xCell.setFormula(StringUtils.prependIfMissing(formula.trim(), "="));
+
+			// Deutsch nach Enlisch
+			// nur ein teil der gebraucht wird
+			// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
+			formula = StringUtils.replaceEach(formula.trim(),
+					// ---------------
+					new String[] { "ISTNV", "WENNNV" }, // Deutsch
+					new String[] { "ISNA", "IFNA" }); // Englisch
+			xCell.setFormula(StringUtils.prependIfMissing(formula, "="));
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
