@@ -41,7 +41,7 @@ public class RangeHelper {
 
 	private RangeHelper(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
 		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
-		this.rangePos = checkNotNull(rangePos);
+		this.rangePos = RangePosition.from(rangePos);
 	}
 
 	/**
@@ -64,6 +64,10 @@ public class RangeHelper {
 	 */
 	public static RangeHelper from(WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet, RangePosition rangePos) {
 		return new RangeHelper(checkNotNull(wkRefxSpreadsheet).get(), rangePos);
+	}
+
+	public static RangeHelper from(ISheet sheet, int ersteSpalte, int ersteZeile, int letzteSpalte, int letzteZeile) throws GenerateException {
+		return new RangeHelper(checkNotNull(sheet).getXSpreadSheet(), RangePosition.from(ersteSpalte, ersteZeile, letzteSpalte, letzteZeile));
 	}
 
 	/**

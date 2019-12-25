@@ -160,7 +160,7 @@ public class BorderFactory {
 		borderLine.Color = 0; // 0x0d3472;
 		borderLine.InnerLineWidth = 0;
 		borderLine.OuterLineWidth = 10;
-		borderLine.LineDistance = 0;
+		borderLine.LineDistance = 0; // muss 0
 		borderLine.LineStyle = BorderLineStyle.SOLID;
 		borderLine.LineWidth = 0;
 		return borderLine;

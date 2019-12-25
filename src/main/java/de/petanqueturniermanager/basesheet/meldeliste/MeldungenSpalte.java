@@ -118,15 +118,15 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 		// -------------------------------------
 		RangePosition spielrNrdatenRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte, letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange, CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-				.setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange, CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR)
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
 		// Spieler Namen
 		RangePosition datenRange = RangePosition.from(meldungNameSpalte, ersteDatenZiele, meldungNameSpalte, letzteDatenZeile);
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
 
 	}
 

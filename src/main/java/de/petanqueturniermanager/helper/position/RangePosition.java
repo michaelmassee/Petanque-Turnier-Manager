@@ -24,7 +24,18 @@ public class RangePosition {
 		this.ende = ende;
 	}
 
+	/**
+	 * @param rangePos
+	 * @return
+	 */
+	public static RangePosition from(RangePosition rangePos) {
+		checkNotNull(rangePos);
+		return from(rangePos.getStart(), rangePos.getEnde());
+	}
+
 	public static RangePosition from(AbstractPosition<?> start, AbstractPosition<?> ende) {
+		checkNotNull(start);
+		checkNotNull(ende);
 		return new RangePosition(start, ende);
 	}
 
@@ -88,6 +99,15 @@ public class RangePosition {
 	public RangePosition spaltePlusEins() {
 		start.spaltePlusEins();
 		ende.spaltePlusEins();
+		return this;
+	}
+
+	/**
+	 * Der komplete Range um x Spalten nach rechts oder links verschieben
+	 */
+	public RangePosition spaltePlus(int anz) {
+		start.spaltePlus(anz);
+		ende.spaltePlus(anz);
 		return this;
 	}
 

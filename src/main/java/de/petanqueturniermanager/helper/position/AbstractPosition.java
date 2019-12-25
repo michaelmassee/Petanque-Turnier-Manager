@@ -81,6 +81,11 @@ public abstract class AbstractPosition<T> {
 		return (T) this;
 	}
 
+	/**
+	 * @param anz, anzahl spalten nach rechts verschieben, minus wert nach links
+	 * @return
+	 */
+
 	@SuppressWarnings("unchecked")
 	public T spaltePlus(int anz) {
 		this.setSpalte(this.getSpalte() + anz);
