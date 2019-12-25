@@ -34,6 +34,10 @@ eclipse.classpath.file {
      }
 }
 
+task cleanCache (type: Delete) {
+  delete "dist/.ooo-debug/user/uno_packages/cache"
+}
+
 task copyRuntimeLibs(type: Sync) {
    	from configurations.runtimeClasspath
    	into "libs"
