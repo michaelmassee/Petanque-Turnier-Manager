@@ -329,7 +329,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public Position getPropKeyPos(String key) throws GenerateException {
 		checkNotNull(key);
 		RangePosition searchRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE);
-		return SearchHelper.from(sheetWkRef, searchRange).searchNachRegExprInSpalte("(?i)" + key); // ignore case
+		// die komplette zell inhalt muss uebreinstimmen, deswegen ^ und $
+		return SearchHelper.from(sheetWkRef, searchRange).searchNachRegExprInSpalte("(?i)^" + key + "$"); // ignore case
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {
