@@ -4,10 +4,11 @@
 
 package de.petanqueturniermanager.supermelee.endrangliste;
 
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_MINUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_MINUS_OFFS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -45,16 +46,16 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
-import de.petanqueturniermanager.helper.sheet.SummenSpalten;
+import de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeRangListeSorter;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
@@ -77,7 +78,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
 	private final EndRanglisteFormatter endRanglisteFormatter;
 	private final RangListeSpalte rangListeSpalte;
-	private final RangListeSorter rangListeSorter;
+	private final SuperMeleeRangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Endrangliste");
@@ -86,7 +87,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
 		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte, ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
-		rangListeSorter = new RangListeSorter(this);
+		rangListeSorter = new SuperMeleeRangListeSorter(this);
 	}
 
 	@Override
@@ -480,7 +481,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	}
 
 	private int getAnzSpaltenInSpieltag() {
-		return SummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+		return SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
 	}
 
 	@Override
@@ -498,7 +499,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
 	}
 
-	protected RangListeSorter getRangListeSorter() {
+	protected SuperMeleeRangListeSorter getRangListeSorter() {
 		return rangListeSorter;
 	}
 
@@ -507,4 +508,20 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		return getRanglisteSpalten(ersteSpalteEndsumme, ERSTE_DATEN_ZEILE);
 	}
+
+	@Override
+	public int validateSpalte() throws GenerateException {
+		return getManuellSortSpalte() + PUNKTE_DIV_OFFS;
+	}
+
+	@Override
+	public int getErsteSpalte() throws GenerateException {
+		return SPIELER_NR_SPALTE;
+	}
+
+	@Override
+	public void calculateAll() {
+		getxCalculatable().calculateAll();
+	}
+
 }

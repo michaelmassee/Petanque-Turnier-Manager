@@ -4,7 +4,7 @@
 
 package de.petanqueturniermanager.helper.sheet;
 
-public class SummenSpalten {
+public class SuperMeleeSummenSpalten {
 
 	// Summe spalten
 	public static final int ANZAHL_SPALTEN_IN_SUMME = 6;

@@ -5,12 +5,12 @@
 package de.petanqueturniermanager.supermelee;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_MINUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.PUNKTE_PLUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_MINUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SummenSpalten.SPIELE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_DIV_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_MINUS_OFFS;
+import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_PLUS_OFFS;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -149,22 +149,6 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
 		GeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor).ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
 
-		// RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
-		// RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
-		//
-		// // formula when in validate spalte ein error
-		// // Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-		// // Achtung spalte plus 1 weil A ist nicht 0 sondern 1
-		// String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (validateSpalteNr + 1) + "))))>0";
-		//
-		// ConditionalFormatHelper.from(sheet, datenRange).clear().
-		// // -----------------------------
-		// // Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-		// formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyAndReset().reset().
-		// // ----------------------------------------------
-		// formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset().reset().
-		// // ---------------------
-		// formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndReset();
 	}
 
 	/**
