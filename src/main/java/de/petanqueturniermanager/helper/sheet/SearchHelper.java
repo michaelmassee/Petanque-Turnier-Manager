@@ -56,7 +56,8 @@ public class SearchHelper {
 
 	/**
 	 * suche in der 1 Spalte von Range, nach regExpr.<br>
-	 * Achtung wenn suche nach werte fuer komplette Zelle dan mit ^ und $
+	 * Achtung: findet teil match in den zellen ! <br>
+	 * wenn suche nach werte fuer komplette Zelle dann mit ^ und $
 	 *
 	 * @param rangePos Range mit Spalte
 	 * @return wenn gefunden dann erste treffer, sonnst Null

@@ -14,14 +14,20 @@ public interface IRangliste extends ISheet {
 
 	int getErsteSummeSpalte() throws GenerateException;
 
+	int getErsteSpalte() throws GenerateException; // Team / Spielernr spalte
+
+	int getErsteDatenZiele() throws GenerateException;
+
 	int getLetzteSpalte() throws GenerateException;
 
 	int getLetzteDatenZeile() throws GenerateException;
 
-	int getErsteDatenZiele() throws GenerateException;
-
 	int getManuellSortSpalte() throws GenerateException;
 
 	List<Position> getRanglisteSpalten() throws GenerateException;
+
+	int validateSpalte() throws GenerateException;
+
+	void calculateAll();
 
 }

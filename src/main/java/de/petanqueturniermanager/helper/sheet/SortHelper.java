@@ -123,9 +123,17 @@ public class SortHelper {
 		return this;
 	}
 
+	/**
+	 * Sorting records. Sorting arranges the visible cells on the sheet.<br>
+	 * In Calc, you can sort by up to three criteria, with each criterion applied one after the other..<br>
+	 *
+	 * @return
+	 */
+
 	public SortHelper doSort() {
 		checkNotNull(sortSpalten);
 		checkArgument(sortSpalten.length > 0);
+		checkArgument(sortSpalten.length < 4); // max 3 spalten
 
 		XCellRange xCellRangeToSort = RangeHelper.from(wkRefxSpreadsheet, rangePositionToSort).getCellRange();
 		if (xCellRangeToSort == null) {
@@ -133,20 +141,14 @@ public class SortHelper {
 		}
 
 		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRangeToSort);
-
-		// Note – The FieldType member, that is used to select textual or numeric sorting in
-		// text documents is ignored in the spreadsheet application. In a spreadsheet, a cell
-		// always has a known type of text or value, which is used for sorting, with numbers
-		// sorted before text cells.
-
 		TableSortField[] sortFields = new TableSortField[sortSpalten.length];
 
 		for (int sortSpalteIdx = 0; sortSpalteIdx < sortSpalten.length; sortSpalteIdx++) {
-			TableSortField field1 = new TableSortField();
-			field1.Field = sortSpalten[sortSpalteIdx]; // 0 = erste spalte
-			field1.IsAscending = aufSteigendSortieren;
-			field1.IsCaseSensitive = caseSensitive;
-			sortFields[sortSpalteIdx] = field1;
+			TableSortField sortField = new TableSortField();
+			sortField.Field = sortSpalten[sortSpalteIdx]; // 0 = erste spalte
+			sortField.IsAscending = aufSteigendSortieren;
+			sortField.IsCaseSensitive = caseSensitive;
+			sortFields[sortSpalteIdx] = sortField;
 		}
 
 		PropertyValue[] aSortDesc = new PropertyValue[2];
@@ -162,7 +164,6 @@ public class SortHelper {
 		aSortDesc[1] = propVal;
 
 		xSortable.sort(aSortDesc);
-
 		return this;
 	}
 

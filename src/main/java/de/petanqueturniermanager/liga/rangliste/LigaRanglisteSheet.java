@@ -30,7 +30,9 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
@@ -66,8 +68,11 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 	private final MeldungenSpalte<TeamMeldungen> meldungenSpalte;
 	private final LigaMeldeListeSheet_Update meldeListe;
+	private final RangListeSorter rangListeSorter;
 	private JederGegenJeden jederGegenJeden;
 	private TeamMeldungen alleMeldungen;
+
+	// RangListeSorter
 
 	/**
 	 * @param workingSpreadsheet
@@ -79,6 +84,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH).ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(2).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
+		rangListeSorter = new RangListeSorter(this);
 	}
 
 	@VisibleForTesting
@@ -127,16 +133,28 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
 		spieltageFormulaEinfuegen();
 		summenSpaltenEinfuegen();
-		doSort();
 
 		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSpalte.upDateRanglisteSpalte();
 		rangListeSpalte.insertHeaderInSheet(headerBackColor);
+		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
+		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
+		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
+		rangListeSorter.doSort();
+		// doSort();
 
 		insertHeader();
 		formatData();
 		meldungenSpalte.formatDaten();
-		addFooter();
+		Position footerPos = addFooter().getPos();
+		printBereichDefinieren(footerPos);
+	}
+
+	private void printBereichDefinieren(Position footerPos) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
+		Position linksOben = Position.from(0, 0);
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
@@ -250,7 +268,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		RangeHelper.from(this, allDatenRange()).setRangeProperties(rangeProp);
 
 		GeradeUngeradeFormatHelper.from(this, allDatenRange()).geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
-				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).apply();
+				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).validateSpalte(validateSpalte()).apply();
 
 		int anzGesamtRunden = anzGesamtRunden();
 		int ersteSummeSpalte = getErsteSummeSpalte();
@@ -282,6 +300,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 * @param jederGegenJeden
 	 * @throws GenerateException
 	 */
+	@Deprecated
 	private void doSort() throws GenerateException {
 		getxCalculatable().calculateAll(); // zum sortieren werte kalkulieren
 
@@ -477,6 +496,22 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		Position[] arraylist = new Position[] { sort1, sort2, sort3 };
 		return Arrays.asList(arraylist);
 
+	}
+
+	@Override
+	public int validateSpalte() throws GenerateException {
+		int anzSortSpalten = getRanglisteSpalten().size();
+		return getManuellSortSpalte() + anzSortSpalten + 1;
+	}
+
+	@Override
+	public int getErsteSpalte() throws GenerateException {
+		return TEAM_NR_SPALTE;
+	}
+
+	@Override
+	public void calculateAll() {
+		getxCalculatable().calculateAll();
 	}
 
 }

@@ -16,6 +16,7 @@ public class EndranglisteSheet_Sort extends EndranglisteSheet {
 	protected void doRun() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		TurnierSheet.from(sheet, getWorkingSpreadsheet()).setActiv();
+		// test
 		getRangListeSorter().doSort();
 	}
 
