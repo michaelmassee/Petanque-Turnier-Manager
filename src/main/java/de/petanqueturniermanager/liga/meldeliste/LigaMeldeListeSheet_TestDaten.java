@@ -29,10 +29,12 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_TestDaten.class);
 
 	private final LigaMeldeListeSheet_New meldeListe;
+	private final boolean geradeAnzahlMannschaften;
 
-	public LigaMeldeListeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaMeldeListeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet, boolean geradeAnzahlMannschaften) {
 		super(workingSpreadsheet);
 		meldeListe = new LigaMeldeListeSheet_New(workingSpreadsheet);
+		this.geradeAnzahlMannschaften = geradeAnzahlMannschaften;
 	}
 
 	@Override
@@ -59,13 +61,13 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
 
 		RangeData data = new RangeData();
 
+		int anzTeams = geradeAnzahlMannschaften ? 5 : 6;
 		int cntr = 0;
 		for (String name : testNamen) {
 			RowData newTeam = data.newRow();
 			newTeam.newEmpty();
 			newTeam.newString(name);
-			if (cntr++ > 5) {
-				// 6 Teams
+			if (cntr++ > anzTeams) {
 				break;
 			}
 		}
