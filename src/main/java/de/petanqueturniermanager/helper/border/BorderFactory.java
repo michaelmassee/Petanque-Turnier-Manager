@@ -17,6 +17,7 @@ public class BorderFactory {
 	BorderLine2 horizontalLine = null;
 	BorderLine2 verticalLine = null;
 	BorderLine2 forLine = null;
+	int distance = -1;
 
 	private BorderFactory() {
 	}
@@ -28,14 +29,60 @@ public class BorderFactory {
 	public TableBorder2 toBorder() {
 		TableBorder2 tableBorder = new TableBorder2();
 		tableBorder.TopLine = topLine;
+		if (topLine != null) {
+			tableBorder.IsTopLineValid = true;
+		} else {
+			tableBorder.TopLine = new BorderLine2();
+			tableBorder.IsTopLineValid = false;
+		}
+
 		tableBorder.BottomLine = bottomLine;
+		if (bottomLine != null) {
+			tableBorder.IsBottomLineValid = true;
+		} else {
+			tableBorder.BottomLine = new BorderLine2();
+			tableBorder.IsBottomLineValid = false;
+		}
+
 		tableBorder.LeftLine = leftLine;
+		if (leftLine != null) {
+			tableBorder.IsLeftLineValid = true;
+		} else {
+			tableBorder.LeftLine = new BorderLine2();
+			tableBorder.IsLeftLineValid = false;
+		}
+
 		tableBorder.RightLine = rightLine;
+		if (rightLine != null) {
+			tableBorder.IsRightLineValid = true;
+		} else {
+			tableBorder.RightLine = new BorderLine2();
+			tableBorder.IsRightLineValid = false;
+		}
+
 		tableBorder.HorizontalLine = horizontalLine;
+		if (horizontalLine != null) {
+			tableBorder.IsHorizontalLineValid = true;
+		} else {
+			tableBorder.HorizontalLine = new BorderLine2();
+			tableBorder.IsHorizontalLineValid = false;
+		}
+
 		tableBorder.VerticalLine = verticalLine;
-		tableBorder.IsTopLineValid = tableBorder.IsBottomLineValid = true;
-		tableBorder.IsLeftLineValid = tableBorder.IsRightLineValid = true;
-		tableBorder.IsDistanceValid = tableBorder.IsHorizontalLineValid = tableBorder.IsVerticalLineValid = true;
+		if (verticalLine != null) {
+			tableBorder.IsVerticalLineValid = true;
+		} else {
+			tableBorder.VerticalLine = new BorderLine2();
+			tableBorder.IsVerticalLineValid = false;
+		}
+
+		if (distance > -1) {
+			tableBorder.Distance = (short) distance;
+			tableBorder.IsDistanceValid = true;
+		} else {
+			tableBorder.IsDistanceValid = false;
+		}
+
 		return tableBorder;
 	}
 
@@ -56,6 +103,11 @@ public class BorderFactory {
 		rightLine = BorderFactory.boldLine();
 		horizontalLine = BorderFactory.boldLine();
 		verticalLine = BorderFactory.boldLine();
+		return this;
+	}
+
+	public BorderFactory distance(int distance) {
+		this.distance = distance;
 		return this;
 	}
 
