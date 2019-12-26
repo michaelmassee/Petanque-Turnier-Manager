@@ -17,7 +17,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * @author Michael Massee
  */
-public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IKonfigurationSheet {
+public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements ILigaPropertiesSpalte, IKonfigurationSheet {
 
 	private static final Logger logger = LogManager.getLogger(LigaKonfigurationSheet.class);
 
@@ -54,7 +54,7 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	@Override
 	protected void updateTurnierSystemKonfiguration() throws GenerateException {
-		// TODO noch nichts hier !!!!
+		// nichts, wenn zusatz spalten dann hier
 	}
 
 	@Override
@@ -64,7 +64,22 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IK
 
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
-		// TODO noch keine
+		// nichts, wenn eigene sonder page styles
+	}
+
+	@Override
+	public Integer getSpielPlanHeaderFarbe() throws GenerateException {
+		return propertiesSpalte.getSpielPlanHeaderFarbe();
+	}
+
+	@Override
+	public Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException {
+		return propertiesSpalte.getSpielPlanHintergrundFarbeUnGerade();
+	}
+
+	@Override
+	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
+		return propertiesSpalte.getSpielPlanHintergrundFarbeGerade();
 	}
 
 }

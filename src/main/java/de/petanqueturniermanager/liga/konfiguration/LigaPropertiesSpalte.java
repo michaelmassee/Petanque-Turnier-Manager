@@ -10,6 +10,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -21,8 +22,21 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 	private static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
+	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
+	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
+	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER = "Spielplan Header";
+
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
+	}
+
+	static {
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
+				.setDescription("Spielplan Hintergrundfarbe für gerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDescription("Spielplan Hintergrundfarbe für ungerade Zeilen"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
+				.setDescription("Spielplan Header-Hintergrundfarbe"));
 	}
 
 	/**
@@ -57,6 +71,21 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
 		// Nichts
+	}
+
+	@Override
+	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE);
+	}
+
+	@Override
+	public Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE);
+	}
+
+	@Override
+	public Integer getSpielPlanHeaderFarbe() throws GenerateException {
+		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER);
 	}
 
 }
