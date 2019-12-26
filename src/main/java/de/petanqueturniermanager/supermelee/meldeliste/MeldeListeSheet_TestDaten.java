@@ -19,22 +19,21 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstante
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.model.SpielerMeldungen;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
-public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
-	/**
-	 *
-	 */
-	private static final int MIN_ANZ_SPIELER = 10;
+public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet {
 
+	private static final int MIN_ANZ_SPIELER = 10;
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
@@ -268,6 +267,16 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet {
 		testNamen.add("Schultheiss, Merle");
 
 		return testNamen;
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return meldeListe.getXSpreadSheet();
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return meldeListe.getTurnierSheet();
 	}
 
 }

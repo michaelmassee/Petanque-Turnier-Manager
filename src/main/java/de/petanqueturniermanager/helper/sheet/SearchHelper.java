@@ -13,7 +13,6 @@ import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XCellRangeAddressable;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
@@ -29,29 +28,24 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
-public class SearchHelper {
+public class SearchHelper extends BaseHelper {
 
 	private static final Logger logger = LogManager.getLogger(SearchHelper.class);
-	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
 	private final RangePosition rangePos;
 
-	private SearchHelper(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
-		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
+	private SearchHelper(ISheet iSheet, RangePosition rangePos) {
+		super(iSheet);
 		checkNotNull(rangePos.getStart());
 		checkNotNull(rangePos.getEnde());
 		this.rangePos = checkNotNull(rangePos);
 	}
 
-	public static SearchHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
-		return new SearchHelper(xSpreadsheet, rangePos);
+	public static SearchHelper from(ISheet iSheet, RangePosition rangePos) {
+		return new SearchHelper(iSheet, rangePos);
 	}
 
-	public static SearchHelper from(ISheet iSheet, RangePosition rangePos) throws GenerateException {
-		return new SearchHelper(checkNotNull(iSheet).getXSpreadSheet(), rangePos);
-	}
-
-	public static SearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) throws GenerateException {
-		return new SearchHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet(), rangePos);
+	public static SearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
+		return new SearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
 	}
 
 	/**
@@ -61,9 +55,10 @@ public class SearchHelper {
 	 *
 	 * @param rangePos Range mit Spalte
 	 * @return wenn gefunden dann erste treffer, sonnst Null
+	 * @throws GenerateException
 	 */
 
-	public Position searchNachRegExprInSpalte(String regExpr) {
+	public Position searchNachRegExprInSpalte(String regExpr) throws GenerateException {
 		checkNotNull(regExpr);
 
 		Position result = null;
@@ -87,9 +82,10 @@ public class SearchHelper {
 	 *
 	 * @param rangePos Range mit Spalte
 	 * @return wenn gefunden dann letzte Zelle, sonnst erste Zelle aus Range
+	 * @throws GenerateException
 	 */
 
-	public Position searchLastEmptyInSpalte() {
+	public Position searchLastEmptyInSpalte() throws GenerateException {
 		Position result = searchLastNotEmptyInSpalte();
 		if (result != null) {
 			result.zeilePlusEins();
@@ -104,9 +100,10 @@ public class SearchHelper {
 	 *
 	 * @param rangePos Range mit Spalte
 	 * @return wenn gefunden dann letzte Zelle, sonnst Null
+	 * @throws GenerateException
 	 */
 
-	public Position searchLastNotEmptyInSpalte() {
+	public Position searchLastNotEmptyInSpalte() throws GenerateException {
 
 		Position result = null;
 		try {
@@ -138,9 +135,9 @@ public class SearchHelper {
 		return result;
 	}
 
-	private XSearchable getXSearchableFromRange(RangePosition rangePos) {
+	private XSearchable getXSearchableFromRange(RangePosition rangePos) throws GenerateException {
 		checkNotNull(rangePos);
-		XCellRange xCellRange = RangeHelper.from(wkRefxSpreadsheet.get(), rangePos).getCellRange();
+		XCellRange xCellRange = RangeHelper.from(getISheet(), rangePos).getCellRange();
 		XSearchable xSearchable = null;
 		if (xCellRange != null) {
 			xSearchable = UnoRuntime.queryInterface(XSearchable.class, xCellRange);

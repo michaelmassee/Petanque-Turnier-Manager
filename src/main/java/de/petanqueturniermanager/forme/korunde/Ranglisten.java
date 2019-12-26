@@ -5,9 +5,9 @@ package de.petanqueturniermanager.forme.korunde;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -22,9 +22,9 @@ import de.petanqueturniermanager.model.TeamRangliste;
  */
 public class Ranglisten {
 
-	private final WeakRefHelper<SheetRunner> parentSheet;
+	private final WeakRefHelper<ISheet> parentSheet;
 
-	public Ranglisten(SheetRunner parentSheet) {
+	public Ranglisten(ISheet parentSheet) {
 		this.parentSheet = new WeakRefHelper<>(parentSheet);
 	}
 
@@ -38,7 +38,7 @@ public class Ranglisten {
 		if (null != rangliste) {
 			getSheetHelper().setActiveSheet(rangliste);
 		} else {
-			rangliste = NewSheet.from(getWorkingSpreadsheet(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
+			rangliste = NewSheet.from(parentSheet.get(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
 		processBoxinfo("Rangliste einlesen");

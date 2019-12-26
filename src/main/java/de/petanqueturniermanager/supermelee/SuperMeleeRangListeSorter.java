@@ -36,9 +36,9 @@ public class SuperMeleeRangListeSorter extends RangListeSorter {
 
 		// wenn einzaln sortieren dann von letzte zu erste spalte
 		// Zuerst die letzte Spalte, Punkte plus
-		SortHelper.from(getIRangliste().getXSpreadSheet(), toSortRange).abSteigendSortieren().spaltenToSort(new int[] { sortSpalten[3] }).doSort();
+		SortHelper.from(getIRangliste(), toSortRange).abSteigendSortieren().spaltenToSort(new int[] { sortSpalten[3] }).doSort();
 		// dann die restliche 3
-		SortHelper.from(getIRangliste().getXSpreadSheet(), toSortRange).abSteigendSortieren().spaltenToSort(new int[] { sortSpalten[0], sortSpalten[1], sortSpalten[2] }).doSort();
+		SortHelper.from(getIRangliste(), toSortRange).abSteigendSortieren().spaltenToSort(new int[] { sortSpalten[0], sortSpalten[1], sortSpalten[2] }).doSort();
 	}
 
 }

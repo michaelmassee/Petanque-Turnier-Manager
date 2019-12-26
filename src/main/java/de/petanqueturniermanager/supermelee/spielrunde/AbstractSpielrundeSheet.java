@@ -580,8 +580,8 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			}
 		}
 		// wenn hier dann neu erstellen
-		if (!NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
-				.setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
+		if (!NewSheet.from(this, getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(force)
+				.setActiv().hideGrid().create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;
 		}
@@ -762,7 +762,8 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		String conditionfindDoppelt = "COUNTIF(" + posNrSpalte.getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
 		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
-		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr).operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndReset();
+		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr).operator(ConditionOperator.FORMULA).style(fehlerStyle)
+				.applyAndReset();
 
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow().style(spielrundeHintergrundFarbeGeradeStyle).applyAndReset();
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow().style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndReset();
@@ -901,15 +902,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 */
 
 	protected void clearSheet() throws GenerateException {
-		XSpreadsheet xSheet = getXSpreadSheet();
 		Position letzteZeile = letzteSpielrNrPosition();
 
 		if (letzteZeile == null) {
 			return; // keine Daten
 		}
-
 		RangePosition rangPos = RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteZeile.getZeile());
-		RangeHelper.from(xSheet, rangPos).clearRange();
+		RangeHelper.from(this, rangPos).clearRange();
 	}
 
 	public SpielTagNr getSpielTag() {

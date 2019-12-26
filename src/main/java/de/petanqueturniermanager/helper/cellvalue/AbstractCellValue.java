@@ -30,7 +30,7 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	private RowProperties rowProperties = RowProperties.from();
 	private Position endPosMerge; // wenn vorhanden dann merge die zellen von pos bis endPosMerge
 	private FillAutoPosition fillAuto; // wenn vorhanden dann autoFill bis diese Position
-	private boolean ueberschreiben = true; // vorhande inhalten in der zelle überschreiben ?
+	private boolean ueberschreiben = true; // vorhanden inhalt in der zelle überschreiben ? Default = true
 
 	protected AbstractCellValue() {
 	}

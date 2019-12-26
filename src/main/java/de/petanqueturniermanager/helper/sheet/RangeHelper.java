@@ -8,18 +8,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.beans.PropertyVetoException;
-import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
-import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
-import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.CellFlags;
 import com.sun.star.sheet.XArrayFormulaRange;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XSheetOperation;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 
@@ -33,49 +28,39 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
  * @author Michael Massee
  *
  */
-public class RangeHelper {
+public class RangeHelper extends BaseHelper {
 
 	private static final Logger logger = LogManager.getLogger(RangeHelper.class);
-	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
 	private final RangePosition rangePos;
 
-	private RangeHelper(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
-		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
+	private RangeHelper(ISheet iSheet, RangePosition rangePos) {
+		super(iSheet);
 		this.rangePos = RangePosition.from(rangePos);
 	}
 
-	/**
-	 * @param sheet
-	 * @param rangePos
-	 * @return
-	 * @throws GenerateException
-	 */
-	public static RangeHelper from(ISheet sheet, RangePosition rangePos) throws GenerateException {
-		return new RangeHelper(checkNotNull(sheet).getXSpreadSheet(), rangePos);
-	}
-
-	public static RangeHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePos) {
-		return new RangeHelper(xSpreadsheet, rangePos);
+	public static RangeHelper from(ISheet sheet, RangePosition rangePos) {
+		return new RangeHelper(sheet, rangePos);
 	}
 
 	/**
 	 * @param wkRefxSpreadsheet
 	 * @param rangePosition
 	 */
-	public static RangeHelper from(WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet, RangePosition rangePos) {
-		return new RangeHelper(checkNotNull(wkRefxSpreadsheet).get(), rangePos);
+	public static RangeHelper from(WeakRefHelper<ISheet> wkRefISheet, RangePosition rangePos) {
+		return new RangeHelper(checkNotNull(wkRefISheet).get(), rangePos);
 	}
 
-	public static RangeHelper from(ISheet sheet, int ersteSpalte, int ersteZeile, int letzteSpalte, int letzteZeile) throws GenerateException {
-		return new RangeHelper(checkNotNull(sheet).getXSpreadSheet(), RangePosition.from(ersteSpalte, ersteZeile, letzteSpalte, letzteZeile));
+	public static RangeHelper from(ISheet sheet, int ersteSpalte, int ersteZeile, int letzteSpalte, int letzteZeile) {
+		return new RangeHelper(sheet, RangePosition.from(ersteSpalte, ersteZeile, letzteSpalte, letzteZeile));
 	}
 
 	/**
 	 * Alles ! wegputzen
 	 *
 	 * @return
+	 * @throws GenerateException
 	 */
-	public RangeHelper clearRange() {
+	public RangeHelper clearRange() throws GenerateException {
 		checkNotNull(rangePos);
 
 		XCellRange xRangetoClear;
@@ -89,10 +74,10 @@ public class RangeHelper {
 		return this;
 	}
 
-	private XCellRangeData getXCellRangeData() {
+	private XCellRangeData getXCellRangeData() throws GenerateException {
 		XCellRangeData xCellRangeData = null;
 		try {
-			XCellRange xCellRange = wkRefxSpreadsheet.get().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(),
+			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(),
 					rangePos.getEndeZeile());
 			if (xCellRange != null) {
 				xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
@@ -105,8 +90,9 @@ public class RangeHelper {
 
 	/**
 	 * @return null when error
+	 * @throws GenerateException
 	 */
-	public RangeData getDataFromRange() {
+	public RangeData getDataFromRange() throws GenerateException {
 		Object[][] data = null;
 		XCellRangeData xCellRangeData = getXCellRangeData();
 		if (xCellRangeData != null) {
@@ -147,14 +133,14 @@ public class RangeHelper {
 		return this;
 	}
 
-	public XCellRange getCellRange() {
+	public XCellRange getCellRange() throws GenerateException {
 
 		checkNotNull(rangePos);
 
 		XCellRange xCellRange = null;
 
 		try {
-			xCellRange = wkRefxSpreadsheet.get().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+			xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -166,9 +152,10 @@ public class RangeHelper {
 	 * not used
 	 *
 	 * @return
+	 * @throws GenerateException
 	 */
 	@SuppressWarnings("unused")
-	private XCellRangesQuery getCellRangesQuery() {
+	private XCellRangesQuery getCellRangesQuery() throws GenerateException {
 		checkNotNull(rangePos);
 
 		XCellRange xCellRange = null;
@@ -181,34 +168,19 @@ public class RangeHelper {
 		return xCellRangesQuery;
 	}
 
-	public RangeHelper setRangeProperties(RangeProperties rangeProp) {
-		XPropertySet xPropSet = getPropertySet();
-		rangeProp.forEach((key, value) -> {
-			setProperty(xPropSet, key, value);
-		});
+	public RangeHelper setRangeProperties(RangeProperties rangeProp) throws GenerateException {
+		XPropertyHelper.from(getCellRange(), getISheet()).setProperties(rangeProp);
 		return this;
 	}
 
-	public RangeHelper setArrayFormula(String formula) {
+	public RangeHelper setArrayFormula(String formula) throws GenerateException {
 		XCellRange xCellRange = getCellRange();
 		XArrayFormulaRange xArrayFormula = UnoRuntime.queryInterface(XArrayFormulaRange.class, xCellRange);
 		xArrayFormula.setArrayFormula(formula);
 		return this;
 	}
 
-	private void setProperty(XPropertySet xPropSet, String key, Object val) {
-		checkNotNull(key);
-		checkNotNull(val);
-		checkNotNull(xPropSet);
-
-		try {
-			xPropSet.setPropertyValue(key, val);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
-			logger.error("Property '" + key + "' = '" + val + "'\r" + e.getMessage(), e);
-		}
-	}
-
-	public XPropertySet getPropertySet() {
+	public XPropertySet getPropertySet() throws GenerateException {
 		XPropertySet xPropSet = null;
 		XCellRange xCellRange = getCellRange();
 		if (xCellRange != null) {

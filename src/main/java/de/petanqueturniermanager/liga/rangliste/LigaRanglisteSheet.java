@@ -114,15 +114,14 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		alleMeldungen = meldeListe.getAlleMeldungen();
 		jederGegenJeden = new JederGegenJeden(alleMeldungen);
 
-		// getxCalculatable().enableAutomaticCalculation(false); // speed up
+		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!alleMeldungen.isValid()) {
 			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan").message("Ungültige anzahl von Melungen").show();
 			return;
 		}
 
-		if (!NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv().hideGrid().tabColor(SHEET_COLOR).create()
-				.isDidCreate()) {
+		if (!NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv().hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
@@ -201,8 +200,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 		TableBorder2 borderHeader3 = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setBorder(borderHeader3).setCellBackColor(headerBackColor).margin(MARGIN);
-		RangeHelper.from(getXSpreadSheet(), data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1))).setDataInRange(data)
-				.setRangeProperties(rangePropZeile3);
+		RangeHelper.from(this, data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1))).setDataInRange(data).setRangeProperties(rangePropZeile3);
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// 2 header zeile

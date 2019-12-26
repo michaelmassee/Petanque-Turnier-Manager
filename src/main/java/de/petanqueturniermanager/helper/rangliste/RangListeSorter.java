@@ -212,7 +212,7 @@ public class RangListeSorter {
 	}
 
 	public void sortHelper(RangePosition toSortRange, int[] sortSpalten) throws GenerateException {
-		SortHelper.from(getIRangliste().getXSpreadSheet(), toSortRange).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
+		SortHelper.from(getIRangliste(), toSortRange).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
 	}
 
 }

@@ -10,6 +10,7 @@ package de.petanqueturniermanager.helper.cellvalue.properties;
  */
 public interface ICommonProperties {
 
+	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1table_1_1CellProperties.html
 	String WIDTH = "Width";
 	String HORI_JUSTIFY = "HoriJustify";
 	String VERT_JUSTIFY = "VertJustify";
@@ -24,6 +25,10 @@ public interface ICommonProperties {
 	String CELL_BACK_COLOR = "CellBackColor";
 	String ROTATEANGLE = "RotateAngle";
 	String IS_CELLBACKGROUND_TRANSPARENT = "IsCellBackgroundTransparent";
+
+	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1NumberFormatter.html
+	// https://wiki.openoffice.org/wiki/Documentation/DevGuide/OfficeDev/Number_Formats
+	String NUMBERFORMAT = "NumberFormat";
 
 	String TOP_MARGIN = "ParaTopMargin";
 	String BOTTOM_MARGIN = "ParaBottomMargin";

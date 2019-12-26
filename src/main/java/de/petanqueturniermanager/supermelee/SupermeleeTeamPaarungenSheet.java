@@ -52,13 +52,14 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 
 	public SupermeleeTeamPaarungenSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
-		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR).useIfExist().create().isDidCreate()) {
-			try {
+		try {
+			if (NewSheet.from(this, SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR).useIfExist().create().isDidCreate()) {
 				initSheet();
-			} catch (GenerateException e) {
-				logger.fatal(e);
 			}
+		} catch (GenerateException e) {
+			logger.fatal(e);
 		}
+
 	}
 
 	@Override
@@ -96,7 +97,7 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 		RangePosition rangePosHeader = RangePosition.from(0, 0, 9, 0); // 10 spalten
 		RangeProperties rangeHeaderProp = RangeProperties.from().setBorder(border).setCharWeight(FontWeight.BOLD);
-		RangeHelper.from(getXSpreadSheet(), rangePosHeader).setRangeProperties(rangeHeaderProp);
+		RangeHelper.from(this, rangePosHeader).setRangeProperties(rangeHeaderProp);
 
 		// --------------------------------------------
 
@@ -125,7 +126,7 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 
 		RangeProperties rangeProp = RangeProperties.from().setBorder(border);
 		RangePosition rangePosAlldata = RangePosition.from(0, 1, 9, rangeData.size()); // 10 spalten
-		RangeHelper.from(getXSpreadSheet(), rangePosAlldata).setDataInRange(rangeData).setRangeProperties(rangeProp);
+		RangeHelper.from(this, rangePosAlldata).setDataInRange(rangeData).setRangeProperties(rangeProp);
 	}
 
 	@Override

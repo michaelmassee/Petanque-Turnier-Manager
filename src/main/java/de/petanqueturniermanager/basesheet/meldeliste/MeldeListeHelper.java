@@ -55,7 +55,7 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile > ERSTE_DATEN_ZEILE) { // daten vorhanden
 			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
-			SortHelper.from(getXSpreadSheet(), rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
+			SortHelper.from(meldeListe, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
 		}
 	}
 
@@ -134,8 +134,8 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 		return name.replaceAll("[^a-zA-Z0-9öäüÄÖÜß]+", "").toLowerCase();
 	}
 
-	public XSpreadsheet getXSpreadSheet() {
-		return NewSheet.from(meldeListe.getWorkingSpreadsheet(), SHEETNAME).useIfExist().hideGrid().pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return NewSheet.from(meldeListe, SHEETNAME).useIfExist().hideGrid().pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
 	}
 
 	public int getSpielerNameSpalte() {
@@ -202,7 +202,7 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 
 			// Use getDataArray to get an Array off all Spieler bis SpieltagSpalte
 			RangePosition rangebisSpieltagSpalte = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, spieltagSpalte, letzteZeile);
-			RangeData meldungenDaten = RangeHelper.from(getXSpreadSheet(), rangebisSpieltagSpalte).getDataFromRange();
+			RangeData meldungenDaten = RangeHelper.from(meldeListe, rangebisSpieltagSpalte).getDataFromRange();
 
 			// 0 = nr
 			// 1 = name
