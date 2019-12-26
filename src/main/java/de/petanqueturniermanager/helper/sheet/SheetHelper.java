@@ -199,8 +199,8 @@ public class SheetHelper {
 			// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 			formula = StringUtils.replaceEach(formula.trim(),
 					// ---------------
-					new String[] { "ISTNV", "WENNNV" }, // Deutsch
-					new String[] { "ISNA", "IFNA" }); // Englisch
+					new String[] { "ISTNV", "WENNNV", "WENN" }, // Deutsch
+					new String[] { "ISNA", "IFNA", "IF" }); // Englisch
 			xCell.setFormula(StringUtils.prependIfMissing(formula, "="));
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);

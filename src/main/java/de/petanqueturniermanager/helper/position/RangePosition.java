@@ -103,12 +103,40 @@ public class RangePosition {
 	}
 
 	/**
-	 * Der komplete Range um x Spalten nach rechts oder links verschieben
+	 * Der komplete Range um x Spalten nach rechts oder links (negativ) verschieben
 	 */
 	public RangePosition spaltePlus(int anz) {
 		start.spaltePlus(anz);
 		ende.spaltePlus(anz);
 		return this;
+	}
+
+	/**
+	 * Verschiebe Range nach Spalte
+	 */
+	public RangePosition spalte(int spalte) {
+		start.spalte(spalte);
+		ende.spalte(spalte);
+		return this;
+	}
+
+	/**
+	 * Der komplete Range um eine Zeile nach unten verschieben
+	 */
+	public RangePosition zeilePlusEins() {
+		start.zeilePlusEins();
+		ende.zeilePlusEins();
+		return this;
+	}
+
+	/**
+	 * Der komplete Range um x Spalten nach unten oder oben (negativ) verschieben
+	 */
+	public RangePosition zeilePlus(int anz) {
+		start.zeilePlus(anz);
+		ende.zeilePlus(anz);
+		return this;
+
 	}
 
 }
