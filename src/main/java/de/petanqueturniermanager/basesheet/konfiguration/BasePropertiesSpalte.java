@@ -182,7 +182,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		// Sortieren
 		RangePosition allPropRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, nextFreepos.spalte(propertiesSpalte + 1));
-		SortHelper.from(getPropSheet(), allPropRange).aufSteigendSortieren().bindFormatsToContent().doSort();
+		SortHelper.from(sheetWkRef.get(), allPropRange).aufSteigendSortieren().bindFormatsToContent().doSort();
 	}
 
 	/**

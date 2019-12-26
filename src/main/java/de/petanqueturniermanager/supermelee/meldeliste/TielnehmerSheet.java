@@ -84,8 +84,8 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 		meldeliste.setSpielTag(getSpielTagNr());
 
 		// wenn hier dann immer neu erstellen, force = true
-		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTagNr())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
-				.forceCreate().hideGrid().setActiv().create();
+		NewSheet.from(this, getSheetName(getSpielTagNr())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr()).forceCreate().hideGrid()
+				.setActiv().create();
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);

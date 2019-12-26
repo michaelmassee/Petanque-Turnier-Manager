@@ -33,8 +33,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
@@ -74,8 +74,8 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		meldeliste.setSpielTag(getSpielTag());
 
 		// wenn hier dann immer neu erstellen, force = true
-		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
-				.forceCreate().hideGrid().setActiv().create();
+		NewSheet.from(this, getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).forceCreate().hideGrid()
+				.setActiv().create();
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
@@ -121,7 +121,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 			}
 		}
 		RangePosition rangePosition = data.getRangePosition(Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
-		RangeHelper.from(getXSpreadSheet(), rangePosition).setDataInRange(data);
+		RangeHelper.from(this, rangePosition).setDataInRange(data);
 
 		// spalten formatieren
 
@@ -154,7 +154,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 			RangePosition rangePositionBlock = RangePosition.from(SPIELER_NR_SPALTE + (blkCntr * 4), ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE + (blkCntr * 4), letzteZeile);
 			Position startNrPos = Position.from(rangePositionBlock.getStart()); // start merken fuer Formula
 			{
-				RangeHelper.from(getXSpreadSheet(), rangePositionBlock).setRangeProperties(rangePropNr);
+				RangeHelper.from(this, rangePositionBlock).setRangeProperties(rangePropNr);
 				getSheetHelper().setColumnProperties(getXSpreadSheet(), rangePositionBlock.getStartSpalte(), columnPropNr);
 			}
 			rangePositionBlock.spaltePlusEins();
@@ -174,7 +174,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 
 			// Border
 			RangePosition rangePositionBlockAll = RangePosition.from(Position.from(startNrPos), Position.from(rangePositionBlock.getEnde()));
-			RangeHelper.from(getXSpreadSheet(), rangePositionBlockAll).setRangeProperties(rangePropBorderOnly);
+			RangeHelper.from(this, rangePositionBlockAll).setRangeProperties(rangePropBorderOnly);
 
 			// zwischen den blöcke, nur spalte breite
 			getSheetHelper().setColumnProperties(getXSpreadSheet(), rangePositionBlock.getEnde().getSpalte() + 1, columnPropNr);

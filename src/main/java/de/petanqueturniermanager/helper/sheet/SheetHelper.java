@@ -59,6 +59,9 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 
 public class SheetHelper {
 
+	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN", "ISOKALENDERWOCHE" };
+	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF", "ISOWEEKNUM" };
+
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
 
 	private final WeakRefHelper<WorkingSpreadsheet> currentSpreadsheet;
@@ -195,12 +198,8 @@ public class SheetHelper {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 
 			// Deutsch nach Enlisch
-			// nur ein teil der gebraucht wird
 			// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
-			formula = StringUtils.replaceEach(formula.trim(),
-					// ---------------
-					new String[] { "ISTNV", "WENNNV", "WENN" }, // Deutsch
-					new String[] { "ISNA", "IFNA", "IF" }); // Englisch
+			formula = StringUtils.replaceEach(formula.trim(), FORMULA_GERMAN_SEARCH_LIST, FORMULA_ENGLISH_REPLACEMENT_LIST);
 			xCell.setFormula(StringUtils.prependIfMissing(formula, "="));
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -612,21 +611,8 @@ public class SheetHelper {
 	}
 
 	/**
-	 * setPropertyInCell(sheet, pos,"CharColor", Integer.valueOf(0x003399));<br>
-	 * setPropertyInCell(sheet, pos,"CharHeight", new Float(20.0));<br>
-	 * // from styles.ParagraphProperties<br>
-	 * setPropertyInCell(sheet, pos,"ParaLeftMargin", Integer.valueOf(500));<br>
-	 * // from table.CellProperties<br>
-	 * setPropertyInCell(sheet, pos,"IsCellBackgroundTransparent", Boolean.FALSE);<br>
-	 * setPropertyInCell(sheet, pos,"CellBackColor", Integer.valueOf(0x99CCFF));
-	 *
-	 * @param sheet
-	 * @param pos
-	 * @param Name
-	 * @param val
 	 * @return xcell, null whenn error or not found
 	 */
-
 	public XCell setPropertyInCell(XSpreadsheet sheet, Position pos, String Name, Object val) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
@@ -648,12 +634,12 @@ public class SheetHelper {
 		return setColumnCellHoriJustify(sheet, pos.getSpalte(), cellHoriJustify);
 	}
 
-	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1table_1_1CellProperties.html#ac4ecfad4d3b8fcf60e5205465fb254dd
 	/*
 	 * use setColumnProperties(sheet, spalte, ColumnProperties.from().setHoriJustify(cellHoriJustify));
 	 *
 	 * @deprecated
 	 */
+	@Deprecated
 	public XPropertySet setColumnCellHoriJustify(XSpreadsheet sheet, int spalte, CellHoriJustify cellHoriJustify) {
 		checkNotNull(sheet);
 		// HoriJustify ,VertJustify ,Orientation

@@ -271,27 +271,10 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 	public List<Integer> getSpielerNrList() throws GenerateException {
 		List<Integer> spielerNrList = new ArrayList<>();
 		int letzteZeile = getLetzteDatenZeile();
-		XSpreadsheet sheet = getXSpreadsheet();
 
-		// // letzte Zeile ?
-		// RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
-		// Position lastNotEmptyPos = SearchHelper.from(spieltagSheet, searchRange).searchLastNotEmptyInSpalte();
-		//
-		// // daten in array einlesen
-		// RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, lastNotEmptyPos.getZeile());
-		// RangeData dataFromRange = RangeHelper.from(spieltagSheet, spielNrRange).getDataFromRange();
-		//
-		// for (RowData zeile : dataFromRange) {
-		// int spielerNr = zeile.get(0).getIntVal(-1);
-		// if (spielerNr < 1) {
-		// break; // fertig
-		// }
-		// spielerNrlist.add(spielerNr);
-		// }
 		if (letzteZeile >= ersteDatenZiele) {
 			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte, letzteZeile);
 			RangeData dataFromRange = RangeHelper.from(sheet, spielNrRange).getDataFromRange();
-
 			for (RowData zeile : dataFromRange) {
 				int spielerNr = zeile.get(0).getIntVal(-1);
 				if (spielerNr < 1) {
@@ -299,14 +282,6 @@ public class MeldungenSpalte<MLDTYPE> { // <MLDTYPE> = meldelistetyp
 				}
 				spielerNrList.add(spielerNr);
 			}
-
-			// Position posSpielerNr = Position.from(meldungNrSpalte, ersteDatenZiele);
-			// for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
-			// Integer spielerNr = getSheetHelper().getIntFromCell(sheet, posSpielerNr.zeile(spielerZeile));
-			// if (spielerNr > -1) {
-			// spielerNrList.add(spielerNr);
-			// }
-			// }
 		}
 		java.util.Collections.sort(spielerNrList);
 		return spielerNrList;

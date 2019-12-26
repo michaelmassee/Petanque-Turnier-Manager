@@ -24,7 +24,7 @@ public class MeldeListeSheet_New extends AbstractSupermeleeMeldeListeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spielTag1 = new SpielTagNr(1);
-		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv().create().isDidCreate()) {
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv().create().isDidCreate()) {
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
 			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));

@@ -275,7 +275,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				// ------------------------------
 				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und <999 sein
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und
+																																								// <999 sein
 				// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
@@ -295,7 +296,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 				// ------------------------------
 				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle)
+				.applyAndReset().reset();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -386,7 +388,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		int anzSpieltage = countAnzSpieltageInMeldeliste();
 
 		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0, ersteSummeSpalte() + anzSpieltage + 10, MeldungenSpalte.MAX_ANZ_MELDUNGEN);
-		RangeHelper.from(getXSpreadSheet(), cleanUpRange).clearRange();
+		RangeHelper.from(this, cleanUpRange).clearRange();
 
 		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
 

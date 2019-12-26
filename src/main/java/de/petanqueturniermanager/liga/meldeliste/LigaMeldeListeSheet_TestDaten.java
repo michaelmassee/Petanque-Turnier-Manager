@@ -17,6 +17,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstante
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -24,7 +25,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 
-public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
+public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_TestDaten.class);
 
@@ -72,7 +73,7 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
 			}
 		}
 		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		RangeHelper.from(meldelisteSheet, data.getRangePosition(posSpielerNr)).setDataInRange(data);
+		RangeHelper.from(this, data.getRangePosition(posSpielerNr)).setDataInRange(data);
 		meldeListe.upDateSheet();
 	}
 
@@ -91,6 +92,16 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet {
 		testNamen.add("Boulodromedare Fulda 2");
 		testNamen.add("VNH Hain-Gründau 1");
 		return testNamen;
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return meldeListe.getXSpreadSheet();
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return meldeListe.getTurnierSheet();
 	}
 
 }

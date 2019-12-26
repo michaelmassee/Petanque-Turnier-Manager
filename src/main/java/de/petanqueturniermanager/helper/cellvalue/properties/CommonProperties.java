@@ -14,12 +14,15 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 
 /**
  * @author Michael Massee
  *
  */
 public abstract class CommonProperties<T> extends HashMap<String, Object> implements ICommonProperties {
+
+	private UserNumberFormat userNumberFormat = null;
 
 	CommonProperties() {
 	}
@@ -37,6 +40,12 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return (T) this;
 	}
 
+	@SuppressWarnings("unchecked")
+	public T numberFormat(UserNumberFormat userNumberFormat) {
+		this.userNumberFormat = userNumberFormat;
+		return (T) this;
+	}
+
 	public T setAllThinBorder() {
 		TableBorder2 tableBorder2 = BorderFactory.from().allThin().toBorder();
 		return put(TABLE_BORDER2, tableBorder2);
@@ -46,7 +55,6 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return put(TABLE_BORDER2, tableBorder2);
 	}
 
-	// list of common properties
 	/**
 	 * @param fontWeight = com.sun.star.awt.FontWeight.*
 	 * @return
@@ -178,4 +186,10 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return rightMargin(margin);
 	}
 
+	/**
+	 * @return the userNumberFormat
+	 */
+	public final UserNumberFormat getUserNumberFormat() {
+		return userNumberFormat;
+	}
 }

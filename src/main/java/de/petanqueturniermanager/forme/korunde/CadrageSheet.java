@@ -71,7 +71,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		vorrunden.getSheet(); // erstellen leer wenn nicht vorhanden
-		NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+		NewSheet.from(this, SHEETNAME).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
 	}
@@ -81,7 +81,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	 *
 	 */
 	private void rangListeNachCadrageErstellen() throws GenerateException {
-		NewSheet ranglisteNachCadrage = NewSheet.from(getWorkingSpreadsheet(), RANGLISTE_NACH_CADRAGE_SHEET).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+		NewSheet ranglisteNachCadrage = NewSheet.from(this, RANGLISTE_NACH_CADRAGE_SHEET).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		for (int grpCntr = 0; grpCntr < 10; grpCntr++) {
 			TeamRangliste gruppeAusRanglist = ranglisten.gruppeAusRanglisteEinlesen(grpCntr, RANGLISTE_AUS_VORUNDE_SHEET);
 			if (gruppeAusRanglist.isEmpty()) {

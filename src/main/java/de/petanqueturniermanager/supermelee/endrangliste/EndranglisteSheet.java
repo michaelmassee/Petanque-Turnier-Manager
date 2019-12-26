@@ -93,8 +93,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spieltagNr = getKonfigurationSheet().getAktiveSpieltag();
-		if (NewSheet.from(getWorkingSpreadsheet(), SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().hideGrid().forceCreate()
-				.spielTagPageStyle(spieltagNr).create().isDidCreate()) {
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().hideGrid().forceCreate().spielTagPageStyle(spieltagNr)
+				.create().isDidCreate()) {
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}

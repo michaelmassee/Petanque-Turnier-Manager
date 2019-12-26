@@ -96,8 +96,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		meldeliste.setSpielTag(getSpieltagNr());
 		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 		// neu erstellen
-		NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv().forceCreate().spielTagPageStyle(spieltagNr)
-				.create();
+		NewSheet.from(this, getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		spielerSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);
@@ -293,27 +292,23 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 	}
 
 	public List<Integer> getSpielerNrList(SpielTagNr spielTagNr) throws GenerateException {
-		checkNotNull(spielTagNr);
+		setSpieltagNr(checkNotNull(spielTagNr));
 
 		List<Integer> spielerNrlist = new ArrayList<>();
+		// letzte Zeile ?
+		RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
+		Position lastNotEmptyPos = SearchHelper.from(this, searchRange).searchLastNotEmptyInSpalte();
 
-		XSpreadsheet spieltagSheet = getSheet(spielTagNr);
-		if (spieltagSheet != null) {
-			// letzte Zeile ?
-			RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
-			Position lastNotEmptyPos = SearchHelper.from(spieltagSheet, searchRange).searchLastNotEmptyInSpalte();
+		// daten in array einlesen
+		RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, lastNotEmptyPos.getZeile());
+		RangeData dataFromRange = RangeHelper.from(this, spielNrRange).getDataFromRange();
 
-			// daten in array einlesen
-			RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, lastNotEmptyPos.getZeile());
-			RangeData dataFromRange = RangeHelper.from(spieltagSheet, spielNrRange).getDataFromRange();
-
-			for (RowData zeile : dataFromRange) {
-				int spielerNr = zeile.get(0).getIntVal(-1);
-				if (spielerNr < 1) {
-					break; // fertig
-				}
-				spielerNrlist.add(spielerNr);
+		for (RowData zeile : dataFromRange) {
+			int spielerNr = zeile.get(0).getIntVal(-1);
+			if (spielerNr < 1) {
+				break; // fertig
 			}
+			spielerNrlist.add(spielerNr);
 		}
 		return spielerNrlist;
 	}
@@ -391,7 +386,7 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(), letzteDatenzeile);
-			RangeHelper.from(getXSpreadSheet(), range).clearRange();
+			RangeHelper.from(this, range).clearRange();
 		}
 	}
 

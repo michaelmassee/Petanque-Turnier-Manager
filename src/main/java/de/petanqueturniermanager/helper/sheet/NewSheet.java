@@ -15,6 +15,8 @@ import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -30,6 +32,7 @@ public class NewSheet {
 	private final SheetHelper sheetHelper;
 	private final String sheetName;
 	private final WeakRefHelper<WorkingSpreadsheet> wkRefworkingSpreadsheet;
+	private final WeakRefHelper<ISheet> wkRefISheet;
 	private boolean didCreate = false;
 	private boolean forceOkCreateNewWhenExist = false;
 	private boolean setActiv = false;
@@ -41,15 +44,16 @@ public class NewSheet {
 	private boolean showGrid = true;
 	private boolean createNewIfExist = true;
 
-	private NewSheet(WorkingSpreadsheet workingSpreadsheet, String sheetName) {
-		wkRefworkingSpreadsheet = new WeakRefHelper<>(checkNotNull(workingSpreadsheet));
+	private NewSheet(ISheet iSheet, String sheetName) {
+		wkRefISheet = new WeakRefHelper<>(checkNotNull(iSheet));
+		wkRefworkingSpreadsheet = new WeakRefHelper<>(checkNotNull(iSheet.getWorkingSpreadsheet()));
 		checkArgument(StringUtils.isNotBlank(sheetName));
 		this.sheetName = sheetName;
-		sheetHelper = new SheetHelper(workingSpreadsheet);
+		sheetHelper = new SheetHelper(iSheet.getWorkingSpreadsheet());
 	}
 
-	public static final NewSheet from(WorkingSpreadsheet workingSpreadsheet, String sheetName) {
-		return new NewSheet(workingSpreadsheet, sheetName);
+	public static final NewSheet from(ISheet iSheet, String sheetName) {
+		return new NewSheet(iSheet, sheetName);
 	}
 
 	public NewSheet setForceCreate(boolean force) {
@@ -95,8 +99,9 @@ public class NewSheet {
 	/**
 	 *
 	 * @return
+	 * @throws GenerateException
 	 */
-	public NewSheet create() {
+	public NewSheet create() throws GenerateException {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
 
@@ -131,10 +136,10 @@ public class NewSheet {
 					// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
 					// @see KonfigurationSheet#initPageStyles
 					// @see SheetRunner#updateKonfigurationSheet
-					PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
+					PageStyleHelper.from(wkRefISheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
 				} else {
 					// dann nur der default, mit copyright footer
-					PageStyleHelper.from(sheet, wkRefworkingSpreadsheet.get(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter().create().applytoSheet();
+					PageStyleHelper.from(wkRefISheet.get(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter().create().applytoSheet();
 				}
 				didCreate = true;
 

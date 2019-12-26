@@ -7,7 +7,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.beans.PropertyValue;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.TableSortField;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
@@ -21,10 +20,9 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
-public class SortHelper {
+public class SortHelper extends BaseHelper {
 
 	// private static final Logger logger = LogManager.getLogger(SortHelper.class);
-	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
 	private final RangePosition rangePositionToSort;
 
 	// private int sortSpalte = 0; // 0 = erste spalte
@@ -33,21 +31,18 @@ public class SortHelper {
 	private boolean bindFormatsToContent = false;
 	private int[] sortSpalten = new int[] { 0 }; // default erste spalte
 
-	private SortHelper(XSpreadsheet xSpreadsheet, RangePosition rangePosition) {
-		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
+	private SortHelper(ISheet iSheet, RangePosition rangePosition) {
+		super(iSheet);
+
 		rangePositionToSort = checkNotNull(rangePosition);
 	}
 
-	public static SortHelper from(XSpreadsheet xSpreadsheet, RangePosition rangePosition) {
-		return new SortHelper(xSpreadsheet, rangePosition);
+	public static SortHelper from(ISheet iSheet, RangePosition rangePosition) {
+		return new SortHelper(iSheet, rangePosition);
 	}
 
-	public static SortHelper from(ISheet iSheet, RangePosition rangePosition) throws GenerateException {
-		return new SortHelper(checkNotNull(iSheet).getXSpreadSheet(), rangePosition);
-	}
-
-	public static SortHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePosition) throws GenerateException {
-		return new SortHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet(), rangePosition);
+	public static SortHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePosition) {
+		return new SortHelper(checkNotNull(sheetWkRef).get(), rangePosition);
 	}
 
 	/**
@@ -128,14 +123,15 @@ public class SortHelper {
 	 * In Calc, you can sort by up to three criteria, with each criterion applied one after the other..<br>
 	 *
 	 * @return
+	 * @throws GenerateException
 	 */
 
-	public SortHelper doSort() {
+	public SortHelper doSort() throws GenerateException {
 		checkNotNull(sortSpalten);
 		checkArgument(sortSpalten.length > 0);
 		checkArgument(sortSpalten.length < 4); // max 3 spalten
 
-		XCellRange xCellRangeToSort = RangeHelper.from(wkRefxSpreadsheet, rangePositionToSort).getCellRange();
+		XCellRange xCellRangeToSort = RangeHelper.from(getISheet(), rangePositionToSort).getCellRange();
 		if (xCellRangeToSort == null) {
 			return this;
 		}

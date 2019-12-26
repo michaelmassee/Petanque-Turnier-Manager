@@ -103,8 +103,8 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		// Spielrunde sheet ?
 		processBoxinfo("Neuer Spielrundeplan " + getSpielRundeNr().getNr() + " für Spieltag " + getSpielTag().getNr());
 
-		if (!NewSheet.from(getWorkingSpreadsheet(), getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
-				.setForceCreate(true).setActiv().tabColor(SHEET_COLOR).create().isDidCreate()) {
+		if (!NewSheet.from(this, getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(true)
+				.setActiv().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrundeplan wurde nicht erstellt");
 			return;
 		}

@@ -11,6 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -26,10 +27,10 @@ import de.petanqueturniermanager.model.TeamRangliste;
 public class Vorrunden {
 
 	private static final String VORRUNDEN_SHEET = "VorRunden";
-	private final WeakRefHelper<SheetRunner> parentSheet;
+	private final WeakRefHelper<ISheet> parentSheet;
 	private final String RNDHEADER = "Rnd";
 
-	public Vorrunden(SheetRunner parentSheet) {
+	public Vorrunden(ISheet parentSheet) {
 		this.parentSheet = new WeakRefHelper<>(parentSheet);
 	}
 
@@ -39,7 +40,7 @@ public class Vorrunden {
 		if (null != vorRunden) {
 			getSheetHelper().setActiveSheet(vorRunden);
 		} else {
-			vorRunden = NewSheet.from(getWorkingSpreadsheet(), VORRUNDEN_SHEET).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
+			vorRunden = NewSheet.from(parentSheet.get(), VORRUNDEN_SHEET).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
 		return vorRunden;
