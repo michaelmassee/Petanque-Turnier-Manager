@@ -20,10 +20,14 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 ## - Java Installieren -
 
+### --- Adopt Open JDK ---
+OpenJDK 8 (LTS)<br>
+HotSpot<br>
 [Download AdoptOpenJDK](https://adoptopenjdk.net/)<br>
 
+### --- Oracle ---
 Oracle Java ab 2019 nur noch für Privat gebrauch Kostenfrei<br>
-[Download Oracle Java ab 8](https://www.java.com/de/download/manual.jsp)
+[Download Oracle Java ab 8](https://www.java.com/de/download/manual.jsp)<br>
 
 ## - Libreoffice Installieren -
 
