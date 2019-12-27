@@ -6,6 +6,9 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
@@ -22,13 +25,13 @@ import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
-public class ConditionalFormatHelper {
+public class ConditionalFormatHelper extends BaseHelper {
+	private static final Logger logger = LogManager.getLogger(ConditionalFormatHelper.class);
 
 	private static final String FORMULA_ISEVEN_ROW = "ISEVEN(ROW())";
 	private static final String FORMULA_ISODD_ROW = "ISODD(ROW())";
 	public static final String FORMULA_CURRENT_CELL = "INDIRECT(ADDRESS(ROW();COLUMN()))";
 
-	private final ISheet sheet;
 	private final RangePosition rangePos;
 	private boolean doClear = false;
 	private ConditionOperator conditionOperator;
@@ -37,7 +40,7 @@ public class ConditionalFormatHelper {
 	private String styleName;
 
 	private ConditionalFormatHelper(ISheet sheet, RangePosition rangePos) {
-		this.sheet = checkNotNull(sheet);
+		super(sheet);
 		this.rangePos = checkNotNull(rangePos);
 	}
 
@@ -95,14 +98,14 @@ public class ConditionalFormatHelper {
 
 	public ConditionalFormatHelper styleIsFehler() {
 		FehlerStyle fehlerStyle = new FehlerStyle();
-		CellStyleHelper.from(sheet, fehlerStyle).apply();
+		CellStyleHelper.from(getISheet(), fehlerStyle).apply();
 		styleName = fehlerStyle.getName();
 		return this;
 	}
 
 	public ConditionalFormatHelper style(AbstractCellStyleDef cellStyleDef) {
 		// add/update Style
-		CellStyleHelper.from(sheet, cellStyleDef).apply();
+		CellStyleHelper.from(getISheet(), cellStyleDef).apply();
 		styleName = cellStyleDef.getName();
 		return this;
 	}
@@ -149,7 +152,7 @@ public class ConditionalFormatHelper {
 		checkNotNull(formula1);
 		checkNotNull(styleName);
 
-		XPropertySet xPropSet = RangeHelper.from(sheet, rangePos).getPropertySet();
+		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
 		try {
 			xEntries = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetConditionalEntries.class, xPropSet.getPropertyValue("ConditionalFormat"));
@@ -191,7 +194,7 @@ public class ConditionalFormatHelper {
 			xEntries.addNew(aCondition);
 			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
 		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException | PropertyVetoException e) {
-			sheet.getLogger().error(e.getMessage(), e);
+			logger.error(e.getMessage(), e);
 		}
 		reset();
 		return this;

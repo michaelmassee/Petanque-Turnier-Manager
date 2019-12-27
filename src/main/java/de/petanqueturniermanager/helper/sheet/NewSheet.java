@@ -5,7 +5,6 @@
 package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -14,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -25,14 +23,12 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyleDef;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-public class NewSheet {
+public class NewSheet extends BaseHelper {
 
 	private static final Logger logger = LogManager.getLogger(NewSheet.class);
 
 	private final SheetHelper sheetHelper;
 	private final String sheetName;
-	private final WeakRefHelper<WorkingSpreadsheet> wkRefworkingSpreadsheet;
-	private final WeakRefHelper<ISheet> wkRefISheet;
 	private boolean didCreate = false;
 	private boolean forceOkCreateNewWhenExist = false;
 	private boolean setActiv = false;
@@ -45,8 +41,7 @@ public class NewSheet {
 	private boolean createNewIfExist = true;
 
 	private NewSheet(ISheet iSheet, String sheetName) {
-		wkRefISheet = new WeakRefHelper<>(checkNotNull(iSheet));
-		wkRefworkingSpreadsheet = new WeakRefHelper<>(checkNotNull(iSheet.getWorkingSpreadsheet()));
+		super(iSheet);
 		checkArgument(StringUtils.isNotBlank(sheetName));
 		this.sheetName = sheetName;
 		sheetHelper = new SheetHelper(iSheet.getWorkingSpreadsheet());
@@ -108,10 +103,10 @@ public class NewSheet {
 		TurnierSheet turnierSheet = null;
 
 		if (sheet != null) {
-			turnierSheet = TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get());
+			turnierSheet = TurnierSheet.from(sheet, getWorkingSpreadsheet());
 			if (createNewIfExist) {
 				turnierSheet.setActiv();
-				MessageBoxResult result = MessageBox.from(wkRefworkingSpreadsheet.get().getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
+				MessageBoxResult result = MessageBox.from(getWorkingSpreadsheet().getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
 						.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(forceOkCreateNewWhenExist).show();
 				if (MessageBoxResult.YES != result) {
 					return this;
@@ -124,9 +119,9 @@ public class NewSheet {
 
 		if (sheet == null) {
 			try {
-				wkRefworkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
+				getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
 				sheet = sheetHelper.findByName(sheetName);
-				turnierSheet = TurnierSheet.from(sheet, wkRefworkingSpreadsheet.get());
+				turnierSheet = TurnierSheet.from(sheet, getWorkingSpreadsheet());
 				if (!showGrid) {
 					// nur bei Neu, einmal abschalten
 					turnierSheet.toggleSheetGrid();
@@ -136,10 +131,10 @@ public class NewSheet {
 					// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
 					// @see KonfigurationSheet#initPageStyles
 					// @see SheetRunner#updateKonfigurationSheet
-					PageStyleHelper.from(wkRefISheet.get(), pageStyleDef).initDefaultFooter().create().applytoSheet();
+					PageStyleHelper.from(getISheet(), pageStyleDef).initDefaultFooter().create().applytoSheet();
 				} else {
 					// dann nur der default, mit copyright footer
-					PageStyleHelper.from(wkRefISheet.get(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter().create().applytoSheet();
+					PageStyleHelper.from(getISheet(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter().create().applytoSheet();
 				}
 				didCreate = true;
 

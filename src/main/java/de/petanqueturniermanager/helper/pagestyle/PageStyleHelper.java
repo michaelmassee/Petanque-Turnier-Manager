@@ -21,6 +21,7 @@ import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.sheet.BaseHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -34,15 +35,14 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  *
  */
 
-public class PageStyleHelper {
+public class PageStyleHelper extends BaseHelper {
 
 	private static final Logger logger = LogManager.getLogger(PageStyleHelper.class);
 
 	private final PageStyleDef pageStyleDef;
-	private final ISheet iSheet;
 
 	private PageStyleHelper(ISheet iSheet, PageStyleDef pageStyleDef) {
-		this.iSheet = checkNotNull(iSheet);
+		super(iSheet);
 		this.pageStyleDef = checkNotNull(pageStyleDef);
 	}
 
@@ -77,7 +77,7 @@ public class PageStyleHelper {
 		String styleName = pageStyleDef.getPageStyleName();
 
 		try {
-			XSpreadsheetDocument currentSpreadsheetDocument = iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+			XSpreadsheetDocument currentSpreadsheetDocument = getWorkingSpreadsheetDocument();
 
 			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
@@ -97,7 +97,7 @@ public class PageStyleHelper {
 
 			// modify properties of the (new) style
 			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, pageStyle);
-			pageStyleDef.formatHeaderFooter(XPropertyHelper.from(xPropSet, iSheet));
+			pageStyleDef.formatHeaderFooter(XPropertyHelper.from(xPropSet, getISheet()));
 
 			// TODO Move this code to XPropertyHelper
 			for (String propKey : pageStyleDef.getPageProperties().keySet()) {
@@ -112,7 +112,7 @@ public class PageStyleHelper {
 	}
 
 	public PageStyleHelper applytoSheet() throws GenerateException {
-		XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, iSheet.getXSpreadSheet());
+		XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, getXSpreadSheet());
 		try {
 			xPropertySet.setPropertyValue("PageStyle", pageStyleDef.getPageStyleName());
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {

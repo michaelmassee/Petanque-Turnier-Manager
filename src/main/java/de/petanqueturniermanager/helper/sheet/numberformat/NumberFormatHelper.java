@@ -49,22 +49,4 @@ public class NumberFormatHelper extends BaseHelper implements ICommonProperties 
 		return index;
 	}
 
-	// public void setformat() {
-	// XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class,
-	// wkRefISheet.get().getWorkingSpreadsheet().getWorkingSpreadsheetDocument());
-	// XNumberFormats xNumberFormats = xNumberFormatsSupplier.getNumberFormats();
-	//
-	// String numberFormat = "TTT";
-	//
-	// try {
-	// int index = xNumberFormats.queryKey(numberFormat, locale, false);
-	// if (index == -1) {
-	// index = xNumberFormats.addNew(numberFormat, locale);
-	// }
-	// xPropertyHelper.setProperty(NUMBERFORMAT, Integer.valueOf(index));
-	// } catch (MalformedNumberFormatException e) {
-	// logger.error(e);
-	// }
-	// }
-
 }
