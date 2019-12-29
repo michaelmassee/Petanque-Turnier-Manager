@@ -24,7 +24,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston,
  * MA 02111-1307 USA
- * 
+ *
  * The Initial Developer of the Original Code is: Sun Microsystems, Inc..
  *
  * Copyright: 2002 by Sun Microsystems, Inc.
@@ -52,11 +52,11 @@ import com.sun.star.registry.XRegistryKey;
 
 /**
  * Component main registration class.
- * 
+ *
  * <p>
  * <strong>This class should not be modified.</strong>
  * </p>
- * 
+ *
  * @author Cedric Bosdonnat aka. cedricbosdo
  *
  */
@@ -65,14 +65,14 @@ public class RegistrationHandler {
 
 	/**
 	 * Get a component factory for the implementations handled by this class.
-	 * 
+	 *
 	 * <p>
 	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
 	 * modified.</strong>
 	 * </p>
-	 * 
+	 *
 	 * @param pImplementationName the name of the implementation to create.
-	 * 
+	 *
 	 * @return the factory which can create the implementation.
 	 */
 	@SuppressWarnings("rawtypes")
@@ -103,14 +103,14 @@ public class RegistrationHandler {
 
 	/**
 	 * Writes the services implementation informations to the UNO registry.
-	 * 
+	 *
 	 * <p>
 	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
 	 * modified.</strong>
 	 * </p>
-	 * 
+	 *
 	 * @param pRegistryKey the root registry key where to write the informations.
-	 * 
+	 *
 	 * @return <code>true</code> if the informations have been successfully written to the registry key, <code>false</code> otherwise.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -166,7 +166,7 @@ public class RegistrationHandler {
 						}
 
 					} catch (Exception e) {
-						e.printStackTrace();
+						logger.error(e.getMessage(), e);
 					}
 				}
 				line = reader.readLine();

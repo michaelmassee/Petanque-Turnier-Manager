@@ -120,10 +120,7 @@ public class ProcessBox {
 	}
 
 	private void setIcons() {
-
 		// icons laden
-		// https://www.flaticon.com/free-icon/podium_889537#term=winner%20podium&page=1&position=11
-
 		try {
 			// BufferedImage img16 = ImageIO.read(this.getClass().getResourceAsStream("podium16x16.png"));
 			// BufferedImage img24 = ImageIO.read(this.getClass().getResourceAsStream("podium24x24.png"));
@@ -140,10 +137,8 @@ public class ProcessBox {
 			for (int i = 0; i < 31; i++) {
 				inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("spinner/frame-" + i + ".png"))));
 			}
-
 			imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check25x32.png")));
 			imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
-
 		} catch (IOException e) {
 			logger.debug(e);
 		}

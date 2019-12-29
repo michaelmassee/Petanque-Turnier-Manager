@@ -22,7 +22,7 @@ public class Log4J {
 	// https://logging.apache.org/log4j/2.x/manual/configuration.html
 	// 5. If no such file is found the XML ConfigurationFactory will look for log4j2-test.xml in the classpath.
 	// <RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false"
-	public static final File LOGFILE = new File(System.getProperty("user.home"), "/.petanqueturniermanager/info.log");
+	public static final File LOGFILE = new File(PetanqueTurnierManagerImpl.BASE_INTERNAL_DIR, "info.log");
 
 	public static final void openLogFile() {
 

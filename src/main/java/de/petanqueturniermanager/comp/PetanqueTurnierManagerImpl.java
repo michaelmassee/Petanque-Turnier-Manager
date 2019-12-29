@@ -3,8 +3,11 @@
 **/
 package de.petanqueturniermanager.comp;
 
+import java.io.File;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHRelease;
 
 import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
@@ -16,8 +19,11 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationStarter;
+import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
@@ -51,15 +57,23 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 
 public final class PetanqueTurnierManagerImpl extends WeakBase implements XServiceInfo, XJobExecutor {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierManagerImpl.class);
-
-	private final XComponentContext xContext;
+	public static final File BASE_INTERNAL_DIR = new File(System.getProperty("user.home"), "/.petanqueturniermanager/");
 	private static final String m_implementationName = PetanqueTurnierManagerImpl.class.getName();
 	private static final String[] m_serviceNames = { "de.petanqueturniermanager.Turnier" };
+	private final NewReleaseChecker newReleaseChecker;
+	private static boolean didInformAboutNewRelease = false; // static weil immer ein neuen instance
+
+	private final XComponentContext xContext;
 
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
+		// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
+
 		xContext = context;
+		newReleaseChecker = new NewReleaseChecker(context);
 		try {
 			ProcessBox.init(context);
+			// start run update release info thread
+			newReleaseChecker.runUpdateOnceThread();
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -107,6 +121,8 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		try {
 			logger.info("Trigger " + action);
 
+			checkForUpdate();
+
 			boolean didHandle = false;
 			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 
@@ -147,6 +163,19 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		} catch (Exception e) {
 			ProcessBox.from().fehler(e.getMessage());
 			logger.error(e.getMessage(), e);
+		}
+	}
+
+	private void checkForUpdate() {
+		if (!didInformAboutNewRelease) {
+			boolean isnewRelease = newReleaseChecker.checkForNewRelease();
+			if (isnewRelease) {
+				didInformAboutNewRelease = true;
+
+				GHRelease readLatestRelease = newReleaseChecker.readLatestRelease();
+				MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK).caption("Neue Version verfügbar")
+						.message("Ein neue Version (" + readLatestRelease.getName() + ") von Pétanque-Turnier-Manager ist verfügbar.\r\nbitte aktualisieren").show();
+			}
 		}
 	}
 
