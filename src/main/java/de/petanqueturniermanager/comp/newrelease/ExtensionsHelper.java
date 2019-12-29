@@ -1,0 +1,58 @@
+/**
+ * Erstellung 29.12.2019 / Michael Massee
+ */
+package de.petanqueturniermanager.comp.newrelease;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Arrays;
+
+import com.sun.star.deployment.PackageInformationProvider;
+import com.sun.star.deployment.XPackageInformationProvider;
+import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+
+/**
+ * @author Michael Massee
+ *
+ */
+public class ExtensionsHelper {
+
+	private final String ID = "de.petanqueturniermanager";
+	private final WeakRefHelper<XComponentContext> xComponentContext;
+
+	/**
+	 * @param iSheet
+	 */
+	private ExtensionsHelper(XComponentContext xComponentContext) {
+		this.xComponentContext = new WeakRefHelper<>(checkNotNull(xComponentContext));
+	}
+
+	public static final ExtensionsHelper from(XComponentContext xComponentContext) {
+		return new ExtensionsHelper(xComponentContext);
+	}
+
+	private XPackageInformationProvider getXPackageInformationProvider() {
+		return PackageInformationProvider.get(xComponentContext.get());
+	}
+
+	public ExtensionsHelper listExtensions() {
+		XPackageInformationProvider packageInformationProvider = getXPackageInformationProvider();
+		String[][] extensionList = packageInformationProvider.getExtensionList();
+		System.out.println(extensionList);
+		return this;
+	}
+
+	public String getVersionNummer() {
+		String verNr = null;
+		XPackageInformationProvider packageInformationProvider = getXPackageInformationProvider();
+		String[][] extensionList = packageInformationProvider.getExtensionList();
+		String[] pluginInfo = Arrays.asList(extensionList).stream().filter(extension -> extension[0].equals(ID)).findFirst().orElse(null);
+		if (pluginInfo != null && pluginInfo.length > 0) {
+			verNr = pluginInfo[1];
+		}
+		return verNr;
+	}
+
+}

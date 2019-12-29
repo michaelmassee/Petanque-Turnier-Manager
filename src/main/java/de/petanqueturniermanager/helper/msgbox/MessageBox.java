@@ -67,6 +67,7 @@ public class MessageBox extends AbstractMessageBox {
 			case WARN_OK_CANCEL:
 			case WARN_OK:
 			case ERROR_OK:
+			case INFO_OK:
 				return MessageBoxResult.OK;
 			}
 		}
@@ -96,6 +97,10 @@ public class MessageBox extends AbstractMessageBox {
 		case ERROR_OK:
 			xMessageBox = newXMessageBox(MessageBoxType.ERRORBOX, MessageBoxButtons.BUTTONS_OK);
 			break;
+		case INFO_OK:
+			xMessageBox = newXMessageBox(MessageBoxType.INFOBOX, MessageBoxButtons.BUTTONS_OK);
+			break;
+
 		default:
 			break;
 		}
