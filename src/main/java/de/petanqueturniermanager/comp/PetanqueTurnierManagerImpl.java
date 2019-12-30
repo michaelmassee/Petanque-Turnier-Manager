@@ -60,20 +60,20 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	public static final File BASE_INTERNAL_DIR = new File(System.getProperty("user.home"), "/.petanqueturniermanager/");
 	private static final String m_implementationName = PetanqueTurnierManagerImpl.class.getName();
 	private static final String[] m_serviceNames = { "de.petanqueturniermanager.Turnier" };
-	private final NewReleaseChecker newReleaseChecker;
 	private static boolean didInformAboutNewRelease = false; // static weil immer ein neuen instance
 
 	private final XComponentContext xContext;
 
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
 		// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
-
 		xContext = context;
-		newReleaseChecker = new NewReleaseChecker(context);
+
+		checkForUpdate();
 		try {
+
 			ProcessBox.init(context);
 			// start run update release info thread
-			newReleaseChecker.runUpdateOnceThread();
+			// newReleaseChecker.runUpdateOnceThread();
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -120,9 +120,6 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	public void trigger(String action) {
 		try {
 			logger.info("Trigger " + action);
-
-			checkForUpdate();
-
 			boolean didHandle = false;
 			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 
@@ -167,16 +164,17 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	}
 
 	private void checkForUpdate() {
+		NewReleaseChecker newReleaseChecker = new NewReleaseChecker();
 		if (!didInformAboutNewRelease) {
-			boolean isnewRelease = newReleaseChecker.checkForNewRelease();
+			boolean isnewRelease = newReleaseChecker.checkForNewRelease(xContext);
 			if (isnewRelease) {
 				didInformAboutNewRelease = true;
-
 				GHRelease readLatestRelease = newReleaseChecker.readLatestRelease();
 				MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK).caption("Neue Version verfügbar")
-						.message("Ein neue Version (" + readLatestRelease.getName() + ") von Pétanque-Turnier-Manager ist verfügbar.\r\nbitte aktualisieren").show();
+						.message("Ein neue Version (" + readLatestRelease.getName() + ") von Pétanque-Turnier-Manager ist verfügbar.").show();
 			}
 		}
+		newReleaseChecker.runUpdateOnceThread(); // update release info
 	}
 
 	private boolean handleSuperMelee(String action, WorkingSpreadsheet workingSpreadsheet) {

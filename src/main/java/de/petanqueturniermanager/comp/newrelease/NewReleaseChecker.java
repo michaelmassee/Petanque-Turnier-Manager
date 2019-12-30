@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.comp.newrelease;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -29,7 +27,6 @@ import com.google.gson.GsonBuilder;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 /**
  * Test Github if new Release available
@@ -46,22 +43,12 @@ public class NewReleaseChecker {
 	static boolean isUpdateThreadRunning = false;
 	static boolean didAlreadyRun = false;
 
-	final WeakRefHelper<XComponentContext> xComponentContext;
-
-	/**
-	 * @param context
-	 */
-	public NewReleaseChecker(XComponentContext context) {
-		xComponentContext = new WeakRefHelper<>(checkNotNull(context));
-	}
-
 	/**
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
 
 	public void runUpdateOnceThread() {
 		if (!isUpdateThreadRunning && !didAlreadyRun) {
-
 			new Thread("Update Latest Release") {
 				@Override
 				public void run() {
@@ -118,21 +105,26 @@ public class NewReleaseChecker {
 		return ret;
 	}
 
-	public boolean checkForNewRelease() {
-
-		// https://www.baeldung.com/java-download-file
-		// https://github.com/G00fY2/version-compare
-
+	public boolean checkForNewRelease(XComponentContext context) {
 		boolean newVersionAvailable = false;
+		try {
 
-		if (!isUpdateThreadRunning) {
-			String versionNummer = ExtensionsHelper.from(xComponentContext.get()).getVersionNummer();
-			GHRelease readLatestRelease = readLatestRelease();
+			// https://www.baeldung.com/java-download-file
+			// https://github.com/G00fY2/version-compare
 
-			String latestVersionFromGithub = readLatestRelease.getName();
-			// clean up name
-			latestVersionFromGithub = StringUtils.stripStart(latestVersionFromGithub, "vV");
-			newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
+			if (!isUpdateThreadRunning) {
+				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
+				GHRelease readLatestRelease = readLatestRelease();
+				if (readLatestRelease != null) {
+					String latestVersionFromGithub = readLatestRelease.getName();
+					// clean up name
+					latestVersionFromGithub = StringUtils.stripStart(latestVersionFromGithub, "vV");
+					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
+				}
+			}
+		} catch (Exception e) {
+			// fehler nur loggen
+			logger.error(e);
 		}
 
 		return newVersionAvailable;
