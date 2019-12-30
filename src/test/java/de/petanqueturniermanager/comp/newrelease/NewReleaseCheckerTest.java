@@ -12,9 +12,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.kohsuke.github.GHRelease;
-import org.powermock.api.mockito.PowerMockito;
-
-import com.sun.star.uno.XComponentContext;
 
 public class NewReleaseCheckerTest {
 
@@ -28,10 +25,10 @@ public class NewReleaseCheckerTest {
 	@Before
 	public void setup() throws IOException {
 
-		XComponentContext xComponentContextMock = PowerMockito.mock(XComponentContext.class);
+		// XComponentContext xComponentContextMock = PowerMockito.mock(XComponentContext.class);
 
 		testFile = Paths.get(folder.newFile(testFileStr).toURI());
-		newReleaseChecker = new NewReleaseChecker(xComponentContextMock) {
+		newReleaseChecker = new NewReleaseChecker() {
 			@Override
 			Path getReleaseFile() {
 				return testFile;
