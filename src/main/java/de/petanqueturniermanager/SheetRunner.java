@@ -71,22 +71,24 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			boolean isFehler = false;
 
 			try {
-				ProcessBox.from().run();
-				updateKonfigurationSheet();
+				ProcessBox().run();
+				if (turnierSystem != TurnierSystem.KEIN) {
+					updateKonfigurationSheet();
+				}
 				doRun();
 			} catch (GenerateException e) {
 				handleGenerateException(e);
 			} catch (Exception e) {
 				isFehler = true;
-				ProcessBox.from().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage()).fehler("Siehe log für weitere Infos");
+				ProcessBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage()).fehler("Siehe log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning = false; // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
 				if (isFehler) {
-					ProcessBox.from().visible().fehler("!! FEHLER !!").ready();
+					ProcessBox().visible().fehler("!! FEHLER !!").ready();
 				} else {
-					ProcessBox.from().visible().info("**FERTIG**").ready();
+					ProcessBox().visible().info("**FERTIG**").ready();
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
@@ -98,10 +100,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
-			ProcessBox.from().info("Verarbeitung abgebrochen");
+			ProcessBox().info("Verarbeitung abgebrochen");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage()).show();
 		} else {
-			ProcessBox.from().fehler(e.getMessage());
+			ProcessBox().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage()).show();
 		}
@@ -139,7 +141,11 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	// for mocking
 	public void processBoxinfo(String infoMsg) {
-		ProcessBox.from().prefix(logPrefix).info(infoMsg);
+		ProcessBox().info(infoMsg);
+	}
+
+	public ProcessBox ProcessBox() {
+		return ProcessBox.from().prefix(logPrefix);
 	}
 
 	/**

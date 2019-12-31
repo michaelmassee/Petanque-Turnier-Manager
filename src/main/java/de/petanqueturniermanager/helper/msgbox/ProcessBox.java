@@ -402,6 +402,13 @@ public class ProcessBox {
 		return this;
 	}
 
+	/**
+	 * @return the frame
+	 */
+	public final JFrame getFrame() {
+		return frame;
+	}
+
 }
 // Animatide gifs are not working !
 

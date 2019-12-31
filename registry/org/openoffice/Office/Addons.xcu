@@ -3,8 +3,8 @@
 	<node oor:name="AddonUI">
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
 		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
-		
-		<!--  oor:op="fuse" -->
+
+		<!-- oor:op="fuse" -->
 
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
@@ -239,6 +239,19 @@
 						</prop>
 						<prop oor:name="URL">
 							<value>service:de.petanqueturniermanager.Turnier?turnierkonfiguration</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+					</node>
+
+					<node oor:name="X2" oor:op="replace">
+						<prop oor:name="Title">
+							<value xml:lang="en">~Download latest Version</value>
+							<value xml:lang="de">~Download neueste Version</value>
+						</prop>
+						<prop oor:name="URL">
+							<value>service:de.petanqueturniermanager.Turnier?downloadExtension</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>

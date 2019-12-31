@@ -3,6 +3,7 @@ package de.petanqueturniermanager.comp.newrelease;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,6 +49,13 @@ public class NewReleaseCheckerTest {
 		GHRelease readLatestRelease = newReleaseChecker.readLatestRelease();
 		assertThat(readLatestRelease).isNotNull();
 		assertThat(readLatestRelease.getName()).isNotNull().isNotEmpty();
+	}
+
+	@Test
+	public void testGetDownloadURL() throws Exception {
+		URL result = newReleaseChecker.getDownloadURL();
+		assertThat(result).isNotNull();
+		assertThat(result.getFile()).endsWith(NewReleaseChecker.EXTENSION_FILE_SUFFIX);
 	}
 
 }
