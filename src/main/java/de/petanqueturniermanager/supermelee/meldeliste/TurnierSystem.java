@@ -6,6 +6,7 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 public enum TurnierSystem {
 
+	KEIN(0, "Kein"), // wenn nur der runner gebraucht wird
 	SUPERMELEE(1, "Supermêlée"), LIGA(2, "Liga"), SCHWEIZER_KO(3, "Schweizer");
 
 	private final String bezeichnung;

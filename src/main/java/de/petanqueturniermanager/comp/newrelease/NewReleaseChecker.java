@@ -7,14 +7,18 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kohsuke.github.GHAsset;
 import org.kohsuke.github.GHRelease;
 import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
@@ -35,6 +39,9 @@ import de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl;
  *
  */
 public class NewReleaseChecker {
+	public static final String EXTENSION_FILE_SUFFIX = "oxt";
+	private static final String GITHUB_PETANQUE_TURNIER_MANAGER = "michaelmassee/Petanque-Turnier-Manager";
+
 	private static final Logger logger = LogManager.getLogger(NewReleaseChecker.class);
 
 	// http://api.github.com/repos/michaelmassee/Petanque-Turnier-Manager/releases/latest
@@ -65,24 +72,31 @@ public class NewReleaseChecker {
 	}
 
 	void writeLatestRelease() {
+		GHRelease latestRelease = getLatestRelease();
+		if (latestRelease != null && !latestRelease.isPrerelease()) {
+			// wenn kein Prerelease
+			Gson gson = new GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
+
+			logger.info("Latest Release = " + latestRelease.getName());
+
+			try (BufferedWriter writer = Files.newBufferedWriter(getReleaseFile())) {
+				writer.write(gson.toJson(latestRelease));
+			} catch (IOException e) {
+				logger.error(e);
+			}
+		}
+	}
+
+	private GHRelease getLatestRelease() {
+		GHRelease latestRelease = null;
 		try {
 			GitHub github = new GitHubBuilder().build();
-			GHRepository repository = github.getRepository("michaelmassee/Petanque-Turnier-Manager");
-			GHRelease latestRelease = repository.getLatestRelease();
-
-			if (!latestRelease.isPrerelease()) {
-				// wenn kein Prerelease
-				Gson gson = new GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
-
-				logger.info("Latest Release = " + latestRelease.getName());
-
-				try (BufferedWriter writer = Files.newBufferedWriter(getReleaseFile())) {
-					writer.write(gson.toJson(latestRelease));
-				}
-			}
+			GHRepository repository = github.getRepository(GITHUB_PETANQUE_TURNIER_MANAGER);
+			latestRelease = repository.getLatestRelease();
 		} catch (IOException e) {
 			logger.error(e);
 		}
+		return latestRelease;
 	}
 
 	@VisibleForTesting
@@ -126,8 +140,41 @@ public class NewReleaseChecker {
 			// fehler nur loggen
 			logger.error(e);
 		}
-
 		return newVersionAvailable;
+	}
+
+	public GHAsset getDownloadGHAsset() {
+		GHAsset otxAsset = null;
+
+		GHRelease latestRelease = getLatestRelease();
+		if (latestRelease != null && !latestRelease.isPrerelease()) {
+			try {
+				List<GHAsset> assets = latestRelease.getAssets();
+				otxAsset = assets.stream().filter(ghasset -> {
+					return ghasset.getName().toLowerCase().endsWith(EXTENSION_FILE_SUFFIX);
+				}).findFirst().orElse(null);
+			} catch (IOException e) {
+				logger.error(e);
+			}
+		}
+		return otxAsset;
+	}
+
+	public URL getDownloadURL() {
+		GHAsset otxAsset = getDownloadGHAsset();
+		return getDownloadURL(otxAsset);
+	}
+
+	public URL getDownloadURL(GHAsset otxAsset) {
+		URL download = null;
+		if (otxAsset != null) {
+			try {
+				download = new URL(otxAsset.getBrowserDownloadUrl());
+			} catch (MalformedURLException e) {
+				logger.error(e);
+			}
+		}
+		return download;
 	}
 
 }

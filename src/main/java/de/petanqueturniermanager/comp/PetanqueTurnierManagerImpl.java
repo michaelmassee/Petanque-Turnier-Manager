@@ -19,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationStarter;
+import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
@@ -67,7 +68,6 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
 		// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
 		xContext = context;
-
 		checkForUpdate();
 		try {
 
@@ -144,6 +144,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 				case "turnierkonfiguration":
 					// Konfiguration vorhanden ? dann starten
 					KonfigurationStarter.start(currentSpreadsheet);
+					didHandle = true;
+					break;
+				case "downloadExtension":
+					new DownloadExtension(currentSpreadsheet).start();
 					didHandle = true;
 					break;
 				case "abbruch":
