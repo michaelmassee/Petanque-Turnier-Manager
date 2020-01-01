@@ -94,4 +94,18 @@ public class PageStyleDef {
 	public void setHeaderCenter(String text) {
 		pageProperties.setHeaderCenter(text);
 	}
+
+	/**
+	 * @param string
+	 */
+	public void setHeaderLeft(String string) {
+		pageProperties.setHeaderLeft(string);
+	}
+
+	/**
+	 * @param string
+	 */
+	public void setHeaderRight(String string) {
+		pageProperties.setHeaderRight(string);
+	}
 }
