@@ -17,4 +17,10 @@ public interface ILigaPropertiesSpalte {
 
 	Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException;
 
+	String getKopfZeileLinks() throws GenerateException;
+
+	String getKopfZeileMitte() throws GenerateException;
+
+	String getKopfZeileRechts() throws GenerateException;
+
 }

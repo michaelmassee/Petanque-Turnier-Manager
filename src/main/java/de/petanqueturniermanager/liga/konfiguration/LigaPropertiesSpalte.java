@@ -26,6 +26,10 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER = "Spielplan Header";
 
+	private static final String KONFIG_PROP_KOPF_ZEILE_LINKS = "Kopfzeile Links";
+	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
+	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
+
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
@@ -37,6 +41,10 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 				.setDescription("Spielplan Hintergrundfarbe für ungerade Zeilen"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
 				.setDescription("Spielplan Header-Hintergrundfarbe"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_LINKS).setDefaultVal("").setDescription("Kopfzeile Links"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_MITTE).setDefaultVal("").setDescription("Kopfzeile Mitte"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_RECHTS).setDefaultVal("").setDescription("Kopfzeile Rechts"));
 	}
 
 	/**
@@ -86,6 +94,21 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public Integer getSpielPlanHeaderFarbe() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER);
+	}
+
+	@Override
+	public String getKopfZeileLinks() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_LINKS);
+	}
+
+	@Override
+	public String getKopfZeileMitte() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE);
+	}
+
+	@Override
+	public String getKopfZeileRechts() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);
 	}
 
 }

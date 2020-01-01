@@ -11,6 +11,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
+import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -64,7 +66,9 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
-		// nichts, wenn eigene sonder page styles
+		// default page Style
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
+				.setHeaderLeft(getKopfZeileLinks()).setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create().applytoSheet();
 	}
 
 	@Override
@@ -80,6 +84,21 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 	@Override
 	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
 		return propertiesSpalte.getSpielPlanHintergrundFarbeGerade();
+	}
+
+	@Override
+	public String getKopfZeileLinks() throws GenerateException {
+		return propertiesSpalte.getKopfZeileLinks();
+	}
+
+	@Override
+	public String getKopfZeileMitte() throws GenerateException {
+		return propertiesSpalte.getKopfZeileMitte();
+	}
+
+	@Override
+	public String getKopfZeileRechts() throws GenerateException {
+		return propertiesSpalte.getKopfZeileRechts();
 	}
 
 }

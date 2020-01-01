@@ -136,8 +136,18 @@ public class PageStyleHelper extends BaseHelper {
 		return this;
 	}
 
+	public PageStyleHelper setHeaderLeft(String string) {
+		pageStyleDef.setHeaderLeft(string);
+		return this;
+	}
+
 	public PageStyleHelper setHeaderCenter(String string) {
 		pageStyleDef.setHeaderCenter(string);
+		return this;
+	}
+
+	public PageStyleHelper setHeaderRight(String string) {
+		pageStyleDef.setHeaderRight(string);
 		return this;
 	}
 
