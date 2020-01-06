@@ -389,9 +389,7 @@ public class SheetHelper {
 	public String getAddressFromColumnRow(Position pos) {
 		checkNotNull(pos);
 		try {
-			Object aFuncInst = currentSpreadsheet.get().getxContext().getServiceManager().createInstanceWithContext("com.sun.star.sheet.FunctionAccess",
-					currentSpreadsheet.get().getxContext());
-			XFunctionAccess xFuncAcc = UnoRuntime.queryInterface(XFunctionAccess.class, aFuncInst);
+			XFunctionAccess xFuncAcc = currentSpreadsheet.get().createInstanceMCF(XFunctionAccess.class, "com.sun.star.sheet.FunctionAccess");
 			// https://wiki.openoffice.org/wiki/Documentation/How_Tos/Calc:_ADDRESS_function
 			// put the data in a array
 			Object[] data = { pos.getRow() + 1, pos.getColumn() + 1, 4, 1 };

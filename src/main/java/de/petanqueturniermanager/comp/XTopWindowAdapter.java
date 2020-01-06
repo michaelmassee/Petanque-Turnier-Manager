@@ -3,8 +3,11 @@
  */
 package de.petanqueturniermanager.comp;
 
+import com.sun.star.awt.XExtendedToolkit;
 import com.sun.star.awt.XTopWindowListener;
 import com.sun.star.lang.EventObject;
+
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
  * @author Michael Massee
@@ -12,38 +15,42 @@ import com.sun.star.lang.EventObject;
  */
 public class XTopWindowAdapter implements XTopWindowListener {
 
-	// TODO
-	// see 25. Monitoring Sheets.pdf chapter 10
-	// XExtendedToolkit tk = Lo.createInstanceMCF(XExtendedToolkit.class,
-	// "com.sun.star.awt.Toolkit");
-	// if (tk != null)
-	// tk.addTopWindowListener( new XTopWindowAdapter() {
-	// public void windowClosing(EventObject eo)
-	// { /* called whenever the appl. is closed */ }
-	// }
+	private static XExtendedToolkit extendedToolkit = null;
+
+	/**
+	 * einmal wenn nicht vorhanden diesen Windows Adapter registrieren
+	 *
+	 * @param workingSpreadsheet
+	 */
+
+	public static void addThisListenerOnce(WorkingSpreadsheet workingSpreadsheet) {
+		if (extendedToolkit == null) {
+			extendedToolkit = workingSpreadsheet.createInstanceMCF(XExtendedToolkit.class, "com.sun.star.awt.Toolkit");
+			extendedToolkit.addTopWindowListener(new XTopWindowAdapter());
+		}
+	}
 
 	@Override
 	public void disposing(EventObject arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowActivated(EventObject arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void windowClosed(EventObject arg0) {
-		// TODO Auto-generated method stub
-
 	}
+
+	/**
+	 * wird aufgerufen bevor speicher dialog<br>
+	 * und für jeden Libreoffice Fenster
+	 */
 
 	@Override
 	public void windowClosing(EventObject arg0) {
-		// Clean Up Prozess Box
-		// TODO Auto-generated method stub
+		// Clean Up Prozess Box, kann wieder aufgemacht werden
+		ProcessBox.dispose();
 	}
 
 	@Override
