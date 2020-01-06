@@ -101,7 +101,6 @@ public class PageStyleHelper extends BaseHelper {
 
 			// TODO Move this code to XPropertyHelper
 			for (String propKey : pageStyleDef.getPageProperties().keySet()) {
-				// Props.setProperty(props, "RightPageHeaderContent", header);
 				xPropSet.setPropertyValue(propKey, pageStyleDef.getPageProperties().get(propKey));
 			}
 		} catch (Exception e) {

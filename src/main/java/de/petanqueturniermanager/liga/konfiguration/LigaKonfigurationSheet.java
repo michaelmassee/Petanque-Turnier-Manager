@@ -67,8 +67,9 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
 		// default page Style
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
-				.setHeaderLeft(getKopfZeileLinks()).setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create().applytoSheet();
+		// .setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()) werden bereits definiert
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks()).setHeaderCenter(getKopfZeileMitte())
+				.setHeaderRight(getKopfZeileRechts()).create().applytoSheet();
 	}
 
 	@Override
