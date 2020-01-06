@@ -68,7 +68,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
 		xContext = context;
-		XTopWindowAdapter.addThisListenerOnce(new WorkingSpreadsheet(xContext));
+		TopWindowListener.addThisListenerOnce(new WorkingSpreadsheet(xContext));
 		checkForUpdate();
 
 		try {
