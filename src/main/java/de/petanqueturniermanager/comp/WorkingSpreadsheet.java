@@ -75,14 +75,36 @@ public class WorkingSpreadsheet {
 	}
 
 	public XDispatchHelper getXDispatchHelper() {
-		XDispatchHelper xDPH = null;
+		// XDispatchHelper xDPH = null;
+		// try {
+		// Object multiComponentFactory = getxContext().getServiceManager().createInstanceWithContext("com.sun.star.frame.DispatchHelper", getxContext());
+		// xDPH = UnoRuntime.queryInterface(XDispatchHelper.class, multiComponentFactory);
+		// } catch (Exception e) {
+		// logger.error(e.getMessage(), e);
+		// }
+		return createInstanceMCF(XDispatchHelper.class, "com.sun.star.frame.DispatchHelper");
+	}
+
+	/**
+	 * @param <T>
+	 * @param aType
+	 * @param serviceName
+	 * @return
+	 */
+	public <T> T createInstanceMCF(Class<T> aType, String serviceName) {
+		checkNotNull(aType);
+		checkNotNull(serviceName);
+
+		T interfaceObj = null;
 		try {
-			Object dispatchHelper = getxContext().getServiceManager().createInstanceWithContext("com.sun.star.frame.DispatchHelper", getxContext());
-			xDPH = UnoRuntime.queryInterface(XDispatchHelper.class, dispatchHelper);
+			Object multiComponentFactory = getxContext().getServiceManager().createInstanceWithContext(serviceName, getxContext());
+			// create service component using the specified component context
+			interfaceObj = UnoRuntime.queryInterface(aType, multiComponentFactory);
+			// uses bridge to obtain proxy to remote interface inside service;
+			// implements casting across process boundaries
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
-		return xDPH;
+		return interfaceObj;
 	}
-
 }

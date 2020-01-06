@@ -65,15 +65,14 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 
 	private final XComponentContext xContext;
 
+	// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
-		// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
 		xContext = context;
+		XTopWindowAdapter.addThisListenerOnce(new WorkingSpreadsheet(xContext));
 		checkForUpdate();
-		try {
 
+		try {
 			ProcessBox.init(context);
-			// start run update release info thread
-			// newReleaseChecker.runUpdateOnceThread();
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}

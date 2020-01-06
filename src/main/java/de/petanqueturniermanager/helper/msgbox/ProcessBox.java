@@ -77,7 +77,7 @@ public class ProcessBox {
 
 	private ArrayList<ImageIcon> inworkIcons = new ArrayList<>();
 
-	private final DialogTools dialogTools;
+	private DialogTools dialogTools;
 	private final ScheduledExecutorService drawInWorkIcon = Executors.newScheduledThreadPool(1);
 	private ScheduledFuture<?> drawInWorkIconScheduled;
 
@@ -94,6 +94,27 @@ public class ProcessBox {
 			throw new NullPointerException("ProcessBox nicht initialisiert");
 		}
 		return ProcessBox.processBox;
+	}
+
+	/**
+	 * Box schließen, kann wieder geöfnet werden
+	 */
+	public static void dispose() {
+		// zuerst prüfen ob noch vorhanden
+		if (ProcessBox.processBox != null) {
+			from()._dispose();
+		}
+	}
+
+	/**
+	 * nur intern verewenden
+	 */
+	private void _dispose() {
+		if (frame != null) {
+			frame.dispose();
+		}
+		dialogTools = null;
+		ProcessBox.processBox = null;
 	}
 
 	public static ProcessBox init(XComponentContext xContext) {
