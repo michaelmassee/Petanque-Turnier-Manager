@@ -13,7 +13,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
  * @author Michael Massee
  *
  */
-public class XTopWindowAdapter implements XTopWindowListener {
+public class TopWindowListener implements XTopWindowListener {
 
 	private static XExtendedToolkit extendedToolkit = null;
 
@@ -22,11 +22,10 @@ public class XTopWindowAdapter implements XTopWindowListener {
 	 *
 	 * @param workingSpreadsheet
 	 */
-
 	public static void addThisListenerOnce(WorkingSpreadsheet workingSpreadsheet) {
 		if (extendedToolkit == null) {
 			extendedToolkit = workingSpreadsheet.createInstanceMCF(XExtendedToolkit.class, "com.sun.star.awt.Toolkit");
-			extendedToolkit.addTopWindowListener(new XTopWindowAdapter());
+			extendedToolkit.addTopWindowListener(new TopWindowListener());
 		}
 	}
 
@@ -44,13 +43,13 @@ public class XTopWindowAdapter implements XTopWindowListener {
 
 	/**
 	 * wird aufgerufen bevor speicher dialog<br>
-	 * und für jeden Libreoffice Fenster
+	 * und für jeden Libreoffice Fenster (Writer,Calc ,etc)
 	 */
 
 	@Override
 	public void windowClosing(EventObject arg0) {
 		// Clean Up Prozess Box, kann wieder aufgemacht werden
-		ProcessBox.dispose();
+		ProcessBox.disposeWhenNotRunning();
 	}
 
 	@Override
