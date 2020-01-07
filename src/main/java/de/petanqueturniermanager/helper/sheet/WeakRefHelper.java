@@ -22,6 +22,13 @@ public class WeakRefHelper<T> {
 		this.wkRef = wkRef;
 	}
 
+	public final boolean isPresent() {
+		if (!this.wkRef.isEnqueued() && this.wkRef.get() != null) {
+			return true;
+		}
+		return false;
+	}
+
 	public final T get() {
 		if (!this.wkRef.isEnqueued()) {
 			return this.wkRef.get();
