@@ -99,24 +99,22 @@ public class ProcessBox {
 	/**
 	 * Box schließen, kann wieder geöfnet werden
 	 */
-	public static void disposeWhenNotRunning() {
+	public static void dispose() {
 		// zuerst prüfen ob noch vorhanden
 		if (ProcessBox.processBox != null) {
-			from()._disposeWhenNotRunning();
+			from()._dispose();
 		}
 	}
 
 	/**
 	 * nur intern verwenden
 	 */
-	private void _disposeWhenNotRunning() {
-		if (!SheetRunner.isRunning()) {
-			if (frame != null) {
-				frame.dispose();
-			}
-			dialogTools = null;
-			ProcessBox.processBox = null;
+	private void _dispose() {
+		if (frame != null) {
+			frame.dispose();
 		}
+		dialogTools = null;
+		ProcessBox.processBox = null;
 	}
 
 	public static ProcessBox init(XComponentContext xContext) {
