@@ -5,7 +5,6 @@ package de.petanqueturniermanager.forme.korunde;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
@@ -63,13 +62,6 @@ public class Ranglisten {
 	private void processBoxinfo(String string) {
 		parentSheet.get().processBoxinfo(string);
 
-	}
-
-	/**
-	 * @return
-	 */
-	private WorkingSpreadsheet getWorkingSpreadsheet() {
-		return parentSheet.get().getWorkingSpreadsheet();
 	}
 
 	/**
