@@ -9,7 +9,6 @@ import com.google.common.collect.ImmutableList;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
@@ -98,13 +97,6 @@ public class Vorrunden {
 	private void processBoxinfo(String string) {
 		parentSheet.get().processBoxinfo(string);
 
-	}
-
-	/**
-	 * @return
-	 */
-	private WorkingSpreadsheet getWorkingSpreadsheet() {
-		return parentSheet.get().getWorkingSpreadsheet();
 	}
 
 	/**
