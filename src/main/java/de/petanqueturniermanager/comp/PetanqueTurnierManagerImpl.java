@@ -77,6 +77,15 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		}
 	}
 
+	/**
+	 * Gives a factory for creating the service.<br>
+	 * This method is called by the <code>JavaLoader</code><br>
+	 *
+	 * @return Returns a <code>XSingleServiceFactory</code> for creating the component.<br>
+	 * @see com.sun.star.comp.loader.JavaLoader<br>
+	 * @param sImplementationName The implementation name of the component.<br>
+	 */
+
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
 		XSingleComponentFactory xFactory = null;
 
