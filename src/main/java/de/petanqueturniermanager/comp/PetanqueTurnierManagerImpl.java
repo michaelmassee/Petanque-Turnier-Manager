@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHRelease;
 
-import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.lib.uno.helper.WeakBase;
@@ -56,11 +55,11 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 // Options Page, eigene Tab !
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/Extensions/Options_Dialog
 
-public final class PetanqueTurnierManagerImpl extends WeakBase implements XServiceInfo, XJobExecutor {
+public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobExecutor {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierManagerImpl.class);
 	public static final File BASE_INTERNAL_DIR = new File(System.getProperty("user.home"), "/.petanqueturniermanager/");
-	private static final String m_implementationName = PetanqueTurnierManagerImpl.class.getName();
-	private static final String[] m_serviceNames = { "de.petanqueturniermanager.Turnier" };
+	private static final String IMPLEMENTATION_NAME = PetanqueTurnierManagerImpl.class.getName();
+	private static final String[] SERVICE_NAMES = { "de.petanqueturniermanager.MenuJobExecute" };
 	private static boolean didInformAboutNewRelease = false; // static weil immer ein neuen instance
 
 	private final XComponentContext xContext;
@@ -77,6 +76,17 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		}
 	}
 
+	// -----------------------------------------------------------------------------------------------
+	/**
+	 * kommt zuerst
+	 *
+	 * @param xRegistryKey
+	 * @return
+	 */
+	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
+		return Factory.writeRegistryServiceInfo(IMPLEMENTATION_NAME, SERVICE_NAMES, xRegistryKey);
+	}
+
 	/**
 	 * Gives a factory for creating the service.<br>
 	 * This method is called by the <code>JavaLoader</code><br>
@@ -87,41 +97,17 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 	 */
 
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
+		logger.debug("__getComponentFactory " + sImplementationName);
+
 		XSingleComponentFactory xFactory = null;
 
-		if (sImplementationName.equals(m_implementationName)) {
-			xFactory = Factory.createComponentFactory(PetanqueTurnierManagerImpl.class, m_serviceNames);
+		if (sImplementationName.equals(IMPLEMENTATION_NAME)) {
+			xFactory = Factory.createComponentFactory(PetanqueTurnierManagerImpl.class, SERVICE_NAMES);
 		}
 		return xFactory;
 	}
 
-	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
-		return Factory.writeRegistryServiceInfo(m_implementationName, m_serviceNames, xRegistryKey);
-	}
-
-	// com.sun.star.lang.XServiceInfo:
-	@Override
-	public String getImplementationName() {
-		return m_implementationName;
-	}
-
-	// com.sun.star.lang.XServiceInfo:
-	@Override
-	public boolean supportsService(String sService) {
-		int len = m_serviceNames.length;
-
-		for (int i = 0; i < len; i++) {
-			if (sService.equals(m_serviceNames[i]))
-				return true;
-		}
-		return false;
-	}
-
-	@Override
-	public String[] getSupportedServiceNames() {
-		return m_serviceNames;
-	}
-
+	// -----------------------------------------------------------------------------------------------
 	// com.sun.star.task.XJobExecutor:
 	@Override
 	public void trigger(String action) {
@@ -305,5 +291,4 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XServi
 		}
 		return didHandle;
 	}
-
 }

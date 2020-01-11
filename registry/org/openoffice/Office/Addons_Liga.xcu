@@ -7,7 +7,7 @@
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
 				<prop oor:name="Title" oor:type="xs:string">
-					<!-- Pétanque-Turnier-Manager -->
+					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
@@ -39,7 +39,7 @@
 									<value xml:lang="de">Neue Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?liga_neue_meldeliste</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_neue_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -51,7 +51,7 @@
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?liga_update_meldeliste</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_update_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -70,7 +70,7 @@
 									<value xml:lang="de">Liga Spielplan</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?liga_spielplan</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_spielplan</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -83,7 +83,7 @@
 									<value xml:lang="de">Liga Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.Turnier?liga_rangliste</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_rangliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

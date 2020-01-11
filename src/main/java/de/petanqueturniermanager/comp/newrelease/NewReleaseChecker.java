@@ -55,6 +55,7 @@ public class NewReleaseChecker {
 	 */
 
 	public void runUpdateOnceThread() {
+		logger.debug("start runUpdateOnceThread");
 		if (!isUpdateThreadRunning && !didAlreadyRun) {
 			new Thread("Update Latest Release") {
 				@Override
@@ -72,6 +73,8 @@ public class NewReleaseChecker {
 	}
 
 	void writeLatestRelease() {
+		logger.debug("start writeLatestRelease");
+
 		GHRelease latestRelease = getLatestRelease();
 		if (latestRelease != null && !latestRelease.isPrerelease()) {
 			// wenn kein Prerelease
