@@ -64,6 +64,46 @@ public class RegistrationHandler {
 	private static final Logger logger = LogManager.getLogger(RegistrationHandler.class);
 
 	/**
+	 * First<br>
+	 * Writes the services implementation informations to the UNO registry.
+	 *
+	 * <p>
+	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
+	 * modified.</strong>
+	 * </p>
+	 *
+	 * nach __writeRegistryServiceInfo ist die VM sofort wieder weg. !
+	 *
+	 * @param pRegistryKey the root registry key where to write the informations.
+	 *
+	 * @return <code>true</code> if the informations have been successfully written to the registry key, <code>false</code> otherwise.
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
+		logger.debug("__writeRegistryServiceInfo " + xRegistryKey.getKeyName());
+
+		Class[] classes = findServicesImplementationClasses();
+
+		boolean success = true;
+		int i = 0;
+		while (i < classes.length && success) {
+			Class clazz = classes[i];
+			try {
+				Class[] writeTypes = new Class[] { XRegistryKey.class };
+				Method getFactoryMethod = clazz.getMethod("__writeRegistryServiceInfo", writeTypes);
+				Object o = getFactoryMethod.invoke(null, xRegistryKey);
+				success = success && ((Boolean) o).booleanValue();
+			} catch (Exception e) {
+				success = false;
+				logger.error(e.getMessage(), e);
+			}
+			i++;
+		}
+		return success;
+	}
+
+	/**
+	 * Second <br>
 	 * Get a component factory for the implementations handled by this class.
 	 *
 	 * <p>
@@ -78,6 +118,9 @@ public class RegistrationHandler {
 	@SuppressWarnings("rawtypes")
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
 		XSingleComponentFactory xFactory = null;
+
+		// fuer jeden __writeRegistryServiceInfo
+		logger.debug("__getComponentFactory " + sImplementationName);
 
 		Class[] classes = findServicesImplementationClasses();
 
@@ -99,41 +142,6 @@ public class RegistrationHandler {
 			i++;
 		}
 		return xFactory;
-	}
-
-	/**
-	 * Writes the services implementation informations to the UNO registry.
-	 *
-	 * <p>
-	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
-	 * modified.</strong>
-	 * </p>
-	 *
-	 * @param pRegistryKey the root registry key where to write the informations.
-	 *
-	 * @return <code>true</code> if the informations have been successfully written to the registry key, <code>false</code> otherwise.
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
-
-		Class[] classes = findServicesImplementationClasses();
-
-		boolean success = true;
-		int i = 0;
-		while (i < classes.length && success) {
-			Class clazz = classes[i];
-			try {
-				Class[] writeTypes = new Class[] { XRegistryKey.class };
-				Method getFactoryMethod = clazz.getMethod("__writeRegistryServiceInfo", writeTypes);
-				Object o = getFactoryMethod.invoke(null, xRegistryKey);
-				success = success && ((Boolean) o).booleanValue();
-			} catch (Exception e) {
-				success = false;
-				logger.error(e.getMessage(), e);
-			}
-			i++;
-		}
-		return success;
 	}
 
 	/**
@@ -180,7 +188,6 @@ public class RegistrationHandler {
 			} catch (Exception e) {
 			}
 		}
-
 		return classes.toArray(new Class[classes.size()]);
 	}
 }
