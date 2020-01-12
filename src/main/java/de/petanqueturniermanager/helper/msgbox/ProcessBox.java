@@ -362,7 +362,6 @@ public class ProcessBox {
 			logOut.append(": ");
 			prefix = null;
 		}
-
 		logOut.append(logMsg + "\r\n");
 		return this;
 	}

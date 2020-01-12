@@ -11,13 +11,13 @@ import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
-import com.sun.star.rendering.XCanvas;
 import com.sun.star.ui.XUIElement;
 import com.sun.star.ui.XUIElementFactory;
 import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.StaticInitStuff;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 /**
  * This is the factory that creates the sidebar panel that displays an analog clock.
@@ -30,11 +30,12 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	private static final String IMPLEMENTATION_NAME = PetanqueTurnierManagerPanelFactory.class.getName();
 	private static final String[] SERVICE_NAMES = { __serviceName };
 
-	// private final XComponentContext mxContext;
+	private final WorkingSpreadsheet currentSpreadsheet;
 
+	// fuer jeden Sheet wird ein Panel erstellt
 	public PetanqueTurnierManagerPanelFactory(final XComponentContext xContext) {
 		logger.debug("PetanqueTurnierManagerPanelFactory constructor");
-		// mxContext = xContext;
+		currentSpreadsheet = new WorkingSpreadsheet(xContext);
 		StaticInitStuff.init(xContext);
 	}
 
@@ -72,7 +73,6 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 
 	/**
 	 * The main factory method has two parts: - Extract and check some values from the given arguments - Check the sResourceURL and create a panel for it.<br>
-	 * Achtung: wird jedes mal neu aufgrufen wenn Focus
 	 */
 	@Override
 	public XUIElement createUIElement(final String sResourceURL, final PropertyValue[] aArgumentList) throws NoSuchElementException, IllegalArgumentException {
@@ -83,34 +83,24 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 			throw new NoSuchElementException(sResourceURL, this);
 		}
 
-		// Retrieve the parent window and canvas from the given argument list.
+		// Retrieve the parent window from the given argument list.
 		XWindow xParentWindow = null;
-		XCanvas xCanvas = null;
 		logger.debug("processing " + aArgumentList.length + " arguments");
 		for (final PropertyValue aValue : aArgumentList) {
-			// logger.debug(" " + aValue.Name + " = " + aValue.Value);
 			if (aValue.Name.equals("ParentWindow")) {
 				try {
 					xParentWindow = (XWindow) AnyConverter.toObject(XWindow.class, aValue.Value);
 				} catch (IllegalArgumentException aException) {
 					logger.error(aException);
 				}
-			} else if (aValue.Name.equals("Canvas")) {
-				xCanvas = (XCanvas) AnyConverter.toObject(XCanvas.class, aValue.Value);
 			}
 		}
-		// Check some arguments.
-		if (xParentWindow == null) {
-			// fehler nur loggen
-			logger.error("No parent window provided to the UIElement factory. Cannot create tool panel.", this, (short) 1);
-			return null;
-		}
-
 		// Create the panel.
-		// final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
-		// if (sElementName.equals("PetanqueTurnierManagerPanel"))
-		// return new UIElement(sResourceURL, new AnalogClockPanel(xParentWindow, mxContext, xCanvas));
-		// else
+		final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
+		if (sElementName.equals("InfoPanel")) {
+			logger.debug("New InfoSidebarPanel");
+			return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
+		}
 		return null;
 	}
 
@@ -126,9 +116,11 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 
 	@Override
 	public boolean supportsService(final String sServiceName) {
-		for (final String sSupportedServiceName : SERVICE_NAMES)
-			if (sSupportedServiceName.equals(sServiceName))
+		for (final String sSupportedServiceName : SERVICE_NAMES) {
+			if (sSupportedServiceName.equals(sServiceName)) {
 				return true;
+			}
+		}
 		return false;
 	}
 

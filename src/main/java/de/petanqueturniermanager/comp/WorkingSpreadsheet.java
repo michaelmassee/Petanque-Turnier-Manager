@@ -75,13 +75,6 @@ public class WorkingSpreadsheet {
 	}
 
 	public XDispatchHelper getXDispatchHelper() {
-		// XDispatchHelper xDPH = null;
-		// try {
-		// Object multiComponentFactory = getxContext().getServiceManager().createInstanceWithContext("com.sun.star.frame.DispatchHelper", getxContext());
-		// xDPH = UnoRuntime.queryInterface(XDispatchHelper.class, multiComponentFactory);
-		// } catch (Exception e) {
-		// logger.error(e.getMessage(), e);
-		// }
 		return createInstanceMCF(XDispatchHelper.class, "com.sun.star.frame.DispatchHelper");
 	}
 

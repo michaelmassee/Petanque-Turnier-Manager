@@ -27,13 +27,13 @@
 
 		</node>
 		<node oor:name="PanelList">
-			<node oor:name="PetanqueTurnierManagerPanel" oor:op="replace">
+			<node oor:name="InfoPanel" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
 					<value xml:lang="en">Info</value>
 					<value xml:lang="de">Info</value>
 				</prop>
 				<prop oor:name="Id" oor:type="xs:string">
-					<value>PetanqueTurnierManagerPanel</value>
+					<value>InfoPanel</value>
 				</prop>
 				<prop oor:name="DeckId" oor:type="xs:string">
 					<value>ToolsDeck</value>
@@ -44,7 +44,7 @@
 					</value>
 				</prop>
 				<prop oor:name="ImplementationURL" oor:type="xs:string">
-					<value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/PetanqueTurnierManagerPanel</value>
+					<value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/InfoPanel</value>
 				</prop>
 				<prop oor:name="OrderIndex" oor:type="xs:int">
 					<value>100</value>
@@ -53,10 +53,10 @@
 				<!--
 				WantsCanvas 
 				When true then an XCanvas object will be passed to the panel factory when the panel is created. Experimental. Defaults to false. 
-				-->
 				<prop oor:name="WantsCanvas" oor:type="xs:boolean">
 					<value>true</value>
 				</prop>
+				-->
 
 				<!-- 
 				DefaultMenuCommand 
