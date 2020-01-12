@@ -60,7 +60,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 	private final XComponentContext xContext;
 
 	// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
-	public PetanqueTurnierManagerImpl(XComponentContext context) {
+	public PetanqueTurnierManagerImpl(final XComponentContext context) {
 		xContext = context;
 		StaticInitStuff.init(context);
 	}
