@@ -7,7 +7,6 @@ import java.io.File;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.kohsuke.github.GHRelease;
 
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
@@ -19,11 +18,8 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationStarter;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
@@ -60,20 +56,13 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 	public static final File BASE_INTERNAL_DIR = new File(System.getProperty("user.home"), "/.petanqueturniermanager/");
 	private static final String IMPLEMENTATION_NAME = PetanqueTurnierManagerImpl.class.getName();
 	private static final String[] SERVICE_NAMES = { "de.petanqueturniermanager.MenuJobExecute" };
-	private static boolean didInformAboutNewRelease = false; // static weil immer ein neuen instance
 
 	private final XComponentContext xContext;
 
 	// !! für jeden aufruf vom menue wird ein neuen Instance erstelt
 	public PetanqueTurnierManagerImpl(XComponentContext context) {
 		xContext = context;
-		TerminateListener.addThisListenerOnce(new WorkingSpreadsheet(xContext));
-		checkForUpdate();
-		try {
-			ProcessBox.init(context);
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
+		StaticInitStuff.init(context);
 	}
 
 	// -----------------------------------------------------------------------------------------------
@@ -158,20 +147,6 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			ProcessBox.from().fehler(e.getMessage());
 			logger.error(e.getMessage(), e);
 		}
-	}
-
-	private void checkForUpdate() {
-		NewReleaseChecker newReleaseChecker = new NewReleaseChecker();
-		if (!didInformAboutNewRelease) {
-			boolean isnewRelease = newReleaseChecker.checkForNewRelease(xContext);
-			if (isnewRelease) {
-				didInformAboutNewRelease = true;
-				GHRelease readLatestRelease = newReleaseChecker.readLatestRelease();
-				MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK).caption("Neue Version verfügbar")
-						.message("Ein neue Version (" + readLatestRelease.getName() + ") von Pétanque-Turnier-Manager ist verfügbar.").show();
-			}
-		}
-		newReleaseChecker.runUpdateOnceThread(); // update release info
 	}
 
 	private boolean handleSuperMelee(String action, WorkingSpreadsheet workingSpreadsheet) {

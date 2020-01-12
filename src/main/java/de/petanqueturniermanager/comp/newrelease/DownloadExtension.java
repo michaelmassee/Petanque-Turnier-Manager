@@ -72,7 +72,7 @@ public class DownloadExtension extends SheetRunner {
 			ProcessBox().fehler("kein " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
 			return;
 		}
-		processBoxinfo("Version " + latest.getName());
+		processBoxinfo("GitHub Version " + latest.getName());
 		processBoxinfo(downloadURL.toString());
 
 		final JFileChooser fc = new JFileChooser();

@@ -7,6 +7,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.deployment.PackageInformationProvider;
 import com.sun.star.deployment.XPackageInformationProvider;
 import com.sun.star.uno.XComponentContext;
@@ -18,6 +21,8 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
  *
  */
 public class ExtensionsHelper {
+
+	private static final Logger logger = LogManager.getLogger(ExtensionsHelper.class);
 
 	private final String ID = "de.petanqueturniermanager";
 	private final WeakRefHelper<XComponentContext> xComponentContext;
@@ -40,7 +45,7 @@ public class ExtensionsHelper {
 	public ExtensionsHelper listExtensions() {
 		XPackageInformationProvider packageInformationProvider = getXPackageInformationProvider();
 		String[][] extensionList = packageInformationProvider.getExtensionList();
-		System.out.println(extensionList);
+		logger.info(extensionList.length);
 		return this;
 	}
 

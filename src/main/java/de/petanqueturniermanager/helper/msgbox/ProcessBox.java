@@ -91,6 +91,7 @@ public class ProcessBox {
 
 	public static ProcessBox from() {
 		if (ProcessBox.processBox == null) {
+			logger.error("ProcessBox nicht initialisiert");
 			throw new NullPointerException("ProcessBox nicht initialisiert");
 		}
 		return ProcessBox.processBox;
@@ -117,7 +118,7 @@ public class ProcessBox {
 		ProcessBox.processBox = null;
 	}
 
-	public static ProcessBox init(XComponentContext xContext) {
+	public synchronized static ProcessBox init(XComponentContext xContext) {
 		checkNotNull(xContext);
 		if (ProcessBox.processBox == null) {
 			ProcessBox.processBox = new ProcessBox(xContext);

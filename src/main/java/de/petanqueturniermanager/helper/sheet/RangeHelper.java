@@ -93,7 +93,7 @@ public class RangeHelper extends BaseHelper {
 	 * @throws GenerateException
 	 */
 	public RangeData getDataFromRange() throws GenerateException {
-		Object[][] data = null;
+		Object[][] data = new Object[][] {};
 		XCellRangeData xCellRangeData = getXCellRangeData();
 		if (xCellRangeData != null) {
 			data = xCellRangeData.getDataArray();

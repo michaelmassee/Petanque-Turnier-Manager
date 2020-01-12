@@ -7,6 +7,7 @@ import com.sun.star.frame.TerminationVetoException;
 import com.sun.star.frame.XDesktop;
 import com.sun.star.frame.XTerminateListener;
 import com.sun.star.lang.EventObject;
+import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -19,9 +20,9 @@ public class TerminateListener implements XTerminateListener {
 
 	private static TerminateListener terminateListener = null;
 
-	public static void addThisListenerOnce(WorkingSpreadsheet workingSpreadsheet) {
+	public synchronized static void addThisListenerOnce(XComponentContext context) {
 		if (terminateListener == null) {
-			XDesktop currentDesktop = DocumentHelper.getCurrentDesktop(workingSpreadsheet.getxContext());
+			XDesktop currentDesktop = DocumentHelper.getCurrentDesktop(context);
 			terminateListener = new TerminateListener();
 			currentDesktop.addTerminateListener(terminateListener);
 		}

@@ -1,1 +1,3 @@
 de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl
+de.petanqueturniermanager.comp.ProtocolHandler
+de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory
