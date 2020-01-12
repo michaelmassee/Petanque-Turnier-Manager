@@ -9,7 +9,6 @@
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
 				<prop oor:name="Title" oor:type="xs:string">
-					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
@@ -33,7 +32,7 @@
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Examples</value>
-							<value xml:lang="de">Beispiel MenuJobExecutedaten</value>
+							<value xml:lang="de">Beispiel Turniere</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>

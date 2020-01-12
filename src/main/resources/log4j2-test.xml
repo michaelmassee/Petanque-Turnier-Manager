@@ -5,16 +5,15 @@
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
 		</Console>
-		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" 
-					filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{MM-dd-yyyy}.log.gz">
+		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{MM-dd-yyyy}.log.gz">
 			<PatternLayout>
 				<Pattern>%d %p %c{1.} %m%n</Pattern>
 			</PatternLayout>
 
 			<Policies>
-				<!--  Triggers a rollover on every restart, but only if the file size is greater than zero.  -->
-				<OnStartupTriggeringPolicy/>
-				<SizeBasedTriggeringPolicy size="5 KB"/>
+				<!--  OnStartupTriggeringPolicy: Triggers a rollover on every restart, but only if the file size is greater than zero.  -->
+				<!--	<OnStartupTriggeringPolicy/>	-->
+				<SizeBasedTriggeringPolicy size="500 MB"/>
 			</Policies>
 
 			<!-- https://stackoverflow.com/questions/33237731/how-to-delete-old-logs-with-log4j2 -->
@@ -34,7 +33,7 @@
 		<Root level="error">
 			<AppenderRef ref="Console"/>
 		</Root>
-		<Logger name="de.petanqueturniermanager" level="all">
+		<Logger name="de.petanqueturniermanager" level="info">
 			<AppenderRef ref="infofile"/>
 		</Logger>
 	</Loggers>

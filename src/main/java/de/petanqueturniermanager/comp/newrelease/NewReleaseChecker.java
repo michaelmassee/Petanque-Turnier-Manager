@@ -31,6 +31,11 @@ import com.google.gson.GsonBuilder;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
  * Test Github if new Release available
@@ -49,12 +54,30 @@ public class NewReleaseChecker {
 
 	static boolean isUpdateThreadRunning = false;
 	static boolean didAlreadyRun = false;
+	private static boolean didInformAboutNewRelease = false; // static weil immer ein neuen instance
+
+	// nur ein thread
+	public synchronized void checkForUpdate(XComponentContext xContext) {
+		if (!didInformAboutNewRelease) {
+			boolean isnewRelease = checkForNewRelease(xContext);
+			if (isnewRelease) {
+				logger.debug("open MessageBox");
+				MessageBoxResult answer = MessageBox.from(xContext, MessageBoxTypeEnum.QUESTION_YES_NO).caption("Neue Version verfügbar")
+						.message("Eine neue Version (" + latestVersionFromGithub() + ") von Pétanque-Turnier-Manager ist verfügbar.\r\nDownload ?").show();
+
+				if (MessageBoxResult.YES == answer) {
+					new DownloadExtension(new WorkingSpreadsheet(xContext)).start();
+				}
+				didInformAboutNewRelease = true;
+			}
+		}
+		runUpdateOnceThread(); // update release info
+	}
 
 	/**
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
-
-	public void runUpdateOnceThread() {
+	private void runUpdateOnceThread() {
 		logger.debug("start runUpdateOnceThread");
 		if (!isUpdateThreadRunning && !didAlreadyRun) {
 			new Thread("Update Latest Release") {
@@ -79,9 +102,7 @@ public class NewReleaseChecker {
 		if (latestRelease != null && !latestRelease.isPrerelease()) {
 			// wenn kein Prerelease
 			Gson gson = new GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
-
 			logger.info("Latest Release = " + latestRelease.getName());
-
 			try (BufferedWriter writer = Files.newBufferedWriter(getReleaseFile())) {
 				writer.write(gson.toJson(latestRelease));
 			} catch (IOException e) {
@@ -122,21 +143,33 @@ public class NewReleaseChecker {
 		return ret;
 	}
 
+	public String latestVersionFromGithub() {
+		String latestVersionFromGithub = null;
+
+		GHRelease readLatestRelease = readLatestRelease();
+		if (readLatestRelease != null) {
+			latestVersionFromGithub = readLatestRelease.getName();
+			// clean up name
+			latestVersionFromGithub = StringUtils.stripStart(latestVersionFromGithub, "vV");
+		}
+		return latestVersionFromGithub;
+	}
+
 	public boolean checkForNewRelease(XComponentContext context) {
+		logger.debug("checkForNewRelease");
 		boolean newVersionAvailable = false;
 		try {
-
 			// https://www.baeldung.com/java-download-file
 			// https://github.com/G00fY2/version-compare
-
 			if (!isUpdateThreadRunning) {
 				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
-				GHRelease readLatestRelease = readLatestRelease();
-				if (readLatestRelease != null) {
-					String latestVersionFromGithub = readLatestRelease.getName();
-					// clean up name
-					latestVersionFromGithub = StringUtils.stripStart(latestVersionFromGithub, "vV");
+				String latestVersionFromGithub = latestVersionFromGithub();
+				logger.debug("Addon Release = " + versionNummer);
+				logger.debug("Latest Release = " + latestVersionFromGithub);
+				if (latestVersionFromGithub != null) {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
+					logger.debug("Neue Version = " + newVersionAvailable);
+					ProcessBox.from().info("Neue Version von PétTurnMngr (" + latestVersionFromGithub + ") verfügbar.");
 				}
 			}
 		} catch (Exception e) {

@@ -2,8 +2,8 @@
 #define __de_petanqueturniermanager_petanqueturniermanager_idl__
 
 #include <com/sun/star/task/XJobExecutor.idl>
+// Package pfad de/petanqueturniermanager
 module de { module petanqueturniermanager {
-    // Sevice name PetanqueTurnierManager spielt keine rolle
 	service PetanqueTurnierManager : com::sun::star::task::XJobExecutor;
  }; };
 #endif

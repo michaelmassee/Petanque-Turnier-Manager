@@ -62,8 +62,7 @@ public class TurnierSheet {
 	 *
 	 */
 	public TurnierSheet protect() {
-		protect(true);
-		return this;
+		return protect(true);
 	}
 
 	/**
