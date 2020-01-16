@@ -78,8 +78,8 @@ public class NewReleaseChecker {
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
 	private void runUpdateOnceThread() {
-		logger.debug("start runUpdateOnceThread");
 		if (!isUpdateThreadRunning && !didAlreadyRun) {
+			logger.debug("start runUpdateOnceThread");
 			new Thread("Update Latest Release") {
 				@Override
 				public void run() {

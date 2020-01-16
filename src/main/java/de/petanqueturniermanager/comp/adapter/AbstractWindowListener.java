@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.sidebar.adapter;
+package de.petanqueturniermanager.comp.adapter;
 
 import com.sun.star.awt.WindowEvent;
 import com.sun.star.awt.XWindowListener;

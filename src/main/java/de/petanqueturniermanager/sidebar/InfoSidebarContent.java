@@ -11,10 +11,13 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.accessibility.XAccessible;
 import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.WindowEvent;
+import com.sun.star.awt.XControl;
+import com.sun.star.awt.XFixedText;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.lang.DisposedException;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lib.uno.helper.ComponentBase;
 import com.sun.star.ui.LayoutSize;
@@ -23,9 +26,11 @@ import com.sun.star.ui.XToolPanel;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
+import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
-import de.petanqueturniermanager.sidebar.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -37,30 +42,24 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * de.muenchen.allg.itd51.wollmux.sidebar.SeriendruckSidebarContent;
  *
  */
-public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel {
+public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener {
 
-	private static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
+	static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
 	private final XWindow window;
 	private final XMultiComponentFactory xMCF;
-	private final WorkingSpreadsheet currentSpreadsheet;
 	private final XToolkit toolkit;
 	private final XWindowPeer windowPeer;
+	private boolean didOnHandleDocReady;
 
-	final XWindow parentWindow;
+	WorkingSpreadsheet currentSpreadsheet;
+	XWindow parentWindow;
 	final Layout layout;
-
-	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
-		@Override
-		public void windowResized(WindowEvent e) {
-			// Rectangle posSizeParent = parentWindow.getPosSize();
-			// Start offset immer 0,0
-			Rectangle posSizeParent = new Rectangle(0, 0, parentWindow.getPosSize().Width, parentWindow.getPosSize().Height);
-			layout.layout(posSizeParent);
-		}
-	};
+	private XFixedText turnierSystemLabel = null;
 
 	/**
+	 * Jedes Document eigene Instance
+	 *
 	 * @param context
 	 * @param parentWindow
 	 */
@@ -69,6 +68,9 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		this.parentWindow = checkNotNull(parentWindow);
 
 		this.parentWindow.addWindowListener(windowAdapter);
+		didOnHandleDocReady = false;
+		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
+
 		layout = new VerticalLayout(0, 10);
 
 		xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
@@ -90,15 +92,23 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		int lineHeight = 15;
 		int lineWidth = 200;
 
-		// TODO: Wenn bereits ein Dokument Aktiv mit Turniersystem vorhanden, dann false currentSpreadsheet
-		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
-		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(currentSpreadsheet);
-		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM);
-		if (spielsystem > -1) {
-			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+		XControl turnierSystemLabelControl = GuiFactory.createLabel(xMCF, currentSpreadsheet.getxContext(), toolkit, windowPeer, "Turniersystem : " + TurnierSystem.KEIN,
+				new Rectangle(0, 0, lineWidth, lineHeight), null);
+		layout.addControl(turnierSystemLabelControl);
+		turnierSystemLabel = UnoRuntime.queryInterface(XFixedText.class, turnierSystemLabelControl);
+		updateFields();
+	}
+
+	private void updateFields() {
+		if (turnierSystemLabel != null) {
+			TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
+			DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(currentSpreadsheet);
+			int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM);
+			if (spielsystem > -1) {
+				turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+			}
+			turnierSystemLabel.setText("Turniersystem : " + turnierSystemAusDocument);
 		}
-		layout.addControl(GuiFactory.createLabel(xMCF, currentSpreadsheet.getxContext(), toolkit, windowPeer, "Turniersystem : " + turnierSystemAusDocument.toString(),
-				new Rectangle(0, 0, lineWidth, lineHeight), null));
 	}
 
 	@Override
@@ -110,6 +120,37 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 	@Override
 	public int getMinimalWidth() {
 		return 200;
+	}
+
+	// ----- Implementation of interface IGlobalEventListener -----
+	@Override
+	public void onUnfocus(Object source) {
+		// dann der fall wenn kein onLoad oder onNew
+		// passiert wenn einfach nur die sidebar aus / an geschalted wird
+		didOnHandleDocReady = true;
+	}
+
+	@Override
+	public void onLoad(Object source) {
+		if (didOnHandleDocReady) {
+			return;
+		}
+		didOnHandleDocReady = true;
+		// update fields
+		updateFields();
+	}
+
+	@Override
+	public void onNew(Object source) {
+		if (didOnHandleDocReady) {
+			return;
+		}
+		didOnHandleDocReady = true;
+		// wenn ein Document neu erstellt wird dann currentSpreadsheet updaten
+		currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext());
+
+		// update fields
+		updateFields();
 	}
 
 	// ----- Implementation of UNO interface XToolPanel -----
@@ -130,5 +171,29 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		}
 		return window;
 	}
+
+	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
+		@Override
+		public void windowResized(WindowEvent e) {
+			// Rectangle posSizeParent = parentWindow.getPosSize();
+			// Start offset immer 0,0
+			Rectangle posSizeParent = new Rectangle(0, 0, parentWindow.getPosSize().Width, parentWindow.getPosSize().Height);
+			layout.layout(posSizeParent);
+		}
+
+		@Override
+		public void disposing(EventObject event) {
+			super.disposing(event);
+			PetanqueTurnierMngrSingleton.removeGlobalEventListener(InfoSidebarContent.this);
+			currentSpreadsheet = null;
+			parentWindow = null;
+		}
+
+		// @Override
+		// public void windowHidden(EventObject event) {
+		// logger.debug("InfoSidebarContent:windowHidden");
+		// }
+
+	};
 
 }

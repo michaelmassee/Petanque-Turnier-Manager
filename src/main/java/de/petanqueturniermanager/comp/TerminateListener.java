@@ -47,6 +47,7 @@ public class TerminateListener implements XTerminateListener {
 	@Override
 	public void notifyTermination(EventObject arg0) {
 		ProcessBox.dispose();
+		PetanqueTurnierMngrSingleton.dispose();
 	}
 
 	@Override

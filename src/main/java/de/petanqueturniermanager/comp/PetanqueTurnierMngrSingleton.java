@@ -1,0 +1,74 @@
+/**
+ * Erstellung 12.01.2020 / Michael Massee
+ */
+package de.petanqueturniermanager.comp;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.sun.star.document.XEventBroadcaster;
+import com.sun.star.uno.UnoRuntime;
+import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.comp.event.GlobalEventListener;
+import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+
+/**
+ * @author Michael Massee
+ *
+ */
+public class PetanqueTurnierMngrSingleton {
+	private static final Logger logger = LogManager.getLogger(PetanqueTurnierMngrSingleton.class);
+
+	private static GlobalEventListener globalEventListener = null;
+
+	/**
+	 * der erste Konstruktur macht Init
+	 *
+	 * @param context
+	 */
+
+	public static final void init(XComponentContext context) {
+		globalEventListener(context);
+		ProcessBox.init(context); // der muss zuerst
+		TerminateListener.addThisListenerOnce(context);
+		new NewReleaseChecker().checkForUpdate(context);
+	}
+
+	// register global EventListener
+	private static final synchronized void globalEventListener(XComponentContext context) {
+		if (globalEventListener != null) {
+			return;
+		}
+		try {
+			globalEventListener = new GlobalEventListener();
+			Object globalEventBroadcaster = context.getServiceManager().createInstanceWithContext("com.sun.star.frame.GlobalEventBroadcaster", context);
+			XEventBroadcaster eventBroadcaster = UnoRuntime.queryInterface(XEventBroadcaster.class, globalEventBroadcaster);
+			eventBroadcaster.addEventListener(globalEventListener);
+		} catch (Throwable e) {
+			// alles ignorieren nur logen
+			logger.error("", e);
+		}
+	}
+
+	public static void addGlobalEventListener(IGlobalEventListener listner) {
+		if (globalEventListener != null) {
+			globalEventListener.addGlobalEventListener(listner);
+		}
+	}
+
+	public static void removeGlobalEventListener(IGlobalEventListener listner) {
+		if (globalEventListener != null) {
+			globalEventListener.removeGlobalEventListener(listner);
+		}
+	}
+
+	public static void dispose() {
+		if (globalEventListener != null) {
+			globalEventListener.disposing(null);
+		}
+	}
+
+}
