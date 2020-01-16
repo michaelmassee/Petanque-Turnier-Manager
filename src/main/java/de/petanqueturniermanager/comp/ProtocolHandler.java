@@ -38,7 +38,7 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 	public ProtocolHandler(final XComponentContext xContext) {
 		logger.debug("ProtocolHandler constructor");
 		maListeners = new HashMap<>();
-		StaticInitStuff.init(xContext);
+		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
 	// -----------------------------------------------------------------------------------------------

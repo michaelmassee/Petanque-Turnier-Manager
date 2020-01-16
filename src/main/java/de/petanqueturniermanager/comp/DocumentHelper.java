@@ -31,7 +31,7 @@ public class DocumentHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentHelper.class);
 
 	/** Returns the current XDesktop */
-	static XDesktop getCurrentDesktop(XComponentContext xContext) {
+	public static XDesktop getCurrentDesktop(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
 		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, xContext.getServiceManager());
 		Object desktop = null;

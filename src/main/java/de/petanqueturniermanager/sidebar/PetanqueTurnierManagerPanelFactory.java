@@ -16,7 +16,7 @@ import com.sun.star.ui.XUIElementFactory;
 import com.sun.star.uno.AnyConverter;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.StaticInitStuff;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 /**
@@ -36,7 +36,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	public PetanqueTurnierManagerPanelFactory(final XComponentContext xContext) {
 		logger.debug("PetanqueTurnierManagerPanelFactory constructor");
 		currentSpreadsheet = new WorkingSpreadsheet(xContext);
-		StaticInitStuff.init(xContext);
+		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
 	// -----------------------------------------------------------------------------------------------
@@ -96,10 +96,12 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 			}
 		}
 		// Create the panel.
-		final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
-		if (sElementName.equals("InfoPanel")) {
-			logger.debug("New InfoSidebarPanel");
-			return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
+		if (xParentWindow != null) {
+			final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
+			if (sElementName.equals("InfoPanel")) {
+				logger.debug("New InfoSidebarPanel");
+				return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
+			}
 		}
 		return null;
 	}
@@ -123,5 +125,4 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 		}
 		return false;
 	}
-
 }
