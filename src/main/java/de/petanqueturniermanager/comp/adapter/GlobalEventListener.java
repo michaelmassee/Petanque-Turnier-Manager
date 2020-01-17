@@ -48,7 +48,7 @@
  *
  */
 
-package de.petanqueturniermanager.comp.event;
+package de.petanqueturniermanager.comp.adapter;
 
 import java.util.ArrayList;
 
@@ -57,8 +57,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.document.XEventListener;
 import com.sun.star.lang.EventObject;
-
-import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 
 /**
  * Der GlobalEventListener sorgt dafür, dass der WollMux alle wichtigen globalen Ereignisse wie z.B. ein OnNew on OnLoad abfangen und darauf reagieren kann. In diesem Fall wird die

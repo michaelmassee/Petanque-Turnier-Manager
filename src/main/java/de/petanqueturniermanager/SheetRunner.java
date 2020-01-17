@@ -15,7 +15,10 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -115,6 +118,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
 		checkNotNull(konfigurationSheet, "IKonfigurationSheet == null");
 		konfigurationSheet.update();
+		PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, new OnConfigChangedEvent(turnierSystem));
 	}
 
 	public abstract Logger getLogger();

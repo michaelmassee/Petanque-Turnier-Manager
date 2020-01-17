@@ -30,6 +30,9 @@ import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
+import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
@@ -42,7 +45,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * de.muenchen.allg.itd51.wollmux.sidebar.SeriendruckSidebarContent;
  *
  */
-public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener {
+public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
 
 	static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
@@ -70,6 +73,7 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		this.parentWindow.addWindowListener(windowAdapter);
 		didOnHandleDocReady = false;
 		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
+		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 
 		layout = new VerticalLayout(0, 10);
 
@@ -89,7 +93,7 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 	}
 
 	private void addInfoFields() {
-		int lineHeight = 15;
+		int lineHeight = 20;
 		int lineWidth = 200;
 
 		XControl turnierSystemLabelControl = GuiFactory.createLabel(xMCF, currentSpreadsheet.getxContext(), toolkit, windowPeer, "Turniersystem : " + TurnierSystem.KEIN,
@@ -100,14 +104,18 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 	}
 
 	private void updateFields() {
+		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
+		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(currentSpreadsheet);
+		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM);
+		if (spielsystem > -1) {
+			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+		}
+		updateFields(turnierSystemAusDocument);
+	}
+
+	private void updateFields(TurnierSystem turnierSystem) {
 		if (turnierSystemLabel != null) {
-			TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
-			DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(currentSpreadsheet);
-			int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM);
-			if (spielsystem > -1) {
-				turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
-			}
-			turnierSystemLabel.setText("Turniersystem : " + turnierSystemAusDocument);
+			turnierSystemLabel.setText("Turniersystem : " + turnierSystem);
 		}
 	}
 
@@ -172,6 +180,14 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		return window;
 	}
 
+	// ----- Implementation of interface ITurnierEventListener -----
+	@Override
+	public void onConfigChanged(ITurnierEvent eventObj) {
+		TurnierSystem turnierSystem = ((OnConfigChangedEvent) eventObj).getTurnierSystem();
+		// update fields
+		updateFields(turnierSystem);
+	}
+
 	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
 		@Override
 		public void windowResized(WindowEvent e) {
@@ -185,6 +201,7 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		public void disposing(EventObject event) {
 			super.disposing(event);
 			PetanqueTurnierMngrSingleton.removeGlobalEventListener(InfoSidebarContent.this);
+			PetanqueTurnierMngrSingleton.removeTurnierEventListener(InfoSidebarContent.this);
 			currentSpreadsheet = null;
 			parentWindow = null;
 		}
