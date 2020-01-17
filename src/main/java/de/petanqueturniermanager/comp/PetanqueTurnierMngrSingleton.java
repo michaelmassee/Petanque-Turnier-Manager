@@ -10,9 +10,13 @@ import com.sun.star.document.XEventBroadcaster;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
-import de.petanqueturniermanager.comp.event.GlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
@@ -23,6 +27,7 @@ public class PetanqueTurnierMngrSingleton {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierMngrSingleton.class);
 
 	private static GlobalEventListener globalEventListener = null;
+	private static final TurnierEventHandler turnierEventHandler = new TurnierEventHandler();
 
 	/**
 	 * der erste Konstruktur macht Init
@@ -65,9 +70,32 @@ public class PetanqueTurnierMngrSingleton {
 		}
 	}
 
+	// ---------------------------------------------------------------------------------------------
+	public static void addTurnierEventListener(ITurnierEventListener listner) {
+		if (turnierEventHandler != null) {
+			turnierEventHandler.addTurnierEventListener(listner);
+		}
+	}
+
+	public static void removeTurnierEventListener(ITurnierEventListener listner) {
+		if (turnierEventHandler != null) {
+			turnierEventHandler.removeTurnierEventListener(listner);
+		}
+	}
+
+	public static void triggerTurnierEventListener(TurnierEventType type, ITurnierEvent eventObj) {
+		if (turnierEventHandler != null) {
+			turnierEventHandler.trigger(type, eventObj);
+		}
+	}
+
+	// ---------------------------------------------------------------------------------------------
 	public static void dispose() {
 		if (globalEventListener != null) {
 			globalEventListener.disposing(null);
+		}
+		if (turnierEventHandler != null) {
+			turnierEventHandler.disposing();
 		}
 	}
 
