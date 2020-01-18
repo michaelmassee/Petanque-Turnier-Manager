@@ -33,6 +33,7 @@
 		<Root level="error">
 			<AppenderRef ref="Console"/>
 		</Root>
+		<!-- debug  -->
 		<Logger name="de.petanqueturniermanager" level="info">
 			<AppenderRef ref="infofile"/>
 		</Logger>
