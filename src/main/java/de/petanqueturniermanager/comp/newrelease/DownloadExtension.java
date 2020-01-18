@@ -5,15 +5,19 @@ package de.petanqueturniermanager.comp.newrelease;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-
-import javax.swing.JFileChooser;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHAsset;
 import org.kohsuke.github.GHRelease;
+
+import com.sun.star.ui.dialogs.ExecutableDialogResults;
+import com.sun.star.ui.dialogs.FolderPicker;
+import com.sun.star.ui.dialogs.XFolderPicker2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -22,7 +26,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -75,33 +78,35 @@ public class DownloadExtension extends SheetRunner {
 		processBoxinfo("GitHub Version " + latest.getName());
 		processBoxinfo(downloadURL.toString());
 
-		final JFileChooser fc = new JFileChooser();
-		fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		int answer = fc.showSaveDialog(ProcessBox.from().getFrame());
-		if (answer == JFileChooser.APPROVE_OPTION) {
-			File selectedPath = fc.getSelectedFile();
-			File targetFile = new File(selectedPath, oxtAsset.getName());
-			if (targetFile.exists()) {
-				processBoxinfo("Datei bereits vorhanden " + targetFile);
-				MessageBoxResult answerBereitsVorhanden = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption("Datei bereits vorhanden")
-						.message("Datei " + targetFile + " bereits vorhanden.\r\nÜberschreiben ?").show();
-				if (answerBereitsVorhanden == MessageBoxResult.NO) {
-					processBoxinfo("Abbruch");
-					return;
+		XFolderPicker2 picker = FolderPicker.create(getWorkingSpreadsheet().getxContext());
+		picker.setTitle("Download Verzeichnis");
+		short res = picker.execute();
+		if (res == ExecutableDialogResults.OK) {
+			try {
+				String directoryUrl = picker.getDirectory();
+				URI dirURL = new URI(directoryUrl);
+				File selectedPath = new File(dirURL);
+				File targetFile = new File(selectedPath, oxtAsset.getName());
+				if (targetFile.exists()) {
+					processBoxinfo("Datei bereits vorhanden " + targetFile);
+					MessageBoxResult answerBereitsVorhanden = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption("Datei bereits vorhanden")
+							.message("Datei " + targetFile + " bereits vorhanden.\r\nÜberschreiben ?").show();
+					if (answerBereitsVorhanden == MessageBoxResult.NO) {
+						processBoxinfo("Abbruch");
+						return;
+					}
+					processBoxinfo("Überschreiben");
 				}
-				processBoxinfo("Überschreiben");
-			}
 
-			processBoxinfo("Speichern in " + selectedPath.getPath());
-			if (selectedPath.canWrite()) {
-				try {
+				processBoxinfo("Speichern in " + selectedPath.getPath());
+				if (selectedPath.canWrite()) {
 					FileUtils.copyURLToFile(downloadURL, targetFile, 10000, 10000);
-				} catch (IOException e) {
-					logger.error(e);
-					ProcessBox().fehler(e.getMessage());
+				} else {
+					ProcessBox().fehler("keine Schreibrechte");
 				}
-			} else {
-				ProcessBox().fehler("keine Schreibrechte");
+			} catch (IOException | URISyntaxException e) {
+				logger.error(e);
+				ProcessBox().fehler(e.getMessage());
 			}
 		} else {
 			processBoxinfo("Abbruch");

@@ -26,6 +26,36 @@ public class Log4J {
 
 	public static final void openLogFile() {
 
+		/**
+		 * kopie von Wollmux <br>
+		 * xdg-open command in the Linux system is used to open a file or URL in the user’s preferred application.<br>
+		 * The URL will be opened in the user’s preferred web browser if a URL is provided.<br>
+		 * The file will be opened in the preferred application for files of that type if a file is provided.<br>
+		 * xdg-open supports ftp, file, https and http URLs.<br>
+		 * This can be used inside a desktop session only.<br>
+		 * It is not recommended to use xdg-open as root.<br>
+		 * Here, the zero is an indication of success while non-zero show the failure.<br>
+		 *
+		 * ExterneAnwendungen(<br>
+		 * (EXT ("pdf", "PDF") DOWNLOAD "true" #ACHTUNG! Acrobat Reader funktioniert NUR mit DOWNLOAD "true"<br>
+		 * FILTER "writer_pdf_Export"<br>
+		 * PROGRAM (<br>
+		 * # Linux<br>
+		 * "xdg-open",<br>
+		 * # Windows<br>
+		 * "start", #S tandard-Programm für PDF-Dateien<br>
+		 * )<br>
+		 * )<br>
+		 * (EXT "http:" DOWNLOAD "false"<br>
+		 * PROGRAM (<br>
+		 * # Linux<br>
+		 * "sensible-browser",<br>
+		 * # Windows<br>
+		 * "start", # Standard-Programm für Browser-URLs<br>
+		 * )<br>
+		 * ) <br>
+		 */
+
 		try {
 			ProcessBox.from().prefix("Log4J").info("Open:" + LOGFILE.getCanonicalPath());
 			String cmd = null;
@@ -35,12 +65,10 @@ public class Log4J {
 			if (StringUtils.containsIgnoreCase(osName, "win")) {
 				cmd = "rundll32 url.dll,FileProtocolHandler " + LOGFILE.getCanonicalPath();
 			} else if (StringUtils.containsIgnoreCase(osName, "linux")) {
-				cmd = "gedit " + LOGFILE.getCanonicalPath();
+				cmd = "xdg-open " + LOGFILE.getCanonicalPath();
 			} else if (StringUtils.containsIgnoreCase(osName, "mac")) {
 				cmd = "open " + LOGFILE.getCanonicalPath();
 			}
-
-			// TODO get default editor from a properties file
 			if (cmd != null) {
 				logger.info(cmd);
 				Runtime.getRuntime().exec(cmd);
