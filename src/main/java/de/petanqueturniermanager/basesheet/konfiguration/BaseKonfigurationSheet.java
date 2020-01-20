@@ -22,6 +22,9 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * @author Michael Massee
  *
+ * TODO use framework <br>
+ * https://github.com/dlsc-software-consulting-gmbh/PreferencesFX<br>
+ *
  */
 abstract public class BaseKonfigurationSheet extends SheetRunner implements IPropertiesSpalte, IKonfigurationSheet {
 

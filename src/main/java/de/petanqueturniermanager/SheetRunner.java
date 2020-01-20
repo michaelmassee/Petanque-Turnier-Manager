@@ -15,6 +15,7 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
@@ -24,6 +25,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -118,7 +121,12 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
 		checkNotNull(konfigurationSheet, "IKonfigurationSheet == null");
 		konfigurationSheet.update();
-		PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, new OnConfigChangedEvent(turnierSystem));
+
+		// trigger change event
+		SpielRundeNr aktiveSpielRunde = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpielRunde();
+		SpielTagNr aktiveSpieltag = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpieltag();
+		OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(turnierSystem, aktiveSpieltag, aktiveSpielRunde);
+		PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, onConfigChangedEvent);
 	}
 
 	public abstract Logger getLogger();

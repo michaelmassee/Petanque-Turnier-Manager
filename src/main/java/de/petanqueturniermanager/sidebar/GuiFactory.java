@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.sidebar;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -28,6 +30,7 @@ import com.sun.star.awt.XWindowPeer;
 import com.sun.star.awt.tree.XMutableTreeDataModel;
 import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.style.VerticalAlignment;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
@@ -40,6 +43,11 @@ import com.sun.star.uno.XComponentContext;
 public class GuiFactory {
 
 	private static final Logger logger = LogManager.getLogger(GuiFactory.class);
+	public static final String V_SCROLL = "VScroll";
+	public static final String READ_ONLY = "ReadOnly";
+	public static final String MULTI_LINE = "MultiLine";
+	public static final String HELP_TEXT = "HelpText";
+	public static final String ENABLED = "Enabled";
 
 	private GuiFactory() {
 	}
@@ -85,7 +93,9 @@ public class GuiFactory {
 	}
 
 	/**
-	 * Erzeugt ein Texteingabefeld.
+	 * Erzeugt ein Texteingabefeld.<br>
+	 * properties : <br>
+	 * https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1awt_1_1UnoControlEditModel.html<br>
 	 *
 	 * @param xMCF
 	 * @param context
@@ -97,23 +107,24 @@ public class GuiFactory {
 	 * @return Ein Textfield-Control.
 	 */
 	public static XControl createTextfield(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
-			SortedMap<String, Object> props) {
+			Map<String, Object> props) {
 		if (props == null) {
-			props = new TreeMap<>();
+			props = new HashMap<>();
 		}
-		props.put("MultiLine", false);
-		props.put("ReadOnly", false);
-		props.put("VScroll", false);
+		props.putIfAbsent(MULTI_LINE, false);
+		props.putIfAbsent(READ_ONLY, false);
+		props.putIfAbsent(V_SCROLL, false);
 
-		XControl buttonCtrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlEdit", props, size);
-
-		XTextComponent txt = UnoRuntime.queryInterface(XTextComponent.class, buttonCtrl);
+		XControl controlEdit = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlEdit", props, size);
+		XTextComponent txt = UnoRuntime.queryInterface(XTextComponent.class, controlEdit);
 		txt.setText(text);
-		return buttonCtrl;
+		return controlEdit;
 	}
 
 	/**
-	 * Erzeugt ein Label.
+	 * Erzeugt ein Label.<br>
+	 * properties: <br>
+	 * https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlFixedTextModel.html<br>
 	 *
 	 * @param xMCF
 	 * @param context
@@ -129,7 +140,8 @@ public class GuiFactory {
 		if (props == null) {
 			props = new TreeMap<>();
 		}
-		props.put("MultiLine", true);
+		props.putIfAbsent(MULTI_LINE, true);
+		props.putIfAbsent("VerticalAlign", VerticalAlignment.MIDDLE);
 
 		XControl fixedTextCtrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlFixedText", props, size);
 		XFixedText txt = UnoRuntime.queryInterface(XFixedText.class, fixedTextCtrl);
@@ -162,7 +174,7 @@ public class GuiFactory {
 	 */
 	public static XControl createTree(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, XMutableTreeDataModel dataModel) {
 		SortedMap<String, Object> props = new TreeMap<>();
-		props.put("DataModel", dataModel);
+		props.putIfAbsent("DataModel", dataModel);
 		return GuiFactory.createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.tree.TreeControl", props, new Rectangle(0, 0, 400, 400));
 	}
 
@@ -190,7 +202,7 @@ public class GuiFactory {
 		if (props == null) {
 			props = new TreeMap<>();
 		}
-		props.put("Spin", Boolean.TRUE);
+		props.putIfAbsent("Spin", Boolean.TRUE);
 
 		return createNumericField(xMCF, context, toolkit, windowPeer, value, listener, size, props);
 	}
@@ -220,8 +232,8 @@ public class GuiFactory {
 	 * @param rectangle
 	 * @return Ein Control-Element.
 	 */
-	public static XControl createControl(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer, String type,
-			SortedMap<String, Object> props, Rectangle rectangle) {
+	public static XControl createControl(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer, String type, Map<String, Object> props,
+			Rectangle rectangle) {
 		try {
 			XControl control = UnoRuntime.queryInterface(XControl.class, xMCF.createInstanceWithContext(type, xContext));
 			XControlModel controlModel = UnoRuntime.queryInterface(XControlModel.class, xMCF.createInstanceWithContext(type + "Model", xContext));
