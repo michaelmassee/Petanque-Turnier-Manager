@@ -11,8 +11,6 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.accessibility.XAccessible;
 import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.WindowEvent;
-import com.sun.star.awt.XControl;
-import com.sun.star.awt.XFixedText;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
@@ -58,7 +56,10 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 	WorkingSpreadsheet currentSpreadsheet;
 	XWindow parentWindow;
 	final Layout layout;
-	private XFixedText turnierSystemLabel = null;
+
+	InfoLine turnierSystemInfoLine = null;
+	InfoLine spielRundeInfoLine = null;
+	InfoLine spielTagInfoLine = null;
 
 	/**
 	 * Jedes Document eigene Instance
@@ -75,7 +76,7 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 
-		layout = new VerticalLayout(0, 10);
+		layout = new VerticalLayout(0, 2);
 
 		xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
 		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
@@ -85,21 +86,19 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		windowPeer.setBackground(0xffffffff);
 		window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
 		window.setVisible(true);
-		initContent();
-	}
-
-	private void initContent() {
 		addInfoFields();
 	}
 
 	private void addInfoFields() {
-		int lineHeight = 20;
-		int lineWidth = 200;
 
-		XControl turnierSystemLabelControl = GuiFactory.createLabel(xMCF, currentSpreadsheet.getxContext(), toolkit, windowPeer, "Turniersystem : " + TurnierSystem.KEIN,
-				new Rectangle(0, 0, lineWidth, lineHeight), null);
-		layout.addControl(turnierSystemLabelControl);
-		turnierSystemLabel = UnoRuntime.queryInterface(XFixedText.class, turnierSystemLabelControl);
+		turnierSystemInfoLine = InfoLine.from(xMCF, currentSpreadsheet, toolkit, windowPeer).labelText("Turniersystem :");
+		layout.addLayout(turnierSystemInfoLine.getLayout(), 1);
+
+		spielRundeInfoLine = InfoLine.from(xMCF, currentSpreadsheet, toolkit, windowPeer).labelText("Spielrunde :");
+		layout.addLayout(spielRundeInfoLine.getLayout(), 1);
+
+		spielTagInfoLine = InfoLine.from(xMCF, currentSpreadsheet, toolkit, windowPeer).labelText("Spieltag :");
+		layout.addLayout(spielTagInfoLine.getLayout(), 1);
 		updateFields();
 	}
 
@@ -110,13 +109,18 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 		if (spielsystem > -1) {
 			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 		}
-		updateFields(turnierSystemAusDocument);
+		turnierSystemInfoLine.fieldText(turnierSystemAusDocument.getBezeichnung());
+		if (turnierSystemAusDocument != TurnierSystem.KEIN) {
+			// TODO wenn Turnier vorhanden Konfig lesen ?
+			spielRundeInfoLine.fieldText(1);
+			spielTagInfoLine.fieldText(1);
+		}
 	}
 
-	private void updateFields(TurnierSystem turnierSystem) {
-		if (turnierSystemLabel != null) {
-			turnierSystemLabel.setText("Turniersystem : " + turnierSystem);
-		}
+	private void updateFields(ITurnierEvent eventObj) {
+		turnierSystemInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getTurnierSystem().getBezeichnung());
+		spielRundeInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpielRundeNr().getNr());
+		spielTagInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpieltagnr().getNr());
 	}
 
 	@Override
@@ -183,9 +187,8 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 	// ----- Implementation of interface ITurnierEventListener -----
 	@Override
 	public void onConfigChanged(ITurnierEvent eventObj) {
-		TurnierSystem turnierSystem = ((OnConfigChangedEvent) eventObj).getTurnierSystem();
 		// update fields
-		updateFields(turnierSystem);
+		updateFields(eventObj);
 	}
 
 	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
@@ -202,14 +205,10 @@ public class InfoSidebarContent extends ComponentBase implements XToolPanel, XSi
 			super.disposing(event);
 			PetanqueTurnierMngrSingleton.removeGlobalEventListener(InfoSidebarContent.this);
 			PetanqueTurnierMngrSingleton.removeTurnierEventListener(InfoSidebarContent.this);
+			turnierSystemInfoLine = null;
 			currentSpreadsheet = null;
 			parentWindow = null;
 		}
-
-		// @Override
-		// public void windowHidden(EventObject event) {
-		// logger.debug("InfoSidebarContent:windowHidden");
-		// }
 
 	};
 
