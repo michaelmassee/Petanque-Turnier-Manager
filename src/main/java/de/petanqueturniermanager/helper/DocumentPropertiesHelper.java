@@ -48,6 +48,10 @@ public class DocumentPropertiesHelper {
 	 */
 	public void insertStringPropertyIfNotExist(String name, String val) {
 		XPropertyContainer xpc = getXPropertyContainer();
+		
+		     //userProperties.addProperty(property, com.sun.star.beans.PropertyAttribute.REMOVEABLE,
+                    //new Any(Type.STRING, value));
+		
 		try {
 			xpc.addProperty(name, PropertyAttribute.OPTIONAL, val); // PropertyAttribute.READONLY
 		} catch (PropertyExistException e) {
