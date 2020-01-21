@@ -146,7 +146,11 @@ public class GlobalEventListener implements XEventListener {
 	 */
 	private void onNew(Object source) {
 		for (IGlobalEventListener listner : listeners) {
-			listner.onNew(source);
+			try {
+				listner.onNew(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
 		}
 	}
 
@@ -155,7 +159,12 @@ public class GlobalEventListener implements XEventListener {
 	 */
 	private void onLoad(Object source) {
 		for (IGlobalEventListener listner : listeners) {
-			listner.onLoad(source);
+			try {
+				listner.onLoad(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
+
 		}
 	}
 
@@ -164,7 +173,11 @@ public class GlobalEventListener implements XEventListener {
 	 */
 	private void onUnfocus(Object source) {
 		for (IGlobalEventListener listner : listeners) {
-			listner.onUnfocus(source);
+			try {
+				listner.onUnfocus(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
 		}
 	}
 

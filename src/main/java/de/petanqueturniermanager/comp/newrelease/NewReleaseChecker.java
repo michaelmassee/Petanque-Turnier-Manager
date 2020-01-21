@@ -80,7 +80,7 @@ public class NewReleaseChecker {
 	private void runUpdateOnceThread() {
 		if (!isUpdateThreadRunning && !didAlreadyRun) {
 			logger.debug("start runUpdateOnceThread");
-			new Thread("Update Latest Release") {
+			new Thread("Update latest release") {
 				@Override
 				public void run() {
 					try {
@@ -102,7 +102,7 @@ public class NewReleaseChecker {
 		if (latestRelease != null && !latestRelease.isPrerelease()) {
 			// wenn kein Prerelease
 			Gson gson = new GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
-			logger.info("Latest Release = " + latestRelease.getName());
+			logger.info("Write latest release = " + latestRelease.getName());
 			try (BufferedWriter writer = Files.newBufferedWriter(getReleaseFile())) {
 				writer.write(gson.toJson(latestRelease));
 			} catch (IOException e) {
@@ -164,8 +164,8 @@ public class NewReleaseChecker {
 			if (!isUpdateThreadRunning) {
 				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
 				String latestVersionFromGithub = latestVersionFromGithub();
-				logger.debug("Addon Release = " + versionNummer);
-				logger.debug("Latest Release = " + latestVersionFromGithub);
+				logger.debug("Extension release = " + versionNummer);
+				logger.debug("Latest release = " + latestVersionFromGithub);
 				if (latestVersionFromGithub != null) {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
 					logger.debug("Neue Version = " + newVersionAvailable);

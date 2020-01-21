@@ -45,7 +45,7 @@ public class UITextAreaProperty implements UIProperty {
 	@Override
 	public void initDefault(WorkingSpreadsheet currentSpreadsheet) {
 		documentPropertiesHelper = new DocumentPropertiesHelper(currentSpreadsheet);
-		documentPropertiesHelper.insertStringPropertyIfNotExist(getPropName(), defaultVal);
+		documentPropertiesHelper.setStringProperty(getPropName(), defaultVal);
 	}
 
 	@Override

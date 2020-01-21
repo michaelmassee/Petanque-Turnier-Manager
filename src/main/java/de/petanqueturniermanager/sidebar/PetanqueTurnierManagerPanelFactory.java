@@ -101,6 +101,9 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 			if (sElementName.equals("InfoPanel")) {
 				logger.debug("New InfoSidebarPanel");
 				return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
+			} else if (sElementName.equals("ConfigPanel")) {
+				logger.debug("New ConfigSidebarPanel");
+				return new ConfigSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
 			}
 		}
 		return null;
