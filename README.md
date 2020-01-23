@@ -24,8 +24,11 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 ## - Java Installieren -
 
+### --- Korekte Java Version 32/64 ---
+[LibreOffice: Das richtige JRE installieren](https://www.youtube.com/watch?v=Qbd9JHKIo2c)<br>
+
 ### --- Adopt Open JDK ---
-OpenJDK 8 (LTS)<br>
+OpenJDK 8 oder 11 **(LTS)**<br>
 HotSpot<br>
 [Download AdoptOpenJDK](https://adoptopenjdk.net/)<br>
 
