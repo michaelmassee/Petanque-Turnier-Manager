@@ -77,14 +77,14 @@ public class NewReleaseChecker {
 	/**
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
-	private void runUpdateOnceThread() {
+	private synchronized void runUpdateOnceThread() {
 		if (!isUpdateThreadRunning && !didAlreadyRun) {
+			isUpdateThreadRunning = true;
 			logger.debug("start runUpdateOnceThread");
 			new Thread("Update latest release") {
 				@Override
 				public void run() {
 					try {
-						isUpdateThreadRunning = true;
 						writeLatestRelease();
 					} finally {
 						isUpdateThreadRunning = false;
@@ -95,6 +95,7 @@ public class NewReleaseChecker {
 		}
 	}
 
+	@VisibleForTesting
 	void writeLatestRelease() {
 		logger.debug("start writeLatestRelease");
 
