@@ -109,11 +109,9 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * @param propName = name vom property
-	 * @return null when not found
+	 * @return default when not found
 	 */
 	public String getStringProperty(String propName, boolean ignoreNotFound, String defaultVal) {
-		insertStringPropertyIfNotExist(propName, defaultVal);
-
 		XPropertySet propSet = getXPropertySet();
 		Object propVal = null;
 		try {
@@ -127,7 +125,7 @@ public class DocumentPropertiesHelper {
 		if (propVal != null && propVal instanceof String) {
 			return (String) propVal;
 		}
-		return null;
+		return defaultVal;
 	}
 
 	/**
