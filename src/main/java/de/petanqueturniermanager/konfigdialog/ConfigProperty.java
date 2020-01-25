@@ -12,10 +12,12 @@ public class ConfigProperty<V> {
 	private final String key;
 	private V defaultVal;
 	private String description;
+	private boolean inSideBar; // uebergang properties nach sidebar
 
 	private ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
 		this.key = checkNotNull(key);
+		inSideBar = false;
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
@@ -48,4 +50,12 @@ public class ConfigProperty<V> {
 		return this.type;
 	}
 
+	public ConfigProperty<V> inSideBar() {
+		this.inSideBar = true;
+		return this;
+	}
+
+	public final boolean isInSideBar() {
+		return inSideBar;
+	}
 }

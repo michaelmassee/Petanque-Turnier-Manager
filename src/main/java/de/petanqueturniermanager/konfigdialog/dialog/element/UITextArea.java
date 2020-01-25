@@ -1,7 +1,7 @@
 /**
  * Erstellung 11.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfigdialog;
+package de.petanqueturniermanager.konfigdialog.dialog.element;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

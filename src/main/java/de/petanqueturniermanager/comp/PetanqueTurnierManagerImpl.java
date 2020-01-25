@@ -16,7 +16,7 @@ import com.sun.star.task.XJobExecutor;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationStarter;
+import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
@@ -128,7 +128,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 					// XUIElement infoPanel = PetanqueTurnierManagerPanelFactory.getInfoPanel(xContext);
 
 					// Konfiguration vorhanden ? dann starten
-					KonfigurationStarter.start(currentSpreadsheet);
+					KonfigurationSingleton.start(currentSpreadsheet);
 					didHandle = true;
 					break;
 				case "downloadExtension":

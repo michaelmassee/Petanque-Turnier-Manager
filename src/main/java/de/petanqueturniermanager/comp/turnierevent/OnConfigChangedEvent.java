@@ -7,7 +7,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -15,21 +14,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class OnConfigChangedEvent implements ITurnierEvent {
 
-	private final TurnierSystem turnierSystem;
 	private final SpielTagNr spieltagnr;
 	private final SpielRundeNr spielRundeNr;
 
-	public OnConfigChangedEvent(TurnierSystem turnierSystem, SpielTagNr spieltag, SpielRundeNr spielRundeNr) {
-		this.turnierSystem = checkNotNull(turnierSystem);
+	public OnConfigChangedEvent(SpielTagNr spieltag, SpielRundeNr spielRundeNr) {
 		spieltagnr = checkNotNull(spieltag);
 		this.spielRundeNr = checkNotNull(spielRundeNr);
-	}
-
-	/**
-	 * @return the turnierSystem
-	 */
-	public final TurnierSystem getTurnierSystem() {
-		return turnierSystem;
 	}
 
 	/**

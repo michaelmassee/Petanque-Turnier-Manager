@@ -23,14 +23,17 @@ import com.sun.star.ui.XSidebarPanel;
 import com.sun.star.ui.XToolPanel;
 import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -40,14 +43,22 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
 	private final XWindow window;
-	private final XMultiComponentFactory xMCF;
-	private final XToolkit toolkit;
-	private final XWindowPeer windowPeer;
+	private GuiFactoryCreateParam guiFactoryCreateParam;
+
 	private boolean didOnHandleDocReady;
 
 	private WorkingSpreadsheet currentSpreadsheet;
 	private XWindow parentWindow;
-	final Layout layout;
+	private final Layout layout;
+
+	/**
+	 * workingSpreadsheet <br>
+	 * !! Zu diesen zeitpunkt ist das nur das eigentliche Document was wir haben wollen Aktiv, wenn sidebar aus war und eingeschaltet wird<br>
+	 * beim load oder new wird workingSpreadsheet aktualisiert
+	 *
+	 * @param workingSpreadsheet
+	 * @param parentWindow
+	 */
 
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
@@ -59,15 +70,14 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 
-		xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
+		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
 		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
-
-		toolkit = parentWindowPeer.getToolkit();
-		windowPeer = GuiFactory.createWindow(getToolkit(), parentWindowPeer);
-		getWindowPeer().setBackground(0xffffffff);
-		window = UnoRuntime.queryInterface(XWindow.class, getWindowPeer());
+		XToolkit parentToolkit = parentWindowPeer.getToolkit();
+		XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
+		windowPeer.setBackground(0xffffffff);
+		window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
 		window.setVisible(true);
-		addFields();
+		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, workingSpreadsheet.getxContext(), parentToolkit, windowPeer);
 	}
 
 	@Override
@@ -86,7 +96,12 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	public void onUnfocus(Object source) {
 		// dann der fall wenn kein onLoad oder onNew
 		// passiert wenn einfach nur die sidebar aus / an geschalted wird
+		if (didOnHandleDocReady) {
+			return;
+		}
 		didOnHandleDocReady = true;
+		// add fields
+		addFields();
 	}
 
 	@Override
@@ -98,8 +113,8 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		// sicher gehen das wir das richtige document haben
 		currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext());
 
-		// update fields
-		initFields();
+		// add fields
+		addFields();
 	}
 
 	@Override
@@ -111,8 +126,8 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		// sicher gehen das wir das richtige document haben
 		currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext());
 
-		// update fields
-		initFields();
+		// add fields
+		addFields();
 	}
 
 	// ----- Implementation of UNO interface XToolPanel -----
@@ -138,26 +153,35 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	@Override
 	public void onConfigChanged(ITurnierEvent eventObj) {
 		// update fields
-		updateFields(eventObj);
+		updateFieldContens(eventObj);
+	}
+
+	protected void doLayout() {
+		// Rectangle posSizeParent = parentWindow.getPosSize();
+		// Start offset immer 0,0
+		Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width, getParentWindow().getPosSize().Height);
+		getLayout().layout(posSizeParent);
 	}
 
 	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
 		@Override
 		public void windowResized(WindowEvent e) {
-			// Rectangle posSizeParent = parentWindow.getPosSize();
-			// Start offset immer 0,0
-			Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width, getParentWindow().getPosSize().Height);
-			layout.layout(posSizeParent);
+			doLayout();
 		}
 
 		@Override
 		public void disposing(EventObject event) {
 			super.disposing(event);
-			PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
-			PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
-			BaseSidebarContent.this.disposing(event);
-			setCurrentSpreadsheet(null);
-			setParentWindow(null);
+			try {
+				PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
+				PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
+				BaseSidebarContent.this.disposing(event);
+				setCurrentSpreadsheet(null);
+				setParentWindow(null);
+				setGuiFactoryCreateParam(null);
+			} catch (Exception e) {
+				// ignore
+			}
 		}
 	};
 
@@ -166,13 +190,6 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	 */
 	protected final XWindow getParentWindow() {
 		return parentWindow;
-	}
-
-	/**
-	 * @return the xMCF
-	 */
-	protected final XMultiComponentFactory getxMCF() {
-		return xMCF;
 	}
 
 	/**
@@ -196,26 +213,32 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		this.currentSpreadsheet = currentSpreadsheet;
 	}
 
-	/**
-	 * @return the toolkit
-	 */
-	protected XToolkit getToolkit() {
-		return toolkit;
-	}
-
-	/**
-	 * @return the windowPeer
-	 */
-	protected XWindowPeer getWindowPeer() {
-		return windowPeer;
+	protected TurnierSystem getTurnierSystemAusDocument() {
+		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
+		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
+		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
+		if (spielsystem > -1) {
+			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+		}
+		return turnierSystemAusDocument;
 	}
 
 	protected abstract void disposing(EventObject event);
 
-	protected abstract void updateFields(ITurnierEvent eventObj);
-
-	protected abstract void initFields();
+	protected abstract void updateFieldContens(ITurnierEvent eventObj);
 
 	protected abstract void addFields();
+
+	public final Layout getLayout() {
+		return layout;
+	}
+
+	protected final GuiFactoryCreateParam getGuiFactoryCreateParam() {
+		return guiFactoryCreateParam;
+	}
+
+	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
+		this.guiFactoryCreateParam = guiFactoryCreateParam;
+	}
 
 }

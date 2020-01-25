@@ -1,7 +1,7 @@
 /**
  * Erstellung 12.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfigdialog;
+package de.petanqueturniermanager.konfigdialog.dialog.element;
 
 import com.sun.star.awt.XControlContainer;
 

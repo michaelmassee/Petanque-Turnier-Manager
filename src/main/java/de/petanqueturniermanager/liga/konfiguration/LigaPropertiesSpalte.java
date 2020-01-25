@@ -20,7 +20,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  */
 public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaPropertiesSpalte {
 
-	private static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
+	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";

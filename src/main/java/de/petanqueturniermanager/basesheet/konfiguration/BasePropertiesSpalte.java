@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -18,6 +19,7 @@ import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
@@ -28,7 +30,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -80,7 +81,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
-				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene. Default = N"));
+				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene. Default = N").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen"));
@@ -149,6 +150,11 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		StringCellValue celValWert = StringCellValue.from(celValKey).setHoriJustify(CellHoriJustify.CENTER);
 
 		for (ConfigProperty<?> configProp : getKonfigProperties()) {
+
+			if (configProp.isInSideBar()) {
+				continue;
+			}
+
 			Position pos = getPropKeyPos(configProp.getKey());
 			if (pos == null) {
 				// when not found insert new
@@ -181,8 +187,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		}
 
 		// Sortieren
-		RangePosition allPropRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, nextFreepos.spalte(propertiesSpalte + 1));
-		SortHelper.from(sheetWkRef.get(), allPropRange).aufSteigendSortieren().bindFormatsToContent().doSort();
+		// Funktioniert nicht richtig !
+		// RangePosition allPropRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, nextFreepos.zeilePlus(-1).spalte(propertiesSpalte + 1));
+		// SortHelper.from(sheetWkRef.get(), allPropRange).aufSteigendSortieren().bindFormatsToContent().doSort();
 	}
 
 	/**
@@ -264,17 +271,26 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * @throws GenerateException
 	 */
 	public String readStringProperty(String key) throws GenerateException {
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = getPropKeyPos(key);
 		String val = null;
-		if (pos != null) {
-			val = getSheetHelper().getTextFromCell(sheet, pos.spaltePlusEins());
-		}
-
-		if (val == null) {
+		// übergang
+		if (isInSideBar(key)) {
+			// value aus Document properties lesen
 			Object defaultVal = getDefaultProp(key);
-			if (defaultVal != null && defaultVal instanceof String) {
-				val = (String) defaultVal;
+			DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(sheetWkRef.get().getWorkingSpreadsheet());
+			val = docPropHelper.getStringProperty(key, true, ((defaultVal == null) ? "" : defaultVal.toString()));
+		} else {
+			// Deprecated
+			XSpreadsheet sheet = getPropSheet();
+			Position pos = getPropKeyPos(key);
+			if (pos != null) {
+				val = getSheetHelper().getTextFromCell(sheet, pos.spaltePlusEins());
+			}
+
+			if (val == null) {
+				Object defaultVal = getDefaultProp(key);
+				if (defaultVal != null && defaultVal instanceof String) {
+					val = (String) defaultVal;
+				}
 			}
 		}
 		return val;
@@ -296,6 +312,15 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 			return false;
 		}
 		return true;
+	}
+
+	private boolean isInSideBar(String key) {
+		for (ConfigProperty<?> konfigProp : getKonfigProperties()) {
+			if (konfigProp.getKey().equals(key)) {
+				return konfigProp.isInSideBar();
+			}
+		}
+		return false;
 	}
 
 	private Object getDefaultProp(String key) {
@@ -321,7 +346,6 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
-	 *
 	 * @param name
 	 * @return null when not found
 	 * @throws GenerateException
@@ -329,8 +353,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public Position getPropKeyPos(String key) throws GenerateException {
 		checkNotNull(key);
 		RangePosition searchRange = RangePosition.from(propertiesSpalte, erstePropertiesZeile, propertiesSpalte, MAX_LINE);
-		// die komplette zell inhalt muss uebreinstimmen, deswegen ^ und $
-		return SearchHelper.from(sheetWkRef, searchRange).searchNachRegExprInSpalte("(?i)^" + key + "$"); // ignore case
+		// die komplette zelle inhalt muss uebreinstimmen, deswegen ^ und $
+		// alle sonderzeichen escapen
+		return SearchHelper.from(sheetWkRef, searchRange).searchNachRegExprInSpalte("(?i)^" + Pattern.quote(key) + "$"); // ignore case
 	}
 
 	private final XSpreadsheet getPropSheet() throws GenerateException {

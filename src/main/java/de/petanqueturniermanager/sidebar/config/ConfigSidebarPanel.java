@@ -1,12 +1,13 @@
 /**
  * Erstellung 21.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar;
+package de.petanqueturniermanager.sidebar.config;
 
 import com.sun.star.awt.XWindow;
 import com.sun.star.lib.uno.helper.ComponentBase;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.sidebar.BaseSidebarPanel;
 
 /**
  * @author Michael Massee
@@ -25,8 +26,7 @@ public class ConfigSidebarPanel extends BaseSidebarPanel {
 
 	@Override
 	protected ComponentBase newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow) {
-		// TODO Auto-generated method stub
-		return null;
+		return new ConfigSidebarContent(workingSpreadsheet, parentWindow);
 	}
 
 }
