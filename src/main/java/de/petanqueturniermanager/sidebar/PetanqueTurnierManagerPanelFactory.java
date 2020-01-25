@@ -18,9 +18,10 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.sidebar.config.ConfigSidebarPanel;
 
 /**
- * This is the factory that creates the sidebar panel that displays an analog clock.
+ * This is the factory that creates the sidebar panel.
  */
 public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XServiceInfo {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierManagerPanelFactory.class);

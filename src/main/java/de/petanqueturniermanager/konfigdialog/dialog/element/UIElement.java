@@ -1,7 +1,7 @@
 /**
  * Erstellung 11.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.konfigdialog;
+package de.petanqueturniermanager.konfigdialog.dialog.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

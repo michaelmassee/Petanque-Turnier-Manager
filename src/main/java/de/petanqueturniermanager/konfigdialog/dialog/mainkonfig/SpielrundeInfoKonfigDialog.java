@@ -26,8 +26,8 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.konfigdialog.UIProperty;
-import de.petanqueturniermanager.konfigdialog.UITextAreaProperty;
+import de.petanqueturniermanager.konfigdialog.dialog.element.UIProperty;
+import de.petanqueturniermanager.konfigdialog.dialog.element.UITextAreaProperty;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**

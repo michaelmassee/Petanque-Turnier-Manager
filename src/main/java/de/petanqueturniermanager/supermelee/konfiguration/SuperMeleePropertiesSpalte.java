@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
+import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -18,7 +21,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements ISuperMeleePropertiesSpalte {
 
-	private static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
+	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
 		// ADDSpielsystemProp(TurnierSystem.SUPERMELEE, KONFIG_PROPERTIES);
@@ -86,6 +89,15 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDescription("Erstelle ein Spielrunde Plan zur jeder Spielrunde\r\nN/J"));
 	}
 
+	private void fireUpdateEvent() {
+		try {
+			OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(getAktiveSpieltag(), getAktiveSpielRunde());
+			PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, onConfigChangedEvent);
+		} catch (GenerateException e) {
+			// ignore this
+		}
+	}
+
 	/**
 	 * @param propertiesSpalte
 	 * @param erstePropertiesZeile
@@ -106,6 +118,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
 		ProcessBox.from().spielTag(spieltag);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
+		fireUpdateEvent();
 	}
 
 	@Override
@@ -119,6 +132,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
 		ProcessBox.from().spielRunde(spielrunde);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
+		fireUpdateEvent();
 	}
 
 	@Override

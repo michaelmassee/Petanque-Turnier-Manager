@@ -51,7 +51,8 @@ public class SearchHelper extends BaseHelper {
 	/**
 	 * suche in der 1 Spalte von Range, nach regExpr.<br>
 	 * Achtung: findet teil match in den zellen ! <br>
-	 * wenn suche nach werte fuer komplette Zelle dann mit ^ und $
+	 * wenn suche nach werte fuer komplette Zelle dann mit ^ und $<br>
+	 * eigentliche String mit Pattern.quote \Qxxxx\E
 	 *
 	 * @param rangePos Range mit Spalte
 	 * @return wenn gefunden dann erste treffer, sonnst Null

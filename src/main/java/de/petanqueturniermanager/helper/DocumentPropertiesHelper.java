@@ -6,12 +6,12 @@ package de.petanqueturniermanager.helper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.beans.IllegalTypeException;
-import com.sun.star.beans.PropertyAttribute;
 import com.sun.star.beans.PropertyExistException;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
@@ -65,6 +65,9 @@ public class DocumentPropertiesHelper {
 	 * @param val
 	 */
 	private boolean insertStringPropertyIfNotExist(String name, String val) {
+		checkNotNull(name);
+		checkNotNull(val);
+
 		boolean didExist = false;
 		XPropertyContainer xpc = getXPropertyContainer();
 
@@ -77,7 +80,7 @@ public class DocumentPropertiesHelper {
 		// PropertyAttribute.READONLY
 
 		try {
-			xpc.addProperty(name, PropertyAttribute.OPTIONAL, new Any(Type.STRING, val));
+			xpc.addProperty(name, (short) 0, new Any(Type.STRING, val));
 		} catch (PropertyExistException e) {
 			didExist = true;
 		} catch (IllegalTypeException | IllegalArgumentException e) {
@@ -112,7 +115,9 @@ public class DocumentPropertiesHelper {
 	 * @param propName = name vom property
 	 * @return null when not found
 	 */
-	public String getStringProperty(String propName, boolean ignoreNotFound) {
+	public String getStringProperty(String propName, boolean ignoreNotFound, String defaultVal) {
+		insertStringPropertyIfNotExist(propName, defaultVal);
+
 		XPropertySet propSet = getXPropertySet();
 		Object propVal = null;
 		try {
@@ -133,8 +138,8 @@ public class DocumentPropertiesHelper {
 	 * @param propName = name vom property
 	 * @return -1 when not found
 	 */
-	public int getIntProperty(String propName) {
-		String stringProperty = getStringProperty(propName, true);
+	public int getIntProperty(String propName, int defaultVal) {
+		String stringProperty = getStringProperty(propName, true, "" + defaultVal);
 		if (stringProperty != null) {
 			return NumberUtils.toInt(stringProperty, -1);
 		}
@@ -148,4 +153,38 @@ public class DocumentPropertiesHelper {
 	public void setIntProperty(String propName, int val) {
 		setStringProperty(propName, "" + val);
 	}
+
+	/**
+	 * @param key
+	 * @param defaultVal
+	 * @return
+	 */
+	public boolean getBooleanProperty(String propName, Boolean defaultVal) {
+		String stringProperty = getStringProperty(propName, true, booleanToString(defaultVal));
+		return stringToBoolean(stringProperty);
+	}
+
+	/**
+	 * @param key
+	 * @param defaultVal
+	 * @return
+	 */
+	public void setBooleanProperty(String propName, Boolean newVal) {
+		setStringProperty(propName, booleanToString(newVal));
+	}
+
+	private String booleanToString(boolean booleanProp) {
+		if (booleanProp) {
+			return "J";
+		}
+		return "N";
+	}
+
+	private boolean stringToBoolean(String booleanProp) {
+		if (StringUtils.isBlank(booleanProp) || StringUtils.containsIgnoreCase(booleanProp, "N")) {
+			return false;
+		}
+		return true;
+	}
+
 }

@@ -27,6 +27,7 @@
 			</node>
 		</node>
 		<node oor:name="PanelList">
+
 			<node oor:name="InfoPanel" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
 					<value xml:lang="en">Info</value>
@@ -46,7 +47,6 @@
 				<prop oor:name="ImplementationURL" oor:type="xs:string">
 					<value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/InfoPanel</value>
 				</prop>
-				
 				<!-- 
 					OrderIndex
 					A numerical value that defines the top-down order of panels in a deck.
@@ -57,7 +57,7 @@
 				<prop oor:name="OrderIndex" oor:type="xs:int">
 					<value>100</value>
 				</prop>
-
+				
 				<!--
 				WantsCanvas 
 				When true then an XCanvas object will be passed to the panel factory when the panel is created. Experimental. Defaults to false. 

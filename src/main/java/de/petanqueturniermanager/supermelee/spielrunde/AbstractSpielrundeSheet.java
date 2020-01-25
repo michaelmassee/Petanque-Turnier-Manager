@@ -38,7 +38,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
@@ -60,7 +59,6 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.konfigdialog.dialog.mainkonfig.SpielrundeInfoKonfigDialog;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -641,20 +639,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			throw new RuntimeException(e); // komplett raus
 		}
 		return true;
-	}
-
-	/**
-	 * @TODO Baustelle<br>
-	 * SpieltagInfos aus Properties einfuegen. Infos was gespeilt wird, etc ....
-	 *
-	 * @return
-	 */
-	@SuppressWarnings("unused")
-	private int spielTagInfosEinfuegen() {
-		DocumentPropertiesHelper prophlpr = new DocumentPropertiesHelper(getWorkingSpreadsheet());
-		String propName = SpielrundeInfoKonfigDialog.getPropertieNameFuerSpieltag(getSpielTag());
-		String spieltagInfos = prophlpr.getStringProperty(propName, true);
-		return 0;
 	}
 
 	private void printBereichDefinieren(XSpreadsheet sheet) throws GenerateException {

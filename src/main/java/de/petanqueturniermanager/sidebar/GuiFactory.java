@@ -15,6 +15,7 @@ import com.sun.star.awt.WindowClass;
 import com.sun.star.awt.WindowDescriptor;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XComboBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlModel;
@@ -71,16 +72,24 @@ public class GuiFactory {
 	}
 
 	/**
+	 * Erzeugt eine CheckBox.
+	 *
+	 * @return Ein CheckBox-Control.
+	 */
+	public static XControl createCheckBox(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String label, XItemListener listener,
+			Rectangle size, Map<String, Object> props) {
+		XControl checkBoxCtrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlCheckBox", props, size);
+		XCheckBox checkBox = UnoRuntime.queryInterface(XCheckBox.class, checkBoxCtrl);
+		checkBox.setLabel(label);
+		if (listener != null) {
+			checkBox.addItemListener(listener);
+		}
+		return checkBoxCtrl;
+	}
+
+	/**
 	 * Erzeugt einen Button mit Label und ActionListener.
 	 *
-	 * @param xMCF
-	 * @param context
-	 * @param toolkit
-	 * @param windowPeer
-	 * @param label
-	 * @param listener
-	 * @param size
-	 * @param props
 	 * @return Ein Button-Control.
 	 */
 	public static XControl createButton(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String label, XActionListener listener,
@@ -97,13 +106,6 @@ public class GuiFactory {
 	 * properties : <br>
 	 * https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1awt_1_1UnoControlEditModel.html<br>
 	 *
-	 * @param xMCF
-	 * @param context
-	 * @param toolkit
-	 * @param windowPeer
-	 * @param text
-	 * @param size
-	 * @param props
 	 * @return Ein Textfield-Control.
 	 */
 	public static XControl createTextfield(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
@@ -126,13 +128,6 @@ public class GuiFactory {
 	 * properties: <br>
 	 * https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlFixedTextModel.html<br>
 	 *
-	 * @param xMCF
-	 * @param context
-	 * @param toolkit
-	 * @param windowPeer
-	 * @param text
-	 * @param size
-	 * @param props
 	 * @return Ein Label-Control
 	 */
 	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
@@ -152,8 +147,6 @@ public class GuiFactory {
 	/**
 	 * Erzeugt ein Datenmodell für einen Baum-Steuerelement.
 	 *
-	 * @param xMCF
-	 * @param context
 	 * @return Ein Datenmodell für XTrees.
 	 * @throws Exception
 	 */
@@ -165,11 +158,6 @@ public class GuiFactory {
 	 * Erzeugt ein Baum-Steuerelement mit einem vorgegebenen Datenmodell. Das Datenmodel kann mit {@link #createTreeModel(XMultiComponentFactory, XComponentContext)} erzeugt
 	 * werden.
 	 *
-	 * @param xMCF
-	 * @param context
-	 * @param toolkit
-	 * @param windowPeer
-	 * @param dataModel
 	 * @return Ein Treel-Control
 	 */
 	public static XControl createTree(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, XMutableTreeDataModel dataModel) {
@@ -223,13 +211,7 @@ public class GuiFactory {
 	/**
 	 * Eine allgemeine Hilfsfunktion, mit der UNO-Steuerelemente erzeugt werden.
 	 *
-	 * @param xMCF
-	 * @param xContext
-	 * @param toolkit
-	 * @param windowPeer
-	 * @param type Klasse des Steuerelements, das erzeugt werden soll.
-	 * @param props
-	 * @param rectangle
+	 * @param type Klasse des Steuerelements, das erzeugt werden soll. https://api.libreoffice.org/docs/idl/ref/dir_f6533bbb374262d299aa8b7962df9f04.html
 	 * @return Ein Control-Element.
 	 */
 	public static XControl createControl(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer, String type, Map<String, Object> props,
@@ -254,9 +236,6 @@ public class GuiFactory {
 
 	/**
 	 * Ändert die Größe und Position eines Fensters.
-	 *
-	 * @param window
-	 * @param posSize
 	 */
 	public static void setWindowPosSize(XWindow window, Rectangle posSize) {
 		setWindowPosSize(window, posSize, 0, 0);
