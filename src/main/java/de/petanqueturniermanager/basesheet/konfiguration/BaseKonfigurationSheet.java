@@ -59,14 +59,14 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 
 	private void updateTurnierSystemInDocument() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
-		docPropHelper.insertIntPropertyIfNotExist(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, getTurnierSystem().getId());
+		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, getTurnierSystem().getId());
 	}
 
 	private void validateSpielSystem() throws GenerateException {
 		// Property im Document vorhanden ?
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
-		if (spielsystem > -1) {
+		if (spielsystem > 0) { // 0 = Kein
 			TurnierSystem turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 			TurnierSystem turnierSystemAusSheet = getTurnierSystem();
 			if (turnierSystemAusDocument != null && turnierSystemAusSheet.getId() != turnierSystemAusDocument.getId()) {

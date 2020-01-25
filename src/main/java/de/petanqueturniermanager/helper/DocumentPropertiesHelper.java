@@ -89,10 +89,6 @@ public class DocumentPropertiesHelper {
 		return didExist;
 	}
 
-	public void insertIntPropertyIfNotExist(String name, int val) {
-		insertStringPropertyIfNotExist(name, "" + val);
-	}
-
 	private XPropertyContainer getXPropertyContainer() {
 		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
 		XDocumentProperties xp = xps.getDocumentProperties();
