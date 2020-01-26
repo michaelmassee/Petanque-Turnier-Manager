@@ -11,6 +11,7 @@ import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XUIElement;
 import com.sun.star.ui.XUIElementFactory;
 import com.sun.star.uno.AnyConverter;
@@ -86,6 +87,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 
 		// Retrieve the parent window from the given argument list.
 		XWindow xParentWindow = null;
+		XSidebar xSidebar = null;
 		logger.debug("processing " + aArgumentList.length + " arguments");
 		for (final PropertyValue aValue : aArgumentList) {
 			if (aValue.Name.equals("ParentWindow")) {
@@ -94,17 +96,25 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 				} catch (IllegalArgumentException aException) {
 					logger.error(aException);
 				}
+			} else if (aValue.Name.equals("Sidebar")) {
+				try {
+					xSidebar = (XSidebar) AnyConverter.toObject(XSidebar.class, aValue.Value);
+				} catch (IllegalArgumentException aException) {
+					logger.error(aException);
+				}
 			}
+
 		}
+
 		// Create the panel.
-		if (xParentWindow != null) {
+		if (xParentWindow != null && xSidebar != null) {
 			final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
 			if (sElementName.equals("InfoPanel")) {
 				logger.debug("New InfoSidebarPanel");
-				return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
+				return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 			} else if (sElementName.equals("ConfigPanel")) {
 				logger.debug("New ConfigSidebarPanel");
-				return new ConfigSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL);
+				return new ConfigSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 			}
 		}
 		return null;

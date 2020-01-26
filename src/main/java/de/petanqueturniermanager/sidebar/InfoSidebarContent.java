@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.XWindow;
 import com.sun.star.lang.EventObject;
+import com.sun.star.ui.XSidebar;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
@@ -37,8 +38,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	 * @param context
 	 * @param parentWindow
 	 */
-	public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow) {
-		super(workingSpreadsheet, parentWindow);
+	public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
+		super(workingSpreadsheet, parentWindow, xSidebar);
 		addEmptyFields(); // kann hier genacht werden weil die felder sich nicht ändern
 	}
 

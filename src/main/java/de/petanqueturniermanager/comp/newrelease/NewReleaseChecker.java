@@ -61,6 +61,7 @@ public class NewReleaseChecker {
 		if (!didInformAboutNewRelease) {
 			boolean isnewRelease = checkForNewRelease(xContext);
 			if (isnewRelease) {
+				didInformAboutNewRelease = true;
 				logger.debug("open MessageBox");
 				MessageBoxResult answer = MessageBox.from(xContext, MessageBoxTypeEnum.QUESTION_YES_NO).caption("Neue Version verfügbar")
 						.message("Eine neue Version (" + latestVersionFromGithub() + ") von Pétanque-Turnier-Manager ist verfügbar.\r\nDownload ?").show();
@@ -68,7 +69,6 @@ public class NewReleaseChecker {
 				if (MessageBoxResult.YES == answer) {
 					new DownloadExtension(new WorkingSpreadsheet(xContext)).start();
 				}
-				didInformAboutNewRelease = true;
 			}
 		}
 		runUpdateOnceThread(); // update release info
@@ -156,7 +156,7 @@ public class NewReleaseChecker {
 		return latestVersionFromGithub;
 	}
 
-	public boolean checkForNewRelease(XComponentContext context) {
+	private synchronized boolean checkForNewRelease(XComponentContext context) {
 		logger.debug("checkForNewRelease");
 		boolean newVersionAvailable = false;
 		try {
@@ -169,8 +169,10 @@ public class NewReleaseChecker {
 				logger.debug("Latest release = " + latestVersionFromGithub);
 				if (latestVersionFromGithub != null) {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
-					logger.debug("Neue Version = " + newVersionAvailable);
-					ProcessBox.from().info("Neue Version von PétTurnMngr (" + latestVersionFromGithub + ") verfügbar.");
+					if (newVersionAvailable) {
+						logger.debug("Neue Version = " + newVersionAvailable);
+						ProcessBox.from().info("Neue Version von PétTurnMngr (" + latestVersionFromGithub + ") verfügbar.");
+					}
 				}
 			}
 		} catch (Exception e) {

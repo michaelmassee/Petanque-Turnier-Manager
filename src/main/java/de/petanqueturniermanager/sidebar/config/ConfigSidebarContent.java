@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.sun.star.awt.InvalidateStyle;
 import com.sun.star.awt.XWindow;
 import com.sun.star.lang.EventObject;
+import com.sun.star.ui.XSidebar;
 
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -30,9 +31,10 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 	/**
 	 * @param workingSpreadsheet
 	 * @param parentWindow
+	 * @param xSidebar
 	 */
-	public ConfigSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow) {
-		super(workingSpreadsheet, parentWindow);
+	public ConfigSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
+		super(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
 	@Override
@@ -66,6 +68,10 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 		// force repaint
 		// funktioniert manchmal .... !?!?
 		getGuiFactoryCreateParam().getWindowPeer().invalidate((short) (InvalidateStyle.TRANSPARENT | InvalidateStyle.CHILDREN));
+
+		// Request layout of the sidebar.
+		// Call this method when one of the panels wants to change its size due to late initialization or different content after a context change.
+		getxSidebar().requestLayout();
 	}
 
 	private void addPropToPanel(ConfigProperty<?> configProperty) {
