@@ -9,8 +9,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -22,6 +20,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.IntegerCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -182,7 +181,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 					writeCellBackColorProperty(configProp.getKey(), (Integer) configProp.getDefaultVal(), configProp.getDescription());
 					break;
 				case BOOLEAN:
-					celValWert.setValue(booleanToString((Boolean) configProp.getDefaultVal()));
+					celValWert.setValue(StringTools.booleanToString((Boolean) configProp.getDefaultVal()));
 					getSheetHelper().setStringValueInCell(celValWert);
 					break;
 				default:
@@ -302,21 +301,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	public Boolean readBooleanProperty(String key) throws GenerateException {
-		return stringToBoolean(readStringProperty(key));
-	}
-
-	private String booleanToString(boolean booleanProp) {
-		if (booleanProp) {
-			return "J";
-		}
-		return "N";
-	}
-
-	private boolean stringToBoolean(String booleanProp) {
-		if (StringUtils.isBlank(booleanProp) || StringUtils.containsIgnoreCase(booleanProp, "N")) {
-			return false;
-		}
-		return true;
+		return StringTools.stringToBoolean(readStringProperty(key));
 	}
 
 	private boolean isInSideBar(String key) {

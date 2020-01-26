@@ -6,7 +6,6 @@ package de.petanqueturniermanager.helper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -154,8 +153,8 @@ public class DocumentPropertiesHelper {
 	 * @return
 	 */
 	public boolean getBooleanProperty(String propName, Boolean defaultVal) {
-		String stringProperty = getStringProperty(propName, true, booleanToString(defaultVal));
-		return stringToBoolean(stringProperty);
+		String stringProperty = getStringProperty(propName, true, StringTools.booleanToString(defaultVal));
+		return StringTools.stringToBoolean(stringProperty);
 	}
 
 	/**
@@ -164,21 +163,7 @@ public class DocumentPropertiesHelper {
 	 * @return
 	 */
 	public void setBooleanProperty(String propName, Boolean newVal) {
-		setStringProperty(propName, booleanToString(newVal));
-	}
-
-	private String booleanToString(boolean booleanProp) {
-		if (booleanProp) {
-			return "J";
-		}
-		return "N";
-	}
-
-	private boolean stringToBoolean(String booleanProp) {
-		if (StringUtils.isBlank(booleanProp) || StringUtils.containsIgnoreCase(booleanProp, "N")) {
-			return false;
-		}
-		return true;
+		setStringProperty(propName, StringTools.booleanToString(newVal));
 	}
 
 }
