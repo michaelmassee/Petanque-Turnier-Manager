@@ -13,20 +13,27 @@ import com.sun.star.awt.Rectangle;
  * @author daniel.sikeler
  */
 public class HorizontalLayout implements Layout {
+
+	private int marginBetween = 1;
 	/**
-	 * Container für die enthaltenen Layouts.
+	 * Container für die enthaltenen Layouts.<br>
+	 * Layout + Gewichtung
 	 */
 	private Map<Layout, Integer> layouts = new LinkedHashMap<>();
 
 	@Override
 	public int layout(Rectangle rect) {
 		int xOffset = 0;
-		int width = rect.Width / layouts.values().stream().reduce(0, Integer::sum);
+		// zwischenraum von 1 px nur zwischen den elementen
+		int gesMargin = (layouts.size() - 1) * marginBetween;
+		int widthProGewichtung = (rect.Width - gesMargin) / layouts.values().stream().reduce(0, Integer::sum); // width / addierten Gewichtungen
 		int height = 0;
 
 		for (Map.Entry<Layout, Integer> entry : layouts.entrySet()) {
-			height = Integer.max(height, entry.getKey().layout(new Rectangle(rect.X + xOffset, rect.Y, width * entry.getValue(), rect.Height)));
-			xOffset += width * entry.getValue();
+			int newWidth = widthProGewichtung * entry.getValue();
+			height = Integer.max(height, entry.getKey().layout(new Rectangle(rect.X + xOffset, rect.Y, newWidth, rect.Height)));
+			xOffset += newWidth;
+			xOffset += marginBetween;
 		}
 
 		return height;

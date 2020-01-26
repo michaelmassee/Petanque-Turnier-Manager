@@ -26,11 +26,12 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 public class PetanqueTurnierMngrSingleton {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierMngrSingleton.class);
 
-	private static GlobalEventListener globalEventListener = null;
+	private static GlobalEventListener globalEventListener;
 	private static final TurnierEventHandler turnierEventHandler = new TurnierEventHandler();
 
 	/**
-	 * der erste Konstruktur macht Init
+	 * der erste Konstruktur macht Init <br>
+	 * wird mehrmals aufgerufen
 	 *
 	 * @param context
 	 */

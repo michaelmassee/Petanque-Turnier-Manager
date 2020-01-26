@@ -6,12 +6,15 @@ package de.petanqueturniermanager.sidebar.fields;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sun.star.awt.Rectangle;
+import com.sun.star.awt.TextEvent;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XFixedText;
 import com.sun.star.awt.XTextComponent;
+import com.sun.star.awt.XTextListener;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
+import com.sun.star.beans.XMultiPropertySet;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
@@ -21,15 +24,13 @@ import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
 /**
- * Label mit Text
+ * Label mit Text<br>
+ * XNumericField
  *
  * @author Michael Massee
  *
  */
-public class LabelPlusTextReadOnly extends BaseField {
-
-	private static final int lineHeight = 25;
-	private static final int lineWidth = 100;
+public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> implements XTextListener {
 
 	private XFixedText label;
 	private XTextComponent field;
@@ -56,9 +57,8 @@ public class LabelPlusTextReadOnly extends BaseField {
 
 	@Override
 	protected void doCreate() {
-		Rectangle baseRectangle = new Rectangle(0, 0, lineWidth, lineHeight);
 
-		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", baseRectangle, null);
+		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, null);
 		label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
 		getLayout().addControl(labelControl);
 
@@ -66,7 +66,8 @@ public class LabelPlusTextReadOnly extends BaseField {
 		// props.putIfAbsent(GuiFactory.HELP_TEXT, "Aktuelle Turniersystem");
 		props.putIfAbsent(GuiFactory.READ_ONLY, true);
 		props.putIfAbsent(GuiFactory.ENABLED, false);
-		XControl textfieldControl = GuiFactory.createTextfield(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", baseRectangle, props);
+		XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", this, BASE_RECTANGLE, props);
+		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, textfieldControl.getModel()));
 		field = UnoRuntime.queryInterface(XTextComponent.class, textfieldControl);
 		getLayout().addControl(textfieldControl);
 	}
@@ -90,6 +91,18 @@ public class LabelPlusTextReadOnly extends BaseField {
 			field.setText(text);
 		}
 		return this;
+	}
+
+	@Override
+	public void disposing(EventObject arg0) {
+		super.disposing();
+		label = null;
+		field = null;
+	}
+
+	@Override
+	public void textChanged(TextEvent arg0) {
+		// TODO Auto-generated method stub
 	}
 
 }

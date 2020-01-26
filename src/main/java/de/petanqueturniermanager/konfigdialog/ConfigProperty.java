@@ -58,4 +58,5 @@ public class ConfigProperty<V> {
 	public final boolean isInSideBar() {
 		return inSideBar;
 	}
+
 }

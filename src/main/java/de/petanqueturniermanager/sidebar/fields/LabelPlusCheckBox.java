@@ -6,13 +6,16 @@ package de.petanqueturniermanager.sidebar.fields;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.awt.ItemEvent;
-import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
+import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.uno.UnoRuntime;
@@ -26,10 +29,9 @@ import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
  * @author Michael Massee
  *
  */
-public class LabelPlusCheckBox extends BaseField implements XItemListener {
+public class LabelPlusCheckBox extends BaseField<LabelPlusCheckBox> implements XItemListener {
 
-	private static final int lineHeight = 25;
-	private static final int lineWidth = 100;
+	static final Logger logger = LogManager.getLogger(LabelPlusCheckBox.class);
 
 	private XCheckBox field;
 
@@ -55,13 +57,13 @@ public class LabelPlusCheckBox extends BaseField implements XItemListener {
 
 	@Override
 	protected void doCreate() {
-		Rectangle baseRectangle = new Rectangle(0, 0, lineWidth, lineHeight);
 		Map<String, Object> props = new HashMap<>();
 		// props.putIfAbsent(GuiFactory.HELP_TEXT, "Aktuelle Turniersystem");
 		// props.putIfAbsent(GuiFactory.READ_ONLY, true);
 		// props.putIfAbsent(GuiFactory.ENABLED, false);
-		XControl checkBoxControl = GuiFactory.createCheckBox(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "..", this, baseRectangle, props);
+		XControl checkBoxControl = GuiFactory.createCheckBox(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "..", this, BASE_RECTANGLE, props);
 		field = UnoRuntime.queryInterface(XCheckBox.class, checkBoxControl);
+		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, checkBoxControl.getModel()));
 		getLayout().addControl(checkBoxControl);
 	}
 
@@ -88,12 +90,12 @@ public class LabelPlusCheckBox extends BaseField implements XItemListener {
 
 	@Override
 	public void disposing(EventObject arg0) {
-		setGuiFactoryCreateParam(null);
+		super.disposing();
+		field = null;
 	}
 
 	@Override
 	public void itemStateChanged(ItemEvent arg0) {
-		// System.out.println(arg0.Selected);
 	}
 
 }
