@@ -79,7 +79,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("Spielrunde Header-Hintergrundfarbe"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
 				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene Benutzer empfohlen. Default = N").inSideBar());
 

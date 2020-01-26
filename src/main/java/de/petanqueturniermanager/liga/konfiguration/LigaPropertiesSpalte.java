@@ -42,9 +42,9 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
 				.setDescription("Spielplan Header-Hintergrundfarbe"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_LINKS).setDefaultVal("").setDescription("Kopfzeile Links"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_MITTE).setDefaultVal("").setDescription("Kopfzeile Mitte"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_RECHTS).setDefaultVal("").setDescription("Kopfzeile Rechts"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_LINKS).setDefaultVal("").setDescription("Kopfzeile Links").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_MITTE).setDefaultVal("").setDescription("Kopfzeile Mitte").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_RECHTS).setDefaultVal("").setDescription("Kopfzeile Rechts").inSideBar());
 	}
 
 	/**

@@ -9,17 +9,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.awt.FontWeight;
-
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -30,7 +24,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
-	private static final int MAX_SPIELTAG = 10;
+	public static final int MAX_SPIELTAG = 10;
 	private static final int KONFIG_SPIELTAG_NR_SPALTE = NAME_PROPERTIES_SPALTE + 3;
 	private static final int KONFIG_SPIELTAG_KOPFZEILE_SPALTE = KONFIG_SPIELTAG_NR_SPALTE + 1;
 
@@ -57,31 +51,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	// wird von #BaseKonfigurationSheet.update() verwendet
 	@Override
 	protected void updateTurnierSystemKonfiguration() throws GenerateException {
-		initSpieltagKonfigSpalten();
-	}
-
-	// Spieltag Konfiguration
-	private void initSpieltagKonfigSpalten() throws GenerateException {
-		// Header
-		ColumnProperties columnPropSpieltag = ColumnProperties.from().setWidth(1700).margin(BasePropertiesSpalte.PROP_CELL_MARGIN).centerJustify();
-		StringCellValue header = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES - 1)).setCharWeight(FontWeight.BOLD)
-				.setBorder(BasePropertiesSpalte.HEADER_BORDER).setCellBackColor(BasePropertiesSpalte.HEADER_BACK_COLOR).addColumnProperties(columnPropSpieltag);
-		getSheetHelper().setStringValueInCell(header.setValue("Spieltag"));
-		ColumnProperties columnPropKopfZeile = ColumnProperties.from().setWidth(8000).centerJustify();
-		getSheetHelper().setStringValueInCell(header.setValue("Kopfzeile").spaltePlusEins().setColumnProperties(columnPropKopfZeile));
-
-		// Daten
-		StringCellValue nr = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_NR_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
-				.centerVertJustify().setCharHeight(14).setBorder(BorderFactory.from().allThin().toBorder());
-		StringCellValue kopfZeile = StringCellValue.from(getXSpreadSheet()).setPos(Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES)).centerHoriJustify()
-				.centerVertJustify().nichtUeberschreiben().setBorder(BorderFactory.from().allThin().toBorder());
-		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
-			getSheetHelper().setStringValueInCell(nr.setValue("" + spieltagCntr).setEndPosMergeZeilePlus(1));
-			nr.zeilePlus(2);
-			// Kopfzeile Spalte
-			getSheetHelper().setStringValueInCell(kopfZeile.setValue(spieltagCntr + ". Spieltag").setEndPosMergeZeilePlus(1));
-			kopfZeile.zeilePlus(2);
-		}
 	}
 
 	/**
@@ -179,13 +148,13 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
-		Position posKopfZeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES);
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
-			// Kopfzeile Spalte
-			String kopfZeile = getSheetHelper().getTextFromCell(getXSpreadSheet(), posKopfZeile);
-			PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
-					.setHeaderCenter(kopfZeile).create();
-			posKopfZeile.zeilePlus(2);
+			String propNameKey = SuperMeleePropertiesSpalte.PROP_SPIELTAG_KOPFZEILE(spieltagCntr);
+			String spielTagKopfzeile = propertiesSpalte.readStringProperty(propNameKey);
+			if (spielTagKopfzeile != null) {
+				PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
+						.setHeaderCenter(spielTagKopfzeile).create();
+			}
 		}
 	}
 
