@@ -3,6 +3,9 @@
  */
 package de.petanqueturniermanager.comp.turnierevent;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -12,9 +15,11 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class OnNewCreatedEvent implements ITurnierEvent {
 
 	private final TurnierSystem turnierSystem;
+	private final WorkingSpreadsheet workingSpreadsheet;
 
-	public OnNewCreatedEvent(TurnierSystem turnierSystem) {
+	public OnNewCreatedEvent(TurnierSystem turnierSystem, WorkingSpreadsheet workingSpreadsheet) {
 		this.turnierSystem = turnierSystem;
+		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 	}
 
 	/**
@@ -22,6 +27,11 @@ public class OnNewCreatedEvent implements ITurnierEvent {
 	 */
 	public final TurnierSystem getTurnierSystem() {
 		return turnierSystem;
+	}
+
+	@Override
+	public WorkingSpreadsheet getWorkingSpreadsheet() {
+		return workingSpreadsheet;
 	}
 
 }

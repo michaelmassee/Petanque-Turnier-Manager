@@ -125,7 +125,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		// trigger change event
 		SpielRundeNr aktiveSpielRunde = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpielRunde();
 		SpielTagNr aktiveSpieltag = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpieltag();
-		OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(aktiveSpieltag, aktiveSpielRunde);
+		OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(aktiveSpieltag, aktiveSpielRunde, getWorkingSpreadsheet());
 		PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, onConfigChangedEvent);
 	}
 
