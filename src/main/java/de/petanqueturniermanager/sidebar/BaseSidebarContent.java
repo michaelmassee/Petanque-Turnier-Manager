@@ -22,6 +22,7 @@ import com.sun.star.lib.uno.helper.ComponentBase;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.ui.LayoutSize;
+import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XSidebarPanel;
 import com.sun.star.ui.XToolPanel;
 import com.sun.star.uno.UnoRuntime;
@@ -53,6 +54,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	private WorkingSpreadsheet currentSpreadsheet;
 	private XWindow parentWindow;
 	private final Layout layout;
+	private XSidebar xSidebar;
 
 	/**
 	 * workingSpreadsheet <br>
@@ -61,10 +63,12 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	 *
 	 * @param workingSpreadsheet
 	 * @param parentWindow
+	 * @param xSidebar
 	 */
 
-	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow) {
+	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
+		this.xSidebar = checkNotNull(xSidebar);
 		didOnHandleDocReady = false;
 		this.parentWindow = checkNotNull(parentWindow);
 		layout = new VerticalLayout(0, 2);
@@ -186,6 +190,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 				setCurrentSpreadsheet(null);
 				setParentWindow(null);
 				setGuiFactoryCreateParam(null);
+				setxSidebar(null);
 			} catch (Exception e) {
 				// ignore
 			}
@@ -246,6 +251,14 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
 		this.guiFactoryCreateParam = guiFactoryCreateParam;
+	}
+
+	protected final XSidebar getxSidebar() {
+		return xSidebar;
+	}
+
+	protected final void setxSidebar(XSidebar xSidebar) {
+		this.xSidebar = xSidebar;
 	}
 
 }

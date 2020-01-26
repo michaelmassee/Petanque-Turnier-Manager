@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.sidebar.fields;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,6 +17,7 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
@@ -32,7 +31,7 @@ public abstract class BaseField<T> {
 
 	static final Logger logger = LogManager.getLogger(BaseField.class);
 
-	private GuiFactoryCreateParam guiFactoryCreateParam;
+	private WeakRefHelper<GuiFactoryCreateParam> guiFactoryCreateParamWkRef;
 	private Layout hLayout;
 	private XMultiPropertySet properties;
 	private final String imageUrlDir;
@@ -43,7 +42,7 @@ public abstract class BaseField<T> {
 	protected static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
 
 	protected BaseField(GuiFactoryCreateParam guiFactoryCreateParam) {
-		this.guiFactoryCreateParam = checkNotNull(guiFactoryCreateParam);
+		this.guiFactoryCreateParamWkRef = new WeakRefHelper<>(guiFactoryCreateParam);
 		hLayout = new HorizontalLayout();
 		imageUrlDir = ExtensionsHelper.from(guiFactoryCreateParam.getContext()).getImageUrlDir();
 		doCreate();
@@ -56,19 +55,19 @@ public abstract class BaseField<T> {
 	protected abstract void doCreate();
 
 	protected final XMultiComponentFactory getxMCF() {
-		return guiFactoryCreateParam.getxMCF();
+		return guiFactoryCreateParamWkRef.get().getxMCF();
 	}
 
 	protected final XComponentContext getxContext() {
-		return guiFactoryCreateParam.getContext();
+		return guiFactoryCreateParamWkRef.get().getContext();
 	}
 
 	protected final XToolkit getToolkit() {
-		return guiFactoryCreateParam.getToolkit();
+		return guiFactoryCreateParamWkRef.get().getToolkit();
 	}
 
 	protected final XWindowPeer getWindowPeer() {
-		return guiFactoryCreateParam.getWindowPeer();
+		return guiFactoryCreateParamWkRef.get().getWindowPeer();
 	}
 
 	/**
@@ -79,11 +78,15 @@ public abstract class BaseField<T> {
 	}
 
 	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
-		this.guiFactoryCreateParam = guiFactoryCreateParam;
+		if (guiFactoryCreateParam == null) {
+			guiFactoryCreateParamWkRef = null;
+		} else {
+			this.guiFactoryCreateParamWkRef = new WeakRefHelper<>(guiFactoryCreateParam);
+		}
 	}
 
 	protected final GuiFactoryCreateParam getGuiFactoryCreateParam() {
-		return guiFactoryCreateParam;
+		return guiFactoryCreateParamWkRef.get();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -101,7 +104,7 @@ public abstract class BaseField<T> {
 	}
 
 	protected void disposing() {
-		guiFactoryCreateParam = null;
+		guiFactoryCreateParamWkRef = null;
 		hLayout = null;
 		properties = null;
 	}

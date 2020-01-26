@@ -9,6 +9,7 @@ import com.sun.star.awt.XWindow;
 import com.sun.star.frame.XFrame;
 import com.sun.star.lib.uno.helper.ComponentBase;
 import com.sun.star.ui.UIElementType;
+import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XUIElement;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -22,9 +23,9 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 	private final String resourceUrl;
 	private final ComponentBase panel;
 
-	public BaseSidebarPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, String resourceUrl) {
+	public BaseSidebarPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, String resourceUrl, XSidebar xSidebar) {
 		this.resourceUrl = checkNotNull(resourceUrl);
-		panel = newContent(workingSpreadsheet, parentWindow);
+		panel = newContent(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
 	@Override
@@ -47,6 +48,6 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 		return UIElementType.TOOLPANEL;
 	}
 
-	abstract protected ComponentBase newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow);
+	abstract protected ComponentBase newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar);
 
 }
