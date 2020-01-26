@@ -51,6 +51,8 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
 
+	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfz. Tag"; // plus spieltagNr
+
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
@@ -81,12 +83,22 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE).setDefaultVal(99)
 				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
-				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info\r\nN/J"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false).inSideBar()
+				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info\r\nN/J (default=N)"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_SUPERMELEE_MODE).setDefaultVal("T").setDescription("Modus\r\nT=Triplette\r\nD=Doublette"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_PLAN).setDefaultVal(false)
-				.setDescription("Erstelle ein Spielrunde Plan zur jeder Spielrunde\r\nN/J"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_PLAN).setDefaultVal(false).inSideBar()
+				.setDescription("Erstelle ein Spielrunde Plan zur jeder Spielrunde\r\nN/J (default=N)"));
+
+		// Spieltag Header
+		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
+			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, PROP_SPIELTAG_KOPFZEILE(spieltagcntr)).setDefaultVal(spieltagcntr + ". Spieltag")
+					.setDescription("Kopfzeile für Spieltag " + spieltagcntr).inSideBar());
+		}
+	}
+
+	public static final String PROP_SPIELTAG_KOPFZEILE(int spielTagNr) {
+		return KONFIG_PROP_SPIELTAG_KOPFZEILE + " " + spielTagNr;
 	}
 
 	private void fireUpdateEvent() {
