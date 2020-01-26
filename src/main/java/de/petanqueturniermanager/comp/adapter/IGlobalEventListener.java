@@ -13,11 +13,12 @@ public interface IGlobalEventListener {
 	}
 
 	default void onLoad(@SuppressWarnings("unused") Object source) {
-
 	}
 
 	default void onUnfocus(@SuppressWarnings("unused") Object source) {
+	}
 
+	default void onViewCreated(@SuppressWarnings("unused") Object source) {
 	}
 
 }

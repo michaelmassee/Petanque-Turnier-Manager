@@ -18,6 +18,7 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -115,6 +116,10 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
 		return sheetWkRef.get().getSheetHelper();
+	}
+
+	protected WorkingSpreadsheet getWorkingSpreadsheet() {
+		return sheetWkRef.get().getWorkingSpreadsheet();
 	}
 
 	@Override

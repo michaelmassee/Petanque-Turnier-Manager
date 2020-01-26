@@ -27,7 +27,6 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 	static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
-	private boolean didAddFields = false;
 	private LabelPlusTextReadOnly turnierSystemInfoLine;
 	private LabelPlusTextReadOnly spielRundeInfoLine;
 	private LabelPlusTextReadOnly spielTagInfoLine;
@@ -58,7 +57,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	protected void addFields() {
 		// wird aufgerufen wenn das eigentliche Document on Top ist
 		// TODO Spieltag und Spielrunde aus document properties
-		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0)));
+		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
 	}
 
 	@Override

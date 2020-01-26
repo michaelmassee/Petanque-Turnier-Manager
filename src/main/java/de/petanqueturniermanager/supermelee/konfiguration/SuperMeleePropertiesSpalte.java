@@ -91,7 +91,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 	private void fireUpdateEvent() {
 		try {
-			OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(getAktiveSpieltag(), getAktiveSpielRunde());
+			OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(getAktiveSpieltag(), getAktiveSpielRunde(), getWorkingSpreadsheet());
 			PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, onConfigChangedEvent);
 		} catch (GenerateException e) {
 			// ignore this

@@ -206,64 +206,20 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	/**
-	 * OnViewCreated kommt, wenn ein Dokument seitens OOo vollständig aufgebaut ist. Das Event kommt bei allen Dokumenten, egal ob sie neu erzeugt, geladen, sichtbar oder
-	 * unsichtbar sind.
-	 *
-	 * Da das Event in allen möglichen Fällen kommt, und die Bearbeitung von unsichtbaren Dokumenten durch den WollMux für eine andere stadtinterne Anwendung (JavaComm) notwendig
-	 * ist, wird in diesem Event die eigentliche Verarbeitung von Dokumenten durch den WollMux angestoßen.
-	 *
-	 * Ausgenommen von der Verarbeitung werden temporäre Dokumente des OOo-Seriendrucks und alle gerade erzeugten, unsichtbaren Textdokumente.
-	 *
-	 * @author Christoph Lutz (D-III-ITD-D101)
+	 * OnViewCreated kommt, wenn ein Dokument seitens OOo vollständig aufgebaut ist.<br>
+	 * Das Event kommt bei allen Dokumenten, egal ob sie neu erzeugt, geladen, sichtbar oder unsichtbar sind.
 	 */
 	private void onViewCreated(Object source) {
 		// XModel compo = UNO.XModel(source);
-		// if (compo == null)
-		// return;
-		//
-		// // Keine Aktion bei neu (mit Create) erzeugten und temporären, unsichtbaren
-		// // Textdokumente des OOo-Seriendrucks. Sicherstellen, dass diese Dokumente auch
-		// // nicht im docManager mitgeführt werden.
-		// if (isTempMailMergeDocument(compo))
-		// {
-		// return;
-		// }
-		//
 		// XTextDocument xTextDoc = UNO.XTextDocument(compo);
-		// if (xTextDoc != null)
-		// {
-		// registerDispatcher(compo.getCurrentController().getFrame());
-		// }
-		//
-		// // Prüfen ob Doppelt- oder Halbinstallation vorliegt.
-		// WollMuxEventHandler.getInstance().handleCheckInstallation();
-		// WollMuxEventHandler.getInstance().handleInitialize();
-		//
-		// Info docInfo = docManager.getInfo(compo);
-		// // docInfo ist hier nur dann ungleich null, wenn das Dokument mit Create erzeugt
-		// // wurde.
-		// if (xTextDoc != null && docInfo != null && isDocumentLoadedHidden(compo))
-		// {
-		// docManager.remove(compo);
-		// return;
-		// }
-		//
-		// // Dokument ggf. in docManager aufnehmen und abhängig vom Typ verarbeiten.
-		// if (docInfo == null)
-		// {
-		// if (xTextDoc != null)
-		// {
-		// docManager.addTextDocument(xTextDoc);
-		// WollMuxEventHandler.getInstance().handleProcessTextDocument(
-		// DocumentManager.getTextDocumentController(xTextDoc), !isDocumentLoadedHidden(compo));
-		// } else
-		// {
-		// docManager.add(compo);
-		// WollMuxEventHandler.getInstance().handleNotifyDocumentEventListener(null,
-		// WollMuxEventHandler.ON_WOLLMUX_PROCESSING_FINISHED, compo);
-		// }
-		// }
 
+		for (IGlobalEventListener listner : listeners) {
+			try {
+				listner.onViewCreated(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
 	}
 
 	/**

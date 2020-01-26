@@ -14,10 +14,13 @@ import com.sun.star.awt.WindowEvent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lib.uno.helper.ComponentBase;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.ui.LayoutSize;
 import com.sun.star.ui.XSidebarPanel;
 import com.sun.star.ui.XToolPanel;
@@ -99,35 +102,33 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		if (didOnHandleDocReady) {
 			return;
 		}
+
+		// hier kein update von WorkingSpreadsheet weil im Konstruktor das richtige document vorhanden.
 		didOnHandleDocReady = true;
 		// add fields
 		addFields();
 	}
 
+	// kommt wenn new,load UND nach der umschaltung von Druckvorschau
 	@Override
-	public void onLoad(Object source) {
+	public void onViewCreated(Object source) {
+
 		if (didOnHandleDocReady) {
 			return;
 		}
-		didOnHandleDocReady = true;
-		// sicher gehen das wir das richtige document haben
-		currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext());
 
-		// add fields
-		addFields();
-	}
+		// wir gehen davon aus das wir den Focus kriegen
+		// in source ist das document was wir haben wollen, kann aber noch nicht Aktiv sein !
+		XModel compo = UnoRuntime.queryInterface(XModel.class, source);
+		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, compo);
+		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, compo.getCurrentController());
 
-	@Override
-	public void onNew(Object source) {
-		if (didOnHandleDocReady) {
-			return;
+		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
+			didOnHandleDocReady = true;
+			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das Aktive Doc
+			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
+			addFields();
 		}
-		didOnHandleDocReady = true;
-		// sicher gehen das wir das richtige document haben
-		currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext());
-
-		// add fields
-		addFields();
 	}
 
 	// ----- Implementation of UNO interface XToolPanel -----
@@ -152,6 +153,12 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	// ----- Implementation of interface ITurnierEventListener -----
 	@Override
 	public void onConfigChanged(ITurnierEvent eventObj) {
+		// sind wir betroffen ?
+		if (!getCurrentSpreadsheet().compareSpreadsheetDocument(eventObj.getWorkingSpreadsheet())) {
+			// nein ignore
+			return;
+		}
+
 		// update fields
 		updateFieldContens(eventObj);
 	}
