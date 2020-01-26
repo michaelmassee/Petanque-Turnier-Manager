@@ -53,6 +53,11 @@ public class UILabel extends UIElement<UILabel, XFixedText> {
 		return this;
 	}
 
+	public final UILabel multiLine() {
+		setProperty(PROP_MULTILINE, true);
+		return this;
+	}
+
 	@Override
 	String getModelClassName() {
 		return "com.sun.star.awt.UnoControlFixedTextModel";

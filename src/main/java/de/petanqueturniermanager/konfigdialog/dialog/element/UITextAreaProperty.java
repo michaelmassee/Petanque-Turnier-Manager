@@ -17,7 +17,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
  */
 public class UITextAreaProperty implements UIProperty {
 
-	private static final int TEXT_HEIGHT = 30;
+	private static final int DEFAULT_TEXT_HEIGHT = 30;
 	private static final int GAP_HEIGHT = 7;
 
 	private static int propCntr = 0;
@@ -27,19 +27,25 @@ public class UITextAreaProperty implements UIProperty {
 	private final String uiName;
 	private final String labelName;
 	private final String defaultVal;
+	private final int textHeight;
 	private DocumentPropertiesHelper documentPropertiesHelper;
 	private XTextComponent uITextArea;
 
 	public UITextAreaProperty(String propName, String label, String defaultVal) {
+		this(propName, label, defaultVal, DEFAULT_TEXT_HEIGHT);
+	}
+
+	public UITextAreaProperty(String propName, String label, String defaultVal, int textHeight) {
 		this.propName = checkNotNull(propName);
 		this.label = checkNotNull(label);
 		this.defaultVal = checkNotNull(defaultVal);
+		this.textHeight = textHeight;
 		uiName = "UITextArea" + propCntr;
 		labelName = "UILabel" + propCntr++;
 	}
 
 	public int getHeight() {
-		return TEXT_HEIGHT + GAP_HEIGHT;
+		return textHeight + GAP_HEIGHT;
 	}
 
 	@Override
@@ -55,16 +61,17 @@ public class UITextAreaProperty implements UIProperty {
 		UILabel.from(dialogModel)
 				.name(labelName)
 				.label(label + " :")
-				.posX(3).posY(posY).width(40).height(14)
+				.posX(3).posY(posY).width(40).height(200) // 14
 				.align(2) // Right
+				.multiLine()
 				.doInsert(xControlCont);
 		// @formatter:on
 
-		String propVal = documentPropertiesHelper.getStringProperty(getPropName(), false, "");
+		String propVal = documentPropertiesHelper.getStringProperty(getPropName(), false, defaultVal);
 		// @formatter:off
 		uITextArea = UITextArea.from(dialogModel)
 				.name(uiName)
-				.posX(45).posY(posY).width(200).height(TEXT_HEIGHT)
+				.posX(45).posY(posY).width(200).height(textHeight)
 				.multiLine(true).vScroll(true).hScroll(true)
 				.Text(propVal)
 				.doInsert(xControlCont);

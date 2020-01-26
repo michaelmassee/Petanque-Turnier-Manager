@@ -13,7 +13,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusTextReadOnly;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
@@ -39,16 +40,10 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	 */
 	public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow) {
 		super(workingSpreadsheet, parentWindow);
-		addFields(); // kann hier genacht werden weil die felder sich nicht ändern
+		addEmptyFields(); // kann hier genacht werden weil die felder sich nicht ändern
 	}
 
-	@Override
-	protected void addFields() {
-		if (didAddFields) {
-			return;
-		}
-		didAddFields = true;
-
+	private void addEmptyFields() {
 		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem :");
 		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
 
@@ -57,14 +52,13 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 		spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag :");
 		getLayout().addLayout(spielTagInfoLine.getLayout(), 1);
+	}
 
-		TurnierSystem turnierSystemAusDocument = getTurnierSystemAusDocument();
-		turnierSystemInfoLine.fieldText(turnierSystemAusDocument.getBezeichnung());
-		if (turnierSystemAusDocument != TurnierSystem.KEIN) {
-			// TODO aus doc properties lesen
-			spielRundeInfoLine.fieldText(1);
-			spielTagInfoLine.fieldText(1);
-		}
+	@Override
+	protected void addFields() {
+		// wird aufgerufen wenn das eigentliche Document on Top ist
+		// TODO Spieltag und Spielrunde aus document properties
+		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0)));
 	}
 
 	@Override
