@@ -24,13 +24,20 @@ public class HorizontalLayout implements Layout {
 	@Override
 	public int layout(Rectangle rect) {
 		int xOffset = 0;
+
 		// zwischenraum von 1 px nur zwischen den elementen
 		int gesMargin = (layouts.size() - 1) * marginBetween;
-		int widthProGewichtung = (rect.Width - gesMargin) / layouts.values().stream().reduce(0, Integer::sum); // width / addierten Gewichtungen
+		int summeFixWidth = layouts.keySet().parallelStream().filter(key -> key instanceof ControlLayout).map(key -> ((ControlLayout) key).getFixWidth()).reduce(0, Integer::sum);
+		int widthOhneFixUndMargin = Math.max(rect.Width - summeFixWidth - gesMargin, 0); // nicht kleiner als 0
+		int widthProGewichtung = widthOhneFixUndMargin / layouts.values().stream().reduce(0, Integer::sum); // width / addierten Gewichtungen
 		int height = 0;
 
 		for (Map.Entry<Layout, Integer> entry : layouts.entrySet()) {
 			int newWidth = widthProGewichtung * entry.getValue();
+			if (entry.getKey() instanceof ControlLayout && ((ControlLayout) entry.getKey()).getFixWidth() > 0) {
+				newWidth = ((ControlLayout) entry.getKey()).getFixWidth();
+			}
+
 			height = Integer.max(height, entry.getKey().layout(new Rectangle(rect.X + xOffset, rect.Y, newWidth, rect.Height)));
 			xOffset += newWidth;
 			xOffset += marginBetween;
