@@ -68,7 +68,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 		{
 			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, null);
 			label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
-			getLayout().addControl(labelControl, 5);
+			getLayout().addControl(labelControl, 1);
 		}
 		// ---------------------------------------
 		{
@@ -78,7 +78,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 			XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", null, BASE_RECTANGLE, props);
 			field = UnoRuntime.queryInterface(XTextComponent.class, textfieldControl);
 			setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, textfieldControl.getModel()));
-			getLayout().addControl(textfieldControl, 7);
+			getLayout().addControl(textfieldControl, 1);
 		}
 		// ---------------------------------------
 		{
@@ -95,7 +95,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 			Rectangle btnRect = new Rectangle(BASE_RECTANGLE.X, BASE_RECTANGLE.Y, BASE_RECTANGLE.Width, 29);
 			XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, this, btnRect, props);
 			btn = UnoRuntime.queryInterface(XButton.class, btnControl);
-			getLayout().addControl(btnControl, 1);
+			getLayout().addControl(btnControl, 0, 29); // wenn fixwidth von 29 px, dann weight muss 0 sein!
 		}
 		// ---------------------------------------
 	}
