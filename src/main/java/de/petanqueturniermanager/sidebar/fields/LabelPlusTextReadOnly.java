@@ -16,6 +16,7 @@ import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.style.VerticalAlignment;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
@@ -66,6 +67,7 @@ public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> impl
 		// props.putIfAbsent(GuiFactory.HELP_TEXT, "Aktuelle Turniersystem");
 		props.putIfAbsent(GuiFactory.READ_ONLY, true);
 		props.putIfAbsent(GuiFactory.ENABLED, false);
+		props.putIfAbsent(GuiFactory.VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
 		XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", this, BASE_RECTANGLE, props);
 		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, textfieldControl.getModel()));
 		field = UnoRuntime.queryInterface(XTextComponent.class, textfieldControl);

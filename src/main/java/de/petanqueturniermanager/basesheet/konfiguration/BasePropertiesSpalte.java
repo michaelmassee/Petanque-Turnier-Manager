@@ -71,24 +71,25 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected final int headerZeile;
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
-				.setDescription("Spielrunde Header-Hintergrundfarbe"));
-
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_LINKS).setDefaultVal("").setDescription("Fußzeile Links").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_FUSSZEILE_MITTE).setDefaultVal("").setDescription("Fußzeile Mitte").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
-				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene Benutzer empfohlen. Default = N").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
+				.setDescription("Meldeliste Hintergrundfarbe für gerade Zeilen").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDescription("Meldeliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
+				.setDescription("Meldeliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen"));
+				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
-				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen"));
+				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
-				.setDescription("Rangliste Header-Hintergrundfarbe"));
+				.setDescription("Rangliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
+				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene Benutzer empfohlen. Default = N").inSideBar());
 	}
 
 	protected BasePropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
@@ -240,20 +241,28 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * @throws GenerateException
 	 */
 	public Integer readCellBackColorProperty(String key) throws GenerateException {
-		XSpreadsheet sheet = getPropSheet();
-		Position pos = getPropKeyPos(key);
 		Integer val = null;
-		if (pos != null) {
-			Object cellProperty = getSheetHelper().getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
-			if (cellProperty != null && cellProperty instanceof Integer) {
-				val = (Integer) cellProperty;
-			}
-		}
 
-		if (val == null) {
+		if (isInSideBar(key)) {
+			// value aus Document properties lesen
 			Object defaultVal = getDefaultProp(key);
-			if (defaultVal != null && defaultVal instanceof Integer) {
-				val = (Integer) defaultVal;
+			DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(sheetWkRef.get().getWorkingSpreadsheet());
+			val = docPropHelper.getIntProperty(key, (defaultVal == null) ? 0 : (Integer) defaultVal);
+		} else {
+			XSpreadsheet sheet = getPropSheet();
+			Position pos = getPropKeyPos(key);
+			if (pos != null) {
+				Object cellProperty = getSheetHelper().getCellProperty(sheet, pos.spaltePlusEins(), "CellBackColor");
+				if (cellProperty != null && cellProperty instanceof Integer) {
+					val = (Integer) cellProperty;
+				}
+			}
+
+			if (val == null) {
+				Object defaultVal = getDefaultProp(key);
+				if (defaultVal != null && defaultVal instanceof Integer) {
+					val = (Integer) defaultVal;
+				}
 			}
 		}
 		return val;

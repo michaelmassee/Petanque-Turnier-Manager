@@ -37,7 +37,7 @@ public abstract class BaseField<T> {
 	private final String imageUrlDir;
 
 	// wird nur intial verwendet, dan bei jeden resize von layout neu berechnet
-	private static final int lineHeight = 25;
+	private static final int lineHeight = 29;
 	private static final int lineWidth = 10;
 	protected static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
 
@@ -90,12 +90,28 @@ public abstract class BaseField<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public final T helpText(String text) {
-		if (properties != null && text != null) {
-			String[] name = new String[] { GuiFactory.HELP_TEXT };
-			String[] val = new String[] { text };
+	public T helpText(String text) {
+		setProperty(GuiFactory.HELP_TEXT, text);
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T helpText(XMultiPropertySet xMultiPropertySet, String text) {
+		setProperty(xMultiPropertySet, GuiFactory.HELP_TEXT, text);
+		return (T) this;
+	}
+
+	public final T setProperty(String key, Object newVal) {
+		return setProperty(properties, key, newVal);
+	}
+
+	@SuppressWarnings("unchecked")
+	public final T setProperty(XMultiPropertySet xMultiPropertySet, String key, Object newVal) {
+		if (properties != null && key != null) {
+			String[] name = new String[] { key };
+			Object[] val = new Object[] { newVal };
 			try {
-				properties.setPropertyValues(name, val);
+				xMultiPropertySet.setPropertyValues(name, val);
 			} catch (IllegalArgumentException | PropertyVetoException | WrappedTargetException e) {
 				logger.error(e.getMessage(), e);
 			}

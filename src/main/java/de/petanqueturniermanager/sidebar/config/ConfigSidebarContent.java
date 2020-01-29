@@ -90,6 +90,11 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 			configElements.add(booleanConfigSidebarElement);
 			break;
 		case COLOR:
+			// create colorpicker
+			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(getGuiFactoryCreateParam(), configProperty,
+					getCurrentSpreadsheet());
+			getLayout().addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
+			configElements.add(backgrnColorConfigSidebarElement);
 			break;
 		case INTEGER:
 			break;
