@@ -43,12 +43,8 @@ public interface Layout {
 		addLayout(new ControlLayout(control), weight);
 	}
 
-	default void addControl(XControl control, int weight, int fixWidth) {
-		if (fixWidth > 0) {
-			// darf kein weight haben
-			weight = 0;
-		}
-		addLayout(new ControlLayout(control, fixWidth), weight);
+	default void addFixedWidthControl(XControl control, int fixWidth) {
+		addLayout(new ControlLayout(control, fixWidth), 0);
 	}
 
 	/**

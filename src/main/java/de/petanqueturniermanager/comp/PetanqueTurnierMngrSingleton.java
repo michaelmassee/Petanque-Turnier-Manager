@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.comp;
 
+import javax.swing.UIManager;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,6 +39,12 @@ public class PetanqueTurnierMngrSingleton {
 	 */
 
 	public static final void init(XComponentContext context) {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+
 		globalEventListener(context);
 		ProcessBox.init(context); // der muss zuerst
 		TerminateListener.addThisListenerOnce(context);

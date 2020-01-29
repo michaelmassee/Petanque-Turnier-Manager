@@ -52,6 +52,10 @@ public class GuiFactory {
 	public static final String ENABLED = "Enabled";
 	public static final String VERTICAL_ALIGN = "VerticalAlign";
 	public static final String IMAGE_URL = "ImageURL";
+	public static final String BACKGROUND_COLOR = "BackgroundColor"; // rgb color
+	public static final String PAINT_TRANSPARENT = "PaintTransparent"; // specifies whether the control paints it background or not.
+	public static final String BORDER = "Border"; // (short) specifies the border style of the control. 0: No border 1: 3D border 2: simple border
+	public static final String BORDER_COLOR = "BorderColor"; // long
 
 	private GuiFactory() {
 	}
@@ -179,7 +183,7 @@ public class GuiFactory {
 	 * @return Ein Label-Control
 	 */
 	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
-			SortedMap<String, Object> props) {
+			Map<String, Object> props) {
 		if (props == null) {
 			props = new TreeMap<>();
 		}
