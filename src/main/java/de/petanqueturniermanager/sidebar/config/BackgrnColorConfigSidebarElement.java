@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.awt.Color;
 
 import javax.swing.JColorChooser;
+import javax.swing.JFrame;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ import com.sun.star.lang.EventObject;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusBackgrColorAndColorChooser;
@@ -35,11 +37,13 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 	ConfigProperty<?> configProperty;
 	WorkingSpreadsheet workingSpreadsheet;
 
-	BackgrnColorConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	BackgrnColorConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty,
+			WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam).labelText(configProperty.getKey())
-				.helpText(configProperty.getDescription()).addXActionListener(btnXActionListener).color(getPropertyValue());
+		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam)
+				.labelText(configProperty.getKey()).helpText(configProperty.getDescription())
+				.addXActionListener(btnXActionListener).color(getPropertyValue());
 	}
 
 	@Override
@@ -72,14 +76,18 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 			// btn Klicked
 			try {
 				Color color = new Color(getPropertyValue());
-				Color newColor = JColorChooser.showDialog(null, configProperty.getKey(), color);
-				int red = newColor.getRed();
-				int green = newColor.getGreen();
-				int blue = newColor.getBlue();
-				String hex = String.format("%02x%02x%02x", red, green, blue);
-				int rgbColor = Integer.valueOf(hex, 16);
-				setPropertyValue(rgbColor);
-				labelPlusBackgrColorAndColorChooser.color(rgbColor);
+				JFrame frame = ProcessBox.from().moveInsideTopWindow().toFront().getFrame();
+				Color newColor = JColorChooser.showDialog(frame, configProperty.getKey(), color);
+				if (newColor != null) {
+					// farbe ausgewaehlt
+					int red = newColor.getRed();
+					int green = newColor.getGreen();
+					int blue = newColor.getBlue();
+					String hex = String.format("%02x%02x%02x", red, green, blue);
+					int rgbColor = Integer.valueOf(hex, 16);
+					setPropertyValue(rgbColor);
+					labelPlusBackgrColorAndColorChooser.color(rgbColor);
+				}
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 			}
