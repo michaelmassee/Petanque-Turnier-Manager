@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.awt.InvalidateStyle;
 import com.sun.star.awt.XWindow;
 import com.sun.star.lang.EventObject;
@@ -17,14 +20,16 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
  *
  */
 public class ConfigSidebarContent extends BaseSidebarContent {
+	static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
-	private boolean didAddFields = false;
+	private boolean didAddFields;
 
 	private List<ConfigSidebarElement> configElements = new ArrayList<>();
 
@@ -35,6 +40,7 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 	 */
 	public ConfigSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		super(workingSpreadsheet, parentWindow, xSidebar);
+
 	}
 
 	@Override
@@ -44,15 +50,21 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 
 	@Override
 	protected void updateFieldContens(ITurnierEvent eventObj) {
-		// Turnier vorhanden ?
 		addFields();
 	}
 
 	@Override
 	protected void addFields() {
+		// Turnier vorhanden ?
+		TurnierSystem turnierSystemAusDocument = getTurnierSystemAusDocument();
+		if (turnierSystemAusDocument == null || turnierSystemAusDocument == TurnierSystem.KEIN) {
+			return;
+		}
+
 		if (didAddFields) {
 			return;
 		}
+		logger.debug("addFields once");
 
 		List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(getCurrentSpreadsheet());
 		if (konfigProperties == null) {
@@ -61,16 +73,19 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 		}
 
 		didAddFields = true;
-		konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBar()).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
+		konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBar()).collect(Collectors.toList())
+				.forEach(konfigprop -> addPropToPanel(konfigprop));
 
 		// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/InvalidateStyle.html
 		// InvalidateStyle.UPDATE
 		// force repaint
 		// funktioniert manchmal .... !?!?
-		getGuiFactoryCreateParam().getWindowPeer().invalidate((short) (InvalidateStyle.TRANSPARENT | InvalidateStyle.CHILDREN));
+//		getGuiFactoryCreateParam().getWindowPeer()
+//				.invalidate((short) (InvalidateStyle.TRANSPARENT | InvalidateStyle.CHILDREN));
 
 		// Request layout of the sidebar.
-		// Call this method when one of the panels wants to change its size due to late initialization or different content after a context change.
+		// Call this method when one of the panels wants to change its size due to late
+		// initialization or different content after a context change.
 		getxSidebar().requestLayout();
 	}
 
@@ -79,20 +94,22 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 		switch (configProperty.getType()) {
 		case STRING:
 			// create textfield mit btn
-			StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
+			StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(
+					getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
 			getLayout().addLayout(stringConfigSidebarElement.getLayout(), 1);
 			configElements.add(stringConfigSidebarElement);
 			break;
 		case BOOLEAN:
 			// create checkbox
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
+			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(
+					getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
 			getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
 			configElements.add(booleanConfigSidebarElement);
 			break;
 		case COLOR:
 			// create colorpicker
-			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(getGuiFactoryCreateParam(), configProperty,
-					getCurrentSpreadsheet());
+			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(
+					getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
 			getLayout().addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
 			configElements.add(backgrnColorConfigSidebarElement);
 			break;
