@@ -1,7 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<oor:component-data oor:name="Sidebar" oor:package="org.openoffice.Office.UI"
-	xmlns:install="http://openoffice.org/2004/installation" xmlns:oor="http://openoffice.org/2001/registry"
-	xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<oor:component-data oor:name="Sidebar" oor:package="org.openoffice.Office.UI" xmlns:install="http://openoffice.org/2004/installation" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<node oor:name="Content">
 		<node oor:name="DeckList">
 			<!-- https://wiki.openoffice.org/wiki/Sidebar_for_Developers -->
@@ -13,15 +11,15 @@
 				<prop oor:name="Id" oor:type="xs:string">
 					<value>PetTurnMngrDeck</value>
 				</prop>
-				<prop oor:name="IconURL" oor:type="xs:string">
 					<!-- vnd.sun.star.extension://org.apache.openoffice.sidebar.AnalogClock -->
 					<!-- vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png -->
 					<!-- %origin% -->
 					<!--  <value>vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png</value> -->
+				<prop oor:name="IconURL" oor:type="xs:string">
 					<value>private:graphicrepository/cmd/lc_testmode.png</value>
 				</prop>
 				<prop oor:name="HighContrastIconURL" oor:type="xs:string">
-					<value>vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png</value>
+					<value>private:graphicrepository/cmd/lc_testmode.png</value>
 				</prop>
 				<prop oor:name="ContextList">
 					<!-- Calc, any, visible ; -->
@@ -31,6 +29,7 @@
 			</node>
 		</node>
 		<node oor:name="PanelList">
+			<!-- *************************************************************************************  -->
 			<node oor:name="InfoPanel" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
 					<value xml:lang="en">Info</value>
@@ -70,6 +69,7 @@
 				<!-- <value>de.petanqueturniermanager:ShowAnalogClockOptionsDialog</value> 
 					</prop> -->
 			</node>
+			<!-- *************************************************************************************  -->
 			<node oor:name="ConfigPanel" oor:op="replace">
 				<prop oor:name="Title" oor:type="xs:string">
 					<value xml:lang="en">Config</value>
@@ -94,21 +94,34 @@
 				<prop oor:name="OrderIndex" oor:type="xs:int">
 					<value>110</value>
 				</prop>
-
-				<!-- WantsCanvas When true then an XCanvas object will be passed to the 
-					panel factory when the panel is created. Experimental. Defaults to false. 
-					<prop oor:name="WantsCanvas" oor:type="xs:boolean"> <value>true</value> </prop> -->
-
-				<!-- DefaultMenuCommand UNO service name of detail dialog to show when 
-					the user clicks on the detail dialog button in the title bar of the panel. 
-					Can be overridden by values in the ContextList. When not command is given 
-					then the button in the title bar is not displayed. -->
-
-				<!--<prop oor:name="DefaultMenuCommand" -->
-				<!-- see Protocalhandler fuer url -->
-				<!-- <value>de.petanqueturniermanager:ShowAnalogClockOptionsDialog</value> 
-					</prop> -->
 			</node>
+			<!-- *************************************************************************************  -->
+			<node oor:name="ColorPanel" oor:op="replace">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="en">Color</value>
+					<value xml:lang="de">Farben</value>
+				</prop>
+				<prop oor:name="Id" oor:type="xs:string">
+					<value>ColorPanel</value>
+				</prop>
+				<prop oor:name="DeckId" oor:type="xs:string">
+					<value>PetTurnMngrDeck</value>
+				</prop>
+				<prop oor:name="ContextList">
+					<value oor:separator=";">any, any, visible ;</value>
+				</prop>
+				<prop oor:name="ImplementationURL" oor:type="xs:string">
+					<value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/ColorPanel</value>
+				</prop>
+
+				<!-- OrderIndex A numerical value that defines the top-down order of 
+					panels in a deck. Higher values lead to positions further down. Defaults 
+					to 10000 which should result in a position below the standard panels. -->
+				<prop oor:name="OrderIndex" oor:type="xs:int">
+					<value>120</value>
+				</prop>
+			</node>
+
 		</node>
 	</node>
 </oor:component-data>

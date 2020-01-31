@@ -26,7 +26,7 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 	private ConfigProperty<?> configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 
-	BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription()).addListener(this)

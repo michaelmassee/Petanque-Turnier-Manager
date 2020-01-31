@@ -35,7 +35,7 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 	private WorkingSpreadsheet workingSpreadsheet;
 	TextAreaDialog textAreaDialog;
 
-	StringConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public StringConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);

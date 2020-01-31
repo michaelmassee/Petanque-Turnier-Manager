@@ -1,7 +1,7 @@
 /**
  * Erstellung 21.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.sidebar.config.color;
 
 import com.sun.star.awt.XWindow;
 import com.sun.star.lib.uno.helper.ComponentBase;
@@ -14,20 +14,20 @@ import de.petanqueturniermanager.sidebar.BaseSidebarPanel;
  * @author Michael Massee
  *
  */
-public class ConfigSidebarPanel extends BaseSidebarPanel {
+public class ColorSidebarPanel extends BaseSidebarPanel {
 
 	/**
 	 * @param workingSpreadsheet
 	 * @param parentWindow
 	 * @param resourceUrl
 	 */
-	public ConfigSidebarPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, String resourceUrl, XSidebar xSidebar) {
+	public ColorSidebarPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, String resourceUrl, XSidebar xSidebar) {
 		super(workingSpreadsheet, parentWindow, resourceUrl, xSidebar);
 	}
 
 	@Override
 	protected ComponentBase newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
-		return new ConfigSidebarContent(workingSpreadsheet, parentWindow, xSidebar);
+		return new ColorSidebarContent(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
 }

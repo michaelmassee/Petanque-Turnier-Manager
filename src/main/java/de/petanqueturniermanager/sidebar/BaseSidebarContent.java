@@ -83,7 +83,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		addFields();
 	}
 
-	protected void newBaseWindow() {
+	private void newBaseWindow() {
 		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
 		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
 		XToolkit parentToolkit = parentWindowPeer.getToolkit();
