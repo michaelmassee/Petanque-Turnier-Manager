@@ -1,10 +1,10 @@
 #UNO project configuration file
-#Sun Dec 22 18:48:39 CET 2019
+#Thu Jan 30 22:07:23 CET 2020
 project.srcdir=/src/main/java
 regclassname=de.petanqueturniermanager.comp.RegistrationHandler
 javaversion=java8
-project.sdk=6.2.8.2
-project.ooo=LibreOffice 6.2
+project.sdk=6.3.4.2
+project.ooo=LibreOffice 6.3
 project.implementation=comp
 project.build=build
 project.language=Java

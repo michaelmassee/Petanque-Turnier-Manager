@@ -20,8 +20,8 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 /**
  * @author Michael Massee
  *
- *         vorlage<br>
- *         de.muenchen.allg.itd51.wollmux.sidebar.SeriendruckSidebarContent;
+ * vorlage<br>
+ * de.muenchen.allg.itd51.wollmux.sidebar.SeriendruckSidebarContent;
  *
  */
 public class InfoSidebarContent extends BaseSidebarContent {
@@ -31,7 +31,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	private LabelPlusTextReadOnly turnierSystemInfoLine;
 	private LabelPlusTextReadOnly spielRundeInfoLine;
 	private LabelPlusTextReadOnly spielTagInfoLine;
-	private boolean didAddFields;
+	boolean didAddFields;
 
 	/**
 	 * Jedes Document eigene Instance
@@ -43,12 +43,15 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		super(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
+	/**
+	 * die felder sind immer gleich
+	 */
 	private void addEmptyFields() {
 		if (didAddFields) {
-			// only once
 			return;
 		}
 		didAddFields = true;
+
 		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem :");
 		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
 
@@ -61,9 +64,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 	@Override
 	protected void addFields() {
-		// wird aufgerufen wenn das eigentliche Document on Top ist
+		addEmptyFields(); // kann hier gemacht werden weil die felder sich nicht ändern
 		// TODO Spieltag und Spielrunde aus document properties
-		addEmptyFields(); // kann hier genacht werden weil die felder sich nicht ändern
 		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
 	}
 

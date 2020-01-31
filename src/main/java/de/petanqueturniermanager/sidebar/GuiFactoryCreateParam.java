@@ -16,10 +16,10 @@ import com.sun.star.uno.XComponentContext;
  */
 public class GuiFactoryCreateParam {
 
-	private final XMultiComponentFactory xMCF;
-	private final XComponentContext xContext;
-	private final XToolkit toolkit;
-	private final XWindowPeer windowPeer;
+	private XMultiComponentFactory xMCF;
+	private XComponentContext xContext;
+	private XToolkit toolkit;
+	private XWindowPeer windowPeer;
 
 	public GuiFactoryCreateParam(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
 		this.xMCF = checkNotNull(xMCF);
@@ -42,6 +42,13 @@ public class GuiFactoryCreateParam {
 
 	public final XWindowPeer getWindowPeer() {
 		return windowPeer;
+	}
+
+	public final void clear() {
+		xMCF = null;
+		xContext = null;
+		toolkit = null;
+		windowPeer = null;
 	}
 
 }

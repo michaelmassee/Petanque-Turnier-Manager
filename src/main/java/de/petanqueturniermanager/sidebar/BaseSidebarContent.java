@@ -43,24 +43,25 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public abstract class BaseSidebarContent extends ComponentBase
-		implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
+public abstract class BaseSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
 	static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
-	private final XWindow window;
+	private XWindow window;
 	private GuiFactoryCreateParam guiFactoryCreateParam;
 
 	private boolean didOnHandleDocReady;
 
 	private WorkingSpreadsheet currentSpreadsheet;
 	private XWindow parentWindow;
-	private final Layout layout;
+	private Layout layout;
 	private XSidebar xSidebar;
 
 	/**
-	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen.
+	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
+	 * 1. Sidebar aus wieder an dann okay<br>
+	 * 2. nach Druckvorschau dann okay<br>
+	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht! okay<br>
 	 * <br>
-	 * Wenn neu oder load, dann nicht Aktuell<br>
 	 *
 	 * @param workingSpreadsheet
 	 * @param parentWindow
@@ -78,17 +79,29 @@ public abstract class BaseSidebarContent extends ComponentBase
 		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
-				currentSpreadsheet.getxContext().getServiceManager());
+		newBaseWindow();
+		addFields();
+	}
+
+	protected void newBaseWindow() {
+		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
 		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
 		XToolkit parentToolkit = parentWindowPeer.getToolkit();
 		XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
 		windowPeer.setBackground(0xffffffff);
 		window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
 		window.setVisible(true);
-		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, workingSpreadsheet.getxContext(), parentToolkit,
-				windowPeer);
-		addFields();
+		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit, windowPeer);
+	}
+
+	protected void removeAllFields() {
+		logger.debug("removeAllFields");
+		layout = new VerticalLayout(0, 2);
+		guiFactoryCreateParam.getWindowPeer().dispose();
+		window.dispose();
+		guiFactoryCreateParam.clear();
+		guiFactoryCreateParam = null;
+		newBaseWindow();
 	}
 
 	@Override
@@ -107,39 +120,50 @@ public abstract class BaseSidebarContent extends ComponentBase
 	public void onUnfocus(Object source) {
 		// dann der fall wenn kein onLoad oder onNew
 		// passiert wenn einfach nur die sidebar aus / an geschalted wird
+		// Druck vorschau
 		if (didOnHandleDocReady) {
 			return;
 		}
 
 		// hier kein update von WorkingSpreadsheet weil im Konstruktor das richtige
 		// document vorhanden.
+		// felder sind bereits vorhanden
 		didOnHandleDocReady = true;
-		// add fields
-		addFields();
+	}
+
+	@Override
+	public void onNew(Object source) {
+		refreshCurrentSpreadsheetFromSource(source);
+	}
+
+	@Override
+	public void onLoad(Object source) {
+		refreshCurrentSpreadsheetFromSource(source);
 	}
 
 	// kommt wenn new,load UND nach der umschaltung von Druckvorschau
-	@Override
-	public void onViewCreated(Object source) {
+	// @Override
+	// public void onViewCreated(Object source) {
+	// if (didOnHandleDocReady) {
+	// return;
+	// }
+	// refreshCurrentSpreadsheetFromSource(source);
+	// }
 
+	private void refreshCurrentSpreadsheetFromSource(Object source) {
 		if (didOnHandleDocReady) {
 			return;
 		}
 
-		// wir gehen davon aus das wir den Focus kriegen
-		// in source ist das document was wir haben wollen, kann aber noch nicht Aktiv
-		// sein !
 		XModel compo = UnoRuntime.queryInterface(XModel.class, source);
 		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, compo);
-		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class,
-				compo.getCurrentController());
+		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, compo.getCurrentController());
 
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
 			didOnHandleDocReady = true;
 			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
 			// Aktive Doc
-			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument,
-					xSpreadsheetView);
+			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
 			addFields();
 		}
 	}
@@ -179,8 +203,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	protected void doLayout() {
 		// Rectangle posSizeParent = parentWindow.getPosSize();
 		// Start offset immer 0,0
-		Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width,
-				getParentWindow().getPosSize().Height);
+		Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width, getParentWindow().getPosSize().Height);
 		getLayout().layout(posSizeParent);
 	}
 
@@ -238,8 +261,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	protected TurnierSystem getTurnierSystemAusDocument() {
 		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
-		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
-				TurnierSystem.KEIN.getId());
+		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
 		if (spielsystem > -1) {
 			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 		}
