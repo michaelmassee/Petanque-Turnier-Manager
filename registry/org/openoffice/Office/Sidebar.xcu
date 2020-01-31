@@ -17,7 +17,8 @@
 					<!-- vnd.sun.star.extension://org.apache.openoffice.sidebar.AnalogClock -->
 					<!-- vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png -->
 					<!-- %origin% -->
-					<value>vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png</value>
+					<!--  <value>vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png</value> -->
+					<value>private:graphicrepository/cmd/lc_testmode.png</value>
 				</prop>
 				<prop oor:name="HighContrastIconURL" oor:type="xs:string">
 					<value>vnd.sun.star.extension://de.petanqueturniermanager/images/petanqueturniermanager-logo-32px.png</value>
