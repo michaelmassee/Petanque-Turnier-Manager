@@ -19,7 +19,8 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.sidebar.config.ConfigSidebarPanel;
+import de.petanqueturniermanager.sidebar.config.allgemein.ConfigSidebarPanel;
+import de.petanqueturniermanager.sidebar.config.color.ColorSidebarPanel;
 
 /**
  * This is the factory that creates the sidebar panel.
@@ -115,6 +116,9 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 			} else if (sElementName.equals("ConfigPanel")) {
 				logger.debug("New ConfigSidebarPanel");
 				return new ConfigSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+			} else if (sElementName.equals("ColorPanel")) {
+				logger.debug("New ColorSidebarPanel");
+				return new ColorSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 			}
 		}
 		return null;

@@ -61,16 +61,16 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN).setDefaultVal(0).setDescription("Neu auslosen ab Spielrunde"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen"));
+				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen"));
+				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
-				.setDescription("Spielrunde Header-Hintergrundfarbe"));
+				.setDescription("Spielrunde Header-Hintergrundfarbe").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE).setDefaultVal(14540253)
-				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag gerade Zeilen"));
+				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag gerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE).setDefaultVal(Integer.valueOf("ccc8c1", 16))
-				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag ungerade Zeilen"));
+				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag ungerade Zeilen").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS).setDefaultVal(0)
 				.setDescription("Pluspunkte nicht gespielte Runde"));

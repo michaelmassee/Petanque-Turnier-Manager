@@ -24,8 +24,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public class ConfigSidebarContent extends BaseSidebarContent {
-	static final Logger logger = LogManager.getLogger(ConfigSidebarContent.class);
+public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
+	static final Logger logger = LogManager.getLogger(BaseConfigSidebarContent.class);
 
 	private boolean didAddFields;
 
@@ -34,7 +34,7 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 	 * @param parentWindow
 	 * @param xSidebar
 	 */
-	public ConfigSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
+	public BaseConfigSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		super(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
@@ -52,14 +52,14 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 		// Turnier vorhanden ?
 		TurnierSystem turnierSystemAusDocument = getTurnierSystemAusDocument();
 		if (turnierSystemAusDocument == null || turnierSystemAusDocument == TurnierSystem.KEIN) {
-			if (didAddFields) {
+			if (isDidAddFields()) {
 				removeAllFields();
-				didAddFields = false;
+				setDidAddFields(false);
 			}
 			return;
 		}
 
-		if (didAddFields) {
+		if (isDidAddFields()) {
 			return;
 		}
 
@@ -70,15 +70,9 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 		}
 		logger.debug("addFields once");
 
-		didAddFields = true;
-		konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBar()).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
-
-		// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/InvalidateStyle.html
-		// InvalidateStyle.UPDATE
-		// force repaint
-		// funktioniert manchmal .... !?!?
-		// getGuiFactoryCreateParam().getWindowPeer()
-		// .invalidate((short) (InvalidateStyle.TRANSPARENT | InvalidateStyle.CHILDREN));
+		setDidAddFields(true);
+		konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBar()).filter(getKonfigFieldFilter()).collect(Collectors.toList())
+				.forEach(konfigprop -> addPropToPanel(konfigprop));
 
 		// Request layout of the sidebar.
 		// Call this method when one of the panels wants to change its size due to late
@@ -113,4 +107,13 @@ public class ConfigSidebarContent extends BaseSidebarContent {
 
 	}
 
+	protected abstract java.util.function.Predicate<ConfigProperty<?>> getKonfigFieldFilter();
+
+	protected final boolean isDidAddFields() {
+		return didAddFields;
+	}
+
+	protected final void setDidAddFields(boolean didAddFields) {
+		this.didAddFields = didAddFields;
+	}
 }
