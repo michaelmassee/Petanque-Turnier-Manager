@@ -16,8 +16,10 @@ import com.sun.star.ui.XSidebar;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
+import de.petanqueturniermanager.sidebar.config.color.BackgrnColorConfigSidebarElement;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -84,13 +86,23 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 
 		switch (configProperty.getType()) {
 		case STRING:
-			// create textfield mit btn
-			StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
-			getLayout().addLayout(stringConfigSidebarElement.getLayout(), 1);
+
+			if (configProperty instanceof AuswahlConfigProperty) {
+				// ComboBox
+				AuswahlConfigSidebarElement auswahlConfigSidebarElement = new AuswahlConfigSidebarElement(getGuiFactoryCreateParam(), (AuswahlConfigProperty) configProperty,
+						getCurrentSpreadsheet());
+				getLayout().addLayout(auswahlConfigSidebarElement.getLayout(), 1);
+			} else {
+				// create textfield mit btn
+				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
+				getLayout().addLayout(stringConfigSidebarElement.getLayout(), 1);
+			}
 			break;
 		case BOOLEAN:
 			// create checkbox
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
+			@SuppressWarnings("unchecked")
+			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty,
+					getCurrentSpreadsheet());
 			getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
 			break;
 		case COLOR:

@@ -5,6 +5,7 @@ package de.petanqueturniermanager.sidebar.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,6 +50,10 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 	}
 
 	private void setPropertyValue(String newVal) {
+		if (StringUtils.equals(getPropertyValue(), newVal)) {
+			return; // nichts zu tun
+		}
+
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
 		docPropHelper.setStringProperty(configProperty.getKey(), newVal);
 	}

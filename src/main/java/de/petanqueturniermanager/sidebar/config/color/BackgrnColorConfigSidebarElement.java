@@ -1,7 +1,7 @@
 /**
  * Erstellung 24.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar.config;
+package de.petanqueturniermanager.sidebar.config.color;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
+import de.petanqueturniermanager.sidebar.config.ConfigSidebarElement;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusBackgrColorAndColorChooser;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
@@ -50,6 +51,10 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 	}
 
 	void setPropertyValue(int newVal) {
+		if (getPropertyValue() == newVal) {
+			return; // nichts zu tun
+		}
+
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
 		docPropHelper.setIntProperty(configProperty.getKey(), newVal);
 	}

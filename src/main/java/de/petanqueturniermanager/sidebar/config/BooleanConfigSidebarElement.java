@@ -23,10 +23,10 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
 public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemListener {
 
 	private LabelPlusCheckBox labelPlusCheckBox;
-	private ConfigProperty<?> configProperty;
+	private ConfigProperty<Boolean> configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 
-	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<?> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription()).addListener(this)
@@ -39,13 +39,17 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 	}
 
 	private void setPropertyValue(boolean newVal) {
+		if (getPropertyValue() == newVal) {
+			return; // nichts zu tun
+		}
+
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
 		docPropHelper.setBooleanProperty(configProperty.getKey(), newVal);
 	}
 
 	private boolean getPropertyValue() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
-		return docPropHelper.getBooleanProperty(configProperty.getKey(), (Boolean) configProperty.getDefaultVal());
+		return docPropHelper.getBooleanProperty(configProperty.getKey(), configProperty.getDefaultVal());
 	}
 
 	@Override
