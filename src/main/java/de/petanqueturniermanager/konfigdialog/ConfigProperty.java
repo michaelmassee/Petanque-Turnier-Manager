@@ -14,10 +14,11 @@ public class ConfigProperty<V> {
 	private String description;
 	private boolean inSideBar; // uebergang properties nach sidebar
 
-	private ConfigProperty(ConfigPropertyType type, String key) {
+	protected ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
 		this.key = checkNotNull(key);
 		inSideBar = false;
+
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {

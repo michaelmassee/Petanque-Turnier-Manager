@@ -16,7 +16,6 @@ import com.sun.star.awt.WindowDescriptor;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
 import com.sun.star.awt.XCheckBox;
-import com.sun.star.awt.XComboBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XFixedText;
@@ -218,14 +217,22 @@ public class GuiFactory {
 		return GuiFactory.createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.tree.TreeControl", props, new Rectangle(0, 0, 400, 400));
 	}
 
-	public static XControl createCombobox(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
-			SortedMap<String, Object> props) {
-		XControl ctrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlComboBox", props, size);
+	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlComboBox.html
+	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlComboBoxModel.html
+	public static XControl createCombobox(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size, Map<String, Object> props) {
+		if (props == null) {
+			props = new TreeMap<>();
+		}
+		props.putIfAbsent("Dropdown", Boolean.TRUE); // specifies if the control has a drop down button.
+		props.putIfAbsent("LineCount", (short) 10); // specifies the maximum line count displayed in the drop down box.
+		props.putIfAbsent("Autocomplete", Boolean.TRUE); // specifies whether automatic completion of text is enabled.
+		// props.putIfAbsent("Enabled", Boolean.FALSE); // specifies that the content of the control cannot be modified by the user.
+
+		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlComboBox", props, size);
 		XTextComponent tf = UnoRuntime.queryInterface(XTextComponent.class, ctrl);
 		tf.setText(text);
-		XComboBox cmb = UnoRuntime.queryInterface(XComboBox.class, ctrl);
-		cmb.setDropDownLineCount((short) 10);
-
+		// XComboBox cmb = UnoRuntime.queryInterface(XComboBox.class, ctrl);
+		// cmb.setDropDownLineCount((short) 10);
 		return ctrl;
 	}
 
@@ -252,9 +259,10 @@ public class GuiFactory {
 		return createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlFixedLine", props, size);
 	}
 
-	public static XControl createListBox(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, XItemListener listener, Rectangle size,
-			SortedMap<String, Object> props) {
-		XControl ctrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlListBox", props, size);
+	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBoxModel.html
+	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBox.html
+	public static XControl createListBox(GuiFactoryCreateParam guiFactoryCreateParam, XItemListener listener, Rectangle size, Map<String, Object> props) {
+		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlListBox", props, size);
 		UnoRuntime.queryInterface(XListBox.class, ctrl).addItemListener(listener);
 
 		return ctrl;

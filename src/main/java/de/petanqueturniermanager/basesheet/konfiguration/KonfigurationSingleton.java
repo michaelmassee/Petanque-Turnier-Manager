@@ -5,6 +5,9 @@ package de.petanqueturniermanager.basesheet.konfiguration;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -20,22 +23,28 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *
  */
 public class KonfigurationSingleton implements IKonfigurationKonstanten {
+	static final Logger logger = LogManager.getLogger(KonfigurationSingleton.class);
 
 	// List<ConfigProperty<?>> KONFIG_PROPERTIES
 	public static List<ConfigProperty<?>> getKonfigProperties(WorkingSpreadsheet currentSpreadsheet) {
-		TurnierSystem turnierSystem = getTurnierSystem(currentSpreadsheet);
-		if (turnierSystem != null) {
-			// leider oldschool fest verdrathen, weil reflection nicht funktioniert :-(
-			switch (turnierSystem) {
-			case LIGA:
-				return LigaPropertiesSpalte.KONFIG_PROPERTIES;
-			case SCHWEIZER_KO:
-				break;
-			case SUPERMELEE:
-				return SuperMeleePropertiesSpalte.KONFIG_PROPERTIES;
-			default:
-				break;
+		try {
+
+			TurnierSystem turnierSystem = getTurnierSystem(currentSpreadsheet);
+			if (turnierSystem != null) {
+				// leider oldschool fest verdrathen, weil reflection nicht funktioniert :-(
+				switch (turnierSystem) {
+				case LIGA:
+					return LigaPropertiesSpalte.KONFIG_PROPERTIES;
+				case SCHWEIZER_KO:
+					break;
+				case SUPERMELEE:
+					return SuperMeleePropertiesSpalte.KONFIG_PROPERTIES;
+				default:
+					break;
+				}
 			}
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 		return null;
 	}
