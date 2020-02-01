@@ -19,8 +19,6 @@ import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lib.uno.helper.ComponentBase;
-import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.ui.LayoutSize;
 import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XSidebarPanel;
@@ -159,14 +157,14 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		}
 
 		XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
+		// XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+		// XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 
-		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
+		if (xModel != null) {
 			didOnHandleDocReady = true;
 			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
 			// Aktive Doc
-			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
+			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
 			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
 				// Tatsächlich nicht Aktuell ?
 				// bis jetzt nur in Linux ein problem
