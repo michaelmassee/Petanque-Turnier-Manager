@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
-import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
-import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
-import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -107,15 +104,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		return KONFIG_PROP_SPIELTAG_KOPFZEILE + " " + spielTagNr;
 	}
 
-	private void fireUpdateEvent() {
-		try {
-			OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(getAktiveSpieltag(), getAktiveSpielRunde(), getWorkingSpreadsheet());
-			PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, onConfigChangedEvent);
-		} catch (GenerateException e) {
-			// ignore this
-		}
-	}
-
 	/**
 	 * @param propertiesSpalte
 	 * @param erstePropertiesZeile
@@ -136,7 +124,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
 		ProcessBox.from().spielTag(spieltag);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
-		fireUpdateEvent();
 	}
 
 	@Override
@@ -150,7 +137,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
 		ProcessBox.from().spielRunde(spielrunde);
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
-		fireUpdateEvent();
 	}
 
 	@Override

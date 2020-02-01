@@ -61,7 +61,7 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 	protected void removeAndAddFields() {
 		boolean mustLayout = false;
 		if (turnierFields) {
-			super.removeAllFields();
+			super.removeAllFieldsAndNewBaseWindow();
 			mustLayout = true;
 		}
 		addFields(mustLayout);

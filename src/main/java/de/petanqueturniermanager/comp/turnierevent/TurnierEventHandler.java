@@ -19,14 +19,33 @@ public class TurnierEventHandler {
 
 	public void trigger(TurnierEventType type, ITurnierEvent eventObj) {
 		switch (type) {
-		case NewCreated:
-			onNewCreated(eventObj);
-		case ConfigChanged:
-			onConfigChanged(eventObj);
+		case GenerateReady:
+			onGenerateReady(eventObj);
+		case GenerateStart:
+			onGenerateStart(eventObj);
 			break;
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * @param eventObj
+	 */
+	private void onGenerateStart(ITurnierEvent eventObj) {
+		for (ITurnierEventListener listner : listeners) {
+			listner.onGenerateStart(eventObj);
+		}
+	}
+
+	/**
+	 * @param eventObj
+	 */
+	private void onGenerateReady(ITurnierEvent eventObj) {
+		for (ITurnierEventListener listner : listeners) {
+			listner.onGenerateReady(eventObj);
+		}
+
 	}
 
 	public void addTurnierEventListener(ITurnierEventListener listner) {
@@ -35,12 +54,6 @@ public class TurnierEventHandler {
 
 	public void removeTurnierEventListener(ITurnierEventListener listner) {
 		listeners.remove(listner);
-	}
-
-	private void onNewCreated(ITurnierEvent eventObj) {
-		for (ITurnierEventListener listner : listeners) {
-			listner.onNewCreated(eventObj);
-		}
 	}
 
 	/**
