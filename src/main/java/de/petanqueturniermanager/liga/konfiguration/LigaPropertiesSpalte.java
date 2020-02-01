@@ -11,6 +11,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
+import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -42,9 +43,9 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
 				.setDescription("Spielplan Header-Hintergrundfarbe"));
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_LINKS).setDefaultVal("").setDescription("Kopfzeile Links").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_MITTE).setDefaultVal("").setDescription("Kopfzeile Mitte").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KOPF_ZEILE_RECHTS).setDefaultVal("").setDescription("Kopfzeile Rechts").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS).setDescription("Kopfzeile Links").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE).setDescription("Kopfzeile Mitte").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS).setDescription("Kopfzeile Rechts").inSideBar());
 	}
 
 	/**

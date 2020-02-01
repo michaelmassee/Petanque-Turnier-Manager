@@ -34,9 +34,12 @@ import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
+import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -73,7 +76,6 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		this.xSidebar = checkNotNull(xSidebar);
 		didOnHandleDocReady = false;
 		this.parentWindow = checkNotNull(parentWindow);
-		layout = new VerticalLayout(0, 2);
 
 		this.parentWindow.addWindowListener(windowAdapter);
 		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
@@ -84,6 +86,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	}
 
 	private void newBaseWindow() {
+		layout = new VerticalLayout(0, 2);
 		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
 		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
 		XToolkit parentToolkit = parentWindowPeer.getToolkit();
@@ -96,9 +99,9 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	protected void removeAllFields() {
 		logger.debug("removeAllFields");
-		layout = new VerticalLayout(0, 2);
 		guiFactoryCreateParam.getWindowPeer().dispose();
 		window.dispose();
+		window = null;
 		guiFactoryCreateParam.clear();
 		guiFactoryCreateParam = null;
 		newBaseWindow();
@@ -163,8 +166,15 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 			didOnHandleDocReady = true;
 			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
 			// Aktive Doc
-			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
-			addFields();
+			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
+			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
+				// Tatsächlich nicht Aktuell ?
+				currentSpreadsheet = workingSpreadsheetFromSource;
+				removeAndAddFields(); // inhalt komplet neu
+			} else {
+				// TODO Spieltag aus Properties
+				updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
+			}
 		}
 	}
 
@@ -268,12 +278,6 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		return turnierSystemAusDocument;
 	}
 
-	protected abstract void disposing(EventObject event);
-
-	protected abstract void updateFieldContens(ITurnierEvent eventObj);
-
-	protected abstract void addFields();
-
 	public final Layout getLayout() {
 		return layout;
 	}
@@ -293,5 +297,13 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	protected final void setxSidebar(XSidebar xSidebar) {
 		this.xSidebar = xSidebar;
 	}
+
+	protected abstract void disposing(EventObject event);
+
+	protected abstract void updateFieldContens(ITurnierEvent eventObj);
+
+	protected abstract void addFields();
+
+	protected abstract void removeAndAddFields();
 
 }

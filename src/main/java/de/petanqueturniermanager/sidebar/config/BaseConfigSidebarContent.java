@@ -29,7 +29,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 	static final Logger logger = LogManager.getLogger(BaseConfigSidebarContent.class);
 
-	private boolean didAddFields;
+	private boolean turnierFields;
 
 	/**
 	 * @param workingSpreadsheet
@@ -44,35 +44,55 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 	protected void disposing(EventObject event) {
 	}
 
+	/**
+	 * event from menu
+	 */
 	@Override
 	protected void updateFieldContens(ITurnierEvent eventObj) {
-		addFields();
+		if (!turnierFields) {
+			addFields();
+		}
+	}
+
+	/**
+	 * event from new and load
+	 */
+	@Override
+	protected void removeAndAddFields() {
+		boolean mustLayout = false;
+		if (turnierFields) {
+			super.removeAllFields();
+			mustLayout = true;
+		}
+		addFields(mustLayout);
 	}
 
 	@Override
 	protected void addFields() {
+		addFields(false);
+	}
+
+	private void addFields(boolean mustLayout) {
+
 		// Turnier vorhanden ?
 		TurnierSystem turnierSystemAusDocument = getTurnierSystemAusDocument();
 		if (turnierSystemAusDocument == null || turnierSystemAusDocument == TurnierSystem.KEIN) {
-			if (isDidAddFields()) {
-				removeAllFields();
-				setDidAddFields(false);
+			// kein Turnier
+			turnierFields = false;
+			if (mustLayout) {
+				getxSidebar().requestLayout();
 			}
 			return;
 		}
 
-		if (isDidAddFields()) {
-			return;
-		}
+		logger.debug("addFields");
 
 		List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(getCurrentSpreadsheet());
 		if (konfigProperties == null) {
 			// kein Turnier vorhanden
 			return;
 		}
-		logger.debug("addFields once");
 
-		setDidAddFields(true);
 		konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBar()).filter(getKonfigFieldFilter()).collect(Collectors.toList())
 				.forEach(konfigprop -> addPropToPanel(konfigprop));
 
@@ -80,6 +100,7 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 		// Call this method when one of the panels wants to change its size due to late
 		// initialization or different content after a context change.
 		getxSidebar().requestLayout();
+		turnierFields = true;
 	}
 
 	private void addPropToPanel(ConfigProperty<?> configProperty) {
@@ -94,7 +115,9 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 				getLayout().addLayout(auswahlConfigSidebarElement.getLayout(), 1);
 			} else {
 				// create textfield mit btn
-				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(getGuiFactoryCreateParam(), configProperty, getCurrentSpreadsheet());
+				@SuppressWarnings("unchecked")
+				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<String>) configProperty,
+						getCurrentSpreadsheet());
 				getLayout().addLayout(stringConfigSidebarElement.getLayout(), 1);
 			}
 			break;
@@ -107,8 +130,9 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 			break;
 		case COLOR:
 			// create colorpicker
-			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(getGuiFactoryCreateParam(), configProperty,
-					getCurrentSpreadsheet());
+			@SuppressWarnings("unchecked")
+			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(getGuiFactoryCreateParam(),
+					(ConfigProperty<Integer>) configProperty, getCurrentSpreadsheet());
 			getLayout().addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
 			break;
 		case INTEGER:
@@ -121,11 +145,4 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 
 	protected abstract java.util.function.Predicate<ConfigProperty<?>> getKonfigFieldFilter();
 
-	protected final boolean isDidAddFields() {
-		return didAddFields;
-	}
-
-	protected final void setDidAddFields(boolean didAddFields) {
-		this.didAddFields = didAddFields;
-	}
 }

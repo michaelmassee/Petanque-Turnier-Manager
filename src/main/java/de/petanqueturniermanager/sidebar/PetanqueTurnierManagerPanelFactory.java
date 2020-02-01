@@ -21,6 +21,7 @@ import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.sidebar.config.allgemein.ConfigSidebarPanel;
 import de.petanqueturniermanager.sidebar.config.color.ColorSidebarPanel;
+import de.petanqueturniermanager.sidebar.config.headerfooter.HeaderFooterSidebarPanel;
 
 /**
  * This is the factory that creates the sidebar panel.
@@ -33,12 +34,12 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	private static final String IMPLEMENTATION_NAME = PetanqueTurnierManagerPanelFactory.class.getName();
 	private static final String[] SERVICE_NAMES = { __serviceName };
 
-	private final WorkingSpreadsheet currentSpreadsheet;
+	private final XComponentContext xContext;
 
 	// fuer jeden Sheet wird ein Panel erstellt
 	public PetanqueTurnierManagerPanelFactory(final XComponentContext xContext) {
 		logger.debug("PetanqueTurnierManagerPanelFactory constructor");
-		currentSpreadsheet = new WorkingSpreadsheet(xContext);
+		this.xContext = xContext;
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
@@ -110,6 +111,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 		// Create the panel.
 		try {
 			if (xParentWindow != null && xSidebar != null) {
+				WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 				final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
 				if (sElementName.equals("InfoPanel")) {
 					logger.debug("New InfoSidebarPanel");
@@ -120,6 +122,9 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 				} else if (sElementName.equals("ColorPanel")) {
 					logger.debug("New ColorSidebarPanel");
 					return new ColorSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+				} else if (sElementName.equals("HeaderFooterPanel")) {
+					logger.debug("New HeaderFooterPanel");
+					return new HeaderFooterSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 				}
 			}
 		} catch (Exception e) {

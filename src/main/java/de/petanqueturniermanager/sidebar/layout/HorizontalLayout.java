@@ -14,6 +14,7 @@ import com.sun.star.awt.Rectangle;
  */
 public class HorizontalLayout implements Layout {
 
+	private final int LEFT_RIGHT_BORDER = 5;
 	private int marginBetween = 1;
 	/**
 	 * Container für die enthaltenen Layouts.<br>
@@ -23,13 +24,13 @@ public class HorizontalLayout implements Layout {
 
 	@Override
 	public int layout(Rectangle rect) {
-		int xOffset = 0;
+		int xOffset = LEFT_RIGHT_BORDER;
 
 		// zwischenraum von 1 px nur zwischen den elementen
 		int gesMargin = (layouts.size() - 1) * marginBetween;
 		int summeFixWidth = layouts.keySet().parallelStream().filter(key -> key instanceof ControlLayout).map(key -> ((ControlLayout) key).getFixWidth()).reduce(0, Integer::sum);
-		int widthOhneFixUndMargin = Math.max(rect.Width - summeFixWidth - gesMargin, 0); // nicht kleiner als 0
-		int widthProGewichtung = widthOhneFixUndMargin / layouts.values().stream().reduce(0, Integer::sum); // width / addierten Gewichtungen
+		int widthOhneFixUndMarginUndBorder = Math.max(rect.Width - summeFixWidth - gesMargin - (LEFT_RIGHT_BORDER * 2), 0); // nicht kleiner als 0
+		int widthProGewichtung = widthOhneFixUndMarginUndBorder / layouts.values().stream().reduce(0, Integer::sum); // width / addierten Gewichtungen
 		int height = 0;
 
 		for (Map.Entry<Layout, Integer> entry : layouts.entrySet()) {

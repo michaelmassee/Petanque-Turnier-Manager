@@ -43,6 +43,7 @@ import com.sun.star.uno.XComponentContext;
 public class GuiFactory {
 
 	private static final Logger logger = LogManager.getLogger(GuiFactory.class);
+	public static final String ALIGN = "Align"; // horiztonal alignment, 0: left, 1: center, 2: right
 	public static final String V_SCROLL = "VScroll";
 	public static final String H_SCROLL = "HScroll";
 	public static final String READ_ONLY = "ReadOnly";

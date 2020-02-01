@@ -63,7 +63,7 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 		// ---------------------------------------
 		{
 			Map<String, Object> props = new HashMap<>();
-			// props.putIfAbsent(GuiFactory.BACKGROUND_COLOR, Integer.valueOf(StringUtils.strip(StringUtils.strip("#e38029"), "#"), 16)); // 227, 128, 41 #e38029
+			// props.putIfAbsent("Align", (short) 2); // rechts
 			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, props);
 			label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
 			labelProperties = UnoRuntime.queryInterface(XMultiPropertySet.class, labelControl.getModel());

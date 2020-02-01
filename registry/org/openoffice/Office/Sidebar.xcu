@@ -121,6 +121,33 @@
 					<value>120</value>
 				</prop>
 			</node>
+						<!-- *************************************************************************************  -->
+			<node oor:name="HeaderFooterPanel" oor:op="replace">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="en">Header/Footer</value>
+					<value xml:lang="de">Kopf/Fußzeile</value>
+				</prop>
+				<prop oor:name="Id" oor:type="xs:string">
+					<value>HeaderFooterPanel</value>
+				</prop>
+				<prop oor:name="DeckId" oor:type="xs:string">
+					<value>PetTurnMngrDeck</value>
+				</prop>
+				<prop oor:name="ContextList">
+					<value oor:separator=";">any, any, visible ;</value>
+				</prop>
+				<prop oor:name="ImplementationURL" oor:type="xs:string">
+					<value>private:resource/toolpanel/PetanqueTurnierManagerPanelFactory/HeaderFooterPanel</value>
+				</prop>
+
+				<!-- OrderIndex A numerical value that defines the top-down order of 
+					panels in a deck. Higher values lead to positions further down. Defaults 
+					to 10000 which should result in a position below the standard panels. -->
+				<prop oor:name="OrderIndex" oor:type="xs:int">
+					<value>130</value>
+				</prop>
+			</node>
+
 
 		</node>
 	</node>

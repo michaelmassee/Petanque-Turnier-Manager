@@ -31,7 +31,6 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	private LabelPlusTextReadOnly turnierSystemInfoLine;
 	private LabelPlusTextReadOnly spielRundeInfoLine;
 	private LabelPlusTextReadOnly spielTagInfoLine;
-	boolean didAddFields;
 
 	/**
 	 * Jedes Document eigene Instance
@@ -46,11 +45,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	/**
 	 * die felder sind immer gleich
 	 */
-	private void addEmptyFields() {
-		if (didAddFields) {
-			return;
-		}
-		didAddFields = true;
+	@Override
+	protected void addFields() {
 
 		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem :");
 		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
@@ -63,8 +59,9 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	}
 
 	@Override
-	protected void addFields() {
-		addEmptyFields(); // kann hier gemacht werden weil die felder sich nicht ändern
+	protected void removeAndAddFields() {
+		// wir mussen die felder nicht entfernen, weil die nicht ändern
+		// nur update
 		// TODO Spieltag und Spielrunde aus document properties
 		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
 	}
