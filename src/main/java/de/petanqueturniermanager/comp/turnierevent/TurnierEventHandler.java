@@ -56,15 +56,6 @@ public class TurnierEventHandler {
 		listeners.remove(listner);
 	}
 
-	/**
-	 * @param eventObj
-	 */
-	private void onConfigChanged(ITurnierEvent eventObj) {
-		for (ITurnierEventListener listner : listeners) {
-			listner.onConfigChanged(eventObj);
-		}
-	}
-
 	public void disposing() {
 		listeners.clear();
 	}
