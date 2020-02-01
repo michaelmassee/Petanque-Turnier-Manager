@@ -97,7 +97,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit, windowPeer);
 	}
 
-	protected void removeAllFields() {
+	protected void removeAllFieldsAndNewBaseWindow() {
 		logger.debug("removeAllFields");
 		guiFactoryCreateParam.getWindowPeer().dispose();
 		window.dispose();
@@ -169,6 +169,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
 			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
 				// Tatsächlich nicht Aktuell ?
+				// bis jetzt nur in Linux ein problem
 				currentSpreadsheet = workingSpreadsheetFromSource;
 				removeAndAddFields(); // inhalt komplet neu
 			} else {
@@ -199,7 +200,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	// ----- Implementation of interface ITurnierEventListener -----
 	@Override
-	public void onConfigChanged(ITurnierEvent eventObj) {
+	public void onGenerateStart(ITurnierEvent eventObj) {
 		// sind wir betroffen ?
 		if (!getCurrentSpreadsheet().compareSpreadsheetDocument(eventObj.getWorkingSpreadsheet())) {
 			// nein ignore
@@ -225,6 +226,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 		@Override
 		public void disposing(EventObject event) {
+			logger.debug("disposing");
 			super.disposing(event);
 			try {
 				PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
@@ -232,6 +234,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 				BaseSidebarContent.this.disposing(event);
 				setCurrentSpreadsheet(null);
 				setParentWindow(null);
+				getGuiFactoryCreateParam().clear();
 				setGuiFactoryCreateParam(null);
 				setxSidebar(null);
 			} catch (Exception e) {

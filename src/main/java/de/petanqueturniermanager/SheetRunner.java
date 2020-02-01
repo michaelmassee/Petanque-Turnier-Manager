@@ -81,6 +81,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				if (turnierSystem != TurnierSystem.KEIN) {
 					updateKonfigurationSheet();
 				}
+				triggerTurnierEventListener(TurnierEventType.GenerateStart);
 				doRun();
 			} catch (GenerateException e) {
 				handleGenerateException(e);
@@ -117,16 +118,34 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	protected abstract IKonfigurationSheet getKonfigurationSheet();
 
+	private void triggerTurnierEventListener(TurnierEventType type) {
+		try {
+			IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
+
+			// trigger change event
+			SpielRundeNr aktiveSpielRunde = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpielRunde();
+			SpielTagNr aktiveSpieltag = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpieltag();
+			OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(aktiveSpieltag, aktiveSpielRunde, getWorkingSpreadsheet());
+			PetanqueTurnierMngrSingleton.triggerTurnierEventListener(type, onConfigChangedEvent);
+			// new Thread("TurnierEvent") {
+			// @Override
+			// public void run() {
+			// try {
+			// // Ohne Sleep Core Dumps ? zum Testen
+			// java.util.concurrent.TimeUnit.SECONDS.sleep(3);
+			// } catch (InterruptedException e) {
+			// }
+			// }
+			// }.start();
+		} catch (Exception e) {
+			// ignore this
+		}
+	}
+
 	private void updateKonfigurationSheet() throws GenerateException {
 		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
 		checkNotNull(konfigurationSheet, "IKonfigurationSheet == null");
 		konfigurationSheet.update();
-
-		// trigger change event
-		SpielRundeNr aktiveSpielRunde = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpielRunde();
-		SpielTagNr aktiveSpieltag = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpieltag();
-		OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(aktiveSpieltag, aktiveSpielRunde, getWorkingSpreadsheet());
-		PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.ConfigChanged, onConfigChangedEvent);
 	}
 
 	public abstract Logger getLogger();

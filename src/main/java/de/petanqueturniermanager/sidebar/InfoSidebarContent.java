@@ -47,8 +47,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	 */
 	@Override
 	protected void addFields() {
-
-		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem :");
+		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem :").fieldText(getTurnierSystemAusDocument().getBezeichnung());
 		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
 
 		spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde :");
@@ -62,12 +61,16 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	protected void removeAndAddFields() {
 		// wir mussen die felder nicht entfernen, weil die nicht ändern
 		// nur update
-		// TODO Spieltag und Spielrunde aus document properties
+		updateFieldContens();
+	}
+
+	private void updateFieldContens() {
 		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
 	}
 
 	@Override
 	protected void updateFieldContens(ITurnierEvent eventObj) {
+		// TODO Spieltag und Spielrunde aus document properties
 		turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
 		spielRundeInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpielRundeNr().getNr());
 		spielTagInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpieltagnr().getNr());

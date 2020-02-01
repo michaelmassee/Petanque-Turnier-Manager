@@ -9,10 +9,10 @@ package de.petanqueturniermanager.comp.turnierevent;
  */
 public interface ITurnierEventListener {
 
-	default void onNewCreated(@SuppressWarnings("unused") ITurnierEvent eventObj) { // neues Turnier erstellt
+	default void onGenerateStart(@SuppressWarnings("unused") ITurnierEvent eventObj) { // neues Turnier erstellt
 	}
 
-	default void onConfigChanged(@SuppressWarnings("unused") ITurnierEvent eventObj) { // neues Turnier erstellt
+	default void onGenerateReady(@SuppressWarnings("unused") ITurnierEvent eventObj) { // neues Turnier erstellt
 	}
 
 }
