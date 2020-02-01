@@ -5,9 +5,6 @@ package de.petanqueturniermanager.sidebar.config.color;
 
 import java.util.function.Predicate;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.awt.XWindow;
 import com.sun.star.ui.XSidebar;
 
@@ -21,7 +18,7 @@ import de.petanqueturniermanager.sidebar.config.BaseConfigSidebarContent;
  *
  */
 public class ColorSidebarContent extends BaseConfigSidebarContent {
-	static final Logger logger = LogManager.getLogger(ColorSidebarContent.class);
+	public static final Predicate<ConfigProperty<?>> COLOR_FILTER = konfigprop -> konfigprop.getType() == ConfigPropertyType.COLOR;
 
 	/**
 	 * @param workingSpreadsheet
@@ -34,12 +31,6 @@ public class ColorSidebarContent extends BaseConfigSidebarContent {
 
 	@Override
 	protected Predicate<ConfigProperty<?>> getKonfigFieldFilter() {
-
-		return new java.util.function.Predicate<ConfigProperty<?>>() {
-			@Override
-			public boolean test(ConfigProperty<?> konfigprop) {
-				return konfigprop.getType() == ConfigPropertyType.COLOR;
-			}
-		};
+		return COLOR_FILTER;
 	}
 }

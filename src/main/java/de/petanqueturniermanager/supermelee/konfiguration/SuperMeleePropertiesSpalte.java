@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
+import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -52,7 +53,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
 
-	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfz. Tag"; // plus spieltagNr
+	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
 
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
@@ -97,7 +98,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
-			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, PROP_SPIELTAG_KOPFZEILE(spieltagcntr)).setDefaultVal(spieltagcntr + ". Spieltag")
+			KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(PROP_SPIELTAG_KOPFZEILE(spieltagcntr)).setDefaultVal(spieltagcntr + ". Spieltag")
 					.setDescription("Kopfzeile für Spieltag " + spieltagcntr).inSideBar());
 		}
 	}
