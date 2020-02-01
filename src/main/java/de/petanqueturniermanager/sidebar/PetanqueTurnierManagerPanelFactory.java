@@ -34,12 +34,12 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	private static final String IMPLEMENTATION_NAME = PetanqueTurnierManagerPanelFactory.class.getName();
 	private static final String[] SERVICE_NAMES = { __serviceName };
 
-	private final XComponentContext xContext;
+	private final WorkingSpreadsheet currentSpreadsheet;
 
 	// fuer jeden Sheet wird ein Panel erstellt
 	public PetanqueTurnierManagerPanelFactory(final XComponentContext xContext) {
 		logger.debug("PetanqueTurnierManagerPanelFactory constructor");
-		this.xContext = xContext;
+		currentSpreadsheet = new WorkingSpreadsheet(xContext);
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
@@ -65,9 +65,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
 		logger.debug("__getComponentFactory " + sImplementationName);
-
 		XSingleComponentFactory xFactory = null;
-
 		if (sImplementationName.equals(IMPLEMENTATION_NAME)) {
 			xFactory = Factory.createComponentFactory(PetanqueTurnierManagerPanelFactory.class, SERVICE_NAMES);
 		}
@@ -111,7 +109,6 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 		// Create the panel.
 		try {
 			if (xParentWindow != null && xSidebar != null) {
-				WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
 				final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
 				if (sElementName.equals("InfoPanel")) {
 					logger.debug("New InfoSidebarPanel");

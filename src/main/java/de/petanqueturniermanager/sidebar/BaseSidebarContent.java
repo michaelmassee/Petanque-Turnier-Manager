@@ -158,9 +158,9 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 			return;
 		}
 
-		XModel compo = UnoRuntime.queryInterface(XModel.class, source);
-		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, compo);
-		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, compo.getCurrentController());
+		XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
+		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
 			didOnHandleDocReady = true;
