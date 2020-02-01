@@ -27,18 +27,23 @@ public class WorkingSpreadsheet {
 	private static final Logger logger = LogManager.getLogger(WorkingSpreadsheet.class);
 
 	private final XComponentContext xContext;
-	private final XSpreadsheetDocument workingSpreadsheetDocument;
-	private final XSpreadsheetView workingSpreadsheetView;
-	private final XController xController;
+	private final XModel xModel;
+
+	// private final XSpreadsheetDocument workingSpreadsheetDocument;
+	// private final XSpreadsheetView workingSpreadsheetView;
+	// private final XController xController;
 
 	public WorkingSpreadsheet(XComponentContext xContext) {
 		this.xContext = checkNotNull(xContext);
 		// Save the current Aktiv Document
-		workingSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
-		XModel xModel = UnoRuntime.queryInterface(XModel.class, workingSpreadsheetDocument);
-		XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-		workingSpreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
-		xController = DocumentHelper.getXModel(xContext).getCurrentController();
+		XSpreadsheetDocument workingSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+		xModel = checkNotNull(UnoRuntime.queryInterface(XModel.class, workingSpreadsheetDocument));
+		// XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+		// XSpreadsheetView view = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
+		// XController currentController = xModel.getCurrentController();
+		//
+		// workingSpreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
+		// xController = DocumentHelper.getXModel(xContext).getCurrentController();
 
 	}
 
@@ -47,21 +52,22 @@ public class WorkingSpreadsheet {
 	 * @param xSpreadsheetDocument
 	 * @param xSpreadsheetView
 	 */
-	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument, XSpreadsheetView xSpreadsheetView) {
+	public WorkingSpreadsheet(XComponentContext xContext, XModel xModel) {
 		this.xContext = checkNotNull(xContext);
-		workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
-		workingSpreadsheetView = checkNotNull(xSpreadsheetView);
-		xController = DocumentHelper.getXModel(xContext).getCurrentController();
+		this.xModel = xModel;
+		// workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
+		// workingSpreadsheetView = checkNotNull(xSpreadsheetView);
+		// xController = DocumentHelper.getXModel(xContext).getCurrentController();
 	}
 
 	public boolean compareSpreadsheetDocument(WorkingSpreadsheet workingSpreadsheet) {
 		if (workingSpreadsheet == null) {
 			return false;
 		}
-		if (workingSpreadsheetDocument == null || workingSpreadsheet.getWorkingSpreadsheetDocument() == null) {
+		if (getWorkingSpreadsheetDocument() == null || workingSpreadsheet.getWorkingSpreadsheetDocument() == null) {
 			return false;
 		}
-		return workingSpreadsheetDocument.equals(workingSpreadsheet.getWorkingSpreadsheetDocument());
+		return getWorkingSpreadsheetDocument().equals(workingSpreadsheet.getWorkingSpreadsheetDocument());
 	}
 
 	/**
@@ -71,23 +77,27 @@ public class WorkingSpreadsheet {
 		return xContext;
 	}
 
+	public XController getXController() {
+		return xModel.getCurrentController();
+	}
+
 	/**
 	 * @return the currentSpreadsheetDocument
 	 */
 	public XSpreadsheetDocument getWorkingSpreadsheetDocument() {
-		return workingSpreadsheetDocument;
+		return UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
 	}
 
 	/**
 	 * @return the currentSpreadsheetView
 	 */
 	public XSpreadsheetView getWorkingSpreadsheetView() {
-		return workingSpreadsheetView;
+		return UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 	}
 
 	public void executeDispatch(String str1, String str2, int val, PropertyValue[] propertyVals) {
 		XDispatchHelper xDispatchHelper = getXDispatchHelper();
-		XDispatchProvider xDispatchProvider = UnoRuntime.queryInterface(XDispatchProvider.class, xController.getFrame());
+		XDispatchProvider xDispatchProvider = UnoRuntime.queryInterface(XDispatchProvider.class, getXController().getFrame());
 		if (xDispatchHelper != null && xDispatchProvider != null) {
 			xDispatchHelper.executeDispatch(xDispatchProvider, str1, str2, val, propertyVals);
 		}
