@@ -12,6 +12,7 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XDispatchHelper;
 import com.sun.star.frame.XDispatchProvider;
+import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.UnoRuntime;
@@ -34,8 +35,11 @@ public class WorkingSpreadsheet {
 		this.xContext = checkNotNull(xContext);
 		// Save the current Aktiv Document
 		workingSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+		XModel xModel = UnoRuntime.queryInterface(XModel.class, workingSpreadsheetDocument);
+		XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
 		workingSpreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
 		xController = DocumentHelper.getXModel(xContext).getCurrentController();
+
 	}
 
 	/**
