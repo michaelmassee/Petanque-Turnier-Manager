@@ -291,7 +291,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 			// value aus Document properties lesen
 			Object defaultVal = getDefaultProp(key);
 			DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(sheetWkRef.get().getWorkingSpreadsheet());
-			val = docPropHelper.getStringProperty(key, true, ((defaultVal == null) ? "" : defaultVal.toString()));
+			val = docPropHelper.getStringProperty(key, ((defaultVal == null) ? "" : defaultVal.toString()));
 		} else {
 			// Deprecated
 			XSpreadsheet sheet = getPropSheet();

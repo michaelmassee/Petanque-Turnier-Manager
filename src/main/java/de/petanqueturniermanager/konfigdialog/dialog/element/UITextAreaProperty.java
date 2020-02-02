@@ -67,7 +67,7 @@ public class UITextAreaProperty implements UIProperty {
 				.doInsert(xControlCont);
 		// @formatter:on
 
-		String propVal = documentPropertiesHelper.getStringProperty(getPropName(), false, defaultVal);
+		String propVal = documentPropertiesHelper.getStringProperty(getPropName(), defaultVal);
 		// @formatter:off
 		uITextArea = UITextArea.from(dialogModel)
 				.name(uiName)

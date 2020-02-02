@@ -19,6 +19,8 @@ import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lib.uno.helper.ComponentBase;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.ui.LayoutSize;
 import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XSidebarPanel;
@@ -32,12 +34,10 @@ import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
-import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -97,7 +97,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	protected void removeAllFieldsAndNewBaseWindow() {
 		logger.debug("removeAllFields");
-		guiFactoryCreateParam.getWindowPeer().dispose();
+		// guiFactoryCreateParam.getWindowPeer().dispose();
 		window.dispose();
 		window = null;
 		guiFactoryCreateParam.clear();
@@ -157,14 +157,15 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		}
 
 		XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-		// XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-		// XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
+		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 
-		if (xModel != null) {
+		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
 			didOnHandleDocReady = true;
 			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
 			// Aktive Doc
-			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
+			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
+			// WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
 			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
 				// Tatsächlich nicht Aktuell ?
 				// bis jetzt nur in Linux ein problem
@@ -172,7 +173,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 				removeAndAddFields(); // inhalt komplet neu
 			} else {
 				// TODO Spieltag aus Properties
-				updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
+				updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
 			}
 		}
 	}
@@ -198,13 +199,12 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	// ----- Implementation of interface ITurnierEventListener -----
 	@Override
-	public void onGenerateStart(ITurnierEvent eventObj) {
+	public void onPropertiesChanged(ITurnierEvent eventObj) {
 		// sind wir betroffen ?
-		if (!getCurrentSpreadsheet().compareSpreadsheetDocument(eventObj.getWorkingSpreadsheet())) {
+		if (!getCurrentSpreadsheet().getWorkingSpreadsheetDocument().equals(eventObj.getWorkingSpreadsheetDocument())) {
 			// nein ignore
 			return;
 		}
-
 		// update fields
 		updateFieldContens(eventObj);
 	}

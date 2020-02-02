@@ -60,7 +60,7 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 
 	String getPropertyValue() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
-		return docPropHelper.getStringProperty(configProperty.getKey(), true, (String) configProperty.getDefaultVal());
+		return docPropHelper.getStringProperty(configProperty.getKey(), (String) configProperty.getDefaultVal());
 	}
 
 	@Override
