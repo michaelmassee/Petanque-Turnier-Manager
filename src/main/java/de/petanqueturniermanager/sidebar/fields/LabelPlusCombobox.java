@@ -67,7 +67,7 @@ public class LabelPlusCombobox extends BaseField<LabelPlusCombobox> implements X
 
 	public LabelPlusCombobox labelText(String text) {
 		if (label != null) {
-			label.setText(StringUtils.appendIfMissing(text, ":"));
+			label.setText(StringUtils.appendIfMissing(text, " :"));
 		}
 		return this;
 	}

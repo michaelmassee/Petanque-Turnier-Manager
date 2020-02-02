@@ -56,8 +56,8 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
 
-		KONFIG_PROPERTIES
-				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN).setDefaultVal(0).setDescription("Neu auslosen ab Spielrunde"));
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN).setDefaultVal(0)
+				.setDescription("Neu auslosen ab Spielrunde").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen").inSideBar());
@@ -72,9 +72,9 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag ungerade Zeilen").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS).setDefaultVal(0)
-				.setDescription("Pluspunkte nicht gespielte Runde"));
+				.setDescription("Pluspunkte nicht gespielte Runde").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS).setDefaultVal(13)
-				.setDescription("Minuspunkte nicht gespielte Runde"));
+				.setDescription("Minuspunkte nicht gespielte Runde").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN).setDefaultVal("X")
 				.setDescription("Spalte Spielbahn in Spielrunde.\r\nX=Keine Spalte\r\nL=Leere Spalte (händisch ausfüllen)\r\nN=Durchnummerieren\r\nR=Random"))
@@ -85,7 +85,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDescription("Spielrunden Modus\r\nT=Triplette\r\nD=Doublette")).addAuswahl("T", "Triplette").addAuswahl("D", "Doublette").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE).setDefaultVal(99)
-				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)"));
+				.setDescription("Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false).inSideBar()
 				.setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info\r\nN/J (default=N)"));

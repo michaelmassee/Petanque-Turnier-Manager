@@ -185,7 +185,7 @@ public class GuiFactory {
 	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
 			Map<String, Object> props) {
 		if (props == null) {
-			props = new TreeMap<>();
+			props = new HashMap<>();
 		}
 		props.putIfAbsent(MULTI_LINE, false);
 		props.putIfAbsent(VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
@@ -222,7 +222,7 @@ public class GuiFactory {
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlComboBoxModel.html
 	public static XControl createCombobox(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size, Map<String, Object> props) {
 		if (props == null) {
-			props = new TreeMap<>();
+			props = new HashMap<>();
 		}
 		props.putIfAbsent("Dropdown", Boolean.TRUE); // specifies if the control has a drop down button.
 		props.putIfAbsent("LineCount", (short) 10); // specifies the maximum line count displayed in the drop down box.
@@ -232,32 +232,36 @@ public class GuiFactory {
 		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlComboBox", props, size);
 		XTextComponent tf = UnoRuntime.queryInterface(XTextComponent.class, ctrl);
 		tf.setText(text);
-		// XComboBox cmb = UnoRuntime.queryInterface(XComboBox.class, ctrl);
-		// cmb.setDropDownLineCount((short) 10);
 		return ctrl;
 	}
 
-	public static XControl createNumericField(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, int value, XTextListener listener,
-			Rectangle size, SortedMap<String, Object> props) {
-		XControl ctrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlNumericField", props, size);
+	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/XNumericField.html
+	public static XControl createNumericField(GuiFactoryCreateParam guiFactoryCreateParam, int value, XTextListener listener, Rectangle size, Map<String, Object> props) {
+
+		if (props == null) {
+			props = new HashMap<>();
+		}
+		props.putIfAbsent("setDecimalDigits", 0); // sets the number of decimals.
+
+		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlNumericField", props, size);
 		UnoRuntime.queryInterface(XNumericField.class, ctrl).setValue(value);
-		UnoRuntime.queryInterface(XTextComponent.class, ctrl).addTextListener(listener);
+		if (listener != null) {
+			UnoRuntime.queryInterface(XTextComponent.class, ctrl).addTextListener(listener);
+		}
 		return ctrl;
 	}
 
-	public static XControl createSpinField(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, int value, XTextListener listener,
-			Rectangle size, SortedMap<String, Object> props) {
+	public static XControl createSpinField(GuiFactoryCreateParam guiFactoryCreateParam, int value, XTextListener listener, Rectangle size, SortedMap<String, Object> props) {
 		if (props == null) {
 			props = new TreeMap<>();
 		}
 		props.putIfAbsent("Spin", Boolean.TRUE);
 
-		return createNumericField(xMCF, context, toolkit, windowPeer, value, listener, size, props);
+		return createNumericField(guiFactoryCreateParam, value, listener, size, props);
 	}
 
-	public static XControl createHLine(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, Rectangle size,
-			SortedMap<String, Object> props) {
-		return createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlFixedLine", props, size);
+	public static XControl createHLine(GuiFactoryCreateParam guiFactoryCreateParam, Rectangle size, SortedMap<String, Object> props) {
+		return createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlFixedLine", props, size);
 	}
 
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBoxModel.html

@@ -45,13 +45,13 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	 */
 	@Override
 	protected void addFields() {
-		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem :").fieldText(getTurnierSystemAusDocument().getBezeichnung());
+		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem").fieldText(getTurnierSystemAusDocument().getBezeichnung());
 		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
 
-		spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde :");
+		spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde");
 		getLayout().addLayout(spielRundeInfoLine.getLayout(), 1);
 
-		spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag :");
+		spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag");
 		getLayout().addLayout(spielTagInfoLine.getLayout(), 1);
 	}
 
