@@ -127,7 +127,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 
 	public LabelPlusTextPlusTextareaBox labelText(String text) {
 		if (label != null) {
-			label.setText(StringUtils.appendIfMissing(text, ":"));
+			label.setText(StringUtils.appendIfMissing(text, " :"));
 		}
 		return this;
 	}

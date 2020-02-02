@@ -6,6 +6,8 @@ package de.petanqueturniermanager.sidebar.fields;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.awt.TextEvent;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XFixedText;
@@ -76,7 +78,7 @@ public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> impl
 
 	public LabelPlusTextReadOnly labelText(String text) {
 		if (label != null) {
-			label.setText(text);
+			label.setText(StringUtils.appendIfMissing(text, " :"));
 		}
 		return this;
 	}

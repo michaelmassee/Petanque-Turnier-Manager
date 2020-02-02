@@ -137,6 +137,10 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 			getLayout().addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
 			break;
 		case INTEGER:
+			@SuppressWarnings("unchecked")
+			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty,
+					getCurrentSpreadsheet());
+			getLayout().addLayout(integerConfigSidebarElement.getLayout(), 1);
 			break;
 		default:
 			break;
