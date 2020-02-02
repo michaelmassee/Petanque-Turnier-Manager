@@ -23,6 +23,7 @@ import com.sun.star.beans.XPropertyContainer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.document.XDocumentProperties;
 import com.sun.star.document.XDocumentPropertiesSupplier;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -45,7 +46,7 @@ public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
 	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
-	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>();
+	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>(); // Hashtable is synchronized
 
 	final XSpreadsheetDocument xSpreadsheetDocument;
 	final Integer xSpreadsheetDocumentHash;
@@ -57,6 +58,7 @@ public class DocumentPropertiesHelper {
 		if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
 			currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
 		} else {
+			// einmal laden
 			currentPropListe = new Hashtable<>();
 			// properties aus dokument laden
 			XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
@@ -69,7 +71,22 @@ public class DocumentPropertiesHelper {
 				} catch (UnknownPropertyException | WrappedTargetException e) {
 				}
 			}
+			// in cache
 			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
+		}
+	}
+
+	/**
+	 * Document close
+	 */
+	public synchronized static void removeDocument(Object source) {
+		if (source != null) {
+			XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
+			XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+			// null dann wenn kein XSpreadsheetDocument
+			if (xSpreadsheetDocument != null) {
+				PROPLISTE.remove(xSpreadsheetDocument.hashCode());
+			}
 		}
 	}
 

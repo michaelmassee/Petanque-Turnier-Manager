@@ -160,6 +160,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
 		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 
+		// wenn kein XSpreadsheetDocument dann null
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
 			didOnHandleDocReady = true;
 			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
@@ -172,7 +173,6 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 				currentSpreadsheet = workingSpreadsheetFromSource;
 				removeAndAddFields(); // inhalt komplet neu
 			} else {
-				// TODO Spieltag aus Properties
 				updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
 			}
 		}

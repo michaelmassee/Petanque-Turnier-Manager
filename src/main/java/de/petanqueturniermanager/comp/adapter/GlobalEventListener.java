@@ -58,6 +58,8 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.document.XEventListener;
 import com.sun.star.lang.EventObject;
 
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+
 /**
  * Der GlobalEventListener sorgt dafür, dass der WollMux alle wichtigen globalen Ereignisse wie z.B. ein OnNew on OnLoad abfangen und darauf reagieren kann. In diesem Fall wird die
  * Methode notifyEvent aufgerufen. Wichtig ist dabei, dass der Verarbeitungsstatus für alle Dokumenttypen (auch nicht-Textdokumente) erfasst wird, damit der WollMux auch für diese
@@ -235,11 +237,12 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	/**
-	 * OnUnlaod kommt als letztes Event wenn ein Dokument geschlossen wurde. Wir nutzen dieses Event um den docManager aufzuräumen und angeschlossene Listener zu informieren.
+	 * OnUnload kommt als letztes Event wenn ein Dokument geschlossen wurde.
 	 *
-	 * @author Christoph Lutz (D-III-ITD-D101) TESTED
 	 */
 	private void onUnload(Object source) {
+		// DocumentPropertiesHelper aufräumen
+		DocumentPropertiesHelper.removeDocument(source);
 
 	}
 
