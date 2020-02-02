@@ -6,25 +6,34 @@ package de.petanqueturniermanager.helper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Hashtable;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.beans.IllegalTypeException;
+import com.sun.star.beans.Property;
 import com.sun.star.beans.PropertyExistException;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
+import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.beans.XPropertyContainer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.document.XDocumentProperties;
 import com.sun.star.document.XDocumentPropertiesSupplier;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Type;
 import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 
 /**
  * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
@@ -35,19 +44,57 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
-	// public static final String PROP_NAME_FORMATION = "formation";
+	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
+	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>();
 
-	final WorkingSpreadsheet workingSpreadsheet;
+	final XSpreadsheetDocument xSpreadsheetDocument;
+	final Integer xSpreadsheetDocumentHash;
+	final Hashtable<String, String> currentPropListe;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
-		workingSpreadsheet = checkNotNull(currentSpreadsheet);
+		xSpreadsheetDocument = checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument();
+		xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
+		if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
+			currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
+		} else {
+			currentPropListe = new Hashtable<>();
+			// properties aus dokument laden
+			XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
+			XPropertySet xPropertySet = getXPropertySet();
+			Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
+			for (Property userProp : properties) {
+				try {
+					Object propVal = xPropertySet.getPropertyValue(userProp.Name);
+					currentPropListe.put(userProp.Name, propVal.toString());
+				} catch (UnknownPropertyException | WrappedTargetException e) {
+				}
+			}
+			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
+		}
+	}
+
+	/**
+	 * Propertie in interne Cache, und Document speichern
+	 *
+	 * @param propName
+	 * @param val
+	 */
+	public void setStringProperty(String propName, String val) {
+		if (val != null) {
+			String oldVal = currentPropListe.get(propName);
+			if (!StringUtils.equals(oldVal, val)) {
+				setStringPropertyInDocument(propName, val);
+				currentPropListe.put(propName, val);
+				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged, new OnProperiesChangedEvent(xSpreadsheetDocument));
+			}
+		}
 	}
 
 	/**
 	 * @param propName
 	 * @param val int val wird als String gespeichert
 	 */
-	public void setStringProperty(String propName, String val) {
+	private void setStringPropertyInDocument(String propName, String val) {
 		insertStringPropertyIfNotExist(propName, val);
 		XPropertySet propSet = getXPropertySet();
 		try {
@@ -89,28 +136,31 @@ public class DocumentPropertiesHelper {
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
-		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, xSpreadsheetDocument);
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}
 
-	// TODO
-	// private void addListners() {
-	// XPropertySet propSet = getXPropertySet();
-	// // BOUND
-	// propSet.addPropertyChangeListener(arg0, arg1);
-	// propSet.addVetoableChangeListener(arg0, arg1);
-	// }
+	private XMultiPropertySet getXMultiPropertySet() {
+		return UnoRuntime.queryInterface(XMultiPropertySet.class, getXPropertyContainer());
+	}
 
 	private XPropertySet getXPropertySet() {
 		return UnoRuntime.queryInterface(XPropertySet.class, getXPropertyContainer());
+	}
+
+	public String getStringProperty(String propName, String defaultVal) {
+		if (currentPropListe.containsKey(propName)) {
+			return currentPropListe.get(propName);
+		}
+		return defaultVal;
 	}
 
 	/**
 	 * @param propName = name vom property
 	 * @return default when not found
 	 */
-	public String getStringProperty(String propName, boolean ignoreNotFound, String defaultVal) {
+	private String getStringPropertyFromDocument(String propName, boolean ignoreNotFound, String defaultVal) {
 		XPropertySet propSet = getXPropertySet();
 		Object propVal = null;
 		try {
@@ -132,7 +182,7 @@ public class DocumentPropertiesHelper {
 	 * @return -1 when not found
 	 */
 	public int getIntProperty(String propName, int defaultVal) {
-		String stringProperty = getStringProperty(propName, true, "" + defaultVal);
+		String stringProperty = getStringProperty(propName, "" + defaultVal);
 		if (stringProperty != null) {
 			return NumberUtils.toInt(stringProperty, -1);
 		}
@@ -153,7 +203,7 @@ public class DocumentPropertiesHelper {
 	 * @return
 	 */
 	public boolean getBooleanProperty(String propName, Boolean defaultVal) {
-		String stringProperty = getStringProperty(propName, true, StringTools.booleanToString(defaultVal));
+		String stringProperty = getStringProperty(propName, StringTools.booleanToString(defaultVal));
 		return StringTools.stringToBoolean(stringProperty);
 	}
 

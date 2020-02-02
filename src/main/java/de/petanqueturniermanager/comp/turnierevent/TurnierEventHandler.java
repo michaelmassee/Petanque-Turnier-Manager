@@ -19,10 +19,8 @@ public class TurnierEventHandler {
 
 	public void trigger(TurnierEventType type, ITurnierEvent eventObj) {
 		switch (type) {
-		case GenerateReady:
-			onGenerateReady(eventObj);
-		case GenerateStart:
-			onGenerateStart(eventObj);
+		case PropertiesChanged:
+			onPropertiesChanged(eventObj);
 			break;
 		default:
 			break;
@@ -32,20 +30,10 @@ public class TurnierEventHandler {
 	/**
 	 * @param eventObj
 	 */
-	private void onGenerateStart(ITurnierEvent eventObj) {
+	private void onPropertiesChanged(ITurnierEvent eventObj) {
 		for (ITurnierEventListener listner : listeners) {
-			listner.onGenerateStart(eventObj);
+			listner.onPropertiesChanged(eventObj);
 		}
-	}
-
-	/**
-	 * @param eventObj
-	 */
-	private void onGenerateReady(ITurnierEvent eventObj) {
-		for (ITurnierEventListener listner : listeners) {
-			listner.onGenerateReady(eventObj);
-		}
-
 	}
 
 	public void addTurnierEventListener(ITurnierEventListener listner) {

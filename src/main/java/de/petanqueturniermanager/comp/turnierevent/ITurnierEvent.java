@@ -3,7 +3,7 @@
  */
 package de.petanqueturniermanager.comp.turnierevent;
 
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 /**
  * @author Michael Massee
@@ -11,6 +11,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
  */
 public interface ITurnierEvent {
 
-	WorkingSpreadsheet getWorkingSpreadsheet(); // von welchen Document wurde der Event ausgelöst
+	XSpreadsheetDocument getWorkingSpreadsheetDocument(); // von welchen Document wurde der Event ausgelöst
 
 }

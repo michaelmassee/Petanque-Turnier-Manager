@@ -8,6 +8,6 @@ package de.petanqueturniermanager.comp.turnierevent;
  *
  */
 public enum TurnierEventType {
-	GenerateReady, GenerateStart
+	PropertiesChanged
 
 }

@@ -15,18 +15,12 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
-import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
-import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -81,7 +75,6 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				if (turnierSystem != TurnierSystem.KEIN) {
 					updateKonfigurationSheet();
 				}
-				triggerTurnierEventListener(TurnierEventType.GenerateStart);
 				doRun();
 			} catch (GenerateException e) {
 				handleGenerateException(e);
@@ -117,30 +110,6 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	protected abstract IKonfigurationSheet getKonfigurationSheet();
-
-	private void triggerTurnierEventListener(TurnierEventType type) {
-		try {
-			IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
-
-			// trigger change event
-			SpielRundeNr aktiveSpielRunde = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpielRunde();
-			SpielTagNr aktiveSpieltag = ((IPropertiesSpalte) konfigurationSheet).getAktiveSpieltag();
-			OnConfigChangedEvent onConfigChangedEvent = new OnConfigChangedEvent(aktiveSpieltag, aktiveSpielRunde, getWorkingSpreadsheet());
-			PetanqueTurnierMngrSingleton.triggerTurnierEventListener(type, onConfigChangedEvent);
-			// new Thread("TurnierEvent") {
-			// @Override
-			// public void run() {
-			// try {
-			// // Ohne Sleep Core Dumps ? zum Testen
-			// java.util.concurrent.TimeUnit.SECONDS.sleep(3);
-			// } catch (InterruptedException e) {
-			// }
-			// }
-			// }.start();
-		} catch (Exception e) {
-			// ignore this
-		}
-	}
 
 	private void updateKonfigurationSheet() throws GenerateException {
 		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();

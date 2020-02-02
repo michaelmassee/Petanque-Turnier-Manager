@@ -12,10 +12,8 @@ import com.sun.star.ui.XSidebar;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
-import de.petanqueturniermanager.comp.turnierevent.OnConfigChangedEvent;
+import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusTextReadOnly;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
@@ -65,15 +63,15 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	}
 
 	private void updateFieldContens() {
-		updateFieldContens(new OnConfigChangedEvent(new SpielTagNr(0), new SpielRundeNr(0), getCurrentSpreadsheet()));
+		updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
 	}
 
 	@Override
 	protected void updateFieldContens(ITurnierEvent eventObj) {
-		// TODO Spieltag und Spielrunde aus document properties
 		turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
-		spielRundeInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpielRundeNr().getNr());
-		spielTagInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpieltagnr().getNr());
+		// TODO Spieltag und Spielrunde aus document properties
+		// spielRundeInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpielRundeNr().getNr());
+		// spielTagInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpieltagnr().getNr());
 	}
 
 	@Override

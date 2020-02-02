@@ -63,7 +63,7 @@ public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemL
 	 */
 	private String getPropertyValue() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
-		return docPropHelper.getStringProperty(configProperty.getKey(), true, configProperty.getDefaultVal());
+		return docPropHelper.getStringProperty(configProperty.getKey(), configProperty.getDefaultVal());
 	}
 
 	@Override
