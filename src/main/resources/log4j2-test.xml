@@ -34,7 +34,7 @@
 			<AppenderRef ref="Console"/>
 		</Root>
 		<!-- debug  -->
-		<Logger name="de.petanqueturniermanager" level="debug">
+		<Logger name="de.petanqueturniermanager" level="info">
 			<AppenderRef ref="infofile"/>
 		</Logger>
 	</Loggers>
