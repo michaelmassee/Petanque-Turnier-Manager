@@ -96,6 +96,18 @@ public abstract class BaseField<T> {
 	}
 
 	@SuppressWarnings("unchecked")
+	public T readOnly(boolean readOnly) {
+		if (readOnly) {
+			setProperty(GuiFactory.READ_ONLY, true);
+			setProperty(GuiFactory.ENABLED, false);
+		} else {
+			setProperty(GuiFactory.READ_ONLY, false);
+			setProperty(GuiFactory.ENABLED, true);
+		}
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
 	public T helpText(XMultiPropertySet xMultiPropertySet, String text) {
 		setProperty(xMultiPropertySet, GuiFactory.HELP_TEXT, text);
 		return (T) this;

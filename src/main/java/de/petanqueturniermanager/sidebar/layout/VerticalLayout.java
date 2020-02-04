@@ -1,5 +1,6 @@
 package de.petanqueturniermanager.sidebar.layout;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public class VerticalLayout implements Layout {
 	/**
 	 * Container für die enthaltenen Layouts.
 	 */
-	private Map<Layout, Integer> layouts = new LinkedHashMap<>();
+	private Map<Layout, Integer> layouts = Collections.synchronizedMap(new LinkedHashMap<>());
 
 	/**
 	 * Der Abstand oberhalb des ersten Layouts.
@@ -50,10 +51,12 @@ public class VerticalLayout implements Layout {
 	public int layout(Rectangle rect) {
 		int yOffset = marginTop;
 
-		for (Map.Entry<Layout, Integer> entry : layouts.entrySet()) {
-			yOffset += entry.getKey().layout(new Rectangle(rect.X, rect.Y + yOffset, rect.Width, rect.Height)) + marginBetween;
+		synchronized (layouts) {
+			for (Map.Entry<Layout, Integer> entry : layouts.entrySet()) {
+				yOffset += entry.getKey().layout(new Rectangle(rect.X, rect.Y + yOffset, rect.Width, rect.Height)) + marginBetween;
+			}
+			yOffset -= marginBetween;
 		}
-		yOffset -= marginBetween;
 
 		return yOffset;
 	}

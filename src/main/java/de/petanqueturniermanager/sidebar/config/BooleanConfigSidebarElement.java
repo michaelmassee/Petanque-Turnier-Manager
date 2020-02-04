@@ -27,10 +27,15 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 	private WorkingSpreadsheet workingSpreadsheet;
 
 	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+		this(guiFactoryCreateParam, configProperty, workingSpreadsheet, false);
+	}
+
+	public BooleanConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Boolean> configProperty, WorkingSpreadsheet workingSpreadsheet,
+			boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription()).addListener(this)
-				.setStat(getPropertyValue());
+				.setStat(getPropertyValue()).readOnly(readOnly);
 	}
 
 	@Override

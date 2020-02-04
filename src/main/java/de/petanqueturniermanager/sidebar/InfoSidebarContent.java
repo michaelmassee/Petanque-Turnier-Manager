@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.sidebar;
 
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,11 +10,12 @@ import com.sun.star.awt.XWindow;
 import com.sun.star.lang.EventObject;
 import com.sun.star.ui.XSidebar;
 
-import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.sidebar.config.BooleanConfigSidebarElement;
+import de.petanqueturniermanager.sidebar.config.IntegerConfigSidebarElement;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusTextReadOnly;
 
 /**
@@ -52,14 +51,49 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem").fieldText(getTurnierSystemAusDocument().getBezeichnung());
 		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
 
-		List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(getCurrentSpreadsheet());
-		WWWWWWW
+		// List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(getCurrentSpreadsheet());
+		// if (konfigProperties != null) {
+		// konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBarInfoPanel()).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
+		// }
 
-		spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde");
-		getLayout().addLayout(spielRundeInfoLine.getLayout(), 1);
+		// spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde");
+		// getLayout().addLayout(spielRundeInfoLine.getLayout(), 1);
+		//
+		// spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag");
+		// getLayout().addLayout(spielTagInfoLine.getLayout(), 1);
+	}
 
-		spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag");
-		getLayout().addLayout(spielTagInfoLine.getLayout(), 1);
+	/**
+	 * Read ONLY Felder
+	 *
+	 * @param konfigprop
+	 * @return
+	 */
+	private void addPropToPanel(ConfigProperty<?> configProperty) {
+
+		switch (configProperty.getType()) {
+		case STRING:
+			break;
+		case BOOLEAN:
+			// create checkbox Readonly
+			@SuppressWarnings("unchecked")
+			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty,
+					getCurrentSpreadsheet(), true);
+			getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
+			break;
+		case COLOR:
+			// create colorpicker
+			// TODO ReadOnly
+			break;
+		case INTEGER:
+			@SuppressWarnings("unchecked")
+			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty,
+					getCurrentSpreadsheet());
+			getLayout().addLayout(integerConfigSidebarElement.getLayout(), 1);
+			break;
+		default:
+			break;
+		}
 	}
 
 	@Override
