@@ -27,9 +27,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
 
-	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
-	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
-
 	private static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Spielrunde Hintergrund Ungerade";
@@ -53,9 +50,6 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
 
 	static {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag"));
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde"));
-
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN).setDefaultVal(0)
 				.setDescription("Neu auslosen ab Spielrunde").inSideBar());
 

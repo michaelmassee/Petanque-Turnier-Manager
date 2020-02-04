@@ -52,6 +52,9 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	private static final int SPALTE_WERT_WIDTH = 1500;
 	private static final int SPALTE_NAME_WIDTH = 7000;
 
+	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
+	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
+
 	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
 	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
@@ -72,6 +75,10 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected final int headerZeile;
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag").inSideBarInfoPanel());
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde").inSideBarInfoPanel());
+
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS).setDescription("Fußzeile Links").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE).setDescription("Fußzeile Mitte").inSideBar());
 

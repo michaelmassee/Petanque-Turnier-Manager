@@ -13,12 +13,13 @@ public class ConfigProperty<V> {
 	private V defaultVal;
 	private String description;
 	private boolean inSideBar; // uebergang properties nach sidebar
+	private boolean inSideBarInfoPanel; // obere Panel, read only felder
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
 		this.key = checkNotNull(key);
 		inSideBar = false;
-
+		inSideBarInfoPanel = false;
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
@@ -58,6 +59,23 @@ public class ConfigProperty<V> {
 
 	public final boolean isInSideBar() {
 		return inSideBar;
+	}
+
+	/**
+	 * Übergang, beiden flags werden gesetzt<br>
+	 * inSideBarInfoPanel und inSideBar= true
+	 *
+	 * @return
+	 */
+
+	public ConfigProperty<V> inSideBarInfoPanel() {
+		this.inSideBarInfoPanel = true;
+		this.inSideBar = true;
+		return this;
+	}
+
+	public final boolean isInSideBarInfoPanel() {
+		return inSideBarInfoPanel;
 	}
 
 }
