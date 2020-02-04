@@ -382,13 +382,13 @@ public class ProcessBox {
 	}
 
 	public ProcessBox visible() {
-		frame.setVisible(true);
-		moveInsideTopWindow();
+//		frame.setVisible(true);
+//		moveInsideTopWindow();
 		return this;
 	}
 
 	public ProcessBox toFront() {
-		frame.toFront();
+//		frame.toFront();
 		return this;
 	}
 

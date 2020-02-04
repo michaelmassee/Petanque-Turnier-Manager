@@ -111,9 +111,7 @@ public class SearchHelper extends BaseHelper {
 			XSearchable xSearchableFromRange = getXSearchableFromRange(rangePos);
 			XSearchDescriptor searchDescriptor = xSearchableFromRange.createSearchDescriptor();
 			searchDescriptor.setSearchString(".*");
-			// properties
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
-			// searchDescriptor.setPropertyValue("SearchWords", true);
 			searchDescriptor.setPropertyValue("SearchBackwards", true); // letzte eintrag suchen
 			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
 			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
