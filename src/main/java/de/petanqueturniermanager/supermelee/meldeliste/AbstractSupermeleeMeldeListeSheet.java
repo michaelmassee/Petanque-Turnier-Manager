@@ -172,7 +172,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 		doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
-		insertInfoSpalte();
+		// insertInfoSpalte();
 		meldungenSpalte.formatDaten();
 		formatDaten();
 
@@ -184,7 +184,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 * aktuelle Spieltag + Spielrunde infos
 	 *
 	 * @throws GenerateException
+	 * @Deprecated weil properties sheet nicht mehr vorhanden, properties sind in sidebar gewandert bzw im Document user properties
 	 */
+	@Deprecated
 	private void insertInfoSpalte() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
