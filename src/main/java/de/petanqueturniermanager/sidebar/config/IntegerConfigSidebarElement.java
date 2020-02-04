@@ -33,11 +33,16 @@ public class IntegerConfigSidebarElement implements ConfigSidebarElement, XTextL
 	TextAreaDialog textAreaDialog;
 
 	public IntegerConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
+		this(guiFactoryCreateParam, configProperty, workingSpreadsheet, false);
+	}
+
+	public IntegerConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet,
+			boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);
 		labelPlusNumericField = LabelPlusNumericField.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription())
-				.addXTextListener(this).fieldVal(getPropertyValue()); // .addXActionListener(btnXActionListener).fieldText(getPropertyValue());
+				.addXTextListener(this).fieldVal(getPropertyValue()).readOnly(readOnly);
 	}
 
 	@Override

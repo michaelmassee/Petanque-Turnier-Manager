@@ -44,8 +44,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public abstract class BaseSidebarContent extends ComponentBase
-		implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
+public abstract class BaseSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
 	static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
 	private XWindow window;
@@ -59,12 +58,10 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private XSidebar xSidebar;
 
 	/**
-	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen.
-	 * <br>
+	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
 	 * 1. Sidebar aus wieder an dann okay<br>
 	 * 2. nach Druckvorschau dann okay<br>
-	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht!
-	 * okay<br>
+	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht! okay<br>
 	 * <br>
 	 *
 	 * @param workingSpreadsheet
@@ -87,16 +84,14 @@ public abstract class BaseSidebarContent extends ComponentBase
 
 	private void newBaseWindow() {
 		layout = new VerticalLayout(0, 2);
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
-				currentSpreadsheet.getxContext().getServiceManager());
+		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
 		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
 		XToolkit parentToolkit = parentWindowPeer.getToolkit();
 		XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
 		windowPeer.setBackground(0xffffffff);
 		window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
 		window.setVisible(true);
-		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit,
-				windowPeer);
+		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit, windowPeer);
 	}
 
 	protected void removeAllFieldsAndNewBaseWindow() {
@@ -162,16 +157,13 @@ public abstract class BaseSidebarContent extends ComponentBase
 
 		XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
 		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class,
-				xModel.getCurrentController());
+		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 
 		// wenn kein XSpreadsheetDocument dann null
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
-			didOnHandleDocReady = true;
 			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
 			// Aktive Doc
-			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(),
-					xSpreadsheetDocument, xSpreadsheetView);
+			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
 			// WorkingSpreadsheet workingSpreadsheetFromSource = new
 			// WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
 			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
@@ -180,9 +172,9 @@ public abstract class BaseSidebarContent extends ComponentBase
 				currentSpreadsheet = workingSpreadsheetFromSource;
 				removeAndAddFields(); // inhalt komplet neu
 			} else {
-				updateFieldContens(
-						new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
+				updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
 			}
+			didOnHandleDocReady = true;
 		}
 	}
 
@@ -221,9 +213,12 @@ public abstract class BaseSidebarContent extends ComponentBase
 	protected void doLayout() {
 		// Rectangle posSizeParent = parentWindow.getPosSize();
 		// Start offset immer 0,0
-		Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width,
-				getParentWindow().getPosSize().Height);
+		Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width, getParentWindow().getPosSize().Height);
+		// multi thread ?
+		// if (didOnHandleDocReady) {
+		// only when fields are there
 		getLayout().layout(posSizeParent);
+		// }
 	}
 
 	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
@@ -282,8 +277,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	protected TurnierSystem getTurnierSystemAusDocument() {
 		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
-		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
-				TurnierSystem.KEIN.getId());
+		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
 		if (spielsystem > -1) {
 			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 		}
