@@ -109,20 +109,20 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 		// Create the panel.
 		try {
 			if (xParentWindow != null && xSidebar != null) {
-				final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
-				if (sElementName.equals("InfoPanel")) {
-					logger.debug("New InfoSidebarPanel");
-					return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
-				} else if (sElementName.equals("ConfigPanel")) {
-					logger.debug("New ConfigSidebarPanel");
-					return new ConfigSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
-				} else if (sElementName.equals("ColorPanel")) {
-					logger.debug("New ColorSidebarPanel");
-					return new ColorSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
-				} else if (sElementName.equals("HeaderFooterPanel")) {
-					logger.debug("New HeaderFooterPanel");
-					return new HeaderFooterSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
-				}
+                //				final String sElementName = sResourceURL.substring(msURLhead.length() + 1);
+                //				if (sElementName.equals("InfoPanel")) {
+                //					logger.debug("New InfoSidebarPanel");
+                //					return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+                //				} else if (sElementName.equals("ConfigPanel")) {
+                //					logger.debug("New ConfigSidebarPanel");
+                //					return new ConfigSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+                //				} else if (sElementName.equals("ColorPanel")) {
+                //					logger.debug("New ColorSidebarPanel");
+                //					return new ColorSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+                //				} else if (sElementName.equals("HeaderFooterPanel")) {
+                //					logger.debug("New HeaderFooterPanel");
+                //					return new HeaderFooterSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+                //				}
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);

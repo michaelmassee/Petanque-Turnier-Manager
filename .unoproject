@@ -1,5 +1,5 @@
 #UNO project configuration file
-#Thu Jan 30 22:07:23 CET 2020
+#Tue Feb 04 10:56:12 CET 2020
 project.srcdir=/src/main/java
 regclassname=de.petanqueturniermanager.comp.RegistrationHandler
 javaversion=java8
