@@ -53,7 +53,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	private WorkingSpreadsheet currentSpreadsheet;
 	private XWindow parentWindow;
-	private Layout layout;
+	Layout layout;
 	private XSidebar xSidebar;
 	private boolean changingLayout;
 
@@ -239,6 +239,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 			try {
 				PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
 				PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
+				layout = new VerticalLayout(0, 2);
 				BaseSidebarContent.this.disposing(event);
 				setCurrentSpreadsheet(null);
 				setParentWindow(null);

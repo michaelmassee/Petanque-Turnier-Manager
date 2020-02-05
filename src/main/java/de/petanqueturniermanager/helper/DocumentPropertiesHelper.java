@@ -80,13 +80,17 @@ public class DocumentPropertiesHelper {
 	 * Document close
 	 */
 	public synchronized static void removeDocument(Object source) {
-		if (source != null) {
-			XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-			XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-			// null dann wenn kein XSpreadsheetDocument
-			if (xSpreadsheetDocument != null) {
-				PROPLISTE.remove(xSpreadsheetDocument.hashCode());
+		try {
+			if (source != null) {
+				XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
+				XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+				// null dann wenn kein XSpreadsheetDocument
+				if (xSpreadsheetDocument != null) {
+					PROPLISTE.remove(xSpreadsheetDocument.hashCode());
+				}
 			}
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 	}
 

@@ -132,8 +132,7 @@ public abstract class BaseField<T> {
 	}
 
 	protected void disposing() {
-		guiFactoryCreateParamWkRef = null;
-		hLayout = null;
+		hLayout = new HorizontalLayout();
 		properties = null;
 	}
 
