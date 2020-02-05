@@ -19,107 +19,110 @@ import de.petanqueturniermanager.sidebar.config.IntegerConfigSidebarElement;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusTextReadOnly;
 
 /**
- * @author Michael Massee
- *
- * vorlage<br>
- * de.muenchen.allg.itd51.wollmux.sidebar.SeriendruckSidebarContent;
- *
+ * @author Michael Massee vorlage<br>
+ *         de.muenchen.allg.itd51.wollmux.sidebar.SeriendruckSidebarContent;
  */
 public class InfoSidebarContent extends BaseSidebarContent {
 
-	static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
+    static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
-	private LabelPlusTextReadOnly turnierSystemInfoLine;
-	private LabelPlusTextReadOnly spielRundeInfoLine;
-	private LabelPlusTextReadOnly spielTagInfoLine;
+    private LabelPlusTextReadOnly turnierSystemInfoLine;
+    private LabelPlusTextReadOnly spielRundeInfoLine;
+    private LabelPlusTextReadOnly spielTagInfoLine;
 
-	/**
-	 * Jedes Document eigene Instance
-	 *
-	 * @param context
-	 * @param parentWindow
-	 */
-	public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
-		super(workingSpreadsheet, parentWindow, xSidebar);
-	}
+    /**
+     * Jedes Document eigene Instance
+     *
+     * @param context
+     * @param parentWindow
+     */
+    public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
+        super(workingSpreadsheet, parentWindow, xSidebar);
+    }
 
-	/**
-	 * die felder sind immer gleich
-	 */
-	@Override
-	protected void addFields() {
-		turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem").fieldText(getTurnierSystemAusDocument().getBezeichnung());
-		getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
+    /**
+     * die felder sind immer gleich
+     */
+    @Override
+    protected void addFields() {
+        setChangingLayout(true);
+        try {
+            turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem")
+                    .fieldText(getTurnierSystemAusDocument().getBezeichnung());
+            getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
+        } finally {
+            setChangingLayout(false);
+        }
 
-		// List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(getCurrentSpreadsheet());
-		// if (konfigProperties != null) {
-		// konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBarInfoPanel()).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
-		// }
+        // List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(getCurrentSpreadsheet());
+        // if (konfigProperties != null) {
+        // konfigProperties.stream().filter(konfigprop -> konfigprop.isInSideBarInfoPanel()).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
+        // }
 
-		// spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde");
-		// getLayout().addLayout(spielRundeInfoLine.getLayout(), 1);
-		//
-		// spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag");
-		// getLayout().addLayout(spielTagInfoLine.getLayout(), 1);
-	}
+        // spielRundeInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spielrunde");
+        // getLayout().addLayout(spielRundeInfoLine.getLayout(), 1);
+        //
+        // spielTagInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Spieltag");
+        // getLayout().addLayout(spielTagInfoLine.getLayout(), 1);
+    }
 
-	/**
-	 * Read ONLY Felder
-	 *
-	 * @param konfigprop
-	 * @return
-	 */
-	private void addPropToPanel(ConfigProperty<?> configProperty) {
+    /**
+     * Read ONLY Felder
+     *
+     * @param konfigprop
+     * @return
+     */
+    private void addPropToPanel(ConfigProperty<?> configProperty) {
 
-		switch (configProperty.getType()) {
-		case STRING:
-			break;
-		case BOOLEAN:
-			// create checkbox Readonly
-			@SuppressWarnings("unchecked")
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty,
-					getCurrentSpreadsheet(), true);
-			getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
-			break;
-		case COLOR:
-			// create colorpicker
-			// TODO ReadOnly
-			break;
-		case INTEGER:
-			@SuppressWarnings("unchecked")
-			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty,
-					getCurrentSpreadsheet());
-			getLayout().addLayout(integerConfigSidebarElement.getLayout(), 1);
-			break;
-		default:
-			break;
-		}
-	}
+        switch (configProperty.getType()) {
+            case STRING:
+                break;
+            case BOOLEAN:
+                // create checkbox Readonly
+                @SuppressWarnings("unchecked")
+                BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(
+                        getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty, getCurrentSpreadsheet(), true);
+                getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
+                break;
+            case COLOR:
+                // create colorpicker
+                // TODO ReadOnly
+                break;
+            case INTEGER:
+                @SuppressWarnings("unchecked")
+                IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(
+                        getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty, getCurrentSpreadsheet());
+                getLayout().addLayout(integerConfigSidebarElement.getLayout(), 1);
+                break;
+            default:
+                break;
+        }
+    }
 
-	@Override
-	protected void removeAndAddFields() {
-		// wir mussen die felder nicht entfernen, weil die sich nicht ändern
-		// nur update
-		updateFieldContens();
-	}
+    @Override
+    protected void removeAndAddFields() {
+        // wir mussen die felder nicht entfernen, weil die sich nicht ändern
+        // nur update
+        updateFieldContens();
+    }
 
-	private void updateFieldContens() {
-		updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
-	}
+    private void updateFieldContens() {
+        updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
+    }
 
-	@Override
-	protected void updateFieldContens(ITurnierEvent eventObj) {
-		turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
-		// TODO Spieltag und Spielrunde aus document properties
-		// spielRundeInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpielRundeNr().getNr());
-		// spielTagInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpieltagnr().getNr());
-	}
+    @Override
+    protected void updateFieldContens(ITurnierEvent eventObj) {
+        turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
+        // TODO Spieltag und Spielrunde aus document properties
+        // spielRundeInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpielRundeNr().getNr());
+        // spielTagInfoLine.fieldText(((OnConfigChangedEvent) eventObj).getSpieltagnr().getNr());
+    }
 
-	@Override
-	protected void disposing(EventObject event) {
-		turnierSystemInfoLine = null;
-		spielRundeInfoLine = null;
-		spielTagInfoLine = null;
-	}
+    @Override
+    protected void disposing(EventObject event) {
+        turnierSystemInfoLine = null;
+        spielRundeInfoLine = null;
+        spielTagInfoLine = null;
+    }
 
 }

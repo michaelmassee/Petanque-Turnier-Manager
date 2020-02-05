@@ -42,274 +42,288 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
- *
  */
-public abstract class BaseSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
-	static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
+public abstract class BaseSidebarContent extends ComponentBase
+        implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
+    static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
-	private XWindow window;
-	private GuiFactoryCreateParam guiFactoryCreateParam;
+    private XWindow window;
+    private GuiFactoryCreateParam guiFactoryCreateParam;
 
-	private boolean didOnHandleDocReady;
+    private boolean didOnHandleDocReady;
 
-	private WorkingSpreadsheet currentSpreadsheet;
-	private XWindow parentWindow;
-	private Layout layout;
-	private XSidebar xSidebar;
+    private WorkingSpreadsheet currentSpreadsheet;
+    private XWindow parentWindow;
+    private Layout layout;
+    private XSidebar xSidebar;
+    private boolean changingLayout;
 
-	/**
-	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
-	 * 1. Sidebar aus wieder an dann okay<br>
-	 * 2. nach Druckvorschau dann okay<br>
-	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht! okay<br>
-	 * <br>
-	 *
-	 * @param workingSpreadsheet
-	 * @param parentWindow
-	 * @param xSidebar
-	 */
+    /**
+     * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
+     * 1. Sidebar aus wieder an dann okay<br>
+     * 2. nach Druckvorschau dann okay<br>
+     * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht! okay<br>
+     * <br>
+     *
+     * @param workingSpreadsheet
+     * @param parentWindow
+     * @param xSidebar
+     */
 
-	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
-		currentSpreadsheet = checkNotNull(workingSpreadsheet);
-		this.xSidebar = checkNotNull(xSidebar);
-		didOnHandleDocReady = false;
-		this.parentWindow = checkNotNull(parentWindow);
+    public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
+        currentSpreadsheet = checkNotNull(workingSpreadsheet);
+        this.xSidebar = checkNotNull(xSidebar);
+        didOnHandleDocReady = false;
+        changingLayout = false;
+        this.parentWindow = checkNotNull(parentWindow);
 
-		newBaseWindow();
-		addFields();
-		this.parentWindow.addWindowListener(windowAdapter);
-		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
-		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
-	}
+        newBaseWindow();
+        addFields();
+        this.parentWindow.addWindowListener(windowAdapter);
+        PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
+        PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
+    }
 
-	private void newBaseWindow() {
-		layout = new VerticalLayout(0, 2);
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, currentSpreadsheet.getxContext().getServiceManager());
-		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
-		XToolkit parentToolkit = parentWindowPeer.getToolkit();
-		XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
-		windowPeer.setBackground(0xffffffff);
-		window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
-		window.setVisible(true);
-		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit, windowPeer);
-	}
+    private void newBaseWindow() {
+        layout = new VerticalLayout(0, 2);
+        XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
+                currentSpreadsheet.getxContext().getServiceManager());
+        XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
+        XToolkit parentToolkit = parentWindowPeer.getToolkit();
+        XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
+        windowPeer.setBackground(0xffffffff);
+        window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
+        window.setVisible(true);
+        guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit, windowPeer);
+    }
 
-	protected void removeAllFieldsAndNewBaseWindow() {
-		logger.debug("removeAllFields");
-		// guiFactoryCreateParam.getWindowPeer().dispose();
-		window.dispose();
-		window = null;
-		guiFactoryCreateParam.clear();
-		guiFactoryCreateParam = null;
-		newBaseWindow();
-	}
+    protected void removeAllFieldsAndNewBaseWindow() {
+        logger.debug("removeAllFields");
+        // guiFactoryCreateParam.getWindowPeer().dispose();
+        window.dispose();
+        window = null;
+        guiFactoryCreateParam.clear();
+        guiFactoryCreateParam = null;
+        newBaseWindow();
+    }
 
-	@Override
-	public LayoutSize getHeightForWidth(int arg0) {
-		int height = layout.getHeight();
-		return new LayoutSize(height, height, height);
-	}
+    @Override
+    public LayoutSize getHeightForWidth(int arg0) {
+        int height = layout.getHeight();
+        return new LayoutSize(height, height, height);
+    }
 
-	@Override
-	public int getMinimalWidth() {
-		return 200;
-	}
+    @Override
+    public int getMinimalWidth() {
+        return 200;
+    }
 
-	// ----- Implementation of interface IGlobalEventListener -----
-	@Override
-	public void onUnfocus(Object source) {
-		// dann der fall wenn kein onLoad oder onNew
-		// passiert wenn einfach nur die sidebar aus / an geschalted wird
-		// Druck vorschau
-		if (didOnHandleDocReady) {
-			return;
-		}
+    // ----- Implementation of interface IGlobalEventListener -----
+    @Override
+    public void onUnfocus(Object source) {
+        // dann der fall wenn kein onLoad oder onNew
+        // passiert wenn einfach nur die sidebar aus / an geschalted wird
+        // Druck vorschau
+        if (didOnHandleDocReady) {
+            return;
+        }
 
-		// hier kein update von WorkingSpreadsheet weil im Konstruktor das richtige
-		// document vorhanden.
-		// felder sind bereits vorhanden
-		didOnHandleDocReady = true;
-	}
+        // hier kein update von WorkingSpreadsheet weil im Konstruktor das richtige
+        // document vorhanden.
+        // felder sind bereits vorhanden
+        didOnHandleDocReady = true;
+    }
 
-	@Override
-	public void onNew(Object source) {
-		refreshCurrentSpreadsheetFromSource(source);
-	}
+    @Override
+    public void onNew(Object source) {
+        refreshCurrentSpreadsheetFromSource(source);
+    }
 
-	@Override
-	public void onLoad(Object source) {
-		refreshCurrentSpreadsheetFromSource(source);
-	}
+    @Override
+    public void onLoad(Object source) {
+        refreshCurrentSpreadsheetFromSource(source);
+    }
 
-	// kommt wenn new,load UND nach der umschaltung von Druckvorschau
-	// @Override
-	// public void onViewCreated(Object source) {
-	// if (didOnHandleDocReady) {
-	// return;
-	// }
-	// refreshCurrentSpreadsheetFromSource(source);
-	// }
+    // kommt wenn new,load UND nach der umschaltung von Druckvorschau
+    // @Override
+    // public void onViewCreated(Object source) {
+    // if (didOnHandleDocReady) {
+    // return;
+    // }
+    // refreshCurrentSpreadsheetFromSource(source);
+    // }
 
-	private void refreshCurrentSpreadsheetFromSource(Object source) {
-		if (didOnHandleDocReady) {
-			return;
-		}
+    private void refreshCurrentSpreadsheetFromSource(Object source) {
+        if (didOnHandleDocReady) {
+            return;
+        }
 
-		XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
+        XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
+        XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+        XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
 
-		// wenn kein XSpreadsheetDocument dann null
-		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
-			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
-			// Aktive Doc
-			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument, xSpreadsheetView);
-			// WorkingSpreadsheet workingSpreadsheetFromSource = new
-			// WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
-			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
-				// Tatsächlich nicht Aktuell ?
-				// bis jetzt nur in Linux ein problem
-				currentSpreadsheet = workingSpreadsheetFromSource;
-				removeAndAddFields(); // inhalt komplet neu
-			} else {
-				updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
-			}
-			didOnHandleDocReady = true;
-		}
-	}
+        // wenn kein XSpreadsheetDocument dann null
+        if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
+            // sicher gehen das wir das richtige document haben, ist nicht unbedingt das
+            // Aktive Doc
+            WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(),
+                    xSpreadsheetDocument, xSpreadsheetView);
+            // WorkingSpreadsheet workingSpreadsheetFromSource = new
+            // WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
+            if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
+                // Tatsächlich nicht Aktuell ?
+                // bis jetzt nur in Linux ein problem
+                currentSpreadsheet = workingSpreadsheetFromSource;
+                removeAndAddFields(); // inhalt komplet neu
+            } else {
+                updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
+            }
+            didOnHandleDocReady = true;
+        }
+    }
 
-	// ----- Implementation of UNO interface XToolPanel -----
-	// XToolPanel
-	@Override
-	public XAccessible createAccessible(XAccessible arg0) {
-		if (window == null) {
-			throw new DisposedException("Panel is already disposed", this);
-		}
-		return UnoRuntime.queryInterface(XAccessible.class, getWindow());
-	}
+    // ----- Implementation of UNO interface XToolPanel -----
+    // XToolPanel
+    @Override
+    public XAccessible createAccessible(XAccessible arg0) {
+        if (window == null) {
+            throw new DisposedException("Panel is already disposed", this);
+        }
+        return UnoRuntime.queryInterface(XAccessible.class, getWindow());
+    }
 
-	// XToolPanel
-	@Override
-	public XWindow getWindow() {
-		if (window == null) {
-			throw new DisposedException("Panel is already disposed", this);
-		}
-		return window;
-	}
+    // XToolPanel
+    @Override
+    public XWindow getWindow() {
+        if (window == null) {
+            throw new DisposedException("Panel is already disposed", this);
+        }
+        return window;
+    }
 
-	// ----- Implementation of interface ITurnierEventListener -----
-	@Override
-	public void onPropertiesChanged(ITurnierEvent eventObj) {
-		// sind wir betroffen ?
-		if (!getCurrentSpreadsheet().getWorkingSpreadsheetDocument().equals(eventObj.getWorkingSpreadsheetDocument())) {
-			// nein ignore
-			return;
-		}
-		// update fields
-		logger.debug("onPropertiesChanged");
-		updateFieldContens(eventObj);
-	}
+    // ----- Implementation of interface ITurnierEventListener -----
+    @Override
+    public void onPropertiesChanged(ITurnierEvent eventObj) {
+        // sind wir betroffen ?
+        if (!getCurrentSpreadsheet().getWorkingSpreadsheetDocument().equals(eventObj.getWorkingSpreadsheetDocument())) {
+            // nein ignore
+            return;
+        }
+        // update fields
+        logger.debug("onPropertiesChanged");
+        updateFieldContens(eventObj);
+    }
 
-	protected void doLayout() {
-		// Rectangle posSizeParent = parentWindow.getPosSize();
-		// Start offset immer 0,0
-		Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width, getParentWindow().getPosSize().Height);
-		// multi thread ?
-		// if (didOnHandleDocReady) {
-		// only when fields are there
-		getLayout().layout(posSizeParent);
-		// }
-	}
+    protected void doLayout() {
+        // multi thread ?
+        if (isChangingLayout()) {
+            return;
+        }
 
-	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
-		@Override
-		public void windowResized(WindowEvent e) {
-			doLayout();
-		}
+        // Rectangle posSizeParent = parentWindow.getPosSize();
+        // Start offset immer 0,0
+        Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width,
+                getParentWindow().getPosSize().Height);
+        // only when fields are there
+        getLayout().layout(posSizeParent);
+    }
 
-		@Override
-		public void disposing(EventObject event) {
-			logger.debug("disposing");
-			super.disposing(event);
-			try {
-				PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
-				PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
-				BaseSidebarContent.this.disposing(event);
-				setCurrentSpreadsheet(null);
-				setParentWindow(null);
-				getGuiFactoryCreateParam().clear();
-				setGuiFactoryCreateParam(null);
-				setxSidebar(null);
-			} catch (Exception e) {
-				// ignore
-			}
-		}
-	};
+    private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
+        @Override
+        public void windowResized(WindowEvent e) {
+            doLayout();
+        }
 
-	/**
-	 * @return the parentWindow
-	 */
-	protected final XWindow getParentWindow() {
-		return parentWindow;
-	}
+        @Override
+        public void disposing(EventObject event) {
+            logger.debug("disposing");
+            try {
+                PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
+                PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
+                BaseSidebarContent.this.disposing(event);
+                setCurrentSpreadsheet(null);
+                setParentWindow(null);
+                getGuiFactoryCreateParam().clear();
+                setGuiFactoryCreateParam(null);
+                setxSidebar(null);
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+    };
 
-	/**
-	 * @param parentWindow the parentWindow to set
-	 */
-	protected final void setParentWindow(XWindow parentWindow) {
-		this.parentWindow = parentWindow;
-	}
+    /**
+     * @return the parentWindow
+     */
+    protected final XWindow getParentWindow() {
+        return parentWindow;
+    }
 
-	/**
-	 * @return the currentSpreadsheet
-	 */
-	protected final WorkingSpreadsheet getCurrentSpreadsheet() {
-		return currentSpreadsheet;
-	}
+    /**
+     * @param parentWindow the parentWindow to set
+     */
+    protected final void setParentWindow(XWindow parentWindow) {
+        this.parentWindow = parentWindow;
+    }
 
-	/**
-	 * @param currentSpreadsheet the currentSpreadsheet to set
-	 */
-	protected final void setCurrentSpreadsheet(WorkingSpreadsheet currentSpreadsheet) {
-		this.currentSpreadsheet = currentSpreadsheet;
-	}
+    /**
+     * @return the currentSpreadsheet
+     */
+    protected final WorkingSpreadsheet getCurrentSpreadsheet() {
+        return currentSpreadsheet;
+    }
 
-	protected TurnierSystem getTurnierSystemAusDocument() {
-		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
-		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
-		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
-		if (spielsystem > -1) {
-			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
-		}
-		return turnierSystemAusDocument;
-	}
+    /**
+     * @param currentSpreadsheet the currentSpreadsheet to set
+     */
+    protected final void setCurrentSpreadsheet(WorkingSpreadsheet currentSpreadsheet) {
+        this.currentSpreadsheet = currentSpreadsheet;
+    }
 
-	public final Layout getLayout() {
-		return layout;
-	}
+    protected TurnierSystem getTurnierSystemAusDocument() {
+        TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
+        DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
+        int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+                TurnierSystem.KEIN.getId());
+        if (spielsystem > -1) {
+            turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+        }
+        return turnierSystemAusDocument;
+    }
 
-	protected final GuiFactoryCreateParam getGuiFactoryCreateParam() {
-		return guiFactoryCreateParam;
-	}
+    public final Layout getLayout() {
+        return layout;
+    }
 
-	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
-		this.guiFactoryCreateParam = guiFactoryCreateParam;
-	}
+    protected final GuiFactoryCreateParam getGuiFactoryCreateParam() {
+        return guiFactoryCreateParam;
+    }
 
-	protected final XSidebar getxSidebar() {
-		return xSidebar;
-	}
+    protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
+        this.guiFactoryCreateParam = guiFactoryCreateParam;
+    }
 
-	protected final void setxSidebar(XSidebar xSidebar) {
-		this.xSidebar = xSidebar;
-	}
+    protected final XSidebar getxSidebar() {
+        return xSidebar;
+    }
 
-	protected abstract void disposing(EventObject event);
+    protected final void setxSidebar(XSidebar xSidebar) {
+        this.xSidebar = xSidebar;
+    }
 
-	protected abstract void updateFieldContens(ITurnierEvent eventObj);
+    protected boolean isChangingLayout() {
+        return changingLayout;
+    }
 
-	protected abstract void addFields();
+    protected void setChangingLayout(boolean changingLayout) {
+        this.changingLayout = changingLayout;
+    }
 
-	protected abstract void removeAndAddFields();
+    protected abstract void disposing(EventObject event);
 
+    protected abstract void updateFieldContens(ITurnierEvent eventObj);
+
+    protected abstract void addFields();
+
+    protected abstract void removeAndAddFields();
 }
