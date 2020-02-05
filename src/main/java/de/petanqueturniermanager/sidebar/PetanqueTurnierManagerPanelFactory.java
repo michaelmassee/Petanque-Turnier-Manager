@@ -22,6 +22,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.sidebar.config.allgemein.ConfigSidebarPanel;
 import de.petanqueturniermanager.sidebar.config.color.ColorSidebarPanel;
 import de.petanqueturniermanager.sidebar.config.headerfooter.HeaderFooterSidebarPanel;
+import de.petanqueturniermanager.sidebar.info.InfoSidebarPanel;
 
 /**
  * This is the factory that creates the sidebar panel.

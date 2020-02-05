@@ -1,13 +1,14 @@
 /**
  * Erstellung 12.01.2020 / Michael Massee
  */
-package de.petanqueturniermanager.sidebar;
+package de.petanqueturniermanager.sidebar.info;
 
 import com.sun.star.awt.XWindow;
 import com.sun.star.lib.uno.helper.ComponentBase;
 import com.sun.star.ui.XSidebar;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.sidebar.BaseSidebarPanel;
 
 /**
  * @author Michael Massee
