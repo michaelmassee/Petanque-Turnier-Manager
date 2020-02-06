@@ -23,108 +23,107 @@ import com.sun.star.uno.UnoRuntime;
 
 /**
  * @author Michael Massee
- *
  */
 @SuppressWarnings("unchecked")
 public abstract class UIElement<T, I> {
-	private static final Logger logger = LogManager.getLogger(UIElement.class);
+    private static final Logger logger = LogManager.getLogger(UIElement.class);
 
-	protected final String PROP_POSX = "PositionX";
-	protected final String PROP_POSY = "PositionY";
-	protected final String PROP_WIDTH = "Width";
-	protected final String PROP_HEIGHT = "Height";
-	protected final String PROP_NAME = "Name";
-	protected final String PROP_TABINDEX = "TabIndex";
-	protected final String PROP_MULTILINE = "MultiLine";
+    protected final String PROP_POSX = "PositionX";
+    protected final String PROP_POSY = "PositionY";
+    protected final String PROP_WIDTH = "Width";
+    protected final String PROP_HEIGHT = "Height";
+    protected final String PROP_NAME = "Name";
+    protected final String PROP_TABINDEX = "TabIndex";
+    protected final String PROP_MULTILINE = "MultiLine";
 
-	private String fieldname;
+    private String fieldname;
 
-	private boolean didInsert = false;
+    private boolean didInsert = false;
 
-	private final XPropertySet xPropertySet;
-	private final XNameContainer xNameCont;
-	private final Object model;
-	private XControlContainer xControlCont;
+    private final XPropertySet xPropertySet;
+    private final XNameContainer xNameCont;
+    private final Object model;
+    private XControlContainer xControlCont;
 
-	protected UIElement(Object dialogModel) throws Exception {
-		checkNotNull(dialogModel);
-		XMultiServiceFactory xMultiServiceFactory = UnoRuntime.queryInterface(XMultiServiceFactory.class, dialogModel);
-		checkNotNull(xMultiServiceFactory);
-		this.model = checkNotNull(xMultiServiceFactory.createInstance(getModelClassName()));
-		this.xPropertySet = checkNotNull(UnoRuntime.queryInterface(XPropertySet.class, checkNotNull(model)));
-		this.xNameCont = checkNotNull(UnoRuntime.queryInterface(XNameContainer.class, dialogModel));
+    protected UIElement(Object dialogModel) throws Exception {
+        checkNotNull(dialogModel);
+        XMultiServiceFactory xMultiServiceFactory = UnoRuntime.queryInterface(XMultiServiceFactory.class, dialogModel);
+        checkNotNull(xMultiServiceFactory);
+        this.model = checkNotNull(xMultiServiceFactory.createInstance(getModelClassName()));
+        this.xPropertySet = checkNotNull(UnoRuntime.queryInterface(XPropertySet.class, checkNotNull(model)));
+        this.xNameCont = checkNotNull(UnoRuntime.queryInterface(XNameContainer.class, dialogModel));
 
-	}
+    }
 
-	public I doInsert(XControlContainer xControlCont) {
-		checkNotNull(getFieldname());
-		this.xControlCont = checkNotNull(xControlCont);
-		try {
-			xNameCont.insertByName(getFieldname(), model);
-			didInsert = true;
-		} catch (IllegalArgumentException | ElementExistException | WrappedTargetException e) {
-			logger.error(e);
-		}
-		return null;
-	}
+    public I doInsert(XControlContainer xControlCont) {
+        checkNotNull(getFieldname());
+        this.xControlCont = checkNotNull(xControlCont);
+        try {
+            xNameCont.insertByName(getFieldname(), model);
+            didInsert = true;
+        } catch (IllegalArgumentException | ElementExistException | WrappedTargetException e) {
+            logger.error(e);
+        }
+        return null;
+    }
 
-	abstract String getModelClassName();
+    abstract String getModelClassName();
 
-	public final T name(String fieldname) {
-		StringUtils.isEmpty(fieldname);
-		this.fieldname = fieldname;
-		setProperty(PROP_NAME, fieldname);
-		return (T) this;
-	}
+    public final T name(String fieldname) {
+        StringUtils.isEmpty(fieldname);
+        this.fieldname = fieldname;
+        setProperty(PROP_NAME, fieldname);
+        return (T) this;
+    }
 
-	public final T posX(int posX) {
-		setProperty(PROP_POSX, Integer.valueOf(posX));
-		return (T) this;
-	}
+    public final T posX(int posX) {
+        setProperty(PROP_POSX, Integer.valueOf(posX));
+        return (T) this;
+    }
 
-	public final T posY(int posY) {
-		setProperty(PROP_POSY, Integer.valueOf(posY));
-		return (T) this;
-	}
+    public final T posY(int posY) {
+        setProperty(PROP_POSY, Integer.valueOf(posY));
+        return (T) this;
+    }
 
-	public final T width(int width) {
-		setProperty(PROP_WIDTH, Integer.valueOf(width));
-		return (T) this;
-	}
+    public final T width(int width) {
+        setProperty(PROP_WIDTH, Integer.valueOf(width));
+        return (T) this;
+    }
 
-	public final T height(int height) {
-		setProperty(PROP_HEIGHT, Integer.valueOf(height));
-		return (T) this;
-	}
+    public final T height(int height) {
+        setProperty(PROP_HEIGHT, Integer.valueOf(height));
+        return (T) this;
+    }
 
-	public final T TabIndex(int tabIndex) {
-		setProperty(PROP_TABINDEX, Short.valueOf((short) tabIndex));
-		return (T) this;
-	}
+    public final T TabIndex(int tabIndex) {
+        setProperty(PROP_TABINDEX, Short.valueOf((short) tabIndex));
+        return (T) this;
+    }
 
-	public final T setProperty(String name, Object val) {
-		if (didInsert) {
-			logger.error("Property " + name + " not Set. UI-Element " + getFieldname() + " bereits eingefuegt.");
-			return (T) this;
-		}
+    public final T setProperty(String name, Object val) {
+        if (didInsert) {
+            logger.error("Property " + name + " not Set. UI-Element " + getFieldname() + " bereits eingefuegt.");
+            return (T) this;
+        }
 
-		try {
-			xPropertySet.setPropertyValue(name, val);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
-			logger.error(e);
-		}
-		return (T) this;
-	}
+        try {
+            xPropertySet.setPropertyValue(name, val);
+        } catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+            logger.error(e);
+        }
+        return (T) this;
+    }
 
-	/**
-	 * @return the xControlCont
-	 */
-	protected XControlContainer getxControlCont() {
-		return xControlCont;
-	}
+    /**
+     * @return the xControlCont
+     */
+    protected XControlContainer getxControlCont() {
+        return xControlCont;
+    }
 
-	protected String getFieldname() {
-		return fieldname;
-	}
+    protected String getFieldname() {
+        return fieldname;
+    }
 
 }
