@@ -55,7 +55,6 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	Layout layout;
 	private XSidebar xSidebar;
 	private boolean changingLayout;
-	private RequestLayoutThread requestLayoutThread;
 
 	/**
 	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
@@ -72,7 +71,6 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.xSidebar = checkNotNull(xSidebar);
-		requestLayoutThread = new RequestLayoutThread();
 		didOnHandleDocReady = false;
 		changingLayout = false; // flag is used to stop the layout managers
 		this.parentWindow = checkNotNull(parentWindow);

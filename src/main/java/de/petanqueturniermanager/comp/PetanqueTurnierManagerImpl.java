@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
@@ -162,19 +163,22 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Konfiguration").message("Kein Turnier vorhanden").show();
 			return true;
 		}
-
-		switch (action) {
-		// ------------------------------
-		case "konfiguration_kopffusszeilen":
-			try {
+		try {
+			switch (action) {
+			// ------------------------------
+			case "konfiguration_kopffusszeilen":
 				// Modal Dialog
 				new KopfFusszeilenDialog(workingSpreadsheet).createDialog();
-			} catch (com.sun.star.uno.Exception e) {
-				logger.error(e.getMessage(), e);
+				break;
+			case "konfiguration_farben":
+				// Modal Dialog
+				new FarbenDialog(workingSpreadsheet).createDialog();
+				break;
+			default:
+				didHandle = false;
 			}
-			break;
-		default:
-			didHandle = false;
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 		return didHandle;
 	}
