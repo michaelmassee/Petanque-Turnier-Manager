@@ -44,7 +44,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 	// https://www.flaticon.com/authors/freepikhttps://www.flaticon.com/authors/freepik
 	// https://www.flaticon.com/packs/electronic-and-web-element-collection-2
 	// https://www.flaticon.com/free-icon/edit_391171 = sidebar-texfield
-	static final String btnImage = "sidebar-texfield.png"; // 19x21
+	public static final String btnImage = "sidebar-texfield.png"; // 19x21
 
 	private LabelPlusTextPlusTextareaBox(GuiFactoryCreateParam guiFactoryCreateParam) {
 		super(guiFactoryCreateParam);

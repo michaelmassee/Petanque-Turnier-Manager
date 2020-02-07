@@ -32,5 +32,4 @@ public class KopfFusszeilenDialog extends BasePropertiesDialog {
 	protected String getTitle() {
 		return "Kopf/Fusszeilen";
 	}
-
 }

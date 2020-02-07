@@ -39,7 +39,7 @@ public abstract class BaseField<T> {
 	// wird nur intial verwendet, dan bei jeden resize von layout neu berechnet
 	public static final int lineHeight = 29;
 	private static final int lineWidth = 10;
-	protected static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
+	public static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
 
 	protected BaseField(GuiFactoryCreateParam guiFactoryCreateParam) {
 		this.guiFactoryCreateParamWkRef = new WeakRefHelper<>(guiFactoryCreateParam);

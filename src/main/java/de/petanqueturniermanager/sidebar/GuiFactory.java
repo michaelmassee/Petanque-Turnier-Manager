@@ -117,16 +117,6 @@ public class GuiFactory {
 	}
 
 	/**
-	 * @Deprecated <br>
-	 * verwende createButton(GuiFactoryCreateParam guiFactoryCreateParam, String label, XActionListener listener, Rectangle size, Map<String, Object> props)
-	 */
-	@Deprecated
-	public static XControl createButton(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String label, XActionListener listener,
-			Rectangle size, Map<String, Object> props) {
-		return createButton(new GuiFactoryCreateParam(xMCF, context, toolkit, windowPeer), label, listener, size, props);
-	}
-
-	/**
 	 * Erzeugt einen Button mit Label und ActionListener. <br>
 	 * properties: https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlButtonModel.html
 	 *
@@ -175,6 +165,12 @@ public class GuiFactory {
 		return controlEdit;
 	}
 
+	@Deprecated
+	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
+			Map<String, Object> props) {
+		return createLabel(new GuiFactoryCreateParam(xMCF, context, toolkit, windowPeer), text, size, props);
+	}
+
 	/**
 	 * Erzeugt ein Label.<br>
 	 * properties: <br>
@@ -182,15 +178,15 @@ public class GuiFactory {
 	 *
 	 * @return Ein Label-Control
 	 */
-	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
-			Map<String, Object> props) {
+	public static XControl createLabel(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size, Map<String, Object> props) {
+
 		if (props == null) {
 			props = new HashMap<>();
 		}
 		props.putIfAbsent(MULTI_LINE, false);
 		props.putIfAbsent(VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
 
-		XControl fixedTextCtrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlFixedText", props, size);
+		XControl fixedTextCtrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlFixedText", props, size);
 		XFixedText txt = UnoRuntime.queryInterface(XFixedText.class, fixedTextCtrl);
 		txt.setText(text);
 		return fixedTextCtrl;
@@ -303,7 +299,9 @@ public class GuiFactory {
 			}
 			control.createPeer(guiFactoryCreateParam.getToolkit(), guiFactoryCreateParam.getWindowPeer());
 			XWindow controlWindow = UnoRuntime.queryInterface(XWindow.class, control);
-			setWindowPosSize(controlWindow, rectangle);
+			if (rectangle != null) {
+				setWindowPosSize(controlWindow, rectangle);
+			}
 			return control;
 		} catch (Exception ex) {
 			logger.error(ex.getMessage(), ex);
