@@ -1,8 +1,5 @@
 package de.petanqueturniermanager.comp;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,11 +30,11 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 
 	private static final String IMPLEMENTATION_NAME = ProtocolHandler.class.getName();
 	private static final String[] SERVICE_NAMES = { SERVICE_NAME };
-	private Map<URL, XStatusListener> maListeners;
+	// private Map<URL, XStatusListener> maListeners;
 
 	public ProtocolHandler(final XComponentContext xContext) {
 		logger.debug("ProtocolHandler constructor");
-		maListeners = new HashMap<>();
+		// maListeners = new HashMap<>();
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
@@ -103,13 +100,13 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 
 	@Override
 	public void addStatusListener(final XStatusListener xListener, final URL aURL) {
-		maListeners.put(aURL, xListener);
+		// maListeners.put(aURL, xListener);
 		xListener.statusChanged(new FeatureStateEvent(this, aURL, "Feature Descriptor", true, false, false));
 	}
 
 	@Override
 	public void removeStatusListener(final XStatusListener xListener, final URL aURL) {
-		maListeners.remove(aURL);
+		// maListeners.remove(aURL);
 	}
 
 	@Override

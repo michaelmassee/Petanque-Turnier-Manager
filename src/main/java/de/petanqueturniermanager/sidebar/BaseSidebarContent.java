@@ -27,7 +27,6 @@ import com.sun.star.ui.XSidebarPanel;
 import com.sun.star.ui.XToolPanel;
 import com.sun.star.uno.UnoRuntime;
 
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
@@ -56,6 +55,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	Layout layout;
 	private XSidebar xSidebar;
 	private boolean changingLayout;
+	private RequestLayoutThread requestLayoutThread;
 
 	/**
 	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
@@ -72,6 +72,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.xSidebar = checkNotNull(xSidebar);
+		requestLayoutThread = new RequestLayoutThread();
 		didOnHandleDocReady = false;
 		changingLayout = false; // flag is used to stop the layout managers
 		this.parentWindow = checkNotNull(parentWindow);
@@ -108,15 +109,17 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	protected void requestLayout() {
 		if (getxSidebar() != null) {
-			RequestLayoutThread.start(getxSidebar());
-			// getxSidebar().requestLayout();
+			RequestLayoutThread.start(getxSidebar()); // nur einmal pro sidebar
 		}
 	}
 
 	@Override
 	public LayoutSize getHeightForWidth(int arg0) {
-		int height = layout.getHeight();
-		return new LayoutSize(height, height, height);
+		if (layout != null) {
+			int height = layout.getHeight();
+			return new LayoutSize(height, height, height);
+		}
+		return new LayoutSize(10, 10, 10);
 	}
 
 	@Override
@@ -221,7 +224,9 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 			// Start offset immer 0,0
 			Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width, getParentWindow().getPosSize().Height);
 			// only when fields are there
-			getLayout().layout(posSizeParent);
+			if (getLayout() != null) {
+				getLayout().layout(posSizeParent);
+			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -235,11 +240,10 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 		@Override
 		public void disposing(EventObject event) {
-			logger.debug("disposing");
 			try {
 				PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
 				PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
-				layout = new VerticalLayout(0, 2);
+				layout = null;
 				BaseSidebarContent.this.disposing(event);
 				setCurrentSpreadsheet(null);
 				setParentWindow(null);
@@ -281,13 +285,8 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	}
 
 	protected TurnierSystem getTurnierSystemAusDocument() {
-		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
-		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
-		if (spielsystem > -1) {
-			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
-		}
-		return turnierSystemAusDocument;
+		return docPropHelper.getTurnierSystemAusDocument();
 	}
 
 	public final Layout getLayout() {

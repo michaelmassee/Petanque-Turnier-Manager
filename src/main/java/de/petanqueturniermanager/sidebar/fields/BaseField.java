@@ -37,7 +37,7 @@ public abstract class BaseField<T> {
 	private final String imageUrlDir;
 
 	// wird nur intial verwendet, dan bei jeden resize von layout neu berechnet
-	private static final int lineHeight = 29;
+	public static final int lineHeight = 29;
 	private static final int lineWidth = 10;
 	protected static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
 

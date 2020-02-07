@@ -21,7 +21,6 @@ import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.sidebar.config.allgemein.ConfigSidebarPanel;
 import de.petanqueturniermanager.sidebar.config.color.ColorSidebarPanel;
-import de.petanqueturniermanager.sidebar.config.headerfooter.HeaderFooterSidebarPanel;
 import de.petanqueturniermanager.sidebar.info.InfoSidebarPanel;
 
 /**
@@ -120,10 +119,13 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 				} else if (sElementName.equals("ColorPanel")) {
 					logger.debug("New ColorSidebarPanel");
 					return new ColorSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
-				} else if (sElementName.equals("HeaderFooterPanel")) {
-					logger.debug("New HeaderFooterPanel");
-					return new HeaderFooterSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
 				}
+
+				// in extra konfig dialog
+				// else if (sElementName.equals("HeaderFooterPanel")) {
+				// logger.debug("New HeaderFooterPanel");
+				// return new HeaderFooterSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+				// }
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);

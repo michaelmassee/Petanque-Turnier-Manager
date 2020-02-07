@@ -3,31 +3,38 @@
  */
 package de.petanqueturniermanager.sidebar;
 
+import java.util.Hashtable;
+
 import com.sun.star.ui.XSidebar;
 
 /**
+ * Katastrophe ... nur Coredumps
+ *
  * @author Michael Massee
  *
  */
 public class RequestLayoutThread {
 
-	static boolean ISRUNNING;
+	static final Hashtable<Integer, Boolean> isRunning = new Hashtable<>();
 
-	static synchronized void start(XSidebar xSidebar) {
-		if (ISRUNNING || xSidebar == null) {
+	public static synchronized void start(XSidebar xSidebar) {
+
+		if (isRunning.containsKey(xSidebar.hashCode()) && isRunning.get(xSidebar.hashCode())) {
 			return;
 		}
-		ISRUNNING = true;
+		isRunning.put(xSidebar.hashCode(), true);
+
 		new Thread() {
 			@Override
 			public void run() {
 				try {
-					// Pause for 3 seconds
-					Thread.sleep(3000);
+					// Pause for 2 sekunden
+					// Ist MEGA dirty, verzweifelte versuch LO CoreDumps :-( in griff zu kriegen
+					Thread.sleep(2000);
 					xSidebar.requestLayout();
 				} catch (InterruptedException e) {
 				} finally {
-					ISRUNNING = false;
+					isRunning.put(xSidebar.hashCode(), false);
 				}
 			}
 		}.start();

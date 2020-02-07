@@ -231,20 +231,6 @@
 							</node>
 						</node>
 					</node>
-
-					<node oor:name="X1" oor:op="replace">
-						<prop oor:name="Title">
-							<value xml:lang="en">~Configuration</value>
-							<value xml:lang="de">~Konfiguration</value>
-						</prop>
-						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.MenuJobExecute?turnierkonfiguration</value>
-						</prop>
-						<prop oor:name="Target" oor:type="xs:string">
-							<value>_self</value>
-						</prop>
-					</node>
-
 					<node oor:name="X2" oor:op="replace">
 						<prop oor:name="Title">
 							<value xml:lang="en">~Download latest Version</value>

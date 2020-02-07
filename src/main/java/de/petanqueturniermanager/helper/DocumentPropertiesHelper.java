@@ -31,10 +31,12 @@ import com.sun.star.uno.Any;
 import com.sun.star.uno.Type;
 import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
@@ -235,6 +237,15 @@ public class DocumentPropertiesHelper {
 	 */
 	public void setBooleanProperty(String propName, Boolean newVal) {
 		setStringProperty(propName, StringTools.booleanToString(newVal));
+	}
+
+	public TurnierSystem getTurnierSystemAusDocument() {
+		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
+		int spielsystem = getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
+		if (spielsystem > -1) {
+			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
+		}
+		return turnierSystemAusDocument;
 	}
 
 }
