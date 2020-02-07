@@ -17,10 +17,8 @@ import com.sun.star.ui.XSidebar;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
-import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
-import de.petanqueturniermanager.sidebar.config.color.BackgrnColorConfigSidebarElement;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -96,9 +94,11 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 			return;
 		}
 
+		AddConfigElementsToWindow addConfigElementsToWindow = new AddConfigElementsToWindow(getGuiFactoryCreateParam(), getCurrentSpreadsheet(), getLayout());
 		setChangingLayout(true);
 		try {
-			konfigProperties.stream().filter(KONFIG_PROP_FILTER).filter(getKonfigFieldFilter()).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
+			konfigProperties.stream().filter(KONFIG_PROP_FILTER).filter(getKonfigFieldFilter()).collect(Collectors.toList())
+					.forEach(konfigprop -> addConfigElementsToWindow.addPropToPanel(konfigprop));
 		} finally {
 			setChangingLayout(false);
 		}
@@ -109,50 +109,6 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 		// Only in InfoPanel
 		requestLayout();
 		turnierFields = true;
-	}
-
-	private void addPropToPanel(ConfigProperty<?> configProperty) {
-
-		switch (configProperty.getType()) {
-		case STRING:
-
-			if (configProperty instanceof AuswahlConfigProperty) {
-				// ComboBox
-				AuswahlConfigSidebarElement auswahlConfigSidebarElement = new AuswahlConfigSidebarElement(getGuiFactoryCreateParam(), (AuswahlConfigProperty) configProperty,
-						getCurrentSpreadsheet());
-				getLayout().addLayout(auswahlConfigSidebarElement.getLayout(), 1);
-			} else {
-				// create textfield mit btn
-				@SuppressWarnings("unchecked")
-				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<String>) configProperty,
-						getCurrentSpreadsheet());
-				getLayout().addLayout(stringConfigSidebarElement.getLayout(), 1);
-			}
-			break;
-		case BOOLEAN:
-			// create checkbox
-			@SuppressWarnings("unchecked")
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty,
-					getCurrentSpreadsheet());
-			getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
-			break;
-		case COLOR:
-			// create colorpicker
-			@SuppressWarnings("unchecked")
-			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(getGuiFactoryCreateParam(),
-					(ConfigProperty<Integer>) configProperty, getCurrentSpreadsheet());
-			getLayout().addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
-			break;
-		case INTEGER:
-			@SuppressWarnings("unchecked")
-			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty,
-					getCurrentSpreadsheet());
-			getLayout().addLayout(integerConfigSidebarElement.getLayout(), 1);
-			break;
-		default:
-			break;
-		}
-
 	}
 
 	protected abstract java.util.function.Predicate<ConfigProperty<?>> getKonfigFieldFilter();

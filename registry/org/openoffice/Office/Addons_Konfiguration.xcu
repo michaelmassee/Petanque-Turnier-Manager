@@ -38,6 +38,20 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							
+							<!-- ****************************************************************** -->
+							<node oor:name="X1X2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Colors</value>
+									<value xml:lang="de">Farben</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_farben</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					

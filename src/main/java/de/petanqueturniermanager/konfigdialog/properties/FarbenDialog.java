@@ -10,27 +10,27 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
-import de.petanqueturniermanager.sidebar.config.headerfooter.HeaderFooterSidebarContent;
+import de.petanqueturniermanager.sidebar.config.color.ColorSidebarContent;
 
 /**
  * @author Michael Massee
  */
-public class KopfFusszeilenDialog extends BasePropertiesDialog {
+public class FarbenDialog extends BasePropertiesDialog {
 
-	static final Logger logger = LogManager.getLogger(KopfFusszeilenDialog.class);
+	static final Logger logger = LogManager.getLogger(FarbenDialog.class);
 
-	public KopfFusszeilenDialog(WorkingSpreadsheet currentSpreadsheet) {
+	public FarbenDialog(WorkingSpreadsheet currentSpreadsheet) {
 		super(currentSpreadsheet);
 	}
 
 	@Override
 	protected Predicate<ConfigProperty<?>> getKonfigFieldFilter() {
-		return HeaderFooterSidebarContent.HEADERFOOTER_FILTER;
+		return ColorSidebarContent.COLOR_FILTER;
 	}
 
 	@Override
 	protected String getTitle() {
-		return "Kopf/Fusszeilen";
+		return "Farben";
 	}
 
 }

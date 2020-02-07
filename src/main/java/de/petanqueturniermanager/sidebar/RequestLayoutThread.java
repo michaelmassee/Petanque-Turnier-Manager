@@ -17,6 +17,9 @@ public class RequestLayoutThread {
 
 	static final Hashtable<Integer, Boolean> isRunning = new Hashtable<>();
 
+	private RequestLayoutThread() {
+	}
+
 	public static synchronized void start(XSidebar xSidebar) {
 
 		if (isRunning.containsKey(xSidebar.hashCode()) && isRunning.get(xSidebar.hashCode())) {
