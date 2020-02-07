@@ -4,6 +4,8 @@
 package de.petanqueturniermanager.comp.turnierevent;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Michael Massee
@@ -11,10 +13,10 @@ import java.util.ArrayList;
  */
 public class TurnierEventHandler {
 
-	private final ArrayList<ITurnierEventListener> listeners;
+	private final List<ITurnierEventListener> listeners;
 
 	public TurnierEventHandler() {
-		listeners = new ArrayList<>();
+		listeners = Collections.synchronizedList(new ArrayList<>());
 	}
 
 	public void trigger(TurnierEventType type, ITurnierEvent eventObj) {

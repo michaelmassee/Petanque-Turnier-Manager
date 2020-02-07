@@ -51,6 +51,8 @@
 package de.petanqueturniermanager.comp.adapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -85,10 +87,10 @@ public class GlobalEventListener implements XEventListener {
 	private static final String ON_LOAD = "OnLoad";
 	private static final String ON_UNFOCUS = "OnUnfocus";
 
-	private final ArrayList<IGlobalEventListener> listeners;
+	private final List<IGlobalEventListener> listeners;
 
 	public GlobalEventListener() {
-		listeners = new ArrayList<>();
+		listeners = Collections.synchronizedList(new ArrayList<IGlobalEventListener>());
 	}
 
 	/**
