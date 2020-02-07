@@ -39,7 +39,7 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 
 	private static final Logger logger = LogManager.getLogger(LabelPlusBackgrColorAndColorChooser.class);
 	// https://www.flaticon.com/free-icon/color-wheel_1373048 = color chooser
-	private static final String btnImage = "sidebar-colorpicker.png"; // 24x24
+	public static final String btnImage = "sidebar-colorpicker.png"; // 24x24
 
 	XFixedText label;
 	XMultiPropertySet labelProperties;

@@ -28,12 +28,14 @@ import com.sun.star.uno.UnoRuntime;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.config.AddConfigElementsToWindow;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
@@ -76,7 +78,10 @@ abstract class BasePropertiesDialog {
 		xPSetDialog.setPropertyValue("Height", Integer.valueOf(DIALOG_MIN_HEIGHT));
 		xPSetDialog.setPropertyValue("Moveable", Boolean.TRUE);
 		xPSetDialog.setPropertyValue("Sizeable", Boolean.TRUE);
-		xPSetDialog.setPropertyValue("Title", getTitle()); // "Kopf/Fusszeilen"
+
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(currentSpreadsheet).getTurnierSystemAusDocument();
+		String title = turnierSystemAusDocument.getBezeichnung() + "  " + getTitle();
+		xPSetDialog.setPropertyValue("Title", title);
 
 		// create the dialog control and set the model
 		Object dialog = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.UnoControlDialog", currentSpreadsheet.getxContext());

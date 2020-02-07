@@ -271,7 +271,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 	/**
 	 * @return the currentSpreadsheet
 	 */
-	protected final WorkingSpreadsheet getCurrentSpreadsheet() {
+	public final WorkingSpreadsheet getCurrentSpreadsheet() {
 		return currentSpreadsheet;
 	}
 
