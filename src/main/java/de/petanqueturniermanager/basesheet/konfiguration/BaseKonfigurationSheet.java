@@ -9,11 +9,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
-import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -21,9 +18,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
- *
- * TODO use framework <br>
- * https://github.com/dlsc-software-consulting-gmbh/PreferencesFX<br>
  *
  */
 abstract public class BaseKonfigurationSheet extends SheetRunner implements IPropertiesSpalte, IKonfigurationSheet {
@@ -38,14 +32,7 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	// Wird immer von Sheetrunner aufgerufen
 	@Override
 	public final void update() throws GenerateException {
-		processBoxinfo("Update Konfiguration");
-		// validate SpielSystem
-		validateSpielSystem();
-		updateTurnierSystemKonfigBlock();
-		doFormat();
-		updateTurnierSystemKonfiguration();
 		updateTurnierSystemInDocument();
-		ProcessBox.from().spielTag(getAktiveSpieltag()).spielRunde(getAktiveSpielRunde()).turnierSystem(getTurnierSystem());
 		initPageStyles();
 		initPageStylesTurnierSystem();
 	}
@@ -53,27 +40,14 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	protected abstract void initPageStylesTurnierSystem() throws GenerateException;
 
 	private void initPageStyles() throws GenerateException {
-		// default page Style
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()).create().applytoSheet();
+		// default page Style footer zeilen
+		// sicher gehen das änderungen ankommen
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()).create();
 	}
 
 	private void updateTurnierSystemInDocument() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, getTurnierSystem().getId());
-	}
-
-	private void validateSpielSystem() throws GenerateException {
-		// Property im Document vorhanden ?
-		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
-		int spielsystem = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
-		if (spielsystem > 0) { // 0 = Kein
-			TurnierSystem turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
-			TurnierSystem turnierSystemAusSheet = getTurnierSystem();
-			if (turnierSystemAusDocument != null && turnierSystemAusSheet.getId() != turnierSystemAusDocument.getId()) {
-				ProcessBox.from().fehler("Dokument wurde mit Turniersystem " + turnierSystemAusDocument + " erstellt.");
-				throw new GenerateException("Turniersystem '" + getTurnierSystem() + "' stimmt nicht mit Dokument '" + turnierSystemAusDocument + "' überein");
-			}
-		}
 	}
 
 	@Override
@@ -89,16 +63,6 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	@Override
 	public final Integer getMeldeListeHeaderFarbe() throws GenerateException {
 		return getPropertiesSpalte().getMeldeListeHeaderFarbe();
-	}
-
-	@Override
-	public void updateKonfigBlock() throws GenerateException {
-		getPropertiesSpalte().updateKonfigBlock();
-	}
-
-	@Override
-	public void doFormat() throws GenerateException {
-		getPropertiesSpalte().doFormat();
 	}
 
 	@Override
@@ -138,17 +102,12 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 
 	@Override
 	public final XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.KONFIGURATION).tabColor(SHEET_COLOR).useIfExist().hideGrid().create().getSheet();
+		throw new GenerateException("nicht erlaubt");
 	}
 
 	@Override
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	public final String suchMatrixProperty() {
-		return getPropertiesSpalte().suchMatrixProperty();
 	}
 
 	@Override
@@ -170,9 +129,5 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	 * @return the propertiesSpalte
 	 */
 	protected abstract IPropertiesSpalte getPropertiesSpalte();
-
-	protected abstract void updateTurnierSystemKonfiguration() throws GenerateException;
-
-	protected abstract void updateTurnierSystemKonfigBlock() throws GenerateException;
 
 }

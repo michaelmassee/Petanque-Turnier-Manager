@@ -329,17 +329,17 @@ public class ProcessBox {
 		return this;
 	}
 
-	public ProcessBox turnierSystem(TurnierSystem spielSystem) {
+	private ProcessBox turnierSystem(TurnierSystem spielSystem) {
 		spielSystemText.setText("" + spielSystem);
 		return this;
 	}
 
-	public ProcessBox spielTag(SpielTagNr spieltag) {
+	private ProcessBox spielTag(SpielTagNr spieltag) {
 		spieltagText.setText("" + spieltag.getNr());
 		return this;
 	}
 
-	public ProcessBox spielRunde(SpielRundeNr spielrunde) {
+	private ProcessBox spielRunde(SpielRundeNr spielrunde) {
 		spielrundeText.setText("" + spielrunde.getNr());
 		return this;
 	}

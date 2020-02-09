@@ -22,7 +22,6 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -171,7 +170,6 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 
 	public void setSpielTagNr(SpielTagNr spielTag) {
 		checkNotNull(spielTag, "spielTagNr == null");
-		ProcessBox.from().spielTag(spielTag);
 		spielTagNr = spielTag;
 	}
 

@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -51,7 +50,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 	@Override
 	protected void doRun() throws GenerateException {
 		// clean up first
-		getSheetHelper().removeAllSheetsExclude(new String[] { IKonfigurationKonstanten.SHEETNAME, SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
 		meldeListe.setSpielTag(SpielTagNr.from(1));
 		meldeListe.setAktiveSpieltag(SpielTagNr.from(1));
 		meldeListe.setAktiveSpielRunde(SpielRundeNr.from(1));

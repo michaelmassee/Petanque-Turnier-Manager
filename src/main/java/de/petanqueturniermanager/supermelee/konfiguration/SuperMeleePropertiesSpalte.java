@@ -10,20 +10,16 @@ import java.util.List;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements ISuperMeleePropertiesSpalte {
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
-		// ADDSpielsystemProp(TurnierSystem.SUPERMELEE, KONFIG_PROPERTIES);
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
 
@@ -103,34 +99,8 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	 * @param erstePropertiesZeile
 	 * @param sheet
 	 */
-	SuperMeleePropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
-		super(propertiesSpalte, erstePropertiesZeile, sheet);
-	}
-
-	@Override
-	public SpielTagNr getAktiveSpieltag() throws GenerateException {
-		SpielTagNr spieltag = SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
-		ProcessBox.from().spielTag(spieltag);
-		return spieltag;
-	}
-
-	@Override
-	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
-		ProcessBox.from().spielTag(spieltag);
-		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
-	}
-
-	@Override
-	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
-		SpielRundeNr spielrunde = SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
-		ProcessBox.from().spielRunde(spielrunde);
-		return spielrunde;
-	}
-
-	@Override
-	public void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
-		ProcessBox.from().spielRunde(spielrunde);
-		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
+	SuperMeleePropertiesSpalte(ISheet sheet) {
+		super(sheet);
 	}
 
 	@Override
@@ -219,5 +189,4 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	protected List<ConfigProperty<?>> getKonfigProperties() {
 		return KONFIG_PROPERTIES;
 	}
-
 }

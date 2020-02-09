@@ -33,15 +33,10 @@ public interface IPropertiesSpalte {
 
 	Integer getRanglisteHeaderFarbe() throws GenerateException;
 
-	void updateKonfigBlock() throws GenerateException;
-
-	void doFormat() throws GenerateException;
-
 	String getFusszeileLinks() throws GenerateException;
 
 	String getFusszeileMitte() throws GenerateException;
 
 	boolean zeigeArbeitsSpalten() throws GenerateException;
 
-	String suchMatrixProperty();
 }

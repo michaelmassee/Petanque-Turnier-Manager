@@ -17,6 +17,7 @@ import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ComboBoxItem;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusCombobox;
+import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**
@@ -38,7 +39,10 @@ public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemL
 
 	@Override
 	public Layout getLayout() {
-		return labelPlusCombobox.getLayout();
+		if (labelPlusCombobox != null) {
+			return labelPlusCombobox.getLayout();
+		}
+		return new HorizontalLayout();
 	}
 
 	private void setPropertyValue(String keyVal) {

@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.sidebar.config;
 
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**
@@ -11,5 +12,8 @@ import de.petanqueturniermanager.sidebar.layout.Layout;
  */
 public interface ConfigSidebarElement {
 	Layout getLayout();
+
+	default void onPropertiesChanged(@SuppressWarnings("unused") ITurnierEvent eventObj) {
+	}
 
 }

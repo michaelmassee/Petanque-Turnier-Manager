@@ -53,8 +53,8 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	 * @param erstePropertiesZeile
 	 * @param sheet
 	 */
-	LigaPropertiesSpalte(int propertiesSpalte, int erstePropertiesZeile, ISheet sheet) {
-		super(propertiesSpalte, erstePropertiesZeile, sheet);
+	LigaPropertiesSpalte(ISheet sheet) {
+		super(sheet);
 	}
 
 	@Override
@@ -68,18 +68,8 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	}
 
 	@Override
-	public void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
-		// nichts
-	}
-
-	@Override
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		return SpielRundeNr.from(1);
-	}
-
-	@Override
-	public void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
-		// Nichts
 	}
 
 	@Override

@@ -13,10 +13,12 @@ import com.sun.star.awt.XTextListener;
 import com.sun.star.lang.EventObject;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusNumericField;
+import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**
@@ -47,7 +49,10 @@ public class IntegerConfigSidebarElement implements ConfigSidebarElement, XTextL
 
 	@Override
 	public Layout getLayout() {
-		return labelPlusNumericField.getLayout();
+		if (labelPlusNumericField != null) {
+			return labelPlusNumericField.getLayout();
+		}
+		return new HorizontalLayout();
 	}
 
 	private void setPropertyValue(Integer newVal) {
@@ -74,6 +79,15 @@ public class IntegerConfigSidebarElement implements ConfigSidebarElement, XTextL
 
 	@Override
 	public void textChanged(TextEvent arg0) {
-		setPropertyValue((int) Math.round(labelPlusNumericField.getFieldVal()));
+		if (labelPlusNumericField != null) {
+			setPropertyValue((int) Math.round(labelPlusNumericField.getFieldVal()));
+		}
+	}
+
+	@Override
+	public void onPropertiesChanged(ITurnierEvent eventObj) {
+		if (labelPlusNumericField != null) {
+			labelPlusNumericField.fieldVal(getPropertyValue());
+		}
 	}
 }

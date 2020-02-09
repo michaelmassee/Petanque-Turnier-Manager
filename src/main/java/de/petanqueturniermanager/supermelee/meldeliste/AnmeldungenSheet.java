@@ -23,7 +23,6 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -214,7 +213,6 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 
 	public void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag);
-		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 

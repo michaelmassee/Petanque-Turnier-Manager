@@ -10,10 +10,12 @@ import com.sun.star.awt.XItemListener;
 import com.sun.star.lang.EventObject;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusCheckBox;
+import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**
@@ -40,7 +42,10 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 
 	@Override
 	public Layout getLayout() {
-		return labelPlusCheckBox.getLayout();
+		if (labelPlusCheckBox != null) {
+			return labelPlusCheckBox.getLayout();
+		}
+		return new HorizontalLayout();
 	}
 
 	private void setPropertyValue(boolean newVal) {
@@ -67,5 +72,12 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 	@Override
 	public void itemStateChanged(ItemEvent itemEvent) {
 		setPropertyValue((itemEvent.Selected > 0 ? true : false));
+	}
+
+	@Override
+	public void onPropertiesChanged(ITurnierEvent eventObj) {
+		if (labelPlusCheckBox != null) {
+			labelPlusCheckBox.setStat(getPropertyValue());
+		}
 	}
 }
