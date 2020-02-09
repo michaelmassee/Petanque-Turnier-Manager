@@ -4,8 +4,6 @@
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,8 +13,6 @@ import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -25,15 +21,13 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
 	public static final int MAX_SPIELTAG = 10;
-	private static final int KONFIG_SPIELTAG_NR_SPALTE = NAME_PROPERTIES_SPALTE + 3;
-	private static final int KONFIG_SPIELTAG_KOPFZEILE_SPALTE = KONFIG_SPIELTAG_NR_SPALTE + 1;
 
 	private final SuperMeleePropertiesSpalte propertiesSpalte;
 
 	// Package weil nur in SuperMeleeSheet verwendet werden darf
 	SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
-		propertiesSpalte = new SuperMeleePropertiesSpalte(NAME_PROPERTIES_SPALTE, ERSTE_ZEILE_PROPERTIES, this);
+		propertiesSpalte = new SuperMeleePropertiesSpalte(this);
 	}
 
 	@Override
@@ -43,27 +37,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 
 	@Override
 	protected void doRun() throws GenerateException {
-		// nur Activ setzten
-		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
-	}
-
-	// update immer einmal in SheetRunner
-	// wird von #BaseKonfigurationSheet.update() verwendet
-	@Override
-	protected void updateTurnierSystemKonfiguration() throws GenerateException {
-	}
-
-	/**
-	 *
-	 * @param spielTagNr
-	 * @return null wenn not found
-	 * @throws GenerateException
-	 */
-
-	public String getKopfZeile(SpielTagNr spielTagNr) throws GenerateException {
-		checkNotNull(spielTagNr);
-		Position posKopfzeile = Position.from(KONFIG_SPIELTAG_KOPFZEILE_SPALTE, ERSTE_ZEILE_PROPERTIES + (spielTagNr.getNr() - 1));
-		return getSheetHelper().getTextFromCell(getXSpreadSheet(), posKopfzeile);
+		throw new GenerateException("nicht erlaubt");
 	}
 
 	@Override
@@ -139,11 +113,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	@Override
 	protected IPropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
-	}
-
-	@Override
-	protected void updateTurnierSystemKonfigBlock() throws GenerateException {
-		propertiesSpalte.updateKonfigBlock(); // SuperMelee + Allgemeine properties
 	}
 
 	@Override

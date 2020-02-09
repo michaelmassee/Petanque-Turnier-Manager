@@ -23,7 +23,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -437,7 +436,6 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 
 	public void setSpieltagNr(SpielTagNr spieltagNr) {
 		checkNotNull(spieltagNr, "spieltagNr==null");
-		ProcessBox.from().spielTag(spieltagNr);
 		this.spieltagNr = spieltagNr;
 	}
 

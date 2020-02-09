@@ -12,14 +12,12 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
@@ -34,7 +32,6 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGer
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
@@ -46,7 +43,6 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet implements IMeldeliste<SpielerMeldungen> {
@@ -180,37 +176,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
 	}
 
-	/**
-	 * aktuelle Spieltag + Spielrunde infos
-	 *
-	 * @throws GenerateException
-	 * @Deprecated weil properties sheet nicht mehr vorhanden, properties sind in sidebar gewandert bzw im Document user properties
-	 */
-	@Deprecated
-	private void insertInfoSpalte() throws GenerateException {
-		XSpreadsheet sheet = getXSpreadSheet();
-		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
-
-		Position posBezeichnug = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
-
-		String formulaStrSpieltag = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-				+ getKonfigurationSheet().suchMatrixProperty() + ";2;0)";
-		String formulaStrSpielRunde = "VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-				+ getKonfigurationSheet().suchMatrixProperty() + ";2;0)";
-
-		TableBorder2 border = BorderFactory.from().allThin().toBorder();
-
-		StringCellValue bezeichnugVal = StringCellValue.from(sheet, posBezeichnug, SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG).setComment("Aktive Spieltag")
-				.setEndPosMergeZeilePlus(1).setCharHeight(14).setCharWeight(FontWeight.BOLD).centerVertJustify().setBorder(border).setCellBackColor(headerBackColor);
-
-		getSheetHelper().setStringValueInCell(bezeichnugVal);
-		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpieltag));
-
-		bezeichnugVal.setValue(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE).setComment("Aktive Spielrunde").zeilePlus(2);
-		getSheetHelper().setStringValueInCell(bezeichnugVal);
-		getSheetHelper().setFormulaInCell(StringCellValue.from(bezeichnugVal).spaltePlusEins().setComment(null).setValue(formulaStrSpielRunde));
-	}
-
 	protected void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
 
@@ -228,13 +193,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
 		getSheetHelper().setStringValueInCell(bezCelSpieltagVal);
 
-		// Aktiv / Inaktiv spieltag
-		// =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
-		String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-				+ getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)=" + spieltag.getNr() + ";\"Aktiv\";\"\"";
-		StringCellValue aktivFormula = StringCellValue.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr)
-				.setCharColor(ColorHelper.CHAR_COLOR_GREEN);
-		getSheetHelper().setFormulaInCell(aktivFormula);
+		// // Aktiv / Inaktiv spieltag
+		// // =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
+		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
+		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)=" + spieltag.getNr() + ";\"Aktiv\";\"\"";
+		// StringCellValue aktivFormula = StringCellValue.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr)
+		// .setCharColor(ColorHelper.CHAR_COLOR_GREEN);
+		// getSheetHelper().setFormulaInCell(aktivFormula);
 
 	}
 
@@ -571,29 +536,29 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 		// Triplette
 		// =WENN(WENNNV(SVERWEIS("Supermêlée Modus";$Konfiguration.$B$3:$C$101;2;0);0)="T";"Aktiv";"")
 		// Zelle rechts neben Block
-		{
-			Position aktivAnzeigePos = Position.from(ersteSummeSpalte() + anzSpieltage + 1, TRIPL_MODE_ANZ_DOUBLETTE);
-			String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-					+ getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)" + "<>\"D\"" // Alle Werte ungleich D = Triplette Mode
-					+ ";\"Aktiv\";\"\"";
-			StringCellValue aktivFormula = StringCellValue.from(getXSpreadSheet()).setPos(aktivAnzeigePos).setValue(formulaStr).setRotateAngle(27000)
-					.setVertJustify(CellVertJustify2.CENTER).setEndPosMergeZeile(TRIPL_MODE_SUMMEN_SPIELBAHNEN).setCharColor(ColorHelper.CHAR_COLOR_GREEN)
-					.setCharWeight(FontWeight.BOLD);
-			getSheetHelper().setFormulaInCell(aktivFormula);
-		}
-
-		// Doublette
-		// Zelle rechts neben Block
-		{
-			Position aktivAnzeigePos = Position.from(ersteSummeSpalte() + anzSpieltage + 1, DOUBL_MODE_ANZ_DOUBLETTE);
-			String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-					+ getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)" + "=\"D\"" // Alle Werte D = Doublette
-					+ ";\"Aktiv\";\"\"";
-			StringCellValue aktivFormula = StringCellValue.from(getXSpreadSheet()).setPos(aktivAnzeigePos).setValue(formulaStr).setRotateAngle(27000)
-					.setVertJustify(CellVertJustify2.CENTER).setEndPosMergeZeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN).setCharColor(ColorHelper.CHAR_COLOR_GREEN)
-					.setCharWeight(FontWeight.BOLD);
-			getSheetHelper().setFormulaInCell(aktivFormula);
-		}
+		// {
+		// Position aktivAnzeigePos = Position.from(ersteSummeSpalte() + anzSpieltage + 1, TRIPL_MODE_ANZ_DOUBLETTE);
+		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
+		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)" + "<>\"D\"" // Alle Werte ungleich D = Triplette Mode
+		// + ";\"Aktiv\";\"\"";
+		// StringCellValue aktivFormula = StringCellValue.from(getXSpreadSheet()).setPos(aktivAnzeigePos).setValue(formulaStr).setRotateAngle(27000)
+		// .setVertJustify(CellVertJustify2.CENTER).setEndPosMergeZeile(TRIPL_MODE_SUMMEN_SPIELBAHNEN).setCharColor(ColorHelper.CHAR_COLOR_GREEN)
+		// .setCharWeight(FontWeight.BOLD);
+		// getSheetHelper().setFormulaInCell(aktivFormula);
+		// }
+		//
+		// // Doublette
+		// // Zelle rechts neben Block
+		// {
+		// Position aktivAnzeigePos = Position.from(ersteSummeSpalte() + anzSpieltage + 1, DOUBL_MODE_ANZ_DOUBLETTE);
+		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
+		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)" + "=\"D\"" // Alle Werte D = Doublette
+		// + ";\"Aktiv\";\"\"";
+		// StringCellValue aktivFormula = StringCellValue.from(getXSpreadSheet()).setPos(aktivAnzeigePos).setValue(formulaStr).setRotateAngle(27000)
+		// .setVertJustify(CellVertJustify2.CENTER).setEndPosMergeZeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN).setCharColor(ColorHelper.CHAR_COLOR_GREEN)
+		// .setCharWeight(FontWeight.BOLD);
+		// getSheetHelper().setFormulaInCell(aktivFormula);
+		// }
 
 	}
 
@@ -694,7 +659,6 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	public final void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag, "spielTag == null");
-		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 

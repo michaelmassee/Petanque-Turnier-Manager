@@ -30,7 +30,7 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 	 */
 	LigaKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA);
-		propertiesSpalte = new LigaPropertiesSpalte(NAME_PROPERTIES_SPALTE, ERSTE_ZEILE_PROPERTIES, this);
+		propertiesSpalte = new LigaPropertiesSpalte(this);
 	}
 
 	@Override
@@ -55,21 +55,10 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 	}
 
 	@Override
-	protected void updateTurnierSystemKonfiguration() throws GenerateException {
-		// nichts, wenn zusatz spalten dann hier
-	}
-
-	@Override
-	protected void updateTurnierSystemKonfigBlock() throws GenerateException {
-		propertiesSpalte.updateKonfigBlock(); // Liga + Allgemeine properties
-	}
-
-	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
 		// default page Style
-		// .setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks()) werden bereits definiert
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks()).setHeaderCenter(getKopfZeileMitte())
-				.setHeaderRight(getKopfZeileRechts()).create().applytoSheet();
+				.setHeaderRight(getKopfZeileRechts()).create();
 	}
 
 	@Override

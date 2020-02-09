@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.sidebar.info;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -17,9 +18,11 @@ import com.sun.star.ui.XSidebar;
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.config.BooleanConfigSidebarElement;
+import de.petanqueturniermanager.sidebar.config.ConfigSidebarElement;
 import de.petanqueturniermanager.sidebar.config.IntegerConfigSidebarElement;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusTextReadOnly;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -37,6 +40,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 	private boolean turnierFields;
 	private boolean didAddGlobalFields;
+	private List<WeakRefHelper<ConfigSidebarElement>> configSidebarElements;
 
 	/**
 	 * Jedes Document eigene Instance
@@ -73,6 +77,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 			addFields();
 		}
 		turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
+		configSidebarElements.stream().filter(element -> element != null && element.isPresent()).forEach(element -> element.get().onPropertiesChanged(eventObj));
 	}
 
 	@Override
@@ -92,7 +97,6 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		addFields(false);
 	}
 
-	// TODO Doppelte code entfernen
 	private void addFields(boolean mustLayout) {
 
 		addGlobalFields();
@@ -115,9 +119,15 @@ public class InfoSidebarContent extends BaseSidebarContent {
 			return;
 		}
 
+		configSidebarElements = new ArrayList<>();
 		setChangingLayout(true);
 		try {
-			konfigProperties.stream().filter(INFO_PANEL_PROP_FILTER).collect(Collectors.toList()).forEach(konfigprop -> addPropToPanel(konfigprop));
+			konfigProperties.stream().filter(INFO_PANEL_PROP_FILTER).collect(Collectors.toList()).forEach(konfigprop -> {
+				ConfigSidebarElement element = addPropToPanel(konfigprop);
+				if (element != null) {
+					configSidebarElements.add(new WeakRefHelper<>(element));
+				}
+			});
 		} finally {
 			setChangingLayout(false);
 		}
@@ -135,31 +145,31 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	 * @param konfigprop
 	 * @return
 	 */
-	private void addPropToPanel(ConfigProperty<?> configProperty) {
+	@SuppressWarnings("unchecked")
+	private ConfigSidebarElement addPropToPanel(ConfigProperty<?> configProperty) {
+
+		ConfigSidebarElement configSidebarElement = null;
 
 		switch (configProperty.getType()) {
 		case STRING:
 			break;
 		case BOOLEAN:
 			// create checkbox Readonly
-			@SuppressWarnings("unchecked")
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty,
-					getCurrentSpreadsheet(), true);
-			getLayout().addLayout(booleanConfigSidebarElement.getLayout(), 1);
+			configSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty, getCurrentSpreadsheet(), true);
+			getLayout().addLayout(configSidebarElement.getLayout(), 1);
 			break;
 		case COLOR:
 			// create colorpicker
 			// TODO ReadOnly
 			break;
 		case INTEGER:
-			@SuppressWarnings("unchecked")
-			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty,
-					getCurrentSpreadsheet(), true);
-			getLayout().addLayout(integerConfigSidebarElement.getLayout(), 1);
+			configSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty, getCurrentSpreadsheet(), true);
+			getLayout().addLayout(configSidebarElement.getLayout(), 1);
 			break;
 		default:
 			break;
 		}
+		return configSidebarElement;
 	}
 
 	@Override

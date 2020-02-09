@@ -902,7 +902,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	public void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag);
-		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 
@@ -913,7 +912,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	public void setSpielRundeNr(SpielRundeNr spielrunde) {
 		checkNotNull(spielrunde);
-		ProcessBox.from().spielRunde(spielrunde);
 		spielRundeNr = spielrunde;
 	}
 }

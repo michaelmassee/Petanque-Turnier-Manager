@@ -192,7 +192,6 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 
 	public void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag);
-		ProcessBox.from().spielTag(spielTag);
 		this.spielTag = spielTag;
 	}
 
@@ -203,7 +202,6 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 
 	public void setSpielRundeNr(SpielRundeNr spielrunde) {
 		checkNotNull(spielrunde);
-		ProcessBox.from().spielRunde(spielrunde);
 		spielRundeNr = spielrunde;
 	}
 }

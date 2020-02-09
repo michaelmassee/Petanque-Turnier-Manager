@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.sidebar.fields;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -109,7 +110,9 @@ public abstract class BaseField<T> {
 
 	@SuppressWarnings("unchecked")
 	public T helpText(XMultiPropertySet xMultiPropertySet, String text) {
-		setProperty(xMultiPropertySet, GuiFactory.HELP_TEXT, text);
+		if (ObjectUtils.allNotNull(xMultiPropertySet, text)) {
+			setProperty(xMultiPropertySet, GuiFactory.HELP_TEXT, text);
+		}
 		return (T) this;
 	}
 
@@ -119,7 +122,7 @@ public abstract class BaseField<T> {
 
 	@SuppressWarnings("unchecked")
 	public final T setProperty(XMultiPropertySet xMultiPropertySet, String key, Object newVal) {
-		if (properties != null && key != null) {
+		if (ObjectUtils.allNotNull(properties, key, newVal)) {
 			String[] name = new String[] { key };
 			Object[] val = new Object[] { newVal };
 			try {

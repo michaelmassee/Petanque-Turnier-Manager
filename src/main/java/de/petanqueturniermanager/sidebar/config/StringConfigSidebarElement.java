@@ -5,6 +5,7 @@ package de.petanqueturniermanager.sidebar.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +22,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.fields.LabelPlusTextPlusTextareaBox;
+import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 
 /**
@@ -46,7 +48,10 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 
 	@Override
 	public Layout getLayout() {
-		return labelPlusTextPlusTextareaBox.getLayout();
+		if (labelPlusTextPlusTextareaBox != null) {
+			return labelPlusTextPlusTextareaBox.getLayout();
+		}
+		return new HorizontalLayout();
 	}
 
 	private void setPropertyValue(String newVal) {
@@ -73,7 +78,9 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 
 	@Override
 	public void textChanged(TextEvent arg0) {
-		setPropertyValue(labelPlusTextPlusTextareaBox.getFieldText());
+		if (labelPlusTextPlusTextareaBox != null) {
+			setPropertyValue(labelPlusTextPlusTextareaBox.getFieldText());
+		}
 	}
 
 	XActionListener btnXActionListener = new XActionListener() {
@@ -84,12 +91,15 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// btn Klicked
+
 			try {
-				textAreaDialog.initTextArea(configProperty.getKey(), configProperty.getKey(), labelPlusTextPlusTextareaBox.getFieldText());
-				textAreaDialog.createDialog();
-				// update
-				labelPlusTextPlusTextareaBox.fieldText(getPropertyValue());
+				if (ObjectUtils.allNotNull(textAreaDialog, labelPlusTextPlusTextareaBox)) {
+					// btn Klicked
+					textAreaDialog.initTextArea(configProperty.getKey(), configProperty.getKey(), labelPlusTextPlusTextareaBox.getFieldText());
+					textAreaDialog.createDialog();
+					// update
+					labelPlusTextPlusTextareaBox.fieldText(getPropertyValue());
+				}
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 			}

@@ -134,7 +134,7 @@ public class TextAreaDialog {
 		}
 
 		// create a peer
-		Object toolkit = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.ExtToolkit", currentSpreadsheet.getxContext());
+		Object toolkit = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.Toolkit", currentSpreadsheet.getxContext());
 		XToolkit xToolkit = UnoRuntime.queryInterface(XToolkit.class, toolkit);
 		XWindow xWindow = UnoRuntime.queryInterface(XWindow.class, xControl);
 		xWindow.setVisible(false);
