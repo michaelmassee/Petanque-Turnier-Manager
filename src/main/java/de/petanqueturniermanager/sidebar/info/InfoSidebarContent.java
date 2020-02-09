@@ -76,8 +76,12 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		if (!turnierFields) {
 			addFields();
 		}
-		turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
-		configSidebarElements.stream().filter(element -> element != null && element.isPresent()).forEach(element -> element.get().onPropertiesChanged(eventObj));
+		if (turnierSystemInfoLine != null) {
+			turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
+		}
+		if (configSidebarElements != null) {
+			configSidebarElements.stream().filter(element -> element != null && element.isPresent()).forEach(element -> element.get().onPropertiesChanged(eventObj));
+		}
 	}
 
 	@Override
