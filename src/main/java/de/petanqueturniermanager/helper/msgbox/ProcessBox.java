@@ -33,7 +33,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -46,9 +45,6 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class ProcessBox {
 	private static final Logger logger = LogManager.getLogger(ProcessBox.class);
@@ -58,27 +54,25 @@ public class ProcessBox {
 	private static final int MIN_HEIGHT = 200;
 	private static final int MIN_WIDTH = 550;
 	private static final String TITLE = "Pétanque Turnier Manager";
-	private static ProcessBox processBox = null;
-	private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+	private static ProcessBox processBox;
+	private static final SimpleDateFormat SIMPLEDATEFORMAT = new SimpleDateFormat("HH:mm:ss");
 
 	private final JFrame frame;
-	private JTextArea logOut = null;
-	private JButton logfileBtn = null;
-	private JButton cancelBtn = null;
-	private String prefix = null;
-	private JTextField spieltagText = null;
-	private JTextField spielrundeText = null;
-	private JTextField spielSystemText = null;
+	private JTextArea logOut;
+	private JButton logfileBtn;
+	private JButton cancelBtn;
+	private String prefix;
 
-	private JLabel statusLabel = null;
+	private JLabel statusLabel;
+	private JLabel infoLabel;
 
-	private ImageIcon imageIconReady = null;
-	private ImageIcon imageIconError = null;
+	private ImageIcon imageIconReady;
+	private ImageIcon imageIconError;
 
-	private ArrayList<ImageIcon> inworkIcons = new ArrayList<>();
+	private ArrayList<ImageIcon> inworkIcons;
 
 	private DialogTools dialogTools;
-	private final ScheduledExecutorService drawInWorkIcon = Executors.newScheduledThreadPool(1);
+	private final ScheduledExecutorService drawInWorkIcon;
 	private ScheduledFuture<?> drawInWorkIconScheduled;
 
 	private boolean isFehler = false;
@@ -86,6 +80,15 @@ public class ProcessBox {
 	private ProcessBox(XComponentContext xContext) {
 		frame = new JFrame();
 		dialogTools = DialogTools.from(checkNotNull(xContext), frame);
+		drawInWorkIcon = Executors.newScheduledThreadPool(1);
+		inworkIcons = new ArrayList<>();
+		logOut = null;
+		logfileBtn = null;
+		cancelBtn = null;
+		prefix = null;
+		statusLabel = null;
+		imageIconReady = null;
+		imageIconError = null;
 		initBox();
 	}
 
@@ -144,13 +147,7 @@ public class ProcessBox {
 	private void setIcons() {
 		// icons laden
 		try {
-			// BufferedImage img16 = ImageIO.read(this.getClass().getResourceAsStream("podium16x16.png"));
-			// BufferedImage img24 = ImageIO.read(this.getClass().getResourceAsStream("podium24x24.png"));
-			// BufferedImage img32 = ImageIO.read(this.getClass().getResourceAsStream("podium32x32.png"));
-			// BufferedImage img64 = ImageIO.read(this.getClass().getResourceAsStream("podium64x64.png"));
-			// BufferedImage img128 = ImageIO.read(this.getClass().getResourceAsStream("podium128x128.png"));
 			BufferedImage img256 = ImageIO.read(this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png"));
-			// BufferedImage img512 = ImageIO.read(this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png"));
 			Image[] images = { img256 };
 			frame.setIconImages(java.util.Arrays.asList(images));
 
@@ -164,14 +161,6 @@ public class ProcessBox {
 		} catch (IOException e) {
 			logger.debug(e);
 		}
-	}
-
-	private JTextField newNumberJTextField() {
-		JTextField jTextField = new JTextField();
-		jTextField.setMinimumSize(new Dimension(40, 10));
-		jTextField.setEditable(false);
-		jTextField.setText("0");
-		return jTextField;
 	}
 
 	private void initSpieltagUndSpielrundInfo(int startZeile) {
@@ -223,30 +212,10 @@ public class ProcessBox {
 
 		gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 0);
 
-		spieltagText = newNumberJTextField();
-		spielrundeText = newNumberJTextField();
-		spielSystemText = newNumberJTextField();
+		infoLabel = new JLabel("..");
+		infoLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-		JLabel spieltagLabel = new JLabel("Tag:");
-		spieltagLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		JLabel spielrundeLabel = new JLabel("Runde:");
-		spielrundeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		JLabel spielSystemLabel = new JLabel("System:");
-		spielrundeLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-
-		panel.add(spieltagLabel, gridBagConstraintsPanel);
-		gridBagConstraintsPanel.gridx++; // spalte
-		panel.add(spieltagText, gridBagConstraintsPanel);
-		gridBagConstraintsPanel.gridx++; // spalte
-
-		panel.add(spielrundeLabel, gridBagConstraintsPanel);
-		gridBagConstraintsPanel.gridx++; // spalte
-		panel.add(spielrundeText, gridBagConstraintsPanel);
-		gridBagConstraintsPanel.gridx++; // spalte
-
-		panel.add(spielSystemLabel, gridBagConstraintsPanel);
-		gridBagConstraintsPanel.gridx++; // spalte
-		panel.add(spielSystemText, gridBagConstraintsPanel);
+		panel.add(infoLabel, gridBagConstraintsPanel);
 		gridBagConstraintsPanel.gridx++; // spalte
 
 		// ----------------------------------------------------------
@@ -318,6 +287,13 @@ public class ProcessBox {
 		return this;
 	}
 
+	public ProcessBox infoText(String newInfoText) {
+		if (infoLabel != null) {
+			infoLabel.setText(newInfoText);
+		}
+		return this;
+	}
+
 	public ProcessBox prefix(String nextLogPrefix) {
 		prefix = nextLogPrefix;
 		return this;
@@ -326,21 +302,6 @@ public class ProcessBox {
 	public ProcessBox clear() {
 		isFehler = false;
 		logOut.setText(null);
-		return this;
-	}
-
-	private ProcessBox turnierSystem(TurnierSystem spielSystem) {
-		spielSystemText.setText("" + spielSystem);
-		return this;
-	}
-
-	private ProcessBox spielTag(SpielTagNr spieltag) {
-		spieltagText.setText("" + spieltag.getNr());
-		return this;
-	}
-
-	private ProcessBox spielRunde(SpielRundeNr spielrunde) {
-		spielrundeText.setText("" + spielrunde.getNr());
 		return this;
 	}
 
@@ -354,7 +315,7 @@ public class ProcessBox {
 		checkNotNull(logOut);
 		checkNotNull(logMsg);
 
-		logOut.append(simpleDateFormat.format(new Date()));
+		logOut.append(SIMPLEDATEFORMAT.format(new Date()));
 		logOut.append(" | ");
 
 		if (prefix != null) {
@@ -431,7 +392,7 @@ public class ProcessBox {
 	}
 
 }
-// Animatide gifs are not working !
+// Animated gifs are not working !
 
 class UpdateInWorkIcon implements Runnable {
 	private int inWorkImgIdx = 0;
@@ -451,5 +412,4 @@ class UpdateInWorkIcon implements Runnable {
 		statusLabel.setIcon(inworkIcons.get(inWorkImgIdx));
 		inWorkImgIdx++;
 	}
-
 }

@@ -47,6 +47,7 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		int neueSpielrunde = aktuelleSpielrunde.getNr();
 		if (getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr())) != null) {
 			neueSpielrunde++;
+			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrunde));
 		}
 
 		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), neueSpielrunde - 1);
