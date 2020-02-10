@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -54,8 +52,6 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	public static final int MAX_ANZSPIELER_IN_SPALTE = 30;
 
 	public static final String PREFIX_SHEET_NAMEN = "SpielrundePlan";
-	private SpielTagNr spielTag = null;
-	private SpielRundeNr spielRundeNr = null;
 
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 
@@ -97,8 +93,6 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	}
 
 	public void generate(SpielerMeldungen meldungen) throws GenerateException {
-		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
-		setSpielRundeNr(getKonfigurationSheet().getAktiveSpielRunde());
 
 		// Spielrunde sheet ?
 		processBoxinfo("Neuer Spielrundeplan " + getSpielRundeNr().getNr() + " für Spieltag " + getSpielTag().getNr());
@@ -165,8 +159,8 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		getSheetHelper().setStringValueInCell(header.spaltePlusEins().setValue("Bahn"));
 	}
 
-	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) {
-		String spielRundeSheetName = "$'" + aktuelleSpielrundeSheet.getSheetName(spielTag, spielRundeNr) + "'.";
+	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) throws GenerateException {
+		String spielRundeSheetName = "$'" + aktuelleSpielrundeSheet.getSheetName(getSpielTag(), getSpielRundeNr()) + "'.";
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (spielerNr.getSpalte() + 1) + ";4))";
 
 		int ersteSpalteVertikaleErgebnisse = AbstractSpielrundeSheet.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
@@ -185,23 +179,11 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 		}
 	}
 
-	public SpielTagNr getSpielTag() {
-		checkNotNull(spielTag);
-		return spielTag;
+	public SpielTagNr getSpielTag() throws GenerateException {
+		return getKonfigurationSheet().getAktiveSpieltag();
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) {
-		checkNotNull(spielTag);
-		this.spielTag = spielTag;
-	}
-
-	public SpielRundeNr getSpielRundeNr() {
-		checkNotNull(spielRundeNr);
-		return spielRundeNr;
-	}
-
-	public void setSpielRundeNr(SpielRundeNr spielrunde) {
-		checkNotNull(spielrunde);
-		spielRundeNr = spielrunde;
+	public SpielRundeNr getSpielRundeNr() throws GenerateException {
+		return getKonfigurationSheet().getAktiveSpielRunde();
 	}
 }
