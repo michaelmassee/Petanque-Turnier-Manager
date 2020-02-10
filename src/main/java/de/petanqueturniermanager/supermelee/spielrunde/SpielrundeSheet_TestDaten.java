@@ -111,8 +111,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 					int welchenTeamHatGewonnen = ThreadLocalRandom.current().nextInt(0, 2); // 0,1
 					int verliererPunkte = ThreadLocalRandom.current().nextInt(0, 13); // 0 - 12
 					// gewinner kann auch weniger als 13 punkte
-					int gewinnerPunkte = ThreadLocalRandom.current().nextInt(verliererPunkte + 1, 14); // random rest
-																										// bis 13
+					int gewinnerPunkte = ThreadLocalRandom.current().nextInt(verliererPunkte + 1, 14); // random rest bis 13
 					int valA = (welchenTeamHatGewonnen == 0 ? verliererPunkte : gewinnerPunkte);
 					int valB = (welchenTeamHatGewonnen == 0 ? gewinnerPunkte : verliererPunkte);
 
@@ -127,6 +126,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
 		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));
+
 		spieltagRanglisteSheet.isErrorInSheet();
 	}
 }

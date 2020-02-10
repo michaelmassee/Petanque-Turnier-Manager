@@ -563,6 +563,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		}
 
 		setSpielRundeNr(neueSpielrundeNr);
+		getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 
 		if (meldungen.spieler().size() < 4) {
 			throw new GenerateException("Fehler beim erstellen von Spielrunde. Kann für Spieltag " + getSpielTag().getNr() + " die Spielrunde " + neueSpielrundeNr.getNr()
@@ -905,10 +906,22 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		this.spielTag = spielTag;
 	}
 
+	/**
+	 * nicht die globale Aktive spielnummer
+	 *
+	 * @return
+	 */
+
 	public SpielRundeNr getSpielRundeNr() {
 		checkNotNull(spielRundeNr);
 		return spielRundeNr;
 	}
+
+	/**
+	 * nicht die global aktive Spielrunde
+	 *
+	 * @param spielrunde
+	 */
 
 	public void setSpielRundeNr(SpielRundeNr spielrunde) {
 		checkNotNull(spielrunde);

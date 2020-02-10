@@ -171,7 +171,7 @@ public class NewReleaseChecker {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
 					if (newVersionAvailable) {
 						logger.debug("Neue Version = " + newVersionAvailable);
-						ProcessBox.from().info("Neue Version von PétTurnMngr (" + latestVersionFromGithub + ") verfügbar.");
+						ProcessBox.from().infoText("Neue Version von PétTurnMngr (" + latestVersionFromGithub + ") verfügbar.");
 					}
 				}
 			}
