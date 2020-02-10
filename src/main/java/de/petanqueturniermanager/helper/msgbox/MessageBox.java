@@ -14,6 +14,8 @@ import com.sun.star.awt.MessageBoxType;
 import com.sun.star.awt.XMessageBox;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+
 public class MessageBox extends AbstractMessageBox {
 	private static final Logger logger = LogManager.getLogger(MessageBox.class);
 
@@ -30,6 +32,10 @@ public class MessageBox extends AbstractMessageBox {
 
 	public static final MessageBox from(XComponentContext xContext, MessageBoxTypeEnum type) {
 		return new MessageBox(xContext, type);
+	}
+
+	public static final MessageBox from(WorkingSpreadsheet workingSpreadsheet, MessageBoxTypeEnum type) {
+		return from(checkNotNull(workingSpreadsheet).getxContext(), type);
 	}
 
 	public final MessageBox caption(String caption) {

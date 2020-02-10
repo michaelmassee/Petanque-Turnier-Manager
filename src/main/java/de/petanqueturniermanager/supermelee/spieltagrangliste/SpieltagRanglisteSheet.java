@@ -23,6 +23,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -94,6 +96,14 @@ public class SpieltagRanglisteSheet extends SuperMeleeSheet implements ISpielTag
 		MeldeListeSheet_Update meldeliste = new MeldeListeSheet_Update(getWorkingSpreadsheet());
 		meldeliste.setSpielTag(getSpieltagNr());
 		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
+
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+
+		if (anzSpielRunden == 0) {
+			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK).caption("Spieltagrangliste").message("Kein Spielrunden vorhanden").show();
+			return;
+		}
+
 		// neu erstellen
 		NewSheet.from(this, getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv().forceCreate().spielTagPageStyle(spieltagNr).create();
 

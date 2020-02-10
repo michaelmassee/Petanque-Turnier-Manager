@@ -22,6 +22,8 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -91,6 +93,11 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 
 		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". Meldungen einlesen");
 		SpielerMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
+
+		if (aktiveUndAusgesetztMeldungen.size() == 0) {
+			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK).caption("Teilnehmer Fehler").message("Keine Meldungen vorhanden").show();
+			return;
+		}
 
 		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
