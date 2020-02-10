@@ -52,7 +52,7 @@ public class ProcessBox {
 	private static final int ANZAHLSPALTEN = 1;
 
 	private static final int MIN_HEIGHT = 200;
-	private static final int MIN_WIDTH = 550;
+	private static final int MIN_WIDTH = 600;
 	private static final String TITLE = "Pétanque Turnier Manager";
 	private static ProcessBox processBox;
 	private static final SimpleDateFormat SIMPLEDATEFORMAT = new SimpleDateFormat("HH:mm:ss");

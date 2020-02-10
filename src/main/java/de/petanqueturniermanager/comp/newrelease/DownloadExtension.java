@@ -104,6 +104,7 @@ public class DownloadExtension extends SheetRunner {
 				} else {
 					ProcessBox().fehler("keine Schreibrechte");
 				}
+				ProcessBox().infoText("");
 			} catch (IOException | URISyntaxException e) {
 				logger.error(e);
 				ProcessBox().fehler(e.getMessage());
