@@ -19,7 +19,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public class KonfigurationSingleton implements IKonfigurationKonstanten {
+public class KonfigurationSingleton {
 	static final Logger logger = LogManager.getLogger(KonfigurationSingleton.class);
 
 	// List<ConfigProperty<?>> KONFIG_PROPERTIES

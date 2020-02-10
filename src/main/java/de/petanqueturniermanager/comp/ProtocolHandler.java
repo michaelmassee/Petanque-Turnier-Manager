@@ -13,28 +13,30 @@ import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.ComponentBase;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.uno.Exception;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.URL;
+
+import de.petanqueturniermanager.konfigdialog.properties.ExtendedPropertiesDialog;
 
 /**
  * We have to provide a protocol handler only so that we can show an options dialog. In the panel description in Sidebar.xcu there is a field "DefaultMenuCommand". Its value is a
  * UNO command name that is executed when the user clicks on the "more options" button in the panel title bar. We need the protocol handler to provide a new command
- * "ShowAnalogClockOptionsDialog" that, when executed, shows the Java dialog implemented by AnalogClockOptionsDialog.
  */
 public class ProtocolHandler extends ComponentBase implements XDispatchProvider, XDispatch {
 	private static final Logger logger = LogManager.getLogger(ProtocolHandler.class);
 
 	private final static String SERVICE_NAME = "de.petanqueturniermanager.ProtocolHandler";
 	final static String MSPROTOCOL = "de.petanqueturniermanager";
-	final static String msShowCommand = "ShowAnalogClockOptionsDialog";
+	final static String msShowCommand = "ExtendedOptionsDialog";
 
 	private static final String IMPLEMENTATION_NAME = ProtocolHandler.class.getName();
 	private static final String[] SERVICE_NAMES = { SERVICE_NAME };
-	// private Map<URL, XStatusListener> maListeners;
+	private final XComponentContext xContext;
 
 	public ProtocolHandler(final XComponentContext xContext) {
 		logger.debug("ProtocolHandler constructor");
-		// maListeners = new HashMap<>();
+		this.xContext = xContext;
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
@@ -111,8 +113,14 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 
 	@Override
 	public void dispatch(final URL aURL, final PropertyValue[] aArguments) {
-		// if (aURL.Complete.endsWith(msShowCommand))
-		// AnalogClockOptionsDialog.Show();
+		if (aURL.Complete.endsWith(msShowCommand)) {
+			WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
+			try {
+				new ExtendedPropertiesDialog(currentSpreadsheet).createDialog();
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
 	}
 
 }

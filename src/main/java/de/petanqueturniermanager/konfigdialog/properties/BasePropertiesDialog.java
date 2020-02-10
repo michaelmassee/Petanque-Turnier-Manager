@@ -29,6 +29,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
@@ -63,6 +65,12 @@ abstract class BasePropertiesDialog {
 	 */
 	public final void createDialog() throws com.sun.star.uno.Exception {
 
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(currentSpreadsheet).getTurnierSystemAusDocument();
+		if (turnierSystemAusDocument == TurnierSystem.KEIN) {
+			MessageBox.from(currentSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Kein Turnier vorhanden").message("Kein Turnier vorhanden").show();
+			return;
+		}
+
 		ProcessBox.from().hide(); // sonst überlapt
 
 		// get the service manager from the component context
@@ -79,7 +87,6 @@ abstract class BasePropertiesDialog {
 		xPSetDialog.setPropertyValue("Moveable", Boolean.TRUE);
 		xPSetDialog.setPropertyValue("Sizeable", Boolean.TRUE);
 
-		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(currentSpreadsheet).getTurnierSystemAusDocument();
 		String title = turnierSystemAusDocument.getBezeichnung() + "  " + getTitle();
 		xPSetDialog.setPropertyValue("Title", title);
 

@@ -64,10 +64,10 @@
 					Can be overridden by values in the ContextList. When not command is given 
 					then the button in the title bar is not displayed. -->
 
-				<!--<prop oor:name="DefaultMenuCommand" -->
+				<prop oor:name="DefaultMenuCommand">
 				<!-- see Protocalhandler fuer url -->
-				<!-- <value>de.petanqueturniermanager:ShowAnalogClockOptionsDialog</value> 
-					</prop> -->
+					<value>de.petanqueturniermanager:ExtendedOptionsDialog</value>
+				</prop>
 			</node>
 			<!-- *************************************************************************************  -->
 			<node oor:name="ConfigPanel" oor:op="replace">
