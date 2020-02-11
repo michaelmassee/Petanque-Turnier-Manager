@@ -48,6 +48,7 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_SortOnly;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
 
 // Jobs
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Jobs
@@ -239,6 +240,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		case "supermelee_validate":
 			new SpielrundeSheet_Validator(workingSpreadsheet).start();
+			break;
+		case "supermelee_spieltagrangliste_validate":
+			new SpieltagRangliste_Validator(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;
