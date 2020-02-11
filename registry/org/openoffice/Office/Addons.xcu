@@ -229,6 +229,20 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="A1C4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Validate Rankinglist</value>
+									<value xml:lang="de">Rangliste Prüfen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_spieltagrangliste_validate</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<node oor:name="X2" oor:op="replace">

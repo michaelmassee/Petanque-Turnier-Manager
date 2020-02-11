@@ -56,7 +56,7 @@ public class IntegerConfigSidebarElement implements ConfigSidebarElement, XTextL
 	}
 
 	private void setPropertyValue(Integer newVal) {
-		if (getPropertyValue() == newVal) {
+		if (getPropertyValue().equals(newVal)) {
 			return; // nichts zu tun
 		}
 

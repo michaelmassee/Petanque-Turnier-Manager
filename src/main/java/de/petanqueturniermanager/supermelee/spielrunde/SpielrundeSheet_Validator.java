@@ -42,12 +42,6 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-
-		// TODO + Prüfen, mögliche fehler ???
-		// Junit test für klasse Team
-		// Flag für Team in Spieler ??? + weakref zum Team ? ist problem ? anders lösen
-		// immer nur mit eine !!! globale liste von spieler instancen arbeiten ???? prüfen !
-
 		SpielTagNr spielTagNr = getKonfigurationSheet().getAktiveSpieltag();
 		validateSpieltag(spielTagNr);
 	}
