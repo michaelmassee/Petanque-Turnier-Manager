@@ -37,20 +37,22 @@ public class DialogTools {
 
 	private void addFrameActionListener() {
 		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
-		currentFrame.addFrameActionListener(new XFrameActionListener() {
-			@Override
-			public void disposing(EventObject arg0) {
-				// when parent close then close this frame
-				if (null != getFrame()) {
-					getFrame().dispose();
+		if (currentFrame != null) {
+			currentFrame.addFrameActionListener(new XFrameActionListener() {
+				@Override
+				public void disposing(EventObject arg0) {
+					// when parent close then close this frame
+					if (null != getFrame()) {
+						getFrame().dispose();
+					}
 				}
-			}
 
-			@Override
-			public void frameAction(FrameActionEvent arg0) {
-				// nichts
-			}
-		});
+				@Override
+				public void frameAction(FrameActionEvent arg0) {
+					// nichts
+				}
+			});
+		}
 	}
 
 	public static final DialogTools from(XComponentContext xContext, Frame frame) {
@@ -59,26 +61,28 @@ public class DialogTools {
 
 	public DialogTools moveInsideTopWindow() {
 		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
-		XWindow containerWindow = currentFrame.getContainerWindow();
-		Rectangle posSize = containerWindow.getPosSize();
+		if (currentFrame != null) {
+			XWindow containerWindow = currentFrame.getContainerWindow();
+			Rectangle posSize = containerWindow.getPosSize();
 
-		int state = frame.getExtendedState();
-		if (Frame.NORMAL != state) {
-			frame.setExtendedState(Frame.NORMAL);
-		}
+			int state = frame.getExtendedState();
+			if (Frame.NORMAL != state) {
+				frame.setExtendedState(Frame.NORMAL);
+			}
 
-		int newXPos = frame.getX();
-		int newYPos = frame.getY();
-		if (newXPos < posSize.X || newXPos > (posSize.X + posSize.Width)) {
-			newXPos = posSize.X + X_OFFSET;
-		}
+			int newXPos = frame.getX();
+			int newYPos = frame.getY();
+			if (newXPos < posSize.X || newXPos > (posSize.X + posSize.Width)) {
+				newXPos = posSize.X + X_OFFSET;
+			}
 
-		if (newYPos < posSize.Y || newYPos > (posSize.Y + posSize.Height)) {
-			newYPos = posSize.Y + Y_OFFSET;
-		}
+			if (newYPos < posSize.Y || newYPos > (posSize.Y + posSize.Height)) {
+				newYPos = posSize.Y + Y_OFFSET;
+			}
 
-		if (frame.getX() != newXPos || frame.getY() != newYPos) {
-			frame.setLocation(newXPos, newYPos);
+			if (frame.getX() != newXPos || frame.getY() != newYPos) {
+				frame.setLocation(newXPos, newYPos);
+			}
 		}
 		return this;
 	}

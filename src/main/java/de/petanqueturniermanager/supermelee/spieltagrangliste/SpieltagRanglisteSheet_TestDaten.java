@@ -60,7 +60,6 @@ public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
 
 			// validieren
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(spieltagNr);
-
 		}
 	}
 

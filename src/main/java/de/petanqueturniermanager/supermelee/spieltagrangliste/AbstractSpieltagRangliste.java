@@ -7,10 +7,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
@@ -27,6 +30,7 @@ abstract class AbstractSpieltagRangliste extends SuperMeleeSheet implements IShe
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
 
 	private SpielTagNr spieltagNr = null;
+	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
 
 	/**
 	 * @param workingSpreadsheet
@@ -34,13 +38,16 @@ abstract class AbstractSpieltagRangliste extends SuperMeleeSheet implements IShe
 	 */
 	public AbstractSpieltagRangliste(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
 		super(workingSpreadsheet, logPrefix);
+
+		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).anzZeilenInHeader(2).formation(Formation.MELEE)
+				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
 	}
 
 	/**
 	 * @param workingSpreadsheet
 	 */
 	public AbstractSpieltagRangliste(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		this(workingSpreadsheet, null);
 	}
 
 	public String getSheetName(SpielTagNr spieltagNr) {
@@ -69,6 +76,10 @@ abstract class AbstractSpieltagRangliste extends SuperMeleeSheet implements IShe
 	public void setSpieltagNr(SpielTagNr spieltagNr) {
 		checkNotNull(spieltagNr, "spieltagNr==null");
 		this.spieltagNr = spieltagNr;
+	}
+
+	protected MeldungenSpalte<SpielerMeldungen> getSpielerSpalte() {
+		return spielerSpalte;
 	}
 
 }

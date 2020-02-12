@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator;
 
@@ -46,9 +47,14 @@ public class SpieltagRangliste_Validator extends AbstractSpieltagRangliste {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
-		spielrundeSheetValidator.setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+		doValidate(getKonfigurationSheet().getAktiveSpieltag());
+	}
+
+	public void doValidate(SpielTagNr spielTagNr) throws GenerateException {
+		setSpieltagNr(spielTagNr);
+		spielrundeSheetValidator.setSpielTag(spielTagNr);
 		validateSpieler();
+		ProcessBox().info("Kein fehler gefunden in \"" + getSheetName(getSpieltagNr()) + "\"");
 	}
 
 	private void validateSpieler() throws GenerateException {
@@ -79,9 +85,18 @@ public class SpieltagRangliste_Validator extends AbstractSpieltagRangliste {
 			List<Integer> nr = dataFromRange.stream().flatMap(rowData -> rowData.stream()).map(celldata -> celldata.getIntVal(0)).filter(num -> num > 0)
 					.collect(Collectors.toList());
 			alleSpielrNrausSpielrunden.addAll(nr);
+		}
+		List<Integer> spielerNrListAusRangliste = getSpielerSpalte().getSpielerNrList();// .sort(Comparator.naturalOrder());
 
-			// nr.stream().forEach(System.out::println);
+		// prüfen ob die Anzahl spieler stimmt
+		if (spielerNrListAusRangliste.size() != alleSpielrNrausSpielrunden.size()) {
+			throw new GenerateException("Spieltagrangliste, Anzahl Spieler stimmen nicht");
+		}
+
+		boolean allMatch = spielerNrListAusRangliste.stream().allMatch(nr -> alleSpielrNrausSpielrunden.contains(nr));
+
+		if (!allMatch) {
+			throw new GenerateException("Spieltagrangliste, Spieler Nummer stimmen nicht");
 		}
 	}
-
 }

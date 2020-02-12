@@ -12,6 +12,7 @@ import com.sun.star.awt.XMessageBoxFactory;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
+import com.sun.star.frame.XFrame;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
@@ -23,12 +24,16 @@ public abstract class AbstractMessageBox {
 	final XComponentContext xContext;
 
 	public AbstractMessageBox(XComponentContext m_xContext) {
-		this.xContext = checkNotNull(m_xContext);
+		xContext = checkNotNull(m_xContext);
 	}
 
 	protected XWindowPeer getWindowPeer() {
-		XWindow xParent = DocumentHelper.getCurrentFrame(this.xContext).getContainerWindow();
-		return UnoRuntime.queryInterface(XWindowPeer.class, xParent);
+		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
+		if (currentFrame != null) {
+			XWindow xParent = DocumentHelper.getCurrentFrame(xContext).getContainerWindow();
+			return UnoRuntime.queryInterface(XWindowPeer.class, xParent);
+		}
+		return null;
 	}
 
 	protected XMessageBoxFactory getXMessageBoxFactory() {
@@ -37,7 +42,7 @@ public abstract class AbstractMessageBox {
 		XToolkit xKit;
 		try {
 			// get access to the office toolkit environment
-			xKit = UnoRuntime.queryInterface(XToolkit.class, this.xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", this.xContext));
+			xKit = UnoRuntime.queryInterface(XToolkit.class, xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", xContext));
 			xMessageBoxFactory = UnoRuntime.queryInterface(XMessageBoxFactory.class, xKit);
 		} catch (Exception e) {
 			getLogger().error(e.getMessage(), e);

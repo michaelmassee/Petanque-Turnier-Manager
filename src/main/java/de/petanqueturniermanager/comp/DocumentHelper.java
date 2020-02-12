@@ -50,10 +50,17 @@ public class DocumentHelper {
 		return getCurrentDesktop(xContext).getCurrentComponent();
 	}
 
-	/** Returns the current frame */
+	/** Returns the current frame can be null */
 	public static XFrame getCurrentFrame(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		return getXModel(xContext).getCurrentController().getFrame();
+		XModel xModel = getXModel(xContext);
+		if (xModel != null) {
+			XController currentController = getXModel(xContext).getCurrentController();
+			if (currentController != null) {
+				return currentController.getFrame();
+			}
+		}
+		return null;
 	}
 
 	/** Returns the current text document (if any) */

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.MessageBoxButtons;
 import com.sun.star.awt.MessageBoxType;
 import com.sun.star.awt.XMessageBox;
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -122,7 +123,11 @@ public class MessageBox extends AbstractMessageBox {
 	}
 
 	private XMessageBox newXMessageBox(MessageBoxType type, int buttons) {
-		return getXMessageBoxFactory().createMessageBox(getWindowPeer(), type, buttons, caption, message);
+		XWindowPeer windowPeer = getWindowPeer();
+		if (windowPeer != null) {
+			return getXMessageBoxFactory().createMessageBox(getWindowPeer(), type, buttons, caption, message);
+		}
+		return null;
 	}
 
 	@Override
