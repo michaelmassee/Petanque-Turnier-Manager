@@ -23,6 +23,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
 
 public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_TestDaten.class);
@@ -123,6 +124,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		}
 		SheetRunner.testDoCancelTask();
 		spieltagRanglisteSheet.generate();
+		new SpieltagRangliste_Validator(getWorkingSpreadsheet()).doValidate(getSpielTag());
 
 		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
 		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));

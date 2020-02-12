@@ -18,8 +18,6 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -37,7 +35,6 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SearchHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -59,7 +56,6 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	public static final int ERSTE_SORTSPALTE_OFFSET = 2; // zur letzte spalte = PUNKTE_DIV_OFFS
 
-	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final SpieltagRanglisteFormatter ranglisteFormatter;
@@ -67,11 +63,10 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spieltag Rangliste");
-		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).anzZeilenInHeader(2).formation(Formation.MELEE)
-				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
+
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
-		ranglisteFormatter = new SpieltagRanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, spielerSpalte, ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
+		ranglisteFormatter = new SpieltagRanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, getSpielerSpalte(), ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
 		rangListeSorter = new SuperMeleeRangListeSorter(this);
 	}
 
@@ -98,8 +93,8 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		NewSheet.from(this, getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv().forceCreate().spielTagPageStyle(getSpieltagNr()).create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		spielerSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);
-		spielerSpalte.insertHeaderInSheet(headerColor);
+		getSpielerSpalte().alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);
+		getSpielerSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.updateHeader();
 
 		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
@@ -107,7 +102,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
 		ergebnisseFormulaEinfuegen();
 		updateSummenSpalten();
-		spielerSpalte.formatDaten();
+		getSpielerSpalte().formatDaten();
 		getRangListeSpalte().upDateRanglisteSpalte();
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.formatDaten();
@@ -134,7 +129,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 			return;
 		}
 		XSpreadsheet sheet = getXSpreadSheet();
-		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteDatenZeile();
 		List<Position> plusPunktPos = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			SheetRunner.testDoCancelTask();
@@ -197,7 +192,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 		int nichtgespieltPlus = getKonfigurationSheet().getNichtGespielteRundePlus();
 		int nichtgespieltMinus = getKonfigurationSheet().getNichtGespielteRundeMinus();
-		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteDatenZeile();
 
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
 
@@ -340,7 +335,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 		SpielTagNr spieltagNr = getSpieltagNr();
 
-		for (int spielerNr : spielerSpalte.getSpielerNrList()) {
+		for (int spielerNr : getSpielerSpalte().getSpielerNrList()) {
 			SpielerSpieltagErgebnis erg = spielerErgebnisseEinlesen(spieltagNr, spielerNr);
 			if (erg != null) {
 				spielTagErgebnisse.add(erg);
@@ -351,7 +346,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	}
 
 	public SpielerSpieltagErgebnis spielerErgebnisseEinlesen(SpielTagNr spieltag, int spielrNr) throws GenerateException {
-		int spielerZeile = spielerSpalte.getSpielerZeileNr(spielrNr);
+		int spielerZeile = getSpielerSpalte().getSpielerZeileNr(spielrNr);
 
 		if (spielerZeile < ERSTE_DATEN_ZEILE) {
 			return null;
@@ -378,7 +373,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	}
 
 	public void clearAll() throws GenerateException {
-		int letzteDatenzeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteDatenZeile();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(), letzteDatenzeile);
 			RangeHelper.from(this, range).clearRange();
@@ -394,12 +389,12 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	@Override
 	public int getLetzteDatenZeile() throws GenerateException {
-		return spielerSpalte.getLetzteDatenZeile();
+		return getSpielerSpalte().getLetzteDatenZeile();
 	}
 
 	@Override
 	public int getErsteDatenZiele() {
-		return spielerSpalte.getErsteDatenZiele();
+		return getSpielerSpalte().getErsteDatenZiele();
 	}
 
 	public RangListeSpalte getRangListeSpalte() {
