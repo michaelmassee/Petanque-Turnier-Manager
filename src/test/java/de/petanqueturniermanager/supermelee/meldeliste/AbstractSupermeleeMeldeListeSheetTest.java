@@ -54,6 +54,11 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			}
 
 			@Override
+			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+				return konfigurationSheetMock;
+			}
+
+			@Override
 			protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
 				return konfigurationSheetMock;
 			}

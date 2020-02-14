@@ -7,6 +7,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -85,7 +86,12 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected BasePropertiesSpalte(ISheet sheet) {
 		sheetWkRef = new WeakRefHelper<>(sheet);
 		checkNotNull(sheet);
-		docPropHelper = new DocumentPropertiesHelper(sheetWkRef.get().getWorkingSpreadsheet());
+		docPropHelper = newDocumentPropertiesHelper(sheetWkRef.get().getWorkingSpreadsheet());
+	}
+
+	@VisibleForTesting
+	DocumentPropertiesHelper newDocumentPropertiesHelper(WorkingSpreadsheet wkspreadSheet) {
+		return new DocumentPropertiesHelper(wkspreadSheet);
 	}
 
 	abstract protected List<ConfigProperty<?>> getKonfigProperties();
