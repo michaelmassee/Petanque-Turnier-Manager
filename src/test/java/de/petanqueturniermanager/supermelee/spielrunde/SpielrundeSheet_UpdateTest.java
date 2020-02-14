@@ -48,6 +48,11 @@ public class SpielrundeSheet_UpdateTest {
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheetMock) {
 
 			@Override
+			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+				return konfigurationSheetMock;
+			}
+
+			@Override
 			protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
 				return konfigurationSheetMock;
 			}

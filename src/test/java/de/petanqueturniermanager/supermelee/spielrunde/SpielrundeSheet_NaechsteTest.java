@@ -18,6 +18,7 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 
@@ -27,13 +28,21 @@ public class SpielrundeSheet_NaechsteTest {
 	private WorkingSpreadsheet workingSpreadsheetMock;
 	MeldeListeSheet_New MeldeListeSheet_NewMock;
 	SheetHelper sheetHelperMock;
+	SuperMeleeKonfigurationSheet konfigurationSheetMock;
 
 	@Before
 	public void setup() {
 		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		MeldeListeSheet_NewMock = PowerMockito.mock(MeldeListeSheet_New.class);
+		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
+
 		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
+
+			@Override
+			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+				return konfigurationSheetMock;
+			}
 
 			@Override
 			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {

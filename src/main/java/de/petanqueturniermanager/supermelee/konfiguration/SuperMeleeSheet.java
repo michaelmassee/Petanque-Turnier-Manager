@@ -12,6 +12,8 @@ import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPI
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.position.Position;
@@ -36,7 +38,12 @@ public abstract class SuperMeleeSheet extends SheetRunner {
 
 	public SuperMeleeSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
 		super(checkNotNull(workingSpreadsheet), TurnierSystem.SUPERMELEE, logPrefix);
-		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
+		konfigurationSheet = newSuperMeleeKonfigurationSheet(workingSpreadsheet);
+	}
+
+	@VisibleForTesting
+	protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
