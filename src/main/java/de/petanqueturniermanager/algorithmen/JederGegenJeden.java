@@ -47,6 +47,12 @@ public class JederGegenJeden {
 		return letzteMeldungNr() / 2;
 	}
 
+	/**
+	 * Alle Runden generieren
+	 * 
+	 * @return
+	 */
+
 	public List<List<TeamPaarung>> generate() {
 		List<List<TeamPaarung>> result = new ArrayList<>();
 
@@ -61,7 +67,7 @@ public class JederGegenJeden {
 
 			// letzte Teampaarung ist einfach nach schema F
 			// wegen heim und gast je nach runde umdrehen, nur wenn kein freispiel
-			// bei freispiel nicht drehen sondern rehenfolge bleibt
+			// bei freispiel nicht drehen sondern reihenfolge bleibt
 			if (IsEvenOrOdd.IsOdd(rundenCntr) || freiSpiel) {
 				runde.add(newTeamPaarung(rundenCntr - 1, letzteMeldungNr - 1));
 			} else {

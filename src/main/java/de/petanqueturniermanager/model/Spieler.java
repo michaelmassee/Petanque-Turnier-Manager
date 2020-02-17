@@ -15,7 +15,7 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 *
 */
 public class Spieler extends NrComparable implements IMeldung {
-	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team
+	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team, Supermelee
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private final HashSet<Integer> gegner = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
