@@ -18,7 +18,7 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 public class Team extends NrComparable implements IMeldung {
 	private final ArrayList<Spieler> spielerList;
 	private final HashSet<Integer> gegner = new HashSet<>();
-	private short setzpos; // Teams mit der gleiche nummer spielen nicht gegeneinander (Schweizer erste Runde)
+	private int setzpos; // Teams mit der gleiche nummer spielen nicht gegeneinander (Schweizer erste Runde)
 
 	private Team(int nr) {
 		super(nr);
@@ -165,6 +165,7 @@ public class Team extends NrComparable implements IMeldung {
 		return MoreObjects.toStringHelper(this)
 				.add("nr", nr)
 				.add("Spieler", spielerNr)
+				.add("SetzPos", setzpos)
 				.toString();
 		// @formatter:on
 
@@ -173,15 +174,16 @@ public class Team extends NrComparable implements IMeldung {
 	/**
 	 * @return the setzpos
 	 */
-	public short getSetzpos() {
+	public int getSetzpos() {
 		return setzpos;
 	}
 
 	/**
 	 * @param setzpos the setzpos to set
 	 */
-	public void setSetzpos(short setzpos) {
+	public Team setSetzpos(int setzpos) {
 		this.setzpos = setzpos;
+		return this;
 	}
 
 }
