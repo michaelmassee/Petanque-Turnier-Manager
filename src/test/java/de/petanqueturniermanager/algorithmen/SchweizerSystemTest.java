@@ -89,7 +89,7 @@ public class SchweizerSystemTest {
 			meldungen.addTeamWennNichtVorhanden(Team.from(i));
 		}
 		for (int i = 4; i < 7; i++) {
-			meldungen.addTeamWennNichtVorhanden(Team.from(i).setSetzpos(1));
+			meldungen.addTeamWennNichtVorhanden(Team.from(i).setSetzPos(1));
 		}
 
 		schweizerSystem = new SchweizerSystem(meldungen);
@@ -97,8 +97,8 @@ public class SchweizerSystemTest {
 
 		assertThat(ersteRunde.size()).isEqualTo(3);
 		assertThat(ersteRunde.get(0).getB()).isNotNull(); // kein freilos
-		assertThat(ersteRunde.get(0).getA().getSetzpos()).isEqualTo(0);
-		assertThat(ersteRunde.get(0).getB().getSetzpos()).isEqualTo(1);
+		assertThat(ersteRunde.get(0).getA().getSetzPos()).isEqualTo(0);
+		assertThat(ersteRunde.get(0).getB().getSetzPos()).isEqualTo(1);
 	}
 
 	@Test
@@ -115,5 +115,15 @@ public class SchweizerSystemTest {
 		Team result = schweizerSystem.findeGegner(Team.from(3), restTeams);
 		assertThat(result).isNotNull();
 		assertThat(result.getNr()).isEqualTo(2);
+	}
+
+	@Test
+	public void testWeitereRunde() throws Exception {
+
+		TeamMeldungen meldungen = new TeamMeldungen();
+
+		// meldungen.addNewWennNichtVorhanden()
+
+		throw new RuntimeException("not yet implemented");
 	}
 }

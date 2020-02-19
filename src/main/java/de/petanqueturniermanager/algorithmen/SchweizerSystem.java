@@ -13,6 +13,8 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.ListUtils;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
@@ -57,7 +59,7 @@ public class SchweizerSystem {
 		Collections.shuffle(teamListe);
 
 		// now sort nach Setzpos
-		List<Team> sortedTeamList = teamListe.stream().sorted((m1, m2) -> Integer.compare(m1.getSetzpos(), m2.getSetzpos())).collect(Collectors.toList());
+		List<Team> sortedTeamList = teamListe.stream().sorted((m1, m2) -> Integer.compare(m1.getSetzPos(), m2.getSetzPos())).collect(Collectors.toList());
 		// split into 2 List Team A/Team B
 		List<List<Team>> partition = ListUtils.partition(sortedTeamList, anzTeamPaarungen);
 
@@ -87,15 +89,30 @@ public class SchweizerSystem {
 	 */
 
 	public List<TeamPaarung> weitereRunde() {
-		List<TeamPaarung> retList = null;
+		List<TeamPaarung> retList = new ArrayList<>();
 
-		List<Team> restTeams = new ArrayList<>(teamListe);
-
-		for (Team team : teamListe) {
-			Team gegner = findeGegner(team, restTeams);
-
+		// zuerst freilos vergeben
+		if (freiSpiel) {
+			Team freilosTeam = IntStream.range(0, teamListe.size()).mapToObj(i -> teamListe.get(teamListe.size() - i - 1)).filter(team -> team.isHatteFreilos() == false)
+					.findFirst().orElse(teamListe.get(0));
+			freilosTeam.setHatteFreilos(true);
+			freilosTeam.setHatGegner(true);
+			retList.add(new TeamPaarung(freilosTeam));
 		}
 
+		for (Team team : teamListe) {
+			if (!team.isHatGegner()) {
+				List<Team> restTeams = teamListe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).collect(Collectors.toList());
+				Team gegner = findeGegner(team, restTeams);
+				if (gegner != null) {
+					// gegner gefunden
+					gegner.setHatGegner(true);
+					gegner.addGegner(team); // gegenseitig eintragen
+				}
+				team.setHatGegner(true);
+				retList.add(new TeamPaarung(team, gegner));
+			}
+		}
 		return retList;
 	}
 
@@ -104,6 +121,7 @@ public class SchweizerSystem {
 	 * @param restMeldungen
 	 * @return
 	 */
+	@VisibleForTesting
 	Team findeGegner(Team team, List<Team> restTeams) {
 		return restTeams.stream().filter(teamAusRest -> {
 			return !teamAusRest.equals(team) && !team.hatAlsGegner(teamAusRest) && !teamAusRest.hatAlsGegner(team);

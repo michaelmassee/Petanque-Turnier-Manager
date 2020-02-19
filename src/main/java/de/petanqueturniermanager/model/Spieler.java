@@ -14,12 +14,13 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 * Erstellung     : 31.08.2017 / massee
 *
 */
-public class Spieler extends NrComparable implements IMeldung {
-	private int setzPos = 0; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team, Supermelee
+public class Spieler extends NrComparable implements IMeldung<Spieler> {
+	private int setzPos; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team, Supermelee
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private final HashSet<Integer> gegner = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
-	private boolean istInTeam = false;
+	private boolean istInTeam;
+	private boolean hatteFreilos; // Team hatte bereits ein freilos
 
 	private Spieler(int nr) {
 		super(nr);
@@ -122,15 +123,6 @@ public class Spieler extends NrComparable implements IMeldung {
 		return mitspielerStr;
 	}
 
-	public int getSetzPos() {
-		return setzPos;
-	}
-
-	public Spieler setSetzPos(int setzPos) {
-		this.setzPos = setzPos;
-		return this;
-	}
-
 	public boolean isIstInTeam() throws AlgorithmenException {
 		validatewkRefteamStatus();
 		return istInTeam;
@@ -171,6 +163,28 @@ public class Spieler extends NrComparable implements IMeldung {
 				.toString();
 		// @formatter:on
 
+	}
+
+	@Override
+	public int getSetzPos() {
+		return setzPos;
+	}
+
+	@Override
+	public Spieler setSetzPos(int setzPos) {
+		this.setzPos = setzPos;
+		return this;
+	}
+
+	@Override
+	public boolean isHatteFreilos() {
+		return hatteFreilos;
+	}
+
+	@Override
+	public Spieler setHatteFreilos(boolean hatteFreilos) {
+		this.hatteFreilos = hatteFreilos;
+		return this;
 	}
 
 }
