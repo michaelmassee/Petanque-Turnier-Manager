@@ -15,10 +15,12 @@ import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 
-public class Team extends NrComparable implements IMeldung {
+public class Team extends NrComparable implements IMeldung<Team> {
 	private final ArrayList<Spieler> spielerList;
 	private final HashSet<Integer> gegner = new HashSet<>();
-	private int setzpos; // Teams mit der gleiche nummer spielen nicht gegeneinander (Schweizer erste Runde)
+	private int setzPos; // Teams mit der gleiche nummer spielen nicht gegeneinander (Schweizer erste Runde)
+	private boolean hatteFreilos; // Team hatte bereits ein freilos
+	private boolean hatGegner; // true wenn das Team in eine neue Spielrunde ein gegner hat
 
 	private Team(int nr) {
 		super(nr);
@@ -165,7 +167,7 @@ public class Team extends NrComparable implements IMeldung {
 		return MoreObjects.toStringHelper(this)
 				.add("nr", nr)
 				.add("Spieler", spielerNr)
-				.add("SetzPos", setzpos)
+				.add("SetzPos", setzPos)
 				.toString();
 		// @formatter:on
 
@@ -174,15 +176,37 @@ public class Team extends NrComparable implements IMeldung {
 	/**
 	 * @return the setzpos
 	 */
-	public int getSetzpos() {
-		return setzpos;
+	@Override
+	public int getSetzPos() {
+		return setzPos;
 	}
 
 	/**
 	 * @param setzpos the setzpos to set
 	 */
-	public Team setSetzpos(int setzpos) {
-		this.setzpos = setzpos;
+	@Override
+	public Team setSetzPos(int setzpos) {
+		setzPos = setzpos;
+		return this;
+	}
+
+	@Override
+	public boolean isHatteFreilos() {
+		return hatteFreilos;
+	}
+
+	@Override
+	public Team setHatteFreilos(boolean hatteFreilos) {
+		this.hatteFreilos = hatteFreilos;
+		return this;
+	}
+
+	public boolean isHatGegner() {
+		return hatGegner;
+	}
+
+	public Team setHatGegner(boolean hatGegner) {
+		this.hatGegner = hatGegner;
 		return this;
 	}
 
