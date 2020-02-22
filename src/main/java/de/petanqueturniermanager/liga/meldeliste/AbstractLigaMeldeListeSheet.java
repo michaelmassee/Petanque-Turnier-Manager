@@ -27,15 +27,16 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
-abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste<TeamMeldungen> {
+abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 16; // Tablle immer mit min anzahl von zeilen formatieren
 
-	private final MeldungenSpalte<TeamMeldungen> meldungenSpalte;
-	private final MeldeListeHelper<TeamMeldungen> meldeListeHelper;
+	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
+	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 
 	/**
 	 * @param workingSpreadsheet
@@ -110,7 +111,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
 				// ------------------------------
 				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und <999 sein
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und
+																																								// <999 sein
 				// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
@@ -130,7 +132,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 				// ------------------------------
 				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle)
+				.applyAndReset().reset();
 		// -----------------------------------------------
 	}
 
@@ -212,7 +215,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 * @return the spielerSpalte
 	 */
 	@Override
-	public final MeldungenSpalte<TeamMeldungen> getMeldungenSpalte() {
+	public final MeldungenSpalte<TeamMeldungen, Team> getMeldungenSpalte() {
 		return meldungenSpalte;
 	}
 

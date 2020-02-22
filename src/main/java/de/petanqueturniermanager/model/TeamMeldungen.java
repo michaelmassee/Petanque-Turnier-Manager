@@ -15,7 +15,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * @author Michael Massee
  *
  */
-public class TeamMeldungen implements IMeldungen<TeamMeldungen> {
+public class TeamMeldungen implements IMeldungen<TeamMeldungen, Team> {
 
 	private final ArrayList<Team> teamList;
 
@@ -60,12 +60,19 @@ public class TeamMeldungen implements IMeldungen<TeamMeldungen> {
 	}
 
 	@Override
-	public List<IMeldung> getMeldungen() {
+	public List<IMeldung<Team>> getMeldungen() {
 		return new ArrayList<>(teamList);
 	}
 
 	public List<Team> teams() {
 		return new ArrayList<>(teamList);
+	}
+
+	/**
+	 * @param i
+	 */
+	public Team getTeam(int teamNr) {
+		return teamList.stream().filter(tm -> tm.getNr() == teamNr).findFirst().orElse(null);
 	}
 
 }

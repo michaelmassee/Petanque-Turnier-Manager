@@ -34,4 +34,19 @@ public class TeamPaarungTest {
 		new TeamPaarung(teamA, teamA);
 	}
 
+	@Test
+	public void testIsInPaarung() throws Exception {
+		Team teamA = Team.from(1);
+		Team teamB = Team.from(8);
+		TeamPaarung paarung = new TeamPaarung(teamA);
+		assertThat(paarung.isInPaarung(teamA)).isTrue();
+		assertThat(paarung.isInPaarung(Team.from(1))).isTrue();
+		assertThat(paarung.isInPaarung(Team.from(2))).isFalse();
+		assertThat(paarung.isInPaarung(null)).isFalse();
+		paarung = new TeamPaarung(teamA, teamB);
+		assertThat(paarung.isInPaarung(Team.from(1))).isTrue();
+		assertThat(paarung.isInPaarung(teamB)).isTrue();
+		assertThat(paarung.isInPaarung(Team.from(2))).isFalse();
+	}
+
 }

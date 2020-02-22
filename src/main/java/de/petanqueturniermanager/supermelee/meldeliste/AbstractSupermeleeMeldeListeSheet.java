@@ -39,13 +39,14 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
-abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet implements IMeldeliste<SpielerMeldungen> {
+abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet implements IMeldeliste<SpielerMeldungen, Spieler> {
 	private static final String SPIELTAG_HEADER_STR = "Spieltag";
 
 	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0
@@ -77,9 +78,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 
 	public static final int ERSTE_ZEILE_INFO = ERSTE_DATEN_ZEILE - 1; // Zeile 2
 
-	private final MeldungenSpalte<SpielerMeldungen> meldungenSpalte;
+	private final MeldungenSpalte<SpielerMeldungen, Spieler> meldungenSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
-	private final MeldeListeHelper<SpielerMeldungen> meldeListeHelper;
+	private final MeldeListeHelper<SpielerMeldungen, Spieler> meldeListeHelper;
 	private SpielTagNr spielTag = null;
 
 	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
@@ -706,7 +707,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet 
 	 * @return the spielerSpalte
 	 */
 	@Override
-	public final MeldungenSpalte<SpielerMeldungen> getMeldungenSpalte() {
+	public final MeldungenSpalte<SpielerMeldungen, Spieler> getMeldungenSpalte() {
 		return meldungenSpalte;
 	}
 

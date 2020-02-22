@@ -14,6 +14,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
@@ -24,7 +25,7 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
-	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielTagSpalte,
+	public EndRanglisteFormatter(IEndRangliste rangliste, int anzSpaltenInSpieltag, MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, int ersteSpielTagSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);

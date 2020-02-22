@@ -43,6 +43,21 @@ public class TeamPaarung implements Cloneable {
 	}
 
 	/**
+	 * @param nrA
+	 * @param nrB
+	 */
+	public TeamPaarung(int nrA, int nrB) {
+		this(Team.from(nrA), Team.from(nrB));
+	}
+
+	/**
+	 * @param nrA
+	 */
+	public TeamPaarung(int nrA) {
+		this(Team.from(nrA));
+	}
+
+	/**
 	 * nur wenn B vorhanden dann A<->B Tauschen
 	 */
 	public void flipTeams() {
@@ -51,6 +66,18 @@ public class TeamPaarung implements Cloneable {
 			a = b.get();
 			setB(oldA);
 		}
+	}
+
+	/**
+	 * teams gegenseitig als gegner eintragen
+	 *
+	 * @return
+	 */
+	public TeamPaarung addGegner() {
+		if (b.isPresent()) {
+			a.addGegner(b.get()); // gegenseitig als gegner eintragen
+		}
+		return this;
 	}
 
 	public Team getA() {
@@ -130,6 +157,27 @@ public class TeamPaarung implements Cloneable {
 			return new TeamPaarung(Team.from(a.nr), Team.from(b.get().nr));
 		}
 		return new TeamPaarung(Team.from(a.nr));
+	}
+
+	/**
+	 * @param team to find
+	 * @return true wenn team = a oder b
+	 */
+	public boolean isInPaarung(Team team) {
+		boolean isA = getA().equals(team);
+		boolean isB = b.isPresent() && b.get().equals(team);
+		return team != null && isA || isB;
+	}
+
+	/**
+	 * @param team1 gegner zurück liefern
+	 * @return
+	 */
+	public Team getGegner(Team team1) {
+		if (getA().equals(team1)) {
+			return getB();
+		}
+		return getA();
 	}
 
 }
