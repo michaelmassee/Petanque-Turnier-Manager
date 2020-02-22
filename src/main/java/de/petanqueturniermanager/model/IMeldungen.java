@@ -11,9 +11,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
  * @author Michael Massee
  *
  */
-public interface IMeldungen<T> {
+public interface IMeldungen<T, M> {
 	T addNewWennNichtVorhanden(RowData meldungZeile);
 
-	List<IMeldung> getMeldungen();
+	List<IMeldung<M>> getMeldungen();
 
 }

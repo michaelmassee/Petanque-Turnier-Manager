@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
@@ -30,7 +31,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 	private final int anzSpaltenInSpielrunde;
 	private final int ersteSpielRundeSpalte;
 
-	SpieltagRanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte<SpielerMeldungen> spielerSpalte, int ersteSpielRundeSpalte,
+	SpieltagRanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, int ersteSpielRundeSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
@@ -85,7 +86,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		ranglisteWkRef.get().processBoxinfo("Formatiere Daten");
 
 		ISpielTagRangliste rangliste = ranglisteWkRef.get();
-		MeldungenSpalte<SpielerMeldungen> spielerSpalte = getSpielerSpalteWkRef().get();
+		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {

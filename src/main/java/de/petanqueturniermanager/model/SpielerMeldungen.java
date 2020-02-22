@@ -20,7 +20,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 *
 */
 
-public class SpielerMeldungen implements IMeldungen<SpielerMeldungen> {
+public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 
 	private final ArrayList<Spieler> spielerList;
 
@@ -82,7 +82,7 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen> {
 	}
 
 	@Override
-	public List<IMeldung> getMeldungen() {
+	public List<IMeldung<Spieler>> getMeldungen() {
 		return new ArrayList<>(spielerList);
 	}
 

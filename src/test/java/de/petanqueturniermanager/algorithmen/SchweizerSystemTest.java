@@ -118,12 +118,121 @@ public class SchweizerSystemTest {
 	}
 
 	@Test
-	public void testWeitereRunde() throws Exception {
+	public void testWeitereRundeGeradeAnzahl() throws Exception {
 
 		TeamMeldungen meldungen = new TeamMeldungen();
 
-		// meldungen.addNewWennNichtVorhanden()
+		// erste runde fest vorgeben
+		schweizerSystem = new SchweizerSystem(newTestmeldungen());
+		List<TeamPaarung> resultRunde2 = schweizerSystem.weitereRunde();
+		assertThat(resultRunde2.size()).isEqualTo(4);
 
-		throw new RuntimeException("not yet implemented");
+		// flatten list for validate
+		List<Team> teamListresult = resultRunde2.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		assertThat(teamListresult.size()).isEqualTo(8);
+
+		List<Team> expected = new ArrayList<>();
+
+		expected.add(Team.from(1));
+		expected.add(Team.from(2));
+
+		expected.add(Team.from(3));
+		expected.add(Team.from(4));
+
+		expected.add(Team.from(5));
+		expected.add(Team.from(6));
+
+		expected.add(Team.from(7));
+		expected.add(Team.from(8));
+
+		assertThat(teamListresult).containsExactlyElementsOf(expected);
+
+		// ---------------------------------------------------------------------------------------
+		// Runde 3
+		// ---------------------------------------------------------------------------------------
+		meldungen = new TeamMeldungen();
+		// neue rangliste
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(4)); // team 5
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(5)); // team 6
+
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(0)); // team 1
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(7)); // team 8
+
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(1)); // team 2
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(6)); // team 7
+
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(3)); // team 4
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(2)); // team 3
+		schweizerSystem = new SchweizerSystem(meldungen);
+		List<TeamPaarung> resultRunde3 = schweizerSystem.weitereRunde();
+		assertThat(resultRunde3.size()).isEqualTo(4);
+
+		// flatten list for validate
+		List<Team> teamListresultRund3 = resultRunde3.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		assertThat(teamListresult.size()).isEqualTo(8);
+
 	}
+
+	@Test
+	public void testFindGegnerAusTeamPaarungen() throws Exception {
+		meldungenMock = Mockito.mock(TeamMeldungen.class);
+		schweizerSystem = new SchweizerSystem(meldungenMock);
+
+		List<TeamPaarung> paarungen = new ArrayList<>();
+
+		paarungen.add(new TeamPaarung(1, 2).addGegner());
+		paarungen.add(new TeamPaarung(6, 8).addGegner());
+		paarungen.add(new TeamPaarung(9).addGegner());
+		paarungen.add(new TeamPaarung(10, 11).addGegner());
+
+		Team result = schweizerSystem.findGegnerAusTeamPaarungen(Team.from(8), paarungen);
+		assertThat(result).isNotNull().isEqualTo(Team.from(6));
+
+		Team result2 = schweizerSystem.findGegnerAusTeamPaarungen(Team.from(9), paarungen);
+		assertThat(result2).isNull();
+
+		Team result3 = schweizerSystem.findGegnerAusTeamPaarungen(Team.from(23), paarungen);
+		assertThat(result3).isNull();
+	}
+
+	@Test
+	public void testKannTauschenMit() throws Exception {
+
+		TeamMeldungen testmeldungen = newTestmeldungen();
+
+		schweizerSystem = new SchweizerSystem(testmeldungen);
+
+		// neue Team Paarungen 2 Runde fest vorgeben zum testen
+		List<TeamPaarung> paarungen = new ArrayList<>();
+
+		paarungen.add(new TeamPaarung(testmeldungen.getTeam(1), testmeldungen.getTeam(2)).addGegner());
+		paarungen.add(new TeamPaarung(testmeldungen.getTeam(6), testmeldungen.getTeam(4)).addGegner());
+		paarungen.add(new TeamPaarung(testmeldungen.getTeam(5), testmeldungen.getTeam(8)).addGegner());
+
+		// letzt paarung wäre 7:3 haben aber beriets gegeneinander gespielt !
+		// geht nicht also neu team suchen für 7
+		Team kannTauschenMit = schweizerSystem.kannTauschenMit(Team.from(7), paarungen);
+		assertThat(kannTauschenMit).isNotNull();
+	}
+
+	// eine runde mit 8 Teams + gegner
+	private TeamMeldungen newTestmeldungen() {
+		TeamMeldungen meldungen = new TeamMeldungen();
+
+		// erste runde fest vorgeben
+		List<Team> testTeams = new ArrayList<>();
+		for (int i = 1; i < 9; i++) {
+			testTeams.add(Team.from(i));
+		}
+
+		testTeams.get(0).addGegner(testTeams.get(3)); // team 1-4
+		testTeams.get(1).addGegner(testTeams.get(4)); // team 2-5
+		testTeams.get(5).addGegner(testTeams.get(7)); // team 6-8
+		testTeams.get(6).addGegner(testTeams.get(2)); // team 7-3
+
+		meldungen.addTeamWennNichtVorhanden(testTeams);
+
+		return meldungen;
+	}
+
 }

@@ -29,6 +29,7 @@ import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 
@@ -39,11 +40,12 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 	public static final int ZWEITE_KOPFDATEN_ZEILE = 1;
 	public static final int DRITTE_KOPFDATEN_ZEILE = 2;
 
-	private final WeakRefHelper<MeldungenSpalte<SpielerMeldungen>> spielerSpalteWkRef;
+	private final WeakRefHelper<MeldungenSpalte<SpielerMeldungen, Spieler>> spielerSpalteWkRef;
 	private final WeakRefHelper<ISuperMeleePropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
+	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte,
+			IRangliste iRanglisteSheet) {
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
 		spielerSpalteWkRef = new WeakRefHelper<>(spielerSpalte);
@@ -136,7 +138,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 		// gerade / ungrade hintergrund farbe
 		IRangliste sheet = iRanglisteSheet.get();
 
-		MeldungenSpalte<SpielerMeldungen> spielerSpalte = getSpielerSpalteWkRef().get();
+		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 		int spielerNrSpalte = spielerSpalte.getSpielerNrSpalte();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
@@ -159,7 +161,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 	protected void formatDatenSpielTagSpalten(int ersteSummeSpalte) throws GenerateException {
 
-		MeldungenSpalte<SpielerMeldungen> spielerSpalte = getSpielerSpalteWkRef().get();
+		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
@@ -182,7 +184,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 	}
 
-	protected WeakRefHelper<MeldungenSpalte<SpielerMeldungen>> getSpielerSpalteWkRef() {
+	protected WeakRefHelper<MeldungenSpalte<SpielerMeldungen, Spieler>> getSpielerSpalteWkRef() {
 		return spielerSpalteWkRef;
 	}
 
@@ -197,7 +199,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 	public StringCellValue addFooter() throws GenerateException {
 
-		MeldungenSpalte<SpielerMeldungen> spielerSpalte = getSpielerSpalteWkRef().get();
+		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenOhneSpielerNrZeile();
 		StringCellValue stringVal = StringCellValue.from(getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile)).setHoriJustify(CellHoriJustify.LEFT)

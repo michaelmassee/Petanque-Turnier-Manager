@@ -10,10 +10,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.collections4.ListUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Lists;
 
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -68,7 +70,7 @@ public class SchweizerSystem {
 		List<Team> listBTeams = partition.get(1);
 		int listBSize = listBTeams.size();
 		List<TeamPaarung> retList = IntStream.range(0, anzTeamPaarungen).mapToObj(i -> {
-			return new TeamPaarung(listATeams.get(i), (((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null));
+			return new TeamPaarung(listATeams.get(i), (((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null)).addGegner();
 		}).sorted((tp1, tp2) -> {
 			// Freilos an letzte Stelle
 			if (tp1.getB() == null) {
@@ -91,6 +93,9 @@ public class SchweizerSystem {
 	public List<TeamPaarung> weitereRunde() {
 		List<TeamPaarung> retList = new ArrayList<>();
 
+		// sicher gehen das hatgegner flag auf false
+		teamListe.stream().forEach(team -> team.setHatGegner(false));
+
 		// zuerst freilos vergeben
 		if (freiSpiel) {
 			Team freilosTeam = IntStream.range(0, teamListe.size()).mapToObj(i -> teamListe.get(teamListe.size() - i - 1)).filter(team -> team.isHatteFreilos() == false)
@@ -108,12 +113,61 @@ public class SchweizerSystem {
 					// gegner gefunden
 					gegner.setHatGegner(true);
 					gegner.addGegner(team); // gegenseitig eintragen
+					team.setHatGegner(true);
+					retList.add(new TeamPaarung(team, gegner));
+				} else {
+					// ohne gegner ?
+					// kann tauschen mit ?
+
+					team.setHatGegner(true);
+					retList.add(new TeamPaarung(team));
 				}
-				team.setHatGegner(true);
-				retList.add(new TeamPaarung(team, gegner));
 			}
 		}
 		return retList;
+	}
+
+	/**
+	 * suche rückwärts in der liste nach ein gegner zum tauschen
+	 *
+	 * @param team team ohne gegner
+	 * @param paarungen bereits zugerodnete gegner
+	 * @return
+	 */
+	Team kannTauschenMit(Team team, List<TeamPaarung> paarungen) {
+
+		// team suchen zum tauschen
+		List<Team> reverseTeamliste = Lists.reverse(teamListe); // orginal wird nicht verändert
+
+		return reverseTeamliste.stream().filter(teamRev -> {
+			return teamRev.isHatGegner() && !teamRev.equals(team);
+		}).filter(teamRev2 -> {
+			// ein team aus paarungen is okay ?
+			return !teamRev2.hatAlsGegner(team);
+		}).filter(teamRev3 -> {
+			// gegner vom potentielle tausch suchen
+			Team gegnerVonteamRev3 = findGegnerAusTeamPaarungen(teamRev3, paarungen);
+			return gegnerVonteamRev3 != null && gegnerVonteamRev3.hatAlsGegner(team);
+		}).findFirst().orElse(null);
+	}
+
+	/**
+	 * finde paarung mit team1, und return gegner
+	 *
+	 * @param team1
+	 * @param paarungen
+	 * @return der gegner von team1
+	 */
+
+	public Team findGegnerAusTeamPaarungen(Team team1, List<TeamPaarung> paarungen) {
+		return paarungen.stream().filter(teamPaarung -> {
+			return teamPaarung.isInPaarung(team1);
+		}).findFirst().map(teamPaarung2 -> teamPaarung2.getGegner(team1)).orElse(null);
+	}
+
+	public List<Team> flattenTeampaarungen(List<TeamPaarung> paarungen) {
+		return paarungen.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+
 	}
 
 	/**

@@ -13,6 +13,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
@@ -30,7 +31,7 @@ abstract class AbstractSpieltagRangliste extends SuperMeleeSheet implements IShe
 	public static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
 
 	private SpielTagNr spieltagNr = null;
-	private final MeldungenSpalte<SpielerMeldungen> spielerSpalte;
+	private final MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte;
 
 	/**
 	 * @param workingSpreadsheet
@@ -78,7 +79,7 @@ abstract class AbstractSpieltagRangliste extends SuperMeleeSheet implements IShe
 		this.spieltagNr = spieltagNr;
 	}
 
-	protected MeldungenSpalte<SpielerMeldungen> getSpielerSpalte() {
+	protected MeldungenSpalte<SpielerMeldungen, Spieler> getSpielerSpalte() {
 		return spielerSpalte;
 	}
 

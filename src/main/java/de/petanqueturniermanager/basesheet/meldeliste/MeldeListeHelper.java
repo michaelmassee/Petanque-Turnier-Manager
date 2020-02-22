@@ -36,11 +36,11 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
+public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonstanten {
 
-	private final IMeldeliste<MLDTYPE> meldeListe;
+	private final IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeListe;
 
-	public MeldeListeHelper(IMeldeliste<MLDTYPE> newMeldeListe) {
+	public MeldeListeHelper(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> newMeldeListe) {
 		meldeListe = checkNotNull(newMeldeListe);
 	}
 
@@ -190,7 +190,8 @@ public class MeldeListeHelper<MLDTYPE> implements MeldeListeKonstanten {
 	 * @throws GenerateException
 	 */
 
-	public IMeldungen<MLDTYPE> getMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt, IMeldungen<MLDTYPE> meldungen) throws GenerateException {
+	public IMeldungen<MLD_LIST_TYPE, MLDTYPE> getMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt,
+			IMeldungen<MLD_LIST_TYPE, MLDTYPE> meldungen) throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
 		checkNotNull(meldungen, "meldungen == null");
 
