@@ -92,6 +92,12 @@ public class TeamPaarung implements Cloneable {
 		return b;
 	}
 
+	public TeamPaarung setA(Team aTeam) {
+		checkNotNull(aTeam);
+		a = aTeam;
+		return this;
+	}
+
 	/**
 	 * @param b
 	 */
@@ -178,6 +184,23 @@ public class TeamPaarung implements Cloneable {
 			return getB();
 		}
 		return getA();
+	}
+
+	/**
+	 * @return
+	 */
+	public TeamPaarung setHatGegner() {
+		if (b.isPresent()) {
+			b.get().setHatGegner(true);
+		}
+		a.setHatGegner(true);
+
+		return this;
+
+	}
+
+	public boolean hasB() {
+		return b.isPresent();
 	}
 
 }

@@ -91,7 +91,7 @@ public class SchweizerSystem {
 	 */
 
 	public List<TeamPaarung> weitereRunde() {
-		List<TeamPaarung> retList = new ArrayList<>();
+		List<TeamPaarung> teamPaarungList = new ArrayList<>();
 
 		// sicher gehen das hatgegner flag auf false
 		teamListe.stream().forEach(team -> team.setHatGegner(false));
@@ -102,53 +102,96 @@ public class SchweizerSystem {
 					.findFirst().orElse(teamListe.get(0));
 			freilosTeam.setHatteFreilos(true);
 			freilosTeam.setHatGegner(true);
-			retList.add(new TeamPaarung(freilosTeam));
+			teamPaarungList.add(new TeamPaarung(freilosTeam));
 		}
 
 		for (Team team : teamListe) {
 			if (!team.isHatGegner()) {
 				List<Team> restTeams = teamListe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).collect(Collectors.toList());
-				Team gegner = findeGegner(team, restTeams);
-				if (gegner != null) {
-					// gegner gefunden
-					gegner.setHatGegner(true);
-					gegner.addGegner(team); // gegenseitig eintragen
-					team.setHatGegner(true);
-					retList.add(new TeamPaarung(team, gegner));
-				} else {
-					// ohne gegner ?
-					// kann tauschen mit ?
+				if (restTeams.size() > 0) {
+					Team gegner = findeGegner(team, restTeams);
+					if (gegner != null) {
+						// gegner gefunden
+						teamPaarungList.add(new TeamPaarung(team, gegner).addGegner().setHatGegner());
+					} else {
+						// ohne gegner ? versuchen ob wir tauschen können mit vorhanden team paarung aus der Liste
+						// Invalid Paarung
+						TeamPaarung invalid = new TeamPaarung(team, restTeams.get(0));
 
-					team.setHatGegner(true);
-					retList.add(new TeamPaarung(team));
+						TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList);
+						if (kannTauschenMit != null) {
+							tauschenTeamsInPaarung(invalid, kannTauschenMit);
+							// wenn erfolgreich dann invalid == valid!
+						}
+						// invalid oder wenn tausch statgefunden hat, Valid paarung hinzufügen
+						teamPaarungList.add(invalid.addGegner().setHatGegner());
+					}
+				} else {
+					// keine rest mehr vorhanden ?
+					teamPaarungList.add(new TeamPaarung(team).setHatGegner());
 				}
 			}
 		}
-		return retList;
+		return teamPaarungList;
+	}
+
+	@VisibleForTesting
+	boolean tauschenTeamsInPaarung(TeamPaarung paarA, TeamPaarung paarB) {
+		if (!paarA.hasB() || !paarB.hasB()) {
+			return false;
+		}
+
+		// tausche B, A1:B2 <-> A2:B2
+		if (!paarA.getA().hatAlsGegner(paarB.getB()) && !paarB.getA().hatAlsGegner(paarA.getB())) {
+			Team A_Bteam = paarA.getB();
+			paarA.setB(paarB.getB());
+			paarB.setB(A_Bteam);
+			return true;
+		}
+		// tausche A+B, A1:A2 <-> B1:B2
+		if (!paarA.getA().hatAlsGegner(paarB.getA()) && !paarB.getB().hatAlsGegner(paarA.getB())) {
+			Team A_Bteam = paarA.getB();
+			paarA.setB(paarB.getA());
+			paarB.setA(A_Bteam);
+			return true;
+		}
+		return false;
 	}
 
 	/**
-	 * suche rückwärts in der liste nach ein gegner zum tauschen
+	 * suche rückwärts in der liste nach ein gegnerteam-paarung zum tauschen
 	 *
 	 * @param team team ohne gegner
 	 * @param paarungen bereits zugerodnete gegner
 	 * @return
 	 */
-	Team kannTauschenMit(Team team, List<TeamPaarung> paarungen) {
+	@VisibleForTesting
+	TeamPaarung kannTauschenMit(TeamPaarung invalidTeamPaarung, List<TeamPaarung> paarungen) {
+
+		Team teamAInvalid = invalidTeamPaarung.getA();
+		Team teamBInvalid = invalidTeamPaarung.getB();
+		if (teamBInvalid == null) {
+			return null;
+		}
 
 		// team suchen zum tauschen
 		List<Team> reverseTeamliste = Lists.reverse(teamListe); // orginal wird nicht verändert
 
-		return reverseTeamliste.stream().filter(teamRev -> {
-			return teamRev.isHatGegner() && !teamRev.equals(team);
+		Team tauschTeam = reverseTeamliste.stream().filter(teamRev -> {
+			return teamRev.isHatGegner() && !teamRev.equals(teamAInvalid) && !teamRev.equals(teamBInvalid);
 		}).filter(teamRev2 -> {
-			// ein team aus paarungen is okay ?
-			return !teamRev2.hatAlsGegner(team);
-		}).filter(teamRev3 -> {
 			// gegner vom potentielle tausch suchen
-			Team gegnerVonteamRev3 = findGegnerAusTeamPaarungen(teamRev3, paarungen);
-			return gegnerVonteamRev3 != null && gegnerVonteamRev3.hatAlsGegner(team);
+			Team gegnerVonteamRev2 = findGegnerAusTeamPaarungen(teamRev2, paarungen);
+			// kann gegen Spielen, A Invalid kann getauscht werden
+			return gegnerVonteamRev2 != null && !gegnerVonteamRev2.hatAlsGegner(teamAInvalid);
+		}).filter(teamRev3 -> {
+			return !teamRev3.hatAlsGegner(teamBInvalid);
 		}).findFirst().orElse(null);
+
+		if (tauschTeam != null) {
+			return paarungen.stream().filter(paarung -> paarung.isInPaarung(tauschTeam)).findFirst().orElse(null);
+		}
+		return null;
 	}
 
 	/**

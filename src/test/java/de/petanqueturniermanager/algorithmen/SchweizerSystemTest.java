@@ -205,14 +205,17 @@ public class SchweizerSystemTest {
 		// neue Team Paarungen 2 Runde fest vorgeben zum testen
 		List<TeamPaarung> paarungen = new ArrayList<>();
 
-		paarungen.add(new TeamPaarung(testmeldungen.getTeam(1), testmeldungen.getTeam(2)).addGegner());
-		paarungen.add(new TeamPaarung(testmeldungen.getTeam(6), testmeldungen.getTeam(4)).addGegner());
-		paarungen.add(new TeamPaarung(testmeldungen.getTeam(5), testmeldungen.getTeam(8)).addGegner());
+		paarungen.add(new TeamPaarung(testmeldungen.getTeam(1), testmeldungen.getTeam(2)).addGegner().setHatGegner());
+		paarungen.add(new TeamPaarung(testmeldungen.getTeam(6), testmeldungen.getTeam(4)).addGegner().setHatGegner());
+		paarungen.add(new TeamPaarung(testmeldungen.getTeam(5), testmeldungen.getTeam(8)).addGegner().setHatGegner());
 
-		// letzt paarung wäre 7:3 haben aber beriets gegeneinander gespielt !
-		// geht nicht also neu team suchen für 7
-		Team kannTauschenMit = schweizerSystem.kannTauschenMit(Team.from(7), paarungen);
+		// letzt paarung wäre 3:7 haben aber bereits gegeneinander gespielt !
+		// geht nicht, also suchen paarung zum tauschen für 3 und 7
+		TeamPaarung invalidTeamP = new TeamPaarung(testmeldungen.getTeam(3), testmeldungen.getTeam(7));
+		TeamPaarung kannTauschenMit = schweizerSystem.kannTauschenMit(invalidTeamP, paarungen);
 		assertThat(kannTauschenMit).isNotNull();
+		assertThat(kannTauschenMit.getA()).isNotNull().isEqualTo(Team.from(5));
+		assertThat(kannTauschenMit.getB()).isNotNull().isEqualTo(Team.from(8));
 	}
 
 	// eine runde mit 8 Teams + gegner
@@ -233,6 +236,45 @@ public class SchweizerSystemTest {
 		meldungen.addTeamWennNichtVorhanden(testTeams);
 
 		return meldungen;
+	}
+
+	@Test
+	public void testTauschenTeamsInPaarung() throws Exception {
+		meldungenMock = Mockito.mock(TeamMeldungen.class);
+		schweizerSystem = new SchweizerSystem(meldungenMock);
+
+		TeamPaarung paarA = new TeamPaarung(Team.from(2), Team.from(3));
+		TeamPaarung paarB = new TeamPaarung(Team.from(7), Team.from(8));
+
+		// A1:B2 <-> A2:B1
+		boolean result = schweizerSystem.tauschenTeamsInPaarung(paarA, paarB);
+		assertThat(result).isTrue();
+		assertThat(paarA.getA()).isEqualTo(Team.from(2));
+		assertThat(paarA.getB()).isEqualTo(Team.from(8));
+		assertThat(paarB.getA()).isEqualTo(Team.from(7));
+		assertThat(paarB.getB()).isEqualTo(Team.from(3));
+	}
+
+	@Test
+	public void testTauschenTeamsInPaarungHatGegner() throws Exception {
+		meldungenMock = Mockito.mock(TeamMeldungen.class);
+		schweizerSystem = new SchweizerSystem(meldungenMock);
+
+		Team teamAA = Team.from(2);
+		Team teamBB = Team.from(8);
+
+		teamAA.addGegner(teamBB);
+
+		TeamPaarung paarA = new TeamPaarung(teamAA, Team.from(3));
+		TeamPaarung paarB = new TeamPaarung(Team.from(7), teamBB);
+
+		// A1:A2 <-> B1:B2
+		boolean result = schweizerSystem.tauschenTeamsInPaarung(paarA, paarB);
+		assertThat(result).isTrue();
+		assertThat(paarA.getA()).isEqualTo(Team.from(2));
+		assertThat(paarA.getB()).isEqualTo(Team.from(7));
+		assertThat(paarB.getA()).isEqualTo(Team.from(3));
+		assertThat(paarB.getB()).isEqualTo(Team.from(8));
 	}
 
 }
