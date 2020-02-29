@@ -8,13 +8,17 @@ import org.junit.Test;
 public class TeamTest {
 
 	private Team team;
+	Spieler a;
+	Spieler b;
+	Spieler c;
+	Spieler d;
 
 	@Before
 	public void init() throws Exception {
 		team = Team.from(1);
-		Spieler a = Spieler.from(1);
-		Spieler b = Spieler.from(2);
-		Spieler c = Spieler.from(3);
+		a = Spieler.from(1);
+		b = Spieler.from(2);
+		c = Spieler.from(3);
 
 		team.addSpielerWennNichtVorhanden(a);
 		team.addSpielerWennNichtVorhanden(b);
@@ -44,5 +48,29 @@ public class TeamTest {
 		assertThat(result).isFalse();
 		result = team.hatZusammenGespieltMit(nichtimTeamHatzusamengespieltmitNichtImTeamB);
 		assertThat(result).isFalse();
+	}
+
+	@Test
+	public void testRemoveGegner() throws Exception {
+		Team team2 = Team.from(2);
+		team.addGegner(team2);
+		assertThat(team.getGegner().size()).isEqualTo(1);
+		assertThat(team2.getGegner().size()).isEqualTo(1);
+		team.removeGegner(team2);
+		assertThat(team.getGegner().size()).isEqualTo(0);
+		assertThat(team2.getGegner().size()).isEqualTo(0);
+	}
+
+	@Test
+	public void testAddGegner() throws Exception {
+		Team team2 = Team.from(2);
+		team.addGegner(team2);
+		team.addGegner(Team.from(2));
+		team.addGegner(Team.from(1)); // sich selbst
+		assertThat(team.getGegner().size()).isEqualTo(1);
+		assertThat(team.getGegner().contains(2));
+
+		assertThat(team2.getGegner().size()).isEqualTo(1);
+		assertThat(team2.getGegner().contains(1));
 	}
 }

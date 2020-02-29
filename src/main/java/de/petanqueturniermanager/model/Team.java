@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
@@ -43,6 +44,20 @@ public class Team extends NrComparable implements IMeldung<Team> {
 		if (!team.equals(this) && !gegner.contains(team.getNr())) {
 			gegner.add(team.getNr());
 			team.addGegner(this);
+		}
+		return this;
+	}
+
+	/**
+	 * Teams gegenseitig als gegner austragen wenn vorhanden
+	 *
+	 * @param team
+	 */
+	public Team removeGegner(Team team) {
+		checkNotNull(team, "team == null");
+		if (!team.equals(this) && gegner.contains(team.getNr())) {
+			gegner.remove(team.getNr());
+			team.removeGegner(this);
 		}
 		return this;
 	}
@@ -208,6 +223,18 @@ public class Team extends NrComparable implements IMeldung<Team> {
 	public Team setHatGegner(boolean hatGegner) {
 		this.hatGegner = hatGegner;
 		return this;
+	}
+
+	@VisibleForTesting
+	public HashSet<Integer> getGegner() {
+		return gegner;
+	}
+
+	/**
+	 * @return
+	 */
+	public int anzGegner() {
+		return gegner.size();
 	}
 
 }
