@@ -80,6 +80,18 @@ public class TeamPaarung implements Cloneable {
 		return this;
 	}
 
+	/**
+	 * teams gegenseitig als gegner entfernen
+	 *
+	 * @return
+	 */
+	public TeamPaarung removeGegner() {
+		if (b.isPresent()) {
+			a.removeGegner(b.get()); // gegenseitig als gegner entfernen
+		}
+		return this;
+	}
+
 	public Team getA() {
 		return a;
 	}
@@ -201,6 +213,17 @@ public class TeamPaarung implements Cloneable {
 
 	public boolean hasB() {
 		return b.isPresent();
+	}
+
+	/**
+	 * flag entfernen
+	 */
+	public TeamPaarung removeHatGegner() {
+		if (b.isPresent()) {
+			b.get().setHatGegner(false);
+		}
+		a.setHatGegner(false);
+		return this;
 	}
 
 }

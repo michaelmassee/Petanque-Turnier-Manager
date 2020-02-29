@@ -124,12 +124,17 @@ public class SchweizerSystemTest {
 
 		// erste runde fest vorgeben
 		schweizerSystem = new SchweizerSystem(newTestmeldungen());
+
+		// ---------------------------------------------------------------------------------------
+		// Runde 2
+		// ---------------------------------------------------------------------------------------
 		List<TeamPaarung> resultRunde2 = schweizerSystem.weitereRunde();
 		assertThat(resultRunde2.size()).isEqualTo(4);
 
 		// flatten list for validate
 		List<Team> teamListresult = resultRunde2.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
 		assertThat(teamListresult.size()).isEqualTo(8);
+		validateGegnerList(teamListresult, 2);
 
 		List<Team> expected = new ArrayList<>();
 
@@ -168,9 +173,38 @@ public class SchweizerSystemTest {
 		assertThat(resultRunde3.size()).isEqualTo(4);
 
 		// flatten list for validate
-		List<Team> teamListresultRund3 = resultRunde3.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
-		assertThat(teamListresult.size()).isEqualTo(8);
+		List<Team> teamListresultRunde3 = resultRunde3.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		assertThat(teamListresultRunde3.size()).isEqualTo(8);
+		validateGegnerList(teamListresultRunde3, 3);
 
+		assertThat(resultRunde3.get(0).getA()).isEqualTo(Team.from(5));
+		assertThat(resultRunde3.get(0).getB()).isEqualTo(Team.from(1));
+
+		assertThat(resultRunde3.get(1).getA()).isEqualTo(Team.from(6));
+		assertThat(resultRunde3.get(1).getB()).isEqualTo(Team.from(2));
+
+		assertThat(resultRunde3.get(2).getA()).isEqualTo(Team.from(8));
+		assertThat(resultRunde3.get(2).getB()).isEqualTo(Team.from(3));
+
+		assertThat(resultRunde3.get(3).getA()).isEqualTo(Team.from(7));
+		assertThat(resultRunde3.get(3).getB()).isEqualTo(Team.from(4));
+
+		// ---------------------------------------------------------------------------------------
+	}
+
+	private void validateGegnerList(List<Team> teamListe, int anzGegner) {
+
+		for (Team team : teamListe) {
+			assertThat(team.anzGegner()).as("Team nr %d ungueltige anzahl gegner", team.getNr()).isEqualTo(anzGegner);
+
+			for (Integer gegnerNr : team.getGegner()) {
+
+				// in der liste suchen
+				Team gegnerTeam = teamListe.stream().filter(tm -> tm.getNr() == gegnerNr).findFirst().orElse(null);
+				assertThat(gegnerTeam).isNotNull();
+				assertThat(gegnerTeam.hatAlsGegner(team));
+			}
+		}
 	}
 
 	@Test
@@ -234,6 +268,8 @@ public class SchweizerSystemTest {
 		testTeams.get(6).addGegner(testTeams.get(2)); // team 7-3
 
 		meldungen.addTeamWennNichtVorhanden(testTeams);
+
+		validateGegnerList(testTeams, 1);
 
 		return meldungen;
 	}

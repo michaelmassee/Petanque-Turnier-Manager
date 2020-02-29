@@ -115,13 +115,15 @@ public class SchweizerSystem {
 						teamPaarungList.add(new TeamPaarung(team, gegner).addGegner().setHatGegner());
 					} else {
 						// ohne gegner ? versuchen ob wir tauschen können mit vorhanden team paarung aus der Liste
-						// Invalid Paarung
+						// Invalid Paarung haben bereits gegen einander gespielt
 						TeamPaarung invalid = new TeamPaarung(team, restTeams.get(0));
 
 						TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList);
 						if (kannTauschenMit != null) {
-							tauschenTeamsInPaarung(invalid, kannTauschenMit);
 							// wenn erfolgreich dann invalid == valid!
+							tauschenTeamsInPaarung(invalid, kannTauschenMit);
+							// gegner wieder herstellen von den invalid teams weil die in den vorrunden bereits gegen einander gespielt haben
+							restTeams.get(0).addGegner(team);
 						}
 						// invalid oder wenn tausch statgefunden hat, Valid paarung hinzufügen
 						teamPaarungList.add(invalid.addGegner().setHatGegner());
@@ -141,21 +143,35 @@ public class SchweizerSystem {
 			return false;
 		}
 
+		boolean didChange = false;
+
 		// tausche B, A1:B2 <-> A2:B2
 		if (!paarA.getA().hatAlsGegner(paarB.getB()) && !paarB.getA().hatAlsGegner(paarA.getB())) {
+			paarA.removeGegner();
+			paarB.removeGegner();
 			Team A_Bteam = paarA.getB();
 			paarA.setB(paarB.getB());
 			paarB.setB(A_Bteam);
-			return true;
+			didChange = true;
 		}
 		// tausche A+B, A1:A2 <-> B1:B2
-		if (!paarA.getA().hatAlsGegner(paarB.getA()) && !paarB.getB().hatAlsGegner(paarA.getB())) {
+		if (!didChange && !paarA.getA().hatAlsGegner(paarB.getA()) && !paarB.getB().hatAlsGegner(paarA.getB())) {
+			paarA.removeGegner();
+			paarB.removeGegner();
 			Team A_Bteam = paarA.getB();
 			paarA.setB(paarB.getA());
 			paarB.setA(A_Bteam);
-			return true;
+			didChange = true;
 		}
-		return false;
+
+		if (didChange) {
+			paarA.setHatGegner();
+			paarA.addGegner();
+			paarB.setHatGegner();
+			paarB.addGegner();
+		}
+
+		return didChange;
 	}
 
 	/**
@@ -180,18 +196,41 @@ public class SchweizerSystem {
 		Team tauschTeam = reverseTeamliste.stream().filter(teamRev -> {
 			return teamRev.isHatGegner() && !teamRev.equals(teamAInvalid) && !teamRev.equals(teamBInvalid);
 		}).filter(teamRev2 -> {
+			// is a oder b Team
+			boolean isA = isATeam(teamRev2, paarungen);
 			// gegner vom potentielle tausch suchen
 			Team gegnerVonteamRev2 = findGegnerAusTeamPaarungen(teamRev2, paarungen);
-			// kann gegen Spielen, A Invalid kann getauscht werden
-			return gegnerVonteamRev2 != null && !gegnerVonteamRev2.hatAlsGegner(teamAInvalid);
-		}).filter(teamRev3 -> {
-			return !teamRev3.hatAlsGegner(teamBInvalid);
+
+			if (gegnerVonteamRev2 == null) {
+				return false;
+			}
+
+			if (isA) {
+				// kann gegen Spielen, A Invalid kann getauscht werden
+				return teamRev2.hatAlsGegner(teamBInvalid) && !gegnerVonteamRev2.hatAlsGegner(teamAInvalid);
+			}
+			// kann gegen Spielen, B Invalid kann getauscht werden
+			return !teamRev2.hatAlsGegner(teamAInvalid) && !gegnerVonteamRev2.hatAlsGegner(teamBInvalid);
 		}).findFirst().orElse(null);
 
 		if (tauschTeam != null) {
 			return paarungen.stream().filter(paarung -> paarung.isInPaarung(tauschTeam)).findFirst().orElse(null);
 		}
 		return null;
+	}
+
+	/**
+	 * finde paarung mit team1, and return true wenn A
+	 *
+	 * @param team1
+	 * @param paarungen
+	 * @return true wenn a false wenn b, wenn not in list found = true
+	 */
+
+	public boolean isATeam(Team team, List<TeamPaarung> paarungen) {
+		return paarungen.stream().filter(teamPaarung -> {
+			return teamPaarung.isInPaarung(team);
+		}).findFirst().map(teamPaarung2 -> teamPaarung2.getA().equals(team)).orElse(true);
 	}
 
 	/**
