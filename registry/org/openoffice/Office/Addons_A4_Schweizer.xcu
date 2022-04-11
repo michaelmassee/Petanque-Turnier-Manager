@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
+		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
+
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+				<prop oor:name="Title" oor:type="xs:string">
+					<!-- Pétanque-MenuJobExecute-Manager -->
+					<value xml:lang="de">PétTurnMngr</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<!-- ****************************************************************** -->
+					<!-- Schweizer -->
+					<node oor:name="A4" oor:op="fuse">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="en">Schweizer</value>
+							<value xml:lang="de">Schweizer</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- name= bestimmt reihenfolge im menu -->
+							<!-- ****************************************************************** -->
+							<node oor:name="A4A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">new Entrylist</value>
+									<value xml:lang="de">Neue Meldeliste Tête</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?schweizer_neue_meldeliste_tete</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							
+						</node>
+					</node>
+					<!-- ****************************************************************** -->
+
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>

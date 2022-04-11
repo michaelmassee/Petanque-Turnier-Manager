@@ -9,6 +9,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.swing.JFileChooser;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +29,9 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+
+import com.sun.star.uno.Exception;
+import com.sun.star.uno.UnoRuntime;
 
 /**
  * @author Michael Massee
@@ -79,6 +84,9 @@ public class DownloadExtension extends SheetRunner {
 		processBoxinfo(downloadURL.toString());
 
 		XFolderPicker2 picker = FolderPicker.create(getWorkingSpreadsheet().getxContext());
+
+		// JFileChooser chooser = new JFileChooser();
+
 		picker.setTitle("Download Verzeichnis");
 		short res = picker.execute();
 		if (res == ExecutableDialogResults.OK) {
@@ -89,7 +97,8 @@ public class DownloadExtension extends SheetRunner {
 				File targetFile = new File(selectedPath, oxtAsset.getName());
 				if (targetFile.exists()) {
 					processBoxinfo("Datei bereits vorhanden " + targetFile);
-					MessageBoxResult answerBereitsVorhanden = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption("Datei bereits vorhanden")
+					MessageBoxResult answerBereitsVorhanden = MessageBox
+							.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption("Datei bereits vorhanden")
 							.message("Datei " + targetFile + " bereits vorhanden.\r\nÜberschreiben ?").show();
 					if (answerBereitsVorhanden == MessageBoxResult.NO) {
 						processBoxinfo("Abbruch");

@@ -245,41 +245,6 @@
 
 						</node>
 					</node>
-					<node oor:name="X2" oor:op="replace">
-						<prop oor:name="Title">
-							<value xml:lang="en">~Download latest Version</value>
-							<value xml:lang="de">~Download neueste Version</value>
-						</prop>
-						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.MenuJobExecute?downloadExtension</value>
-						</prop>
-						<prop oor:name="Target" oor:type="xs:string">
-							<value>_self</value>
-						</prop>
-					</node>
-
-					<!-- ****************************************************************** -->
-					<!-- CANCEL Any Threads running, Verarbeitung Abbruch -->
-					<node oor:name="Z1" oor:op="replace">
-						<prop oor:name="URL" oor:type="xs:string">
-							<value>private:separator</value>
-						</prop>
-					</node>
-
-					<node oor:name="Z2" oor:op="replace">
-						<prop oor:name="Title">
-							<value xml:lang="en">~Cancel Processing</value>
-							<value xml:lang="de">~Stop verarbeitung</value>
-						</prop>
-						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.MenuJobExecute?abbruch</value>
-						</prop>
-						<prop oor:name="Target" oor:type="xs:string">
-							<value>_self</value>
-						</prop>
-					</node>
-
-					<!-- ****************************************************************** -->
 
 				</node>
 			</node>
