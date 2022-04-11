@@ -31,6 +31,7 @@ import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet_TestDaten;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeTeteSheet_New;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -121,6 +122,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 
 				if (!didHandle) {
 					didHandle = handleLiga(action, currentSpreadsheet);
+				}
+
+				if (!didHandle) {
+					didHandle = handleSchweizer(action, currentSpreadsheet);
 				}
 
 				if (!didHandle) {
@@ -304,4 +309,21 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		}
 		return didHandle;
 	}
+
+	private boolean handleSchweizer(String action, WorkingSpreadsheet workingSpreadsheet) {
+		boolean didHandle = true;
+		if (!action.toLowerCase().startsWith("schweizer")) {
+			return false;
+		}
+		switch (action) {
+		// ------------------------------
+		case "schweizer_neue_meldeliste_tete":
+			new SchweizerMeldeListeTeteSheet_New(workingSpreadsheet).start();
+			break;
+		default:
+			didHandle = false;
+		}
+		return didHandle;
+	}
+
 }

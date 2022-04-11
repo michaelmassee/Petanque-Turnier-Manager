@@ -190,12 +190,55 @@ public class SchweizerSystemTest {
 		assertThat(resultRunde3.get(3).getB()).isEqualTo(Team.from(4));
 
 		// ---------------------------------------------------------------------------------------
+		// Runde 4
+		// ---------------------------------------------------------------------------------------
+		meldungen = new TeamMeldungen();
+		// neue rangliste
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(4)); // team 5
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(7)); // team 8
+
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(6)); // team 7
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(5)); // team 6
+
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(3)); // team 4
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(0)); // team 1
+
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(2)); // team 3
+		meldungen.addTeamWennNichtVorhanden(teamListresult.get(1)); // team 2
+		schweizerSystem = new SchweizerSystem(meldungen);
+		List<TeamPaarung> resultRunde4 = schweizerSystem.weitereRunde();
+		assertThat(resultRunde4.size()).isEqualTo(4);
+
+		// flatten list for validate
+		List<Team> teamListresultRunde4 = resultRunde4.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		assertThat(teamListresultRunde4.size()).isEqualTo(8);
+		validateGegnerList(teamListresultRunde4, 4);
+
+		assertThat(resultRunde4.get(0).getA()).isEqualTo(Team.from(5));
+		assertThat(resultRunde4.get(0).getB()).isEqualTo(Team.from(8));
+
+		assertThat(resultRunde4.get(1).getA()).isEqualTo(Team.from(7));
+		assertThat(resultRunde4.get(1).getB()).isEqualTo(Team.from(6));
+
+		assertThat(resultRunde4.get(2).getA()).isEqualTo(Team.from(4));
+		assertThat(resultRunde4.get(2).getB()).isEqualTo(Team.from(2));
+
+		assertThat(resultRunde4.get(3).getA()).isEqualTo(Team.from(1));
+		assertThat(resultRunde4.get(3).getB()).isEqualTo(Team.from(3));
 	}
+
+	/**
+	 *
+	 * @param teamListe
+	 * @param anzGegner -1 = nicht prüfen
+	 */
 
 	private void validateGegnerList(List<Team> teamListe, int anzGegner) {
 
 		for (Team team : teamListe) {
-			assertThat(team.anzGegner()).as("Team nr %d ungueltige anzahl gegner", team.getNr()).isEqualTo(anzGegner);
+			if (anzGegner > -1) {
+				assertThat(team.anzGegner()).as("Team nr %d ungueltige anzahl gegner", team.getNr()).isEqualTo(anzGegner);
+			}
 
 			for (Integer gegnerNr : team.getGegner()) {
 
@@ -250,6 +293,122 @@ public class SchweizerSystemTest {
 		assertThat(kannTauschenMit).isNotNull();
 		assertThat(kannTauschenMit.getA()).isNotNull().isEqualTo(Team.from(5));
 		assertThat(kannTauschenMit.getB()).isNotNull().isEqualTo(Team.from(8));
+	}
+
+	@Test
+	public void testErsteRundeMitSetzPosUnGerade() throws Exception {
+		TeamMeldungen meldungen = new TeamMeldungen();
+
+		for (int i = 1; i < 4; i++) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(i));
+		}
+		for (int i = 4; i < 8; i++) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(i).setSetzPos(1));
+		}
+
+		schweizerSystem = new SchweizerSystem(meldungen);
+		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde();
+
+		assertThat(ersteRunde.size()).isEqualTo(4);
+		assertThat(ersteRunde.get(0).getA().getSetzPos()).isEqualTo(0);
+		assertThat(ersteRunde.get(0).getB().getSetzPos()).isEqualTo(1);
+		assertThat(ersteRunde.get(3).getB()).isNull(); // freilos
+
+	}
+
+	@Test
+	public void testWeitereRundeUngGeradeAnzahl() throws Exception {
+		// erste runde fest vorgeben
+		// runde 1
+		schweizerSystem = new SchweizerSystem(new9Testmeldungen());
+
+		// Runde 2
+		List<TeamPaarung> weitereRunde = schweizerSystem.weitereRunde();
+
+		assertThat(weitereRunde.size()).isEqualTo(5); // 9 + freilos
+
+		assertThat(weitereRunde.get(0).getA()).isEqualByComparingTo(Team.from(1));
+		assertThat(weitereRunde.get(0).getB()).isEqualByComparingTo(Team.from(2));
+
+		assertThat(weitereRunde.get(1).getA()).isEqualByComparingTo(Team.from(3));
+		assertThat(weitereRunde.get(1).getB()).isEqualByComparingTo(Team.from(4));
+
+		assertThat(weitereRunde.get(2).getA()).isEqualByComparingTo(Team.from(5));
+		assertThat(weitereRunde.get(2).getB()).isEqualByComparingTo(Team.from(6));
+
+		assertThat(weitereRunde.get(3).getA()).isEqualByComparingTo(Team.from(7));
+		assertThat(weitereRunde.get(3).getB()).isEqualByComparingTo(Team.from(9));
+
+		assertThat(weitereRunde.get(4).getA()).isEqualByComparingTo(Team.from(8));
+		assertThat(weitereRunde.get(4).getB()).isNull();
+
+		// flatten list for validate
+		List<Team> flattenTeampaarungen1 = schweizerSystem.flattenTeampaarungen(weitereRunde);
+		assertThat(flattenTeampaarungen1.size()).isEqualTo(10); // 9 + freilos
+
+		// ---------------------------------------------------------------------------------------
+		// Runde 3
+		// ---------------------------------------------------------------------------------------
+		// neue rangliste
+		TeamMeldungen meldungen = new TeamMeldungen();
+
+		// neue rangliste
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(1)); // team 2
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(2)); // team 3
+
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(5)); // team 6
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(8)); // team 9
+
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(6)); // team 7
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(0)); // team 1
+
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(3)); // team 4
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(4)); // team 5
+
+		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(7)); // team 8, hatte bereits freilos
+
+		schweizerSystem = new SchweizerSystem(meldungen);
+		List<TeamPaarung> resultRunde3 = schweizerSystem.weitereRunde(); // Runde 3
+		assertThat(resultRunde3.size()).isEqualTo(5);
+
+		assertThat(resultRunde3.get(0).getA()).isEqualByComparingTo(Team.from(2));
+		assertThat(resultRunde3.get(0).getB()).isEqualByComparingTo(Team.from(3));
+
+		assertThat(resultRunde3.get(1).getA()).isEqualByComparingTo(Team.from(6));
+		assertThat(resultRunde3.get(1).getB()).isEqualByComparingTo(Team.from(9));
+
+		assertThat(resultRunde3.get(2).getA()).isEqualByComparingTo(Team.from(7));
+		assertThat(resultRunde3.get(2).getB()).isEqualByComparingTo(Team.from(1));
+
+		assertThat(resultRunde3.get(3).getA()).isEqualByComparingTo(Team.from(4));
+		assertThat(resultRunde3.get(3).getB()).isEqualByComparingTo(Team.from(8));
+
+		// team 5 mit freilos
+		assertThat(resultRunde3.get(4).getA()).isEqualByComparingTo(Team.from(5));
+		assertThat(resultRunde3.get(4).getB()).isNull();
+	}
+
+	// eine runde mit 9 Teams + gegner
+	private TeamMeldungen new9Testmeldungen() {
+		TeamMeldungen meldungen = new TeamMeldungen();
+
+		// erste runde fest vorgeben
+		List<Team> testTeams = new ArrayList<>();
+		for (int i = 1; i < 10; i++) {
+			testTeams.add(Team.from(i));
+		}
+
+		testTeams.get(0).addGegner(testTeams.get(3)); // team 1-4
+		testTeams.get(1).addGegner(testTeams.get(4)); // team 2-5
+		testTeams.get(5).addGegner(testTeams.get(7)); // team 6-8
+		testTeams.get(6).addGegner(testTeams.get(2)); // team 7-3
+		testTeams.get(8).setHatteFreilos(true);
+
+		meldungen.addTeamWennNichtVorhanden(testTeams);
+
+		validateGegnerList(testTeams, -1);
+
+		return meldungen;
 	}
 
 	// eine runde mit 8 Teams + gegner

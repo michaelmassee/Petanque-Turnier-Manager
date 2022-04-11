@@ -134,7 +134,15 @@ public class SchweizerSystem {
 				}
 			}
 		}
-		return teamPaarungList;
+		return teamPaarungList.stream().sorted((tp1, tp2) -> {
+			// Freilos an letzter Stelle
+			if (tp1.getB() == null) {
+				return 1;
+			} else if (tp2.getB() == null) {
+				return -1;
+			}
+			return 0;
+		}).collect(Collectors.toList());
 	}
 
 	@VisibleForTesting
@@ -248,8 +256,14 @@ public class SchweizerSystem {
 	}
 
 	public List<Team> flattenTeampaarungen(List<TeamPaarung> paarungen) {
-		return paarungen.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
-
+		return paarungen.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).sorted((team1, team2) -> {
+			if (team1 == null) {
+				return 1;
+			} else if (team2 == null) {
+				return 1;
+			}
+			return Integer.compare(team1.getNr(), team2.getNr());
+		}).collect(Collectors.toList());
 	}
 
 	/**

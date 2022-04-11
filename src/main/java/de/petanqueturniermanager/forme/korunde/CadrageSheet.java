@@ -47,7 +47,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	 * @param workingSpreadsheet
 	 */
 	public CadrageSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER_KO, "Cadrage");
+		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Cadrage");
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);

@@ -41,7 +41,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	 * @throws GenerateException
 	 */
 	public KoGruppeABSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER_KO, "KO Gruppe AB");
+		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "KO Gruppe AB");
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);

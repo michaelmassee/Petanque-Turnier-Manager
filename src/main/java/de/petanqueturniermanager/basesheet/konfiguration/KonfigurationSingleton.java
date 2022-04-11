@@ -12,6 +12,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -32,10 +33,12 @@ public class KonfigurationSingleton {
 				switch (turnierSystem) {
 				case LIGA:
 					return LigaPropertiesSpalte.KONFIG_PROPERTIES;
-				case SCHWEIZER_KO:
+				case MAASTRICHTER:
 					break;
 				case SUPERMELEE:
 					return SuperMeleePropertiesSpalte.KONFIG_PROPERTIES;
+				case SCHWEIZER:
+					return SchweizerPropertiesSpalte.KONFIG_PROPERTIES;
 				default:
 					break;
 				}
