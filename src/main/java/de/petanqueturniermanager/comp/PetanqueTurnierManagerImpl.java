@@ -87,7 +87,8 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 	 * Gives a factory for creating the service.<br>
 	 * This method is called by the <code>JavaLoader</code><br>
 	 *
-	 * @return Returns a <code>XSingleServiceFactory</code> for creating the component.<br>
+	 * @return Returns a <code>XSingleServiceFactory</code> for creating the
+	 *         component.<br>
 	 * @see com.sun.star.comp.loader.JavaLoader<br>
 	 * @param sImplementationName The implementation name of the component.<br>
 	 */
@@ -163,10 +164,12 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			return false;
 		}
 
-		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet).getTurnierSystemAusDocument();
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
+				.getTurnierSystemAusDocument();
 
 		if (turnierSystemAusDocument == TurnierSystem.KEIN) {
-			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Konfiguration").message("Kein Turnier vorhanden").show();
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Konfiguration")
+					.message("Kein Turnier vorhanden").show();
 			return true;
 		}
 		try {

@@ -33,15 +33,17 @@ public class PetanqueTurnierMngrSingleton {
 
 	/**
 	 * der erste Konstruktur macht Init <br>
-	 * wird mehrmals aufgerufen
+	 * wird und kann mehrmals aufgerufen !!
 	 *
 	 * @param context
 	 */
 
 	public static final void init(XComponentContext context) {
+		logger.debug("PetanqueTurnierMngrSingleton.init");
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
+			// only log
 			logger.error(e.getMessage(), e);
 		}
 

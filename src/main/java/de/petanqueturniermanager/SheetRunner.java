@@ -7,6 +7,7 @@ package de.petanqueturniermanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XCalculatable;
@@ -24,6 +25,8 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public abstract class SheetRunner extends Thread implements Runnable {
+
+	private static final Logger logger = LogManager.getLogger(SheetRunner.class);
 
 	private static final String VERARBEITUNG_ABGEBROCHEN = "Verarbeitung abgebrochen";
 	private final WorkingSpreadsheet workingSpreadsheet;
@@ -66,6 +69,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	@Override
 	public final void run() {
 		if (!SheetRunner.isRunning) {
+			logger.debug("Start SheetRunner");
+
 			SheetRunner.isRunning = true;
 			SheetRunner.runner = this;
 			boolean isFehler = false;
@@ -80,7 +85,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				handleGenerateException(e);
 			} catch (Exception e) {
 				isFehler = true;
-				ProcessBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage()).fehler("Siehe log für weitere Infos");
+				ProcessBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage())
+						.fehler("Siehe log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning = false; // Immer an erste stelle diesen flag zurück
@@ -93,19 +99,21 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
 		} else {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message("Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.")
-					.show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch")
+					.message("Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.").show();
 		}
 	}
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
 			ProcessBox().info("Verarbeitung abgebrochen");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage()).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage())
+					.show();
 		} else {
 			ProcessBox().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage()).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage())
+					.show();
 		}
 	}
 

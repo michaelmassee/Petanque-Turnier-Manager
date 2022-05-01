@@ -122,6 +122,7 @@ public class ProcessBox {
 	}
 
 	public synchronized static ProcessBox init(XComponentContext xContext) {
+		logger.debug("ProcessBox INIT");
 		checkNotNull(xContext);
 		if (ProcessBox.processBox == null) {
 			ProcessBox.processBox = new ProcessBox(xContext);
@@ -130,6 +131,7 @@ public class ProcessBox {
 	}
 
 	private void initBox() {
+		logger.debug("ProcessBox.initBox");
 		frame.setLayout(new GridBagLayout());
 		setIcons();
 
@@ -147,14 +149,16 @@ public class ProcessBox {
 	private void setIcons() {
 		// icons laden
 		try {
-			BufferedImage img256 = ImageIO.read(this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png"));
+			BufferedImage img256 = ImageIO
+					.read(this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png"));
 			Image[] images = { img256 };
 			frame.setIconImages(java.util.Arrays.asList(images));
 
 			// https://loading.io/
 			// https://ezgif.com/
 			for (int i = 0; i < 31; i++) {
-				inworkIcons.add(new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("spinner/frame-" + i + ".png"))));
+				inworkIcons.add(new ImageIcon(
+						ImageIO.read(this.getClass().getResourceAsStream("spinner/frame-" + i + ".png"))));
 			}
 			imageIconReady = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("check25x32.png")));
 			imageIconError = new ImageIcon(ImageIO.read(this.getClass().getResourceAsStream("cross32x32.png")));
@@ -312,6 +316,7 @@ public class ProcessBox {
 	}
 
 	public synchronized ProcessBox info(String logMsg) {
+		logger.debug("ProcessBox info ->" + logMsg);
 		checkNotNull(logOut);
 		checkNotNull(logMsg);
 
@@ -354,12 +359,14 @@ public class ProcessBox {
 	}
 
 	public ProcessBox run() {
+		logger.debug("ProcessBox run");
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(true);
 		}
 		statusLabel.setToolTipText("In Arbeit");
-		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0, 100, TimeUnit.MILLISECONDS);
+		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0,
+				100, TimeUnit.MILLISECONDS);
 		return this;
 	}
 
