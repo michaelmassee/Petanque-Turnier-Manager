@@ -43,7 +43,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  */
 public abstract class BaseSidebarContent extends ComponentBase implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
-	static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
+	private static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
 	private XWindow window;
 	private GuiFactoryCreateParam guiFactoryCreateParam;
@@ -52,7 +52,7 @@ public abstract class BaseSidebarContent extends ComponentBase implements XToolP
 
 	private WorkingSpreadsheet currentSpreadsheet;
 	private XWindow parentWindow;
-	Layout layout;
+	private Layout layout;
 	private XSidebar xSidebar;
 	private boolean changingLayout;
 

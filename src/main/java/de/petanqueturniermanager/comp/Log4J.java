@@ -4,22 +4,16 @@
 package de.petanqueturniermanager.comp;
 
 import java.io.File;
-
 import java.io.IOException;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
-import org.apache.logging.log4j.core.Layout;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.LoggerConfig;
-import org.apache.logging.log4j.core.layout.PatternLayout;
 
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
@@ -59,9 +53,6 @@ public class Log4J {
 	}
 
 	public static final void openLogFile() {
-
-		Logger loggerAusconfigDatei = LogManager.getLogger(LOGGERNAME);
-		Configurator.setLevel(loggerAusconfigDatei, Level.DEBUG);
 
 		if (logFile != null) {
 			try {
