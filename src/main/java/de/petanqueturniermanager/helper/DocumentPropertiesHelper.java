@@ -39,7 +39,8 @@ import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
+ * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html
+ * <br>
  * https://forum.openoffice.org/en/forum/viewtopic.php?t=33455 <br>
  *
  */
@@ -47,34 +48,39 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
-	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
-	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>(); // Hashtable is synchronized
+	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in
+	// speicher.
+	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>(); // Hashtable is
+																										// synchronized
 
 	final XSpreadsheetDocument xSpreadsheetDocument;
-	final Integer xSpreadsheetDocumentHash;
 	final Hashtable<String, String> currentPropListe;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
 		xSpreadsheetDocument = checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument();
-		xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
-		if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
-			currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
-		} else {
-			// einmal laden
-			currentPropListe = new Hashtable<>();
-			// properties aus dokument laden
-			XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
-			XPropertySet xPropertySet = getXPropertySet();
-			Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
-			for (Property userProp : properties) {
-				try {
-					Object propVal = xPropertySet.getPropertyValue(userProp.Name);
-					currentPropListe.put(userProp.Name, propVal.toString());
-				} catch (UnknownPropertyException | WrappedTargetException e) {
+		if (xSpreadsheetDocument != null) {
+			Integer xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
+			if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
+				currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
+			} else {
+				// einmal laden
+				currentPropListe = new Hashtable<>();
+				// properties aus dokument laden
+				XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
+				XPropertySet xPropertySet = getXPropertySet();
+				Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
+				for (Property userProp : properties) {
+					try {
+						Object propVal = xPropertySet.getPropertyValue(userProp.Name);
+						currentPropListe.put(userProp.Name, propVal.toString());
+					} catch (UnknownPropertyException | WrappedTargetException e) {
+					}
 				}
+				// in cache
+				PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
 			}
-			// in cache
-			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
+		} else {
+			currentPropListe = new Hashtable<>();
 		}
 	}
 
@@ -85,7 +91,8 @@ public class DocumentPropertiesHelper {
 		try {
 			if (source != null) {
 				XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-				XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
+				XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class,
+						xModel);
 				// null dann wenn kein XSpreadsheetDocument
 				if (xSpreadsheetDocument != null) {
 					PROPLISTE.remove(xSpreadsheetDocument.hashCode());
@@ -108,21 +115,23 @@ public class DocumentPropertiesHelper {
 			if (!StringUtils.equals(oldVal, val)) {
 				setStringPropertyInDocument(propName, val);
 				currentPropListe.put(propName, val);
-				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged, new OnProperiesChangedEvent(xSpreadsheetDocument));
+				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,
+						new OnProperiesChangedEvent(xSpreadsheetDocument));
 			}
 		}
 	}
 
 	/**
 	 * @param propName
-	 * @param val int val wird als String gespeichert
+	 * @param val      int val wird als String gespeichert
 	 */
 	private void setStringPropertyInDocument(String propName, String val) {
 		insertStringPropertyIfNotExist(propName, val);
 		XPropertySet propSet = getXPropertySet();
 		try {
 			propSet.setPropertyValue(propName, val);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
 			logger.error(e);
 		}
 	}
@@ -140,7 +149,8 @@ public class DocumentPropertiesHelper {
 		boolean didExist = false;
 		XPropertyContainer xpc = getXPropertyContainer();
 
-		// userProperties.addProperty(property, com.sun.star.beans.PropertyAttribute.REMOVEABLE,
+		// userProperties.addProperty(property,
+		// com.sun.star.beans.PropertyAttribute.REMOVEABLE,
 		// new Any(Type.STRING, value));
 		// const short BOUND = 2
 		// indicates that a PropertyChangeEvent will be fired to all registered
@@ -159,7 +169,8 @@ public class DocumentPropertiesHelper {
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
-		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class, xSpreadsheetDocument);
+		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class,
+				xSpreadsheetDocument);
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}
@@ -214,7 +225,7 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * @param propName
-	 * @param val int val wird als String gespeichert
+	 * @param val      int val wird als String gespeichert
 	 */
 	public void setIntProperty(String propName, int val) {
 		setStringProperty(propName, "" + val);
@@ -241,7 +252,8 @@ public class DocumentPropertiesHelper {
 
 	public TurnierSystem getTurnierSystemAusDocument() {
 		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
-		int spielsystem = getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
+		int spielsystem = getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				TurnierSystem.KEIN.getId());
 		if (spielsystem > -1) {
 			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 		}
