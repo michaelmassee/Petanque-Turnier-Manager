@@ -19,7 +19,7 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 
 * [Libreoffice ab Version 6](https://de.libreoffice.org/get-help/system-requirements/)
-* [Java ab Version 8](https://www.java.com/de/download/help/sysreq.xml)
+* [Java ab Version 11](https://www.java.com/de/download/help/sysreq.xml)
 
 
 ## - Java Installieren -
@@ -28,13 +28,13 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 [LibreOffice: Das richtige JRE installieren](https://www.youtube.com/watch?v=Qbd9JHKIo2c)<br>
 
 ### --- Adopt Open JDK ---
-OpenJDK 8 oder 11 **(LTS)**<br>
+OpenJDK 11 **(LTS)**<br>
 HotSpot<br>
 [Download AdoptOpenJDK](https://adoptopenjdk.net/)<br>
 
 ### --- Oracle ---
 Oracle Java ab 2019 nur noch für Privat gebrauch Kostenfrei<br>
-[Download Oracle Java ab 8](https://www.java.com/de/download/manual.jsp)<br>
+[Download Oracle Java ab 11](https://www.java.com/de/download/manual.jsp)<br>
 
 ## - Libreoffice Installieren -
 
