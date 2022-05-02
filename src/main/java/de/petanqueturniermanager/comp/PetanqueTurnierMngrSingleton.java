@@ -39,6 +39,8 @@ public class PetanqueTurnierMngrSingleton {
 	 */
 
 	public static final void init(XComponentContext context) {
+		GlobalProperties.get(); // just do an init, read properties if not already there
+
 		logger.debug("PetanqueTurnierMngrSingleton.init");
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -60,8 +62,10 @@ public class PetanqueTurnierMngrSingleton {
 		}
 		try {
 			globalEventListener = new GlobalEventListener();
-			Object globalEventBroadcaster = context.getServiceManager().createInstanceWithContext("com.sun.star.frame.GlobalEventBroadcaster", context);
-			XEventBroadcaster eventBroadcaster = UnoRuntime.queryInterface(XEventBroadcaster.class, globalEventBroadcaster);
+			Object globalEventBroadcaster = context.getServiceManager()
+					.createInstanceWithContext("com.sun.star.frame.GlobalEventBroadcaster", context);
+			XEventBroadcaster eventBroadcaster = UnoRuntime.queryInterface(XEventBroadcaster.class,
+					globalEventBroadcaster);
 			eventBroadcaster.addEventListener(globalEventListener);
 		} catch (Throwable e) {
 			// alles ignorieren nur logen
