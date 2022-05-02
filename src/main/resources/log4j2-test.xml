@@ -5,7 +5,7 @@
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
 		</Console>
-		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{MM-dd-yyyy}.log.gz">
+		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{dd-MM-yyyy}.log.gz">
 			<PatternLayout>
 				<Pattern>%d %p %c{1.} %m%n</Pattern>
 			</PatternLayout>
