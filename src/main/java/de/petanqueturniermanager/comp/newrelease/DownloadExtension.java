@@ -9,8 +9,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import javax.swing.JFileChooser;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,9 +27,6 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-
-import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
 
 /**
  * @author Michael Massee
@@ -68,7 +63,7 @@ public class DownloadExtension extends SheetRunner {
 		processBoxinfo("Start Download von Pétanque-Turnier-Manager");
 		processBoxinfo("Aktuell instalierte Version " + extensionsHelper.getVersionNummer());
 
-		GHRelease latest = newReleaseChecker.readLatestRelease();
+		GHRelease latest = newReleaseChecker.readLatestReleaseFromCacheFile();
 		if (latest == null) {
 			ProcessBox().fehler("Kein Version verfügbar.");
 			return;
@@ -81,11 +76,10 @@ public class DownloadExtension extends SheetRunner {
 			return;
 		}
 		processBoxinfo("GitHub Version " + latest.getName());
+		processBoxinfo(latest.getBody()); // Release Infos
 		processBoxinfo(downloadURL.toString());
 
 		XFolderPicker2 picker = FolderPicker.create(getWorkingSpreadsheet().getxContext());
-
-		// JFileChooser chooser = new JFileChooser();
 
 		picker.setTitle("Download Verzeichnis");
 		short res = picker.execute();

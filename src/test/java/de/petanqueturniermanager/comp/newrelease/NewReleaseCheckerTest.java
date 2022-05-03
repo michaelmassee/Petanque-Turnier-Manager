@@ -26,7 +26,8 @@ public class NewReleaseCheckerTest {
 	@Before
 	public void setup() throws IOException {
 
-		// XComponentContext xComponentContextMock = PowerMockito.mock(XComponentContext.class);
+		// XComponentContext xComponentContextMock =
+		// PowerMockito.mock(XComponentContext.class);
 
 		testFile = Paths.get(folder.newFile(testFileStr).toURI());
 		newReleaseChecker = new NewReleaseChecker() {
@@ -39,21 +40,21 @@ public class NewReleaseCheckerTest {
 
 	@Test
 	public void testWriteLatestRelease() throws Exception {
-		newReleaseChecker.writeLatestRelease();
+		newReleaseChecker.writeLatestReleaseFromGithubInCacheFile();
 		assert Files.exists(testFile);
 	}
 
 	@Test
 	public void testReadLatestRelease() throws Exception {
-		newReleaseChecker.writeLatestRelease();
-		GHRelease readLatestRelease = newReleaseChecker.readLatestRelease();
+		newReleaseChecker.writeLatestReleaseFromGithubInCacheFile();
+		GHRelease readLatestRelease = newReleaseChecker.readLatestReleaseFromCacheFile();
 		assertThat(readLatestRelease).isNotNull();
 		assertThat(readLatestRelease.getName()).isNotNull().isNotEmpty();
 	}
 
 	@Test
 	public void testGetDownloadURL() throws Exception {
-		URL result = newReleaseChecker.getDownloadURL();
+		URL result = newReleaseChecker.getDownloadURL(newReleaseChecker.getDownloadGHAsset());
 		assertThat(result).isNotNull();
 		assertThat(result.getFile()).endsWith(NewReleaseChecker.EXTENSION_FILE_SUFFIX);
 	}
