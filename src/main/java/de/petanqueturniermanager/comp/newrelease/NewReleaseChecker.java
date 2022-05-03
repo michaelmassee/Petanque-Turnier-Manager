@@ -50,45 +50,58 @@ public class NewReleaseChecker {
 	private static final Logger logger = LogManager.getLogger(NewReleaseChecker.class);
 
 	// http://api.github.com/repos/michaelmassee/Petanque-Turnier-Manager/releases/latest
-	public static final URI RELEASE_FILE = new File(PetanqueTurnierManagerImpl.BASE_INTERNAL_DIR, "release.info").toURI();
+	public static final URI RELEASE_FILE = new File(PetanqueTurnierManagerImpl.BASE_INTERNAL_DIR, "release.info")
+			.toURI();
 
-	static boolean isUpdateThreadRunning = false;
-	static boolean didAlreadyRun = false;
-	private static boolean didInformAboutNewRelease = false; // static weil immer ein neuen instance
+	private static boolean isUpdateThreadRunning = false; // thread nur einmal laufen lassen
+	private static boolean didAlreadyRun = false;
+	private static boolean didUpdateCacheFile = false;
 
-	// nur ein thread
+	// !! wird mehrmals aufgerufen
 	public synchronized void checkForUpdate(XComponentContext xContext) {
-		if (!didInformAboutNewRelease) {
+		runUpdateCacheFileOnceThread(); // update release info
+
+		if (didUpdateCacheFile && !didAlreadyRun) {
+			didAlreadyRun = true;
 			boolean isnewRelease = checkForNewRelease(xContext);
 			if (isnewRelease) {
-				didInformAboutNewRelease = true;
 				logger.debug("open MessageBox");
-				MessageBoxResult answer = MessageBox.from(xContext, MessageBoxTypeEnum.QUESTION_YES_NO).caption("Neue Version verfügbar")
-						.message("Eine neue Version (" + latestVersionFromGithub() + ") von Pétanque-Turnier-Manager ist verfügbar.\r\nDownload ?").show();
+
+				GHRelease gHRelease = readLatestReleaseFromCacheFile();
+				String releaseNotes = "";
+				if (gHRelease != null) {
+					releaseNotes = gHRelease.getBody();
+				}
+
+				MessageBoxResult answer = MessageBox.from(xContext, MessageBoxTypeEnum.QUESTION_YES_NO)
+						.caption("Neue Version")
+						.message("Eine neue Version (" + latestVersionFromCacheFile()
+								+ ") von Pétanque-Turnier-Manager ist verfügbar.\r\n\r\n'" + releaseNotes
+								+ "'\r\n\r\nDownload ?")
+						.show();
 
 				if (MessageBoxResult.YES == answer) {
 					new DownloadExtension(new WorkingSpreadsheet(xContext)).start();
 				}
 			}
 		}
-		runUpdateOnceThread(); // update release info
 	}
 
 	/**
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
-	private synchronized void runUpdateOnceThread() {
-		if (!isUpdateThreadRunning && !didAlreadyRun) {
+	private synchronized void runUpdateCacheFileOnceThread() {
+		if (!isUpdateThreadRunning && !didUpdateCacheFile) {
 			isUpdateThreadRunning = true;
 			logger.debug("start runUpdateOnceThread");
 			new Thread("Update latest release") {
 				@Override
 				public void run() {
 					try {
-						writeLatestRelease();
+						writeLatestReleaseFromGithubInCacheFile();
 					} finally {
 						isUpdateThreadRunning = false;
-						didAlreadyRun = true; // nur einmal laufen
+						didUpdateCacheFile = true; // auch wenn keine verbindung auf true
 					}
 				}
 			}.start();
@@ -96,13 +109,14 @@ public class NewReleaseChecker {
 	}
 
 	@VisibleForTesting
-	void writeLatestRelease() {
+	void writeLatestReleaseFromGithubInCacheFile() {
 		logger.debug("start writeLatestRelease");
 
-		GHRelease latestRelease = getLatestRelease();
+		GHRelease latestRelease = getLatestReleaseFromGitHub();
 		if (latestRelease != null && !latestRelease.isPrerelease()) {
 			// wenn kein Prerelease
-			Gson gson = new GsonBuilder().setPrettyPrinting().addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
+			Gson gson = new GsonBuilder().setPrettyPrinting()
+					.addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
 			logger.info("Write latest release = " + latestRelease.getName());
 			try (BufferedWriter writer = Files.newBufferedWriter(getReleaseFile())) {
 				writer.write(gson.toJson(latestRelease));
@@ -112,7 +126,7 @@ public class NewReleaseChecker {
 		}
 	}
 
-	private GHRelease getLatestRelease() {
+	private GHRelease getLatestReleaseFromGitHub() {
 		GHRelease latestRelease = null;
 		try {
 			GitHub github = new GitHubBuilder().build();
@@ -129,7 +143,8 @@ public class NewReleaseChecker {
 		return Paths.get(RELEASE_FILE);
 	}
 
-	public GHRelease readLatestRelease() {
+	@VisibleForTesting
+	GHRelease readLatestReleaseFromCacheFile() {
 		GHRelease ret = null;
 		Path pathReleaseFile = getReleaseFile();
 		if (!(Files.exists(pathReleaseFile) && Files.isReadable(pathReleaseFile))) {
@@ -144,16 +159,16 @@ public class NewReleaseChecker {
 		return ret;
 	}
 
-	public String latestVersionFromGithub() {
-		String latestVersionFromGithub = null;
+	private String latestVersionFromCacheFile() {
+		String latestVersionFromCacheFile = null;
 
-		GHRelease readLatestRelease = readLatestRelease();
+		GHRelease readLatestRelease = readLatestReleaseFromCacheFile();
 		if (readLatestRelease != null) {
-			latestVersionFromGithub = readLatestRelease.getName();
+			latestVersionFromCacheFile = readLatestRelease.getName();
 			// clean up name
-			latestVersionFromGithub = StringUtils.stripStart(latestVersionFromGithub, "vV");
+			latestVersionFromCacheFile = StringUtils.stripStart(latestVersionFromCacheFile, "vV");
 		}
-		return latestVersionFromGithub;
+		return latestVersionFromCacheFile;
 	}
 
 	private synchronized boolean checkForNewRelease(XComponentContext context) {
@@ -164,14 +179,15 @@ public class NewReleaseChecker {
 			// https://github.com/G00fY2/version-compare
 			if (!isUpdateThreadRunning) {
 				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
-				String latestVersionFromGithub = latestVersionFromGithub();
-				logger.debug("Extension release = " + versionNummer);
-				logger.debug("Latest release = " + latestVersionFromGithub);
-				if (latestVersionFromGithub != null) {
-					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromGithub);
+				String latestVersionFromCacheFile = latestVersionFromCacheFile();
+				logger.debug("Instalierte Release = " + versionNummer);
+				logger.debug("Letzte GitHub Release = " + latestVersionFromCacheFile);
+				if (latestVersionFromCacheFile != null) {
+					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromCacheFile);
 					if (newVersionAvailable) {
 						logger.debug("Neue Version = " + newVersionAvailable);
-						ProcessBox.from().infoText("Neue Version von PétTurnMngr (" + latestVersionFromGithub + ") verfügbar.");
+						ProcessBox.from().infoText(
+								"Neue Version von PétTurnMngr (" + latestVersionFromCacheFile + ") verfügbar.");
 					}
 				}
 			}
@@ -182,10 +198,10 @@ public class NewReleaseChecker {
 		return newVersionAvailable;
 	}
 
-	public GHAsset getDownloadGHAsset() {
+	GHAsset getDownloadGHAsset() {
 		GHAsset otxAsset = null;
 
-		GHRelease latestRelease = getLatestRelease();
+		GHRelease latestRelease = getLatestReleaseFromGitHub();
 		if (latestRelease != null && !latestRelease.isPrerelease()) {
 			try {
 				List<GHAsset> assets = latestRelease.getAssets();
@@ -199,12 +215,7 @@ public class NewReleaseChecker {
 		return otxAsset;
 	}
 
-	public URL getDownloadURL() {
-		GHAsset otxAsset = getDownloadGHAsset();
-		return getDownloadURL(otxAsset);
-	}
-
-	public URL getDownloadURL(GHAsset otxAsset) {
+	URL getDownloadURL(GHAsset otxAsset) {
 		URL download = null;
 		if (otxAsset != null) {
 			try {
