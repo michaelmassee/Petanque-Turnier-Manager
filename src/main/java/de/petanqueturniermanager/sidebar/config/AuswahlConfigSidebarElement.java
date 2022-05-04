@@ -30,11 +30,13 @@ public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemL
 	private AuswahlConfigProperty configProperty;
 	private WorkingSpreadsheet workingSpreadsheet;
 
-	public AuswahlConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet) {
+	public AuswahlConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam,
+			AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription())
-				.addAuswahlItems(configProperty.getAuswahl()).addListener(this).select(getComboboxItemValue());
+		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(configProperty.getKey())
+				.helpText(configProperty.getDescription()).addAuswahlItems(configProperty.getAuswahl())
+				.addListener(this).select(getComboboxItemValue());
 	}
 
 	@Override
@@ -57,7 +59,8 @@ public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemL
 	private String getComboboxItemValue() {
 		// find text
 		String key = getPropertyValue();
-		ComboBoxItem itemFromVal = configProperty.getAuswahl().stream().filter(cmbItem -> key.equalsIgnoreCase(cmbItem.getKey())).findAny()
+		ComboBoxItem itemFromVal = configProperty.getAuswahl().stream()
+				.filter(cmbItem -> key.equalsIgnoreCase(cmbItem.getKey())).findAny()
 				.orElse(configProperty.getAuswahl().get(0));
 		return itemFromVal.getText();
 	}

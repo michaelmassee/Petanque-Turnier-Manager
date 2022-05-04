@@ -34,7 +34,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 	private static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
-	public static final Predicate<ConfigProperty<?>> INFO_PANEL_PROP_FILTER = konfigprop -> konfigprop.isInSideBarInfoPanel();
+	public static final Predicate<ConfigProperty<?>> INFO_PANEL_PROP_FILTER = konfigprop -> konfigprop
+			.isInSideBarInfoPanel();
 
 	private LabelPlusTextReadOnly turnierSystemInfoLine;
 
@@ -52,7 +53,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		super(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
-	// nur einmale hinzu fügen
+	// nur einmal hinzu fügen
 	private void addGlobalFields() {
 		if (didAddGlobalFields) {
 			return;
@@ -60,7 +61,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		didAddGlobalFields = true;
 		setChangingLayout(true);
 		try {
-			turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem").fieldText(getTurnierSystemAusDocument().getBezeichnung());
+			turnierSystemInfoLine = LabelPlusTextReadOnly.from(getGuiFactoryCreateParam()).labelText("Turniersystem")
+					.fieldText(getTurnierSystemAusDocument().getBezeichnung());
 			getLayout().addLayout(turnierSystemInfoLine.getLayout(), 1);
 		} finally {
 			setChangingLayout(false);
@@ -68,7 +70,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	}
 
 	// private void updateFieldContens() {
-	// updateFieldContens(new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
+	// updateFieldContens(new
+	// OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
 	// }
 
 	@Override
@@ -80,7 +83,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 			turnierSystemInfoLine.fieldText(getTurnierSystemAusDocument().getBezeichnung());
 		}
 		if (configSidebarElements != null) {
-			configSidebarElements.stream().filter(element -> element != null && element.isPresent()).forEach(element -> element.get().onPropertiesChanged(eventObj));
+			configSidebarElements.stream().filter(element -> element != null && element.isPresent())
+					.forEach(element -> element.get().onPropertiesChanged(eventObj));
 		}
 	}
 
@@ -126,12 +130,13 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		configSidebarElements = new ArrayList<>();
 		setChangingLayout(true);
 		try {
-			konfigProperties.stream().filter(INFO_PANEL_PROP_FILTER).collect(Collectors.toList()).forEach(konfigprop -> {
-				ConfigSidebarElement element = addPropToPanel(konfigprop);
-				if (element != null) {
-					configSidebarElements.add(new WeakRefHelper<>(element));
-				}
-			});
+			konfigProperties.stream().filter(INFO_PANEL_PROP_FILTER).collect(Collectors.toList())
+					.forEach(konfigprop -> {
+						ConfigSidebarElement element = addPropToPanel(konfigprop);
+						if (element != null) {
+							configSidebarElements.add(new WeakRefHelper<>(element));
+						}
+					});
 		} finally {
 			setChangingLayout(false);
 		}
@@ -159,7 +164,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 			break;
 		case BOOLEAN:
 			// create checkbox Readonly
-			configSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Boolean>) configProperty, getCurrentSpreadsheet(), true);
+			configSidebarElement = new BooleanConfigSidebarElement(getGuiFactoryCreateParam(),
+					(ConfigProperty<Boolean>) configProperty, getCurrentSpreadsheet(), true);
 			getLayout().addLayout(configSidebarElement.getLayout(), 1);
 			break;
 		case COLOR:
@@ -167,7 +173,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 			// TODO ReadOnly
 			break;
 		case INTEGER:
-			configSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(), (ConfigProperty<Integer>) configProperty, getCurrentSpreadsheet(), true);
+			configSidebarElement = new IntegerConfigSidebarElement(getGuiFactoryCreateParam(),
+					(ConfigProperty<Integer>) configProperty, getCurrentSpreadsheet(), true);
 			getLayout().addLayout(configSidebarElement.getLayout(), 1);
 			break;
 		default:
@@ -179,6 +186,9 @@ public class InfoSidebarContent extends BaseSidebarContent {
 	@Override
 	protected void disposing(EventObject event) {
 		turnierSystemInfoLine = null;
+		if (configSidebarElements != null) {
+			configSidebarElements.clear();
+		}
 	}
 
 }
