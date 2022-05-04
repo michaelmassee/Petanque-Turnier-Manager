@@ -44,7 +44,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 	static final Logger logger = LogManager.getLogger(BaseConfigSidebarContent.class);
 
-	private static final Predicate<ConfigProperty<?>> KONFIG_PROP_FILTER = konfigprop -> konfigprop.isInSideBar() && !konfigprop.isInSideBarInfoPanel();
+	private static final Predicate<ConfigProperty<?>> KONFIG_PROP_FILTER = konfigprop -> konfigprop.isInSideBar()
+			&& !konfigprop.isInSideBarInfoPanel();
 
 	private boolean turnierFields;
 
@@ -111,14 +112,16 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 			return;
 		}
 
-		AddConfigElementsToWindow addConfigElementsToWindow = new AddConfigElementsToWindow(getGuiFactoryCreateParam(), getCurrentSpreadsheet(), getLayout());
+		AddConfigElementsToWindow addConfigElementsToWindow = new AddConfigElementsToWindow(getGuiFactoryCreateParam(),
+				getCurrentSpreadsheet(), getLayout());
 		setChangingLayout(true);
 
 		// button panel
 		addButtonLine();
 
 		try {
-			konfigProperties.stream().filter(KONFIG_PROP_FILTER).filter(getKonfigFieldFilter()).collect(Collectors.toList())
+			konfigProperties.stream().filter(KONFIG_PROP_FILTER).filter(getKonfigFieldFilter())
+					.collect(Collectors.toList())
 					.forEach(konfigprop -> addConfigElementsToWindow.addPropToPanel(konfigprop));
 		} finally {
 			setChangingLayout(false);
@@ -156,6 +159,7 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 				try {
 					new KopfFusszeilenDialog(getCurrentSpreadsheet()).createDialog();
 				} catch (Exception e) {
+					logger.error(e.getMessage(), e);
 				}
 			}
 		});
@@ -172,6 +176,7 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 				try {
 					new FarbenDialog(getCurrentSpreadsheet()).createDialog();
 				} catch (Exception e) {
+					logger.error(e.getMessage(), e);
 				}
 			}
 		});
@@ -187,8 +192,10 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 		props.putIfAbsent(GuiFactory.IMAGE_URL, getImageUrlDir() + imageUrl);
 
 		// höhe wird nicht verändert
-		Rectangle btnRect = new Rectangle(BaseField.BASE_RECTANGLE.X, BaseField.BASE_RECTANGLE.Y, BaseField.BASE_RECTANGLE.Width, 29);
-		XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, xActionListener, btnRect, props);
+		Rectangle btnRect = new Rectangle(BaseField.BASE_RECTANGLE.X, BaseField.BASE_RECTANGLE.Y,
+				BaseField.BASE_RECTANGLE.Width, 29);
+		XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, xActionListener, btnRect,
+				props);
 		// btn = UnoRuntime.queryInterface(XButton.class, btnControl);
 		hLayout.addFixedWidthControl(btnControl, 29); // fest 29px breit
 	}
