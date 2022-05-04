@@ -22,7 +22,8 @@ public class AddConfigElementsToWindow {
 	private final WorkingSpreadsheet currentSpreadsheet;
 	private final Layout layout;
 
-	public AddConfigElementsToWindow(GuiFactoryCreateParam guiFactoryCreateParam, WorkingSpreadsheet currentSpreadsheet, Layout layout) {
+	public AddConfigElementsToWindow(GuiFactoryCreateParam guiFactoryCreateParam, WorkingSpreadsheet currentSpreadsheet,
+			Layout layout) {
 		this.guiFactoryCreateParam = checkNotNull(guiFactoryCreateParam);
 		this.currentSpreadsheet = checkNotNull(currentSpreadsheet);
 		this.layout = checkNotNull(layout);
@@ -35,35 +36,35 @@ public class AddConfigElementsToWindow {
 
 			if (configProperty instanceof AuswahlConfigProperty) {
 				// ComboBox
-				AuswahlConfigSidebarElement auswahlConfigSidebarElement = new AuswahlConfigSidebarElement(guiFactoryCreateParam, (AuswahlConfigProperty) configProperty,
-						currentSpreadsheet);
+				AuswahlConfigSidebarElement auswahlConfigSidebarElement = new AuswahlConfigSidebarElement(
+						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet);
 				layout.addLayout(auswahlConfigSidebarElement.getLayout(), 1);
 			} else {
 				// create textfield mit btn
 				@SuppressWarnings("unchecked")
-				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(guiFactoryCreateParam, (ConfigProperty<String>) configProperty,
-						currentSpreadsheet);
+				StringConfigSidebarElement stringConfigSidebarElement = new StringConfigSidebarElement(
+						guiFactoryCreateParam, (ConfigProperty<String>) configProperty, currentSpreadsheet);
 				layout.addLayout(stringConfigSidebarElement.getLayout(), 1);
 			}
 			break;
 		case BOOLEAN:
 			// create checkbox
 			@SuppressWarnings("unchecked")
-			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(guiFactoryCreateParam, (ConfigProperty<Boolean>) configProperty,
-					currentSpreadsheet);
+			BooleanConfigSidebarElement booleanConfigSidebarElement = new BooleanConfigSidebarElement(
+					guiFactoryCreateParam, (ConfigProperty<Boolean>) configProperty, currentSpreadsheet);
 			layout.addLayout(booleanConfigSidebarElement.getLayout(), 1);
 			break;
 		case COLOR:
 			// create colorpicker
 			@SuppressWarnings("unchecked")
-			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(guiFactoryCreateParam,
-					(ConfigProperty<Integer>) configProperty, currentSpreadsheet);
+			BackgrnColorConfigSidebarElement backgrnColorConfigSidebarElement = new BackgrnColorConfigSidebarElement(
+					guiFactoryCreateParam, (ConfigProperty<Integer>) configProperty, currentSpreadsheet);
 			layout.addLayout(backgrnColorConfigSidebarElement.getLayout(), 1);
 			break;
 		case INTEGER:
 			@SuppressWarnings("unchecked")
-			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(guiFactoryCreateParam, (ConfigProperty<Integer>) configProperty,
-					currentSpreadsheet);
+			IntegerConfigSidebarElement integerConfigSidebarElement = new IntegerConfigSidebarElement(
+					guiFactoryCreateParam, (ConfigProperty<Integer>) configProperty, currentSpreadsheet);
 			layout.addLayout(integerConfigSidebarElement.getLayout(), 1);
 			break;
 		default:

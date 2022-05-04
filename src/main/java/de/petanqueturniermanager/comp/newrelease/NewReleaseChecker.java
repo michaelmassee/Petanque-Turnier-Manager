@@ -193,7 +193,7 @@ public class NewReleaseChecker {
 			}
 		} catch (Exception e) {
 			// fehler nur loggen
-			logger.error(e);
+			logger.error(e.getMessage(), e);
 		}
 		return newVersionAvailable;
 	}

@@ -68,15 +68,17 @@ public class RegistrationHandler {
 	 * Writes the services implementation informations to the UNO registry.
 	 *
 	 * <p>
-	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
-	 * modified.</strong>
+	 * This method calls all the methods of the same name from the classes listed in
+	 * the <code>RegistrationHandler.classes</code> file. <strong>This method should
+	 * not be modified.</strong>
 	 * </p>
 	 *
 	 * nach __writeRegistryServiceInfo ist die VM sofort wieder weg. !
 	 *
 	 * @param pRegistryKey the root registry key where to write the informations.
 	 *
-	 * @return <code>true</code> if the informations have been successfully written to the registry key, <code>false</code> otherwise.
+	 * @return <code>true</code> if the informations have been successfully written
+	 *         to the registry key, <code>false</code> otherwise.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
@@ -107,8 +109,9 @@ public class RegistrationHandler {
 	 * Get a component factory for the implementations handled by this class.
 	 *
 	 * <p>
-	 * This method calls all the methods of the same name from the classes listed in the <code>RegistrationHandler.classes</code> file. <strong>This method should not be
-	 * modified.</strong>
+	 * This method calls all the methods of the same name from the classes listed in
+	 * the <code>RegistrationHandler.classes</code> file. <strong>This method should
+	 * not be modified.</strong>
 	 * </p>
 	 *
 	 * @param pImplementationName the name of the implementation to create.
@@ -186,6 +189,7 @@ public class RegistrationHandler {
 				reader.close();
 				in.close();
 			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
 			}
 		}
 		return classes.toArray(new Class[classes.size()]);

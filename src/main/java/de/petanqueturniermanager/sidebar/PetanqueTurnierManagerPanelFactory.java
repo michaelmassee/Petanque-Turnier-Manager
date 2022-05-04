@@ -28,7 +28,7 @@ import de.petanqueturniermanager.sidebar.info.InfoSidebarPanel;
 public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XServiceInfo {
 	private static final Logger logger = LogManager.getLogger(PetanqueTurnierManagerPanelFactory.class);
 
-	public static final String __serviceName = "de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory";
+	private static final String __serviceName = "de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory";
 	private static final String msURLhead = "private:resource/toolpanel/PetanqueTurnierManagerPanelFactory";
 	private static final String IMPLEMENTATION_NAME = PetanqueTurnierManagerPanelFactory.class.getName();
 	private static final String[] SERVICE_NAMES = { __serviceName };
@@ -36,6 +36,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	private final WorkingSpreadsheet currentSpreadsheet;
 
 	// fuer jeden Sheet wird ein Panel erstellt
+	// und bei druck vorschau und wieder zurück
 	public PetanqueTurnierManagerPanelFactory(final XComponentContext xContext) {
 		logger.debug("PetanqueTurnierManagerPanelFactory constructor");
 		currentSpreadsheet = new WorkingSpreadsheet(xContext);
@@ -57,7 +58,8 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	 * Gives a factory for creating the service.<br>
 	 * This method is called by the <code>JavaLoader</code><br>
 	 *
-	 * @return Returns a <code>XSingleServiceFactory</code> for creating the component.<br>
+	 * @return Returns a <code>XSingleServiceFactory</code> for creating the
+	 *         component.<br>
 	 * @see com.sun.star.comp.loader.JavaLoader<br>
 	 * @param sImplementationName The implementation name of the component.<br>
 	 */
@@ -73,10 +75,12 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	// ----------------------------------------------------------------------------------------------------------
 
 	/**
-	 * The main factory method has two parts: - Extract and check some values from the given arguments - Check the sResourceURL and create a panel for it.<br>
+	 * The main factory method has two parts: - Extract and check some values from
+	 * the given arguments - Check the sResourceURL and create a panel for it.<br>
 	 */
 	@Override
-	public XUIElement createUIElement(final String sResourceURL, final PropertyValue[] aArgumentList) throws NoSuchElementException, IllegalArgumentException {
+	public XUIElement createUIElement(final String sResourceURL, final PropertyValue[] aArgumentList)
+			throws NoSuchElementException, IllegalArgumentException {
 		logger.debug("createUIElement " + sResourceURL);
 
 		// Reject all resource URLs that don't have the right prefix.
@@ -87,19 +91,18 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 		// Retrieve the parent window from the given argument list.
 		XWindow xParentWindow = null;
 		XSidebar xSidebar = null;
-		logger.debug("processing " + aArgumentList.length + " arguments");
-		for (final PropertyValue aValue : aArgumentList) {
+		for (PropertyValue aValue : aArgumentList) {
 			if (aValue.Name.equals("ParentWindow")) {
 				try {
 					xParentWindow = (XWindow) AnyConverter.toObject(XWindow.class, aValue.Value);
 				} catch (IllegalArgumentException aException) {
-					logger.error(aException);
+					logger.error(aException.getMessage(), aException);
 				}
 			} else if (aValue.Name.equals("Sidebar")) {
 				try {
 					xSidebar = (XSidebar) AnyConverter.toObject(XSidebar.class, aValue.Value);
 				} catch (IllegalArgumentException aException) {
-					logger.error(aException);
+					logger.error(aException.getMessage(), aException);
 				}
 			}
 
