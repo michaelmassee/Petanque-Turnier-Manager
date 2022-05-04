@@ -7,7 +7,7 @@
 		</Console>
 		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{dd-MM-yyyy}.log.gz">
 			<PatternLayout>
-				<Pattern>%d %p %c{1.} %m%n</Pattern>
+				<Pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %c{1.} %m%n</Pattern>
 			</PatternLayout>
 
 			<Policies>
