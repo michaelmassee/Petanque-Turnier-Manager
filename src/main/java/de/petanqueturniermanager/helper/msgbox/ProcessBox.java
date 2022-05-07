@@ -121,7 +121,7 @@ public class ProcessBox {
 		ProcessBox.processBox = null;
 	}
 
-	public synchronized static ProcessBox init(XComponentContext xContext) {
+	public static ProcessBox init(XComponentContext xContext) {
 		logger.debug("ProcessBox INIT");
 		checkNotNull(xContext);
 		if (ProcessBox.processBox == null) {

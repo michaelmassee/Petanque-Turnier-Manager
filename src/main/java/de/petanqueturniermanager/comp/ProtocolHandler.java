@@ -20,8 +20,11 @@ import com.sun.star.util.URL;
 import de.petanqueturniermanager.konfigdialog.properties.ExtendedPropertiesDialog;
 
 /**
- * We have to provide a protocol handler only so that we can show an options dialog. In the panel description in Sidebar.xcu there is a field "DefaultMenuCommand". Its value is a
- * UNO command name that is executed when the user clicks on the "more options" button in the panel title bar. We need the protocol handler to provide a new command
+ * We have to provide a protocol handler only so that we can show an options
+ * dialog. In the panel description in Sidebar.xcu there is a field
+ * "DefaultMenuCommand". Its value is a UNO command name that is executed when
+ * the user clicks on the "more options" button in the panel title bar. We need
+ * the protocol handler to provide a new command
  */
 public class ProtocolHandler extends ComponentBase implements XDispatchProvider, XDispatch {
 	private static final Logger logger = LogManager.getLogger(ProtocolHandler.class);
@@ -33,6 +36,13 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 	private static final String IMPLEMENTATION_NAME = ProtocolHandler.class.getName();
 	private static final String[] SERVICE_NAMES = { SERVICE_NAME };
 	private final XComponentContext xContext;
+
+	/**
+	 * Braucht ProtocolHandler.xcu<br>
+	 * TODO ist abgeschaltet
+	 * 
+	 * @param xContext
+	 */
 
 	public ProtocolHandler(final XComponentContext xContext) {
 		logger.debug("ProtocolHandler constructor");
@@ -55,7 +65,8 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 	 * Gives a factory for creating the service.<br>
 	 * This method is called by the <code>JavaLoader</code><br>
 	 *
-	 * @return Returns a <code>XSingleServiceFactory</code> for creating the component.<br>
+	 * @return Returns a <code>XSingleServiceFactory</code> for creating the
+	 *         component.<br>
 	 * @see com.sun.star.comp.loader.JavaLoader<br>
 	 * @param sImplementationName The implementation name of the component.<br>
 	 */
@@ -90,11 +101,13 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 	 * We only support one command but still have to implement this method.
 	 */
 	@Override
-	public com.sun.star.frame.XDispatch[] queryDispatches(final DispatchDescriptor[] aRequests) throws RuntimeException {
+	public com.sun.star.frame.XDispatch[] queryDispatches(final DispatchDescriptor[] aRequests)
+			throws RuntimeException {
 		final int nDispatchCount = aRequests.length;
 		final XDispatch[] aDispatches = new XDispatch[nDispatchCount];
 		for (int nIndex = 0; nIndex < nDispatchCount; ++nIndex)
-			aDispatches[nIndex] = queryDispatch(aRequests[nIndex].FeatureURL, aRequests[nIndex].FrameName, aRequests[nIndex].SearchFlags);
+			aDispatches[nIndex] = queryDispatch(aRequests[nIndex].FeatureURL, aRequests[nIndex].FrameName,
+					aRequests[nIndex].SearchFlags);
 		return aDispatches;
 	}
 
@@ -108,7 +121,7 @@ public class ProtocolHandler extends ComponentBase implements XDispatchProvider,
 
 	@Override
 	public void removeStatusListener(final XStatusListener xListener, final URL aURL) {
-		// maListeners.remove(aURL);
+		// xListener.remove(aURL);
 	}
 
 	@Override

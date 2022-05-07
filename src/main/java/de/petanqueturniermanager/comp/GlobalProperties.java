@@ -44,6 +44,14 @@ public class GlobalProperties {
 		}
 	}
 
+	private boolean getBoolean(String propKey) {
+		boolean ret = false;
+		if (props != null && props.containsKey(propKey)) {
+			ret = Boolean.parseBoolean(props.getProperty(propKey));
+		}
+		return ret;
+	}
+
 	private void setLogLevel() {
 		String logLevel = (String) props.get(LOG_LEVEL_PROP);
 		if (logLevel != null && !logLevel.isBlank()) {

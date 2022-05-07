@@ -21,9 +21,10 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 public abstract class BaseSidebarPanel extends ComponentBase implements XUIElement {
 
 	private final String resourceUrl;
-	private final ComponentBase panel;
+	private final BaseSidebarContent panel;
 
-	public BaseSidebarPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, String resourceUrl, XSidebar xSidebar) {
+	public BaseSidebarPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, String resourceUrl,
+			XSidebar xSidebar) {
 		this.resourceUrl = checkNotNull(resourceUrl);
 		panel = newContent(workingSpreadsheet, parentWindow, xSidebar);
 	}
@@ -48,6 +49,7 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 		return UIElementType.TOOLPANEL;
 	}
 
-	abstract protected ComponentBase newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar);
+	abstract protected BaseSidebarContent newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
+			XSidebar xSidebar);
 
 }
