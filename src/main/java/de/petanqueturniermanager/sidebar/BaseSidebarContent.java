@@ -54,7 +54,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private GuiFactoryCreateParam guiFactoryCreateParam;
 	private boolean didOnHandleDocReady;
 	private Layout layout;
-	private boolean changingLayout;
+	private volatile boolean changingLayout; // stop mehrere Threads
 
 	/**
 	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen.
@@ -110,9 +110,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	}
 
 	protected void requestLayout() {
-		if (getxSidebar() != null) {
-			RequestLayoutThread.start(getxSidebar()); // nur einmal pro sidebar
-		}
+		new RequestLayoutThread().RequestLayout(xSidebar);
 	}
 
 	@Override
@@ -256,7 +254,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 				setParentWindow(null);
 				getGuiFactoryCreateParam().clear();
 				setGuiFactoryCreateParam(null);
-				setxSidebar(null);
+				xSidebar = null;
 				window.dispose();
 				window = null;
 			} catch (Exception e) {
@@ -308,14 +306,6 @@ public abstract class BaseSidebarContent extends ComponentBase
 
 	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
 		this.guiFactoryCreateParam = guiFactoryCreateParam;
-	}
-
-	private final XSidebar getxSidebar() {
-		return xSidebar;
-	}
-
-	private final void setxSidebar(XSidebar xSidebar) {
-		this.xSidebar = xSidebar;
 	}
 
 	protected boolean isChangingLayout() {

@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.comp;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.swing.UIManager;
 
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +33,8 @@ public class PetanqueTurnierMngrSingleton {
 	private static GlobalEventListener globalEventListener;
 	private static final TurnierEventHandler turnierEventHandler = new TurnierEventHandler();
 
+	static AtomicBoolean didRun = new AtomicBoolean(); // is volatile
+
 	/**
 	 * der erste Konstruktur macht Init <br>
 	 * wird und kann mehrmals aufgerufen !!
@@ -39,6 +43,9 @@ public class PetanqueTurnierMngrSingleton {
 	 */
 
 	public static final void init(XComponentContext context) {
+		if (didRun.getAndSet(true)) {
+			return;
+		}
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
@@ -56,7 +63,7 @@ public class PetanqueTurnierMngrSingleton {
 	}
 
 	// register global EventListener
-	private static final synchronized void globalEventListener(XComponentContext context) {
+	private static final void globalEventListener(XComponentContext context) {
 		if (globalEventListener != null) {
 			return;
 		}

@@ -65,7 +65,9 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	 */
 
 	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
+		// wird beim init von plugin aufgerufen
 		logger.debug("__getComponentFactory " + sImplementationName);
+
 		XSingleComponentFactory xFactory = null;
 		if (sImplementationName.equals(IMPLEMENTATION_NAME)) {
 			xFactory = Factory.createComponentFactory(PetanqueTurnierManagerPanelFactory.class, SERVICE_NAMES);

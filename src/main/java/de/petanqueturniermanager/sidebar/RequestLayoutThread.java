@@ -3,44 +3,55 @@
  */
 package de.petanqueturniermanager.sidebar;
 
-import java.util.Hashtable;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.sun.star.ui.XSidebar;
 
 /**
- * Katastrophe ... nur Coredumps
- *
+ * nur einmal pro XSidebar requestLayout aufrufen mit eine verzögerung von 2 sec
+ * 
  * @author Michael Massee
  *
  */
 public class RequestLayoutThread {
+	static Set<Integer> hashSet = ConcurrentHashMap.newKeySet();
 
-	static final Hashtable<Integer, Boolean> isRunning = new Hashtable<>();
-
-	private RequestLayoutThread() {
-	}
-
-	public static synchronized void start(XSidebar xSidebar) {
-
-		if (isRunning.containsKey(xSidebar.hashCode()) && isRunning.get(xSidebar.hashCode())) {
-			return;
-		}
-		isRunning.put(xSidebar.hashCode(), true);
-
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					// Pause for 2 sekunden
-					// Ist MEGA dirty, verzweifelte versuch LO CoreDumps :-( in griff zu kriegen
-					Thread.sleep(2000);
-					xSidebar.requestLayout();
-				} catch (InterruptedException e) {
-				} finally {
-					isRunning.put(xSidebar.hashCode(), false);
-				}
+	public void RequestLayout(XSidebar xSidebar) {
+		if (xSidebar != null) {
+			int hash = xSidebar.hashCode();
+			if (!hashSet.contains(hash)) {
+				hashSet.add(hash);
+				new RequestLayoutThreadInt(xSidebar, hash).start();
 			}
-		}.start();
+		}
+	}
+}
+
+class RequestLayoutThreadInt extends Thread {
+	private static final Logger logger = LogManager.getLogger(RequestLayoutThreadInt.class);
+	private final XSidebar xSidebar;
+	private final Integer hash;
+
+	RequestLayoutThreadInt(XSidebar xSidebar, Integer hash) {
+		this.xSidebar = xSidebar;
+		this.hash = hash;
 	}
 
+	@Override
+	public void run() {
+		try {
+			// Pause for 2 sekunden
+			// Ist MEGA dirty, verzweifelte versuch LO CoreDumps :-( in griff zu kriegen
+			Thread.sleep(2000);
+			logger.debug("xSidebar.requestLayout");
+			xSidebar.requestLayout();
+		} catch (InterruptedException e) {
+		} finally {
+			RequestLayoutThread.hashSet.remove(hash);
+		}
+	}
 }

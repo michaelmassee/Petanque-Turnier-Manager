@@ -48,10 +48,10 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
-	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in
-	// speicher.
-	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>(); // Hashtable is
-																										// synchronized
+	// TODO ist das noch notwendig ?
+	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
+	// Hashtable is synchronized
+	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>(); 
 
 	final XSpreadsheetDocument xSpreadsheetDocument;
 	final Hashtable<String, String> currentPropListe;

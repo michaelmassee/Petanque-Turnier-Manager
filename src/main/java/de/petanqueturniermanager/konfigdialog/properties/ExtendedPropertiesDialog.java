@@ -14,14 +14,19 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 
 /**
+ * wird von Protokollhandler verwendet <br>
+ * TODO ist Abgeschaltet
+ * 
  * @author Michael Massee
  */
 public class ExtendedPropertiesDialog extends BasePropertiesDialog {
 
-	public static final Predicate<ConfigProperty<?>> SPIELTAG_FILTER = konfigprop -> konfigprop.getType() == ConfigPropertyType.INTEGER
+	public static final Predicate<ConfigProperty<?>> SPIELTAG_FILTER = konfigprop -> konfigprop
+			.getType() == ConfigPropertyType.INTEGER
 			&& (konfigprop.getKey().equals(BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG));
 
-	public static final Predicate<ConfigProperty<?>> SPIELRUNDE_FILTER = konfigprop -> konfigprop.getType() == ConfigPropertyType.INTEGER
+	public static final Predicate<ConfigProperty<?>> SPIELRUNDE_FILTER = konfigprop -> konfigprop
+			.getType() == ConfigPropertyType.INTEGER
 			&& (konfigprop.getKey().equals(BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE));
 
 	static final Logger logger = LogManager.getLogger(ExtendedPropertiesDialog.class);

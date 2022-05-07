@@ -57,8 +57,8 @@ public class NewReleaseChecker {
 	private static boolean didAlreadyRun = false;
 	private static boolean didUpdateCacheFile = false;
 
-	// !! wird mehrmals aufgerufen
-	public synchronized void checkForUpdate(XComponentContext xContext) {
+	// !! wird einmal aufgerufen
+	public void checkForUpdate(XComponentContext xContext) {
 		runUpdateCacheFileOnceThread(); // update release info
 
 		if (didUpdateCacheFile && !didAlreadyRun) {
@@ -90,7 +90,7 @@ public class NewReleaseChecker {
 	/**
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
-	private synchronized void runUpdateCacheFileOnceThread() {
+	private void runUpdateCacheFileOnceThread() {
 		if (!isUpdateThreadRunning && !didUpdateCacheFile) {
 			isUpdateThreadRunning = true;
 			logger.debug("start runUpdateOnceThread");
@@ -171,7 +171,7 @@ public class NewReleaseChecker {
 		return latestVersionFromCacheFile;
 	}
 
-	private synchronized boolean checkForNewRelease(XComponentContext context) {
+	private boolean checkForNewRelease(XComponentContext context) {
 		logger.debug("checkForNewRelease");
 		boolean newVersionAvailable = false;
 		try {
