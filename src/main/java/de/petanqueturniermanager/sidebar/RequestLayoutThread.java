@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.ui.XSidebar;
 
 /**
- * nur einmal pro XSidebar requestLayout aufrufen mit eine verzögerung von 2 sec
+ * requestLayout aufrufen mit eine verzögerung von 2 sec
  * 
  * @author Michael Massee
  *

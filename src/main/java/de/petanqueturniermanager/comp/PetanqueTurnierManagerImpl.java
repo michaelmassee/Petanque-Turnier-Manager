@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
+import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
@@ -175,6 +176,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		try {
 			switch (action) {
 			// ------------------------------
+			case "konfiguration_turnier":
+				new TurnierDialog(workingSpreadsheet).createDialog();
+				break;
+
 			case "konfiguration_kopffusszeilen":
 				// Modal Dialog
 				new KopfFusszeilenDialog(workingSpreadsheet).createDialog();

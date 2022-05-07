@@ -6,6 +6,8 @@
 	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <node oor:name="HandlerSet">
+        <!-- see DefaultMenuCommand in sidebar.xcu  -->
+        <!--  disabled -->
     	<node oor:name="de.petanqueturniermanager.ProtocolHandler" oor:op="replace">
       		<prop oor:name="Protocols" oor:type="oor:string-list">
       			<value>de.petanqueturniermanager:*</value>

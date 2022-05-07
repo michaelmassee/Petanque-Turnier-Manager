@@ -25,8 +25,22 @@
 						</prop>
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
-							<!-- ****************************************************************** -->
+														<!-- ****************************************************************** -->
 							<node oor:name="X1X1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Turnier</value>
+									<value xml:lang="de">Turnier</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							
+							<!-- ****************************************************************** -->
+							<node oor:name="X1X2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Header Footer</value>
 									<value xml:lang="de">Kopf/Fußzeilen</value>
@@ -40,7 +54,7 @@
 							</node>
 							
 							<!-- ****************************************************************** -->
-							<node oor:name="X1X2" oor:op="replace">
+							<node oor:name="X1X3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Colors</value>
 									<value xml:lang="de">Farben</value>
