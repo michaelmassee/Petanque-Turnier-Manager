@@ -63,11 +63,13 @@
 					the user clicks on the detail dialog button in the title bar of the panel. 
 					Can be overridden by values in the ContextList. When not command is given 
 					then the button in the title bar is not displayed. -->
-
+				<!-- see Protocalhandler fuer url -->					
+				<!-- 
 				<prop oor:name="DefaultMenuCommand">
-				<!-- see Protocalhandler fuer url -->
+				
 					<value>de.petanqueturniermanager:ExtendedOptionsDialog</value>
 				</prop>
+				 -->
 			</node>
 			<!-- *************************************************************************************  -->
 			<node oor:name="ConfigPanel" oor:op="replace">
