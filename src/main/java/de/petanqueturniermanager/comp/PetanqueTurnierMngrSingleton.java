@@ -33,7 +33,7 @@ public class PetanqueTurnierMngrSingleton {
 	private static GlobalEventListener globalEventListener;
 	private static final TurnierEventHandler turnierEventHandler = new TurnierEventHandler();
 
-	static AtomicBoolean didRun = new AtomicBoolean(); // is volatile
+	private static AtomicBoolean didRun = new AtomicBoolean(); // is volatile
 
 	/**
 	 * der erste Konstruktur macht Init <br>
@@ -59,7 +59,7 @@ public class PetanqueTurnierMngrSingleton {
 		globalEventListener(context);
 		ProcessBox.init(context); // der muss zuerst
 		TerminateListener.addThisListenerOnce(context);
-		new NewReleaseChecker().checkForUpdate(context);
+		new NewReleaseChecker().runUdateCache();
 	}
 
 	// register global EventListener
