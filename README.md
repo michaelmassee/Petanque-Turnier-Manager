@@ -4,7 +4,7 @@
 Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 * Betriebsystem unabhängig, läuft unter Linux/Mac/Windows.
 * OpenSource, Kostenfrei.
-* Ideal für ältere Laptops/Rechner, stat Win95 mit Linux Mint.
+* Ideal für ältere Laptops/Rechner, statt Windows 10 mit Ubuntu oder Linux Mint.
 * Mehrere Turniersysteme (wird laufend erweitert)
 
 # Installation
