@@ -72,7 +72,6 @@ public class NewReleaseChecker {
 	public void udateNewReleaseInfo(XComponentContext xContext) {
 		if (didUpdateCacheFile.get() && !didInform.getAndSet(true)) {
 			boolean newRelease = checkForNewRelease(xContext);
-			newRelease = true;
 			if (newRelease) {
 				String latestVersionFromCacheFile = latestVersionFromCacheFile();
 				String newVer = "Neue Version von PétTurnMngr (" + latestVersionFromCacheFile + ") verfügbar.";
