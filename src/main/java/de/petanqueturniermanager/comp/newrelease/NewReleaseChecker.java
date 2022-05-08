@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -53,16 +54,39 @@ public class NewReleaseChecker {
 	public static final URI RELEASE_FILE = new File(PetanqueTurnierManagerImpl.BASE_INTERNAL_DIR, "release.info")
 			.toURI();
 
-	private static boolean isUpdateThreadRunning = false; // thread nur einmal laufen lassen
-	private static boolean didAlreadyRun = false;
-	private static boolean didUpdateCacheFile = false;
+	private static AtomicBoolean isUpdateThreadRunning = new AtomicBoolean(); // is volatile
+	private static AtomicBoolean didUpdateCacheFile = new AtomicBoolean(); // is volatile
+	private static AtomicBoolean didAlreadyRun = new AtomicBoolean(); // is volatile
+	private static AtomicBoolean didInform = new AtomicBoolean(); // is volatile
 
-	// !! wird einmal aufgerufen
-	public void checkForUpdate(XComponentContext xContext) {
+	// !! Wird einmal aufgerufen
+	public void runUdateCache() {
 		runUpdateCacheFileOnceThread(); // update release info
+	}
 
-		if (didUpdateCacheFile && !didAlreadyRun) {
-			didAlreadyRun = true;
+	/**
+	 * Check for new Release und write Info in Process Box
+	 * 
+	 * @param xContext
+	 */
+	public void udateNewReleaseInfo(XComponentContext xContext) {
+		if (didUpdateCacheFile.get() && !didInform.getAndSet(true)) {
+			boolean newRelease = checkForNewRelease(xContext);
+			newRelease = true;
+			if (newRelease) {
+				String latestVersionFromCacheFile = latestVersionFromCacheFile();
+				String newVer = "Neue Version von PétTurnMngr (" + latestVersionFromCacheFile + ") verfügbar.";
+				ProcessBox.from().infoText(newVer);
+
+				GHRelease rel = readLatestReleaseFromCacheFile();
+				ProcessBox.from().info(newVer).info("Release Notes:").info(rel.getBody());
+			}
+		}
+	}
+
+	@Deprecated
+	private void doDownload(XComponentContext xContext) {
+		if (didUpdateCacheFile.get() && !didAlreadyRun.getAndSet(true)) {
 			boolean isnewRelease = checkForNewRelease(xContext);
 			if (isnewRelease) {
 				logger.debug("open MessageBox");
@@ -91,8 +115,7 @@ public class NewReleaseChecker {
 	 * nur einmal abfragen, und latest release info aktualisieren
 	 */
 	private void runUpdateCacheFileOnceThread() {
-		if (!isUpdateThreadRunning && !didUpdateCacheFile) {
-			isUpdateThreadRunning = true;
+		if (!isUpdateThreadRunning.getAndSet(true) && !didUpdateCacheFile.get()) {
 			logger.debug("start runUpdateOnceThread");
 			new Thread("Update latest release") {
 				@Override
@@ -100,8 +123,8 @@ public class NewReleaseChecker {
 					try {
 						writeLatestReleaseFromGithubInCacheFile();
 					} finally {
-						isUpdateThreadRunning = false;
-						didUpdateCacheFile = true; // auch wenn keine verbindung auf true
+						didUpdateCacheFile.set(true);
+						isUpdateThreadRunning.set(false);
 					}
 				}
 			}.start();
@@ -172,22 +195,20 @@ public class NewReleaseChecker {
 	}
 
 	private boolean checkForNewRelease(XComponentContext context) {
-		logger.debug("checkForNewRelease");
 		boolean newVersionAvailable = false;
 		try {
 			// https://www.baeldung.com/java-download-file
 			// https://github.com/G00fY2/version-compare
-			if (!isUpdateThreadRunning) {
+			if (!isUpdateThreadRunning.get()) {
 				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
 				String latestVersionFromCacheFile = latestVersionFromCacheFile();
 				logger.debug("Instalierte Release = " + versionNummer);
 				logger.debug("Letzte GitHub Release = " + latestVersionFromCacheFile);
 				if (latestVersionFromCacheFile != null) {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromCacheFile);
+					newVersionAvailable = true;
 					if (newVersionAvailable) {
 						logger.debug("Neue Version = " + newVersionAvailable);
-						ProcessBox.from().infoText(
-								"Neue Version von PétTurnMngr (" + latestVersionFromCacheFile + ") verfügbar.");
 					}
 				}
 			}
