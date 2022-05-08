@@ -205,7 +205,6 @@ public class NewReleaseChecker {
 				logger.debug("Letzte GitHub Release = " + latestVersionFromCacheFile);
 				if (latestVersionFromCacheFile != null) {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromCacheFile);
-					newVersionAvailable = true;
 					if (newVersionAvailable) {
 						logger.debug("Neue Version = " + newVersionAvailable);
 					}
