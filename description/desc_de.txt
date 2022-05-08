@@ -1,3 +1,4 @@
 Pétanque Turnier Manager
 Ein Pétanque/Boule Turnierleitungs-Extension für Calc.
 feedback: michael@massee.de
+https://michaelmassee.github.io/Petanque-Turnier-Manager/
