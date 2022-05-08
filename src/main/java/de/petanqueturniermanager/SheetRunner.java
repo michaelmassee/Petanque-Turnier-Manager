@@ -7,6 +7,8 @@ package de.petanqueturniermanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -32,7 +35,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SheetHelper sheetHelper;
 	private final TurnierSystem turnierSystem;
-	private static volatile boolean isRunning = false; // nur 1 Sheetrunner gleichzeitig
+	private static AtomicBoolean isRunning = new AtomicBoolean(); // nur 1 Sheetrunner gleichzeitig
+
 	private static SheetRunner runner = null;
 
 	private String logPrefix = null;
@@ -68,10 +72,8 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	@Override
 	public final void run() {
-		if (!SheetRunner.isRunning) {
+		if (!SheetRunner.isRunning.getAndSet(true)) {
 			logger.debug("Start SheetRunner");
-
-			SheetRunner.isRunning = true;
 			SheetRunner.runner = this;
 			boolean isFehler = false;
 
@@ -89,7 +91,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 						.fehler("Siehe log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
-				SheetRunner.isRunning = false; // Immer an erste stelle diesen flag zurück
+				SheetRunner.isRunning.set(false); // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
 				if (isFehler) {
 					ProcessBox().visible().fehler("!! FEHLER !!").ready();
@@ -97,6 +99,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 					ProcessBox().visible().info("**FERTIG**").ready();
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
+				new NewReleaseChecker().udateNewReleaseInfo(getxContext());
 			}
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch")
@@ -144,7 +147,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	public static boolean isRunning() {
-		return isRunning;
+		return isRunning.get();
 	}
 
 	// for mocking
