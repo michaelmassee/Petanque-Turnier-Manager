@@ -23,9 +23,15 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 
 	private final ArrayList<Spieler> spielerList;
+	private final boolean setzPostionAktiv; // Aus der Konfiguration properties.
 
 	public SpielerMeldungen() {
+		this(true);
+	}
+
+	public SpielerMeldungen(boolean setzPostionAktiv) {
 		spielerList = new ArrayList<>();
+		this.setzPostionAktiv = setzPostionAktiv;
 	}
 
 	@Override
@@ -34,7 +40,7 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 		if (spielerNr > 0) {
 			Spieler spieler = Spieler.from(spielerNr);
 			int nichtzusammen = meldungZeile.get(2).getIntVal(-1);
-			if (nichtzusammen > 0) {
+			if (setzPostionAktiv && nichtzusammen > 0) {
 				spieler.setSetzPos(nichtzusammen);
 			}
 			this.addSpielerWennNichtVorhanden(spieler);

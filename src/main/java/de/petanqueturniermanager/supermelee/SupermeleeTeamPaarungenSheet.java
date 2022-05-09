@@ -1,7 +1,3 @@
-/**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
-
 package de.petanqueturniermanager.supermelee;
 
 import org.apache.logging.log4j.LogManager;
@@ -30,6 +26,9 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
+/**
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
 
@@ -53,7 +52,8 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 	public SupermeleeTeamPaarungenSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 		try {
-			if (NewSheet.from(this, SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR).useIfExist().create().isDidCreate()) {
+			if (NewSheet.from(this, SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
+					.useIfExist().create().isDidCreate()) {
 				initSheet();
 			}
 		} catch (GenerateException e) {
@@ -81,18 +81,29 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		// --------------------------------------------
 		Position pos = Position.from(ANZ_SPIELER_SPALTE, ERSTE_DATEN_ZEILE - 1);
 		int spalteBreite = 1000;
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteBreite).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler").setColumnProperties(columnProperties);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteBreite)
+				.setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler")
+				.setColumnProperties(columnProperties);
 		getSheetHelper().setStringValueInCell(headerVal);
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Tripl/Doubl\r\nDoublette Teams"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3").setComment("Tripl/Doubl\r\nTriplette Teams"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Doubl").setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Ung").setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2").setComment("Doubl/Tripl\r\nDoublette Teams"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3").setComment("Doubl/Tripl\r\nTriplette Teams"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Tripl").setComment("x= mit dieser Anzahl von Spieler kann nur Triplette gespielt werden"));
-		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3").setComment("Wenn nur Triplette gespielt wird, anzahl Teams."));
+		getSheetHelper().setStringValueInCell(
+				headerVal.spaltePlusEins().setValue("∑x2").setComment("Tripl/Doubl\r\nDoublette Teams"));
+		getSheetHelper().setStringValueInCell(
+				headerVal.spaltePlusEins().setValue("∑x3").setComment("Tripl/Doubl\r\nTriplette Teams"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Doubl")
+				.setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2")
+				.setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Ung")
+				.setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
+		getSheetHelper().setStringValueInCell(
+				headerVal.spaltePlusEins().setValue("∑x2").setComment("Doubl/Tripl\r\nDoublette Teams"));
+		getSheetHelper().setStringValueInCell(
+				headerVal.spaltePlusEins().setValue("∑x3").setComment("Doubl/Tripl\r\nTriplette Teams"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Tripl")
+				.setComment("x= mit dieser Anzahl von Spieler kann nur Triplette gespielt werden"));
+		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3")
+				.setComment("Wenn nur Triplette gespielt wird, anzahl Teams."));
 
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 		RangePosition rangePosHeader = RangePosition.from(0, 0, 9, 0); // 10 spalten
@@ -107,7 +118,8 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
 			RowData row = rangeData.newRow();
 			{
-				SuperMeleeTeamRechner teamRechnerTriplette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Triplette);
+				SuperMeleeTeamRechner teamRechnerTriplette = new SuperMeleeTeamRechner(anSpielerCntr,
+						SuperMeleeMode.Triplette);
 				row.newInt(teamRechnerTriplette.getAnzSpieler());
 				row.newInt(teamRechnerTriplette.getAnzDoublette());
 				row.newInt(teamRechnerTriplette.getAnzTriplette());
@@ -116,7 +128,8 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 				row.newString(teamRechnerTriplette.valideAnzahlSpieler() ? "" : "X");
 			}
 			{
-				SuperMeleeTeamRechner teamRechnerDoublette = new SuperMeleeTeamRechner(anSpielerCntr, SuperMeleeMode.Doublette);
+				SuperMeleeTeamRechner teamRechnerDoublette = new SuperMeleeTeamRechner(anSpielerCntr,
+						SuperMeleeMode.Doublette);
 				row.newInt(teamRechnerDoublette.getAnzDoublette());
 				row.newInt(teamRechnerDoublette.getAnzTriplette());
 				row.newString(teamRechnerDoublette.isNurTripletteMoeglich() ? "X" : "");
@@ -173,7 +186,8 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		String letzteZelleAddress = Position.from(spalte, ERSTE_DATEN_ZEILE + 999).getAddressWith$();
 
 		// suchkriterium;matrix;index;sortiert
-		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";" + (spalte + 1) + ";0)";
+		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
+				+ ";" + (spalte + 1) + ";0)";
 	}
 
 }

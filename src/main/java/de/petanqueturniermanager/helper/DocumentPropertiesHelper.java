@@ -39,9 +39,10 @@ import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html
- * <br>
+ * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
  * https://forum.openoffice.org/en/forum/viewtopic.php?t=33455 <br>
+ * <br>
+ * Setzt und liest Docoment properties<br>
  *
  */
 
@@ -51,7 +52,7 @@ public class DocumentPropertiesHelper {
 	// TODO ist das noch notwendig ?
 	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
 	// Hashtable is synchronized
-	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>(); 
+	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>();
 
 	final XSpreadsheetDocument xSpreadsheetDocument;
 	final Hashtable<String, String> currentPropListe;
@@ -123,7 +124,7 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * @param propName
-	 * @param val      int val wird als String gespeichert
+	 * @param val int val wird als String gespeichert
 	 */
 	private void setStringPropertyInDocument(String propName, String val) {
 		insertStringPropertyIfNotExist(propName, val);
@@ -225,7 +226,7 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * @param propName
-	 * @param val      int val wird als String gespeichert
+	 * @param val int val wird als String gespeichert
 	 */
 	public void setIntProperty(String propName, int val) {
 		setStringProperty(propName, "" + val);

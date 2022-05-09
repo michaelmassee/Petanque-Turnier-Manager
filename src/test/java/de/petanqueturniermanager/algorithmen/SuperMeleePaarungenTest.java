@@ -80,7 +80,8 @@ public class SuperMeleePaarungenTest {
 				}
 				for (int spielrunde = 1; spielrunde <= anzSpielrunden; spielrunde++) {
 					MeleeSpielRunde spielRunde = paarungen.neueSpielrunde(spielrunde, meldungen);
-					pruefeTeamMischungSpielrunde(paarungenExpectedAnzahl.expAnzSpieler, paarungenExpectedAnzahl.expAnzDoubl, paarungenExpectedAnzahl.expAnzTriplett, spielRunde);
+					pruefeTeamMischungSpielrunde(paarungenExpectedAnzahl.expAnzSpieler,
+							paarungenExpectedAnzahl.expAnzDoubl, paarungenExpectedAnzahl.expAnzTriplett, spielRunde);
 				}
 			} catch (AlgorithmenException e) {
 				throw new UncheckedExecutionException(e);
@@ -120,7 +121,8 @@ public class SuperMeleePaarungenTest {
 		}
 	}
 
-	private void pruefeTeamMischung(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett) throws AlgorithmenException {
+	private void pruefeTeamMischung(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett)
+			throws AlgorithmenException {
 
 		meldungen = new SpielerMeldungen();
 		for (int spielrNr = 1; spielrNr <= expAnzSpieler; spielrNr++) {
@@ -130,7 +132,8 @@ public class SuperMeleePaarungenTest {
 		pruefeTeamMischungSpielrunde(expAnzSpieler, expAnzDoubl, expAnzTriplett, spielRunde);
 	}
 
-	private void pruefeTeamMischungSpielrunde(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett, MeleeSpielRunde spielRunde) {
+	private void pruefeTeamMischungSpielrunde(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett,
+			MeleeSpielRunde spielRunde) {
 
 		int expAnzTeams = expAnzDoubl + expAnzTriplett;
 
@@ -145,15 +148,18 @@ public class SuperMeleePaarungenTest {
 		for (Team team : spielRunde.teams()) {
 			// erste teams doublette
 			if (teamCntr <= expAnzDoubl) {
-				assertThat(team.size()).as("anz spieler %d, test doublette teamNr %d", expAnzSpieler, teamCntr).isEqualTo(2);
+				assertThat(team.size()).as("anz spieler %d, test doublette teamNr %d", expAnzSpieler, teamCntr)
+						.isEqualTo(2);
 			} else {
 				// dann triplette teams
-				assertThat(team.size()).as("anz spieler %d, test triplette teamNr %d", expAnzSpieler, teamCntr).isEqualTo(3);
+				assertThat(team.size()).as("anz spieler %d, test triplette teamNr %d", expAnzSpieler, teamCntr)
+						.isEqualTo(3);
 				anzTriplette++;
 			}
 			teamCntr++;
 		}
-		assertThat(anzTriplette).as("anz spieler %d, exp anz Triplette %d", expAnzSpieler, anzTriplette).isEqualTo(expAnzTriplett);
+		assertThat(anzTriplette).as("anz spieler %d, exp anz Triplette %d", expAnzSpieler, anzTriplette)
+				.isEqualTo(expAnzTriplett);
 	}
 
 	@Test
@@ -333,7 +339,8 @@ public class SuperMeleePaarungenTest {
 		assertEquals(4, vierteRunde.teams().size());
 	}
 
-	private MeleeSpielRunde buildTestRunde(int nr, SpielerMeldungen testMeldungen, List<Integer[]> spielerNrTeamListe) throws AlgorithmenException {
+	private MeleeSpielRunde buildTestRunde(int nr, SpielerMeldungen testMeldungen, List<Integer[]> spielerNrTeamListe)
+			throws AlgorithmenException {
 		MeleeSpielRunde spielRunde = new MeleeSpielRunde(nr);
 
 		int tmNr = 1;
@@ -345,7 +352,8 @@ public class SuperMeleePaarungenTest {
 		return spielRunde;
 	}
 
-	private Team buildTestTeam(int nr, SpielerMeldungen testMeldungen, Integer[] spielerNr) throws AlgorithmenException {
+	private Team buildTestTeam(int nr, SpielerMeldungen testMeldungen, Integer[] spielerNr)
+			throws AlgorithmenException {
 		Team team = Team.from(nr);
 
 		for (Integer splnr : spielerNr) {
