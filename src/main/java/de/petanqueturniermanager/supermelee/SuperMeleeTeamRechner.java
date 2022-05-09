@@ -5,7 +5,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /*
-* TeamRechner.java
 * Erstellung     : 11.09.2017 / Michael Massee
 */
 
@@ -76,7 +75,6 @@ public class SuperMeleeTeamRechner {
 
 		int anzDoubletteTeams = 0;
 
-		// TODO das geht einfacher als mit switch :-)
 		// rest = 0,4,5,8,9,13
 		switch (restSpielerMinusAnzSpielerIntriplette) {
 		case 4:

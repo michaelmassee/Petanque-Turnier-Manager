@@ -36,19 +36,12 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde, - Punkte"; // 13
 
 	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
-	private static final String KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE = "Anzahl gespielte Spieltage"; // anzahl spieltage
-																									// die bei der neu
-																									// auslosung
-																									// eingelesen wird
-																									// (hat zusammen
-
-	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1. Kopfzeile"; // spieltag in
-																											// header ?
-
-	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional
-																					// Doublette
+	// anzahl spieltage die bei der neu auslosung eingelesen wird (hat zusammen
+	private static final String KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE = "Anzahl gespielte Spieltage";
+	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1. Kopfzeile"; // spieltag in header ?
+	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
-
+	private static final String KONFIG_PROP_SETZ_POS = "Setzpositionen beachten"; // Default true
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
 
 	static {
@@ -103,6 +96,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_PLAN)
 				.setDefaultVal(false).inSideBar()
 				.setDescription("Erstelle ein Spielrunde Plan zu jeder Spielrunde\r\nN/J (default=N)"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SETZ_POS).setDefaultVal(true)
+				.inSideBar().setDescription(
+						"Bei der Generierung von Spielrunden, Setzpositionen aus der Meldeliste beachten. Default=J"));
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -210,5 +207,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	protected List<ConfigProperty<?>> getKonfigProperties() {
 		return KONFIG_PROPERTIES;
+	}
+
+	@Override
+	public boolean getSetzPositionenAktiv() throws GenerateException {
+		return readBooleanProperty(KONFIG_PROP_SETZ_POS);
 	}
 }

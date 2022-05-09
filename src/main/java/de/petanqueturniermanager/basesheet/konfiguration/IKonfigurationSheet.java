@@ -10,6 +10,7 @@ import de.petanqueturniermanager.helper.ISheet;
  * @author Michael Massee
  *
  */
+@Deprecated
 public interface IKonfigurationSheet extends ISheet {
 	void update() throws GenerateException;
 }

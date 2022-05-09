@@ -16,7 +16,8 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
+public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
+		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
 
 	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
 
@@ -106,6 +107,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 	}
 
 	@Override
+	public boolean getSetzPositionenAktiv() throws GenerateException {
+		return propertiesSpalte.getSetzPositionenAktiv();
+	}
+
+	@Override
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		return this;
 	}
@@ -121,7 +127,8 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet impleme
 			String propNameKey = SuperMeleePropertiesSpalte.PROP_SPIELTAG_KOPFZEILE(spieltagCntr);
 			String spielTagKopfzeile = propertiesSpalte.readStringProperty(propNameKey);
 			if (spielTagKopfzeile != null) {
-				PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter().setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
+				PageStyleHelper.from(this, SpielTagNr.from(spieltagCntr)).initDefaultFooter()
+						.setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
 						.setHeaderCenter(spielTagKopfzeile).create();
 			}
 		}

@@ -41,4 +41,6 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	boolean getSpielrundePlan() throws GenerateException;
 
+	boolean getSetzPositionenAktiv() throws GenerateException;
+
 }
