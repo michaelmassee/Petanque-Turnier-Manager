@@ -89,8 +89,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 	 * Gives a factory for creating the service.<br>
 	 * This method is called by the <code>JavaLoader</code><br>
 	 *
-	 * @return Returns a <code>XSingleServiceFactory</code> for creating the
-	 *         component.<br>
+	 * @return Returns a <code>XSingleServiceFactory</code> for creating the component.<br>
 	 * @see com.sun.star.comp.loader.JavaLoader<br>
 	 * @param sImplementationName The implementation name of the component.<br>
 	 */
@@ -210,13 +209,13 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			new MeldeListeSheet_Update(workingSpreadsheet).start();
 			break;
 		case "anmeldungen":
-			new AnmeldungenSheet(workingSpreadsheet).start();
+			new AnmeldungenSheet(workingSpreadsheet).backUpDocument().start();
 			break;
 		case "teilnehmer":
 			new TielnehmerSheet(workingSpreadsheet).start();
 			break;
 		case "naechste_spieltag":
-			new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet).start();
+			new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet).backUpDocument().start();
 			break;
 		case "meldeliste_testdaten":
 			new MeldeListeSheet_TestDaten(workingSpreadsheet).start();
@@ -226,18 +225,17 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		// ------------------------------
 		case "aktuelle_spielrunde":
-			new SpielrundeSheet_Update(workingSpreadsheet).start();
+			new SpielrundeSheet_Update(workingSpreadsheet).backUpDocument().backupDocumentAfterRun().start();
 			break;
 		case "naechste_spielrunde":
-			new SpielrundeSheet_Naechste(workingSpreadsheet).start();
+			new SpielrundeSheet_Naechste(workingSpreadsheet).backUpDocument().backupDocumentAfterRun().start();
 			break;
 		case "spielrunden_testdaten":
 			new SpielrundeSheet_TestDaten(workingSpreadsheet).start();
-
 			break;
 		// ------------------------------
 		case "spieltag_rangliste":
-			new SpieltagRanglisteSheet(workingSpreadsheet).start();
+			new SpieltagRanglisteSheet(workingSpreadsheet).backUpDocument().start();
 			break;
 		case "spieltag_rangliste_sort":
 			new SpieltagRanglisteSheet_SortOnly(workingSpreadsheet).start();
@@ -247,7 +245,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		// ------------------------------
 		case "supermelee_endrangliste":
-			new EndranglisteSheet(workingSpreadsheet).start();
+			new EndranglisteSheet(workingSpreadsheet).backUpDocument().start();
 			break;
 		case "supermelee_endrangliste_sort":
 			new EndranglisteSheet_Sort(workingSpreadsheet).start();
@@ -295,17 +293,17 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		// ------------------------------
 		case "liga_update_meldeliste":
-			new LigaMeldeListeSheet_Update(workingSpreadsheet).start();
+			new LigaMeldeListeSheet_Update(workingSpreadsheet).backUpDocument().start();
 			break;
 		// ------------------------------
 		case "liga_testdaten_meldeliste":
 			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_spielplan":
-			new LigaSpielPlanSheet(workingSpreadsheet).start();
+			new LigaSpielPlanSheet(workingSpreadsheet).backUpDocument().backupDocumentAfterRun().start();
 			break;
 		case "liga_rangliste":
-			new LigaRanglisteSheet(workingSpreadsheet).start();
+			new LigaRanglisteSheet(workingSpreadsheet).backUpDocument().start();
 			break;
 		case "liga_spielplan_testdaten":
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, false).start();

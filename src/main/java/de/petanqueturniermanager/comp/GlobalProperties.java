@@ -13,6 +13,9 @@ import org.apache.logging.log4j.core.config.Configurator;
 public class GlobalProperties {
 	private static final String FILENAME = "PetanqueTurnierManager.properties";
 	private static final String LOG_LEVEL_PROP = "loglevel";
+	private static final String CREATE_BACKUP_PROP = "backup"; // create backups before wichtige generierungen
+	private static final String AUTOSAVE_PROP = "autosave"; // autosave nach jeden Aktion
+
 	private static final Properties props = new Properties();
 
 	private static GlobalProperties instance = null;
@@ -42,6 +45,14 @@ public class GlobalProperties {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public boolean isAutoSave() {
+		return getBoolean(AUTOSAVE_PROP);
+	}
+
+	public boolean isCreateBackup() {
+		return getBoolean(CREATE_BACKUP_PROP);
 	}
 
 	private boolean getBoolean(String propKey) {

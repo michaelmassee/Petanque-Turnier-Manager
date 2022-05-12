@@ -43,8 +43,9 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Liga-Meldeliste");
-		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH).ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
-				.sheet(this).formation(Formation.TETE).build();
+		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
+				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
+				.formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
@@ -86,33 +87,41 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 			return;
 		}
 
-		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
+		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(),
+				letzteDatenZeile);
 
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
 		Integer geradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade();
 		Integer unGeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
-		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(geradeColor);
-		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(unGeradeColor);
+		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(
+				geradeColor);
+		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(
+				unGeradeColor);
 
 		// TODO Doppelte Code
 		// Spieler Nummer
 		// -----------------------------------------------
-		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenZeile);
-		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
+				letzteDatenZeile);
+		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
+				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
 		// ------------------------------
 				formulaIsText().styleIsFehler().applyAndReset().reset().
 				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset()
+				.reset().
 				// ------------------------------
 				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset().reset(). // nr muss >0 und
-																																								// <999 sein
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
+				.styleIsFehler().applyAndReset().reset(). // nr muss >0 und
+															// <999 sein
 				// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ------------------------------
@@ -123,17 +132,21 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		// -----------------------------------------------
 		// Spieler Namen
 		// -----------------------------------------------
-		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(), letzteDatenZeile);
-		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL
-				+ ")>1";
+		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE,
+				getSpielerNameErsteSpalte(), letzteDatenZeile);
+		String conditionfindDoppeltNamen = "COUNTIF("
+				+ Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";"
+				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
 		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset().reset().
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset()
+				.reset().
 				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
+				.applyAndReset().reset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle)
-				.applyAndReset().reset();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow()
+				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
 		// -----------------------------------------------
 	}
 
@@ -172,7 +185,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), null);
 	}
 
-	private TeamMeldungen meldeListeHelperGetMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
+	private TeamMeldungen meldeListeHelperGetMeldungen(final SpielTagNr spieltag,
+			final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
 		return (TeamMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt, new TeamMeldungen());
 	}
 

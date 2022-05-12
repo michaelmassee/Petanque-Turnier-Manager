@@ -12,6 +12,7 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XDispatchHelper;
 import com.sun.star.frame.XDispatchProvider;
+import com.sun.star.frame.XStorable;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.UnoRuntime;
@@ -19,7 +20,7 @@ import com.sun.star.uno.XComponentContext;
 
 /**
  * @author Michael Massee <br>
- * beim start active Dokumenten merken
+ * Beim start active Dokument merken
  */
 public class WorkingSpreadsheet {
 
@@ -32,13 +33,9 @@ public class WorkingSpreadsheet {
 
 	public WorkingSpreadsheet(XComponentContext xContext) {
 		this.xContext = checkNotNull(xContext);
-		// Save the current Aktiv Document
 		workingSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
 		workingSpreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
 		xController = DocumentHelper.getXModel(xContext).getCurrentController();
-		// XModel xModel = UnoRuntime.queryInterface(XModel.class, workingSpreadsheetDocument);
-		// XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-
 	}
 
 	/**
@@ -46,7 +43,8 @@ public class WorkingSpreadsheet {
 	 * @param xSpreadsheetDocument
 	 * @param xSpreadsheetView
 	 */
-	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument, XSpreadsheetView xSpreadsheetView) {
+	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument,
+			XSpreadsheetView xSpreadsheetView) {
 		this.xContext = checkNotNull(xContext);
 		workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
 		workingSpreadsheetView = checkNotNull(xSpreadsheetView);
@@ -61,6 +59,15 @@ public class WorkingSpreadsheet {
 			return false;
 		}
 		return workingSpreadsheetDocument.equals(workingSpreadsheet.getWorkingSpreadsheetDocument());
+	}
+
+	/**
+	 * for save and location actions
+	 * 
+	 * @return the XStorable
+	 */
+	public XStorable getXStorable() {
+		return UnoRuntime.queryInterface(XStorable.class, workingSpreadsheetDocument);
 	}
 
 	/**
@@ -86,7 +93,8 @@ public class WorkingSpreadsheet {
 
 	public void executeDispatch(String str1, String str2, int val, PropertyValue[] propertyVals) {
 		XDispatchHelper xDispatchHelper = getXDispatchHelper();
-		XDispatchProvider xDispatchProvider = UnoRuntime.queryInterface(XDispatchProvider.class, xController.getFrame());
+		XDispatchProvider xDispatchProvider = UnoRuntime.queryInterface(XDispatchProvider.class,
+				xController.getFrame());
 		if (xDispatchHelper != null && xDispatchProvider != null) {
 			xDispatchHelper.executeDispatch(xDispatchProvider, str1, str2, val, propertyVals);
 		}
@@ -108,7 +116,8 @@ public class WorkingSpreadsheet {
 
 		T interfaceObj = null;
 		try {
-			Object multiComponentFactory = getxContext().getServiceManager().createInstanceWithContext(serviceName, getxContext());
+			Object multiComponentFactory = getxContext().getServiceManager().createInstanceWithContext(serviceName,
+					getxContext());
 			// create service component using the specified component context
 			interfaceObj = UnoRuntime.queryInterface(aType, multiComponentFactory);
 			// uses bridge to obtain proxy to remote interface inside service;
