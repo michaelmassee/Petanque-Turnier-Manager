@@ -1,0 +1,5 @@
+de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl
+#de.petanqueturniermanager.addins.DoublerImpl
+#de.petanqueturniermanager.comp.ProtocolHandler
+#de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory
+de.petanqueturniermanager.addins.GlobalImpl
