@@ -35,14 +35,26 @@ dependencies {
 eclipse.classpath.file {
    withXml { 
      def node = it.asNode()
-     def alreadyExist = node.find { entry ->
+     def alreadyExistLibreOffice = node.find { entry ->
        entry.path.text().endsWith ("LibreOffice 6.2") 
      }
-     if (!alreadyExist) {
+     if (!alreadyExistLibreOffice) {
 		node.appendNode('classpathentry', 
 		        [kind: 'con', path: 'org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2'])
-		}
+	}
+	
+		
+	// <classpathentry kind="lib" path="build"/>
+	 def alreadyExistLibBuild = node.find { entry ->
+       entry.kind.text().equals ("lib") &&  entry.path.text().equals ("build")
      }
+     
+     if (!alreadyExistLibBuild) {
+		node.appendNode('classpathentry', 
+		        [kind: 'lib', path: 'build'])
+	}
+  }
+	
 }
 
 task cleanCache (type: Delete) {
