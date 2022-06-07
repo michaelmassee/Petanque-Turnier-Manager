@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oor:component-data
+	xmlns:oor="http://openoffice.org/2001/registry"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" oor:name="CalcAddIns"
+	oor:package="org.openoffice.Office">
+
+	<node oor:name="AddInInfo">
+		<node oor:name="de.petanqueturniermanager.addin.GlobalAddIn"
+			oor:op="replace">
+			<node oor:name="AddInFunctions">
+			
+				<node oor:name="ptmspieltag" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTMGAMEDAY</value>
+						<value xml:lang="de">PTMSPIELTAG</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, activ game day</value>
+						<value xml:lang="de">Petanque Turniermanager, Aktive Spieltag</value>
+					</prop>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+					<prop oor:name="CompatibilityName">
+						<value xml:lang="en">PTMGAMEDAY</value>
+					</prop>
+				</node>			
+
+				<node oor:name="ptmspielrunde" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTMGAMEROUND</value>
+						<value xml:lang="de">PTMSPIELRUNDE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, activ round nr</value>
+						<value xml:lang="de">Petanque Turniermanager, Aktive Spielrunde</value>
+					</prop>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+					<prop oor:name="CompatibilityName">
+						<value xml:lang="en">PTMGAMEROUND</value>
+					</prop>
+				</node>
+			</node>
+		</node>
+	</node>
+</oor:component-data>

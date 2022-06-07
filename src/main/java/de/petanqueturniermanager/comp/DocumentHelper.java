@@ -33,7 +33,8 @@ public class DocumentHelper {
 	/** Returns the current XDesktop */
 	public static XDesktop getCurrentDesktop(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class, xContext.getServiceManager());
+		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
+				xContext.getServiceManager());
 		Object desktop = null;
 		try {
 			desktop = xMCF.createInstanceWithContext("com.sun.star.frame.Desktop", xContext);
@@ -71,9 +72,9 @@ public class DocumentHelper {
 
 	/**
 	 * Returns the current Spreadsheet document (if any) <br>
-	 * mit absicht nicht public, weil mehrere Fenster gleichzeitig offen
+	 *
 	 */
-	static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
+	public static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
 		return UnoRuntime.queryInterface(XSpreadsheetDocument.class, getCurrentComponent(xContext));
 	}
@@ -104,7 +105,8 @@ public class DocumentHelper {
 		XPropertySet xProp = UnoRuntime.queryInterface(XPropertySet.class, xController);
 		try {
 			xProp.setPropertyValue("ShowGrid", showGrid);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
 			// ignore weil nicht wichtig wenn nicht funktioniert
 			// e.printStackTrace();
 		}

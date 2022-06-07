@@ -217,6 +217,21 @@ public class SheetHelper {
 		return xCell;
 	}
 
+	public String getFormulaFromCell(XSpreadsheet sheet, Position pos) {
+		checkNotNull(sheet);
+		checkNotNull(pos);
+		String ret = null;
+
+		XCell xCell = null;
+		try {
+			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
+			ret = xCell.getFormula();
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return ret;
+	}
+
 	/**
 	 * nur die Zelle formatieren
 	 *
