@@ -58,30 +58,30 @@ public class DocumentPropertiesHelper {
 	final Hashtable<String, String> currentPropListe;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
-		xSpreadsheetDocument = checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument();
-		if (xSpreadsheetDocument != null) {
-			Integer xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
-			if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
-				currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
-			} else {
-				// einmal laden
-				currentPropListe = new Hashtable<>();
-				// properties aus dokument laden
-				XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
-				XPropertySet xPropertySet = getXPropertySet();
-				Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
-				for (Property userProp : properties) {
-					try {
-						Object propVal = xPropertySet.getPropertyValue(userProp.Name);
-						currentPropListe.put(userProp.Name, propVal.toString());
-					} catch (UnknownPropertyException | WrappedTargetException e) {
-					}
-				}
-				// in cache
-				PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
-			}
+		this(checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument());
+	}
+
+	public DocumentPropertiesHelper(XSpreadsheetDocument xSpreadsheetDocument) {
+		this.xSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
+		Integer xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
+		if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
+			currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
 		} else {
+			// einmal laden
 			currentPropListe = new Hashtable<>();
+			// properties aus dokument laden
+			XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
+			XPropertySet xPropertySet = getXPropertySet();
+			Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
+			for (Property userProp : properties) {
+				try {
+					Object propVal = xPropertySet.getPropertyValue(userProp.Name);
+					currentPropListe.put(userProp.Name, propVal.toString());
+				} catch (UnknownPropertyException | WrappedTargetException e) {
+				}
+			}
+			// in cache
+			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
 		}
 	}
 

@@ -1,0 +1,26 @@
+#ifndef _de_petanqueturniermanager_addin_GlobalAddIn_
+#define _de_petanqueturniermanager_addin_GlobalAddIn_
+
+
+#include <com/sun/star/uno/XInterface.idl>
+#include <com/sun/star/table/XCellRange.idl>
+#include <com/sun/star/sheet/XVolatileResult.idl>
+
+// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1sheet_1_1AddIn.html
+
+module de { module petanqueturniermanager { module addin {
+
+  interface XGlobal {
+    long ptmspieltag();
+    long ptmspielrunde();
+  };
+
+}; }; };
+
+
+module de { module petanqueturniermanager { module addin {
+  service GlobalAddIn : XGlobal;
+}; }; };
+
+
+#endif

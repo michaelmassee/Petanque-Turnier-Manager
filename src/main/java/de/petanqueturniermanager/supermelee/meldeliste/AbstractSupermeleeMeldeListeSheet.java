@@ -18,6 +18,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
@@ -148,6 +149,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		meldeListeHelper.testDoppelteMeldungen();
 		getTurnierSheet().setActiv();
 
+		// for test only
+		// String formula = getSheetHelper().getFormulaFromCell(getXSpreadSheet(), Position.from(6, 1));
+
 		// ------
 		// Header einfuegen
 		// ------
@@ -173,12 +177,43 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
-		// insertInfoSpalte();
+		insertInfoBlock();
 		meldungenSpalte.formatDaten();
 		formatDaten();
 
 		// TurnierSystem
 		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
+	}
+
+	/**
+	 * Aktive Spielrunde und Spieltag
+	 * 
+	 * @throws GenerateException
+	 */
+
+	private void insertInfoBlock() throws GenerateException {
+		processBoxinfo("Info Block");
+		XSpreadsheet sheet = getXSpreadSheet();
+		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+
+		Position posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
+
+		StringCellValue labelVal = StringCellValue.from(sheet, posInfo, "Spieltag").setComment("Aktive Spieltag")
+				.setBorder(border).setCellBackColor(headerBackColor);
+		getSheetHelper().setStringValueInCell(labelVal);
+		labelVal.zeilePlus(1).setValue("Spielrunde").setComment("Aktive Spielrunde");
+		getSheetHelper().setStringValueInCell(labelVal);
+		// ---------------------------------------------------
+		Position posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
+		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, GlobalImpl.PTMSPIELTAG)
+				.setBorder(border);
+		getSheetHelper().setFormulaInCell(spielTagFormula);
+
+		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
+		StringCellValue spielRundeFormula = StringCellValue.from(sheet, posSpielrundeFormula, GlobalImpl.PTMSPIELRUNDE)
+				.setBorder(border);
+		getSheetHelper().setFormulaInCell(spielRundeFormula);
 	}
 
 	protected void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
@@ -348,7 +383,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		return meldeListeHelper.spieltagSpalte(getSpielTag());
 	}
 
-	public int ersteSummeSpalte() throws GenerateException {
+	private int ersteSummeSpalte() throws GenerateException {
 		return letzteSpielTagSpalte() + SUMMEN_SPALTE_OFFSET;
 	}
 
@@ -362,7 +397,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		return meldungenSpalte.getSpielerNameErsteSpalte();
 	}
 
-	public void updateSpieltageSummenSpalten() throws GenerateException {
+	private void updateSpieltageSummenSpalten() throws GenerateException {
 
 		processBoxinfo("Aktualisiere Summen Spalten");
 
@@ -404,20 +439,21 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// public static final int SUMMEN_GESAMT_ANZ_SPIELER = SUMMEN_ANZ_SPIELER + 1;
 		// ------------------------------------------------------------------------------------
 
-		bezCelVal.setComment(null).setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
+		bezCelVal.setComment("Anzahl Spieler mit \"1\" im Spieltag").setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment(null).setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
+		bezCelVal.setComment("Anzahl Spieler mit \"\" im Spieltag").setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Spieler mit \"2\" im Spieltag").setValue("Ausgestiegen")
+		bezCelVal.setComment("Anzahl Spieler mit \"2\" im Spieltag").setValue("Ausgestiegen")
 				.zeile(SUMMEN_AUSGESTIEGENE_ZEILE);
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Aktive + Ausgestiegen").setValue("Akt + Ausg").zeile(SUMMEN_ANZ_SPIELER);
+		bezCelVal.setComment("Anzahl Aktive + Ausgestiegen").setValue("Akt + Ausg").zeile(SUMMEN_ANZ_SPIELER);
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Aktive + Inaktiv + Ausgestiegen").setValue("Summe").zeile(SUMMEN_GESAMT_ANZ_SPIELER);
+		bezCelVal.setComment("Anzahl Aktive + Inaktiv + Ausgestiegen").setValue("Summe")
+				.zeile(SUMMEN_GESAMT_ANZ_SPIELER);
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
 		// ------------------------------------------------------------------------------------

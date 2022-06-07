@@ -63,9 +63,9 @@ import com.sun.star.lang.EventObject;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 
 /**
- * Der GlobalEventListener sorgt dafür, dass der WollMux alle wichtigen globalen Ereignisse wie z.B. ein OnNew on OnLoad abfangen und darauf reagieren kann. In diesem Fall wird die
- * Methode notifyEvent aufgerufen. Wichtig ist dabei, dass der Verarbeitungsstatus für alle Dokumenttypen (auch nicht-Textdokumente) erfasst wird, damit der WollMux auch für diese
- * Komponenten onWollMuxProcessingFinished liefern kann.
+ * Der GlobalEventListener sorgt dafür, dass der WollMux alle wichtigen globalen Ereignisse wie z.B. ein OnNew on OnLoad abfangen und darauf reagieren kann. In diesem Fall wird die Methode notifyEvent
+ * aufgerufen. Wichtig ist dabei, dass der Verarbeitungsstatus für alle Dokumenttypen (auch nicht-Textdokumente) erfasst wird, damit der WollMux auch für diese Komponenten onWollMuxProcessingFinished
+ * liefern kann.
  *
  * @author christoph.lutz
  */
@@ -186,12 +186,12 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	/**
-	 * OnCreate ist das erste Event das aufgerufen wird, wenn ein neues leeres Dokument über eine Factory erzeugt wird wie z.B. mit loadComponentFromURL(...
-	 * "private:factory/swriter" ...) oder in OOo über Datei->Neu. Auch OOo erzeugt manchmal im Hintergrund unsichtbare leere Dokumente über die Factory. Bekannt sind folgende
-	 * Fälle: Beim OOo-Seriendruck über den Seriendruck-Assistent (für jeden Datensatz); Beim Einfügen von Autotexten (z.B. mit "bt<F3>" in OOo).
+	 * OnCreate ist das erste Event das aufgerufen wird, wenn ein neues leeres Dokument über eine Factory erzeugt wird wie z.B. mit loadComponentFromURL(... "private:factory/swriter" ...) oder in OOo über
+	 * Datei->Neu. Auch OOo erzeugt manchmal im Hintergrund unsichtbare leere Dokumente über die Factory. Bekannt sind folgende Fälle: Beim OOo-Seriendruck über den Seriendruck-Assistent (für jeden
+	 * Datensatz); Beim Einfügen von Autotexten (z.B. mit "bt<F3>" in OOo).
 	 *
-	 * Das Event kommt nicht, wenn ein Dokument von einer Datei geladen oder von einer Vorlage erzeugt wird. Das Event kommt auch dann nicht, wenn eine Vorlagendatei als
-	 * Standardvorlage für neue Dokumente definiert ist und Datei->Neu verwendet wird.
+	 * Das Event kommt nicht, wenn ein Dokument von einer Datei geladen oder von einer Vorlage erzeugt wird. Das Event kommt auch dann nicht, wenn eine Vorlagendatei als Standardvorlage für neue Dokumente
+	 * definiert ist und Datei->Neu verwendet wird.
 	 *
 	 * @author Christoph Lutz (D-III-ITD-D101)
 	 */
@@ -229,9 +229,6 @@ public class GlobalEventListener implements XEventListener {
 	/**
 	 * OnSave oder OnSaveAs-Events werden beim Speichern von Dokumenten aufgerufen.
 	 *
-	 * Wir verwenden diese beiden Events um die persistenten Daten des WollMux sicher zu persistieren (flush).
-	 *
-	 * @author Christoph Lutz (D-III-ITD-D101)
 	 */
 	private void onSaveOrSaveAs(Object source) {
 		// XTextDocument xTextDoc = UNO.XTextDocument(source);
