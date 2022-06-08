@@ -11,8 +11,9 @@
 module de { module petanqueturniermanager { module addin {
 
   interface XGlobal {
-    long ptmspieltag();
-    long ptmspielrunde();
+    string ptmstringproperty([in] string propname); // return string value of property
+    long ptmintproperty([in] string propname); // return int value of property
+    string ptmturniersystem ();
   };
 
 }; }; };

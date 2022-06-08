@@ -58,29 +58,40 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	private final DocumentPropertiesHelper docPropHelper;
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG).setDefaultVal(1).setDescription("Aktuelle Spieltag").inSideBarInfoPanel());
-		KONFIG_PROPERTIES
-				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE).setDefaultVal(1).setDescription("Aktuelle Spielrunde").inSideBarInfoPanel());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
+				.setDefaultVal(1).setDescription("Aktuelle Spieltag").inSideBarInfoPanel());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
+				.setDefaultVal(1).setDescription("Aktuelle Spielrunde").inSideBarInfoPanel());
 
-		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS).setDescription("Fußzeile Links").inSideBar());
-		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE).setDescription("Fußzeile Mitte").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS)
+				.setDescription("Fußzeile Links").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
+				.setDescription("Fußzeile Mitte").inSideBar());
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE)
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für gerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE)
+				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER)
+				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Rangliste Hintergrundfarbe für gerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Rangliste Hintergrundfarbe für gerade Zeilen")
+				.inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
+				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
 				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
+				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
 				.setDescription("Rangliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN).setDefaultVal(false)
-				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene Benutzer empfohlen. Default = N").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN)
+				.setDefaultVal(false)
+				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene Benutzer empfohlen. Default = N")
+				.inSideBar());
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {
