@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.addins;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
@@ -19,8 +21,11 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	private static final String[] serviceNames = { SERVICE_NAME };
 
 	// =de.petanqueturniermanager.addin.GlobalAddIn.ptmspielrunde()
-	public static final String PTMSPIELTAG = SERVICE_NAME + ".ptmspieltag()";
-	public static final String PTMSPIELRUNDE = SERVICE_NAME + ".ptmspielrunde()";
+	public static final String PTMSPIELTAG = SERVICE_NAME + ".ptmintproperty(\""
+			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")";
+	public static final String PTMSPIELRUNDE = SERVICE_NAME + ".ptmintproperty(\""
+			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\")";
+	public static final String PTMINTPROPERTY = SERVICE_NAME + ".ptmintproperty()";
 
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
@@ -73,27 +78,31 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public int ptmspielrunde() {
+	public int ptmintproperty(String arg0) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
-		if (turnierSystemAusDocument != TurnierSystem.KEIN) {
-			return hlpr.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 0);
+		if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+			return hlpr.getIntProperty(arg0, 0);
 		}
 		return 0;
 	}
 
 	@Override
-	public int ptmspieltag() {
+	public String ptmstringproperty(String arg0) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
-		if (turnierSystemAusDocument != TurnierSystem.KEIN) {
-			return hlpr.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 0);
+		if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+			return hlpr.getStringProperty(arg0, "fehler");
 		}
-
-		return 0;
-
+		return "fehler";
 	}
 
+	@Override
+	public String ptmturniersystem() {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+		TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
+		return turnierSystemAusDocument.getBezeichnung();
+	}
 }

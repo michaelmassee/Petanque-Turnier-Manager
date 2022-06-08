@@ -23,7 +23,21 @@ public class ConfigProperty<V> {
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
-		return new ConfigProperty<>(type, key);
+		ConfigProperty<V> ret = null;
+		switch (type) {
+		case INTEGER:
+		case COLOR:
+			ret = (ConfigProperty<V>) new ConfigProperty<Integer>(type, key);
+			break;
+		case BOOLEAN:
+			ret = (ConfigProperty<V>) new ConfigProperty<Boolean>(type, key);
+			break;
+		default:
+			ret = (ConfigProperty<V>) new ConfigProperty<String>(type, key);
+			break;
+		}
+
+		return ret;
 	}
 
 	public String getKey() {

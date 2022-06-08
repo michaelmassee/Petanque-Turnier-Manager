@@ -8,40 +8,65 @@
 		<node oor:name="de.petanqueturniermanager.addin.GlobalAddIn"
 			oor:op="replace">
 			<node oor:name="AddInFunctions">
-			
-				<node oor:name="ptmspieltag" oor:op="replace">
-					<prop oor:name="DisplayName">
-						<value xml:lang="en">PTMGAMEDAY</value>
-						<value xml:lang="de">PTMSPIELTAG</value>
-					</prop>
-					<prop oor:name="Description">
-						<value xml:lang="en">Petanque Turniermanager, activ game day</value>
-						<value xml:lang="de">Petanque Turniermanager, Aktive Spieltag</value>
-					</prop>
-					<prop oor:name="Category">
-						<value>Add-In</value>
-					</prop>
-					<prop oor:name="CompatibilityName">
-						<value xml:lang="en">PTMGAMEDAY</value>
-					</prop>
-				</node>			
 
-				<node oor:name="ptmspielrunde" oor:op="replace">
+				<node oor:name="ptmturniersystem" oor:op="replace">
 					<prop oor:name="DisplayName">
-						<value xml:lang="en">PTMGAMEROUND</value>
-						<value xml:lang="de">PTMSPIELRUNDE</value>
+						<value xml:lang="en">PTMTURNIERSYSTEM</value>
+						<value xml:lang="de">PTMTURNIERSYSTEM</value>
 					</prop>
 					<prop oor:name="Description">
-						<value xml:lang="en">Petanque Turniermanager, activ round nr</value>
-						<value xml:lang="de">Petanque Turniermanager, Aktive Spielrunde</value>
+						<value xml:lang="en">Petanque Turniermanager, Turnier System</value>
+						<value xml:lang="de">Petanque Turniermanager, Turnier System</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
-					</prop>
-					<prop oor:name="CompatibilityName">
-						<value xml:lang="en">PTMGAMEROUND</value>
 					</prop>
 				</node>
+
+				<node oor:name="ptmintproperty" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTMINTPROPERTY</value>
+						<value xml:lang="de">PTMINTPROPERTY</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, get int value of Propertry</value>
+						<value xml:lang="de">Petanque Turniermanager, Integer Wert von Property</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="value" oor:op="replace">
+							<prop oor:name="PropertyName">
+								<value xml:lang="en">Name of the PTM Property</value>
+								<value xml:lang="de">PTM Propertynamen</value>
+							</prop>
+						</node>
+					</node>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+				</node>
+				
+				<node oor:name="ptmstringproperty" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTMSTRINGPROPERTY</value>
+						<value xml:lang="de">PTMSTRINGPROPERTY</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, get string value of Propertry</value>
+						<value xml:lang="de">Petanque Turniermanager, String Wert von Property</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="value" oor:op="replace">
+							<prop oor:name="PropertyName">
+								<value xml:lang="en">Name of the PTM Property</value>
+								<value xml:lang="de">PTM Propertynamen</value>
+							</prop>
+						</node>
+					</node>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+				</node>
+				
 			</node>
 		</node>
 	</node>
