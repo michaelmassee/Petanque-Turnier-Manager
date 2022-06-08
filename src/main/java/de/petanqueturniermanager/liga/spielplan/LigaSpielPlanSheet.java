@@ -26,11 +26,13 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SearchHelper;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -117,11 +119,13 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
 			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan").message("Ungültige anzahl von Melungen").show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
+					.message("Ungültige anzahl von Melungen").show();
 			return;
 		}
 
-		if (!NewSheet.from(this, SHEET_NAMEN).pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
+		if (!NewSheet.from(this, SHEET_NAMEN).pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
+				.tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
@@ -138,20 +142,31 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		insertFormulaPunkte();
 		insertDatumFormulaUndFormatierungen();
 		formatieren(spielPlanHRunde);
-		// inspect();
+		printBereichDefinieren(spielPlanHRunde.size(), spielPlanRRunde.size(), spielPlanHRunde.get(0).size());
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
 	}
 
-	// private void inspect() throws GenerateException {
-	// test code
-	// Position testPos = Position.from(1, 2);
-	// getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(), testPos).setValue("22.10.2020"));
-	// XCell cell = getSheetHelper().getCell(getXSpreadSheet(), testPos);
-	// XPropertyHelper testCellProp = XPropertyHelper.from(cell);
-	//
-	// testCellProp.inpectPropertySet();
-	// NumberFormatHelper.from(this, testCellProp).setformat();
-	// testCellProp.inpectPropertySet();
-	// }
+	private void printBereichDefinieren(int anzHRunden, int anzRRunden, int anzTeamPaarungen) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+
+		Position rechtsUnten = Position.from(SPIELPNKT_B_SPALTE,
+				ERSTE_SPIELTAG_DATEN_ZEILE + ((anzHRunden + anzRRunden) * anzTeamPaarungen) - 1);
+		Position linksOben = Position.from(0, 0);
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
+				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+	}
+
+//	private void inspect() throws GenerateException {
+////	 test code
+//		Position testPos = Position.from(1, 2);
+//		getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(), testPos).setValue("22.10.2020"));
+//		XCell cell = getSheetHelper().getCell(getXSpreadSheet(), testPos);
+//		XPropertyHelper testCellProp = XPropertyHelper.from(cell);
+//
+//		testCellProp.inpectPropertySet();
+//		NumberFormatHelper.from(this, testCellProp).setformat();
+//		testCellProp.inpectPropertySet();
+//	}
 
 	private void insertDatumFormulaUndFormatierungen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
@@ -159,46 +174,57 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
 		{
 			Position posKw = Position.from(KW_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
-			StringCellValue formulaKw = StringCellValue.from(getXSpreadSheet(), posKw).setFillAutoDown(letzteSpielZeile);
+			StringCellValue formulaKw = StringCellValue.from(getXSpreadSheet(), posKw)
+					.setFillAutoDown(letzteSpielZeile);
 			formulaKw.setValue("ISOKALENDERWOCHE(" + posDatum.getAddress() + ")");
 			getSheetHelper().setFormulaInCell(formulaKw);
 		}
 
 		{
 			Position posWochenTag = Position.from(WOCHENTAG_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
-			StringCellValue formulaWochenTag = StringCellValue.from(getXSpreadSheet(), posWochenTag).setFillAutoDown(letzteSpielZeile);
+			StringCellValue formulaWochenTag = StringCellValue.from(getXSpreadSheet(), posWochenTag)
+					.setFillAutoDown(letzteSpielZeile);
 			formulaWochenTag.setValue(posDatum.getAddress()); // nur ein Kopie
 			getSheetHelper().setFormulaInCell(formulaWochenTag);
 			// Range numberformat formatieren
 			RangePosition wochenTagRange = RangePosition.from(posWochenTag, posWochenTag.getSpalte(), letzteSpielZeile);
-			RangeHelper.from(this, wochenTagRange).setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.WOCHEN_TAG));
+			RangeHelper.from(this, wochenTagRange)
+					.setRangeProperties(RangeProperties.from().numberFormat(UserNumberFormat.WOCHEN_TAG));
 		}
 	}
 
 	private void formatieren(List<List<TeamPaarung>> spielPlanHRunde) throws GenerateException {
 		// erstmal ein Grid
 		int letzteSpielZeile = letzteSpielZeile();
-		RangePosition allDataMitHeader = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE, SPIELPNKT_B_SPALTE, letzteSpielZeile);
-		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).centerJustify().setShrinkToFit(true).topMargin(110)
-				.bottomMargin(110).setCharHeight(12);
+		RangePosition allDataMitHeader = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE,
+				SPIELPNKT_B_SPALTE, letzteSpielZeile);
+		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
+				.centerJustify().setShrinkToFit(true).topMargin(110).bottomMargin(110).setCharHeight(10);
 		RangeHelper.from(this, allDataMitHeader).setRangeProperties(rangeProp);
 
 		// gerade ungerade
-		RangePosition runden = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE, letzteSpielZeile);
+		RangePosition runden = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE,
+				letzteSpielZeile);
 		Integer spielPlanHintergrundFarbeGerade = getKonfigurationSheet().getSpielPlanHintergrundFarbeGerade();
 		Integer spielPlanHintergrundFarbeUnGerade = getKonfigurationSheet().getSpielPlanHintergrundFarbeUnGerade();
-		GeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(spielPlanHintergrundFarbeGerade).ungeradeFarbe(spielPlanHintergrundFarbeUnGerade).apply();
+		GeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(spielPlanHintergrundFarbeGerade)
+				.ungeradeFarbe(spielPlanHintergrundFarbeUnGerade).apply();
 
-		RangeProperties horTrennerDouble = RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());
-		RangeProperties horTrennerBoldBottom = RangeProperties.from().setBorder(BorderFactory.from().boldLn().forBottom().toBorder());
-		RangeProperties horTrennerBoldTop = RangeProperties.from().setBorder(BorderFactory.from().boldLn().forTop().toBorder());
+		RangeProperties horTrennerDouble = RangeProperties.from()
+				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());
+		RangeProperties horTrennerBoldBottom = RangeProperties.from()
+				.setBorder(BorderFactory.from().boldLn().forBottom().toBorder());
+		RangeProperties horTrennerBoldTop = RangeProperties.from()
+				.setBorder(BorderFactory.from().boldLn().forTop().toBorder());
 
 		// Header
-		RangePosition headerHorTrenner = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE + 2, SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE + 2);
+		RangePosition headerHorTrenner = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE + 2,
+				SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE + 2);
 		RangeHelper.from(this, headerHorTrenner).setRangeProperties(horTrennerBoldTop);
 
 		// Spieltag/Runde Trenner
-		RangePosition trennerPos = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
+		RangePosition trennerPos = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE,
+				ERSTE_SPIELTAG_DATEN_ZEILE);
 		int anzRunden = spielPlanHRunde.size();
 		int anzPaarungen = spielPlanHRunde.get(0).size();
 
@@ -219,11 +245,15 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		}
 
 		// Vertikal
-		RangeProperties vertTrennerBoldRight = RangeProperties.from().setBorder(BorderFactory.from().boldLn().forRight().toBorder());
-		RangeProperties vertTrennerBoldLeft = RangeProperties.from().setBorder(BorderFactory.from().boldLn().forLeft().toBorder());
-		RangeProperties vertTrennerDoubleLeft = RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder());
+		RangeProperties vertTrennerBoldRight = RangeProperties.from()
+				.setBorder(BorderFactory.from().boldLn().forRight().toBorder());
+		RangeProperties vertTrennerBoldLeft = RangeProperties.from()
+				.setBorder(BorderFactory.from().boldLn().forLeft().toBorder());
+		RangeProperties vertTrennerDoubleLeft = RangeProperties.from()
+				.setBorder(BorderFactory.from().doubleLn().forLeft().toBorder());
 
-		RangePosition vertikal = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE, SPIEL_NR_SPALTE, letzteSpielZeile);
+		RangePosition vertikal = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE, SPIEL_NR_SPALTE,
+				letzteSpielZeile);
 		RangeHelper.from(this, vertikal.spalte(SPIEL_NR_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
 		RangeHelper.from(this, vertikal.spalte(DATUM_SPALTE)).setRangeProperties(vertTrennerBoldRight);
 		RangeHelper.from(this, vertikal.spalte(NAME_B_SPALTE)).setRangeProperties(vertTrennerDoubleLeft);
@@ -231,8 +261,10 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		RangeHelper.from(this, vertikal.spalte(SPIELPNKT_B_SPALTE + 1)).setRangeProperties(vertTrennerBoldLeft);
 
 		// header Farbe
-		RangePosition headerRange = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE, SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE + 1);
-		RangeHelper.from(this, headerRange).setRangeProperties(RangeProperties.from().setCellBackColor(getKonfigurationSheet().getSpielPlanHeaderFarbe()));
+		RangePosition headerRange = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE, SPIELPNKT_B_SPALTE,
+				ERSTE_SPIELTAG_HEADER_ZEILE + 1);
+		RangeHelper.from(this, headerRange).setRangeProperties(
+				RangeProperties.from().setCellBackColor(getKonfigurationSheet().getSpielPlanHeaderFarbe()));
 
 	}
 
@@ -242,20 +274,28 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		// -----------------------------------------------------------------
 
 		Position headerPos = Position.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE);
-		ColumnProperties colPropErsteSpalten = ColumnProperties.from().setWidth(1500).centerJustify().setShrinkToFit(true);
-		StringCellValue stValHeader = StringCellValue.from(getXSpreadSheet(), headerPos).setColumnProperties(colPropErsteSpalten);
+		ColumnProperties colPropErsteSpalten = ColumnProperties.from().setWidth(1500).centerJustify()
+				.setShrinkToFit(true);
+		StringCellValue stValHeader = StringCellValue.from(getXSpreadSheet(), headerPos)
+				.setColumnProperties(colPropErsteSpalten);
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("Nr.").setEndPosMergeZeilePlus(1));
 		colPropErsteSpalten.setWidth(800);
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("KW").spalte(KW_SPALTE).setEndPosMergeZeilePlus(1));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Tag").spalte(WOCHENTAG_SPALTE).setEndPosMergeZeilePlus(1));
+		getSheetHelper()
+				.setStringValueInCell(stValHeader.setValue("Tag").spalte(WOCHENTAG_SPALTE).setEndPosMergeZeilePlus(1));
 		colPropErsteSpalten.setWidth(2000);
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Datum").spalte(DATUM_SPALTE).setEndPosMergeZeilePlus(1));
+		getSheetHelper()
+				.setStringValueInCell(stValHeader.setValue("Datum").spalte(DATUM_SPALTE).setEndPosMergeZeilePlus(1));
 
 		// header erste Zeile
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Name").spalte(NAME_A_SPALTE).setEndPosMergeSpaltePlus(1));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Punkte").spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Spiele").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("SpPunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
+		getSheetHelper()
+				.setStringValueInCell(stValHeader.setValue("Name").spalte(NAME_A_SPALTE).setEndPosMergeSpaltePlus(1));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue("Punkte").spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue("Spiele").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue("SpPunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
 		ColumnProperties colProp = ColumnProperties.from().setWidth(LIGA_MELDUNG_NAME_WIDTH);
@@ -277,7 +317,8 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("G").spalte(SPIELPNKT_B_SPALTE));
 	}
 
-	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlanHRunde, List<List<TeamPaarung>> spielPlanRRunde) throws GenerateException {
+	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlanHRunde, List<List<TeamPaarung>> spielPlanRRunde)
+			throws GenerateException {
 		RangeData rangeData = new RangeData();
 
 		List<List<TeamPaarung>> alleSpieltage = new ArrayList<>();
@@ -294,11 +335,12 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 			}
 		}
 		Position startPos = Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
-		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData)
-				.setRangeProperties(RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData).setRangeProperties(
+				RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 
 		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
-		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).isVisible(zeigeArbeitsSpalten);
+		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.isVisible(zeigeArbeitsSpalten);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_A_NR_SPALTE, spalteBreite);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_B_NR_SPALTE, spalteBreite);
 
@@ -333,21 +375,25 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
 		{
-			String formulaHeimPunkteStr = "WENN(" + Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
+			String formulaHeimPunkteStr = "WENN("
+					+ Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
 					+ Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
 
 			StringCellValue formulaHeimPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaHeimPunkteStr)
-					.setPos(Position.from(PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+					.setPos(Position.from(PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
+					.setFillAutoDown(letzteSpielZeile);
 			getSheetHelper().setFormulaInCell(formulaHeimPunkte);
 		}
 
 		// ------------------------------------------------------------------------------------
 		{
-			String formulaGastPunkteStr = "WENN(" + Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
+			String formulaGastPunkteStr = "WENN("
+					+ Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
 					+ Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
 
 			StringCellValue formulaGastPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaGastPunkteStr)
-					.setPos(Position.from(PUNKTE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
+					.setPos(Position.from(PUNKTE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
+					.setFillAutoDown(letzteSpielZeile);
 			getSheetHelper().setFormulaInCell(formulaGastPunkte);
 		}
 
@@ -357,14 +403,16 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		int letzteSpielZeile = letzteSpielZeile();
 		// fill down fuer name
 		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
-		String formulaNameA = freispielName(meldeListe.formulaSverweisSpielernamen(Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
-		StringCellValue nameAFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameA).setPos(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
-				.setFillAutoDown(letzteSpielZeile);
+		String formulaNameA = freispielName(meldeListe
+				.formulaSverweisSpielernamen(Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
+		StringCellValue nameAFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameA)
+				.setPos(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(nameAFormula);
 
-		String formulaNameB = freispielName(meldeListe.formulaSverweisSpielernamen(Position.from(TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
-		StringCellValue nameBFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameB).setPos(Position.from(NAME_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
-				.setFillAutoDown(letzteSpielZeile);
+		String formulaNameB = freispielName(meldeListe
+				.formulaSverweisSpielernamen(Position.from(TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
+		StringCellValue nameBFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameB)
+				.setPos(Position.from(NAME_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
 		getSheetHelper().setFormulaInCell(nameBFormula);
 	}
 
@@ -373,7 +421,8 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		return SearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999)).searchLastNotEmptyInSpalte().getZeile();
+		return SearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+				.searchLastNotEmptyInSpalte().getZeile();
 	}
 
 	/**
