@@ -106,7 +106,7 @@ public class TurnierSheet {
 	}
 
 	public boolean isProtected() {
-		XProtectable xProtectable = queryInterface(XProtectable.class);
+		XProtectable xProtectable = queryInterfaceXSpreadsheet(XProtectable.class);
 		return xProtectable.isProtected();
 	}
 
@@ -123,11 +123,13 @@ public class TurnierSheet {
 	 */
 	public TurnierSheet tabColor(int color) {
 		if (color > 0) {
-			XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class, wkRefxSpreadsheet.get());
+			XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class,
+					wkRefxSpreadsheet.get());
 			if (xPropSet != null) {
 				try {
 					xPropSet.setPropertyValue("TabColor", new Integer(color));
-				} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+				} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+						| WrappedTargetException e) {
 					logger.error(e.getMessage(), e);
 				}
 			}
@@ -151,15 +153,24 @@ public class TurnierSheet {
 	public XCellRange getCellRangeByPosition(RangePosition range) {
 		checkNotNull(range);
 		try {
-			return wkRefxSpreadsheet.get().getCellRangeByPosition(range.getStartSpalte(), range.getStartZeile(), range.getEndeSpalte(), range.getEndeZeile());
+			return wkRefxSpreadsheet.get().getCellRangeByPosition(range.getStartSpalte(), range.getStartZeile(),
+					range.getEndeSpalte(), range.getEndeZeile());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
 		return null;
 	}
 
-	public <C> C queryInterface(Class<C> clazz) {
+	public <C> C queryInterfaceXSpreadsheet(Class<C> clazz) {
 		return UnoRuntime.queryInterface(clazz, wkRefxSpreadsheet.get());
+	}
+
+	public <C> C queryInterfaceSpreadsheetView(Class<C> clazz) {
+		WorkingSpreadsheet workingSpreadsheet = wkRefCurrentSpreadsheet.get();
+		if (workingSpreadsheet != null) {
+			return UnoRuntime.queryInterface(clazz, workingSpreadsheet.getWorkingSpreadsheetView());
+		}
+		return null;
 	}
 
 }
