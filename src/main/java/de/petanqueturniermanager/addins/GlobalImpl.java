@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addin.XGlobal;
@@ -65,8 +66,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return serviceNames;
 	}
 
-	// ------------------- XGlobal function(s) -----------------
-
 	/**
 	 * bei jeden call das aktive Dokument ermitteln
 	 * 
@@ -74,16 +73,23 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	 */
 
 	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
-		return new DocumentPropertiesHelper(DocumentHelper.getCurrentSpreadsheetDocument(xContext));
+		XSpreadsheetDocument currentSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+		// ist dann der fall wenn das Dokument geladen wird
+		if (currentSpreadsheetDocument != null) {
+			return new DocumentPropertiesHelper(DocumentHelper.getCurrentSpreadsheetDocument(xContext));
+		}
+		return null;
 	}
 
 	@Override
 	public int ptmintproperty(String arg0) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
-		TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
+		if (hlpr != null) {
+			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
-		if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
-			return hlpr.getIntProperty(arg0, 0);
+			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+				return hlpr.getIntProperty(arg0, 0);
+			}
 		}
 		return 0;
 	}
@@ -91,10 +97,11 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	public String ptmstringproperty(String arg0) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
-		TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
-
-		if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
-			return hlpr.getStringProperty(arg0, "fehler");
+		if (hlpr != null) {
+			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
+			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+				return hlpr.getStringProperty(arg0, "fehler");
+			}
 		}
 		return "fehler";
 	}
@@ -102,7 +109,10 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	public String ptmturniersystem() {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
-		TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
-		return turnierSystemAusDocument.getBezeichnung();
+		if (hlpr != null) {
+			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
+			return turnierSystemAusDocument.getBezeichnung();
+		}
+		return TurnierSystem.KEIN.getBezeichnung();
 	}
 }
