@@ -41,7 +41,7 @@ public class PrintArea {
 		checkNotNull(range);
 		XCellRange aRange = turnierSheet.getCellRangeByPosition(range);
 		CellRangeAddress aRangeAddress = UnoRuntime.queryInterface(XCellRangeAddressable.class, aRange).getRangeAddress();
-		XPrintAreas printArea = turnierSheet.queryInterface(XPrintAreas.class);
+		XPrintAreas printArea = turnierSheet.queryInterfaceXSpreadsheet(XPrintAreas.class);
 		printArea.setPrintAreas(new CellRangeAddress[] { aRangeAddress });
 		return this;
 	}

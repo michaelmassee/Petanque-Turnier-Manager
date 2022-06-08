@@ -39,6 +39,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -78,7 +79,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	public static final int DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE = DOUBL_MODE_ANZ_TRIPLETTE + 1;
 	public static final int DOUBL_MODE_SUMMEN_SPIELBAHNEN = DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE + 1;
 
-	public static final int ERSTE_ZEILE_INFO = ERSTE_DATEN_ZEILE - 1; // Zeile 2
+	public static final int ERSTE_ZEILE_INFO = 0; // Zeile 1
 
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> meldungenSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
@@ -183,6 +184,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// TurnierSystem
 		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
+
+		// headerlines
+		SheetFreeze.from(getTurnierSheet()).setHeader(2);
 	}
 
 	/**
