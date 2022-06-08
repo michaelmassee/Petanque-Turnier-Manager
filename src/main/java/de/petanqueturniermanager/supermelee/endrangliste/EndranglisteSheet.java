@@ -50,6 +50,7 @@ import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
@@ -84,9 +85,11 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Endrangliste");
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
-		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).anzZeilenInHeader(2).sheet(this).formation(Formation.MELEE)
+		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
+				.anzZeilenInHeader(2).sheet(this).formation(Formation.MELEE)
 				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
-		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte, ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
+		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte,
+				ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSorter = new SuperMeleeRangListeSorter(this);
 	}
@@ -94,8 +97,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spieltagNr = getKonfigurationSheet().getAktiveSpieltag();
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv().hideGrid().forceCreate().spielTagPageStyle(spieltagNr)
-				.create().isDidCreate()) {
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
+				.hideGrid().forceCreate().spielTagPageStyle(spieltagNr).create().isDidCreate()) {
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}
@@ -105,7 +108,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 		int anzahlSpieltage = getAnzahlSpieltage();
 		if (anzahlSpieltage < 2) {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message("Ungültige anzahl von Spieltage. " + anzahlSpieltage).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler")
+					.message("Ungültige anzahl von Spieltage. " + anzahlSpieltage).show();
 			return;
 		}
 
@@ -136,13 +140,17 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		rangListeSorter.doSort();
 		Position footerPos = endRanglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
+		processBoxinfo("Header festsetzen");
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
 		processBoxinfo("Print-Bereich");
-		Position linksOben = Position.from(SPIELER_NR_SPALTE, AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position linksOben = Position.from(SPIELER_NR_SPALTE,
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
-		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
+				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {
@@ -156,32 +164,42 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
 		int letzteSpalte = getLetzteSpalte();
 
-		Integer streichSpieltag_geradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
-		Integer streichSpieltag_unGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
-		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(streichSpieltag_geradeColor);
-		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(streichSpieltag_unGeradeColor);
+		Integer streichSpieltag_geradeColor = getKonfigurationSheet()
+				.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
+		Integer streichSpieltag_unGeradeColor = getKonfigurationSheet()
+				.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
+		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(
+				streichSpieltag_geradeColor);
+		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(
+				streichSpieltag_unGeradeColor);
 
 		Integer geradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade();
-		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
-		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(unGeradeColor);
+		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
+				geradeColor);
+		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(
+				unGeradeColor);
 
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
 
 		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
 		// Achtung spalte plus 1 weil A ist nicht 0 sondern 1
-		String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (rangListeSorter.validateSpalte() + 1) + "))))>0";
+		String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (rangListeSorter.validateSpalte() + 1)
+				+ "))))>0";
 
 		ConditionalFormatHelper.from(this, datenRange).clear().
 		// -----------------------------
 		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyAndReset().reset().
+				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyAndReset()
+				.reset().
 				// ------------------------
 				// Formula fuer streichspieltag
 				// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3);ISTGERADE(ZEILE()))
-				formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA).style(streichSpieltagHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA)
+				.style(streichSpieltagHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ---------------------
-				formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA).style(streichSpieltagHintergrundFarbeUnGeradeStyle).applyAndReset().reset().
+				formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA)
+				.style(streichSpieltagHintergrundFarbeUnGeradeStyle).applyAndReset().reset().
 				// --------------------------
 				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset().reset().
 				// ---------------------------
@@ -211,7 +229,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		// 2. prüfen ob wert in steichspieltag spalte < anzahlSpieltage
 		String zweitePruefung = verweisAufStreichSpalte + "<" + (anzahlSpieltage + 1);
 		// 3. prüfen ob wert in steichspieltag spalte == aktuelle spalte block
-		String drittePruefung = verweisAufStreichSpalte + "=ROUNDUP((COLUMN()-" + ERSTE_SPIELTAG_SPALTE + ")/" + anzSpaltenInSpieltag + ";0)";
+		String drittePruefung = verweisAufStreichSpalte + "=ROUNDUP((COLUMN()-" + ERSTE_SPIELTAG_SPALTE + ")/"
+				+ anzSpaltenInSpieltag + ";0)";
 		// 4. prüfen ob gerade oder ungerade zeile
 		String viertePruefung = isCondition + "(ROW())";
 		return "AND(" + erstePruefung + ";" + zweitePruefung + ";" + drittePruefung + ";" + viertePruefung + ")";
@@ -222,20 +241,28 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		processBoxinfo("Formatiere Streichspieltag");
 
 		int schlechtesteSpielTageSpalte = getSchlechtesteSpielTageSpalte();
-		NumberCellValue numberCellValueSchlechtesteSpielTag = NumberCellValue.from(getXSpreadSheet(), schlechtesteSpielTageSpalte, ERSTE_DATEN_ZEILE);
+		NumberCellValue numberCellValueSchlechtesteSpielTag = NumberCellValue.from(getXSpreadSheet(),
+				schlechtesteSpielTageSpalte, ERSTE_DATEN_ZEILE);
 
 		// Header Streichspieltag
-		Position startStreichspieltag = Position.from(getSchlechtesteSpielTageSpalte(), AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position startStreichspieltag = Position.from(getSchlechtesteSpielTageSpalte(),
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position endStreichspieltag = Position.from(startStreichspieltag).zeilePlus(2);
 
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerStreichspieltag = StringCellValue.from(getXSpreadSheet(), startStreichspieltag).setEndPosMerge(endStreichspieltag).setCharWeight(FontWeight.LIGHT)
-				.setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER).setValue("Streich").setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
-				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Streich-Spieltag").setColumnProperties(columnProperties);
+		ColumnProperties columnProperties = ColumnProperties.from()
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerStreichspieltag = StringCellValue.from(getXSpreadSheet(), startStreichspieltag)
+				.setEndPosMerge(endStreichspieltag).setCharWeight(FontWeight.LIGHT).setRotateAngle(27000)
+				.setVertJustify(CellVertJustify2.CENTER).setValue("Streich")
+				.setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
+				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Streich-Spieltag")
+				.setColumnProperties(columnProperties);
 		getSheetHelper().setStringValueInCell(headerStreichspieltag);
 		// Daten
-		RangePosition rangPos = RangePosition.from(getSchlechtesteSpielTageSpalte(), ERSTE_DATEN_ZEILE, getSchlechtesteSpielTageSpalte(), getLetzteDatenZeile());
-		CellProperties celRangeProp = CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
+		RangePosition rangPos = RangePosition.from(getSchlechtesteSpielTageSpalte(), ERSTE_DATEN_ZEILE,
+				getSchlechtesteSpielTageSpalte(), getLetzteDatenZeile());
+		CellProperties celRangeProp = CellProperties.from()
+				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
 				.setHoriJustify(CellHoriJustify.CENTER);
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), rangPos, celRangeProp);
 
@@ -244,7 +271,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			SpielTagNr spielTagNr = schlechtesteSpieltag(spielerNr);
 			int spielerZeile = spielerSpalte.getSpielerZeileNr(spielerNr);
 			if (spielTagNr != null && spielerZeile > 0) {
-				getSheetHelper().setValInCell(numberCellValueSchlechtesteSpielTag.zeile(spielerZeile).setValue((double) spielTagNr.getNr()));
+				getSheetHelper().setValInCell(
+						numberCellValueSchlechtesteSpielTag.zeile(spielerZeile).setValue((double) spielTagNr.getNr()));
 			}
 		}
 	}
@@ -286,7 +314,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 			for (int summeSpalteCntr = 0; summeSpalteCntr < getAnzSpaltenInSpieltag(); summeSpalteCntr++) {
 				SheetRunner.testDoCancelTask();
-				String verweisAufSummeSpalte = spieltagRanglisteSheet.formulaSverweisAufSummeSpalte(SpielTagNr.from(spieltagCntr), summeSpalteCntr, verweisAufSpalteSpielerNr);
+				String verweisAufSummeSpalte = spieltagRanglisteSheet.formulaSverweisAufSummeSpalte(
+						SpielTagNr.from(spieltagCntr), summeSpalteCntr, verweisAufSpalteSpielerNr);
 				strVal.setValue("IFNA(" + verweisAufSummeSpalte + ";\"\")");
 				getSheetHelper().setFormulaInCell(strVal.setFillAutoDown(letzteDatenZeile));
 				strVal.spaltePlusEins();
@@ -320,26 +349,32 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		Position ersteSpielTagErsteZelle = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE);
 		Position letzteSpielTagLetzteZelle = Position.from(letzteSpieltagLetzteSpalte, ERSTE_DATEN_ZEILE);
 
-		String formula = "=COUNTIF(" + ersteSpielTagErsteZelle.getAddress() + ":" + letzteSpielTagLetzteZelle.getAddress() + ";\"<>\")/" + ANZAHL_SPALTEN_IN_SUMME;
+		String formula = "=COUNTIF(" + ersteSpielTagErsteZelle.getAddress() + ":"
+				+ letzteSpielTagLetzteZelle.getAddress() + ";\"<>\")/" + ANZAHL_SPALTEN_IN_SUMME;
 
 		// letzte Spalte ist anzahl spieltage
-		ColumnProperties celColumProp = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue formulaVal = StringCellValue.from(getXSpreadSheet(), Position.from(anzSpielTageSpalte(), ERSTE_DATEN_ZEILE)).setValue(formula).setFillAutoDown(letzteZeile)
-				.setColumnProperties(celColumProp);
+		ColumnProperties celColumProp = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue formulaVal = StringCellValue
+				.from(getXSpreadSheet(), Position.from(anzSpielTageSpalte(), ERSTE_DATEN_ZEILE)).setValue(formula)
+				.setFillAutoDown(letzteZeile).setColumnProperties(celColumProp);
 		getSheetHelper().setFormulaInCell(formulaVal);
 
 		// Spalte formatieren
 		// Header AnzahlTage
-		Position start = Position.from(anzSpielTageSpalte(), AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
+		Position start = Position.from(anzSpielTageSpalte(),
+				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position end = Position.from(start).zeilePlus(2);
-		StringCellValue headerAnzTage = StringCellValue.from(getXSpreadSheet(), start).setEndPosMerge(end).setCharWeight(FontWeight.LIGHT).setRotateAngle(27000)
-				.setVertJustify(CellVertJustify2.CENTER).setValue("Tage").setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
+		StringCellValue headerAnzTage = StringCellValue.from(getXSpreadSheet(), start).setEndPosMerge(end)
+				.setCharWeight(FontWeight.LIGHT).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
+				.setValue("Tage").setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
 				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Gespielte Tage");
 		getSheetHelper().setStringValueInCell(headerAnzTage);
 
 		// Daten
 		RangePosition rangPos = RangePosition.from(formulaVal.getPos(), formulaVal.getFillAuto());
-		CellProperties celRangeProp = CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder());
+		CellProperties celRangeProp = CellProperties.from()
+				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder());
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), rangPos, celRangeProp);
 
 	}
@@ -390,7 +425,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME; summeSpalteCntr++) {
 			SheetRunner.testDoCancelTask();
 
-			StringCellValue endsummeFormula = StringCellValue.from(getXSpreadSheet(), Position.from(ersteSpalteEndsumme + summeSpalteCntr, spielerZeile));
+			StringCellValue endsummeFormula = StringCellValue.from(getXSpreadSheet(),
+					Position.from(ersteSpalteEndsumme + summeSpalteCntr, spielerZeile));
 			endsummeFormula.setValue("SUM(" + felderList[summeSpalteCntr] + ")");
 			getSheetHelper().setFormulaInCell(endsummeFormula);
 		}
@@ -431,13 +467,17 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 			int ersteSpieltagSummeSpalte = ERSTE_SPIELTAG_SPALTE + ((spieltagCntr - 1) * ANZAHL_SPALTEN_IN_SUMME);
 			// summe vorhanden ?
-			String spielPlus = getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte, spielerZeile));
+			String spielPlus = getSheetHelper().getTextFromCell(sheet,
+					Position.from(ersteSpieltagSummeSpalte, spielerZeile));
 			if (StringUtils.isNotBlank(spielPlus)) {
 				SpielerSpieltagErgebnis ergebnis = new SpielerSpieltagErgebnis(spielTagNr, spielrNr);
 				ergebnis.setSpielPlus(NumberUtils.toInt(spielPlus));
-				ergebnis.setSpielMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + SPIELE_MINUS_OFFS, spielerZeile))));
-				ergebnis.setPunktePlus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + PUNKTE_PLUS_OFFS, spielerZeile))));
-				ergebnis.setPunkteMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet, Position.from(ersteSpieltagSummeSpalte + PUNKTE_MINUS_OFFS, spielerZeile))));
+				ergebnis.setSpielMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet,
+						Position.from(ersteSpieltagSummeSpalte + SPIELE_MINUS_OFFS, spielerZeile))));
+				ergebnis.setPunktePlus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet,
+						Position.from(ersteSpieltagSummeSpalte + PUNKTE_PLUS_OFFS, spielerZeile))));
+				ergebnis.setPunkteMinus(NumberUtils.toInt(getSheetHelper().getTextFromCell(sheet,
+						Position.from(ersteSpieltagSummeSpalte + PUNKTE_MINUS_OFFS, spielerZeile))));
 				spielerErgebnisse.add(ergebnis);
 			} else {
 				// nuller spieltag

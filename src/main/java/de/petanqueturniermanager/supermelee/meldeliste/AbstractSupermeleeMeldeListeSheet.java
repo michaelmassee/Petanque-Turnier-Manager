@@ -186,7 +186,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
 
 		// headerlines
-		SheetFreeze.from(getTurnierSheet()).setHeader(2);
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
 	}
 
 	/**

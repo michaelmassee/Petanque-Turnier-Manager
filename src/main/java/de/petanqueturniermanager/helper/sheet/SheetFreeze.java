@@ -16,7 +16,11 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 public class SheetFreeze {
 
+	// To freeze only horizontally, specify nRows as 0. To freeze only vertically, specify nColumns as 0.
+
 	private final XViewFreezable sheetFreeze;
+	private int anzZeilen = 0;
+	private int anzSpalten = 0;
 
 	private SheetFreeze(TurnierSheet turnierSheet) {
 		checkNotNull(turnierSheet);
@@ -31,17 +35,19 @@ public class SheetFreeze {
 		return new SheetFreeze(TurnierSheet.from(xSpreadsheet, currentSpreadsheet));
 	}
 
-	public SheetFreeze setHeader(int anzZeilen) {
-		// freezeAtPosition ([in] long nColumns, [in] long nRows)
-		// To freeze only horizontally, specify nRows as 0. To freeze only vertically, specify nColumns as 0.
-		sheetFreeze.freezeAtPosition(0, anzZeilen);
+	public SheetFreeze anzZeilen(int anzZeilen) {
+		this.anzZeilen = anzZeilen;
 		return this;
 	}
 
-	public SheetFreeze setLeft(int anzSpalten) {
-		// freezeAtPosition ([in] long nColumns, [in] long nRows)
-		// To freeze only horizontally, specify nRows as 0. To freeze only vertically, specify nColumns as 0.
-		sheetFreeze.freezeAtPosition(anzSpalten, 0);
+	public SheetFreeze anzSpalten(int anzSpalten) {
+		this.anzSpalten = anzSpalten;
 		return this;
 	}
+
+	public SheetFreeze doFreeze() {
+		sheetFreeze.freezeAtPosition(this.anzSpalten, this.anzZeilen);
+		return this;
+	}
+
 }
