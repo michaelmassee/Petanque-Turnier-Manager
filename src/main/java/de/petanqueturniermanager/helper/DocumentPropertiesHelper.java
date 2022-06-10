@@ -105,7 +105,9 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * Propertie in interne Cache, und Document speichern
+	 * Property in interne Cache, und Document speichern<br>
+	 * nur wenn sich der inhalt geaendert hat wird gespeichert<br>
+	 * fires TurnierEventType.PropertiesChanged
 	 *
 	 * @param propName
 	 * @param val
@@ -117,7 +119,7 @@ public class DocumentPropertiesHelper {
 				setStringPropertyInDocument(propName, val);
 				currentPropListe.put(propName, val);
 				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,
-						new OnProperiesChangedEvent(xSpreadsheetDocument));
+						new OnProperiesChangedEvent(xSpreadsheetDocument).addChanged(propName, oldVal, val));
 			}
 		}
 	}
