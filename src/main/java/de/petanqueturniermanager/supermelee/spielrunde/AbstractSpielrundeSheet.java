@@ -96,7 +96,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 
-	private SpielTagNr spielTag = null;
+	// private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
 
 	public AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
@@ -110,7 +110,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	public AbstractSupermeleeMeldeListeSheet getMeldeListe() {
-		meldeListe.setSpielTag(getSpielTag());
 		return meldeListe;
 	}
 
@@ -963,14 +962,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		RangeHelper.from(this, rangPos).clearRange();
 	}
 
-	public SpielTagNr getSpielTag() {
-		checkNotNull(spielTag);
-		return spielTag;
+	public SpielTagNr getSpielTag() throws GenerateException {
+		return getKonfigurationSheet().getAktiveSpieltag();
 	}
 
-	public void setSpielTag(SpielTagNr spielTag) {
+	public void setSpielTag(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag);
-		this.spielTag = spielTag;
+		getKonfigurationSheet().setAktiveSpieltag(spielTag);
 	}
 
 	/**

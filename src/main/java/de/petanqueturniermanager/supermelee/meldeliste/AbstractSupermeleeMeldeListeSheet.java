@@ -30,6 +30,7 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -84,7 +85,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> meldungenSpalte;
 	private final SupermeleeTeamPaarungenSheet supermeleeTeamPaarungen;
 	private final MeldeListeHelper<SpielerMeldungen, Spieler> meldeListeHelper;
-	private SpielTagNr spielTag = null;
+	// private SpielTagNr spielTag = null;
 
 	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
@@ -210,10 +211,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		getSheetHelper().setStringValueInCell(labelVal);
 		// ---------------------------------------------------
 		Position posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
-		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, GlobalImpl.PTMSPIELTAG)
+		// StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, GlobalImpl.PTMSPIELTAG)
+		// .setBorder(border);
+		// getSheetHelper().setFormulaInCell(spielTagFormula);
+		NumberCellValue spielTag = NumberCellValue.from(sheet, posSpieltagFormula, getSpielTag().getNr())
 				.setBorder(border);
-		getSheetHelper().setFormulaInCell(spielTagFormula);
-
+		getSheetHelper().setValInCell(spielTag);
+		// ---------------------------------------------------
 		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
 		StringCellValue spielRundeFormula = StringCellValue.from(sheet, posSpielrundeFormula, GlobalImpl.PTMSPIELRUNDE)
 				.setBorder(border);
@@ -746,14 +750,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		return meldungenSpalte.getErsteDatenZiele();
 	}
 
-	public final SpielTagNr getSpielTag() {
-		checkNotNull(spielTag, "spielTag == null");
-		return spielTag;
+	public final SpielTagNr getSpielTag() throws GenerateException {
+		return getKonfigurationSheet().getAktiveSpieltag();
 	}
 
-	public final void setSpielTag(SpielTagNr spielTag) {
+	public final void setSpielTag(SpielTagNr spielTag) throws GenerateException {
 		checkNotNull(spielTag, "spielTag == null");
-		this.spielTag = spielTag;
+		getKonfigurationSheet().setAktiveSpieltag(spielTag);
 	}
 
 	public void setAktiveSpieltag(SpielTagNr spielTagNr) throws GenerateException {
