@@ -3,7 +3,10 @@ package de.petanqueturniermanager.addins;
 import com.sun.star.lib.uno.helper.WeakBase;
 
 /**
- * Erstellung 23.05.2022 / Michael Massee
+ * Erstellung 23.05.2022 / Michael Massee http://biochemfusion.com/doc/Calc_addin_howto.html<br>
+ * https://wiki.openoffice.org/wiki/Calc/Add-In/Project_Type#Generated_Code<br>
+ * https://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Spreadsheet_Add-Ins<br>
+ * https://github.com/hernad/libreoffice-sdk-examples/blob/4b767eac97f79e3bdb5c16e461891d89ab991470/examples/DevelopersGuide/Spreadsheet/ExampleAddIn.java
  */
 
 public abstract class AbstractAddInImpl extends WeakBase
