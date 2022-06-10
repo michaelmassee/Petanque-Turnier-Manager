@@ -52,11 +52,15 @@ public class NumberCellValue extends AbstractCellValueWithSheet<NumberCellValue,
 		return NumberCellValue.from(sheet, Position.from(spalte, zeile), 0);
 	}
 
+	public static final NumberCellValue from(XSpreadsheet sheet, int spalte, int zeile, Integer value) {
+		return NumberCellValue.from(sheet, Position.from(spalte, zeile)).setValue(value);
+	}
+
 	public static final NumberCellValue from(XSpreadsheet sheet, int spalte, int zeile, double value) {
 		return NumberCellValue.from(sheet, Position.from(spalte, zeile), value);
 	}
 
-	public NumberCellValue setValue(Integer value) {
+	public final NumberCellValue setValue(Integer value) {
 		super.setValue((double) value);
 		return this;
 	}
