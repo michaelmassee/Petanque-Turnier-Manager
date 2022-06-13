@@ -31,7 +31,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.SearchHelper;
+import de.petanqueturniermanager.helper.sheet.RangeSearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
@@ -421,7 +421,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		return SearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+		return RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
 				.searchLastNotEmptyInSpalte().getZeile();
 	}
 

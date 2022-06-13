@@ -33,7 +33,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.SearchHelper;
+import de.petanqueturniermanager.helper.sheet.RangeSearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -176,7 +176,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * @throws GenerateException
 	 */
 	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
-		Position result = SearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN)).searchLastEmptyInSpalte();
+		Position result = RangeSearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN)).searchLastEmptyInSpalte();
 		if (result != null) {
 			return result.getZeile();
 		}
@@ -190,7 +190,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * @throws GenerateException
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
-		Position resultFreieZelle = SearchHelper.from(getISheet(), RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN))
+		Position resultFreieZelle = RangeSearchHelper.from(getISheet(), RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN))
 				.searchLastNotEmptyInSpalte();
 		if (resultFreieZelle != null) {
 			return resultFreieZelle.getZeile();
@@ -206,7 +206,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
 		// muss in komplette spalte wert stehen. Deswegen mit ^ und $
-		Position result = SearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
+		Position result = RangeSearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
 				.searchNachRegExprInSpalte("^" + spielerNr + "$");
 		if (result != null) {
 			// Validieren !

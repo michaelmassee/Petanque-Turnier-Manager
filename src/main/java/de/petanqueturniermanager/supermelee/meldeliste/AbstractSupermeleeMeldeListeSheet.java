@@ -209,15 +209,32 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		labelVal.zeilePlus(1).setValue("Spielrunde").setComment("Aktive Spielrunde");
 		getSheetHelper().setStringValueInCell(labelVal);
 		// ---------------------------------------------------
+		setProperties();
+
+	}
+
+	protected void setProperties() throws GenerateException {
+		XSpreadsheet sheet = getXSpreadSheet();
+		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+		Position posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 		Position posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
 		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, GlobalImpl.PTMSPIELTAG)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielTagFormula);
+//		NumberCellValue spielTagNr = NumberCellValue
+//				.from(sheet, posSpieltagFormula, this.getKonfigurationSheet().getAktiveSpieltag().getNr())
+//				.setBorder(border);
+//		getSheetHelper().setValInCell(spielTagNr);
 
 		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
 		StringCellValue spielRundeFormula = StringCellValue.from(sheet, posSpielrundeFormula, GlobalImpl.PTMSPIELRUNDE)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielRundeFormula);
+//		NumberCellValue spielRndNr = NumberCellValue
+//				.from(sheet, posSpielrundeFormula, this.getKonfigurationSheet().getAktiveSpielRunde().getNr())
+//				.setBorder(border);
+//		getSheetHelper().setValInCell(spielRndNr);
+
 	}
 
 	protected void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {

@@ -23,8 +23,6 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XStorable;
 import com.sun.star.io.IOException;
 import com.sun.star.sheet.XCalculatable;
-import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -218,8 +216,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	}
 
 	public XCalculatable getxCalculatable() {
-		XSpreadsheetDocument doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-		return UnoRuntime.queryInterface(XCalculatable.class, doc);
+		return getWorkingSpreadsheet().getxCalculatable();
 	}
 
 	public static boolean isRunning() {

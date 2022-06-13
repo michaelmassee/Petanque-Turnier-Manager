@@ -28,24 +28,24 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
-public class SearchHelper extends BaseHelper {
+public class RangeSearchHelper extends BaseHelper {
 
-	private static final Logger logger = LogManager.getLogger(SearchHelper.class);
+	private static final Logger logger = LogManager.getLogger(RangeSearchHelper.class);
 	private final RangePosition rangePos;
 
-	private SearchHelper(ISheet iSheet, RangePosition rangePos) {
+	private RangeSearchHelper(ISheet iSheet, RangePosition rangePos) {
 		super(iSheet);
 		checkNotNull(rangePos.getStart());
 		checkNotNull(rangePos.getEnde());
 		this.rangePos = checkNotNull(rangePos);
 	}
 
-	public static SearchHelper from(ISheet iSheet, RangePosition rangePos) {
-		return new SearchHelper(iSheet, rangePos);
+	public static RangeSearchHelper from(ISheet iSheet, RangePosition rangePos) {
+		return new RangeSearchHelper(iSheet, rangePos);
 	}
 
-	public static SearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
-		return new SearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
+	public static RangeSearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
+		return new RangeSearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
 	}
 
 	/**
