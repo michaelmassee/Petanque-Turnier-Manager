@@ -1,7 +1,7 @@
 /**
  * Erstellung 20.11.2019 / Michael Massee
  */
-package de.petanqueturniermanager.helper.sheet;
+package de.petanqueturniermanager.helper.sheet.search;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -23,29 +23,31 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 /**
  * @author Michael Massee
  *
  */
-public class RangeSearchHelper extends BaseHelper {
+public class SheetSearchHelper extends AbstractSearchHelper {
 
-	private static final Logger logger = LogManager.getLogger(RangeSearchHelper.class);
+	private static final Logger logger = LogManager.getLogger(SheetSearchHelper.class);
 	private final RangePosition rangePos;
 
-	private RangeSearchHelper(ISheet iSheet, RangePosition rangePos) {
+	private SheetSearchHelper(ISheet iSheet, RangePosition rangePos) {
 		super(iSheet);
 		checkNotNull(rangePos.getStart());
 		checkNotNull(rangePos.getEnde());
 		this.rangePos = checkNotNull(rangePos);
 	}
 
-	public static RangeSearchHelper from(ISheet iSheet, RangePosition rangePos) {
-		return new RangeSearchHelper(iSheet, rangePos);
+	public static SheetSearchHelper from(ISheet iSheet, RangePosition rangePos) {
+		return new SheetSearchHelper(iSheet, rangePos);
 	}
 
-	public static RangeSearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
-		return new RangeSearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
+	public static SheetSearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
+		return new SheetSearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
 	}
 
 	/**
@@ -72,7 +74,8 @@ public class RangeSearchHelper extends BaseHelper {
 			searchDescriptor.setPropertyValue("SearchBackwards", false);
 			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
 			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
 			logger.fatal(e);
 		}
 		return result;
@@ -118,7 +121,8 @@ public class RangeSearchHelper extends BaseHelper {
 			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
 			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
 
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
 			logger.fatal(e);
 		}
 		return result;
@@ -129,7 +133,8 @@ public class RangeSearchHelper extends BaseHelper {
 		Object findFirstResult = xSearchableFromRange.findFirst(searchDescriptor);
 		XCellRange xCellRangeResult = UnoRuntime.queryInterface(XCellRange.class, findFirstResult);
 		if (xCellRangeResult != null) {
-			XCellRangeAddressable xCellRangeAddressable = UnoRuntime.queryInterface(XCellRangeAddressable.class, xCellRangeResult);
+			XCellRangeAddressable xCellRangeAddressable = UnoRuntime.queryInterface(XCellRangeAddressable.class,
+					xCellRangeResult);
 			CellRangeAddress cellRangeAddress = xCellRangeAddressable.getRangeAddress();
 			result = Position.from(cellRangeAddress.StartColumn, cellRangeAddress.StartRow);
 		}

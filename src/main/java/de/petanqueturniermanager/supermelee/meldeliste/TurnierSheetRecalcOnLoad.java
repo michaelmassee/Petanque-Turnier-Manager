@@ -37,6 +37,8 @@ public class TurnierSheetRecalcOnLoad implements IGlobalEventListener {
 		DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
 		if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
 
+			//
+
 			// just do a global recalc
 			XCalculatable xCal = UnoRuntime.queryInterface(XCalculatable.class, xSpreadsheetDocument);
 			if (xCal != null) {

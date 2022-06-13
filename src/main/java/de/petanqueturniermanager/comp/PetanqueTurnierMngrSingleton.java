@@ -61,7 +61,7 @@ public class PetanqueTurnierMngrSingleton {
 		ProcessBox.init(context); // der muss zuerst
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUdateCache();
-		addGlobalEventListener(new TurnierSheetRecalcOnLoad(context)); // supermelee
+		addGlobalEventListener(new TurnierSheetRecalcOnLoad(context));
 	}
 
 	// register global EventListener
