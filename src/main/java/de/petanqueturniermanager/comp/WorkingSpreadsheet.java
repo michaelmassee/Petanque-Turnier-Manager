@@ -13,6 +13,7 @@ import com.sun.star.frame.XController;
 import com.sun.star.frame.XDispatchHelper;
 import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XStorable;
+import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.UnoRuntime;
@@ -126,5 +127,9 @@ public class WorkingSpreadsheet {
 			logger.error(e.getMessage(), e);
 		}
 		return interfaceObj;
+	}
+
+	public XCalculatable getxCalculatable() {
+		return UnoRuntime.queryInterface(XCalculatable.class, workingSpreadsheetDocument);
 	}
 }

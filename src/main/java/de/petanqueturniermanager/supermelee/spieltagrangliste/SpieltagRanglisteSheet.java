@@ -32,7 +32,7 @@ import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.SearchHelper;
+import de.petanqueturniermanager.helper.sheet.RangeSearchHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -316,7 +316,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		List<Integer> spielerNrlist = new ArrayList<>();
 		// letzte Zeile ?
 		RangePosition searchRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, 9999);
-		Position lastNotEmptyPos = SearchHelper.from(this, searchRange).searchLastNotEmptyInSpalte();
+		Position lastNotEmptyPos = RangeSearchHelper.from(this, searchRange).searchLastNotEmptyInSpalte();
 
 		// daten in array einlesen
 		RangePosition spielNrRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,

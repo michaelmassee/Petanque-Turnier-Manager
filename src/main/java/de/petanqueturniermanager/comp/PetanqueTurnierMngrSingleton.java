@@ -22,6 +22,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSheetRecalcOnLoad;
 
 /**
  * @author Michael Massee
@@ -60,6 +61,7 @@ public class PetanqueTurnierMngrSingleton {
 		ProcessBox.init(context); // der muss zuerst
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUdateCache();
+		addGlobalEventListener(new TurnierSheetRecalcOnLoad(context)); // supermelee
 	}
 
 	// register global EventListener
