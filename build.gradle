@@ -32,11 +32,25 @@ dependencies {
     testImplementation 'org.powermock:powermock-api-mockito2:2.+'
 }
 
+eclipse {
+    classpath {
+       downloadSources=true
+       downloadJavadoc = true
+    }
+}
+
+eclipse.project {
+      // https://docs.gradle.org/current/dsl/org.gradle.plugins.ide.eclipse.model.EclipseProject.html
+      natures 'org.libreoffice.ide.eclipse.core.unonature', 'org.eclipse.buildship.core.gradleprojectnature'
+      buildCommand 'org.libreoffice.ide.eclipse.core.types'
+}
+
+/*
 eclipse.classpath.file {
    withXml { 
      def node = it.asNode()
      def alreadyExistLibreOffice = node.find { entry ->
-       entry.path.text().endsWith ("LibreOffice 6.2") 
+      entry.path.text().endsWith ("LibreOffice 6.2") 
      }
      if (!alreadyExistLibreOffice) {
 		node.appendNode('classpathentry', 
@@ -54,8 +68,8 @@ eclipse.classpath.file {
 		        [kind: 'lib', path: 'build'])
 	}
   }
-	
 }
+*/
 
 task cleanCache (type: Delete) {
   delete "dist/.ooo-debug/user/uno_packages/cache"
