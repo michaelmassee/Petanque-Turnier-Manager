@@ -45,9 +45,9 @@ eclipse.project {
       buildCommand 'org.libreoffice.ide.eclipse.core.types'
 }
 
-/*
 eclipse.classpath.file {
-   withXml { 
+   withXml {
+    /**
      def node = it.asNode()
      def alreadyExistLibreOffice = node.find { entry ->
       entry.path.text().endsWith ("LibreOffice 6.2") 
@@ -57,7 +57,7 @@ eclipse.classpath.file {
 		        [kind: 'con', path: 'org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2'])
 	}
 	
-		
+**/		
 	// <classpathentry kind="lib" path="build"/>
 	 def alreadyExistLibBuild = node.find { entry ->
        entry.kind.text().equals ("lib") &&  entry.path.text().equals ("build")
@@ -69,7 +69,6 @@ eclipse.classpath.file {
 	}
   }
 }
-*/
 
 task cleanCache (type: Delete) {
   delete "dist/.ooo-debug/user/uno_packages/cache"
