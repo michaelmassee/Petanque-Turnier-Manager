@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.addins;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,6 +27,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	private static final String SERVICE_NAME = "de.petanqueturniermanager.addin.GlobalAddIn";
 	private static final String[] serviceNames = { SERVICE_NAME };
 
+	private static AtomicBoolean isDirty;
+
 	// =de.petanqueturniermanager.addin.GlobalAddIn.ptmspielrunde()
 	public static final String PTMSPIELTAG = SERVICE_NAME + ".ptmintproperty(\""
 			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")";
@@ -35,6 +39,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
 		this.xContext = xContext;
+		this.isDirty = new AtomicBoolean(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
@@ -84,6 +89,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		if (doc != null) {
 			return new DocumentPropertiesHelper(DocumentHelper.getCurrentSpreadsheetDocument(xContext));
 		}
+		// das hat nicht funktioniert
+		isDirty.set(true);
 		logger.debug("XSpreadsheetDocument = null");
 		return null;
 	}
@@ -96,7 +103,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
 				Integer propVal = hlpr.getIntProperty(arg0, 0);
-				logger.debug("return:" + propVal + " von:" + arg0);
+				logger.debug("return:" + arg0 + "=" + propVal);
 				return propVal;
 			}
 		}
@@ -111,7 +118,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
 				String propVal = hlpr.getStringProperty(arg0, "fehler");
-				logger.debug("return:" + propVal + " von:" + arg0);
+				logger.debug("return:" + arg0 + "=" + propVal);
 				return propVal;
 			}
 		}
@@ -127,4 +134,9 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		}
 		return TurnierSystem.KEIN.getBezeichnung();
 	}
+
+	static boolean getAndSetDirty(boolean newval) {
+		return isDirty.getAndSet(newval);
+	}
+
 }
