@@ -13,6 +13,7 @@ import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XCellRangeAddressable;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
@@ -22,32 +23,31 @@ import com.sun.star.util.XSearchable;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 /**
  * @author Michael Massee
  *
  */
-public class SheetSearchHelper extends AbstractSearchHelper {
+public class SheetSearchHelper {
 
 	private static final Logger logger = LogManager.getLogger(SheetSearchHelper.class);
-	private final RangePosition rangePos;
+	private final XSpreadsheet xSpreadsheet;
 
-	private SheetSearchHelper(ISheet iSheet, RangePosition rangePos) {
-		super(iSheet);
-		checkNotNull(rangePos.getStart());
-		checkNotNull(rangePos.getEnde());
-		this.rangePos = checkNotNull(rangePos);
+	private SheetSearchHelper(XSpreadsheet xSpreadsheet) {
+		this.xSpreadsheet = xSpreadsheet;
 	}
 
-	public static SheetSearchHelper from(ISheet iSheet, RangePosition rangePos) {
-		return new SheetSearchHelper(iSheet, rangePos);
-	}
+	/**
+	 * TODO noch baustelle
+	 * 
+	 * @param sheetWkRef
+	 * @return
+	 * @throws GenerateException
+	 */
 
-	public static SheetSearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
-		return new SheetSearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
+	public static SheetSearchHelper from(WeakRefHelper<ISheet> sheetWkRef) throws GenerateException {
+		return new SheetSearchHelper(checkNotNull(sheetWkRef).get().getXSpreadSheet());
 	}
 
 	/**
@@ -61,19 +61,24 @@ public class SheetSearchHelper extends AbstractSearchHelper {
 	 * @throws GenerateException
 	 */
 
-	public Position searchNachRegExprInSpalte(String regExpr) throws GenerateException {
+	/**
+	 * TODO noch baustelle
+	 */
+
+	public Position searchNachRegExpr(String regExpr) throws GenerateException {
 		checkNotNull(regExpr);
 
 		Position result = null;
 		try {
-			XSearchable xSearchableFromRange = getXSearchableFromRange(rangePos);
-			XSearchDescriptor searchDescriptor = xSearchableFromRange.createSearchDescriptor();
+			XSearchable xSearchableFromSheet = getXSearchableFromSheet();
+			XSearchDescriptor searchDescriptor = xSearchableFromSheet.createSearchDescriptor();
 			searchDescriptor.setSearchString(regExpr);
 			// properties
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
+			// https://www.openoffice.org/api/docs/common/ref/com/sun/star/util/XSearchable-xref.html
 			searchDescriptor.setPropertyValue("SearchBackwards", false);
 			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
-			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
+			result = getRangePositionFromResult(xSearchableFromSheet, searchDescriptor);
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
 			logger.fatal(e);
@@ -81,51 +86,8 @@ public class SheetSearchHelper extends AbstractSearchHelper {
 		return result;
 	}
 
-	/**
-	 * suche nach der letzte leere Zelle in die 1 Spalte von Range
-	 *
-	 * @param rangePos Range mit Spalte
-	 * @return wenn gefunden dann letzte Zelle, sonnst erste Zelle aus Range
-	 * @throws GenerateException
-	 */
-
-	public Position searchLastEmptyInSpalte() throws GenerateException {
-		Position result = searchLastNotEmptyInSpalte();
-		if (result != null) {
-			result.zeilePlusEins();
-		} else {
-			result = Position.from(rangePos.getStartSpalte(), rangePos.getStartZeile());
-		}
-		return result;
-	}
-
-	/**
-	 * suche nach der letzte nicht leere Zelle in die 1 Spalte von Range
-	 *
-	 * @param rangePos Range mit Spalte
-	 * @return wenn gefunden dann letzte Zelle, sonnst Null
-	 * @throws GenerateException
-	 */
-
-	public Position searchLastNotEmptyInSpalte() throws GenerateException {
-
-		Position result = null;
-		try {
-			XSearchable xSearchableFromRange = getXSearchableFromRange(rangePos);
-			XSearchDescriptor searchDescriptor = xSearchableFromRange.createSearchDescriptor();
-			searchDescriptor.setSearchString(".*");
-			// properties
-			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
-			// searchDescriptor.setPropertyValue("SearchWords", true);
-			searchDescriptor.setPropertyValue("SearchBackwards", true); // letzte eintrag suchen
-			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
-			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
-
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-				| WrappedTargetException e) {
-			logger.fatal(e);
-		}
-		return result;
+	private XSearchable getXSearchableFromSheet() throws GenerateException {
+		return UnoRuntime.queryInterface(XSearchable.class, xSpreadsheet);
 	}
 
 	private Position getRangePositionFromResult(XSearchable xSearchableFromRange, XSearchDescriptor searchDescriptor) {
@@ -139,16 +101,6 @@ public class SheetSearchHelper extends AbstractSearchHelper {
 			result = Position.from(cellRangeAddress.StartColumn, cellRangeAddress.StartRow);
 		}
 		return result;
-	}
-
-	private XSearchable getXSearchableFromRange(RangePosition rangePos) throws GenerateException {
-		checkNotNull(rangePos);
-		XCellRange xCellRange = RangeHelper.from(getISheet(), rangePos).getCellRange();
-		XSearchable xSearchable = null;
-		if (xCellRange != null) {
-			xSearchable = UnoRuntime.queryInterface(XSearchable.class, xCellRange);
-		}
-		return xSearchable;
 	}
 
 }

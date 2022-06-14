@@ -14,6 +14,7 @@ import com.sun.star.document.XEventBroadcaster;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
@@ -22,7 +23,6 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSheetRecalcOnLoad;
 
 /**
  * @author Michael Massee
@@ -61,7 +61,7 @@ public class PetanqueTurnierMngrSingleton {
 		ProcessBox.init(context); // der muss zuerst
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUdateCache();
-		addGlobalEventListener(new TurnierSheetRecalcOnLoad(context));
+		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 	}
 
 	// register global EventListener
