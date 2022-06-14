@@ -53,10 +53,10 @@ public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
 				meldeListeSheetNeuerSpieltag.setSpielTag(spieltagNr);
 				meldeListeSheetNeuerSpieltag.naechsteSpieltag();
 			}
-
 			spielrundeSheetTestDaten.setSpielTag(spieltagNr);
-			spielrundeSheetTestDaten.generate();
 			getKonfigurationSheet().setAktiveSpieltag(spieltagNr);
+
+			spielrundeSheetTestDaten.generate();
 
 			// validieren
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(spieltagNr);
