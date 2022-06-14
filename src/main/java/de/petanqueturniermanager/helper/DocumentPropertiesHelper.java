@@ -7,6 +7,7 @@ package de.petanqueturniermanager.helper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Hashtable;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -105,9 +106,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * Property in interne Cache, und Document speichern<br>
-	 * nur wenn sich der inhalt geaendert hat wird gespeichert<br>
-	 * fires TurnierEventType.PropertiesChanged
+	 * Property in interne Cache, und Document speichern
 	 *
 	 * @param propName
 	 * @param val
@@ -186,9 +185,17 @@ public class DocumentPropertiesHelper {
 		return UnoRuntime.queryInterface(XPropertySet.class, getXPropertyContainer());
 	}
 
+	/**
+	 * 
+	 * @param propName case insenitive
+	 * @param defaultVal
+	 * @return
+	 */
 	public String getStringProperty(String propName, String defaultVal) {
-		if (currentPropListe.containsKey(propName)) {
-			return currentPropListe.get(propName);
+		Optional<String> korrektPropName = currentPropListe.keySet().stream()
+				.filter(key -> key.equalsIgnoreCase(propName)).findFirst();
+		if (korrektPropName.isPresent()) {
+			return currentPropListe.get(korrektPropName.get());
 		}
 		return defaultVal;
 	}
