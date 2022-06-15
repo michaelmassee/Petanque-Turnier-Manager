@@ -39,6 +39,7 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 					logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
 					// nachteil das wird beim laden doppelt gemacht
 					xCal.calculateAll();
+					GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
 				}
 			}
 		}

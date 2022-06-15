@@ -53,10 +53,11 @@ public class DocumentPropertiesHelper {
 	// TODO ist das noch notwendig ?
 	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
 	// Hashtable is synchronized
+	// key search ignore case
 	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>();
 
-	final XSpreadsheetDocument xSpreadsheetDocument;
-	final Hashtable<String, String> currentPropListe;
+	private final XSpreadsheetDocument xSpreadsheetDocument;
+	private final Hashtable<String, String> currentPropListe;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
 		this(checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument());
@@ -81,9 +82,12 @@ public class DocumentPropertiesHelper {
 				} catch (UnknownPropertyException | WrappedTargetException e) {
 				}
 			}
-			// in cache
 			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
 		}
+	}
+
+	public boolean isEmpty() {
+		return currentPropListe.isEmpty();
 	}
 
 	/**
@@ -124,17 +128,21 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param propName
-	 * @param val int val wird als String gespeichert
+	 * fuegt ein neues Property zu Document hinzu wenn nicht verhanden<br>
+	 * speichert der neue wert
+	 * 
 	 */
 	private void setStringPropertyInDocument(String propName, String val) {
-		insertStringPropertyIfNotExist(propName, val);
-		XPropertySet propSet = getXPropertySet();
-		try {
-			propSet.setPropertyValue(propName, val);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
-				| WrappedTargetException e) {
-			logger.error(e);
+		boolean didExist = insertStringPropertyIfNotExist(propName, val); // zuerst neu einfuegen wenn nicht vorhanden
+		if (didExist) {
+			// wenn bereits vorhanden dann wert updaten!
+			XPropertySet propSet = getXPropertySet();
+			try {
+				propSet.setPropertyValue(propName, val);
+			} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+					| WrappedTargetException e) {
+				logger.error(e);
+			}
 		}
 	}
 
@@ -143,6 +151,7 @@ public class DocumentPropertiesHelper {
 	 *
 	 * @param name
 	 * @param val
+	 * @return true wenn bereits vorhanden
 	 */
 	private boolean insertStringPropertyIfNotExist(String name, String val) {
 		checkNotNull(name);
