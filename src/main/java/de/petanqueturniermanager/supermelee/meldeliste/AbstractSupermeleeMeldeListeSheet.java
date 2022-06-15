@@ -261,10 +261,12 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// // =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
 		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
 		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)=" + spieltag.getNr() + ";\"Aktiv\";\"\"";
-		// StringCellValue aktivFormula = StringCellValue.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr)
-		// .setCharColor(ColorHelper.CHAR_COLOR_GREEN);
-		// getSheetHelper().setFormulaInCell(aktivFormula);
 
+		String formulaStr = "IF(" + GlobalImpl.PTMSPIELTAG + "=" + spieltag.getNr() + ";\"Aktiv\";\"\")";
+		StringCellValue aktivFormula = StringCellValue
+				.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr)
+				.setCharColor(ColorHelper.CHAR_COLOR_GREEN);
+		getSheetHelper().setFormulaInCell(aktivFormula);
 	}
 
 	void formatDaten() throws GenerateException {
