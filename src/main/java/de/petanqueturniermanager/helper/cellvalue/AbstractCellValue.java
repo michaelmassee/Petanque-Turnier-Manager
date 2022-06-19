@@ -22,6 +22,8 @@ import de.petanqueturniermanager.helper.position.Position;
 @SuppressWarnings("rawtypes")
 abstract public class AbstractCellValue<T extends ICellValue, V> {
 
+	public static final int ROTATEANGLE_PLUS_90 = 27000;
+
 	private V value;
 	private Position pos;
 	private String comment;
@@ -339,7 +341,8 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	public T setCellBackColor(String hexCharColor) {
 		checkNotNull(hexCharColor);
 		if (StringUtils.isNotBlank(hexCharColor)) {
-			this.cellProperties.setCellBackColor(Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
+			this.cellProperties
+					.setCellBackColor(Integer.valueOf(StringUtils.strip(StringUtils.strip(hexCharColor), "#"), 16));
 		}
 		return (T) this;
 	}
@@ -376,6 +379,15 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	public T setBorder(TableBorder2 tableBorder2) {
 		this.cellProperties.setBorder(tableBorder2);
 		return (T) this;
+	}
+
+	/**
+	 * rotiere 90 Grad in Uhrzeiger
+	 * 
+	 * @return
+	 */
+	public T setRotate90() {
+		return setRotateAngle(ROTATEANGLE_PLUS_90);
 	}
 
 	/**
