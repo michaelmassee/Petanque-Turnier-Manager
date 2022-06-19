@@ -63,7 +63,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 	private static final int ERSTE_SPIELTAG_SPALTE = TEAM_NR_SPALTE + 3; // nr + name + rangliste
 	private static final int PUNKTE_NR_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH;
-	private static final int ANZ_SUMMEN_SPALTEN = 8; // Punkte +/- Spiele +/-/Diff SpielPunkte +/-/Diff
+	private static final int ANZ_SUMMEN_SPALTEN = 9; // Punkte +/- Spiele +/-/Diff SpielPunkte +/-/Diff + anz runden
 	private static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
@@ -246,6 +246,13 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		header2val.setValue("SpPnkte");
 		getSheetHelper().setStringValueInCell(header2val);
 
+		StringCellValue rndHeader = StringCellValue.from(getXSpreadSheet());
+		rndHeader.setPos(header2val.getPos()).spaltePlus(3);
+		rndHeader.setValue("AzRnd").setRotate90().setEndPosMergeZeilePlus(1).centerJustify().setBorder(borderHeader3)
+				.setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
+				.setComment("Anzahl gespielten Runden");
+		getSheetHelper().setStringValueInCell(rndHeader);
+
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// 1 header zeile
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,7 +267,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 		// 1 header zeile
 		// summen
-		header1val.setValue("Summen").setEndPosMergeSpaltePlus(7);
+		header1val.setValue("Summen").setEndPosMergeSpaltePlus(8);
 		getSheetHelper().setStringValueInCell(header1val);
 
 	}
@@ -307,6 +314,8 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 				RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
 		RangeHelper.from(this, trennPos.spaltePlus(3)).setRangeProperties(
 				RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
+		RangeHelper.from(this, trennPos.spaltePlus(3)).setRangeProperties(
+				RangeProperties.from().setBorder(BorderFactory.from().doubleLn().forLeft().toBorder()));
 
 	}
 
@@ -328,7 +337,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		int anzRunden = anzGesamtRunden();
 		int ersteSummeSpalte = getErsteSummeSpalte();
 		int autoFillDownZeilePlus = anzZeilen() - 1;
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH + 30);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH + 100);
 
 		int endSummeSpalteOffs = 0;
 		for (int summeSpalte = 0; summeSpalte < 6; summeSpalte++) {
@@ -371,7 +380,15 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		getSheetHelper().setFormulaInCell(summenFormulaDiffSpielPnkt);
 
 		// anz gespielte Runden
+		Position summePunktPlusPos = Position.from(summeSpielPnktPlusPos).spaltePlus(-5);
+		Position summePunktMinusPos = Position.from(summePunktPlusPos).spaltePlus(1);
 
+		String summenAnzRundenFormula = summePunktPlusPos.getAddress() + "+" + summePunktMinusPos.getAddress();
+		StringCellValue summenAnzRunden = StringCellValue.from(getXSpreadSheet())
+				.setPos(summeSpielPnktMinusPos.spaltePlusEins()).setFillAutoDownZeilePlus(autoFillDownZeilePlus)
+				.setValue(summenFormulaDiffSpielPnktStr).setColumnProperties(columnProperties)
+				.setValue(summenAnzRundenFormula);
+		getSheetHelper().setFormulaInCell(summenAnzRunden);
 	}
 
 	private void spieltageFormulaEinfuegen() throws GenerateException {
@@ -467,7 +484,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 	@Override
 	public int getLetzteSpalte() throws GenerateException {
-		return getErsteSummeSpalte() + ANZ_SUMMEN_SPALTEN;
+		return getErsteSummeSpalte() + ANZ_SUMMEN_SPALTEN - 1;
 	}
 
 	@Override
