@@ -56,14 +56,18 @@ public class RangListeSorter {
 		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).centerJustify().isVisible(isVisible);
-		StringCellValue sortlisteVal = StringCellValue.from(getIRangliste().getXSpreadSheet(), Position.from(getIRangliste().getManuellSortSpalte(), ersteDatenZiele))
+		ColumnProperties columnProperties = ColumnProperties.from()
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).centerJustify().isVisible(isVisible);
+		StringCellValue sortlisteVal = StringCellValue
+				.from(getIRangliste().getXSpreadSheet(),
+						Position.from(getIRangliste().getManuellSortSpalte(), ersteDatenZiele))
 				.addColumnProperties(columnProperties);
 
 		List<Position> ranglisteSpalten = getIRangliste().getRanglisteSpalten();
 
 		for (Position ranglisteSpalte : ranglisteSpalten) {
-			getSheetHelper().setFormulaInCell(sortlisteVal.setFillAutoDown(letzteDatenZeile).setValue(ranglisteSpalte.getAddress()));
+			getSheetHelper().setFormulaInCell(
+					sortlisteVal.setFillAutoDown(letzteDatenZeile).setValue(ranglisteSpalte.getAddress()));
 			sortlisteVal.spaltePlusEins();
 		}
 	}
@@ -82,7 +86,8 @@ public class RangListeSorter {
 		// formula zusammenbauen
 		// --------------------------------------------------------------------------
 
-		StringCellValue platzPlatzEins = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele), "x");
+		StringCellValue platzPlatzEins = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele),
+				"x");
 		List<Position> ranglisteSpalten = getIRangliste().getRanglisteSpalten();
 
 		StringBuffer formulaBuff = new StringBuffer();
@@ -133,16 +138,20 @@ public class RangListeSorter {
 
 		// erste Zelle wert
 		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteDatenZeile);
-		getSheetHelper().setFormulaInCell(platzPlatzEins.setValue(formulaBuff.toString()).zeile(ersteDatenZiele).setFillAuto(fillAutoPosition));
+		getSheetHelper().setFormulaInCell(
+				platzPlatzEins.setValue(formulaBuff.toString()).zeile(ersteDatenZiele).setFillAuto(fillAutoPosition));
 
 		// Alle Nummer Bold
 		getSheetHelper().setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
 				CellProperties.from().setCharWeight(FontWeight.BOLD).setCharColor(ColorHelper.CHAR_COLOR_RED));
 		// --------------------------------------------------------------------------
 		// Header am ende, wegen Bug ? Auto Fill und ausgeblendete Spalte
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+		ColumnProperties columnProperties = ColumnProperties.from()
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 				.isVisible(isVisible);
-		StringCellValue validateHeader = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).addColumnProperties(columnProperties).setValue("Err");
+		StringCellValue validateHeader = StringCellValue
+				.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).addColumnProperties(columnProperties)
+				.setValue("Err");
 
 		if (isVisible) {
 			validateHeader.setComment("Validate Spalte");
@@ -211,7 +220,7 @@ public class RangListeSorter {
 		sortHelper(toSortRange, sortSpalten);
 	}
 
-	public void sortHelper(RangePosition toSortRange, int[] sortSpalten) throws GenerateException {
+	protected void sortHelper(RangePosition toSortRange, int[] sortSpalten) throws GenerateException {
 		SortHelper.from(getIRangliste(), toSortRange).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
 	}
 

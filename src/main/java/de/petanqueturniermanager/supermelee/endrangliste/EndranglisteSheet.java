@@ -4,11 +4,11 @@
 
 package de.petanqueturniermanager.supermelee.endrangliste;
 
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_MINUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.ANZAHL_SPALTEN_IN_SUMME;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIELE_MINUS_OFFS;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,13 +51,13 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
-import de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeRangListeSorter;
+import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;

@@ -8,6 +8,8 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 
 public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 
@@ -19,8 +21,14 @@ public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 	protected void doRun() throws GenerateException {
 		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
 		XSpreadsheet sheet = getXSpreadSheet();
-		getSheetHelper().setActiveSheet(sheet);
-		getRangListeSorter().doSort();
+		if (sheet == null) {
+			String errorMsg = "Keine Rangliste vorhanden.";
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Sortieren von Rangliste")
+					.message(errorMsg).show();
+		} else {
+			getSheetHelper().setActiveSheet(sheet);
+			getRangListeSorter().doSort();
+		}
 	}
 
 }

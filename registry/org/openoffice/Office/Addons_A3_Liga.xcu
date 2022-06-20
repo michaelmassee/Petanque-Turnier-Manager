@@ -88,7 +88,19 @@
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
-							</node>							
+							</node>	
+							<node oor:name="A3A6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Sort Liga Ranking</value>
+									<value xml:lang="de">Liga Rangliste sortieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_rangliste_sortieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

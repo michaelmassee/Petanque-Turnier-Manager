@@ -4,10 +4,10 @@
 package de.petanqueturniermanager.supermelee.konfiguration;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_DIV_OFFS;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.SPIELE_PLUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIELE_DIV_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIELE_PLUS_OFFS;
 
 import java.util.Arrays;
 import java.util.List;
