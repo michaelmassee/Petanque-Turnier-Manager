@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.supermelee.endrangliste;
+package de.petanqueturniermanager.liga.rangliste;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -6,11 +6,14 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
-public class EndranglisteSheet_Sort extends EndranglisteSheet {
+/**
+ * Erstellung 20.06.2022 / Michael Massee
+ */
 
-	public EndranglisteSheet_Sort(WorkingSpreadsheet workingSpreadsheet) {
+public class LigaRanglisteSheetSortOnly extends LigaRanglisteSheet {
+
+	public LigaRanglisteSheetSortOnly(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 	}
 
@@ -22,7 +25,8 @@ public class EndranglisteSheet_Sort extends EndranglisteSheet {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Sortieren von Rangliste")
 					.message(errorMsg).show();
 		} else {
-			TurnierSheet.from(sheet, getWorkingSpreadsheet()).setActiv();
+			getSheetHelper().setActiveSheet(sheet);
+			initJederGegenJeden();
 			getRangListeSorter().doSort();
 		}
 	}

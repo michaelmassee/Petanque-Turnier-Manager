@@ -108,12 +108,20 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		upDateSheet();
 	}
 
+	protected RangListeSorter getRangListeSorter() {
+		return rangListeSorter;
+	}
+
+	protected void initJederGegenJeden() throws GenerateException {
+		alleMeldungen = meldeListe.getAlleMeldungen();
+		jederGegenJeden = new JederGegenJeden(alleMeldungen);
+	}
+
 	/**
 	 * @throws GenerateException
 	 */
 	public void upDateSheet() throws GenerateException {
-		alleMeldungen = meldeListe.getAlleMeldungen();
-		jederGegenJeden = new JederGegenJeden(alleMeldungen);
+		initJederGegenJeden();
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!alleMeldungen.isValid()) {
@@ -505,10 +513,9 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	@Override
 	public List<Position> getRanglisteSpalten() throws GenerateException {
 		int punktespalte = getErsteSummeSpalte();
-		int[] rangListeSpalten = new int[] { punktespalte, punktespalte + 2, punktespalte + 7 };
-		Position sort1 = Position.from(rangListeSpalten[0], getErsteDatenZiele());
-		Position sort2 = Position.from(rangListeSpalten[1], getErsteDatenZiele());
-		Position sort3 = Position.from(rangListeSpalten[2], getErsteDatenZiele());
+		Position sort1 = Position.from(punktespalte, getErsteDatenZiele());
+		Position sort2 = Position.from(punktespalte + 2, getErsteDatenZiele());
+		Position sort3 = Position.from(punktespalte + 7, getErsteDatenZiele());
 
 		Position[] arraylist = new Position[] { sort1, sort2, sort3 };
 		return Arrays.asList(arraylist);

@@ -5,7 +5,7 @@
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static de.petanqueturniermanager.helper.sheet.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
 
 import java.util.ArrayList;
 import java.util.List;
