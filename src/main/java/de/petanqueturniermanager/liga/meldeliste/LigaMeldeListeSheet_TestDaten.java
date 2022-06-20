@@ -17,6 +17,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -44,6 +45,11 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
 		testNamenEinfuegen();
@@ -71,7 +77,8 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 				break;
 			}
 		}
-		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
+				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		RangeHelper.from(this, data.getRangePosition(posSpielerNr)).setDataInRange(data);
 		meldeListe.upDateSheet();
 	}

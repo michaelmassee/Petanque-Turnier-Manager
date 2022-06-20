@@ -13,6 +13,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -51,6 +52,11 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
 		setSpielTag(SpielTagNr.from(1));

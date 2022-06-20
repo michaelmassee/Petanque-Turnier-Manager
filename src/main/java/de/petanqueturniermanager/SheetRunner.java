@@ -47,6 +47,11 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	private static AtomicBoolean isRunning = new AtomicBoolean(); // nur 1 Sheetrunner gleichzeitig
 	private static volatile SheetRunner runner = null;
 	private String logPrefix = null;
+
+	protected String getLogPrefix() {
+		return logPrefix;
+	}
+
 	private boolean backupDocumentAfterRun;
 
 	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {

@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
@@ -42,6 +43,11 @@ public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
 
