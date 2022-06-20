@@ -19,6 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -49,6 +50,11 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 
 	@Override
 	protected void doRun() throws GenerateException {
+
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
 		meldeListe.setSpielTag(SpielTagNr.from(1));
@@ -57,6 +63,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 
 		testNamenEinfuegen();
 		initialAktuellenSpielTagMitAktivenMeldungenFuellen(meldeListe.getSpielTag());
+
 	}
 
 	public void spielerAufAktivInaktivMischen(SpielTagNr spielTagNr) throws GenerateException {
@@ -65,7 +72,8 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 		SpielerMeldungen aktiveUndAusgesetztMeldungenAktuellenSpielTag = meldeListe.getAktiveUndAusgesetztMeldungen();
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(),
+				Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			SheetRunner.testDoCancelTask();
@@ -100,7 +108,8 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 		meldeListe.setSpielTag(spielTagNr);
 
 		int aktuelleSpieltagSpalte = meldeListe.aktuelleSpieltagSpalte();
-		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(), Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
+		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(),
+				Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
 		int letzteDatenZeile = meldeListe.letzteDatenZeile();
 
@@ -128,8 +137,10 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 
 		List<String> testNamen = listeMitTestNamen();
 
-		Position posSpielerName = Position.from(meldeListe.getSpielerNameSpalte(), MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerName = Position.from(meldeListe.getSpielerNameSpalte(),
+				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
+		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
+				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		NumberCellValue spielrNr = NumberCellValue.from(meldelisteSheet, posSpielerNr);
 		StringCellValue spielrNamen = StringCellValue.from(meldelisteSheet, posSpielerName);
 
@@ -139,10 +150,12 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 			String textFromCell = getSheetHelper().getTextFromCell(meldelisteSheet, posSpielerName);
 
 			if (StringUtils.isNotEmpty(textFromCell)) {
-				throw new GenerateException("Fehler beim füllen von Testdaten in Meldesheet. Es dürfen keine Daten vorhanden sein");
+				throw new GenerateException(
+						"Fehler beim füllen von Testdaten in Meldesheet. Es dürfen keine Daten vorhanden sein");
 			}
 
-			getSheetHelper().setStringValueInCell(spielrNamen.setPos(posSpielerName).setValue(testNamen.get(spielerCntr)));
+			getSheetHelper()
+					.setStringValueInCell(spielrNamen.setPos(posSpielerName).setValue(testNamen.get(spielerCntr)));
 
 			spielrNr.zeile(posSpielerName.getZeile());
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);

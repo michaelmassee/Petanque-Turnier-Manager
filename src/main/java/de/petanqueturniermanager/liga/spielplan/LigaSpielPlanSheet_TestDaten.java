@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import de.petanqueturniermanager.algorithmen.JederGegenJeden;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.model.SpielErgebnis;
@@ -33,6 +34,11 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
 		// Meldeliste
