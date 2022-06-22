@@ -11,12 +11,12 @@
 
 				<node oor:name="ptmturniersystem" oor:op="replace">
 					<prop oor:name="DisplayName">
-						<value xml:lang="en">PTMTURNIERSYSTEM</value>
-						<value xml:lang="de">PTMTURNIERSYSTEM</value>
+						<value xml:lang="en">PTM.ALG.TURNIERSYSTEM</value>
+						<value xml:lang="de">PTM.ALG.TURNIERSYSTEM</value>
 					</prop>
 					<prop oor:name="Description">
-						<value xml:lang="en">Petanque Turniermanager, Turnier System</value>
-						<value xml:lang="de">Petanque Turniermanager, Turnier System</value>
+						<value xml:lang="en">Petanque Turniermanager, Turnier System.</value>
+						<value xml:lang="de">Petanque Turniermanager, Turnier System.</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
@@ -25,8 +25,8 @@
 
 				<node oor:name="ptmintproperty" oor:op="replace">
 					<prop oor:name="DisplayName">
-						<value xml:lang="en">PTMINTPROPERTY</value>
-						<value xml:lang="de">PTMINTPROPERTY</value>
+						<value xml:lang="en">PTM.ALG.INTPROPERTY</value>
+						<value xml:lang="de">PTM.ALG.INTPROPERTY</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, get int value of Propertry</value>
@@ -47,8 +47,8 @@
 				
 				<node oor:name="ptmstringproperty" oor:op="replace">
 					<prop oor:name="DisplayName">
-						<value xml:lang="en">PTMSTRINGPROPERTY</value>
-						<value xml:lang="de">PTMSTRINGPROPERTY</value>
+						<value xml:lang="en">PTM.ALG.STRINGPROPERTY</value>
+						<value xml:lang="de">PTM.ALG.STRINGPROPERTY</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, get string value of Propertry</value>
