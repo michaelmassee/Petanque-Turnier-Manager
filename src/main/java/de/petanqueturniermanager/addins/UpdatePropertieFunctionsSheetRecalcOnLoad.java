@@ -9,6 +9,8 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Erstellung 10.06.2022 / Michael Massee<br>
@@ -18,6 +20,12 @@ import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventListener {
 
 	private static final Logger logger = LogManager.getLogger(UpdatePropertieFunctionsSheetRecalcOnLoad.class);
+
+	@Override
+	public void onNew(Object source) {
+		logger.debug("set dirty false");
+		GlobalImpl.getAndSetDirty(false);
+	}
 
 	/**
 	 * Die Formule in GlobalImpl koenen erst dann ihre werte ermittlen wenn das Document volstaendig geladen ist
@@ -32,13 +40,18 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 			if (xModel != null) {
 				XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class,
 						xModel);
-
-				// just do a global recalc
-				XCalculatable xCal = UnoRuntime.queryInterface(XCalculatable.class, xSpreadsheetDocument);
-				if (xCal != null) {
-					logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
-					// nachteil das wird beim laden doppelt gemacht
-					xCal.calculateAll();
+				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
+				if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
+					// just do a global recalc
+					XCalculatable xCal = UnoRuntime.queryInterface(XCalculatable.class, xSpreadsheetDocument);
+					if (xCal != null) {
+						logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
+						// nachteil das wird beim laden doppelt gemacht
+						xCal.calculateAll();
+						GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
+					}
+				} else {
+					logger.debug("set dirty false");
 					GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
 				}
 			}
