@@ -20,6 +20,9 @@ public interface IGlobalEventListener {
 	default void onLoad(@SuppressWarnings("unused") Object source) {
 	}
 
+	default void onUnload(@SuppressWarnings("unused") Object source) {
+	}
+
 	default void onUnfocus(@SuppressWarnings("unused") Object source) {
 	}
 
