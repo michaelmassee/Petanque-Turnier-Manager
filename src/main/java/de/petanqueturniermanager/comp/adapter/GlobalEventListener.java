@@ -242,6 +242,14 @@ public class GlobalEventListener implements XEventListener {
 	private void onUnload(Object source) {
 		// DocumentPropertiesHelper aufräumen
 		DocumentPropertiesHelper.removeDocument(source);
+		for (IGlobalEventListener listner : listeners) {
+			try {
+				listner.onUnload(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
+
+		}
 
 	}
 
