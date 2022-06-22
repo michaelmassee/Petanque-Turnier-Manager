@@ -58,6 +58,7 @@ public class DocumentPropertiesHelper {
 
 	private final XSpreadsheetDocument xSpreadsheetDocument;
 	private final Hashtable<String, String> currentPropListe;
+	private boolean firstLoad = false;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
 		this(checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument());
@@ -83,6 +84,7 @@ public class DocumentPropertiesHelper {
 				}
 			}
 			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
+			firstLoad = true;
 		}
 	}
 
@@ -277,6 +279,13 @@ public class DocumentPropertiesHelper {
 			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 		}
 		return turnierSystemAusDocument;
+	}
+
+	/**
+	 * @return true wenn properties das erste mal geladen wurde
+	 */
+	public boolean isFirstLoad() {
+		return firstLoad;
 	}
 
 }
