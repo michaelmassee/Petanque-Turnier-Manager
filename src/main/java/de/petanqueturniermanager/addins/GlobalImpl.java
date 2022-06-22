@@ -89,10 +89,10 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		if (doc != null) {
 			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(
 					DocumentHelper.getCurrentSpreadsheetDocument(xContext));
-			if (hlpr.isFirstLoad()) {
-				// ist dann der fall wenn das dokument als erstes neu geladen wird
+			if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
+				// ist dann der fall wenn das dokument als erstes neu aus dem Menue geladen wird
 				// oder document hat keine properties ...
-				logger.debug("properties isFirstLoad=true");
+				logger.debug("properties isFirstLoad and isEmpty=true");
 				isDirty.set(true);
 				return null;
 			}
