@@ -13,6 +13,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addin.XGlobal;
+import de.petanqueturniermanager.algorithmen.Direktvergleich;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
@@ -35,11 +36,12 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTMSPIELRUNDE = SERVICE_NAME + ".ptmintproperty(\""
 			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\")";
 	public static final String PTMINTPROPERTY = SERVICE_NAME + ".ptmintproperty()";
+	public static final String PTMDIREKTVERGLEICH = SERVICE_NAME + ".ptmdirektvergleich()";
 
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
 		this.xContext = xContext;
-		this.isDirty = new AtomicBoolean(false);
+		GlobalImpl.isDirty = new AtomicBoolean(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
@@ -90,16 +92,16 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(
 					DocumentHelper.getCurrentSpreadsheetDocument(xContext));
 			if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
-				// ist dann der fall wenn das dokument als erstes neu aus dem Menue geladen wird
-				// oder document hat keine properties ...
+				// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
+				// oder das Dokument hat keine properties aber PTM Funktionen.
 				logger.debug("properties isFirstLoad and isEmpty=true");
-				isDirty.set(true);
+				GlobalImpl.isDirty.set(true);
 				return null;
 			}
 			return hlpr;
 		}
 		// das hat nicht funktioniert
-		isDirty.set(true);
+		GlobalImpl.isDirty.set(true);
 		logger.debug("XSpreadsheetDocument = null");
 		return null;
 	}
@@ -145,7 +147,12 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	static boolean getAndSetDirty(boolean newval) {
-		return isDirty.getAndSet(newval);
+		return GlobalImpl.isDirty.getAndSet(newval);
 	}
 
+	@Override
+	public int ptmdirektvergleich(int teamA, int teamB, int[][] paarungen, int[][] siege, int[][] spielpunkte) {
+		Direktvergleich dvrgl = new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte);
+		return dvrgl.calc().getCode();
+	}
 }

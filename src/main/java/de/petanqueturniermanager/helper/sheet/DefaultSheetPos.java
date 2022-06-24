@@ -19,5 +19,6 @@ public class DefaultSheetPos {
 
 	public static final short LIGA_WORK = 2; // Liga Spielplan
 	public static final short LIGA_ENDRANGLISTE = 3;
+	public static final short LIGA_DIREKTEVERGLEICH = 4;
 
 }
