@@ -142,7 +142,8 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		insertFormulaPunkte();
 		insertDatumFormulaUndFormatierungen();
 		formatieren(spielPlanHRunde);
-		printBereichDefinieren(spielPlanHRunde.size(), spielPlanRRunde.size(), spielPlanHRunde.get(0).size());
+		printBereichDefinieren(ligaSpielPlan.anzRunden(), ligaSpielPlan.anzRunden(),
+				ligaSpielPlan.anzBegnungenProRunde());
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
 	}
 
@@ -325,7 +326,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		alleSpieltage.addAll(spielPlanHRunde);
 		alleSpieltage.addAll(spielPlanRRunde);
 
-		// hin und rr runde
+		// hr und rr runde
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
 				SheetRunner.testDoCancelTask();

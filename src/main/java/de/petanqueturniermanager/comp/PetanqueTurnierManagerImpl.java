@@ -29,6 +29,7 @@ import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -308,6 +309,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		case "liga_rangliste_sortieren":
 			new LigaRanglisteSheetSortOnly(workingSpreadsheet).start();
+			break;
+		case "liga_direktvergleich":
+			new LigaRanglisteDirektvergleichSheet(workingSpreadsheet).start();
 			break;
 		case "liga_spielplan_testdaten":
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, false).start();

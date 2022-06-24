@@ -455,18 +455,16 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		String rangeStrBTeamNr = teamNrBStartPos.getAddressWith$() + ":" + teamNrBEndePos.getAddressWith$();
 
 		// @formatter:off
-        String formulaPunktePlus = "IFNA(" + "INDEX($'Liga Spielplan'." + rangeStrAPlus + ";MATCH("
-                + ersteTeamNrPos.getAddress() + ";$'Liga Spielplan'." + rangeStrATeamNr + ";0)" + ");"
-                + "INDEX($'Liga Spielplan'." + rangeStrBPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'Liga Spielplan'."
+        String formulaPunktePlus = "IFNA(" + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrAPlus + ";MATCH("
+                + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrATeamNr + ";0)" + ");"
+                + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrBPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'."
                 + rangeStrBTeamNr + ";0)" + ")" + ")";
 
-        String formulaPunkteMinus = "IFNA(" + "INDEX($'Liga Spielplan'." + rangeStrBPlus + ";MATCH("
-                + ersteTeamNrPos.getAddress() + ";$'Liga Spielplan'." + rangeStrATeamNr + ";0)" + ");"
-                + "INDEX($'Liga Spielplan'." + rangeStrAPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'Liga Spielplan'."
+        String formulaPunkteMinus = "IFNA(" + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrBPlus + ";MATCH("
+                + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrATeamNr + ";0)" + ");"
+                + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrAPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'."
                 + rangeStrBTeamNr + ";0)" + ")" + ")";
         // @formatter:on
-		// RangeHelper;
-
 		boolean isvisable = getKonfigurationSheet().zeigeArbeitsSpalten();
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(isvisable);
 
@@ -478,11 +476,6 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		spielTagFormula.spaltePlusEins().setFillAutoDownZeilePlus(anzZeilen() - 1).setValue(formulaPunkteMinus);
 		getSheetHelper().setFormulaInCell(spielTagFormula);
 
-	}
-
-	@Override
-	public TurnierSheet getTurnierSheet() throws GenerateException {
-		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 	@Override
@@ -535,6 +528,11 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	@Override
 	public void calculateAll() {
 		getxCalculatable().calculateAll();
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
 }
