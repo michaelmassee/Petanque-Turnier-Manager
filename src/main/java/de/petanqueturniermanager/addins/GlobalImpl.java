@@ -35,8 +35,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")";
 	public static final String PTMSPIELRUNDE = SERVICE_NAME + ".ptmintproperty(\""
 			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\")";
-	public static final String PTMINTPROPERTY = SERVICE_NAME + ".ptmintproperty()";
-	public static final String PTMDIREKTVERGLEICH = SERVICE_NAME + ".ptmdirektvergleich()";
+	public static final String PTMINTPROPERTY = SERVICE_NAME + ".ptmintproperty";
+	public static final String PTMDIREKTVERGLEICH = SERVICE_NAME + ".ptmdirektvergleich";
 
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {

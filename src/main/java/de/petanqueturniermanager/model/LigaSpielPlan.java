@@ -58,4 +58,12 @@ public class LigaSpielPlan {
 		return this;
 	}
 
+	public int anzBegnungenProRunde() {
+		return spielPlan.get(0).size();
+	}
+
+	public int anzRunden() {
+		return spielPlan.size();
+	}
+
 }

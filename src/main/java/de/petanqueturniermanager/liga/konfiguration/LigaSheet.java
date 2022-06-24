@@ -34,4 +34,5 @@ public abstract class LigaSheet extends SheetRunner {
 	protected LigaKonfigurationSheet getKonfigurationSheet() {
 		return konfigurationSheet;
 	}
+
 }

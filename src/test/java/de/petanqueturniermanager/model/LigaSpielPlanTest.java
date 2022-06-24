@@ -18,18 +18,18 @@ public class LigaSpielPlanTest {
 		}
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
 
-		// clone erstellen ! zum prüfen
-		// List<TeamPaarung> tpListFlatOrg = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream).map(tp -> {
-		// return new TeamPaarung(tp.getA(), tp.getB());
-		// }).collect(Collectors.toList());
+		assertThat(ligaSpielPlan.anzBegnungenProRunde()).isEqualTo(3);
+		assertThat(ligaSpielPlan.anzRunden()).isEqualTo(5);
 
-		List<TeamPaarung> tpListFlatExpected = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream).map(tp -> {
-			return new TeamPaarung(tp.getB(), tp.getA()); // Teams tauschen
-		}).collect(Collectors.toList());
+		List<TeamPaarung> tpListFlatExpected = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream)
+				.map(tp -> {
+					return new TeamPaarung(tp.getB(), tp.getA()); // Teams tauschen
+				}).collect(Collectors.toList());
 
 		ligaSpielPlan.flipTeams();
 
-		List<TeamPaarung> tpListFlat = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream).collect(Collectors.toList());
+		List<TeamPaarung> tpListFlat = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream)
+				.collect(Collectors.toList());
 		assertThat(tpListFlat).containsAll(tpListFlatExpected);
 	}
 
@@ -41,21 +41,21 @@ public class LigaSpielPlanTest {
 		}
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
 
-		// clone erstellen ! zum prüfen
-		// List<TeamPaarung> tpListFlatOrg = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream).map(tp -> {
-		// return new TeamPaarung(tp.getA(), tp.getB());
-		// }).collect(Collectors.toList());
+		assertThat(ligaSpielPlan.anzBegnungenProRunde()).isEqualTo(4);
+		assertThat(ligaSpielPlan.anzRunden()).isEqualTo(7);
 
-		List<TeamPaarung> tpListFlatExpected = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream).map(tp -> {
-			if (tp.getOptionalB().isPresent()) {
-				return new TeamPaarung(tp.getB(), tp.getA()); // Teams tauschen
-			}
-			return new TeamPaarung(tp.getA(), tp.getB()); // Teams Nicht ! Tauschen
-		}).collect(Collectors.toList());
+		List<TeamPaarung> tpListFlatExpected = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream)
+				.map(tp -> {
+					if (tp.getOptionalB().isPresent()) {
+						return new TeamPaarung(tp.getB(), tp.getA()); // Teams tauschen
+					}
+					return new TeamPaarung(tp.getA(), tp.getB()); // Teams Nicht ! Tauschen
+				}).collect(Collectors.toList());
 
 		ligaSpielPlan.flipTeams();
 
-		List<TeamPaarung> tpListFlat = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream).collect(Collectors.toList());
+		List<TeamPaarung> tpListFlat = ligaSpielPlan.getSpielPlan().stream().flatMap(Collection::stream)
+				.collect(Collectors.toList());
 		assertThat(tpListFlat).containsAll(tpListFlatExpected);
 	}
 
