@@ -7,6 +7,8 @@
 #include <com/sun/star/sheet/XVolatileResult.idl>
 
 // https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1sheet_1_1AddIn.html
+// https://www.openoffice.org/api/docs/common/ref/com/sun/star/sheet/AddIn.html
+// long for integer values
 
 module de { module petanqueturniermanager { module addin {
 
@@ -14,6 +16,8 @@ module de { module petanqueturniermanager { module addin {
     string ptmstringproperty([in] string propname); // return string value of property
     long ptmintproperty([in] string propname); // return int value of property
     string ptmturniersystem ();
+    // 2D sequence which can be assigned to a cell range in the spreadsheet.
+    long ptmdirektvergleich ([in] long teamA,[in] long teamB, [in]sequence< sequence< long > > begegnungen, [in]sequence< sequence< long > > siege ,[in] sequence< sequence< long > > spielpunkte );
   };
 
 }; }; };

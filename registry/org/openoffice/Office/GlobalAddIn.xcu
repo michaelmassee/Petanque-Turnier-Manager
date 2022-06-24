@@ -33,8 +33,12 @@
 						<value xml:lang="de">Petanque Turniermanager, Integer Wert von Property</value>
 					</prop>
 					<node oor:name="Parameters">
-						<node oor:name="value" oor:op="replace">
-							<prop oor:name="PropertyName">
+						<node oor:name="PropertyName" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">PTM PropertyName</value>
+								<value xml:lang="de">PTM Propertynamen</value>
+							</prop>						
+							<prop oor:name="Description">
 								<value xml:lang="en">Name of the PTM Property</value>
 								<value xml:lang="de">PTM Propertynamen</value>
 							</prop>
@@ -44,7 +48,7 @@
 						<value>Add-In</value>
 					</prop>
 				</node>
-				
+
 				<node oor:name="ptmstringproperty" oor:op="replace">
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.STRINGPROPERTY</value>
@@ -55,8 +59,12 @@
 						<value xml:lang="de">Petanque Turniermanager, String Wert von Property</value>
 					</prop>
 					<node oor:name="Parameters">
-						<node oor:name="value" oor:op="replace">
-							<prop oor:name="PropertyName">
+						<node oor:name="PropertyName" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">PTM PropertyName</value>
+								<value xml:lang="de">PTM Propertynamen</value>
+							</prop>						
+							<prop oor:name="Description">
 								<value xml:lang="en">Name of the PTM Property</value>
 								<value xml:lang="de">PTM Propertynamen</value>
 							</prop>
@@ -66,7 +74,71 @@
 						<value>Add-In</value>
 					</prop>
 				</node>
-				
+
+				<node oor:name="ptmdirektvergleich" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.DIRECTCOMPARISON</value>
+						<value xml:lang="de">PTM.ALG.DIREKTVERGLEICH</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, calculate direct comparison.</value>
+						<value xml:lang="de">Petanque Turniermanager, führt einen Direktvergleich von Ergebnisse zwischen 2 Teams durch.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="teamA" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Team A</value>
+								<value xml:lang="de">Team A</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">Team A</value>
+								<value xml:lang="de">Team A</value>
+							</prop>
+						</node>
+						<node oor:name="teamB" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Team B</value>
+								<value xml:lang="de">Team B</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">Team B</value>
+								<value xml:lang="de">Team B</value>
+							</prop>
+						</node>
+						<node oor:name="begegnungen" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Game encounters</value>
+								<value xml:lang="de">Spiel Begegnungen</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">2D Array of Game encounters</value>
+								<value xml:lang="de">2D Array von Spiel Begegnungen</value>
+							</prop>
+						</node>
+						<node oor:name="siege" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Wins</value>
+								<value xml:lang="de">Siege</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">2D Array of wins</value>
+								<value xml:lang="de">2D Array von Siege</value>
+							</prop>
+						</node>
+						<node oor:name="spielpunkte" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Gamepoints</value>
+								<value xml:lang="de">Spielpunkte</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">2D Array of Gamepoints</value>
+								<value xml:lang="de">2D Array von Spielpunkte</value>
+							</prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 			</node>
 		</node>
 	</node>
