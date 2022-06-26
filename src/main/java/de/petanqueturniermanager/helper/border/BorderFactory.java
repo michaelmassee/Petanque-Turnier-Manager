@@ -126,12 +126,21 @@ public class BorderFactory {
 		return this;
 	}
 
+	/**
+	 * Linie Oben aendern
+	 * 
+	 */
 	public BorderFactory forTop() {
 		if (forLine != null) {
 			topLine = forLine;
 		}
 		return this;
 	}
+
+	/**
+	 * Linie Unten aendern
+	 * 
+	 */
 
 	public BorderFactory forBottom() {
 		if (forLine != null) {
@@ -140,6 +149,10 @@ public class BorderFactory {
 		return this;
 	}
 
+	/**
+	 * Linie Links aendern
+	 * 
+	 */
 	public BorderFactory forLeft() {
 		if (forLine != null) {
 			leftLine = forLine;
@@ -147,6 +160,10 @@ public class BorderFactory {
 		return this;
 	}
 
+	/**
+	 * Linie Rechts aendern
+	 * 
+	 */
 	public BorderFactory forRight() {
 		if (forLine != null) {
 			rightLine = forLine;
