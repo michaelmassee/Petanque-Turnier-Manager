@@ -464,7 +464,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
 		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
 		ConditionalFormatHelper.from(this, datenRange).clear().formula1(formulaFindDoppelteSpielrNr)
-				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndReset();
+				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
 	}
 
 	private void headerPaarungen(XSpreadsheet sheet, MeleeSpielRunde spielRunde) throws GenerateException {
@@ -788,9 +788,9 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 				unGeradeColor);
 
 		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).clear().formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndReset();
+				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
 		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).formulaIsOddRow()
-				.operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndReset();
+				.operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 
 		// erste Spalte, mit prüfung auf doppelte nummer
 		Position posNrSpalte = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
@@ -803,24 +803,24 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
 		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr)
-				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndReset();
+				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
 
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndReset();
+				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
 		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow()
-				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndReset();
+				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 
 		// ergebniss spalten mit prüfung auf >=0 <=13
 		ConditionalFormatHelper.from(this, ergbenissRange).clear().formula1("0").formula2("13")
-				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset();
+				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
 		// test if Text mit FORMULA
 		String formula = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
 		ConditionalFormatHelper.from(this, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndReset();
+				.styleIsFehler().applyAndDoReset();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndReset();
+				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow()
-				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndReset();
+				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 	}
 
 	/**

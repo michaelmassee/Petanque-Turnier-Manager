@@ -190,20 +190,20 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		ConditionalFormatHelper.from(this, datenRange).clear().
 		// -----------------------------
 		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyAndReset()
-				.reset().
+				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle())
+				.applyAndDoReset().
 				// ------------------------
 				// Formula fuer streichspieltag
 				// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3);ISTGERADE(ZEILE()))
 				formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA)
-				.style(streichSpieltagHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				.style(streichSpieltagHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ---------------------
 				formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA)
-				.style(streichSpieltagHintergrundFarbeUnGeradeStyle).applyAndReset().reset().
+				.style(streichSpieltagHintergrundFarbeUnGeradeStyle).applyAndDoReset().
 				// --------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ---------------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndReset();
+				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 
 	}
 

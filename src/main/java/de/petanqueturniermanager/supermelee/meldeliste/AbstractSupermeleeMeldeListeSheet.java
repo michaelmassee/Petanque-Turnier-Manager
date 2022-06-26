@@ -310,18 +310,17 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
 		// ------------------------------
-				formulaIsText().styleIsFehler().applyAndReset().reset().
+				formulaIsText().styleIsFehler().applyAndDoReset().
 				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset()
-				.reset().
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
 				// ------------------------------
 				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndReset().reset(). // nr muss >0 und
-															// <999 sein
+				.styleIsFehler().applyAndDoReset(). // nr muss >0 und
+													// <999 sein
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -335,14 +334,14 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
 		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndReset()
-				.reset().
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
+				.applyAndDoReset().
 				// ------------------------------
 				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
-				.applyAndReset().reset().
+				.applyAndDoReset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().formulaIsOddRow()
-				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
+				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 		// -----------------------------------------------
 
 		// -----------------------------------------------
@@ -352,14 +351,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				ERSTE_DATEN_ZEILE, meldeListeHelper.setzPositionSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, setzpositionRangePos).clear().
 		// ------------------------------
-				formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset()
-				.reset().
+				formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset().
 				// ------------------------------
-				formulaIsText().styleIsFehler().applyAndReset().reset().
+				formulaIsText().styleIsFehler().applyAndDoReset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 
 		// -----------------------------------------------
 		// Spieltag spalten
@@ -371,14 +369,13 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				letzteSpielTagSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, spieltageRangePos).clear().
 		// ------------------------------
-				formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndReset()
-				.reset().
+				formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset().
 				// ------------------------------
-				formulaIsText().styleIsFehler().applyAndReset().reset().
+				formulaIsText().styleIsFehler().applyAndDoReset().
 				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndReset().reset().
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndReset().reset();
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 	}
 
 	/**

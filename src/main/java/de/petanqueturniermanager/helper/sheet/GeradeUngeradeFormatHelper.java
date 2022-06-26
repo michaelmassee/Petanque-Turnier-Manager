@@ -67,11 +67,11 @@ public class GeradeUngeradeFormatHelper {
 			// -----------------------------
 			// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
 			conditionalFormatHelper.formula1(formulaSortError).operator(ConditionOperator.FORMULA)
-					.style(new FehlerStyle()).applyAndReset();
+					.style(new FehlerStyle()).applyAndDoReset();
 		}
 
-		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset()
-				.formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndReset();
+		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset()
+				.formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 
 		return this;
 	}

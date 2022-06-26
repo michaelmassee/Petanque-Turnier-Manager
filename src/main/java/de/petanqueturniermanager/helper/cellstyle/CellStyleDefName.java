@@ -11,6 +11,7 @@ public enum CellStyleDefName {
 	MeldungenHintergrundFarbeUnGerade,
 	RanglisteHintergrundFarbeGerade,
 	RanglisteHintergrundFarbeGeradeRed,
+	RanglisteHintergrundFarbeGeradeGreen,
 	RanglisteHintergrundFarbeUnGerade,
 	SpielrundeHintergrundFarbeGerade,
 	SpielrundeHintergrundFarbeUnGerade,
