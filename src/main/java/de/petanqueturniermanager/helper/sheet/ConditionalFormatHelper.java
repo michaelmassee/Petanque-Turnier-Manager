@@ -111,19 +111,6 @@ public class ConditionalFormatHelper extends BaseHelper {
 	}
 
 	/**
-	 * Formatierung anwenden und properties auf default
-	 *
-	 * @return
-	 * @throws GenerateException
-	 */
-
-	@Deprecated
-	public ConditionalFormatHelper applyAndResetDeprecated() throws GenerateException {
-		applyAndReset();
-		return this;
-	}
-
-	/**
 	 * properties auf default
 	 *
 	 * @return
@@ -147,7 +134,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	 * @throws GenerateException
 	 */
 
-	public ConditionalFormatHelper applyAndReset() throws GenerateException {
+	public ConditionalFormatHelper applyAndDoReset() throws GenerateException {
 		checkNotNull(conditionOperator);
 		checkNotNull(formula1);
 		checkNotNull(styleName);
@@ -155,7 +142,8 @@ public class ConditionalFormatHelper extends BaseHelper {
 		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
 		try {
-			xEntries = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetConditionalEntries.class, xPropSet.getPropertyValue("ConditionalFormat"));
+			xEntries = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetConditionalEntries.class,
+					xPropSet.getPropertyValue("ConditionalFormat"));
 			if (doClear) {
 				xEntries.clear(); // clears all condition entries.
 			}
@@ -193,7 +181,8 @@ public class ConditionalFormatHelper extends BaseHelper {
 			aCondition[idx].Value = styleName;
 			xEntries.addNew(aCondition);
 			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
-		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException | PropertyVetoException e) {
+		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException
+				| PropertyVetoException e) {
 			logger.error(e.getMessage(), e);
 		}
 		reset();
