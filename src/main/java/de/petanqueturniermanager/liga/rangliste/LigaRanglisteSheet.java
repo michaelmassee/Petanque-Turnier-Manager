@@ -72,8 +72,6 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	private JederGegenJeden jederGegenJeden;
 	private TeamMeldungen alleMeldungen;
 
-	// RangListeSorter
-
 	/**
 	 * @param workingSpreadsheet
 	 * @param logPrefix
@@ -254,12 +252,12 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		header2val.setValue("SpPnkte");
 		getSheetHelper().setStringValueInCell(header2val);
 
-		StringCellValue rndHeader = StringCellValue.from(getXSpreadSheet());
-		rndHeader.setPos(header2val.getPos()).spaltePlus(3);
-		rndHeader.setValue("AzRnd").setRotate90().setEndPosMergeZeilePlus(1).centerJustify().setBorder(borderHeader3)
-				.setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
-				.setComment("Anzahl gespielten Runden");
-		getSheetHelper().setStringValueInCell(rndHeader);
+		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
+		begegnungenHeader.setPos(header2val.getPos()).spaltePlus(3);
+		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(1).centerJustify()
+				.setBorder(borderHeader3).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
+				.setComment("Anzahl gespielten Begegnungen");
+		getSheetHelper().setStringValueInCell(begegnungenHeader);
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// 1 header zeile
@@ -346,6 +344,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		int ersteSummeSpalte = getErsteSummeSpalte();
 		int autoFillDownZeilePlus = anzZeilen() - 1;
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH + 100);
+		ColumnProperties columnPropertiesSpielPnktSmn = ColumnProperties.from().setWidth(1100);
 
 		int endSummeSpalteOffs = 0;
 		for (int summeSpalte = 0; summeSpalte < 6; summeSpalte++) {
@@ -359,6 +358,11 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 			StringCellValue summenFormulaSumme = StringCellValue.from(getXSpreadSheet()).setPos(summePos)
 					.setFillAutoDownZeilePlus(autoFillDownZeilePlus).setValue(summenFormulaSummeStr)
 					.setColumnProperties(columnProperties);
+
+			if (endSummeSpalteOffs > 4) {
+				summenFormulaSumme.setColumnProperties(columnPropertiesSpielPnktSmn);
+			}
+
 			getSheetHelper().setFormulaInCell(summenFormulaSumme);
 			endSummeSpalteOffs++;
 
@@ -377,14 +381,16 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 				endSummeSpalteOffs++;
 			}
 		}
-		// Spielpunkte Diff
+
+		// Spielpunkte summen diff
+
 		Position summeSpielPnktPlusPos = Position.from((ersteSummeSpalte + endSummeSpalteOffs) - 2, ERSTE_DATEN_ZEILE);
 		Position summeSpielPnktMinusPos = Position.from((ersteSummeSpalte + endSummeSpalteOffs) - 1, ERSTE_DATEN_ZEILE);
 		String summenFormulaDiffSpielPnktStr = summeSpielPnktPlusPos.getAddress() + "-"
 				+ summeSpielPnktMinusPos.getAddress();
 		StringCellValue summenFormulaDiffSpielPnkt = StringCellValue.from(getXSpreadSheet())
 				.setPos(summeSpielPnktMinusPos.spaltePlusEins()).setFillAutoDownZeilePlus(autoFillDownZeilePlus)
-				.setValue(summenFormulaDiffSpielPnktStr).setColumnProperties(columnProperties);
+				.setValue(summenFormulaDiffSpielPnktStr).setColumnProperties(columnPropertiesSpielPnktSmn);
 		getSheetHelper().setFormulaInCell(summenFormulaDiffSpielPnkt);
 
 		// anz gespielte Runden
