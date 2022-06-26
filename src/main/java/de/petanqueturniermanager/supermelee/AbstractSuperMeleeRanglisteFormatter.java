@@ -26,7 +26,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
-import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Spieler;
@@ -149,7 +149,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
-		GeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor).ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
+		RanglisteGeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor).ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
 
 	}
 

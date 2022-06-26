@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
-public class GeradeUngeradeFormatHelper {
+public class RanglisteGeradeUngeradeFormatHelper {
 
 	private final ISheet sheet;
 	private final RangePosition rangePos;
@@ -27,31 +27,31 @@ public class GeradeUngeradeFormatHelper {
 	private int ungeradeColor = BasePropertiesSpalte.DEFAULT_UNGERADE__BACK_COLOR;
 	private int validateSpalteNr = -1;
 
-	private GeradeUngeradeFormatHelper(ISheet sheet, RangePosition rangePos) {
+	private RanglisteGeradeUngeradeFormatHelper(ISheet sheet, RangePosition rangePos) {
 		this.sheet = checkNotNull(sheet);
 		this.rangePos = checkNotNull(rangePos);
 	}
 
-	public static final GeradeUngeradeFormatHelper from(ISheet sheet, RangePosition rangePos) {
-		return new GeradeUngeradeFormatHelper(sheet, rangePos);
+	public static final RanglisteGeradeUngeradeFormatHelper from(ISheet sheet, RangePosition rangePos) {
+		return new RanglisteGeradeUngeradeFormatHelper(sheet, rangePos);
 	}
 
-	public GeradeUngeradeFormatHelper geradeFarbe(int geradeColor) {
+	public RanglisteGeradeUngeradeFormatHelper geradeFarbe(int geradeColor) {
 		this.geradeColor = geradeColor;
 		return this;
 	}
 
-	public GeradeUngeradeFormatHelper ungeradeFarbe(int ungeradeColor) {
+	public RanglisteGeradeUngeradeFormatHelper ungeradeFarbe(int ungeradeColor) {
 		this.ungeradeColor = ungeradeColor;
 		return this;
 	}
 
-	public GeradeUngeradeFormatHelper validateSpalte(int validateSpalteNr) {
+	public RanglisteGeradeUngeradeFormatHelper validateSpalte(int validateSpalteNr) {
 		this.validateSpalteNr = validateSpalteNr;
 		return this;
 	}
 
-	public GeradeUngeradeFormatHelper apply() throws GenerateException {
+	public RanglisteGeradeUngeradeFormatHelper apply() throws GenerateException {
 		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
 				geradeColor);
 		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(

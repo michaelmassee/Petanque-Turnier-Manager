@@ -24,7 +24,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -133,7 +133,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		RangePosition meldeListeRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE + 1, // plus anz spalten Tmnr + Namen, minus 1
 				ERSTE_DATEN_ZEILE + anzTeams() - 1);
 
-		GeradeUngeradeFormatHelper.from(this, meldeListeRange)
+		RanglisteGeradeUngeradeFormatHelper.from(this, meldeListeRange)
 				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
 				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).apply();
 
@@ -209,7 +209,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		RangePosition rangePosDirektCode = RangePosition.from(ERSTE_SPALTE_DIREKTVERGLEICH, ERSTE_DATEN_ZEILE,
 				ERSTE_SPALTE_DIREKTVERGLEICH + anzTeams() - 1, ERSTE_DATEN_ZEILE + anzTeams() - 1);
 
-		GeradeUngeradeFormatHelper.from(this, rangePosDirektCode)
+		RanglisteGeradeUngeradeFormatHelper.from(this, rangePosDirektCode)
 				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
 				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).apply();
 
