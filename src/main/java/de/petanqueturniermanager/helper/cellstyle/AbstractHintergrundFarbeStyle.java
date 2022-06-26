@@ -10,11 +10,11 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 
 public abstract class AbstractHintergrundFarbeStyle extends AbstractCellStyleDef {
 
-	public AbstractHintergrundFarbeStyle(String name, Integer color) {
+	public AbstractHintergrundFarbeStyle(CellStyleDefName name, Integer color) {
 		super(checkNotNull(name, "name=null"), buildCellProperties(checkNotNull(color, "color=null")));
 	}
 
-	static CellProperties buildCellProperties(Integer geradeColor) {
-		return CellProperties.from().setCellBackColor(geradeColor).setCellbackgroundTransparent(false);
+	private static CellProperties buildCellProperties(Integer backgrColor) {
+		return CellProperties.from().setCellBackColor(backgrColor).setCellbackgroundTransparent(false);
 	}
 }

@@ -10,16 +10,16 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 
 public abstract class AbstractCellStyleDef {
 
-	private final String name;
+	private final CellStyleDefName name;
 	private final CellProperties cellProperties;
 
-	public AbstractCellStyleDef(String name, CellProperties cellProperties) {
+	public AbstractCellStyleDef(CellStyleDefName name, CellProperties cellProperties) {
 		this.name = checkNotNull(name, "name == null");
 		this.cellProperties = checkNotNull(cellProperties, "cellProperties == null");
 	}
 
 	public String getName() {
-		return name;
+		return name.name();
 	}
 
 	public CellProperties getCellProperties() {

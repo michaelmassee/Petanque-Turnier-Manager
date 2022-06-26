@@ -276,6 +276,11 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 		return (T) this;
 	}
 
+	/**
+	 * Horizon und Vertikal zentrieren
+	 * 
+	 */
+
 	@SuppressWarnings("unchecked")
 	public T centerJustify() {
 		this.centerHoriJustify();
@@ -375,6 +380,11 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 		this.fillAuto = FillAutoPosition.from(getPos()).zeilePlus(anzZeile);
 		return (T) this;
 	}
+
+	/**
+	 * Alle Border Links,Rechts,Oben und Unten eine einfache schmale Linie
+	 * 
+	 */
 
 	@SuppressWarnings("unchecked")
 	public T setAllThinBorder() {

@@ -5,10 +5,9 @@
 package de.petanqueturniermanager.helper.cellstyle;
 
 public class StreichSpieltagHintergrundFarbeUnGeradeStyle extends AbstractHintergrundFarbeStyle {
-	private static final String NAME = "StreichSpieltagHintergrundFarbeUnGerade";
 
 	public StreichSpieltagHintergrundFarbeUnGeradeStyle(Integer geradeColor) {
-		super(NAME, geradeColor);
+		super(CellStyleDefName.StreichSpieltagHintergrundFarbeUnGerade, geradeColor);
 	}
 
 }
