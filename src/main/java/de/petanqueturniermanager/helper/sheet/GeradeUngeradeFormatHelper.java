@@ -52,8 +52,10 @@ public class GeradeUngeradeFormatHelper {
 	}
 
 	public GeradeUngeradeFormatHelper apply() throws GenerateException {
-		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(geradeColor);
-		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(ungeradeColor);
+		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
+				geradeColor);
+		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(
+				ungeradeColor);
 
 		ConditionalFormatHelper conditionalFormatHelper = ConditionalFormatHelper.from(sheet, rangePos).clear();
 
@@ -64,12 +66,12 @@ public class GeradeUngeradeFormatHelper {
 			String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (validateSpalteNr + 1) + "))))>0";
 			// -----------------------------
 			// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-			conditionalFormatHelper.formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle()).applyAndReset();
+			conditionalFormatHelper.formula1(formulaSortError).operator(ConditionOperator.FORMULA)
+					.style(new FehlerStyle()).applyAndReset();
 		}
 
-		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset().
-		// -------------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndReset();
+		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndReset()
+				.formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndReset();
 
 		return this;
 	}
