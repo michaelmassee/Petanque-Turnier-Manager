@@ -8,10 +8,9 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 
 public class FehlerStyle extends AbstractCellStyleDef {
-	private static final String NAME = "IstFehler";
 
 	public FehlerStyle() {
-		super(NAME, buildCellProperties());
+		super(CellStyleDefName.IstFehler, buildCellProperties());
 	}
 
 	private static CellProperties buildCellProperties() {
