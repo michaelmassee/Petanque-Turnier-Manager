@@ -4,9 +4,9 @@
 
 package de.petanqueturniermanager.helper.cellstyle;
 
-public class RanglisteHintergrundFarbeGeradeStyle extends AbstractHintergrundFarbeStyle {
+public class RanglisteHintergrundFarbeGeradeStyleRed extends AbstractHintergrundFarbeStyle {
 
-	public RanglisteHintergrundFarbeGeradeStyle(Integer geradeColor) {
+	public RanglisteHintergrundFarbeGeradeStyleRed(Integer geradeColor) {
 		super(CellStyleDefName.RanglisteHintergrundFarbeGerade, geradeColor);
 	}
 

@@ -5,10 +5,8 @@
 package de.petanqueturniermanager.helper.cellstyle;
 
 public class MeldungenHintergrundFarbeGeradeStyle extends AbstractHintergrundFarbeStyle {
-	private static final String NAME = "MeldungenHintergrundFarbeGerade";
-
 	public MeldungenHintergrundFarbeGeradeStyle(Integer geradeColor) {
-		super(NAME, geradeColor);
+		super(CellStyleDefName.MeldungenHintergrundFarbeGerade, geradeColor);
 	}
 
 }
