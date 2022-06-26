@@ -35,7 +35,7 @@ import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.GeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
@@ -287,7 +287,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).centerJustify().margin(MARGIN);
 		RangeHelper.from(this, allDatenRange()).setRangeProperties(rangeProp);
 
-		GeradeUngeradeFormatHelper.from(this, allDatenRange())
+		RanglisteGeradeUngeradeFormatHelper.from(this, allDatenRange())
 				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
 				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
 				.validateSpalte(validateSpalte()).apply();
