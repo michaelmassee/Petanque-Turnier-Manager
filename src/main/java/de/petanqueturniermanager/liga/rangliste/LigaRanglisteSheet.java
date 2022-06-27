@@ -35,9 +35,9 @@ import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -249,7 +249,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		getSheetHelper().setStringValueInCell(header2val);
 
 		header2val.spaltePlus(3);
-		header2val.setValue("SpPnkte");
+		header2val.setValue("Spielpunkte");
 		getSheetHelper().setStringValueInCell(header2val);
 
 		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
