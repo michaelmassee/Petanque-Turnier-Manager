@@ -17,7 +17,8 @@ public class RangePosition {
 	private RangePosition(AbstractPosition<?> start, AbstractPosition<?> ende) {
 		checkNotNull(start);
 		checkNotNull(ende);
-		checkArgument(start.getColumn() <= ende.getColumn(), "spalte (column) start %s > ende %s", start.getColumn(), ende.getColumn());
+		checkArgument(start.getColumn() <= ende.getColumn(), "spalte (column) start %s > ende %s", start.getColumn(),
+				ende.getColumn());
 		checkArgument(start.getRow() <= ende.getRow(), "zeile (row) start %s > ende %s", start.getRow(), ende.getRow());
 
 		this.start = start;
@@ -49,6 +50,25 @@ public class RangePosition {
 
 	public static RangePosition from(AbstractPosition<?> start, int endeSpalte, int endeZeile) {
 		return from(start, Position.from(endeSpalte, endeZeile));
+	}
+
+	/**
+	 * Adress of Range BT5:BT10
+	 * 
+	 * @return
+	 */
+	public String getAddress() {
+		if (start != null && ende != null) {
+			return start.getAddress() + ":" + ende.getAddress();
+		}
+		return "";
+	}
+
+	public String getAddressWith$() {
+		if (start != null && ende != null) {
+			return start.getAddressWith$() + ":" + ende.getAddressWith$();
+		}
+		return "";
 	}
 
 	public AbstractPosition<?> getStart() {

@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -119,7 +120,8 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		dateneinfuegen(alleMeldungen);
 		formatData();
 		addConditionalFormuleForDirektVergleichReturnCode();
-		addFooter();
+		StringCellValue lastPos = addFooter();
+		printBereichDefinieren(lastPos.getPos());
 	}
 
 	private int anzTeams() throws GenerateException {
@@ -193,8 +195,8 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	private String ligaSpielPlanVerweis(int startSpalte) throws GenerateException {
 		int anzZeilen = (ligaSpielPlan.anzRunden() * 2) * ligaSpielPlan.anzBegnungenProRunde();
 		Position startBegegnungenPos = Position.from(startSpalte, LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE);
-		return "$'" + LigaSpielPlanSheet.SHEET_NAMEN + "'." + startBegegnungenPos.getAddress() + ":"
-				+ startBegegnungenPos.spaltePlusEins().zeilePlus(anzZeilen - 1).getAddress();
+		return "$'" + LigaSpielPlanSheet.SHEET_NAMEN + "'." + startBegegnungenPos.getAddressWith$() + ":"
+				+ startBegegnungenPos.spaltePlusEins().zeilePlus(anzZeilen - 1).getAddressWith$();
 	}
 
 	private String direktVergleichFormula(int tmA, int tmB, String spielplanBegegnungenVerweis,
@@ -227,7 +229,12 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		return ERSTE_DATEN_ZEILE + anzTeams();
 	}
 
-	private void addFooter() throws GenerateException {
+	/**
+	 * 
+	 * @return last pos
+	 * @throws GenerateException
+	 */
+	private StringCellValue addFooter() throws GenerateException {
 		processBoxinfo("Footer");
 		Position startPos = Position.from(TEAM_NR_SPALTE, footerStartLinePos() + 1);
 		StringCellValue direktvergleichResultCode = StringCellValue.from(getXSpreadSheet()).setPos(startPos)
@@ -246,6 +253,16 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 			direktvergleichResultCode.zeilePlusEins();
 			direktvergleichResultVal.zeilePlusEins();
 		}
+		return direktvergleichResultCode.zeilePlus(-1); // letzte zeile
+	}
+
+	private void printBereichDefinieren(Position footerPos) throws GenerateException {
+		processBoxinfo("Print-Bereich");
+		RangePosition allDatenRange = allDatenRange();
+		Position rechtsUnten = Position.from(allDatenRange.getEnde().getSpalte(), footerPos.getZeile());
+		Position linksOben = Position.from(0, 0);
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
+				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
 }

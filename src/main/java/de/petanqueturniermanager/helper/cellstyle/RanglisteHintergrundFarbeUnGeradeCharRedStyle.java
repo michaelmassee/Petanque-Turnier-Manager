@@ -6,9 +6,9 @@ package de.petanqueturniermanager.helper.cellstyle;
 
 import de.petanqueturniermanager.helper.ColorHelper;
 
-public class RanglisteHintergrundFarbeUnGeradeRedStyle extends AbstractVordergrundHintergrundFarbeStyle {
+public class RanglisteHintergrundFarbeUnGeradeCharRedStyle extends AbstractVordergrundHintergrundFarbeStyle {
 
-	public RanglisteHintergrundFarbeUnGeradeRedStyle(Integer unGeradeColor) {
+	public RanglisteHintergrundFarbeUnGeradeCharRedStyle(Integer unGeradeColor) {
 		super(CellStyleDefName.RanglisteHintergrundFarbeUnGeradeRed, ColorHelper.CHAR_COLOR_RED, unGeradeColor);
 	}
 

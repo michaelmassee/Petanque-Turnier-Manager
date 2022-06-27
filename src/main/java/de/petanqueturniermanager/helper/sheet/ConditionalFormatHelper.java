@@ -28,9 +28,17 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 public class ConditionalFormatHelper extends BaseHelper {
 	private static final Logger logger = LogManager.getLogger(ConditionalFormatHelper.class);
 
-	private static final String FORMULA_ISEVEN_ROW = "ISEVEN(ROW())";
-	private static final String FORMULA_ISODD_ROW = "ISODD(ROW())";
+	public static final String FORMULA_ISEVEN_ROW = "ISEVEN(ROW())";
+	public static final String FORMULA_ISODD_ROW = "ISODD(ROW())";
 	public static final String FORMULA_CURRENT_CELL = "INDIRECT(ADDRESS(ROW();COLUMN()))";
+
+	public static String FORMULAISEVENANDEQUALTOINT_STR(int val) {
+		return "AND(" + FORMULA_ISEVEN_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+	}
+
+	public static String FORMULAISODDANDEQUALTOINT_STR(int val) {
+		return "AND(" + FORMULA_ISODD_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+	}
 
 	private final RangePosition rangePos;
 	private boolean doClear = false;
@@ -70,13 +78,13 @@ public class ConditionalFormatHelper extends BaseHelper {
 	}
 
 	public ConditionalFormatHelper formulaIsEvenAndEqualToInt(int val) {
-		formula1 = "AND(" + FORMULA_ISEVEN_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+		formula1 = FORMULAISEVENANDEQUALTOINT_STR(val);
 		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
 
 	public ConditionalFormatHelper formulaIsOddAndEqualToInt(int val) {
-		formula1 = "AND(" + FORMULA_ISODD_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+		formula1 = FORMULAISODDANDEQUALTOINT_STR(val);
 		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}
@@ -95,6 +103,15 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper formulaIsOddRow() {
 		formula1 = FORMULA_ISODD_ROW;
+		conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
+	/**
+	 * set ConditionOperator nach FORMULA
+	 */
+
+	public ConditionalFormatHelper isFormula() {
 		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}

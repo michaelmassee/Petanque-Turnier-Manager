@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -123,7 +124,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!alleMeldungen.isValid()) {
-			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
+			processBoxinfo("Abbruch, ungültige Anzahl von Melungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
 					.message("Ungültige anzahl von Melungen").show();
 			return;
@@ -256,7 +257,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		begegnungenHeader.setPos(header2val.getPos()).spaltePlus(3);
 		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(1).centerJustify()
 				.setBorder(borderHeader3).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
-				.setComment("Anzahl gespielten Begegnungen");
+				.setComment("Die Anzahl an gespielten Begegnungen");
 		getSheetHelper().setStringValueInCell(begegnungenHeader);
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -283,18 +284,32 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 * @throws GenerateException
 	 */
 	private void formatData() throws GenerateException {
+
+		int anzGesamtRunden = anzGesamtRunden();
+		int ersteSummeSpalte = getErsteSummeSpalte();
+		int letzteDatenZeile = getLetzteDatenZeile();
+
 		RangeProperties rangeProp = RangeProperties.from()
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).centerJustify().margin(MARGIN);
 		RangeHelper.from(this, allDatenRange()).setRangeProperties(rangeProp);
 
 		RanglisteGeradeUngeradeFormatHelper.from(this, allDatenRange())
 				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
-				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
+				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).endeSpaltePlus(-1) // ende Spalte ist anz begegnungen
 				.validateSpalte(validateSpalte()).apply();
 
-		int anzGesamtRunden = anzGesamtRunden();
-		int ersteSummeSpalte = getErsteSummeSpalte();
-		int letzteDatenZeile = getLetzteDatenZeile();
+		// Spalte Begegnungen
+		RangePosition begegnungenSpalte = RangePosition.from(ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1),
+				ERSTE_DATEN_ZEILE, ersteSummeSpalte + (ANZ_SUMMEN_SPALTEN - 1), ERSTE_DATEN_ZEILE + (anzZeilen() - 1));
+		// "AND(" + FORMULA_ISEVEN_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+		String maxFormula = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<MAX(" + begegnungenSpalte.getAddressWith$()
+				+ ")";
+		String orangeFormulaEven = "AND(" + ConditionalFormatHelper.FORMULA_ISEVEN_ROW + ";" + maxFormula + ")";
+		String orangeFormulaOdd = "AND(" + ConditionalFormatHelper.FORMULA_ISODD_ROW + ";" + maxFormula + ")";
+		RanglisteGeradeUngeradeFormatHelper.from(this, begegnungenSpalte)
+				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
+				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
+				.orangeCharFormulaGerade(orangeFormulaEven).orangeCharFormulaUnGerade(orangeFormulaOdd).apply();
 
 		// Runden
 		RangePosition rundenErsteSpalteRange = RangePosition.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 3,
@@ -486,7 +501,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 	@Override
 	public int getErsteSummeSpalte() throws GenerateException {
-		return ERSTE_SPIELTAG_SPALTE + (anzGesamtRunden() * 6); // 6 = anzahl summen spalte pro spieltag;
+		return ERSTE_SPIELTAG_SPALTE + (anzGesamtRunden() * 6); // 6 = Anzahl summen spalte pro spieltag;
 	}
 
 	@Override

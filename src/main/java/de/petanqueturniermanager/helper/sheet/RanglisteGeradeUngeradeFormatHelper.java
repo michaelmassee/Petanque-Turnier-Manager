@@ -13,11 +13,13 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeGreenStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeRedStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharGreenStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharOrangeStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharRedStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeGreenStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeRedStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharGreenStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharOrangeStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharRedStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
@@ -34,6 +36,8 @@ public class RanglisteGeradeUngeradeFormatHelper {
 	private int validateSpalteNr = -1;
 	private Optional<Integer> redCharEqualToValue = Optional.empty();
 	private Optional<Integer> greenCharEqualToValue = Optional.empty();
+	private Optional<String> orangeCharEvenFormula = Optional.empty();
+	private Optional<String> orangeCharOddFormula = Optional.empty();
 
 	private RanglisteGeradeUngeradeFormatHelper(ISheet sheet, RangePosition rangePos) {
 		this.sheet = checkNotNull(sheet);
@@ -69,6 +73,21 @@ public class RanglisteGeradeUngeradeFormatHelper {
 		return this;
 	}
 
+	public RanglisteGeradeUngeradeFormatHelper orangeCharFormulaGerade(String orangeCharEvenFormula) {
+		this.orangeCharEvenFormula = Optional.of(orangeCharEvenFormula);
+		return this;
+	}
+
+	public RanglisteGeradeUngeradeFormatHelper orangeCharFormulaUnGerade(String orangeCharOddFormula) {
+		this.orangeCharOddFormula = Optional.of(orangeCharOddFormula);
+		return this;
+	}
+
+	public RanglisteGeradeUngeradeFormatHelper endeSpaltePlus(int anz) {
+		this.rangePos.getEnde().spaltePlus(anz);
+		return this;
+	}
+
 	public RanglisteGeradeUngeradeFormatHelper apply() throws GenerateException {
 		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
 				geradeColor);
@@ -91,16 +110,25 @@ public class RanglisteGeradeUngeradeFormatHelper {
 
 		if (redCharEqualToValue.isPresent()) {
 			conditionalFormatHelper.formulaIsEvenAndEqualToInt(redCharEqualToValue.get())
-					.style(new RanglisteHintergrundFarbeGeradeRedStyle(geradeColor)).applyAndDoReset();
+					.style(new RanglisteHintergrundFarbeGeradeCharRedStyle(geradeColor)).applyAndDoReset();
 			conditionalFormatHelper.formulaIsOddAndEqualToInt(redCharEqualToValue.get())
-					.style(new RanglisteHintergrundFarbeUnGeradeRedStyle(ungeradeColor)).applyAndDoReset();
+					.style(new RanglisteHintergrundFarbeUnGeradeCharRedStyle(ungeradeColor)).applyAndDoReset();
 		}
 
 		if (greenCharEqualToValue.isPresent()) {
 			conditionalFormatHelper.formulaIsEvenAndEqualToInt(greenCharEqualToValue.get())
-					.style(new RanglisteHintergrundFarbeGeradeGreenStyle(geradeColor)).applyAndDoReset();
+					.style(new RanglisteHintergrundFarbeGeradeCharGreenStyle(geradeColor)).applyAndDoReset();
 			conditionalFormatHelper.formulaIsOddAndEqualToInt(greenCharEqualToValue.get())
-					.style(new RanglisteHintergrundFarbeUnGeradeGreenStyle(ungeradeColor)).applyAndDoReset();
+					.style(new RanglisteHintergrundFarbeUnGeradeCharGreenStyle(ungeradeColor)).applyAndDoReset();
+		}
+
+		if (orangeCharEvenFormula.isPresent()) {
+			conditionalFormatHelper.formula1(orangeCharEvenFormula.get()).isFormula()
+					.style(new RanglisteHintergrundFarbeGeradeCharOrangeStyle(geradeColor)).applyAndDoReset();
+		}
+		if (orangeCharOddFormula.isPresent()) {
+			conditionalFormatHelper.formula1(orangeCharOddFormula.get()).isFormula()
+					.style(new RanglisteHintergrundFarbeUnGeradeCharOrangeStyle(ungeradeColor)).applyAndDoReset();
 		}
 
 		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset()

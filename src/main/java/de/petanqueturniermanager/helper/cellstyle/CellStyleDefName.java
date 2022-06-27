@@ -13,10 +13,12 @@ public enum CellStyleDefName {
 	RanglisteHintergrundFarbeGerade,
 	RanglisteHintergrundFarbeGeradeRed,
 	RanglisteHintergrundFarbeGeradeGreen,
+	RanglisteHintergrundFarbeGeradeOrange,
 	//---------------------------------------
 	RanglisteHintergrundFarbeUnGerade,
 	RanglisteHintergrundFarbeUnGeradeRed,
 	RanglisteHintergrundFarbeUnGeradeGreen,
+	RanglisteHintergrundFarbeUnGeradeOrange,
 	//---------------------------------------
 	SpielrundeHintergrundFarbeGerade,
 	SpielrundeHintergrundFarbeUnGerade,
