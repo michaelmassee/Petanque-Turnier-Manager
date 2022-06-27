@@ -9,19 +9,28 @@ import org.apache.commons.text.CaseUtils;
  */
 
 public enum DirektvergleichResult {
-	VERLOREN(1), GEWONNEN(2), GLEICH(0), KEINERGEBNIS(3), FEHLER(-1);
+	VERLOREN(1), GEWONNEN(2), GLEICH(0), KEINERGEBNIS(3, "Kein Ergebnis"), FEHLER(-1);
+
+	DirektvergleichResult(int i, String anzeigeText) {
+		this(i);
+		this.anzeigeText = anzeigeText;
+	}
 
 	DirektvergleichResult(int i) {
 		code = i;
 	}
 
 	private final int code;
+	private String anzeigeText;
 
 	public int getCode() {
 		return code;
 	}
 
 	public String getAnzeigeText() {
+		if (anzeigeText != null) {
+			return anzeigeText;
+		}
 		return CaseUtils.toCamelCase(name(), true, null);
 	}
 
