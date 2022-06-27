@@ -9,10 +9,15 @@ public enum CellStyleDefName {
 	IstFehler,
 	MeldungenHintergrundFarbeGerade,
 	MeldungenHintergrundFarbeUnGerade,
+	//---------------------------------------
 	RanglisteHintergrundFarbeGerade,
 	RanglisteHintergrundFarbeGeradeRed,
 	RanglisteHintergrundFarbeGeradeGreen,
+	//---------------------------------------
 	RanglisteHintergrundFarbeUnGerade,
+	RanglisteHintergrundFarbeUnGeradeRed,
+	RanglisteHintergrundFarbeUnGeradeGreen,
+	//---------------------------------------
 	SpielrundeHintergrundFarbeGerade,
 	SpielrundeHintergrundFarbeUnGerade,
 	StreichSpieltagHintergrundFarbeGerade,

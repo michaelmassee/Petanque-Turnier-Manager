@@ -69,6 +69,24 @@ public class ConditionalFormatHelper extends BaseHelper {
 		return this;
 	}
 
+	public ConditionalFormatHelper formulaIsEvenAndEqualToInt(int val) {
+		formula1 = "AND(" + FORMULA_ISEVEN_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+		conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
+	public ConditionalFormatHelper formulaIsOddAndEqualToInt(int val) {
+		formula1 = "AND(" + FORMULA_ISODD_ROW + ";" + FORMULA_CURRENT_CELL + "=" + val + ")";
+		conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
+	public ConditionalFormatHelper operatorIsEqualTo(String val) {
+		formula1 = val;
+		conditionOperator = ConditionOperator.EQUAL;
+		return this;
+	}
+
 	public ConditionalFormatHelper formulaIsEvenRow() {
 		formula1 = FORMULA_ISEVEN_ROW;
 		conditionOperator = ConditionOperator.FORMULA;

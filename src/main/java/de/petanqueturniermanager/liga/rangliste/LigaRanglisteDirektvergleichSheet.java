@@ -3,6 +3,10 @@
  */
 package de.petanqueturniermanager.liga.rangliste;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -10,6 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -24,9 +29,9 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
@@ -57,8 +62,6 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 
 	/**
 	 * @param workingSpreadsheet
-	 * @param logPrefix
-	 * @throws GenerateException
 	 */
 	public LigaRanglisteDirektvergleichSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Liga-RanglisteSheet");
@@ -116,6 +119,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		dateneinfuegen(alleMeldungen);
 		formatData();
 		addConditionalFormuleForDirektVergleichReturnCode();
+		addFooter();
 	}
 
 	private int anzTeams() throws GenerateException {
@@ -164,11 +168,12 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		}
 
 		// formula einfuegen
-		StringCellValue formula = StringCellValue.from(getXSpreadSheet());
-		StringCellValue xStr = StringCellValue.from(getXSpreadSheet()).setValue("X");
-		String spielplanBegegnungenVerweis = ligaSpielPlanVerweis();
-		String spielplanSpieleVerweis = ligaSpielPlanVerweis();
-		String spielplanSpielPunkteVerweis = ligaSpielPlanVerweis();
+		StringCellValue formula = StringCellValue.from(getXSpreadSheet())
+				.setCharWeight(com.sun.star.awt.FontWeight.BOLD);
+		StringCellValue xStr = StringCellValue.from(getXSpreadSheet()).setValue("x");
+		String spielplanBegegnungenVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.TEAM_A_NR_SPALTE);
+		String spielplanSpieleVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.SPIELE_A_SPALTE);
+		String spielplanSpielPunkteVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.SPIELPNKT_A_SPALTE);
 		for (IMeldung<Team> mldA : alleMeldungen.getMeldungen()) {
 			for (IMeldung<Team> mldB : alleMeldungen.getMeldungen()) {
 				if (mldA.getNr() != mldB.getNr()) {
@@ -185,11 +190,11 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		}
 	}
 
-	private String ligaSpielPlanVerweis() throws GenerateException {
-		Position startBegegnungenPos = Position.from(LigaSpielPlanSheet.TEAM_A_NR_SPALTE,
-				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE);
+	private String ligaSpielPlanVerweis(int startSpalte) throws GenerateException {
+		int anzZeilen = (ligaSpielPlan.anzRunden() * 2) * ligaSpielPlan.anzBegnungenProRunde();
+		Position startBegegnungenPos = Position.from(startSpalte, LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE);
 		return "$'" + LigaSpielPlanSheet.SHEET_NAMEN + "'." + startBegegnungenPos.getAddress() + ":"
-				+ startBegegnungenPos.spaltePlusEins().zeilePlus(anzTeams() - 1).getAddress();
+				+ startBegegnungenPos.spaltePlusEins().zeilePlus(anzZeilen - 1).getAddress();
 	}
 
 	private String direktVergleichFormula(int tmA, int tmB, String spielplanBegegnungenVerweis,
@@ -205,14 +210,42 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	}
 
 	private void addConditionalFormuleForDirektVergleichReturnCode() throws GenerateException {
+		processBoxinfo("Conditional Formule für Codes");
 
 		RangePosition rangePosDirektCode = RangePosition.from(ERSTE_SPALTE_DIREKTVERGLEICH, ERSTE_DATEN_ZEILE,
 				ERSTE_SPALTE_DIREKTVERGLEICH + anzTeams() - 1, ERSTE_DATEN_ZEILE + anzTeams() - 1);
 
 		RanglisteGeradeUngeradeFormatHelper.from(this, rangePosDirektCode)
+				.redCharEqualToValue(DirektvergleichResult.VERLOREN.getCode())
+				.greenCharEqualToValue(DirektvergleichResult.GEWONNEN.getCode())
 				.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
 				.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade()).apply();
 
+	}
+
+	private int footerStartLinePos() throws GenerateException {
+		return ERSTE_DATEN_ZEILE + anzTeams();
+	}
+
+	private void addFooter() throws GenerateException {
+		processBoxinfo("Footer");
+		Position startPos = Position.from(TEAM_NR_SPALTE, footerStartLinePos() + 1);
+		StringCellValue direktvergleichResultCode = StringCellValue.from(getXSpreadSheet()).setPos(startPos)
+				.setCharHeight(8);
+		StringCellValue direktvergleichResultVal = StringCellValue.from(direktvergleichResultCode).spaltePlusEins()
+				.setHoriJustify(com.sun.star.table.CellHoriJustify.LEFT);
+
+		List<DirektvergleichResult> sortedList = DirektvergleichResult.stream()
+				.sorted(Comparator.comparingInt(DirektvergleichResult::getCode)).collect(Collectors.toList());
+
+		for (DirektvergleichResult drslt : sortedList) {
+			direktvergleichResultCode.setValue(drslt.getCode());
+			direktvergleichResultVal.setValue(drslt.getAnzeigeText());
+			getSheetHelper().setStringValueInCell(direktvergleichResultCode);
+			getSheetHelper().setStringValueInCell(direktvergleichResultVal);
+			direktvergleichResultCode.zeilePlusEins();
+			direktvergleichResultVal.zeilePlusEins();
+		}
 	}
 
 }

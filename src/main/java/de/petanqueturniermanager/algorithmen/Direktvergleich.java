@@ -55,7 +55,7 @@ public class Direktvergleich {
 		}
 
 		if (summSiegeA == 0 && summSiegeB == 0 && summSpPnktA == 0 && summSpPnktB == 0) {
-			return DirektvergleichResult.KEINERGEBNISS;
+			return DirektvergleichResult.KEINERGEBNIS;
 		}
 
 		if (summSiegeA > summSiegeB) {
@@ -79,7 +79,7 @@ public class Direktvergleich {
 				return DirektvergleichResult.GLEICH;
 			}
 		}
-		return DirektvergleichResult.KEINERGEBNISS;
+		return DirektvergleichResult.KEINERGEBNIS;
 
 	}
 
