@@ -7,6 +7,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses(
 
 { DirektvergleichTest.class, KoRundeTeamPaarungenTest.class, PermutationsTest.class, SuperMeleePaarungenTest.class,
-		CadrageRechnerTest.class, JederGegenJedenTest.class, SchweizerSystemTest.class, IsEvenOrOddTest.class })
+		CadrageRechnerTest.class, JederGegenJedenTest.class, SchweizerSystemTest.class, IsEvenOrOddTest.class,
+		DirektvergleichResultTest.class })
 public class TestSuite { // nothing
 }

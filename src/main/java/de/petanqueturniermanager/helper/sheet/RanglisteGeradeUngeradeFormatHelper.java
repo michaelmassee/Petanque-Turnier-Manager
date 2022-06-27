@@ -5,13 +5,19 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Optional;
+
 import com.sun.star.sheet.ConditionOperator;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeGreenStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeRedStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeGreenStyle;
+import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeRedStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
@@ -26,6 +32,8 @@ public class RanglisteGeradeUngeradeFormatHelper {
 	private int geradeColor = BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR;
 	private int ungeradeColor = BasePropertiesSpalte.DEFAULT_UNGERADE__BACK_COLOR;
 	private int validateSpalteNr = -1;
+	private Optional<Integer> redCharEqualToValue = Optional.empty();
+	private Optional<Integer> greenCharEqualToValue = Optional.empty();
 
 	private RanglisteGeradeUngeradeFormatHelper(ISheet sheet, RangePosition rangePos) {
 		this.sheet = checkNotNull(sheet);
@@ -51,9 +59,20 @@ public class RanglisteGeradeUngeradeFormatHelper {
 		return this;
 	}
 
+	public RanglisteGeradeUngeradeFormatHelper redCharEqualToValue(int redCharEqualToValue) {
+		this.redCharEqualToValue = Optional.of(redCharEqualToValue);
+		return this;
+	}
+
+	public RanglisteGeradeUngeradeFormatHelper greenCharEqualToValue(int greenCharEqualToValue) {
+		this.greenCharEqualToValue = Optional.of(greenCharEqualToValue);
+		return this;
+	}
+
 	public RanglisteGeradeUngeradeFormatHelper apply() throws GenerateException {
 		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
 				geradeColor);
+
 		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(
 				ungeradeColor);
 
@@ -68,6 +87,20 @@ public class RanglisteGeradeUngeradeFormatHelper {
 			// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
 			conditionalFormatHelper.formula1(formulaSortError).operator(ConditionOperator.FORMULA)
 					.style(new FehlerStyle()).applyAndDoReset();
+		}
+
+		if (redCharEqualToValue.isPresent()) {
+			conditionalFormatHelper.formulaIsEvenAndEqualToInt(redCharEqualToValue.get())
+					.style(new RanglisteHintergrundFarbeGeradeRedStyle(geradeColor)).applyAndDoReset();
+			conditionalFormatHelper.formulaIsOddAndEqualToInt(redCharEqualToValue.get())
+					.style(new RanglisteHintergrundFarbeUnGeradeRedStyle(ungeradeColor)).applyAndDoReset();
+		}
+
+		if (greenCharEqualToValue.isPresent()) {
+			conditionalFormatHelper.formulaIsEvenAndEqualToInt(greenCharEqualToValue.get())
+					.style(new RanglisteHintergrundFarbeGeradeGreenStyle(geradeColor)).applyAndDoReset();
+			conditionalFormatHelper.formulaIsOddAndEqualToInt(greenCharEqualToValue.get())
+					.style(new RanglisteHintergrundFarbeUnGeradeGreenStyle(ungeradeColor)).applyAndDoReset();
 		}
 
 		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset()
