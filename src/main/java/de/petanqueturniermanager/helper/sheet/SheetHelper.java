@@ -19,6 +19,7 @@ import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
+import com.sun.star.container.XNamed;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
@@ -54,7 +55,7 @@ import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
-// welche service ???
+// welcher service ???
 // https://www.openoffice.org/api/docs/common/ref/com/sun/star/lang/XComponent-xref.html
 
 public class SheetHelper {
@@ -70,6 +71,26 @@ public class SheetHelper {
 
 	public SheetHelper(WorkingSpreadsheet currentSpreadsheet) {
 		this.currentSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
+	}
+
+	/**
+	 * Neuer Name fuer Tabelle.<br>
+	 * Hinweis alle verweisse in Formule, etc auf diese Tabelle werden mit umbenant.
+	 * 
+	 * @param xSheet
+	 * @param newName
+	 * @return true wenn rename okay
+	 */
+
+	public boolean reNameSheet(XSpreadsheet xSheet, String newName) {
+		boolean renameOk = false;
+		XNamed xNamed = UnoRuntime.queryInterface(XNamed.class, xSheet);
+
+		if (xNamed != null) {
+			xNamed.setName(newName);
+			renameOk = true;
+		}
+		return renameOk;
 	}
 
 	/**
