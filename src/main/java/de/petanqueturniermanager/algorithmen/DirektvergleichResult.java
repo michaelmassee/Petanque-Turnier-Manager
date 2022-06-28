@@ -9,7 +9,7 @@ import org.apache.commons.text.CaseUtils;
  */
 
 public enum DirektvergleichResult {
-	VERLOREN(1), GEWONNEN(2), GLEICH(0), KEINERGEBNIS(3, "Kein Ergebnis"), FEHLER(-1);
+	VERLOREN(1), GEWONNEN(2), GLEICH(0, "Unentschieden"), KEINERGEBNIS(3, "Kein Ergebnis"), FEHLER(-1);
 
 	DirektvergleichResult(int i, String anzeigeText) {
 		this(i);
