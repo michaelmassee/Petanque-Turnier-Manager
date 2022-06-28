@@ -7,7 +7,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
@@ -62,6 +64,10 @@ public class TeamMeldungen implements IMeldungen<TeamMeldungen, Team> {
 	@Override
 	public List<IMeldung<Team>> getMeldungen() {
 		return new ArrayList<>(teamList);
+	}
+
+	public List<IMeldung<Team>> getMeldungenSortedByNr() {
+		return getMeldungen().stream().sorted(Comparator.comparingInt(IMeldung::getNr)).collect(Collectors.toList());
 	}
 
 	public List<Team> teams() {

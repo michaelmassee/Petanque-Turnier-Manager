@@ -28,9 +28,9 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
@@ -54,7 +54,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
 	private static final Logger LOGGER = LogManager.getLogger(SpielrundePlan.class);
 	private static final String SHEET_COLOR = "b0f442";
-	public static final String SHEET_NAMEN = "Liga Spielplan";
+	public static final String SHEET_NAMEN = "Spielplan";
 
 	private static final int ERSTE_SPIELTAG_HEADER_ZEILE = 0; // Zeile 0
 	public static final int ERSTE_SPIELTAG_DATEN_ZEILE = ERSTE_SPIELTAG_HEADER_ZEILE + 2; // Zeile 2
@@ -294,7 +294,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue("Punkte").spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Spiele").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue("SpPunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
