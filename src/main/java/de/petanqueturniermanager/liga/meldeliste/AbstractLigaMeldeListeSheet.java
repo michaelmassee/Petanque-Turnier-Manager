@@ -22,11 +22,15 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -49,8 +53,45 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
+	/**
+	 * ab der Version 3.3.0 neuer Name
+	 * 
+	 * @throws GenerateException
+	 */
+	private void renameSpielPlanSheet() throws GenerateException {
+		String oldName = "Liga Spielplan";
+		processBoxinfo("Pruefe ob " + oldName + " vorhanden");
+		if (getSheetHelper().findByName(oldName) != null) {
+			MessageBoxResult answer = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+					.caption("Scheet " + oldName).message("Achtung die Tabelle " + oldName + " muss unbenant werden in "
+							+ LigaSpielPlanSheet.SHEET_NAMEN)
+					.show();
+
+			if (answer == MessageBoxResult.YES) {
+				XSpreadsheet spielplan = getSheetHelper().findByName(oldName);
+				if (getSheetHelper().reNameSheet(spielplan, LigaSpielPlanSheet.SHEET_NAMEN)) {
+					MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK).caption("Scheet " + oldName)
+							.message("Die Tabelle " + oldName + "wurde unbenant in " + LigaSpielPlanSheet.SHEET_NAMEN)
+							.show();
+				} else {
+					MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Scheet " + oldName)
+							.message("Fehler: Die Tabelle " + oldName + " wurde nicht unbenant in "
+									+ LigaSpielPlanSheet.SHEET_NAMEN)
+							.show();
+					throw new GenerateException("Sheet mit Namen " + oldName + " Vorhanden. Bitte umbenen in "
+							+ LigaSpielPlanSheet.SHEET_NAMEN);
+				}
+			} else {
+				throw new GenerateException("Sheet mit Namen " + oldName + " Vorhanden. Bitte umbenen in "
+						+ LigaSpielPlanSheet.SHEET_NAMEN);
+			}
+		}
+	}
+
 	public void upDateSheet() throws GenerateException {
 		processBoxinfo("Aktualisiere Meldungen");
+		renameSpielPlanSheet();
+
 		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
 		meldeListeHelper.testDoppelteMeldungen();
 

@@ -120,6 +120,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 * @throws GenerateException
 	 */
 	public void upDateSheet() throws GenerateException {
+		meldeListe.upDateSheet();
 		initJederGegenJeden();
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
