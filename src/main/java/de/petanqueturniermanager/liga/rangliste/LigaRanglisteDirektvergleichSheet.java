@@ -97,6 +97,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	 * @throws GenerateException
 	 */
 	private void upDateSheet() throws GenerateException {
+		meldeListe.upDateSheet();
 		TeamMeldungen alleMeldungen = meldeListe.getAlleMeldungen();
 		this.ligaSpielPlan = new LigaSpielPlan(alleMeldungen);
 
@@ -163,7 +164,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		StringCellValue htmNr = StringCellValue.from(getXSpreadSheet()).setPos(startTeamNrPos)
 				.setCellBackColor(headerBackColor).centerJustify().setAllThinBorder();
 
-		for (IMeldung<Team> mld : alleMeldungen.getMeldungen()) {
+		for (IMeldung<Team> mld : alleMeldungen.getMeldungenSortedByNr()) {
 			htmNr.setValue(mld.getNr());
 			getSheetHelper().setStringValueInCell(htmNr);
 			htmNr.spaltePlusEins();
@@ -176,8 +177,8 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 		String spielplanBegegnungenVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.TEAM_A_NR_SPALTE);
 		String spielplanSpieleVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.SPIELE_A_SPALTE);
 		String spielplanSpielPunkteVerweis = ligaSpielPlanVerweis(LigaSpielPlanSheet.SPIELPNKT_A_SPALTE);
-		for (IMeldung<Team> mldA : alleMeldungen.getMeldungen()) {
-			for (IMeldung<Team> mldB : alleMeldungen.getMeldungen()) {
+		for (IMeldung<Team> mldA : alleMeldungen.getMeldungenSortedByNr()) {
+			for (IMeldung<Team> mldB : alleMeldungen.getMeldungenSortedByNr()) {
 				if (mldA.getNr() != mldB.getNr()) {
 					String formuleStr = direktVergleichFormula(mldA.getNr(), mldB.getNr(), spielplanBegegnungenVerweis,
 							spielplanSpieleVerweis, spielplanSpielPunkteVerweis);
