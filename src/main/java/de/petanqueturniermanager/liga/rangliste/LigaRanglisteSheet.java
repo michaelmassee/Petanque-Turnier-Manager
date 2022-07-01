@@ -56,7 +56,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 	private static final int MARGIN = 120;
 	private static final Logger logger = LogManager.getLogger(LigaRanglisteSheet.class);
-	private static final String SHEETNAME = "Rangliste";
+	public static final String SHEETNAME = "Rangliste";
 	private static final String SHEET_COLOR = "d637e8";
 	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0

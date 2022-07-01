@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Export;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
@@ -318,6 +319,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		case "liga_spielplan_testdaten_mit_freispiel":
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, true).start();
+			break;
+		case "liga_export":
+			new LigaMeldeListeSheet_Export(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;

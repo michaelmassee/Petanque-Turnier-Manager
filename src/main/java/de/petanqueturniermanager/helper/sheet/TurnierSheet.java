@@ -13,10 +13,13 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XIndexAccess;
+import com.sun.star.container.XNamed;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XProtectable;
@@ -31,11 +34,11 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 public class TurnierSheet {
 	private static final Logger logger = LogManager.getLogger(TurnierSheet.class);
 	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
-	private final WeakRefHelper<WorkingSpreadsheet> wkRefCurrentSpreadsheet;
+	private final WeakRefHelper<WorkingSpreadsheet> wkRefWorkingSpreadsheet;
 
 	private TurnierSheet(XSpreadsheet xSpreadsheet, WorkingSpreadsheet currentSpreadsheet) {
 		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
-		wkRefCurrentSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
+		wkRefWorkingSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
 	}
 
 	public static TurnierSheet from(XSpreadsheet xSpreadsheet, WorkingSpreadsheet currentSpreadsheet) {
@@ -53,7 +56,7 @@ public class TurnierSheet {
 	}
 
 	public TurnierSheet setActiv() {
-		wkRefCurrentSpreadsheet.get().getWorkingSpreadsheetView().setActiveSheet(wkRefxSpreadsheet.get());
+		wkRefWorkingSpreadsheet.get().getWorkingSpreadsheetView().setActiveSheet(wkRefxSpreadsheet.get());
 		return this;
 	}
 
@@ -81,7 +84,7 @@ public class TurnierSheet {
 		// dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
 		// dispatcher.executeDispatch (document, ".uno: ToggleSheetGrid", "", 0, Array ())
 		PropertyValue[] aArgs = new PropertyValue[0];
-		wkRefCurrentSpreadsheet.get().executeDispatch(".uno:ToggleSheetGrid", "", 0, aArgs);
+		wkRefWorkingSpreadsheet.get().executeDispatch(".uno:ToggleSheetGrid", "", 0, aArgs);
 		return this;
 	}
 
@@ -166,11 +169,46 @@ public class TurnierSheet {
 	}
 
 	public <C> C queryInterfaceSpreadsheetView(Class<C> clazz) {
-		WorkingSpreadsheet workingSpreadsheet = wkRefCurrentSpreadsheet.get();
+		WorkingSpreadsheet workingSpreadsheet = wkRefWorkingSpreadsheet.get();
 		if (workingSpreadsheet != null) {
 			return UnoRuntime.queryInterface(clazz, workingSpreadsheet.getWorkingSpreadsheetView());
 		}
 		return null;
+	}
+
+	// iSheetNr = oMySheet.RangeAddress.Sheet
+	// https://forum.openoffice.org/en/forum/viewtopic.php?t=86514
+	// https://github.com/KWARC/Sally/blob/9950c9e54e11d80073fa4c19377ce6e1a50fd112/LibreAlex/source/info/kwarc/sally/AlexLibre/Sally/SCUtil.java
+	// https://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Capabilities_of_SheetCellRanges_Container
+	// https://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Cell_Ranges_and_Cells_Container
+
+	public int getSheetPosition() {
+		XSpreadsheets xSpreadsheets = wkRefWorkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets();
+		XIndexAccess xIndexAccess = UnoRuntime.queryInterface(XIndexAccess.class, xSpreadsheets);
+		int anzSheets = xIndexAccess.getCount();
+		String thisSheetName = getName();
+		int retIdx = -1;
+
+		try {
+			for (int index = 0; index < anzSheets; index++) {
+				XSpreadsheet xSpreadsheet = UnoRuntime.queryInterface(XSpreadsheet.class,
+						xIndexAccess.getByIndex(index));
+				XNamed xsheetname = UnoRuntime.queryInterface(XNamed.class, xSpreadsheet);
+				if (StringUtils.equals(thisSheetName, xsheetname.getName())) {
+					retIdx = index;
+					break;
+				}
+			}
+		} catch (IndexOutOfBoundsException | WrappedTargetException e) {
+			logger.error(e.getMessage(), e);
+		}
+
+		return retIdx;
+	}
+
+	public String getName() {
+		XNamed xsheetname = UnoRuntime.queryInterface(XNamed.class, wkRefxSpreadsheet.get());
+		return xsheetname.getName();
 	}
 
 }

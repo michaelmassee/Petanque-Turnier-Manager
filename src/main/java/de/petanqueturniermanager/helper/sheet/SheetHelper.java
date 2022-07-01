@@ -115,6 +115,19 @@ public class SheetHelper {
 		return foundSpreadsheet;
 	}
 
+	/**
+	 * @param sheetName
+	 * @return the index of Sheet by name. -1 when not found
+	 */
+	public int getIdxByName(String sheetName) {
+		int sheetPosition = -1;
+		XSpreadsheet xSpreadsheet = findByName(sheetName);
+		if (xSpreadsheet != null) {
+			sheetPosition = TurnierSheet.from(xSpreadsheet, currentSpreadsheet.get()).getSheetPosition();
+		}
+		return sheetPosition;
+	}
+
 	public void removeAllSheetsExclude(String sheetNameNotToRemove) {
 		removeAllSheetsExclude(new String[] { sheetNameNotToRemove });
 	}

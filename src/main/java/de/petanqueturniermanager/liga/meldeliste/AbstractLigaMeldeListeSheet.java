@@ -37,7 +37,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste<TeamMeldungen, Team> {
 
-	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 16; // Tablle immer mit min anzahl von zeilen formatieren
+	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 4; // Tabelle immer mit min anzahl von zeilen formatieren
 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
@@ -46,7 +46,11 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	 * @param workingSpreadsheet
 	 */
 	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Liga-Meldeliste");
+		this(workingSpreadsheet, "Liga-Meldeliste");
+	}
+
+	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
+		super(workingSpreadsheet, prefix);
 		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).build();
