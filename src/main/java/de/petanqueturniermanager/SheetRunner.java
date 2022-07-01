@@ -7,21 +7,11 @@ package de.petanqueturniermanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.beans.PropertyValue;
-import com.sun.star.frame.XStorable;
-import com.sun.star.io.IOException;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.uno.XComponentContext;
 
@@ -34,6 +24,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.io.BackUp;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public abstract class SheetRunner extends Thread implements Runnable {
@@ -143,46 +134,13 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	private void backUpDocument(String backupPrefix) {
 		if (GlobalProperties.get().isCreateBackup()) {
-			XStorable xStorable = workingSpreadsheet.getXStorable();
-			String location = xStorable.getLocation();
-
-			try {
-				if (!StringUtils.isAllBlank(location)) {
-					// doc wurde bereits gespeichert
-					URL docUrl = new URL(location);
-					Path path = Path.of(docUrl.toURI());
-					Path fileName = path.getFileName();
-					Path dir = path.getParent();
-
-					// generate file name
-					String dateStmp = DateFormatUtils.format(new Date(), "ddMMyyyy_HHmmss");
-					String orgFileName = fileName.toString();
-					String newFileName = dateStmp + (StringUtils.isEmpty(backupPrefix) ? "" : "_" + backupPrefix)
-							+ (StringUtils.isEmpty(logPrefix) ? "" : "_" + logPrefix) + "_" + orgFileName;
-					Path newLocation = dir.resolve(newFileName);
-					logger.info("Erstelle Backup :" + newLocation.toUri());
-					PropertyValue[] newProperties = new PropertyValue[0];
-					xStorable.storeToURL(newLocation.toUri().toString(), newProperties);
-				}
-			} catch (MalformedURLException | URISyntaxException | IOException e) {
-				logger.error(e.getMessage(), e);
-			}
+			BackUp.from(workingSpreadsheet).prefix1(backupPrefix).prefix2(logPrefix).doBackUp();
 		}
-
 	}
 
 	private void autoSave() {
 		if (GlobalProperties.get().isAutoSave()) {
-			XStorable xStorable = workingSpreadsheet.getXStorable();
-			String location = xStorable.getLocation();
-			if (!StringUtils.isAllBlank(location)) {
-				logger.info("Autosave :" + location);
-				try {
-					xStorable.store();
-				} catch (IOException e) {
-					logger.error(e.getMessage(), e);
-				}
-			}
+			BackUp.from(workingSpreadsheet).doSave();
 		}
 	}
 

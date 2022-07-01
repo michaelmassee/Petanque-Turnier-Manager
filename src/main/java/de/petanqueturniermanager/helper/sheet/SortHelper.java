@@ -120,7 +120,10 @@ public class SortHelper extends BaseHelper {
 
 	/**
 	 * Sorting records. Sorting arranges the visible cells on the sheet.<br>
+	 * Anmrk 1.7.2022 Stimt das mit nur 3 Spalten ??<br>
 	 * In Calc, you can sort by up to three criteria, with each criterion applied one after the other..<br>
+	 * Bug mit nur 3 ist gefixt ?<br>
+	 * https://bugs.documentfoundation.org/show_bug.cgi?id=45747&redirected_from=fdo<br>
 	 *
 	 * @return
 	 * @throws GenerateException
@@ -129,6 +132,7 @@ public class SortHelper extends BaseHelper {
 	public SortHelper doSort() throws GenerateException {
 		checkNotNull(sortSpalten);
 		checkArgument(sortSpalten.length > 0);
+		// Anmrk 1.7.2022 Stimt das mit nur 3 Spalten ??<br>
 		checkArgument(sortSpalten.length < 4); // max 3 spalten
 
 		XCellRange xCellRangeToSort = RangeHelper.from(getISheet(), rangePositionToSort).getCellRange();
