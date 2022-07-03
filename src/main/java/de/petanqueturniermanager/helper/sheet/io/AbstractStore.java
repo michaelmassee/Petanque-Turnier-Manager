@@ -15,6 +15,8 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XStorable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 /**
@@ -97,6 +99,16 @@ public abstract class AbstractStore<T> {
 		URL docUrl = new URL(getLocation());
 		Path path = Path.of(docUrl.toURI());
 		return path.getFileName();
+	}
+
+	protected final boolean istGespeichertMitWarnmeldung() {
+		boolean istGespeichert = istGespeichert();
+		if (!istGespeichert) {
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.WARN_OK)
+					.caption("Datei nicht gespeichert").message("Das aktuelle Dokument ist noch nicht gespeichert.")
+					.show();
+		}
+		return istGespeichert;
 	}
 
 	protected final boolean istGespeichert() {

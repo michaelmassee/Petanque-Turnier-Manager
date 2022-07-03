@@ -50,8 +50,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  * // storeProps[1].Value = FilterProps;</br>
  * </br>
  * // https://wiki.documentfoundation.org/Macros/Python_Guide/PDF_export_filter_data</br>
- * 
- * @author michael
  *
  */
 
@@ -64,7 +62,7 @@ public class PdfExport extends AbstractStore<PdfExport> {
 	private String sheetName = null;
 	private RangePosition rangePosition = null;
 
-	public PdfExport(WorkingSpreadsheet workingSpreadsheet) {
+	private PdfExport(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 	}
 
@@ -82,7 +80,7 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		return this;
 	}
 
-	private Object selectRangetoExport() {
+	private Object selectRangetoExport() throws GenerateException {
 		checkNotNull(sheetName);
 		checkNotNull(rangePosition);
 
@@ -99,8 +97,13 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		return retSel;
 	}
 
-	public URI doExport() {
+	public URI doExport() throws GenerateException {
 		URI pdfFile = null;
+
+		if (!istGespeichert()) {
+			logger.warn("Dokument wurde noch nicht gespeichert, Dateiname fehlt.");
+			throw new GenerateException("Dokument wurde noch nicht gespeichert, Dateiname fehlt.");
+		}
 
 		try {
 			String newFileName = newFileName(null);
