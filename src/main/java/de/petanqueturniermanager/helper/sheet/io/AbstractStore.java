@@ -25,8 +25,6 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
  * https://www.openoffice.org/api/docs/common/ref/com/sun/star/frame/XStorable.html<br>
  * https://wiki.openoffice.org/wiki/Framework/Article/Filter/FilterList_OOo_2_1<br>
  * https://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Saving_Spreadsheet_Documents<br>
- * 
- * @author michael
  *
  */
 public abstract class AbstractStore<T> {
