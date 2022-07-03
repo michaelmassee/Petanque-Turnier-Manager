@@ -142,19 +142,22 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		insertFormulaPunkte();
 		insertDatumFormulaUndFormatierungen();
 		formatieren(spielPlanHRunde);
-		printBereichDefinieren(ligaSpielPlan.anzRunden(), ligaSpielPlan.anzRunden(),
-				ligaSpielPlan.anzBegnungenProRunde());
+		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
 	}
 
-	private void printBereichDefinieren(int anzHRunden, int anzRRunden, int anzTeamPaarungen) throws GenerateException {
+	private void printBereichDefinieren() throws GenerateException {
 		processBoxinfo("Print-Bereich");
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(printBereichRangePosition());
+	}
 
-		Position rechtsUnten = Position.from(SPIELPNKT_B_SPALTE,
-				ERSTE_SPIELTAG_DATEN_ZEILE + ((anzHRunden + anzRRunden) * anzTeamPaarungen) - 1);
+	public RangePosition printBereichRangePosition() throws GenerateException {
+		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldeListe.getAlleMeldungen());
+		int anzZeilen = (ligaSpielPlan.anzBegnungenProRunde() * ligaSpielPlan.anzRunden() * 2) - 1;
+
+		Position rechtsUnten = Position.from(SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE + anzZeilen);
 		Position linksOben = Position.from(0, 0);
-		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
-				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		return RangePosition.from(linksOben, rechtsUnten);
 	}
 
 //	private void inspect() throws GenerateException {
@@ -465,4 +468,5 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		Position startPosSpiele = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPosSpiele)).setDataInRange(rangeData);
 	}
+
 }

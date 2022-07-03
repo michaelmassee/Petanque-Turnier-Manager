@@ -20,11 +20,13 @@ import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
+import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
 /**
@@ -42,6 +44,11 @@ public class TurnierSheet {
 	}
 
 	public static TurnierSheet from(XSpreadsheet xSpreadsheet, WorkingSpreadsheet currentSpreadsheet) {
+		return new TurnierSheet(checkNotNull(xSpreadsheet), checkNotNull(currentSpreadsheet));
+	}
+
+	public static TurnierSheet from(String name, WorkingSpreadsheet currentSpreadsheet) {
+		XSpreadsheet xSpreadsheet = new SheetHelper(currentSpreadsheet).findByName(checkNotNull(name));
 		return new TurnierSheet(checkNotNull(xSpreadsheet), checkNotNull(currentSpreadsheet));
 	}
 
@@ -209,6 +216,17 @@ public class TurnierSheet {
 	public String getName() {
 		XNamed xsheetname = UnoRuntime.queryInterface(XNamed.class, wkRefxSpreadsheet.get());
 		return xsheetname.getName();
+	}
+
+	public XCell getCell(Position pos) {
+		checkNotNull(pos);
+		XCell xCell = null;
+		try {
+			xCell = wkRefxSpreadsheet.get().getCellByPosition(pos.getColumn(), pos.getRow());
+		} catch (IndexOutOfBoundsException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return xCell;
 	}
 
 }

@@ -36,6 +36,9 @@ public abstract class AbstractStore<T> {
 
 	protected static final String SAVE_PROP_FILTERDATA = "FilterData";
 	protected static final String SAVE_PROP_FILTER_PAGERANGE = "PageRange";
+	protected static final String SAVE_PROP_FILTER_SELECTION = "Selection";
+	protected static final String SAVE_PROP_FILTER_EXPORTBOOKMARKS = "ExportBookmarks";
+	protected static final String SAVE_PROP_FILTER_EXPORTNOTES = "ExportNotes";
 
 	private final XStorable xStorable;
 	private final String location;
