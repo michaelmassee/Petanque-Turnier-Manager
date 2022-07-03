@@ -26,6 +26,7 @@ import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
@@ -47,8 +48,11 @@ public class TurnierSheet {
 		return new TurnierSheet(checkNotNull(xSpreadsheet), checkNotNull(currentSpreadsheet));
 	}
 
-	public static TurnierSheet from(String name, WorkingSpreadsheet currentSpreadsheet) {
+	public static TurnierSheet from(String name, WorkingSpreadsheet currentSpreadsheet) throws GenerateException {
 		XSpreadsheet xSpreadsheet = new SheetHelper(currentSpreadsheet).findByName(checkNotNull(name));
+		if (xSpreadsheet == null) {
+			throw new GenerateException("Die Tabelle '" + name + "' ist nicht vorhanden.");
+		}
 		return new TurnierSheet(checkNotNull(xSpreadsheet), checkNotNull(currentSpreadsheet));
 	}
 

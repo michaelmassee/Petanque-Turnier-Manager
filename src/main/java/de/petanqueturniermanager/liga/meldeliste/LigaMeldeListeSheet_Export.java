@@ -12,6 +12,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Exportiert die Tabellen nach pdf und erstelt eine html datei
@@ -27,6 +28,11 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+
+		if (getTurnierSystem() != TurnierSystem.LIGA) {
+			throw new GenerateException("Kein oder falsches Turnier System. " + getTurnierSystem());
+		}
+
 		upDateSheet();
 		ProcessBox().info("Exportiere nach PDF");
 
