@@ -15,8 +15,6 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 
 /**
  * Exportiert die Tabellen nach pdf und erstelt eine html datei
- * 
- * @author michael
  *
  */
 
@@ -31,11 +29,16 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 	protected void doRun() throws GenerateException {
 		upDateSheet();
 		ProcessBox().info("Exportiere nach PDF");
-		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.SHEET_NAMEN)
-				.prefix1(LigaSpielPlanSheet.SHEET_NAMEN).doExport().toString());
-		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
-				.prefix1(LigaRanglisteSheet.SHEETNAME).doExport().toString());
 
+		LigaSpielPlanSheet ligaSpielPlanSheet = new LigaSpielPlanSheet(getWorkingSpreadsheet());
+		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.SHEET_NAMEN)
+				.range(ligaSpielPlanSheet.printBereichRangePosition()).prefix1(LigaSpielPlanSheet.SHEET_NAMEN)
+				.doExport().toString());
+
+		LigaRanglisteSheet ligaRanglisteSheet = new LigaRanglisteSheet(getWorkingSpreadsheet());
+		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
+				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport()
+				.toString());
 	}
 
 	@Override

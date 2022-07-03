@@ -70,8 +70,6 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final LigaMeldeListeSheet_Update meldeListe;
 	private final RangListeSorter rangListeSorter;
-	private JederGegenJeden jederGegenJeden;
-	private TeamMeldungen alleMeldungen;
 
 	/**
 	 * @param workingSpreadsheet
@@ -111,9 +109,12 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		return rangListeSorter;
 	}
 
-	protected void initJederGegenJeden() throws GenerateException {
-		alleMeldungen = meldeListe.getAlleMeldungen();
-		jederGegenJeden = new JederGegenJeden(alleMeldungen);
+	private TeamMeldungen getAlleMeldungen() throws GenerateException {
+		return meldeListe.getAlleMeldungen(); // inhalt kann sich später ändern
+	}
+
+	private JederGegenJeden newJederGegenJeden() throws GenerateException {
+		return new JederGegenJeden(getAlleMeldungen());
 	}
 
 	/**
@@ -121,10 +122,9 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 */
 	public void upDateSheet() throws GenerateException {
 		meldeListe.upDateSheet();
-		initJederGegenJeden();
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		if (!alleMeldungen.isValid()) {
+		if (!getAlleMeldungen().isValid()) {
 			processBoxinfo("Abbruch, ungültige Anzahl von Melungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
 					.message("Ungültige anzahl von Melungen").show();
@@ -140,7 +140,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);
-		spieltageFormulaEinfuegen();
+		spieltageFormulaEinfuegen(newJederGegenJeden());
 		summenSpaltenEinfuegen();
 
 		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
@@ -154,17 +154,20 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		insertHeader();
 		formatData();
 		meldungenSpalte.formatDaten();
-		Position footerPos = addFooter().getPos();
-		printBereichDefinieren(footerPos);
+		addFooter();
+		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
-	private void printBereichDefinieren(Position footerPos) throws GenerateException {
+	private void printBereichDefinieren() throws GenerateException {
 		processBoxinfo("Print-Bereich");
-		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(printBereichRangePosition());
+	}
+
+	public RangePosition printBereichRangePosition() throws GenerateException {
 		Position linksOben = Position.from(0, 0);
-		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
-				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
+		Position rechtsUnten = Position.from(getLetzteSpalte(), getFooterZeile());
+		return RangePosition.from(linksOben, rechtsUnten);
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
@@ -173,13 +176,13 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
-		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(
+		getSheetHelper().setStringValueInCell(stringVal.setValue(
 				"Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte Δ, 4. Direktvergleich"));
 		return stringVal;
 	}
 
 	private int getFooterZeile() throws GenerateException {
-		return getLetzteDatenZeile() + 1;
+		return getLetzteDatenZeile() + 2;
 	}
 
 	/**
@@ -347,12 +350,12 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 				ERSTE_DATEN_ZEILE + (anzZeilen() - 1));
 	}
 
-	private int anzZeilen() {
-		return jederGegenJeden.getAnzMeldungen();
+	private int anzZeilen() throws GenerateException {
+		return newJederGegenJeden().getAnzMeldungen();
 	}
 
-	private int anzGesamtRunden() {
-		return jederGegenJeden.anzRunden() * 2; // *2 weil hin und rückrunde
+	private int anzGesamtRunden() throws GenerateException {
+		return newJederGegenJeden().anzRunden() * 2; // *2 weil hin und rückrunde
 	}
 
 	private void summenSpaltenEinfuegen() throws GenerateException {
@@ -421,7 +424,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		getSheetHelper().setFormulaInCell(summenAnzRunden);
 	}
 
-	private void spieltageFormulaEinfuegen() throws GenerateException {
+	private void spieltageFormulaEinfuegen(JederGegenJeden jederGegenJeden) throws GenerateException {
 
 		// =WENNNV(INDEX($'Liga Spielplan'.F3:F5;VERGLEICH(A3;$'Liga Spielplan'.O3:O5;0)); INDEX($'Liga Spielplan'.G3:G5;VERGLEICH(A3;$'Liga Spielplan'.P3:P5;0)))
 

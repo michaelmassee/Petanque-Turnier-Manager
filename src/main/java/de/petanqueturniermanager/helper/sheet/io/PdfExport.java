@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.helper.sheet.io;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -11,8 +13,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.io.IOException;
+import com.sun.star.table.XCellRange;
+import com.sun.star.uno.UnoRuntime;
+import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
 /**
  * Erstellung 01.07.2022 / Michael Massee
@@ -54,6 +62,7 @@ public class PdfExport extends AbstractStore<PdfExport> {
 	private static final Logger logger = LogManager.getLogger(PdfExport.class);
 
 	private String sheetName = null;
+	private RangePosition rangePosition = null;
 
 	public PdfExport(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -66,6 +75,28 @@ public class PdfExport extends AbstractStore<PdfExport> {
 	public PdfExport sheetName(String sheetName) {
 		this.sheetName = sheetName;
 		return this;
+	}
+
+	public PdfExport range(RangePosition rangePosition) throws GenerateException {
+		this.rangePosition = rangePosition;
+		return this;
+	}
+
+	private Object selectRangetoExport() {
+		checkNotNull(sheetName);
+		checkNotNull(rangePosition);
+
+		Object retSel = null;
+		XSelectionSupplier xSelectionSupplier = UnoRuntime.queryInterface(XSelectionSupplier.class,
+				getWorkingSpreadsheet().getWorkingSpreadsheetView());
+
+		XCellRange cell = TurnierSheet.from(sheetName, getWorkingSpreadsheet()).setActiv()
+				.getCellRangeByPosition(rangePosition);
+
+		xSelectionSupplier.select(cell);
+		retSel = xSelectionSupplier.getSelection();
+
+		return retSel;
 	}
 
 	public URI doExport() {
@@ -83,13 +114,20 @@ public class PdfExport extends AbstractStore<PdfExport> {
 			saveprops.put(SAVE_PROP_OVERWRITE, Boolean.TRUE);
 			saveprops.put(SAVE_PROP_FILTER_NAME, CALC_PDF_EXPORT_FILTER);
 
-			if (sheetName != null) {
+			filterData.put(SAVE_PROP_FILTER_EXPORTBOOKMARKS, Boolean.FALSE);
+			filterData.put(SAVE_PROP_FILTER_EXPORTNOTES, Boolean.FALSE);
+
+			if (rangePosition != null) {
+				// selected range from activ sheet
+				filterData.put(SAVE_PROP_FILTER_SELECTION, selectRangetoExport());
+			} else if (sheetName != null) {
 				int sheetPosition = this.getSheetHelper().getIdxByName(sheetName);
 				if (sheetPosition > -1) {
 					// export only this sheet
 					filterData.put(SAVE_PROP_FILTER_PAGERANGE, "" + sheetPosition);
 				}
 			}
+
 			if (!filterData.isEmpty()) {
 				saveprops.put(SAVE_PROP_FILTERDATA, map2Proplist(filterData));
 			}

@@ -26,7 +26,6 @@ public class LigaRanglisteSheetSortOnly extends LigaRanglisteSheet {
 					.message(errorMsg).show();
 		} else {
 			getSheetHelper().setActiveSheet(sheet);
-			initJederGegenJeden();
 			getRangListeSorter().doSort();
 		}
 	}
