@@ -15,6 +15,8 @@ import com.sun.star.sheet.XArrayFormulaRange;
 import com.sun.star.sheet.XCellRangeData;
 import com.sun.star.sheet.XCellRangesQuery;
 import com.sun.star.sheet.XSheetOperation;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
 
@@ -28,29 +30,44 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
  * @author Michael Massee
  *
  */
-public class RangeHelper extends BaseHelper {
+public class RangeHelper {
 
 	private static final Logger logger = LogManager.getLogger(RangeHelper.class);
 	private final RangePosition rangePos;
+	private final XSpreadsheet xSpreadsheet;
+	private final XSpreadsheetDocument workingSpreadsheetDocument;
 
-	private RangeHelper(ISheet iSheet, RangePosition rangePos) {
-		super(iSheet);
+	private RangeHelper(XSpreadsheet xSpreadsheet, XSpreadsheetDocument workingSpreadsheetDocument,
+			RangePosition rangePos) {
+		this.xSpreadsheet = checkNotNull(xSpreadsheet);
+		this.workingSpreadsheetDocument = checkNotNull(workingSpreadsheetDocument);
 		this.rangePos = RangePosition.from(rangePos);
 	}
 
-	public static RangeHelper from(ISheet sheet, RangePosition rangePos) {
+	private RangeHelper(ISheet sheet, RangePosition rangePos) throws GenerateException {
+		this(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), rangePos);
+	}
+
+	public static RangeHelper from(XSpreadsheet xSpreadsheet, XSpreadsheetDocument workingSpreadsheetDocument,
+			RangePosition rangePos) throws GenerateException {
+		return new RangeHelper(xSpreadsheet, workingSpreadsheetDocument, rangePos);
+	}
+
+	public static RangeHelper from(ISheet sheet, RangePosition rangePos) throws GenerateException {
 		return new RangeHelper(sheet, rangePos);
 	}
 
 	/**
 	 * @param wkRefxSpreadsheet
 	 * @param rangePosition
+	 * @throws GenerateException
 	 */
-	public static RangeHelper from(WeakRefHelper<ISheet> wkRefISheet, RangePosition rangePos) {
+	public static RangeHelper from(WeakRefHelper<ISheet> wkRefISheet, RangePosition rangePos) throws GenerateException {
 		return new RangeHelper(checkNotNull(wkRefISheet).get(), rangePos);
 	}
 
-	public static RangeHelper from(ISheet sheet, int ersteSpalte, int ersteZeile, int letzteSpalte, int letzteZeile) {
+	public static RangeHelper from(ISheet sheet, int ersteSpalte, int ersteZeile, int letzteSpalte, int letzteZeile)
+			throws GenerateException {
 		return new RangeHelper(sheet, RangePosition.from(ersteSpalte, ersteZeile, letzteSpalte, letzteZeile));
 	}
 
@@ -67,9 +84,11 @@ public class RangeHelper extends BaseHelper {
 		xRangetoClear = getCellRange();
 		if (xRangetoClear != null) {
 			// --- Sheet operation. ---
-			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class, xRangetoClear);
-			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED | CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS
-					| CellFlags.STRING | CellFlags.STYLES | CellFlags.VALUE);
+			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class,
+					xRangetoClear);
+			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED
+					| CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS | CellFlags.STRING | CellFlags.STYLES
+					| CellFlags.VALUE);
 		}
 		return this;
 	}
@@ -77,8 +96,8 @@ public class RangeHelper extends BaseHelper {
 	private XCellRangeData getXCellRangeData() throws GenerateException {
 		XCellRangeData xCellRangeData = null;
 		try {
-			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(),
-					rangePos.getEndeZeile());
+			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(),
+					rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 			if (xCellRange != null) {
 				xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
 			}
@@ -86,6 +105,10 @@ public class RangeHelper extends BaseHelper {
 			logger.error(e.getMessage(), e);
 		}
 		return xCellRangeData;
+	}
+
+	private XCellRange getXSpreadSheet() {
+		return xSpreadsheet;
 	}
 
 	/**
@@ -122,11 +145,13 @@ public class RangeHelper extends BaseHelper {
 
 			// array muss genau mit rangepos übereinstimmen
 			if (rangePos.getAnzahlZeilen() != dataArray.length) {
-				throw new GenerateException("Anzahl Zeilen stimmen nicht überein. range:" + rangePos.getAnzahlZeilen() + " array:" + dataArray.length);
+				throw new GenerateException("Anzahl Zeilen stimmen nicht überein. range:" + rangePos.getAnzahlZeilen()
+						+ " array:" + dataArray.length);
 			}
 
 			if (rangePos.getAnzahlSpalten() != dataArray[0].length) {
-				throw new GenerateException("Anzahl Spalten stimmen nicht überein. range:" + rangePos.getAnzahlSpalten() + " array:" + dataArray[0].length);
+				throw new GenerateException("Anzahl Spalten stimmen nicht überein. range:" + rangePos.getAnzahlSpalten()
+						+ " array:" + dataArray[0].length);
 			}
 			xCellRangeData.setDataArray(dataArray);
 		}
@@ -140,7 +165,8 @@ public class RangeHelper extends BaseHelper {
 		XCellRange xCellRange = null;
 
 		try {
-			xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
+			xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
+					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -169,8 +195,12 @@ public class RangeHelper extends BaseHelper {
 	}
 
 	public RangeHelper setRangeProperties(RangeProperties rangeProp) throws GenerateException {
-		XPropertyHelper.from(getCellRange(), getISheet()).setProperties(rangeProp);
+		XPropertyHelper.from(getCellRange(), getWorkingSpreadsheetDocument()).setProperties(rangeProp);
 		return this;
+	}
+
+	private XSpreadsheetDocument getWorkingSpreadsheetDocument() {
+		return workingSpreadsheetDocument;
 	}
 
 	public RangeHelper setArrayFormula(String formula) throws GenerateException {
