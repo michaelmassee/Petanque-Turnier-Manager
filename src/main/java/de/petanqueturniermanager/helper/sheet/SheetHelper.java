@@ -467,11 +467,10 @@ public class SheetHelper {
 	}
 
 	/**
-	 * @deprecated use TurnierSheet.from(xSheet, currentSpreadsheet).setActiv()
+	 * @see TurnierSheet.from(xSheet, currentSpreadsheet).setActiv()
 	 * @param spreadsheet
 	 */
 
-	@Deprecated
 	public void setActiveSheet(XSpreadsheet spreadsheet) {
 		TurnierSheet.from(spreadsheet, currentSpreadsheet.get()).setActiv();
 	}
@@ -480,11 +479,11 @@ public class SheetHelper {
 	 * 1. in google nach begriff "color chooser" suchen. -> Color chooser verwenden, hex code ohne #<br>
 	 * 2. Color chooser in Zelle verwenden-> hex code kopieren <br>
 	 *
-	 * @deprecated use TurnierSheet.from(xSheet, currentSpreadsheet).tabColor
+	 * @see TurnierSheet.from(xSheet, currentSpreadsheet).tabColor
 	 * @param xSheet
 	 * @param hex, 6 stellige farbcode, ohne # oder sonstige vorzeichen !
 	 */
-	@Deprecated
+
 	public void setTabColor(XSpreadsheet xSheet, String hex) {
 		TurnierSheet.from(xSheet, currentSpreadsheet.get()).tabColor(hex);
 	}
@@ -724,13 +723,7 @@ public class SheetHelper {
 	public XCell getCell(XSpreadsheet xSheet, Position pos) {
 		checkNotNull(xSheet);
 		checkNotNull(pos);
-		XCell xCell = null;
-		try {
-			xCell = xSheet.getCellByPosition(pos.getColumn(), pos.getRow());
-		} catch (IndexOutOfBoundsException e) {
-			logger.error(e.getMessage(), e);
-		}
-		return xCell;
+		return TurnierSheet.from(xSheet, currentSpreadsheet.get()).getCell(pos);
 	}
 
 	/**

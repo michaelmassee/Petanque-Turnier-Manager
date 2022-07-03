@@ -16,6 +16,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.beans.XPropertySetInfo;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.helper.ISheet;
@@ -23,33 +24,46 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CommonProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
 
-public class XPropertyHelper extends BaseHelper implements ICommonProperties {
+public class XPropertyHelper /* extends BaseHelper */ implements ICommonProperties {
 
 	private static final Logger logger = LogManager.getLogger(XPropertyHelper.class);
 
 	private final XPropertySet xPropertySet;
+	private final XSpreadsheetDocument xSpreadsheetDocument;
 
-	private XPropertyHelper(XPropertySet xPropertySet, ISheet iSheet) {
-		super(iSheet);
+	private XPropertyHelper(XPropertySet xPropertySet, XSpreadsheetDocument xSpreadsheetDocument) {
 		this.xPropertySet = checkNotNull(xPropertySet);
+		this.xSpreadsheetDocument = xSpreadsheetDocument;
+	}
+
+	public static final XPropertyHelper from(XPropertySet xPropSet, XSpreadsheetDocument xSpreadsheetDocument) {
+		checkNotNull(xPropSet);
+		return new XPropertyHelper(xPropSet, xSpreadsheetDocument);
+	}
+
+	public static final XPropertyHelper from(Object hasProperties, XSpreadsheetDocument xSpreadsheetDocument) {
+		checkNotNull(hasProperties);
+		XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, hasProperties);
+		return new XPropertyHelper(xPropSet, xSpreadsheetDocument);
 	}
 
 	public static final XPropertyHelper from(XPropertySet xPropSet, ISheet iSheet) {
 		checkNotNull(xPropSet);
-		return new XPropertyHelper(xPropSet, iSheet);
+		return new XPropertyHelper(xPropSet, iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument());
 	}
 
 	public static final XPropertyHelper from(Object hasProperties, ISheet iSheet) {
 		checkNotNull(hasProperties);
 		XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, hasProperties);
-		return new XPropertyHelper(xPropSet, iSheet);
+		return new XPropertyHelper(xPropSet, iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument());
 	}
 
 	public XPropertyHelper setProperty(String key, Object val) {
 		checkArgument(StringUtils.isNotEmpty(key), "key darf nicht null oder leer sein");
 		try {
 			xPropertySet.setPropertyValue(key, val);
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
 			logger.error("Property '" + key + "' = '" + val + "'\r" + e.getMessage(), e);
 		}
 		return this;
@@ -84,7 +98,7 @@ public class XPropertyHelper extends BaseHelper implements ICommonProperties {
 
 		// Sonderbehandelung fuer NumberFormat
 		if (properties.getUserNumberFormat() != null) {
-			int idx = NumberFormatHelper.from(getISheet()).getIdx(properties.getUserNumberFormat());
+			int idx = NumberFormatHelper.from(xSpreadsheetDocument).getIdx(properties.getUserNumberFormat());
 			if (idx > -1) {
 				setProperty(NUMBERFORMAT, Integer.valueOf(idx));
 			}
