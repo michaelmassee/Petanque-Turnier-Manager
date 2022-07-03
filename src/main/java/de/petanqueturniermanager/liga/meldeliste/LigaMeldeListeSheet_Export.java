@@ -4,11 +4,18 @@
 
 package de.petanqueturniermanager.liga.meldeliste;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.io.HtmlExport;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -45,6 +52,11 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
 				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport()
 				.toString());
+
+		ProcessBox().info("Exportiere nach HTML");
+		URI htmlExportFile = HtmlExport.from(getWorkingSpreadsheet()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport();
+		ProcessBox().info(htmlExportFile.toString());
+		cleanUpLigaHtml(htmlExportFile);
 	}
 
 	@Override
@@ -52,4 +64,13 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 		return logger;
 	}
 
+	private void cleanUpLigaHtml(URI htmlExportFile) {
+		Document ligaHtml;
+		try {
+			ligaHtml = Jsoup.parse(new File(htmlExportFile));
+			ligaHtml.getAllElements();
+		} catch (IOException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
 }
