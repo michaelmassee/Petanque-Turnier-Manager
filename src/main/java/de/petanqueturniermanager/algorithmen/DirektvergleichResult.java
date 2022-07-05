@@ -1,5 +1,8 @@
 package de.petanqueturniermanager.algorithmen;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.text.CaseUtils;
@@ -45,6 +48,11 @@ public enum DirektvergleichResult {
 
 	public static Stream<DirektvergleichResult> stream() {
 		return Stream.of(DirektvergleichResult.values());
+	}
+
+	public static List<DirektvergleichResult> sortedByCodeList() {
+		return DirektvergleichResult.stream().sorted(Comparator.comparingInt(DirektvergleichResult::getCode))
+				.collect(Collectors.toList());
 	}
 
 }
