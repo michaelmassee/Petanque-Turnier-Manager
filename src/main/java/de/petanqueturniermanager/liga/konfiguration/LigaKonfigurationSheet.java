@@ -19,7 +19,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * @author Michael Massee
  */
-public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements ILigaPropertiesSpalte, IKonfigurationSheet {
+public class LigaKonfigurationSheet extends BaseKonfigurationSheet
+		implements ILigaPropertiesSpalte, IKonfigurationSheet {
 
 	private static final Logger logger = LogManager.getLogger(LigaKonfigurationSheet.class);
 
@@ -57,8 +58,8 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
 		// default page Style
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks()).setHeaderCenter(getKopfZeileMitte())
-				.setHeaderRight(getKopfZeileRechts()).create();
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks())
+				.setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create();
 	}
 
 	@Override
@@ -89,6 +90,21 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet implements IL
 	@Override
 	public String getKopfZeileRechts() throws GenerateException {
 		return propertiesSpalte.getKopfZeileRechts();
+	}
+
+	@Override
+	public String getGruppennamen() throws GenerateException {
+		return propertiesSpalte.getGruppennamen();
+	}
+
+	@Override
+	public String getBaseDownloadUrl() throws GenerateException {
+		return propertiesSpalte.getBaseDownloadUrl();
+	}
+
+	@Override
+	public String getLigaLogoUr() throws GenerateException {
+		return propertiesSpalte.getLigaLogoUr();
 	}
 
 }

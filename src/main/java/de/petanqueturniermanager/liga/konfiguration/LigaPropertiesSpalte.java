@@ -31,21 +31,41 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
 	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
 
+	// html export
+	private static final String KONFIG_PROP_NAME_GRUPPE = "Gruppennamen";
+	private static final String KONFIG_PROP_LOGO_URL = "Liga-Logo Url"; // (png)";
+	private static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer der Download von Spielpläne";
+
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
 
 	static {
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE).setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Spielplan Hintergrundfarbe für gerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE).setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE)
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Spielplan Hintergrundfarbe für gerade Zeilen")
+				.inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE)
+				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
 				.setDescription("Spielplan Hintergrundfarbe für ungerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER).setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
-				.setDescription("Spielplan Header-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER)
+				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR).setDescription("Spielplan Header-Hintergrundfarbe")
+				.inSideBar());
 
-		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS).setDescription("Kopfzeile Links").inSideBar());
-		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE).setDescription("Kopfzeile Mitte").inSideBar());
-		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS).setDescription("Kopfzeile Rechts").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
+				.setDescription("Kopfzeile Links").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
+				.setDescription("Kopfzeile Mitte").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
+				.setDescription("Kopfzeile Rechts").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
+				.setDescription("Name der Gruppe in dieses Dokument.").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_LOGO_URL).setDefaultVal("")
+				.setDescription("Url zur Liga Logo Datei").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL).setDefaultVal("")
+				.setDescription("Bases Url fuer den Download von Spielpläne, Ranglisten, etc..").inSideBar());
 	}
 
 	/**
@@ -100,6 +120,21 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public String getKopfZeileRechts() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);
+	}
+
+	@Override
+	public String getGruppennamen() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_NAME_GRUPPE);
+	}
+
+	@Override
+	public String getBaseDownloadUrl() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
+	}
+
+	@Override
+	public String getLigaLogoUr() throws GenerateException {
+		return readStringProperty(KONFIG_PROP_LOGO_URL);
 	}
 
 }

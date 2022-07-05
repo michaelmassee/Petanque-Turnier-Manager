@@ -28,11 +28,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 
-	// TODO get this from properties
-	private static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;\">";
-	private static String BFL_IMAGE = "<img src=\"http://bc-linden.de/oeffentlich/bfl/logo.png\" align=\"right\" style=\"width:80px;\">";
-	private static String PDF_BASE_URL = "http://bc-linden.de/oeffentlich/bfl/";
-
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_Export.class);
 
 	public LigaMeldeListeSheet_Export(WorkingSpreadsheet workingSpreadsheet) {
@@ -71,14 +66,41 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 	}
 
 	private void cleanUpLigaHtml(URI htmlExportFileUri) {
+
+		ProcessBox().info("Clean und reformat html");
+
 		try {
+
+			String baseDownloadUrl = StringUtils.strip(getKonfigurationSheet().getBaseDownloadUrl());
+			if (StringUtils.isEmpty(baseDownloadUrl)) {
+				ProcessBox().info("Warning: Download URL Verzeichnis fehlt in der Turnier Konfiguration");
+			} else {
+				ProcessBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
+			}
+
+			String ligaLogoUr = StringUtils.strip(getKonfigurationSheet().getLigaLogoUr());
+			if (StringUtils.isEmpty(ligaLogoUr)) {
+				ProcessBox().info("Warning: Liga logo fehlt in der Turnier Konfiguration");
+			} else {
+				ProcessBox().info("Liga logo: " + ligaLogoUr);
+			}
+
+			String gruppennamen = StringUtils.strip(getKonfigurationSheet().getGruppennamen());
+			if (StringUtils.isEmpty(gruppennamen)) {
+				ProcessBox().info("Warning: Gruppennamen fehlt in der Turnier Konfiguration");
+			} else {
+				ProcessBox().info("Gruppennamen: " + gruppennamen);
+			}
+
 			File htmlExportFile = new File(htmlExportFileUri);
 			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
 			name = StringUtils.replace(name, ".html", ".clean.html");
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
-			LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(BFL_IMAGE).gruppe("Gruppe 1").pdfImageUrl(PDF_IMAGE)
-					.pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
-		} catch (IOException e) {
+			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(ligaLogoUr).gruppe(gruppennamen)
+					.pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
+
+			ProcessBox().info(cleanHtml.toString());
+		} catch (IOException | GenerateException e) {
 			logger.error(e.getMessage(), e);
 		}
 

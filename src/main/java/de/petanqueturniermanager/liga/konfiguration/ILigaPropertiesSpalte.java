@@ -23,4 +23,10 @@ public interface ILigaPropertiesSpalte {
 
 	String getKopfZeileRechts() throws GenerateException;
 
+	String getGruppennamen() throws GenerateException;
+
+	String getBaseDownloadUrl() throws GenerateException;
+
+	String getLigaLogoUr() throws GenerateException;
+
 }
