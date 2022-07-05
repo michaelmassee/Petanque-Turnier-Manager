@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet_TestDaten;
 
 public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 
@@ -52,6 +53,7 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
+		getKonfigurationSheet().setGruppennamen(LigaSpielPlanSheet_TestDaten.TEST_GRUPPE);
 		testNamenEinfuegen();
 	}
 

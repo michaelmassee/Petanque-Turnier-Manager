@@ -31,12 +31,21 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	private static AtomicBoolean isDirty;
 
 	// =de.petanqueturniermanager.addin.GlobalAddIn.ptmspielrunde()
-	public static final String PTMSPIELTAG = SERVICE_NAME + ".ptmintproperty(\""
-			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")";
-	public static final String PTMSPIELRUNDE = SERVICE_NAME + ".ptmintproperty(\""
-			+ BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\")";
-	public static final String PTMINTPROPERTY = SERVICE_NAME + ".ptmintproperty";
-	public static final String PTMDIREKTVERGLEICH = SERVICE_NAME + ".ptmdirektvergleich";
+	public static final String PTM_INT_PROPERTY = SERVICE_NAME + ".ptmintproperty";
+	public static final String PTM_STRING_PROPERTY = SERVICE_NAME + ".ptmstringproperty";
+	public static final String PTM_DIREKTVERGLEICH = SERVICE_NAME + ".ptmdirektvergleich";
+
+	public static final String FORMAT_PTM_INT_PROPERTY(String propName) {
+		return PTM_INT_PROPERTY + "(\"" + propName + "\")";
+	}
+
+	public static final String FORMAT_PTM_STRING_PROPERTY(String propName) {
+		return PTM_STRING_PROPERTY + "(\"" + propName + "\")";
+	}
+
+	public static final String PTMSPIELTAG = FORMAT_PTM_INT_PROPERTY(BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
+	public static final String PTM_SPIELRUNDE = FORMAT_PTM_INT_PROPERTY(
+			BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
 
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
@@ -128,7 +137,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
 			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
-				String propVal = hlpr.getStringProperty(arg0, "fehler");
+				String propVal = hlpr.getStringProperty(arg0, "Property '" + arg0 + "' fehlt.");
 				logger.debug("return:" + arg0 + "=" + propVal);
 				return propVal;
 			}

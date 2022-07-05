@@ -29,4 +29,6 @@ public interface ILigaPropertiesSpalte {
 
 	String getLigaLogoUr() throws GenerateException;
 
+	void setGruppennamen(String name) throws GenerateException;
+
 }

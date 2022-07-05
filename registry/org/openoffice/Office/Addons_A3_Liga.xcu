@@ -66,8 +66,8 @@
 
 							<node oor:name="A3A4" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Liga Gameplan</value>
-									<value xml:lang="de">Liga Spielplan</value>
+									<value xml:lang="en">Gameplan</value>
+									<value xml:lang="de">Spielplan</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_spielplan</value>
@@ -79,8 +79,8 @@
 							
 							<node oor:name="A3A5" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Liga Ranking</value>
-									<value xml:lang="de">Liga Rangliste</value>
+									<value xml:lang="en">Ranking</value>
+									<value xml:lang="de">Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_rangliste</value>
@@ -91,8 +91,8 @@
 							</node>	
 							<node oor:name="A3A6" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Sort Liga Ranking</value>
-									<value xml:lang="de">Liga Rangliste sortieren</value>
+									<value xml:lang="en">Sort Ranking</value>
+									<value xml:lang="de">Rangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_rangliste_sortieren</value>
@@ -104,8 +104,8 @@
 							
 							<node oor:name="A3A7" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Liga Directcomparison</value>
-									<value xml:lang="de">Liga Direktvergleich</value>
+									<value xml:lang="en">Directcomparison</value>
+									<value xml:lang="de">Direktvergleich</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_direktvergleich</value>
@@ -123,8 +123,8 @@
 							
 							<node oor:name="A3A9" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Liga Export</value>
-									<value xml:lang="de">Liga Export</value>
+									<value xml:lang="en">Export PDF and HTML</value>
+									<value xml:lang="de">Export PDF und HTML</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_export</value>

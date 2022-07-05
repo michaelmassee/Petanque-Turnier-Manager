@@ -13,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -37,6 +38,7 @@ import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -292,8 +294,10 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 				.setStringValueInCell(stValHeader.setValue("Datum").spalte(DATUM_SPALTE).setEndPosMergeZeilePlus(1));
 
 		// header erste Zeile
-		getSheetHelper()
-				.setStringValueInCell(stValHeader.setValue("Name").spalte(NAME_A_SPALTE).setEndPosMergeSpaltePlus(1));
+		getSheetHelper().setFormulaInCell(stValHeader
+				.setValue(GlobalImpl.FORMAT_PTM_STRING_PROPERTY(LigaPropertiesSpalte.KONFIG_PROP_NAME_GRUPPE))
+				.spalte(NAME_A_SPALTE).setEndPosMergeSpaltePlus(1));
+
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue("Punkte").spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(

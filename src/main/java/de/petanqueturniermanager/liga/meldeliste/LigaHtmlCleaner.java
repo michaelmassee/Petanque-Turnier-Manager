@@ -37,11 +37,11 @@ public class LigaHtmlCleaner {
 	private String logoUrl = null;
 	private String pdfDownloadBaseUrl = null;
 
-	private static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;\">";
+	private static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;;margin-right:10px;\">";
 
 	private static String PTM_IMAGE = "<a href=\"https://michaelmassee.github.io/Petanque-Turnier-Manager/\">"
-			+ "<img src=\"https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/petanqueturniermanager-logo-256px.png\" align=\"right\" style=\"width:80px;\">"
-			+ "</a>";
+			+ "<img src=\"https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/petanqueturniermanager-logo-256px.png\" align=\"right\" "
+			+ "style=\"width:60px;margin-right:10px;position:relative;bottom:60px;\">" + "</a>";
 
 	LigaHtmlCleaner(URI htmlOrgFile, File htmlTargetFile) {
 		this(new File(checkNotNull(htmlOrgFile, "htmlOrgFile==null")), htmlTargetFile);
@@ -103,8 +103,12 @@ public class LigaHtmlCleaner {
 
 			addMeldeliste(ligaHtmlOrg, bodyNew);
 			addSpielplan(ligaHtmlOrg, bodyNew);
-			addRangliste(ligaHtmlOrg, bodyNew);
-			addDirektvergleich(ligaHtmlOrg, bodyNew);
+			boolean addRangliste = addRangliste(ligaHtmlOrg, bodyNew);
+			boolean addDirektvergleich = addDirektvergleich(ligaHtmlOrg, bodyNew);
+
+			if (addRangliste || addDirektvergleich) {
+				bodyNew.append(PTM_IMAGE);
+			}
 
 			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(htmlTargetFile))) {
 				fileStream.write(ligaHtmlNew.outerHtml());
@@ -144,7 +148,7 @@ public class LigaHtmlCleaner {
 		}
 	}
 
-	private void addRangliste(Document ligaHtmlOrg, Element bodyNew) {
+	private boolean addRangliste(Document ligaHtmlOrg, Element bodyNew) {
 		Element ranglisteClone = findRanglisteTable(ligaHtmlOrg);
 		if (ranglisteClone != null) {
 			cleanUpTable(ranglisteClone);
@@ -170,11 +174,13 @@ public class LigaHtmlCleaner {
 			bodyNew.append("<A NAME=\"table2\"><h1>Rangliste</h1></A>");
 			bodyNew.append("<p style=\"font-size:80%\">" + reihenfolge + "</p>");
 			ranglisteClone.appendTo(bodyNew);
+		} else {
+			return false;
 		}
-
+		return true;
 	}
 
-	private void addDirektvergleich(Document ligaHtmlOrg, Element bodyNew) {
+	private boolean addDirektvergleich(Document ligaHtmlOrg, Element bodyNew) {
 		Element direktvergleichClone = findDirektvergleichTable(ligaHtmlOrg);
 		if (direktvergleichClone != null) {
 			cleanUpTable(direktvergleichClone);
@@ -185,7 +191,6 @@ public class LigaHtmlCleaner {
 				direktvergleichClone.selectFirst("tr:containsWholeText(" + dvgl.getAnzeigeText() + ")").remove();
 			}
 			direktvergleichClone.appendTo(bodyNew);
-			bodyNew.append(PTM_IMAGE);
 
 			// footer wieder einfuegen
 			Element footerTable = new Element("table");
@@ -203,9 +208,10 @@ public class LigaHtmlCleaner {
 				tr.appendTo(footerTable);
 			}
 			footerTable.appendTo(bodyNew);
-
+		} else {
+			return false;
 		}
-
+		return true;
 	}
 
 	private Element findAnmeldungenTable(Document ligaHtmlOrg) {
@@ -222,7 +228,7 @@ public class LigaHtmlCleaner {
 	// bgcolor="#E6EBF4">KW</td>
 	private Element findSpielplanTable(Document ligaHtmlOrg) {
 		try {
-			return ligaHtmlOrg.selectFirst("table:containsWholeText(KW)").clone();
+			return ligaHtmlOrg.selectFirst("table:containsWholeText(KW):containsWholeText(Datum)").clone();
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
