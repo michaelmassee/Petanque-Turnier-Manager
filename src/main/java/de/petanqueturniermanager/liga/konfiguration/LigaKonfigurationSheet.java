@@ -98,6 +98,11 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public void setGruppennamen(String name) throws GenerateException {
+		propertiesSpalte.setGruppennamen(name);
+	}
+
+	@Override
 	public String getBaseDownloadUrl() throws GenerateException {
 		return propertiesSpalte.getBaseDownloadUrl();
 	}

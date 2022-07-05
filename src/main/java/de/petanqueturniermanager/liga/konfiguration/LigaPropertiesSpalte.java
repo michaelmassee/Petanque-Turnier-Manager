@@ -32,9 +32,9 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
 
 	// html export
-	private static final String KONFIG_PROP_NAME_GRUPPE = "Gruppennamen";
-	private static final String KONFIG_PROP_LOGO_URL = "Liga-Logo Url"; // (png)";
-	private static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer der Download von Spielpläne";
+	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppennamen";
+	public static final String KONFIG_PROP_LOGO_URL = "Liga-Logo Url"; // (png)";
+	public static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer der Download von Spielpläne";
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
@@ -125,6 +125,11 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public String getGruppennamen() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_NAME_GRUPPE);
+	}
+
+	@Override
+	public void setGruppennamen(String name) throws GenerateException {
+		setStringProperty(KONFIG_PROP_NAME_GRUPPE, name);
 	}
 
 	@Override

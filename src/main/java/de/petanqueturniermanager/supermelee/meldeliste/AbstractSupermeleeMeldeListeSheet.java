@@ -227,7 +227,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 //		getSheetHelper().setValInCell(spielTagNr);
 
 		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
-		StringCellValue spielRundeFormula = StringCellValue.from(sheet, posSpielrundeFormula, GlobalImpl.PTMSPIELRUNDE)
+		StringCellValue spielRundeFormula = StringCellValue.from(sheet, posSpielrundeFormula, GlobalImpl.PTM_SPIELRUNDE)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielRundeFormula);
 //		NumberCellValue spielRndNr = NumberCellValue

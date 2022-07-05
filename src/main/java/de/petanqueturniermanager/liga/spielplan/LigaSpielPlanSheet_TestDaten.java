@@ -22,6 +22,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  */
 public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 
+	public static final String TEST_GRUPPE = "Test Gruppe";
 	private final boolean mitFreispiel;
 
 	/**
@@ -41,6 +42,7 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
+		getKonfigurationSheet().setGruppennamen(TEST_GRUPPE);
 		// Meldeliste
 		new LigaMeldeListeSheet_TestDaten(getWorkingSpreadsheet(), (mitFreispiel) ? false : true).testNamenEinfuegen();
 		generate();

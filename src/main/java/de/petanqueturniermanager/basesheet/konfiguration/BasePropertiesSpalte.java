@@ -162,6 +162,10 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		return StringTools.stringToBoolean(readStringProperty(key));
 	}
 
+	public void setStringProperty(String key, String val) throws GenerateException {
+		docPropHelper.setStringProperty(key, val);
+	}
+
 	private Object getDefaultProp(String key) {
 		for (ConfigProperty<?> konfigProp : getKonfigProperties()) {
 			if (konfigProp.getKey().equals(key)) {

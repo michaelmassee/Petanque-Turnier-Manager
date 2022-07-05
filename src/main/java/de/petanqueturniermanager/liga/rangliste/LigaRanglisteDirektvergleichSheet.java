@@ -203,7 +203,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	private String direktVergleichFormula(int tmA, int tmB, String spielplanBegegnungenVerweis,
 			String spielplanSpieleVerweis, String spielplanSpielPunkteVerweis) {
 		// =PTM.ALG.DIREKTVERGLEICH(1;2;$'Liga Spielplan'.O3:P32;$'Liga Spielplan'.I3:J32;$'Liga Spielplan'.K3:L32)
-		return GlobalImpl.PTMDIREKTVERGLEICH + "(" + tmA + ";" + tmB + ";" + spielplanBegegnungenVerweis + ";"
+		return GlobalImpl.PTM_DIREKTVERGLEICH + "(" + tmA + ";" + tmB + ";" + spielplanBegegnungenVerweis + ";"
 				+ spielplanSpieleVerweis + ";" + spielplanSpielPunkteVerweis + ")";
 	}
 
