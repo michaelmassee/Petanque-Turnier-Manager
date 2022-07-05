@@ -10,8 +10,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class LigaHtmlCleanerTest {
 
-	static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;\">";
-	static String BFL_IMAGE = "<img src=\"http://bc-linden.de/oeffentlich/bfl/logo.png\" align=\"right\" style=\"width:80px;\">";
+	static String BFL_LOGO_URL = "http://bc-linden.de/oeffentlich/bfl/logo.png";
 	static String PDF_BASE_URL = "http://bc-linden.de/oeffentlich/bfl/";
 
 	@Rule
@@ -22,8 +21,7 @@ public class LigaHtmlCleanerTest {
 		File targetHtml = folder.newFile("LigaGeneratedClean.html");
 		URL ligaorg = LigaHtmlCleanerTest.class.getClassLoader().getResource("LigaGeneratedOrginal.html");
 		LigaHtmlCleaner ligaHtmlCleaner = new LigaHtmlCleaner(ligaorg.toURI(), targetHtml);
-		ligaHtmlCleaner.logoUrl(BFL_IMAGE).gruppe("Gruppe 1").pdfImageUrl(PDF_IMAGE).pdfDownloadBaseUrl(PDF_BASE_URL)
-				.cleanUp();
+		ligaHtmlCleaner.logoUrl(BFL_LOGO_URL).gruppe("Gruppe 1").pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
 
 		// for local test only
 		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
