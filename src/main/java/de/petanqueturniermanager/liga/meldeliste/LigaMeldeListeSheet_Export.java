@@ -8,10 +8,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -27,6 +27,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 
 public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
+
+	// TODO get this from properties
+	private static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;\">";
+	private static String BFL_IMAGE = "<img src=\"http://bc-linden.de/oeffentlich/bfl/logo.png\" align=\"right\" style=\"width:80px;\">";
+	private static String PDF_BASE_URL = "http://bc-linden.de/oeffentlich/bfl/";
+
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_Export.class);
 
 	public LigaMeldeListeSheet_Export(WorkingSpreadsheet workingSpreadsheet) {
@@ -37,7 +43,7 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 	protected void doRun() throws GenerateException {
 
 		if (getTurnierSystem() != TurnierSystem.LIGA) {
-			throw new GenerateException("Kein oder falsches Turnier System. " + getTurnierSystem());
+			throw new GenerateException("Kein oder falsches Turniersystem. " + getTurnierSystem());
 		}
 
 		upDateSheet();
@@ -54,7 +60,7 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 				.toString());
 
 		ProcessBox().info("Exportiere nach HTML");
-		URI htmlExportFile = HtmlExport.from(getWorkingSpreadsheet()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport();
+		URI htmlExportFile = HtmlExport.from(getWorkingSpreadsheet()).doExport();
 		ProcessBox().info(htmlExportFile.toString());
 		cleanUpLigaHtml(htmlExportFile);
 	}
@@ -64,13 +70,17 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 		return logger;
 	}
 
-	private void cleanUpLigaHtml(URI htmlExportFile) {
-		Document ligaHtml;
+	private void cleanUpLigaHtml(URI htmlExportFileUri) {
 		try {
-			ligaHtml = Jsoup.parse(new File(htmlExportFile));
-			ligaHtml.getAllElements();
+			File htmlExportFile = new File(htmlExportFileUri);
+			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
+			name = StringUtils.replace(name, ".html", ".clean.html");
+			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
+			LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(BFL_IMAGE).gruppe("Gruppe 1").pdfImageUrl(PDF_IMAGE)
+					.pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
+
 	}
 }
