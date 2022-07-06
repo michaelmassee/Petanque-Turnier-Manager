@@ -257,13 +257,6 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		header2val.setValue("Spielpunkte");
 		getSheetHelper().setStringValueInCell(header2val);
 
-		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
-		begegnungenHeader.setPos(header2val.getPos()).spaltePlus(3);
-		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(1).centerJustify()
-				.setBorder(borderHeader3).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
-				.setComment("Die Anzahl an gespielten Begegnungen");
-		getSheetHelper().setStringValueInCell(begegnungenHeader);
-
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
 		// 1 header zeile
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,8 +271,16 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 		// 1 header zeile
 		// summen
-		header1val.setValue("Summen").setEndPosMergeSpaltePlus(8);
+		header1val.setValue("Summen").setEndPosMergeSpaltePlus(7);
 		getSheetHelper().setStringValueInCell(header1val);
+		// Begegnungen
+
+		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
+		begegnungenHeader.setPos(header1val.getPos()).spaltePlus(8);
+		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(2).centerJustify()
+				.setBorder(borderHeader3).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
+				.setComment("Die Anzahl an gespielten Begegnungen");
+		getSheetHelper().setStringValueInCell(begegnungenHeader);
 
 	}
 
