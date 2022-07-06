@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.TextNode;
 
 import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
 
@@ -158,13 +159,24 @@ public class LigaHtmlCleaner {
 			if (reihenfolgeEL != null) {
 				reihenfolgeEL.remove();
 			}
-			Element fontElePlatz = ranglisteClone.selectFirst("font:containsWholeText(Platz)");
+			Element fontElePlatz = ranglisteClone.selectFirst("font:containsWholeOwnText(Platz)");
 			Element fontElePlatzParent = fontElePlatz.parent();
 			fontElePlatz.remove();
 			Element pPlatz = new Element("p");
 			pPlatz.attr("class", CLASS_TXTROTATE);
 			pPlatz.appendText("Platz");
 			pPlatz.appendTo(fontElePlatzParent);
+
+			Element tdEleBegegnung = ranglisteClone.selectFirst("td:containsOwn(Begegn)");
+			for (TextNode txNode : tdEleBegegnung.textNodes()) {
+				txNode.remove();
+			}
+
+			Element pBegn = new Element("p");
+			pBegn.attr("class", CLASS_TXTROTATE);
+			pBegn.attr("style", "font-size:15px;");
+			pBegn.appendText("Begegn.");
+			pBegn.appendTo(tdEleBegegnung);
 
 			bodyNew.append("<hr>");
 			String formatPdfDownloadLink = formatPdfDownloadLink("Rangliste");
