@@ -14,7 +14,6 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addin.XGlobal;
 import de.petanqueturniermanager.algorithmen.Direktvergleich;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -43,10 +42,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return PTM_STRING_PROPERTY + "(\"" + propName + "\")";
 	}
 
-	public static final String PTMSPIELTAG = FORMAT_PTM_INT_PROPERTY(BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
-	public static final String PTM_SPIELRUNDE = FORMAT_PTM_INT_PROPERTY(
-			BasePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
-
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
 		this.xContext = xContext;
@@ -54,7 +49,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 
-	public static XSingleComponentFactory __getComponentFactory(String name) {
+	public static final XSingleComponentFactory __getComponentFactory(String name) {
 		XSingleComponentFactory xFactory = null;
 		if (name.equals(implName)) {
 			xFactory = Factory.createComponentFactory(GlobalImpl.class, serviceNames);
@@ -62,29 +57,8 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return xFactory;
 	}
 
-	public static boolean __writeRegistryServiceInfo(XRegistryKey regKey) {
+	public static final boolean __writeRegistryServiceInfo(XRegistryKey regKey) {
 		return Factory.writeRegistryServiceInfo(implName, serviceNames, regKey);
-	}
-
-	// -------- XServiceInfo methods ------------
-	@Override
-	public String getImplementationName() {
-		return implName;
-	}
-
-	@Override
-	public boolean supportsService(String sService) {
-		for (int i = 0; i < serviceNames.length; i++) {
-			if (sService.equals(serviceNames[i])) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public String[] getSupportedServiceNames() {
-		return serviceNames;
 	}
 
 	// ------------------- XGlobal function(s) -----------------
@@ -163,5 +137,15 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public int ptmdirektvergleich(int teamA, int teamB, int[][] paarungen, int[][] siege, int[][] spielpunkte) {
 		Direktvergleich dvrgl = new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte);
 		return dvrgl.calc().getCode();
+	}
+
+	@Override
+	String getImplName() {
+		return implName;
+	}
+
+	@Override
+	String[] getServiceNames() {
+		return serviceNames;
 	}
 }

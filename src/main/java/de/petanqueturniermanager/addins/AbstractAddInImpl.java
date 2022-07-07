@@ -24,4 +24,30 @@ public abstract class AbstractAddInImpl extends WeakBase
 		return locale;
 	}
 
+	@Override
+	public String getImplementationName() {
+		return getImplName();
+	}
+
+	// -------- XServiceInfo methods ------------
+
+	@Override
+	public boolean supportsService(String sService) {
+		for (int i = 0; i < getServiceNames().length; i++) {
+			if (sService.equals(getServiceNames()[i])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public String[] getSupportedServiceNames() {
+		return getServiceNames();
+	}
+
+	abstract String getImplName();
+
+	abstract String[] getServiceNames();
+
 }

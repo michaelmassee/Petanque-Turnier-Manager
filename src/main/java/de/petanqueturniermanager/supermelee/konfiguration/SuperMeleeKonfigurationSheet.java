@@ -9,10 +9,10 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -117,8 +117,28 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected IPropertiesSpalte getPropertiesSpalte() {
+	protected ISuperMeleePropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
+	}
+
+	@Override
+	public final SpielTagNr getAktiveSpieltag() throws GenerateException {
+		return getPropertiesSpalte().getAktiveSpieltag();
+	}
+
+	@Override
+	public final void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+		getPropertiesSpalte().setAktiveSpieltag(spieltag);
+	}
+
+	@Override
+	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+		return getPropertiesSpalte().getAktiveSpielRunde();
+	}
+
+	@Override
+	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
+		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
 	}
 
 	@Override

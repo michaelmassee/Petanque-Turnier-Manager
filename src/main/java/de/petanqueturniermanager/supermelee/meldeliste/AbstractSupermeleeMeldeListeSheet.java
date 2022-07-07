@@ -18,7 +18,6 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
-import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
@@ -218,7 +217,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 		Position posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 		Position posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
-		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, GlobalImpl.PTMSPIELTAG)
+		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, SuperMeleeSheet.PTM_SPIELTAG)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielTagFormula);
 //		NumberCellValue spielTagNr = NumberCellValue
@@ -227,8 +226,8 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 //		getSheetHelper().setValInCell(spielTagNr);
 
 		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
-		StringCellValue spielRundeFormula = StringCellValue.from(sheet, posSpielrundeFormula, GlobalImpl.PTM_SPIELRUNDE)
-				.setBorder(border);
+		StringCellValue spielRundeFormula = StringCellValue
+				.from(sheet, posSpielrundeFormula, SuperMeleeSheet.PTM_SPIELRUNDE).setBorder(border);
 		getSheetHelper().setFormulaInCell(spielRundeFormula);
 //		NumberCellValue spielRndNr = NumberCellValue
 //				.from(sheet, posSpielrundeFormula, this.getKonfigurationSheet().getAktiveSpielRunde().getNr())
@@ -262,7 +261,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
 		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)=" + spieltag.getNr() + ";\"Aktiv\";\"\"";
 
-		String formulaStr = "IF(" + GlobalImpl.PTMSPIELTAG + "=" + spieltag.getNr() + ";\"Aktiv\";\"\")";
+		String formulaStr = "IF(" + SuperMeleeSheet.PTM_SPIELTAG + "=" + spieltag.getNr() + ";\"Aktiv\";\"\")";
 		StringCellValue aktivFormula = StringCellValue
 				.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr)
 				.setCharColor(ColorHelper.CHAR_COLOR_GREEN);

@@ -22,8 +22,24 @@ public class BorderFactory {
 	private BorderFactory() {
 	}
 
+	private BorderFactory(BorderFactory factr) {
+		BorderFactory newBorderFactory = new BorderFactory();
+		newBorderFactory.topLine = cloneBorderLine2(factr.topLine);
+		newBorderFactory.bottomLine = cloneBorderLine2(factr.bottomLine);
+		newBorderFactory.leftLine = cloneBorderLine2(factr.leftLine);
+		newBorderFactory.rightLine = cloneBorderLine2(factr.rightLine);
+		newBorderFactory.horizontalLine = cloneBorderLine2(factr.horizontalLine);
+		newBorderFactory.verticalLine = cloneBorderLine2(factr.verticalLine);
+		newBorderFactory.forLine = cloneBorderLine2(factr.forLine);
+		newBorderFactory.distance = factr.distance;
+	}
+
 	public static final BorderFactory from() {
 		return new BorderFactory();
+	}
+
+	public static final BorderFactory from(BorderFactory factr) {
+		return new BorderFactory(factr);
 	}
 
 	public TableBorder2 toBorder() {
@@ -205,36 +221,17 @@ public class BorderFactory {
 		return borderLine;
 	}
 
-	// function getDoubleBorder ()
-	// '---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	//
-	// Dim oRahmenLinieBold As Object
-	// Set oRahmenLinieBold = createUNOStruct("com.sun.star.table.BorderLine2")
-	//
-	// With oRahmenLinieBold
-	// .Color = RGB(0, 0, 0)
-	// .InnerLineWidth = 18
-	// .LineDistance = 53
-	// .LineStyle = 15
-	// .LineWidth = 88
-	// .OuterLineWidth = 18
-	// End With
-	// '---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	//
-	// Dim oRahmenLinieBold As Object
-	// Set oRahmenLinieBold = createUNOStruct("com.sun.star.table.BorderLine2")
-	//
-	// With oRahmenLinieBold
-	// .Color = RGB(0, 0, 0)
-	// .InnerLineWidth = 0
-	// .LineDistance = 0
-	// .LineStyle = 0
-	// .LineWidth = 53
-	// .OuterLineWidth = 53
-	// End With
-	//
-	// getBoldBorder = oRahmenLinieBold
-	//
-	// end Function
-
+	private BorderLine2 cloneBorderLine2(BorderLine2 ln) {
+		if (ln != null) {
+			BorderLine2 borderLine = new BorderLine2();
+			borderLine.Color = ln.Color;
+			borderLine.InnerLineWidth = ln.InnerLineWidth;
+			borderLine.OuterLineWidth = ln.OuterLineWidth;
+			borderLine.LineDistance = ln.LineDistance;
+			borderLine.LineStyle = ln.LineStyle;
+			borderLine.LineWidth = ln.LineWidth;
+			return borderLine;
+		}
+		return null;
+	}
 }

@@ -109,12 +109,12 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		// eventuelle luecken in spiele namen nach unten sortieren
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
-		meldeListeHelper.doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
+		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true); // nach nr sortieren
 		meldungenSpalte.formatDaten();
 		formatDaten();
 
 		// TurnierSystem
-		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
+		// meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
 	}
 
 	void formatDaten() throws GenerateException {

@@ -14,6 +14,8 @@ import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements ISuperMeleePropertiesSpalte {
 
@@ -22,6 +24,9 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
+
+	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
+	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
 	private static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergrund Gerade";
@@ -45,6 +50,12 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
 
 	static {
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
+				.setDefaultVal(1).setDescription("Aktuelle Spieltag").inSideBarInfoPanel());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
+				.setDefaultVal(1).setDescription("Aktuelle Spielrunde").inSideBarInfoPanel());
+
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN)
 				.setDefaultVal(0).setDescription("Neu auslosen ab Spielrunde").inSideBar());
 
@@ -212,5 +223,25 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public boolean getSetzPositionenAktiv() throws GenerateException {
 		return readBooleanProperty(KONFIG_PROP_SETZ_POS);
+	}
+
+	@Override
+	public final void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
+		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
+	}
+
+	@Override
+	public final void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
+	}
+
+	@Override
+	public SpielTagNr getAktiveSpieltag() throws GenerateException {
+		return SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
+	}
+
+	@Override
+	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
 	}
 }
