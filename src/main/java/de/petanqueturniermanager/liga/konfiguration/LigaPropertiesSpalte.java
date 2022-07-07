@@ -12,8 +12,6 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * @author Michael Massee
@@ -80,16 +78,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	protected List<ConfigProperty<?>> getKonfigProperties() {
 		return KONFIG_PROPERTIES;
-	}
-
-	@Override
-	public SpielTagNr getAktiveSpieltag() throws GenerateException {
-		return SpielTagNr.from(1);
-	}
-
-	@Override
-	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
-		return SpielRundeNr.from(1);
 	}
 
 	@Override

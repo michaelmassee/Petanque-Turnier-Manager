@@ -12,8 +12,6 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -83,26 +81,6 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	@Override
 	public final Integer getMeldeListeHeaderFarbe() throws GenerateException {
 		return getPropertiesSpalte().getMeldeListeHeaderFarbe();
-	}
-
-	@Override
-	public final SpielTagNr getAktiveSpieltag() throws GenerateException {
-		return getPropertiesSpalte().getAktiveSpieltag();
-	}
-
-	@Override
-	public final void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
-		getPropertiesSpalte().setAktiveSpieltag(spieltag);
-	}
-
-	@Override
-	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
-		return getPropertiesSpalte().getAktiveSpielRunde();
-	}
-
-	@Override
-	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
-		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -26,6 +27,11 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public abstract class SuperMeleeSheet extends SheetRunner {
 
 	protected static final int SUPER_MELEE_MELDUNG_NAME_WIDTH = 4000; // spalte Name
+
+	public static final String PTM_SPIELTAG = GlobalImpl
+			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
+	public static final String PTM_SPIELRUNDE = GlobalImpl
+			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
 
 	private SuperMeleeKonfigurationSheet konfigurationSheet;
 
@@ -58,7 +64,8 @@ public abstract class SuperMeleeSheet extends SheetRunner {
 		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteDatenZeile);
 		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ersteDatenZeile);
 
-		Position[] arraylist = new Position[] { summeSpielGewonnenZelle1, summeSpielDiffZelle1, punkteDiffZelle1, punkteGewonnenZelle1 };
+		Position[] arraylist = new Position[] { summeSpielGewonnenZelle1, summeSpielDiffZelle1, punkteDiffZelle1,
+				punkteGewonnenZelle1 };
 		return Arrays.asList(arraylist);
 	}
 

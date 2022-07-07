@@ -214,7 +214,8 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		headerZeile3.newString("-");
 		headerZeile3.newString("Δ"); // Spiele diff Delta Δ
 
-		TableBorder2 borderHeader3 = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+		BorderFactory borderHeaderFact = BorderFactory.from().allThin().boldLn().forBottom();
+		TableBorder2 borderHeader3 = borderHeaderFact.toBorder();
 		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setBorder(borderHeader3)
 				.setCellBackColor(headerBackColor).margin(MARGIN);
 		RangeHelper.from(this, data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1)))
@@ -273,12 +274,13 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		// summen
 		header1val.setValue("Summen").setEndPosMergeSpaltePlus(7);
 		getSheetHelper().setStringValueInCell(header1val);
-		// Begegnungen
 
+		// Begegnungen
+		TableBorder2 begegnungenBrd = BorderFactory.from(borderHeaderFact).doubleLn().forLeft().toBorder();
 		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
 		begegnungenHeader.setPos(header1val.getPos()).spaltePlus(8);
 		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(2).centerJustify()
-				.setBorder(borderHeader3).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
+				.setBorder(begegnungenBrd).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
 				.setComment("Die Anzahl an gespielten Begegnungen");
 		getSheetHelper().setStringValueInCell(begegnungenHeader);
 
