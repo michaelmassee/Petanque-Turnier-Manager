@@ -21,7 +21,8 @@ public class LigaHtmlCleanerTest {
 		File targetHtml = folder.newFile("LigaGeneratedClean.html");
 		URL ligaorg = LigaHtmlCleanerTest.class.getClassLoader().getResource("LigaGeneratedOrginal.html");
 		LigaHtmlCleaner ligaHtmlCleaner = new LigaHtmlCleaner(ligaorg.toURI(), targetHtml);
-		ligaHtmlCleaner.logoUrl(BFL_LOGO_URL).gruppe("Gruppe 1").pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
+		ligaHtmlCleaner.logoUrl(BFL_LOGO_URL).ranglistePdfName("rangliste.pdf").spielplanPdfName("spielplan.pdf")
+				.pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
 
 		// for local test only
 		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");

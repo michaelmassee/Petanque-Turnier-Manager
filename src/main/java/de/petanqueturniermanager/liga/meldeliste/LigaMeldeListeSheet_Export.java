@@ -45,19 +45,21 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 		ProcessBox().info("Exportiere nach PDF");
 
 		LigaSpielPlanSheet ligaSpielPlanSheet = new LigaSpielPlanSheet(getWorkingSpreadsheet());
-		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.SHEET_NAMEN)
+		String fileNamePdfSpielplan = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.SHEET_NAMEN)
 				.range(ligaSpielPlanSheet.printBereichRangePosition()).prefix1(LigaSpielPlanSheet.SHEET_NAMEN)
-				.doExport().toString());
+				.doExport().toString();
+		ProcessBox().info(fileNamePdfSpielplan);
 
 		LigaRanglisteSheet ligaRanglisteSheet = new LigaRanglisteSheet(getWorkingSpreadsheet());
-		ProcessBox().info(PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
+		String fileNamePdfRangliste = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
 				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport()
-				.toString());
+				.toString();
+		ProcessBox().info(fileNamePdfRangliste);
 
 		ProcessBox().info("Exportiere nach HTML");
 		URI htmlExportFile = HtmlExport.from(getWorkingSpreadsheet()).doExport();
 		ProcessBox().info(htmlExportFile.toString());
-		cleanUpLigaHtml(htmlExportFile);
+		cleanUpLigaHtml(htmlExportFile, fileNamePdfSpielplan, fileNamePdfRangliste);
 	}
 
 	@Override
@@ -65,9 +67,12 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 		return logger;
 	}
 
-	private void cleanUpLigaHtml(URI htmlExportFileUri) {
+	private void cleanUpLigaHtml(URI htmlExportFileUri, String fileNamePdfSpielplan, String fileNamePdfRangliste) {
 
 		ProcessBox().info("Clean und reformat html");
+
+		String fileNameOnlyPdfSpielplan = FilenameUtils.getName(fileNamePdfSpielplan);
+		String fileNameOnlyPdfRangliste = FilenameUtils.getName(fileNamePdfRangliste);
 
 		try {
 
@@ -96,7 +101,8 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
 			name = StringUtils.replace(name, ".html", ".clean.html");
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
-			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(ligaLogoUr).gruppe(gruppennamen)
+			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(ligaLogoUr)
+					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)
 					.pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
 
 			ProcessBox().info(cleanHtml.toString());

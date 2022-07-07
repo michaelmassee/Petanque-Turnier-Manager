@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -34,9 +33,10 @@ public class LigaHtmlCleaner {
 
 	private final File htmlOrgFile;
 	private final File htmlTargetFile;
-	private String gruppe = null;
 	private String logoUrl = null;
 	private String pdfDownloadBaseUrl = null;
+	private String spielplanPdfName = null;
+	private String ranglistePdfName = null;
 
 	private static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;;margin-right:10px;\">";
 
@@ -62,8 +62,13 @@ public class LigaHtmlCleaner {
 		return new LigaHtmlCleaner(htmlOrgFile, htmlTargetFile);
 	}
 
-	public LigaHtmlCleaner gruppe(String gruppe) {
-		this.gruppe = gruppe;
+	public LigaHtmlCleaner spielplanPdfName(String spielplanPdfName) {
+		this.spielplanPdfName = spielplanPdfName;
+		return this;
+	}
+
+	public LigaHtmlCleaner ranglistePdfName(String ranglistePdfName) {
+		this.ranglistePdfName = ranglistePdfName;
 		return this;
 	}
 
@@ -139,7 +144,7 @@ public class LigaHtmlCleaner {
 			cleanUpTable(spielplanClone);
 			bodyNew.append("<hr>");
 
-			String formatPdfDownloadLink = formatPdfDownloadLink("Spielplan");
+			String formatPdfDownloadLink = formatPdfDownloadLink(spielplanPdfName);
 			if (formatPdfDownloadLink != null) {
 				bodyNew.append(formatPdfDownloadLink);
 			}
@@ -179,7 +184,7 @@ public class LigaHtmlCleaner {
 			pBegn.appendTo(tdEleBegegnung);
 
 			bodyNew.append("<hr>");
-			String formatPdfDownloadLink = formatPdfDownloadLink("Rangliste");
+			String formatPdfDownloadLink = formatPdfDownloadLink(ranglistePdfName);
 			if (formatPdfDownloadLink != null) {
 				bodyNew.append(formatPdfDownloadLink);
 			}
@@ -293,10 +298,9 @@ public class LigaHtmlCleaner {
 		return ligaHtmlNew;
 	}
 
-	private String formatPdfDownloadLink(String tableName) {
-
-		if (pdfDownloadBaseUrl != null && gruppe != null) {
-			String dwnlLink = pdfDownloadBaseUrl + StringUtils.remove(gruppe, ' ') + "-" + tableName + ".pdf";
+	private String formatPdfDownloadLink(String pdfname) {
+		if (pdfDownloadBaseUrl != null && pdfname != null) {
+			String dwnlLink = pdfDownloadBaseUrl + pdfname;
 			return "<a href=\"" + dwnlLink + "\" download>" + PDF_IMAGE + "</a>";
 		}
 		return null;
