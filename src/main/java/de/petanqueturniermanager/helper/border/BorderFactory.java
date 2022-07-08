@@ -10,28 +10,32 @@ import com.sun.star.table.TableBorder2;
 
 public class BorderFactory {
 
-	BorderLine2 topLine = null;
-	BorderLine2 bottomLine = null;
-	BorderLine2 leftLine = null;
-	BorderLine2 rightLine = null;
-	BorderLine2 horizontalLine = null;
-	BorderLine2 verticalLine = null;
-	BorderLine2 forLine = null;
-	int distance = -1;
+	private BorderLine2 topLine = null;
+	private BorderLine2 bottomLine = null;
+	private BorderLine2 leftLine = null;
+	private BorderLine2 rightLine = null;
+	private BorderLine2 horizontalLine = null;
+	private BorderLine2 verticalLine = null;
+	private BorderLine2 forLine = null;
+	private int distance = -1;
 
 	private BorderFactory() {
 	}
 
+	/**
+	 * Copy fields von factr
+	 * 
+	 * @param factr
+	 */
 	private BorderFactory(BorderFactory factr) {
-		BorderFactory newBorderFactory = new BorderFactory();
-		newBorderFactory.topLine = cloneBorderLine2(factr.topLine);
-		newBorderFactory.bottomLine = cloneBorderLine2(factr.bottomLine);
-		newBorderFactory.leftLine = cloneBorderLine2(factr.leftLine);
-		newBorderFactory.rightLine = cloneBorderLine2(factr.rightLine);
-		newBorderFactory.horizontalLine = cloneBorderLine2(factr.horizontalLine);
-		newBorderFactory.verticalLine = cloneBorderLine2(factr.verticalLine);
-		newBorderFactory.forLine = cloneBorderLine2(factr.forLine);
-		newBorderFactory.distance = factr.distance;
+		topLine = cloneBorderLine2(factr.topLine);
+		bottomLine = cloneBorderLine2(factr.bottomLine);
+		leftLine = cloneBorderLine2(factr.leftLine);
+		rightLine = cloneBorderLine2(factr.rightLine);
+		horizontalLine = cloneBorderLine2(factr.horizontalLine);
+		verticalLine = cloneBorderLine2(factr.verticalLine);
+		forLine = cloneBorderLine2(factr.forLine);
+		distance = factr.distance;
 	}
 
 	public static final BorderFactory from() {
@@ -103,22 +107,22 @@ public class BorderFactory {
 	}
 
 	public BorderFactory allThin() {
-		topLine = BorderFactory.thinLine();
-		bottomLine = BorderFactory.thinLine();
-		leftLine = BorderFactory.thinLine();
-		rightLine = BorderFactory.thinLine();
-		horizontalLine = BorderFactory.thinLine();
-		verticalLine = BorderFactory.thinLine();
+		topLine = thinLine();
+		bottomLine = thinLine();
+		leftLine = thinLine();
+		rightLine = thinLine();
+		horizontalLine = thinLine();
+		verticalLine = thinLine();
 		return this;
 	}
 
 	public BorderFactory allBold() {
-		topLine = BorderFactory.boldLine();
-		bottomLine = BorderFactory.boldLine();
-		leftLine = BorderFactory.boldLine();
-		rightLine = BorderFactory.boldLine();
-		horizontalLine = BorderFactory.boldLine();
-		verticalLine = BorderFactory.boldLine();
+		topLine = boldLine();
+		bottomLine = boldLine();
+		leftLine = boldLine();
+		rightLine = boldLine();
+		horizontalLine = boldLine();
+		verticalLine = boldLine();
 		return this;
 	}
 
@@ -128,17 +132,17 @@ public class BorderFactory {
 	}
 
 	public BorderFactory thinLn() {
-		forLine = BorderFactory.thinLine();
+		forLine = thinLine();
 		return this;
 	}
 
 	public BorderFactory boldLn() {
-		forLine = BorderFactory.boldLine();
+		forLine = boldLine();
 		return this;
 	}
 
 	public BorderFactory doubleLn() {
-		forLine = BorderFactory.doubleLine();
+		forLine = doubleLine();
 		return this;
 	}
 
@@ -188,7 +192,7 @@ public class BorderFactory {
 	}
 
 	// https://api.libreoffice.org/docs/idl/ref/structcom_1_1sun_1_1star_1_1table_1_1BorderLine2.html#af257a0b7f752fc39fc92aca04f336030
-	static BorderLine2 thinLine() {
+	private BorderLine2 thinLine() {
 		BorderLine2 borderLine = new BorderLine2();
 		borderLine.Color = 0; // 0x0d3472;
 		borderLine.InnerLineWidth = 0;
@@ -199,7 +203,7 @@ public class BorderFactory {
 		return borderLine;
 	}
 
-	static BorderLine2 boldLine() {
+	private BorderLine2 boldLine() {
 		BorderLine2 borderLine = new BorderLine2();
 		borderLine.Color = 0; // 0x0d3472;
 		borderLine.InnerLineWidth = 18;
@@ -210,7 +214,7 @@ public class BorderFactory {
 		return borderLine;
 	}
 
-	static BorderLine2 doubleLine() {
+	private BorderLine2 doubleLine() {
 		BorderLine2 borderLine = new BorderLine2();
 		borderLine.Color = 0; // 0x0d3472;
 		borderLine.InnerLineWidth = 18;
