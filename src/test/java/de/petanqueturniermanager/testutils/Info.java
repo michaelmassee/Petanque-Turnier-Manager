@@ -3,17 +3,10 @@ package de.petanqueturniermanager.testutils;
 // Info.java
 // Andrew Davison, ad@fivedots.coe.psu.ac.th, December 2016
 
-/*    * fonts
-      * lookup registry modifications
-      * configuration paths in office
-      * get info about the loaded document
-      * services, interfaces, methods info
-      * style info
-      * fonts
-      * document properties
-      * installed package info
-      * import/export filters
-*/
+/*
+ * * fonts lookup registry modifications configuration paths in office get info about the loaded document services, interfaces, methods info style info fonts document properties installed package info
+ * import/export filters
+ */
 import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -49,6 +42,8 @@ import com.sun.star.uno.Type;
 import com.sun.star.uno.XInterface;
 import com.sun.star.util.DateTime;
 import com.sun.star.util.XChangesBatch;
+
+import de.petanqueturniermanager.helper.Lo;
 
 public class Info {
 
@@ -100,7 +95,7 @@ public class Info {
 	// ----------------------- fonts ----------------------------------
 
 	public static FontDescriptor[] getFonts() {
-		XToolkit xToolkit = Lo.createInstanceMCF(XToolkit.class, "com.sun.star.awt.Toolkit");
+		XToolkit xToolkit = LoOrg.createInstanceMCF(XToolkit.class, "com.sun.star.awt.Toolkit");
 		XDevice device = xToolkit.createScreenCompatibleDevice(0, 0);
 		if (device == null) {
 			System.out.println("Could not access graphical output device");
@@ -141,65 +136,65 @@ public class Info {
 		}
 	} // end of getRegModsPath()
 
-//	public static String getRegItemProp(String item, String prop) {
-//		return getRegItemProp(item, null, prop);
-//	}
+	//	public static String getRegItemProp(String item, String prop) {
+	//		return getRegItemProp(item, null, prop);
+	//	}
 
-//	public static String getRegItemProp(String item, String node, String prop)
-//	// return value from "registrymodifications.xcu"
-//	// e.g. "Writer/MailMergeWizard" null, "MailAddress"
-//	// e.g. "Logging/Settings", "org.openoffice.logging.sdbc.DriverManager", "LogLevel"
-//	/*
-//	 * This xpath doesn't deal with all cases in the XCU file, which sometimes has many node levels between the item and the prop. Returns null if no value is found, or it's only an empty string.
-//	 */
-//	{
-//		String fnm = getRegModsPath();
-//		// System.out.println(fnm);
-//
-//		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-//		factory.setIgnoringElementContentWhitespace(true);
-//		factory.setNamespaceAware(true);
-//
-//		String value = null;
-//		try {
-//			DocumentBuilder builder = factory.newDocumentBuilder();
-//			Document doc = builder.parse(new File(fnm));
-//
-//			XPathFactory xpathFactory = XPathFactory.newInstance();
-//			XPath xpath = xpathFactory.newXPath();
-//			xpath.setNamespaceContext(new UniversalNamespaceResolver(doc));
-//
-//			XPathExpression expr = null;
-//			if (node == null)
-//				expr = xpath.compile(
-//						"//item[@oor:path='/org.openoffice.Office." + item + "']/prop[@oor:name='" + prop + "']");
-//			else
-//				expr = xpath.compile("//item[@oor:path='/org.openoffice.Office." + item + "']/node[@oor:name='" + node
-//						+ "']/prop[@oor:name='" + prop + "']");
-//
-//			value = (String) expr.evaluate(doc, XPathConstants.STRING);
-//			if ((value == null) || value.equals("")) {
-//				System.out.println("Item Property not found");
-//				value = null;
-//			} else {
-//				value = value.trim();
-//				if (value.equals("")) {
-//					System.out.println("Item Property is white space (?)");
-//					value = null;
-//				}
-//			}
-//		} catch (XPathExpressionException e) {
-//			System.out.println(e);
-//		} catch (ParserConfigurationException e) {
-//			System.out.println(e);
-//		} catch (SAXException e) {
-//			System.out.println(e);
-//		} catch (java.io.IOException e) {
-//			System.out.println(e);
-//		}
-//
-//		return value;
-//	} // end of getRegItemProp()
+	//	public static String getRegItemProp(String item, String node, String prop)
+	//	// return value from "registrymodifications.xcu"
+	//	// e.g. "Writer/MailMergeWizard" null, "MailAddress"
+	//	// e.g. "Logging/Settings", "org.openoffice.logging.sdbc.DriverManager", "LogLevel"
+	//	/*
+	//	 * This xpath doesn't deal with all cases in the XCU file, which sometimes has many node levels between the item and the prop. Returns null if no value is found, or it's only an empty string.
+	//	 */
+	//	{
+	//		String fnm = getRegModsPath();
+	//		// System.out.println(fnm);
+	//
+	//		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	//		factory.setIgnoringElementContentWhitespace(true);
+	//		factory.setNamespaceAware(true);
+	//
+	//		String value = null;
+	//		try {
+	//			DocumentBuilder builder = factory.newDocumentBuilder();
+	//			Document doc = builder.parse(new File(fnm));
+	//
+	//			XPathFactory xpathFactory = XPathFactory.newInstance();
+	//			XPath xpath = xpathFactory.newXPath();
+	//			xpath.setNamespaceContext(new UniversalNamespaceResolver(doc));
+	//
+	//			XPathExpression expr = null;
+	//			if (node == null)
+	//				expr = xpath.compile(
+	//						"//item[@oor:path='/org.openoffice.Office." + item + "']/prop[@oor:name='" + prop + "']");
+	//			else
+	//				expr = xpath.compile("//item[@oor:path='/org.openoffice.Office." + item + "']/node[@oor:name='" + node
+	//						+ "']/prop[@oor:name='" + prop + "']");
+	//
+	//			value = (String) expr.evaluate(doc, XPathConstants.STRING);
+	//			if ((value == null) || value.equals("")) {
+	//				System.out.println("Item Property not found");
+	//				value = null;
+	//			} else {
+	//				value = value.trim();
+	//				if (value.equals("")) {
+	//					System.out.println("Item Property is white space (?)");
+	//					value = null;
+	//				}
+	//			}
+	//		} catch (XPathExpressionException e) {
+	//			System.out.println(e);
+	//		} catch (ParserConfigurationException e) {
+	//			System.out.println(e);
+	//		} catch (SAXException e) {
+	//			System.out.println(e);
+	//		} catch (java.io.IOException e) {
+	//			System.out.println(e);
+	//		}
+	//
+	//		return value;
+	//	} // end of getRegItemProp()
 
 	// -------------------------- configuration paths --------------------
 
@@ -223,7 +218,7 @@ public class Info {
 
 	public static XPropertySet getConfigProps(String nodePath) {
 		// create the provider and remember it as a XMultiServiceFactory
-		XMultiServiceFactory conProv = Lo.createInstanceMCF(XMultiServiceFactory.class,
+		XMultiServiceFactory conProv = LoOrg.createInstanceMCF(XMultiServiceFactory.class,
 				"com.sun.star.configuration.ConfigurationProvider");
 		if (conProv == null) {
 			System.out.println("Could not create configuration provider");
@@ -252,7 +247,7 @@ public class Info {
 	 * Replaced by thePathSetting in LibreOffice 4.3
 	 */
 	{
-		XPropertySet propSet = Lo.createInstanceMCF(XPropertySet.class, "com.sun.star.util.PathSettings");
+		XPropertySet propSet = LoOrg.createInstanceMCF(XPropertySet.class, "com.sun.star.util.PathSettings");
 		if (propSet == null) {
 			System.out.println("Could not access office settings");
 			return null;
@@ -325,7 +320,7 @@ public class Info {
 	// Create a specified read-only configuration view
 	{
 		// create the provider and remember it as a XMultiServiceFactory
-		XMultiServiceFactory conProv = Lo.createInstanceMCF(XMultiServiceFactory.class,
+		XMultiServiceFactory conProv = LoOrg.createInstanceMCF(XMultiServiceFactory.class,
 				"com.sun.star.configuration.ConfigurationProvider");
 		if (conProv == null) {
 			System.out.println("Could not create configuration provider");
@@ -344,7 +339,7 @@ public class Info {
 		}
 	} // emd createConfigurationView()
 
-// =================== update configuration settings ================
+	// =================== update configuration settings ================
 
 	public static boolean setConfig(String nodePath, String nodeStr, Object val) {
 		XPropertySet props = setConfigProps(nodePath);
@@ -365,7 +360,7 @@ public class Info {
 
 	public static XPropertySet setConfigProps(String nodePath) {
 		// create the provider and remember it as a XMultiServiceFactory
-		XMultiServiceFactory conProv = Lo.createInstanceMCF(XMultiServiceFactory.class,
+		XMultiServiceFactory conProv = LoOrg.createInstanceMCF(XMultiServiceFactory.class,
 				"com.sun.star.configuration.ConfigurationProvider");
 		if (conProv == null) {
 			System.out.println("Could not create configuration provider");
@@ -384,7 +379,7 @@ public class Info {
 		}
 	} // end of setConfigProps()
 
-// =================== getting info about a document ====================
+	// =================== getting info about a document ====================
 
 	public static String getName(String fnm)
 	// extract the file's name from the supplied string
@@ -446,7 +441,8 @@ public class Info {
 	 * use a type detector to determine the type of the file. The commented-out code is a simple, fast detection, while the approach used looks at the file's metadata
 	 */
 	{
-		XTypeDetection xTypeDetect = Lo.createInstanceMCF(XTypeDetection.class, "com.sun.star.document.TypeDetection");
+		XTypeDetection xTypeDetect = LoOrg.createInstanceMCF(XTypeDetection.class,
+				"com.sun.star.document.TypeDetection");
 		if (xTypeDetect == null) {
 			System.out.println("No type detector reference");
 			return null;
@@ -479,25 +475,25 @@ public class Info {
 	 */
 
 	public static int reportDocType(Object doc) {
-		int docType = Lo.UNKNOWN;
-		if (isDocType(doc, Lo.WRITER_SERVICE)) {
+		int docType = LoOrg.UNKNOWN;
+		if (isDocType(doc, LoOrg.WRITER_SERVICE)) {
 			System.out.println("A Writer document");
-			docType = Lo.WRITER;
-		} else if (isDocType(doc, Lo.IMPRESS_SERVICE)) {
+			docType = LoOrg.WRITER;
+		} else if (isDocType(doc, LoOrg.IMPRESS_SERVICE)) {
 			System.out.println("An Impress document");
-			docType = Lo.IMPRESS;
-		} else if (isDocType(doc, Lo.DRAW_SERVICE)) {
+			docType = LoOrg.IMPRESS;
+		} else if (isDocType(doc, LoOrg.DRAW_SERVICE)) {
 			System.out.println("A Draw document");
-			docType = Lo.DRAW;
-		} else if (isDocType(doc, Lo.CALC_SERVICE)) {
+			docType = LoOrg.DRAW;
+		} else if (isDocType(doc, LoOrg.CALC_SERVICE)) {
 			System.out.println("A Calc spreadsheet");
-			docType = Lo.CALC;
-		} else if (isDocType(doc, Lo.BASE_SERVICE)) {
+			docType = LoOrg.CALC;
+		} else if (isDocType(doc, LoOrg.BASE_SERVICE)) {
 			System.out.println("A Base document");
-			docType = Lo.BASE;
-		} else if (isDocType(doc, Lo.MATH_SERVICE)) {
+			docType = LoOrg.BASE;
+		} else if (isDocType(doc, LoOrg.MATH_SERVICE)) {
 			System.out.println("A Math document");
-			docType = Lo.MATH;
+			docType = LoOrg.MATH;
 		} else
 			System.out.println("Unknown document");
 
@@ -505,27 +501,27 @@ public class Info {
 	} // end of reportDocType()
 
 	public static String docTypeString(Object doc) {
-		if (isDocType(doc, Lo.WRITER_SERVICE)) {
+		if (isDocType(doc, LoOrg.WRITER_SERVICE)) {
 			System.out.println("A Writer document");
-			return Lo.WRITER_SERVICE;
-		} else if (isDocType(doc, Lo.IMPRESS_SERVICE)) {
+			return LoOrg.WRITER_SERVICE;
+		} else if (isDocType(doc, LoOrg.IMPRESS_SERVICE)) {
 			System.out.println("An Impress document");
-			return Lo.IMPRESS_SERVICE;
-		} else if (isDocType(doc, Lo.DRAW_SERVICE)) {
+			return LoOrg.IMPRESS_SERVICE;
+		} else if (isDocType(doc, LoOrg.DRAW_SERVICE)) {
 			System.out.println("A Draw document");
-			return Lo.DRAW_SERVICE;
-		} else if (isDocType(doc, Lo.CALC_SERVICE)) {
+			return LoOrg.DRAW_SERVICE;
+		} else if (isDocType(doc, LoOrg.CALC_SERVICE)) {
 			System.out.println("A Calc spreadsheet");
-			return Lo.CALC_SERVICE;
-		} else if (isDocType(doc, Lo.BASE_SERVICE)) {
+			return LoOrg.CALC_SERVICE;
+		} else if (isDocType(doc, LoOrg.BASE_SERVICE)) {
 			System.out.println("A Base document");
-			return Lo.BASE_SERVICE;
-		} else if (isDocType(doc, Lo.MATH_SERVICE)) {
+			return LoOrg.BASE_SERVICE;
+		} else if (isDocType(doc, LoOrg.MATH_SERVICE)) {
 			System.out.println("A Math document");
-			return Lo.MATH_SERVICE;
+			return LoOrg.MATH_SERVICE;
 		} else {
 			System.out.println("Unknown document");
-			return Lo.UNKNOWN_SERVICE;
+			return LoOrg.UNKNOWN_SERVICE;
 		}
 	} // end of docTypeString()
 
@@ -545,43 +541,43 @@ public class Info {
 			return si.getImplementationName();
 	} // end of getImplementationName()
 
-//	public static String getMIMEType(String fnm)
-//	// also see FileIO.getMimeType() for use of zipped mimetype;
-//	// also see Office API-based Images.getMimeType() for images only
-//	{
-//		File f = new File(fnm);
-//		try {
-//			MimetypesFileTypeMap mftMap = new MimetypesFileTypeMap(FileIO.getUtilsFolder() + MIME_FNM);
-//			// MimetypesFileTypeMap is a Java API
-//			// System.out.println("Mime Type for " + fnm + ": \"" +
-//			// mftMap.getContentType(f) + "\"");
-//			return mftMap.getContentType(f);
-//		} catch (java.lang.Exception e) {
-//			System.out.println("Could not find " + MIME_FNM);
-//			return "application/octet-stream"; // better than nothing
-//		}
-//	} // end of getMIMEType()
+	//	public static String getMIMEType(String fnm)
+	//	// also see FileIO.getMimeType() for use of zipped mimetype;
+	//	// also see Office API-based Images.getMimeType() for images only
+	//	{
+	//		File f = new File(fnm);
+	//		try {
+	//			MimetypesFileTypeMap mftMap = new MimetypesFileTypeMap(FileIO.getUtilsFolder() + MIME_FNM);
+	//			// MimetypesFileTypeMap is a Java API
+	//			// System.out.println("Mime Type for " + fnm + ": \"" +
+	//			// mftMap.getContentType(f) + "\"");
+	//			return mftMap.getContentType(f);
+	//		} catch (java.lang.Exception e) {
+	//			System.out.println("Could not find " + MIME_FNM);
+	//			return "application/octet-stream"; // better than nothing
+	//		}
+	//	} // end of getMIMEType()
 
 	public static int mimeDocType(String mimeType) {
 		if (mimeType == null)
-			return Lo.UNKNOWN;
+			return LoOrg.UNKNOWN;
 
 		if (mimeType.contains("vnd.oasis.opendocument.text"))
-			return Lo.WRITER;
+			return LoOrg.WRITER;
 		else if (mimeType.contains("vnd.oasis.opendocument.base"))
-			return Lo.BASE;
+			return LoOrg.BASE;
 		else if (mimeType.contains("vnd.oasis.opendocument.spreadsheet"))
-			return Lo.CALC;
+			return LoOrg.CALC;
 		else if (mimeType.contains("vnd.oasis.opendocument.graphics")
 				|| mimeType.contains("vnd.oasis.opendocument.image")
 				|| mimeType.contains("vnd.oasis.opendocument.chart"))
-			return Lo.DRAW;
+			return LoOrg.DRAW;
 		else if (mimeType.contains("vnd.oasis.opendocument.presentation"))
-			return Lo.IMPRESS;
+			return LoOrg.IMPRESS;
 		else if (mimeType.contains("vnd.oasis.opendocument.formula"))
-			return Lo.MATH;
+			return LoOrg.MATH;
 		else
-			return Lo.UNKNOWN;
+			return LoOrg.UNKNOWN;
 	} // end of mimeDocType()
 
 	public static boolean isImageMime(String mimeType) {
@@ -595,7 +591,7 @@ public class Info {
 	// ------------------------ services, interfaces, methods info ----------------------
 
 	public static String[] getServiceNames() {
-		XMultiComponentFactory mcFactory = Lo.getComponentFactory();
+		XMultiComponentFactory mcFactory = LoOrg.getComponentFactory();
 		if (mcFactory == null)
 			return null;
 		else {
@@ -608,7 +604,7 @@ public class Info {
 	public static String[] getServiceNames(String serviceName) {
 		ArrayList<String> names = new ArrayList<String>();
 		try {
-			XContentEnumerationAccess enumAccess = Lo.qi(XContentEnumerationAccess.class, Lo.getComponentFactory());
+			XContentEnumerationAccess enumAccess = Lo.qi(XContentEnumerationAccess.class, LoOrg.getComponentFactory());
 			XEnumeration xEnum = enumAccess.createContentEnumeration(serviceName);
 			while (xEnum.hasMoreElements()) {
 				Object obj = xEnum.nextElement();
@@ -903,7 +899,7 @@ public class Info {
 	// ----------- installed package info -----------------
 
 	public static XPackageInformationProvider getPip() {
-		return PackageInformationProvider.get(Lo.getContext());
+		return PackageInformationProvider.get(LoOrg.getContext());
 	}
 
 	public static void listExtensions()
@@ -915,7 +911,7 @@ public class Info {
 			System.out.println("No package info provider found");
 		else {
 			String[][] extsTable = pip.getExtensionList();
-			// Lo.printTable("Extensions", extsTable);
+			// LoOrg.printTable("Extensions", extsTable);
 			System.out.println("\nExtensions:");
 			String serviceName;
 			for (int i = 0; i < extsTable.length; i++) {
@@ -934,7 +930,7 @@ public class Info {
 			return null;
 		} else {
 			String[][] extsTable = pip.getExtensionList();
-			Lo.printTable("Extensions", extsTable);
+			LoOrg.printTable("Extensions", extsTable);
 			String serviceName;
 			for (int i = 0; i < extsTable.length; i++) {
 				if (extsTable[i][0].equals(id))
@@ -957,7 +953,7 @@ public class Info {
 	// -------------------- import/export filters ------------
 
 	public static String[] getFilterNames() {
-		XNameAccess na = Lo.createInstanceMCF(XNameAccess.class, "com.sun.star.document.FilterFactory");
+		XNameAccess na = LoOrg.createInstanceMCF(XNameAccess.class, "com.sun.star.document.FilterFactory");
 		if (na == null) {
 			System.out.println("No Filter factory found");
 			return null;
@@ -966,7 +962,7 @@ public class Info {
 	} // end of getFilterNames()
 
 	public static PropertyValue[] getFilterProps(String filterNm) {
-		XNameAccess na = Lo.createInstanceMCF(XNameAccess.class, "com.sun.star.document.FilterFactory");
+		XNameAccess na = LoOrg.createInstanceMCF(XNameAccess.class, "com.sun.star.document.FilterFactory");
 		if (na == null) {
 			System.out.println("No Filter factory found");
 			return null;

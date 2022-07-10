@@ -10,7 +10,7 @@ import com.sun.star.beans.XIntrospectionAccess;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.bridge.XBridge;
 import com.sun.star.bridge.XBridgeFactory;
-//import com.sun.star.comp.beans.*;
+// import com.sun.star.comp.beans.*;
 import com.sun.star.comp.helper.Bootstrap;
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.connection.XConnection;
@@ -33,12 +33,13 @@ import com.sun.star.reflection.XIdlMethod;
 import com.sun.star.script.provider.XScriptContext;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.Type;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.CloseVetoException;
 import com.sun.star.util.XCloseable;
 
-public class Lo {
+import de.petanqueturniermanager.helper.Lo;
+
+public class LoOrg {
 	// docType ints
 	public static final int UNKNOWN = 0;
 	public static final int WRITER = 1;
@@ -127,36 +128,30 @@ public class Lo {
 		return bridgeComponent;
 	}
 
-//	@SuppressWarnings("deprecation")
-//	public static void setOOoBean(OOoBean oob)
-//	// use OOoBean to initialize Lo globals
-//	{
-//		try {
-//			OfficeConnection conn = oob.getOOoConnection(); // OfficeConnection is deprecated
-//			if (conn == null)
-//				System.out.println("No office connection found in OOoBean");
-//			else {
-//				xcc = conn.getComponentContext();
-//				if (xcc == null)
-//					System.out.println("No component context found in OOoBean");
-//				else
-//					mcFactory = xcc.getServiceManager();
-//
-//				xDesktop = oob.getOOoDesktop();
-//				msFactory = oob.getMultiServiceFactory();
-//			}
-//		} catch (java.lang.Exception e) {
-//			System.out.println("Couldn't initialize LO using OOoBean: " + e);
-//		}
-//	} // end of setOOoBean()
+	//	@SuppressWarnings("deprecation")
+	//	public static void setOOoBean(OOoBean oob)
+	//	// use OOoBean to initialize Lo globals
+	//	{
+	//		try {
+	//			OfficeConnection conn = oob.getOOoConnection(); // OfficeConnection is deprecated
+	//			if (conn == null)
+	//				System.out.println("No office connection found in OOoBean");
+	//			else {
+	//				xcc = conn.getComponentContext();
+	//				if (xcc == null)
+	//					System.out.println("No component context found in OOoBean");
+	//				else
+	//					mcFactory = xcc.getServiceManager();
+	//
+	//				xDesktop = oob.getOOoDesktop();
+	//				msFactory = oob.getMultiServiceFactory();
+	//			}
+	//		} catch (java.lang.Exception e) {
+	//			System.out.println("Couldn't initialize LO using OOoBean: " + e);
+	//		}
+	//	} // end of setOOoBean()
 
 	// ====== interface object creation (uses generics) ===========
-
-	public static <T> T qi(Class<T> aType, Object o)
-	// the "Loki" function -- reduces typing
-	{
-		return UnoRuntime.queryInterface(aType, o);
-	}
 
 	public static <T> T createInstanceMSF(Class<T> aType, String serviceName)
 	/*
@@ -647,7 +642,7 @@ public class Lo {
 	} // end of storeDoc()
 
 	public static String ext2Format(String ext) {
-		return ext2Format(Lo.UNKNOWN, ext);
+		return ext2Format(LoOrg.UNKNOWN, ext);
 	}
 
 	public static String ext2Format(int docType, String ext)
@@ -669,7 +664,7 @@ public class Lo {
 		case "docx":
 			return "Office Open XML Text"; // "MS Word 2007 XML"
 		case "rtf":
-			if (docType == Lo.CALC)
+			if (docType == LoOrg.CALC)
 				return "Rich Text Format (StarCalc)";
 			else
 				return "Rich Text Format"; // assume writer
@@ -680,15 +675,15 @@ public class Lo {
 			return "writer8_template";
 
 		case "pdf":
-			if (docType == Lo.WRITER)
+			if (docType == LoOrg.WRITER)
 				return "writer_pdf_Export";
-			else if (docType == Lo.IMPRESS)
+			else if (docType == LoOrg.IMPRESS)
 				return "impress_pdf_Export";
-			else if (docType == Lo.DRAW)
+			else if (docType == LoOrg.DRAW)
 				return "draw_pdf_Export";
-			else if (docType == Lo.CALC)
+			else if (docType == LoOrg.CALC)
 				return "calc_pdf_Export";
-			else if (docType == Lo.MATH)
+			else if (docType == LoOrg.MATH)
 				return "math_pdf_Export";
 			else
 				return "writer_pdf_Export"; // assume we are saving a writer doc
@@ -706,13 +701,13 @@ public class Lo {
 			return "draw8";
 
 		case "jpg":
-			if (docType == Lo.IMPRESS)
+			if (docType == LoOrg.IMPRESS)
 				return "impress_jpg_Export";
 			else
 				return "draw_jpg_Export"; // assume Draw doc
 
 		case "png":
-			if (docType == Lo.IMPRESS)
+			if (docType == LoOrg.IMPRESS)
 				return "impress_png_Export";
 			else
 				return "draw_png_Export"; // assume Draw doc
@@ -730,37 +725,37 @@ public class Lo {
 
 		case "htm":
 		case "html":
-			if (docType == Lo.WRITER)
+			if (docType == LoOrg.WRITER)
 				return "HTML (StarWriter)"; // "writerglobal8_HTML";
-			else if (docType == Lo.IMPRESS)
+			else if (docType == LoOrg.IMPRESS)
 				return "impress_html_Export";
-			else if (docType == Lo.DRAW)
+			else if (docType == LoOrg.DRAW)
 				return "draw_html_Export";
-			else if (docType == Lo.CALC)
+			else if (docType == LoOrg.CALC)
 				return "HTML (StarCalc)";
 			else
 				return "HTML";
 
 		case "xhtml":
-			if (docType == Lo.WRITER)
+			if (docType == LoOrg.WRITER)
 				return "XHTML Writer File";
-			else if (docType == Lo.IMPRESS)
+			else if (docType == LoOrg.IMPRESS)
 				return "XHTML Impress File";
-			else if (docType == Lo.DRAW)
+			else if (docType == LoOrg.DRAW)
 				return "XHTML Draw File";
-			else if (docType == Lo.CALC)
+			else if (docType == LoOrg.CALC)
 				return "XHTML Calc File";
 			else
 				return "XHTML Writer File"; // assume we are saving a writer doc
 
 		case "xml":
-			if (docType == Lo.WRITER)
+			if (docType == LoOrg.WRITER)
 				return "OpenDocument Text Flat XML";
-			else if (docType == Lo.IMPRESS)
+			else if (docType == LoOrg.IMPRESS)
 				return "OpenDocument Presentation Flat XML";
-			else if (docType == Lo.DRAW)
+			else if (docType == LoOrg.DRAW)
 				return "OpenDocument Drawing Flat XML";
-			else if (docType == Lo.CALC)
+			else if (docType == LoOrg.CALC)
 				return "OpenDocument Spreadsheet Flat XML";
 			else
 				return "OpenDocument Text Flat XML"; // assume we are saving a writer doc

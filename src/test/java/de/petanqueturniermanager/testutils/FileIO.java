@@ -3,15 +3,11 @@ package de.petanqueturniermanager.testutils;
 // FileIO.java
 // Andrew Davison, ad@fivedots.coe.psu.ac.th, March 2015
 
-/* A growing collection of utility functions to make Office
-   easier to use. They are currently divided into the following
-   groups:
-
-     * File IO
-     * file creation / deletion
-     * saving/writing to a file
-     * zip access
-*/
+/*
+ * A growing collection of utility functions to make Office easier to use. They are currently divided into the following groups:
+ * 
+ * File IO file creation / deletion saving/writing to a file zip access
+ */
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -33,6 +29,8 @@ import com.sun.star.io.XInputStream;
 import com.sun.star.io.XTextInputStream;
 import com.sun.star.packages.zip.XZipFileAccess;
 import com.sun.star.ucb.XSimpleFileAccess3;
+
+import de.petanqueturniermanager.helper.Lo;
 
 public class FileIO {
 
@@ -258,9 +256,9 @@ public class FileIO {
 	} // end of saveArray()
 
 	/*
-	 * public static boolean saveFile(String fnm, byte[] data) { String openFileURL = FileIO.fnmToURL(fnm); boolean res = false; try { XSimpleFileAccess sfa = Lo.createInstanceMCF(XSimpleFileAccess.class,
-	 * "com.sun.star.comp.ucb.SimpleFileAccess"); System.out.println("sf 0"); XOutputStream os = sfa.openFileWrite(openFileURL); System.out.println("sf 1"); os.writeBytes(data); os.flush();
-	 * os.closeOutput(); res = true; } catch (java.lang.Exception e) { System.out.println(e); } return res; } // end of saveFile
+	 * public static boolean saveFile(String fnm, byte[] data) { String openFileURL = FileIO.fnmToURL(fnm); boolean res = false; try { XSimpleFileAccess sfa =
+	 * LoOrg.createInstanceMCF(XSimpleFileAccess.class, "com.sun.star.comp.ucb.SimpleFileAccess"); System.out.println("sf 0"); XOutputStream os = sfa.openFileWrite(openFileURL);
+	 * System.out.println("sf 1"); os.writeBytes(data); os.flush(); os.closeOutput(); res = true; } catch (java.lang.Exception e) { System.out.println(e); } return res; } // end of saveFile
 	 */
 
 	public static void appendTo(String fnm, String msg) {
@@ -278,7 +276,7 @@ public class FileIO {
 	public static XZipFileAccess zipAccess(String fnm)
 	// get zip access to the document using Office API
 	{
-		return Lo.createInstanceMCF(XZipFileAccess.class, "com.sun.star.packages.zip.ZipFileAccess",
+		return LoOrg.createInstanceMCF(XZipFileAccess.class, "com.sun.star.packages.zip.ZipFileAccess",
 				new Object[] { fnmToURL(fnm) });
 	}
 
@@ -290,7 +288,7 @@ public class FileIO {
 		String[] names = nmAccess.getElementNames();
 
 		System.out.println("\nZipped Contents of " + fnm);
-		Lo.printNames(names, 1);
+		LoOrg.printNames(names, 1);
 	} // end of zipListUno()
 
 	public static void unzipFile(XZipFileAccess zfa, String fnm) {
@@ -300,7 +298,7 @@ public class FileIO {
 			System.out.println("Extracting " + fnm);
 			XInputStream inStream = zfa.getStreamByPattern("*" + fnm);
 
-			XSimpleFileAccess3 fileAcc = Lo.createInstanceMCF(XSimpleFileAccess3.class,
+			XSimpleFileAccess3 fileAcc = LoOrg.createInstanceMCF(XSimpleFileAccess3.class,
 					"com.sun.star.ucb.SimpleFileAccess");
 
 			String copyFnm = (ext == null) ? (fileName + "Copy") : (fileName + "Copy." + ext);
@@ -337,7 +335,7 @@ public class FileIO {
 		ArrayList<String> lines = new ArrayList<String>();
 
 		try {
-			XTextInputStream tis = Lo.createInstanceMCF(XTextInputStream.class, "com.sun.star.io.TextInputStream");
+			XTextInputStream tis = LoOrg.createInstanceMCF(XTextInputStream.class, "com.sun.star.io.TextInputStream");
 			XActiveDataSink sink = Lo.qi(XActiveDataSink.class, tis);
 			sink.setInputStream(is);
 

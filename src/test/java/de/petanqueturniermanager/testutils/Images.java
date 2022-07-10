@@ -5,12 +5,11 @@ import java.awt.image.BufferedImage;
 // Images.java
 // Andrew Davison, ad@fivedots.coe.psu.ac.th, July 2016
 
-/* A growing collection of utility functions to make Office
-   easier to use. They are currently divided into the following
-   groups:
-
-     * image I/O
-*/
+/*
+ * A growing collection of utility functions to make Office easier to use. They are currently divided into the following groups:
+ * 
+ * image I/O
+ */
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,6 +26,8 @@ import com.sun.star.graphic.XGraphic;
 import com.sun.star.graphic.XGraphicProvider;
 import com.sun.star.uno.Exception;
 
+import de.petanqueturniermanager.helper.Lo;
+
 // import com.sun.star.script.provider.XScriptContext;
 
 public class Images {
@@ -39,7 +40,7 @@ public class Images {
 	// load the graphic as a bitmap, and return it as a string
 	{
 		try {
-			XNameContainer bitmapContainer = Lo.createInstanceMSF(XNameContainer.class,
+			XNameContainer bitmapContainer = LoOrg.createInstanceMSF(XNameContainer.class,
 					"com.sun.star.drawing.BitmapTable");
 
 			// insert image into container
@@ -148,7 +149,7 @@ public class Images {
 
 	public static XGraphic loadGraphicFile(String imFnm) {
 		System.out.println("Loading XGraphic from " + imFnm);
-		XGraphicProvider gProvider = Lo.createInstanceMCF(XGraphicProvider.class,
+		XGraphicProvider gProvider = LoOrg.createInstanceMCF(XGraphicProvider.class,
 				"com.sun.star.graphic.GraphicProvider");
 		if (gProvider == null) {
 			System.out.println("Graphic Provider could not be found");
@@ -181,7 +182,7 @@ public class Images {
 	public static XGraphic loadGraphicLink(Object graphicLink)
 	// load the graphic with the specified URL, return it as an XGraphic
 	{
-		XGraphicProvider gProvider = Lo.createInstanceMCF(XGraphicProvider.class,
+		XGraphicProvider gProvider = LoOrg.createInstanceMCF(XGraphicProvider.class,
 				"com.sun.star.graphic.GraphicProvider");
 		if (gProvider == null) {
 			System.out.println("Graphic Provider could not be found");
@@ -222,7 +223,7 @@ public class Images {
 	// imFormat can be be "gif", "png", "jpeg", "wmf", "bmp", "svg", etc)
 	{
 		System.out.println("Saving graphic in " + fnm);
-		XGraphicProvider gProvider = Lo.createInstanceMCF(XGraphicProvider.class,
+		XGraphicProvider gProvider = LoOrg.createInstanceMCF(XGraphicProvider.class,
 				"com.sun.star.graphic.GraphicProvider");
 		if (gProvider == null) {
 			System.out.println("Graphic Provider could not be found");
@@ -246,7 +247,7 @@ public class Images {
 	// also see non-Office Info.getMIMEType()
 	{
 		// create graphics export filter
-		XMimeTypeInfo mi = Lo.createInstanceMCF(XMimeTypeInfo.class, "com.sun.star.drawing.GraphicExportFilter");
+		XMimeTypeInfo mi = LoOrg.createInstanceMCF(XMimeTypeInfo.class, "com.sun.star.drawing.GraphicExportFilter");
 		return mi.getSupportedMimeTypeNames();
 	} // end of getMimeTypes()
 

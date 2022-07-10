@@ -3,19 +3,11 @@ package de.petanqueturniermanager.testutils;
 // GUI.java
 // Andrew Davison, ad@fivedots.coe.psu.ac.th, August 2016
 
-/* A growing collection of utility functions to make Office
-   easier to use. They are currently divided into the following
-   groups:
-
-     * toolbar addition
-     * floating frame, message box
-     * controller and frame
-     * Office container window
-     * zooming
-     * UI config manager
-     * layout manager
-     * menu bar
-*/
+/*
+ * A growing collection of utility functions to make Office easier to use. They are currently divided into the following groups:
+ * 
+ * toolbar addition floating frame, message box controller and frame Office container window zooming UI config manager layout manager menu bar
+ */
 import java.util.ArrayList;
 
 import javax.swing.JLabel;
@@ -66,6 +58,8 @@ import com.sun.star.view.DocumentZoomType;
 import com.sun.star.view.XControlAccess;
 import com.sun.star.view.XSelectionSupplier;
 
+import de.petanqueturniermanager.helper.Lo;
+
 public class GUI {
 	// view settings zoom constants
 	public static final short OPTIMAL = DocumentZoomType.OPTIMAL;
@@ -115,7 +109,7 @@ public class GUI {
 	 * 
 	 */
 	{
-		String cmd = Lo.makeUnoCmd(itemName);
+		String cmd = LoOrg.makeUnoCmd(itemName);
 		// System.out.println("Cmd: " + cmd);
 
 		XUIConfigurationManager confMan = GUI.getUIConfigManagerDoc(doc);
@@ -152,7 +146,7 @@ public class GUI {
 	public static XFrame createFloatingFrame(String title, int x, int y, int width, int height)
 	// create a floating XFrame at the given position and size
 	{
-		XToolkit xToolkit = Lo.createInstanceMCF(XToolkit.class, "com.sun.star.awt.Toolkit");
+		XToolkit xToolkit = LoOrg.createInstanceMCF(XToolkit.class, "com.sun.star.awt.Toolkit");
 		if (xToolkit == null)
 			return null;
 
@@ -168,7 +162,7 @@ public class GUI {
 		XWindowPeer xWindowPeer = xToolkit.createWindow(desc);
 		XWindow window = Lo.qi(XWindow.class, xWindowPeer);
 
-		XFrame xFrame = Lo.createInstanceMCF(XFrame.class, "com.sun.star.frame.Frame");
+		XFrame xFrame = LoOrg.createInstanceMCF(XFrame.class, "com.sun.star.frame.Frame");
 		if (xFrame == null) {
 			System.out.println("Could not create frame");
 			return null;
@@ -177,7 +171,7 @@ public class GUI {
 		xFrame.setName(title);
 		xFrame.initialize(window);
 
-		XFramesSupplier xFramesSup = Lo.qi(XFramesSupplier.class, Lo.getDesktop());
+		XFramesSupplier xFramesSup = Lo.qi(XFramesSupplier.class, LoOrg.getDesktop());
 		XFrames xFrames = xFramesSup.getFrames();
 		if (xFrames == null)
 			System.out.println("Mo desktop frames found");
@@ -189,7 +183,7 @@ public class GUI {
 	} // end of createFloatingFrame()
 
 	public static void showMessageBox(String title, String message) {
-		XToolkit xToolkit = Lo.createInstanceMCF(XToolkit.class, "com.sun.star.awt.Toolkit");
+		XToolkit xToolkit = LoOrg.createInstanceMCF(XToolkit.class, "com.sun.star.awt.Toolkit");
 		XWindow xWindow = getWindow();
 		if ((xToolkit == null) || (xWindow == null))
 			return;
@@ -271,7 +265,7 @@ public class GUI {
 	// -------------------------- Office container window -------------
 
 	public static XWindow getWindow() {
-		XDesktop desktop = Lo.getDesktop();
+		XDesktop desktop = LoOrg.getDesktop();
 		XFrame frame = desktop.getCurrentFrame();
 		if (frame == null) {
 			System.out.println("No current frame");
@@ -319,7 +313,7 @@ public class GUI {
 	}
 
 	public static XTopWindow getTopWindow() {
-		XExtendedToolkit tk = Lo.createInstanceMCF(XExtendedToolkit.class, "com.sun.star.awt.Toolkit");
+		XExtendedToolkit tk = LoOrg.createInstanceMCF(XExtendedToolkit.class, "com.sun.star.awt.Toolkit");
 		if (tk == null) {
 			System.out.println("Toolkit not found");
 			return null;
@@ -396,16 +390,16 @@ public class GUI {
 	// zoom using dispatch
 	{
 		if (view == OPTIMAL)
-			Lo.dispatchCmd("ZoomOptimal");
+			LoOrg.dispatchCmd("ZoomOptimal");
 		else if (view == PAGE_WIDTH)
-			Lo.dispatchCmd("ZoomPageWidth");
+			LoOrg.dispatchCmd("ZoomPageWidth");
 		if (view == ENTIRE_PAGE)
-			Lo.dispatchCmd("ZoomPage");
+			LoOrg.dispatchCmd("ZoomPage");
 		else {
 			System.out.println("Did not recognize zoom view: " + view + "; using optimal");
-			Lo.dispatchCmd("ZoomOptimal");
+			LoOrg.dispatchCmd("ZoomOptimal");
 		}
-		Lo.delay(500);
+		LoOrg.delay(500);
 	} // end of zoom()
 
 	public static void zoomValue(XComponent doc, int value)
@@ -418,8 +412,8 @@ public class GUI {
 		 * 72 for 72%
 		 */
 
-		Lo.dispatchCmd("Zoom", Props.makeProps(zoomLabels, zoomVals));
-		Lo.delay(500);
+		LoOrg.dispatchCmd("Zoom", Props.makeProps(zoomLabels, zoomVals));
+		LoOrg.delay(500);
 	} // end of zoomValue()
 
 	// ================= UI config manager =========================
@@ -433,7 +427,7 @@ public class GUI {
 	public static XUIConfigurationManager getUIConfigManagerDoc(XComponent doc) {
 		String docType = Info.docTypeString(doc); // null
 
-		XModuleUIConfigurationManagerSupplier xSupplier = Lo.createInstanceMCF(
+		XModuleUIConfigurationManagerSupplier xSupplier = LoOrg.createInstanceMCF(
 				XModuleUIConfigurationManagerSupplier.class, "com.sun.star.ui.ModuleUIConfigurationManagerSupplier");
 
 		XUIConfigurationManager configMan = null;
@@ -478,7 +472,7 @@ public class GUI {
 	// ================= layout manager =========================
 
 	public static XLayoutManager getLayoutManager() {
-		XDesktop desktop = Lo.getDesktop();
+		XDesktop desktop = LoOrg.getDesktop();
 		XFrame frame = desktop.getCurrentFrame();
 		if (frame == null) {
 			System.out.println("No current frame");
