@@ -219,4 +219,8 @@ public class RangeHelper {
 		return xPropSet;
 	}
 
+	public RangePosition getRangePos() {
+		return rangePos;
+	}
+
 }

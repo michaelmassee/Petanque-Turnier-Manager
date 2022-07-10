@@ -12,7 +12,7 @@ public class DirektvergleichResultTest {
 	@Test
 	public void testDirektvergleichResultAnzeigeText() throws Exception {
 		assertThat(DirektvergleichResult.FEHLER.getAnzeigeText()).isEqualTo("Fehler");
-		assertThat(DirektvergleichResult.KEINERGEBNIS.getAnzeigeText()).isEqualTo("Keinergebnis");
+		assertThat(DirektvergleichResult.KEINERGEBNIS.getAnzeigeText()).isEqualTo("Kein Ergebnis");
 	}
 
 	@Test

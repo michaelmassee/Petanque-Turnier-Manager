@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.helper.sheet.rangedata;
 
+import org.apache.commons.lang3.math.NumberUtils;
+
 import com.google.common.base.MoreObjects;
 
 /**
@@ -25,16 +27,21 @@ public class CellData {
 	}
 
 	/**
-	 * @param i
+	 * @param defaultval wenn data = null or not a number then return defaultval
 	 */
 	public int getIntVal(int defaultval) {
-		if (data != null && data instanceof Number) {
-			return (int) ((Number) data).doubleValue();
+		if (data != null) {
+			if (data instanceof String && NumberUtils.isParsable((String) data)) {
+				return NumberUtils.toInt((String) data);
+			} else if (data instanceof Number) {
+				return (int) ((Number) data).doubleValue();
+			}
 		}
 		return defaultval;
 	}
 
 	/**
+	 * when data of type int then return String
 	 */
 	public String getStringVal() {
 		if (data != null) {
