@@ -17,6 +17,8 @@ import com.sun.star.ui.ItemStyle;
 import com.sun.star.ui.ItemType;
 import com.sun.star.uno.Exception;
 
+import de.petanqueturniermanager.helper.Lo;
+
 public class Props {
 
 	// -------------- make/get/set properties in an array --------------------
@@ -391,7 +393,8 @@ public class Props {
 			return;
 		}
 
-		XTypeDetection xTypeDetect = Lo.createInstanceMCF(XTypeDetection.class, "com.sun.star.document.TypeDetection");
+		XTypeDetection xTypeDetect = LoOrg.createInstanceMCF(XTypeDetection.class,
+				"com.sun.star.document.TypeDetection");
 		if (xTypeDetect == null) {
 			System.out.println("No type detector reference");
 			return;

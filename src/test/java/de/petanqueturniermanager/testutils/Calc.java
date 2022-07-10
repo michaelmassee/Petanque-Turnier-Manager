@@ -3,30 +3,16 @@ package de.petanqueturniermanager.testutils;
 // Calc.java
 // Andrew Davison, ad@fivedots.coe.psu.ac.th, September 2014
 
-/* A growing collection of utility functions to make Office
-   easier to use. They are currently divided into the following
-   groups:
-     * document methods
-     * sheet methods
-     * view methods
-     * view data methods
-     * insert/remove rows, columns, cells
-
-     * get/set values in cells, arrays, rows, columns
-     * get XCell and XCellRange methods
-     * convert cell/cellrange names to positions
-     * get cell and range addresses
-     * convert cell ranges to strings 
-     * search
-
-     * cell decoration
-     * scenarios
-     * data pilot methods
-     * using calc functions
-     * solver methods
-
-     * headers /footers
-*/
+/*
+ * A growing collection of utility functions to make Office easier to use. They are currently divided into the following groups: document methods sheet methods view methods view data methods
+ * insert/remove rows, columns, cells
+ * 
+ * get/set values in cells, arrays, rows, columns get XCell and XCellRange methods convert cell/cellrange names to positions get cell and range addresses convert cell ranges to strings search
+ * 
+ * cell decoration scenarios data pilot methods using calc functions solver methods
+ * 
+ * headers /footers
+ */
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -105,6 +91,8 @@ import com.sun.star.util.XSearchDescriptor;
 import com.sun.star.util.XSearchable;
 import com.sun.star.view.DocumentZoomType;
 
+import de.petanqueturniermanager.helper.Lo;
+
 public class Calc {
 
 	// for headers and footers
@@ -150,7 +138,7 @@ public class Calc {
 	// --------------- document methods ------------------
 
 	public static XSpreadsheetDocument openDoc(String fnm, XComponentLoader loader) {
-		XComponent doc = Lo.openDoc(fnm, loader);
+		XComponent doc = LoOrg.openDoc(fnm, loader);
 		if (doc == null) {
 			System.out.println("Document is null");
 			return null;
@@ -159,32 +147,32 @@ public class Calc {
 	} // end of openDoc()
 
 	public static XSpreadsheetDocument getSSDoc(XComponent doc) {
-		if (!Info.isDocType(doc, Lo.CALC_SERVICE)) {
+		if (!Info.isDocType(doc, LoOrg.CALC_SERVICE)) {
 			System.out.println("Not a spreadsheet doc; closing");
-			Lo.closeDoc(doc);
+			LoOrg.closeDoc(doc);
 			return null;
 		}
 
 		XSpreadsheetDocument ssDoc = Lo.qi(XSpreadsheetDocument.class, doc);
 		if (ssDoc == null) {
 			System.out.println("Not a spreadsheet doc; closing");
-			Lo.closeDoc(doc);
+			LoOrg.closeDoc(doc);
 			return null;
 		}
 		return ssDoc;
 	} // end of getSSDoc()
 
 	public static XSpreadsheetDocument createDoc(XComponentLoader loader) {
-		XComponent doc = Lo.createDoc("scalc", loader);
+		XComponent doc = LoOrg.createDoc("scalc", loader);
 		return Lo.qi(XSpreadsheetDocument.class, doc);
 		// XSpreadsheetDocument does not inherit XComponent!
 	}
 
 	/*
-	 * public static void closeDoc(XSpreadsheetDocument doc) { XCloseable closeable = Lo.qi(XCloseable.class, doc); Lo.close(closeable); }
+	 * public static void closeDoc(XSpreadsheetDocument doc) { XCloseable closeable = Lo.qi(XCloseable.class, doc); LoOrg.close(closeable); }
 	 * 
 	 * 
-	 * public static void saveDoc(XSpreadsheetDocument doc, String fnm) { // XStorable store = Lo.qi(XStorable.class, doc); XComponent doc = Lo.qi(XComponent.class, doc); Lo.saveDoc(doc, fnm); }
+	 * public static void saveDoc(XSpreadsheetDocument doc, String fnm) { // XStorable store = Lo.qi(XStorable.class, doc); XComponent doc = Lo.qi(XComponent.class, doc); LoOrg.saveDoc(doc, fnm); }
 	 */
 
 	// ------------------------ sheet methods -------------------------
@@ -333,7 +321,7 @@ public class Calc {
 	}
 
 	public static void gotoCell(XFrame frame, String cellName) {
-		Lo.dispatchCmd(frame, "GoToCell", Props.makeProps("ToPoint", cellName));
+		LoOrg.dispatchCmd(frame, "GoToCell", Props.makeProps("ToPoint", cellName));
 	}
 
 	public static void splitWindow(XSpreadsheetDocument doc, String cellName) {
@@ -343,7 +331,7 @@ public class Calc {
 		// viewSplit.splitAtPosition(x*100, y*100);
 		// deprecated
 		gotoCell(frame, cellName);
-		Lo.dispatchCmd(frame, "SplitWindow", Props.makeProps("ToPoint", cellName));
+		LoOrg.dispatchCmd(frame, "SplitWindow", Props.makeProps("ToPoint", cellName));
 	} // end of splitWindow()
 
 	public static CellRangeAddress getSelectedAddr(XSpreadsheetDocument doc) {
@@ -771,7 +759,7 @@ public class Calc {
 		XCell xCell = getCell(sheet, cellName);
 		xCell.setFormula(month + "/" + day + "/" + year);
 
-		XNumberFormatsSupplier nfsSupplier = Lo.createInstanceMCF(XNumberFormatsSupplier.class,
+		XNumberFormatsSupplier nfsSupplier = LoOrg.createInstanceMCF(XNumberFormatsSupplier.class,
 				"com.sun.star.util.NumberFormatsSupplier");
 		XNumberFormats numberFormats = nfsSupplier.getNumberFormats();
 		XNumberFormatTypes xFormatTypes = Lo.qi(XNumberFormatTypes.class, numberFormats);
@@ -1130,7 +1118,7 @@ public class Calc {
 		XComponent compDoc = Lo.qi(XComponent.class, doc);
 		XNameContainer styleFamilies = Info.getStyleContainer(compDoc, "CellStyles");
 
-		XStyle style = Lo.createInstanceMSF(XStyle.class, "com.sun.star.style.CellStyle");
+		XStyle style = LoOrg.createInstanceMSF(XStyle.class, "com.sun.star.style.CellStyle");
 		// "com.sun.star.sheet.TableCellStyle"); // crashes insertByName() ??
 
 		try {
@@ -1313,7 +1301,7 @@ public class Calc {
 
 	public static Object callFun(String funcName, Object[] args) {
 		try {
-			XFunctionAccess fa = Lo.createInstanceMCF(XFunctionAccess.class, "com.sun.star.sheet.FunctionAccess");
+			XFunctionAccess fa = LoOrg.createInstanceMCF(XFunctionAccess.class, "com.sun.star.sheet.FunctionAccess");
 			return fa.callFunction(funcName, args);
 		} catch (Exception e) {
 			System.out.println("Could not invoke function \"" + funcName + "\"");
@@ -1322,7 +1310,7 @@ public class Calc {
 	} // end of callFun()
 
 	public static String[] getFunctionNames() {
-		XFunctionDescriptions funcsDesc = Lo.createInstanceMCF(XFunctionDescriptions.class,
+		XFunctionDescriptions funcsDesc = LoOrg.createInstanceMCF(XFunctionDescriptions.class,
 				"com.sun.star.sheet.FunctionDescriptions");
 		if (funcsDesc == null) {
 			System.out.println("No function descriptions were found");
@@ -1356,7 +1344,7 @@ public class Calc {
 	} // end of getFunctionNames()
 
 	public static PropertyValue[] findFunction(String funcNm) {
-		XFunctionDescriptions funcsDesc = Lo.createInstanceMCF(XFunctionDescriptions.class,
+		XFunctionDescriptions funcsDesc = LoOrg.createInstanceMCF(XFunctionDescriptions.class,
 				"com.sun.star.sheet.FunctionDescriptions");
 		if (funcsDesc == null) {
 			System.out.println("No function descriptions were found");
@@ -1380,7 +1368,7 @@ public class Calc {
 	} // end of findFunction()
 
 	public static PropertyValue[] findFunction(int idx) {
-		XFunctionDescriptions funcsDesc = Lo.createInstanceMCF(XFunctionDescriptions.class,
+		XFunctionDescriptions funcsDesc = LoOrg.createInstanceMCF(XFunctionDescriptions.class,
 				"com.sun.star.sheet.FunctionDescriptions");
 		if (funcsDesc == null) {
 			System.out.println("No function descriptions were found");
@@ -1421,7 +1409,7 @@ public class Calc {
 	} // end of printFunArgument()
 
 	public static int[] getRecentFunctions() {
-		XRecentFunctions recentFuncs = Lo.createInstanceMCF(XRecentFunctions.class,
+		XRecentFunctions recentFuncs = LoOrg.createInstanceMCF(XRecentFunctions.class,
 				"com.sun.star.sheet.RecentFunctions");
 		if (recentFuncs == null) {
 			System.out.println("No recent functions found");

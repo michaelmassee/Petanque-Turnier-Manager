@@ -3,26 +3,18 @@ package de.petanqueturniermanager.testutils;
 // XML.java
 // Andrew Davison, ad@fivedots.coe.psu.ac.th, December 2016
 
-/* XML utilities:
-      * XML Document IO
-      * DOM data extraction
-      * String extraction
-      * XLS transforming
-      * Flat XML filter selection
-
-   Useful code:
-     http://www.drdobbs.com/jvm/easy-dom-parsing-in-java/231002580
-
-     http://www.java2s.com/Code/Java/XML/FindAllElementsByTagName.htm
-
-
-   XSLT tutorial at W3Schools
-      http://www.w3schools.com/xml/xsl_intro.asp
-
-   Also:
-      "Appendix B. The XSLT You Need for OpenOffice.org"
-      http:// books.evc-cit.info/apb.php
-*/
+/*
+ * XML utilities: XML Document IO DOM data extraction String extraction XLS transforming Flat XML filter selection
+ * 
+ * Useful code: http://www.drdobbs.com/jvm/easy-dom-parsing-in-java/231002580
+ * 
+ * http://www.java2s.com/Code/Java/XML/FindAllElementsByTagName.htm
+ * 
+ * 
+ * XSLT tutorial at W3Schools http://www.w3schools.com/xml/xsl_intro.asp
+ * 
+ * Also: "Appendix B. The XSLT You Need for OpenOffice.org" http:// books.evc-cit.info/apb.php
+ */
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.StringReader;
@@ -208,7 +200,7 @@ public class XML {
 
 		// put column strings in first row of array
 		for (int col = 0; col < numCols; col++)
-			data[0][col] = Lo.capitalize(colIDs[col]);
+			data[0][col] = LoOrg.capitalize(colIDs[col]);
 
 		for (int i = 0; i < numRows; i++) {
 			// extract all the column strings for ith row
@@ -295,13 +287,13 @@ public class XML {
 	public static String getFlatFilterName(String docType)
 	// return the Flat XML filter name for the doc type
 	{
-		if (docType == Lo.WRITER_STR)
+		if (docType == LoOrg.WRITER_STR)
 			return "OpenDocument Text Flat XML";
-		else if (docType == Lo.CALC_STR)
+		else if (docType == LoOrg.CALC_STR)
 			return "OpenDocument Spreadsheet Flat XML";
-		else if (docType == Lo.DRAW_STR)
+		else if (docType == LoOrg.DRAW_STR)
 			return "OpenDocument Drawing Flat XML";
-		else if (docType == Lo.IMPRESS_STR)
+		else if (docType == LoOrg.IMPRESS_STR)
 			return "OpenDocument Presentation Flat XML";
 		else {
 			System.out.println("No Flat XML filter for this document type; using Flat text");
