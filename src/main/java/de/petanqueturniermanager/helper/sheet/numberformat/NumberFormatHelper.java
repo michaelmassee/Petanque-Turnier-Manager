@@ -8,12 +8,12 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.lang.Locale;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.MalformedNumberFormatException;
 import com.sun.star.util.XNumberFormats;
 import com.sun.star.util.XNumberFormatsSupplier;
 
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 
 /**
@@ -41,8 +41,7 @@ public class NumberFormatHelper implements ICommonProperties {
 	public int getIdx(UserNumberFormat userNumberFormat) {
 		int index = -1;
 
-		XNumberFormatsSupplier xNumberFormatsSupplier = UnoRuntime.queryInterface(XNumberFormatsSupplier.class,
-				xSpreadsheetDocument);
+		XNumberFormatsSupplier xNumberFormatsSupplier = Lo.qi(XNumberFormatsSupplier.class, xSpreadsheetDocument);
 		XNumberFormats xNumberFormats = xNumberFormatsSupplier.getNumberFormats();
 		try {
 			index = xNumberFormats.queryKey(userNumberFormat.getPattern(), locale, false);

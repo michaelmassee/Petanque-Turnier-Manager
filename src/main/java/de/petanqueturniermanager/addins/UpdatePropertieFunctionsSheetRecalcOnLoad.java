@@ -6,10 +6,10 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -36,14 +36,13 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 
 		// propertie funktions failed on load Document?
 		if (source != null && GlobalImpl.getAndSetDirty(false)) {
-			XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
+			XModel xModel = Lo.qi(XModel.class, source);
 			if (xModel != null) {
-				XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class,
-						xModel);
+				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
 				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
 				if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
 					// just do a global recalc
-					XCalculatable xCal = UnoRuntime.queryInterface(XCalculatable.class, xSpreadsheetDocument);
+					XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
 					if (xCal != null) {
 						logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
 						// nachteil das wird beim laden doppelt gemacht
@@ -56,33 +55,33 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 				}
 			}
 		}
-//		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class,
-//				xModel.getCurrentController());
-//
-//		DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
-//		if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
-//
-//			//
-//
-//			// just do a global recalc
-//			XCalculatable xCal = UnoRuntime.queryInterface(XCalculatable.class, xSpreadsheetDocument);
-//			if (xCal != null) {
-//				// nachteil das wird beim laden doppelt gemcht
-//				xCal.calculateAll();
-//			}
-//
-////			// XComponentContext xContext
-////			WorkingSpreadsheet wkSheet = new WorkingSpreadsheet(weakRefContext.get());
-////			SheetHelper shHlpr = new SheetHelper(wkSheet); // WorkingSpreadsheet
-////			XSpreadsheet anmeldungen = shHlpr.findByName(MeldeListeKonstanten.SHEETNAME);
-////			if (anmeldungen != null) {
-////				// do recalc
-////				XCalculatable xCal = UnoRuntime.queryInterface(XCalculatable.class, xSpreadsheetDocument);
-////				if (xCal != null) {
-////					xCal.calculateAll();
-////				}
-////			}
-//		}
+		//		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class,
+		//				xModel.getCurrentController());
+		//
+		//		DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
+		//		if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
+		//
+		//			//
+		//
+		//			// just do a global recalc
+		//			XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
+		//			if (xCal != null) {
+		//				// nachteil das wird beim laden doppelt gemcht
+		//				xCal.calculateAll();
+		//			}
+		//
+		////			// XComponentContext xContext
+		////			WorkingSpreadsheet wkSheet = new WorkingSpreadsheet(weakRefContext.get());
+		////			SheetHelper shHlpr = new SheetHelper(wkSheet); // WorkingSpreadsheet
+		////			XSpreadsheet anmeldungen = shHlpr.findByName(MeldeListeKonstanten.SHEETNAME);
+		////			if (anmeldungen != null) {
+		////				// do recalc
+		////				XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
+		////				if (xCal != null) {
+		////					xCal.calculateAll();
+		////				}
+		////			}
+		//		}
 	}
 
 }

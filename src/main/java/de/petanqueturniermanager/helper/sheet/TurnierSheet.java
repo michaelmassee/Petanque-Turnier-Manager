@@ -22,11 +22,11 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
@@ -110,7 +110,7 @@ public class TurnierSheet {
 	 * @param protect true/false
 	 */
 	TurnierSheet protect(boolean protect) {
-		// XProtectable xProtectable = UnoRuntime.queryInterface(XProtectable.class, xSpreadsheet);
+		// XProtectable xProtectable = Lo.qi(XProtectable.class, xSpreadsheet);
 		// if (protect) {
 		// xProtectable.protect("");
 		// } else {
@@ -137,8 +137,7 @@ public class TurnierSheet {
 	 */
 	public TurnierSheet tabColor(int color) {
 		if (color > 0) {
-			XPropertySet xPropSet = UnoRuntime.queryInterface(com.sun.star.beans.XPropertySet.class,
-					wkRefxSpreadsheet.get());
+			XPropertySet xPropSet = Lo.qi(com.sun.star.beans.XPropertySet.class, wkRefxSpreadsheet.get());
 			if (xPropSet != null) {
 				try {
 					xPropSet.setPropertyValue("TabColor", new Integer(color));
@@ -176,13 +175,13 @@ public class TurnierSheet {
 	}
 
 	public <C> C queryInterfaceXSpreadsheet(Class<C> clazz) {
-		return UnoRuntime.queryInterface(clazz, wkRefxSpreadsheet.get());
+		return Lo.qi(clazz, wkRefxSpreadsheet.get());
 	}
 
 	public <C> C queryInterfaceSpreadsheetView(Class<C> clazz) {
 		WorkingSpreadsheet workingSpreadsheet = wkRefWorkingSpreadsheet.get();
 		if (workingSpreadsheet != null) {
-			return UnoRuntime.queryInterface(clazz, workingSpreadsheet.getWorkingSpreadsheetView());
+			return Lo.qi(clazz, workingSpreadsheet.getWorkingSpreadsheetView());
 		}
 		return null;
 	}
@@ -195,16 +194,15 @@ public class TurnierSheet {
 
 	public int getSheetPosition() {
 		XSpreadsheets xSpreadsheets = wkRefWorkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets();
-		XIndexAccess xIndexAccess = UnoRuntime.queryInterface(XIndexAccess.class, xSpreadsheets);
+		XIndexAccess xIndexAccess = Lo.qi(XIndexAccess.class, xSpreadsheets);
 		int anzSheets = xIndexAccess.getCount();
 		String thisSheetName = getName();
 		int retIdx = -1;
 
 		try {
 			for (int index = 0; index < anzSheets; index++) {
-				XSpreadsheet xSpreadsheet = UnoRuntime.queryInterface(XSpreadsheet.class,
-						xIndexAccess.getByIndex(index));
-				XNamed xsheetname = UnoRuntime.queryInterface(XNamed.class, xSpreadsheet);
+				XSpreadsheet xSpreadsheet = Lo.qi(XSpreadsheet.class, xIndexAccess.getByIndex(index));
+				XNamed xsheetname = Lo.qi(XNamed.class, xSpreadsheet);
 				if (StringUtils.equals(thisSheetName, xsheetname.getName())) {
 					retIdx = index;
 					break;
@@ -218,7 +216,7 @@ public class TurnierSheet {
 	}
 
 	public String getName() {
-		XNamed xsheetname = UnoRuntime.queryInterface(XNamed.class, wkRefxSpreadsheet.get());
+		XNamed xsheetname = Lo.qi(XNamed.class, wkRefxSpreadsheet.get());
 		return xsheetname.getName();
 	}
 

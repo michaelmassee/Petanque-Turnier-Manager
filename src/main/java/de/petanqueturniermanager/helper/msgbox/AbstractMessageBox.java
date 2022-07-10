@@ -1,6 +1,6 @@
 /**
-* Erstellung : 02.04.2018 / Michael Massee
-**/
+ * Erstellung : 02.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.msgbox;
 
@@ -14,10 +14,10 @@ import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.frame.XFrame;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
+import de.petanqueturniermanager.helper.Lo;
 
 public abstract class AbstractMessageBox {
 
@@ -31,7 +31,7 @@ public abstract class AbstractMessageBox {
 		XFrame currentFrame = DocumentHelper.getCurrentFrame(xContext);
 		if (currentFrame != null) {
 			XWindow xParent = DocumentHelper.getCurrentFrame(xContext).getContainerWindow();
-			return UnoRuntime.queryInterface(XWindowPeer.class, xParent);
+			return Lo.qi(XWindowPeer.class, xParent);
 		}
 		return null;
 	}
@@ -42,8 +42,9 @@ public abstract class AbstractMessageBox {
 		XToolkit xKit;
 		try {
 			// get access to the office toolkit environment
-			xKit = UnoRuntime.queryInterface(XToolkit.class, xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", xContext));
-			xMessageBoxFactory = UnoRuntime.queryInterface(XMessageBoxFactory.class, xKit);
+			xKit = Lo.qi(XToolkit.class,
+					xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", xContext));
+			xMessageBoxFactory = Lo.qi(XMessageBoxFactory.class, xKit);
 		} catch (Exception e) {
 			getLogger().error(e.getMessage(), e);
 		}

@@ -78,7 +78,7 @@ public class BackUp extends AbstractStore<BackUp> {
 
 	public BackUp doExportToHtml() {
 
-//		XStorable xStorableHTML = (XStorable) UnoRuntime.queryInterface(XStorable.class, xSpreadsheetComponent);
+//		XStorable xStorableHTML = (XStorable) Lo.qi(XStorable.class, xSpreadsheetComponent);
 //		PropertyValue[] storeHTMLProps = new PropertyValue[1];
 //		storeHTMLProps[0] = new PropertyValue();
 //		storeHTMLProps[0].Name = "FilterName";

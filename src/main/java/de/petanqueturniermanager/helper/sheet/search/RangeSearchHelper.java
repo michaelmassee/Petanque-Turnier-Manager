@@ -15,12 +15,12 @@ import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XSearchDescriptor;
 import com.sun.star.util.XSearchable;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -131,10 +131,9 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 	private Position getRangePositionFromResult(XSearchable xSearchableFromRange, XSearchDescriptor searchDescriptor) {
 		Position result = null;
 		Object findFirstResult = xSearchableFromRange.findFirst(searchDescriptor);
-		XCellRange xCellRangeResult = UnoRuntime.queryInterface(XCellRange.class, findFirstResult);
+		XCellRange xCellRangeResult = Lo.qi(XCellRange.class, findFirstResult);
 		if (xCellRangeResult != null) {
-			XCellRangeAddressable xCellRangeAddressable = UnoRuntime.queryInterface(XCellRangeAddressable.class,
-					xCellRangeResult);
+			XCellRangeAddressable xCellRangeAddressable = Lo.qi(XCellRangeAddressable.class, xCellRangeResult);
 			CellRangeAddress cellRangeAddress = xCellRangeAddressable.getRangeAddress();
 			result = Position.from(cellRangeAddress.StartColumn, cellRangeAddress.StartRow);
 		}
@@ -146,7 +145,7 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 		XCellRange xCellRange = RangeHelper.from(getISheet(), rangePos).getCellRange();
 		XSearchable xSearchable = null;
 		if (xCellRange != null) {
-			xSearchable = UnoRuntime.queryInterface(XSearchable.class, xCellRange);
+			xSearchable = Lo.qi(XSearchable.class, xCellRange);
 		}
 		return xSearchable;
 	}

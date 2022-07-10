@@ -16,8 +16,8 @@ public class CloseConnections {
 	public static void closeOfficeConnection(@SuppressWarnings("unused") XComponentContext xContext) {
 
 		// try {
-		// // XModel xModel = UnoRuntime.queryInterface(XModel.class, DocumentHelper.getCurrentComponent(xContext));
-		// // com.sun.star.lang.XComponent xDisposeable = UnoRuntime.queryInterface(com.sun.star.lang.XComponent.class, xModel);
+		// // XModel xModel = Lo.qi(XModel.class, DocumentHelper.getCurrentComponent(xContext));
+		// // com.sun.star.lang.XComponent xDisposeable = Lo.qi(com.sun.star.lang.XComponent.class, xModel);
 		//
 		// // Schließt Document !!!
 		// // xDisposeable.dispose();

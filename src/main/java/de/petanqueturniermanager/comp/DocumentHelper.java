@@ -19,13 +19,14 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.text.XTextDocument;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.helper.Lo;
 
 // https://api.libreoffice.org/examples/examples.html#Java_examples
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/OpenOffice.org_Developers_Guide
 // Addon Guide
-//https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Add-Ons
+// https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Add-Ons
 
 public class DocumentHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentHelper.class);
@@ -33,8 +34,7 @@ public class DocumentHelper {
 	/** Returns the current XDesktop */
 	public static XDesktop getCurrentDesktop(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
-				xContext.getServiceManager());
+		XMultiComponentFactory xMCF = Lo.qi(XMultiComponentFactory.class, xContext.getServiceManager());
 		Object desktop = null;
 		try {
 			desktop = xMCF.createInstanceWithContext("com.sun.star.frame.Desktop", xContext);
@@ -42,7 +42,7 @@ public class DocumentHelper {
 			logger.error(e.getMessage(), e);
 			return null;
 		}
-		return UnoRuntime.queryInterface(com.sun.star.frame.XDesktop.class, desktop);
+		return Lo.qi(com.sun.star.frame.XDesktop.class, desktop);
 	}
 
 	/** Returns the current XComponent */
@@ -67,7 +67,7 @@ public class DocumentHelper {
 	/** Returns the current text document (if any) */
 	static XTextDocument getCurrentTextDocument(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		return UnoRuntime.queryInterface(XTextDocument.class, getCurrentComponent(xContext));
+		return Lo.qi(XTextDocument.class, getCurrentComponent(xContext));
 	}
 
 	/**
@@ -76,7 +76,7 @@ public class DocumentHelper {
 	 */
 	public static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		return UnoRuntime.queryInterface(XSpreadsheetDocument.class, getCurrentComponent(xContext));
+		return Lo.qi(XSpreadsheetDocument.class, getCurrentComponent(xContext));
 	}
 
 	/**
@@ -86,11 +86,11 @@ public class DocumentHelper {
 	static XSpreadsheetView getCurrentSpreadsheetView(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
 		XModel xModel = getXModel(xContext);
-		return UnoRuntime.queryInterface(XSpreadsheetView.class, xModel.getCurrentController());
+		return Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 	}
 
 	static XModel getXModel(XComponentContext xContext) {
-		return UnoRuntime.queryInterface(XModel.class, getCurrentComponent(xContext));
+		return Lo.qi(XModel.class, getCurrentComponent(xContext));
 	}
 
 	/**
@@ -102,7 +102,7 @@ public class DocumentHelper {
 	static void showGrid(XComponentContext xContext, boolean showGrid) {
 		// Funktioniert, Aber das ist Global für alle Calc Dokumenten
 		XController xController = getXModel(xContext).getCurrentController();
-		XPropertySet xProp = UnoRuntime.queryInterface(XPropertySet.class, xController);
+		XPropertySet xProp = Lo.qi(XPropertySet.class, xController);
 		try {
 			xProp.setPropertyValue("ShowGrid", showGrid);
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException

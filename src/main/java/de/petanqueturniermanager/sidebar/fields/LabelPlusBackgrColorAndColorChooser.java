@@ -23,9 +23,9 @@ import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.style.VerticalAlignment;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
@@ -35,7 +35,8 @@ import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
  * @author Michael Massee
  *
  */
-public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBackgrColorAndColorChooser> implements XActionListener {
+public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBackgrColorAndColorChooser>
+		implements XActionListener {
 
 	private static final Logger logger = LogManager.getLogger(LabelPlusBackgrColorAndColorChooser.class);
 	// https://www.flaticon.com/free-icon/color-wheel_1373048 = color chooser
@@ -46,7 +47,8 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 	XFixedText colorLabel;
 	XButton btn;
 
-	private LabelPlusBackgrColorAndColorChooser(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	private LabelPlusBackgrColorAndColorChooser(XMultiComponentFactory xMCF, XComponentContext xContext,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		super(new GuiFactoryCreateParam(xMCF, xContext, toolkit, windowPeer));
 	}
 
@@ -64,9 +66,10 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 		{
 			Map<String, Object> props = new HashMap<>();
 			// props.putIfAbsent("Align", (short) 2); // rechts
-			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, props);
-			label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
-			labelProperties = UnoRuntime.queryInterface(XMultiPropertySet.class, labelControl.getModel());
+			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
+					BASE_RECTANGLE, props);
+			label = Lo.qi(XFixedText.class, labelControl);
+			labelProperties = Lo.qi(XMultiPropertySet.class, labelControl.getModel());
 			getLayout().addControl(labelControl, 1);
 		}
 		// ---------------------------------------
@@ -75,9 +78,10 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 			props.putIfAbsent(GuiFactory.BORDER, (short) 2);
 			props.putIfAbsent(GuiFactory.BORDER_COLOR, 0); // 0 = black
 
-			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, props);
-			colorLabel = UnoRuntime.queryInterface(XFixedText.class, labelControl);
-			setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, labelControl.getModel()));
+			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
+					BASE_RECTANGLE, props);
+			colorLabel = Lo.qi(XFixedText.class, labelControl);
+			setProperties(Lo.qi(XMultiPropertySet.class, labelControl.getModel()));
 			getLayout().addFixedWidthControl(labelControl, 70);
 		}
 		// ---------------------------------------
@@ -93,7 +97,7 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 			// höhe wird nicht verändert
 			Rectangle btnRect = new Rectangle(BASE_RECTANGLE.X, BASE_RECTANGLE.Y, BASE_RECTANGLE.Width, 29);
 			XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, this, btnRect, props);
-			btn = UnoRuntime.queryInterface(XButton.class, btnControl);
+			btn = Lo.qi(XButton.class, btnControl);
 			getLayout().addFixedWidthControl(btnControl, 29); // fest 29px breit
 		}
 		// ---------------------------------------

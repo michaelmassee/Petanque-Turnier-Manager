@@ -17,8 +17,9 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * @author Michael Massee <br>
@@ -69,7 +70,7 @@ public class WorkingSpreadsheet {
 	 * @return the XStorable
 	 */
 	public XStorable getXStorable() {
-		return UnoRuntime.queryInterface(XStorable.class, workingSpreadsheetDocument);
+		return Lo.qi(XStorable.class, workingSpreadsheetDocument);
 	}
 
 	/**
@@ -95,8 +96,7 @@ public class WorkingSpreadsheet {
 
 	public void executeDispatch(String str1, String str2, int val, PropertyValue[] propertyVals) {
 		XDispatchHelper xDispatchHelper = getXDispatchHelper();
-		XDispatchProvider xDispatchProvider = UnoRuntime.queryInterface(XDispatchProvider.class,
-				xController.getFrame());
+		XDispatchProvider xDispatchProvider = Lo.qi(XDispatchProvider.class, xController.getFrame());
 		if (xDispatchHelper != null && xDispatchProvider != null) {
 			xDispatchHelper.executeDispatch(xDispatchProvider, str1, str2, val, propertyVals);
 		}
@@ -121,7 +121,7 @@ public class WorkingSpreadsheet {
 			Object multiComponentFactory = getxContext().getServiceManager().createInstanceWithContext(serviceName,
 					getxContext());
 			// create service component using the specified component context
-			interfaceObj = UnoRuntime.queryInterface(aType, multiComponentFactory);
+			interfaceObj = Lo.qi(aType, multiComponentFactory);
 			// uses bridge to obtain proxy to remote interface inside service;
 			// implements casting across process boundaries
 		} catch (Exception e) {
@@ -131,11 +131,10 @@ public class WorkingSpreadsheet {
 	}
 
 	public XCalculatable getxCalculatable() {
-		return UnoRuntime.queryInterface(XCalculatable.class, workingSpreadsheetDocument);
+		return Lo.qi(XCalculatable.class, workingSpreadsheetDocument);
 	}
 
 	public XMultiServiceFactory getXMultiServiceFactory() {
-		return UnoRuntime.queryInterface(com.sun.star.lang.XMultiServiceFactory.class,
-				DocumentHelper.getXModel(xContext));
+		return Lo.qi(com.sun.star.lang.XMultiServiceFactory.class, DocumentHelper.getXModel(xContext));
 	}
 }

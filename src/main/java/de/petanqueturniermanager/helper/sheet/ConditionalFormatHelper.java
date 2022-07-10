@@ -1,6 +1,6 @@
 /**
-* Erstellung : 21.05.2018 / Michael Massee
-**/
+ * Erstellung : 21.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.sheet;
 
@@ -16,10 +16,10 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellstyle.AbstractCellStyleDef;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
@@ -177,7 +177,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();
 		com.sun.star.sheet.XSheetConditionalEntries xEntries;
 		try {
-			xEntries = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetConditionalEntries.class,
+			xEntries = Lo.qi(com.sun.star.sheet.XSheetConditionalEntries.class,
 					xPropSet.getPropertyValue("ConditionalFormat"));
 			if (doClear) {
 				xEntries.clear(); // clears all condition entries.

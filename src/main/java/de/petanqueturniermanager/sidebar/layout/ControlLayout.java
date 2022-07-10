@@ -4,7 +4,8 @@ import com.sun.star.awt.PosSize;
 import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XWindow;
-import com.sun.star.uno.UnoRuntime;
+
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * Ein Layout, dass nur ein Control enthalten kann.
@@ -26,11 +27,11 @@ public class ControlLayout implements Layout {
 	}
 
 	public ControlLayout(XControl control) {
-		this(UnoRuntime.queryInterface(XWindow.class, control), 0);
+		this(Lo.qi(XWindow.class, control), 0);
 	}
 
 	public ControlLayout(XControl control, int fixWidth) {
-		this(UnoRuntime.queryInterface(XWindow.class, control), fixWidth);
+		this(Lo.qi(XWindow.class, control), fixWidth);
 	}
 
 	@Override

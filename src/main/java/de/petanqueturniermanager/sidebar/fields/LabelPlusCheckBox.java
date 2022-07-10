@@ -18,10 +18,10 @@ import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
@@ -35,7 +35,8 @@ public class LabelPlusCheckBox extends BaseField<LabelPlusCheckBox> implements X
 
 	private XCheckBox field;
 
-	private LabelPlusCheckBox(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	private LabelPlusCheckBox(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit,
+			XWindowPeer windowPeer) {
 		super(new GuiFactoryCreateParam(xMCF, xContext, toolkit, windowPeer));
 	}
 
@@ -47,11 +48,13 @@ public class LabelPlusCheckBox extends BaseField<LabelPlusCheckBox> implements X
 		return new LabelPlusCheckBox(guiFactoryCreateParam);
 	}
 
-	public static final LabelPlusCheckBox from(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	public static final LabelPlusCheckBox from(XMultiComponentFactory xMCF, XComponentContext xContext,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		return new LabelPlusCheckBox(xMCF, xContext, toolkit, windowPeer);
 	}
 
-	public static final LabelPlusCheckBox from(XMultiComponentFactory xMCF, WorkingSpreadsheet workingSpreadsheet, XToolkit toolkit, XWindowPeer windowPeer) {
+	public static final LabelPlusCheckBox from(XMultiComponentFactory xMCF, WorkingSpreadsheet workingSpreadsheet,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		return new LabelPlusCheckBox(xMCF, workingSpreadsheet.getxContext(), toolkit, windowPeer);
 	}
 
@@ -61,9 +64,10 @@ public class LabelPlusCheckBox extends BaseField<LabelPlusCheckBox> implements X
 		// props.putIfAbsent(GuiFactory.HELP_TEXT, "Aktuelle Turniersystem");
 		// props.putIfAbsent(GuiFactory.READ_ONLY, true);
 		// props.putIfAbsent(GuiFactory.ENABLED, false);
-		XControl checkBoxControl = GuiFactory.createCheckBox(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "..", this, BASE_RECTANGLE, props);
-		field = UnoRuntime.queryInterface(XCheckBox.class, checkBoxControl);
-		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, checkBoxControl.getModel()));
+		XControl checkBoxControl = GuiFactory.createCheckBox(getxMCF(), getxContext(), getToolkit(), getWindowPeer(),
+				"..", this, BASE_RECTANGLE, props);
+		field = Lo.qi(XCheckBox.class, checkBoxControl);
+		setProperties(Lo.qi(XMultiPropertySet.class, checkBoxControl.getModel()));
 		getLayout().addControl(checkBoxControl);
 	}
 

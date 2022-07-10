@@ -20,8 +20,8 @@ import com.sun.star.awt.XTextListener;
 import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.style.VerticalAlignment;
-import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
@@ -60,9 +60,10 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 		{
 			Map<String, Object> props = new HashMap<>();
 			// props.putIfAbsent(GuiFactory.BACKGROUND_COLOR, Integer.valueOf(StringUtils.strip(StringUtils.strip("#e38029"), "#"), 16)); // 227, 128, 41 #e38029
-			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, props);
-			label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
-			labelProperties = UnoRuntime.queryInterface(XMultiPropertySet.class, labelControl.getModel());
+			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
+					BASE_RECTANGLE, props);
+			label = Lo.qi(XFixedText.class, labelControl);
+			labelProperties = Lo.qi(XMultiPropertySet.class, labelControl.getModel());
 			getLayout().addControl(labelControl, 1);
 		}
 		// ---------------------------------------
@@ -72,9 +73,10 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 			props.putIfAbsent(GuiFactory.ENABLED, true);
 			props.putIfAbsent(GuiFactory.VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
 
-			XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", null, BASE_RECTANGLE, props);
-			field = UnoRuntime.queryInterface(XTextComponent.class, textfieldControl);
-			setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, textfieldControl.getModel()));
+			XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", null, BASE_RECTANGLE,
+					props);
+			field = Lo.qi(XTextComponent.class, textfieldControl);
+			setProperties(Lo.qi(XMultiPropertySet.class, textfieldControl.getModel()));
 			getLayout().addControl(textfieldControl, 1);
 		}
 		// ---------------------------------------
@@ -91,7 +93,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 			// höhe wird nicht verändert
 			Rectangle btnRect = new Rectangle(BASE_RECTANGLE.X, BASE_RECTANGLE.Y, BASE_RECTANGLE.Width, 29);
 			XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, this, btnRect, props);
-			btn = UnoRuntime.queryInterface(XButton.class, btnControl);
+			btn = Lo.qi(XButton.class, btnControl);
 			getLayout().addFixedWidthControl(btnControl, 29); // fest 29px breit
 		}
 		// ---------------------------------------

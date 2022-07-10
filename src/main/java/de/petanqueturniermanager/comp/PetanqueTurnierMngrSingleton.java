@@ -11,7 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.document.XEventBroadcaster;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
@@ -22,6 +21,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
@@ -73,8 +73,7 @@ public class PetanqueTurnierMngrSingleton {
 			globalEventListener = new GlobalEventListener();
 			Object globalEventBroadcaster = context.getServiceManager()
 					.createInstanceWithContext("com.sun.star.frame.GlobalEventBroadcaster", context);
-			XEventBroadcaster eventBroadcaster = UnoRuntime.queryInterface(XEventBroadcaster.class,
-					globalEventBroadcaster);
+			XEventBroadcaster eventBroadcaster = Lo.qi(XEventBroadcaster.class, globalEventBroadcaster);
 			eventBroadcaster.addEventListener(globalEventListener);
 		} catch (Throwable e) {
 			// alles ignorieren nur logen

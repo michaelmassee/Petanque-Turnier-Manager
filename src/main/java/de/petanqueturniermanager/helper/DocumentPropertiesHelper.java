@@ -98,8 +98,8 @@ public class DocumentPropertiesHelper {
 	public synchronized static void removeDocument(Object source) {
 		try {
 			if (source != null) {
-				XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-				XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class,
+				XModel xModel = Lo.qi(XModel.class, source);
+				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class,
 						xModel);
 				// null dann wenn kein XSpreadsheetDocument
 				if (xSpreadsheetDocument != null) {
@@ -182,18 +182,18 @@ public class DocumentPropertiesHelper {
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
-		XDocumentPropertiesSupplier xps = UnoRuntime.queryInterface(XDocumentPropertiesSupplier.class,
+		XDocumentPropertiesSupplier xps = Lo.qi(XDocumentPropertiesSupplier.class,
 				xSpreadsheetDocument);
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}
 
 	private XMultiPropertySet getXMultiPropertySet() {
-		return UnoRuntime.queryInterface(XMultiPropertySet.class, getXPropertyContainer());
+		return Lo.qi(XMultiPropertySet.class, getXPropertyContainer());
 	}
 
 	private XPropertySet getXPropertySet() {
-		return UnoRuntime.queryInterface(XPropertySet.class, getXPropertyContainer());
+		return Lo.qi(XPropertySet.class, getXPropertyContainer());
 	}
 
 	/**

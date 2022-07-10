@@ -23,12 +23,12 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -65,9 +65,11 @@ abstract class BasePropertiesDialog {
 	 */
 	public final void createDialog() throws com.sun.star.uno.Exception {
 
-		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(currentSpreadsheet).getTurnierSystemAusDocument();
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(currentSpreadsheet)
+				.getTurnierSystemAusDocument();
 		if (turnierSystemAusDocument == TurnierSystem.KEIN) {
-			MessageBox.from(currentSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Kein Turnier vorhanden").message("Kein Turnier vorhanden").show();
+			MessageBox.from(currentSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption("Kein Turnier vorhanden").message("Kein Turnier vorhanden").show();
 			return;
 		}
 
@@ -77,8 +79,9 @@ abstract class BasePropertiesDialog {
 		XMultiComponentFactory xMultiComponentFactory = currentSpreadsheet.getxContext().getServiceManager();
 
 		// create the dialog model and set the properties
-		Object dialogModel = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.UnoControlDialogModel", currentSpreadsheet.getxContext());
-		XPropertySet xPSetDialog = UnoRuntime.queryInterface(XPropertySet.class, dialogModel);
+		Object dialogModel = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.UnoControlDialogModel",
+				currentSpreadsheet.getxContext());
+		XPropertySet xPSetDialog = Lo.qi(XPropertySet.class, dialogModel);
 		// http://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlDialogModel.html
 		xPSetDialog.setPropertyValue("PositionX", Integer.valueOf(50));
 		xPSetDialog.setPropertyValue("PositionY", Integer.valueOf(50));
@@ -91,17 +94,19 @@ abstract class BasePropertiesDialog {
 		xPSetDialog.setPropertyValue("Title", title);
 
 		// create the dialog control and set the model
-		Object dialog = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.UnoControlDialog", currentSpreadsheet.getxContext());
-		XControl xControl = UnoRuntime.queryInterface(XControl.class, dialog);
-		XControlModel xControlModel = UnoRuntime.queryInterface(XControlModel.class, dialogModel);
+		Object dialog = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.UnoControlDialog",
+				currentSpreadsheet.getxContext());
+		XControl xControl = Lo.qi(XControl.class, dialog);
+		XControlModel xControlModel = Lo.qi(XControlModel.class, dialogModel);
 		xControl.setModel(xControlModel);
 
-		XDialog xDialog = UnoRuntime.queryInterface(XDialog.class, dialog);
+		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 
 		// create a peer
-		Object toolkit = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.Toolkit", currentSpreadsheet.getxContext());
-		XToolkit xToolkit = UnoRuntime.queryInterface(XToolkit.class, toolkit);
-		XWindow xWindow = UnoRuntime.queryInterface(XWindow.class, xControl);
+		Object toolkit = xMultiComponentFactory.createInstanceWithContext("com.sun.star.awt.Toolkit",
+				currentSpreadsheet.getxContext());
+		XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
+		XWindow xWindow = Lo.qi(XWindow.class, xControl);
 		xWindow.setVisible(false);
 		xControl.createPeer(xToolkit, null);
 		XWindowPeer windowPeer = xControl.getPeer();
@@ -112,10 +117,12 @@ abstract class BasePropertiesDialog {
 		xWindow.addWindowListener(windowAdapter);
 
 		// Felder hinzufuegen
-		GuiFactoryCreateParam guiFactoryCreateParam = new GuiFactoryCreateParam(xMultiComponentFactory, currentSpreadsheet.getxContext(), xToolkit, windowPeer);
+		GuiFactoryCreateParam guiFactoryCreateParam = new GuiFactoryCreateParam(xMultiComponentFactory,
+				currentSpreadsheet.getxContext(), xToolkit, windowPeer);
 		List<ConfigProperty<?>> konfigProperties = KonfigurationSingleton.getKonfigProperties(currentSpreadsheet);
 
-		AddConfigElementsToWindow addConfigElementsToWindow = new AddConfigElementsToWindow(guiFactoryCreateParam, currentSpreadsheet, layout);
+		AddConfigElementsToWindow addConfigElementsToWindow = new AddConfigElementsToWindow(guiFactoryCreateParam,
+				currentSpreadsheet, layout);
 		AtomicInteger anzElementen = new AtomicInteger(0);
 		if (konfigProperties != null) {
 			konfigProperties.stream().filter(getKonfigFieldFilter()).forEach(konfigprop -> {
@@ -132,7 +139,7 @@ abstract class BasePropertiesDialog {
 		xDialog.execute();
 
 		// dispose the dialog
-		XComponent xComponent = UnoRuntime.queryInterface(XComponent.class, dialog);
+		XComponent xComponent = Lo.qi(XComponent.class, dialog);
 		xComponent.dispose();
 	}
 
@@ -144,7 +151,8 @@ abstract class BasePropertiesDialog {
 	protected final void doLayout(WindowEvent windowEvent) {
 		try {
 			if (layout != null) {
-				Rectangle posSizeParent = new Rectangle(BORDER, BORDER, windowEvent.Width - (BORDER * 2), windowEvent.Height - (BORDER * 2));
+				Rectangle posSizeParent = new Rectangle(BORDER, BORDER, windowEvent.Width - (BORDER * 2),
+						windowEvent.Height - (BORDER * 2));
 				layout.layout(posSizeParent);
 			}
 		} catch (Exception e) {

@@ -196,7 +196,7 @@ public abstract class BaseConfigSidebarContent extends BaseSidebarContent {
 				BaseField.BASE_RECTANGLE.Width, 29);
 		XControl btnControl = GuiFactory.createButton(getGuiFactoryCreateParam(), null, xActionListener, btnRect,
 				props);
-		// btn = UnoRuntime.queryInterface(XButton.class, btnControl);
+		// btn = Lo.qi(XButton.class, btnControl);
 		hLayout.addFixedWidthControl(btnControl, 29); // fest 29px breit
 	}
 

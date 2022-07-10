@@ -11,11 +11,11 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.TableSortField;
 import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XSortable;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
 /**
@@ -156,7 +156,7 @@ public class SortHelper {
 			return this;
 		}
 
-		XSortable xSortable = UnoRuntime.queryInterface(XSortable.class, xCellRangeToSort);
+		XSortable xSortable = Lo.qi(XSortable.class, xCellRangeToSort);
 		TableSortField[] sortFields = new TableSortField[sortSpalten.length];
 
 		for (int sortSpalteIdx = 0; sortSpalteIdx < sortSpalten.length; sortSpalteIdx++) {
