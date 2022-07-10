@@ -17,9 +17,9 @@ import com.sun.star.beans.XPropertySetInfo;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.CommonProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
@@ -43,7 +43,7 @@ public class XPropertyHelper /* extends BaseHelper */ implements ICommonProperti
 
 	public static final XPropertyHelper from(Object hasProperties, XSpreadsheetDocument xSpreadsheetDocument) {
 		checkNotNull(hasProperties);
-		XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, hasProperties);
+		XPropertySet xPropSet = Lo.qi(XPropertySet.class, hasProperties);
 		return new XPropertyHelper(xPropSet, xSpreadsheetDocument);
 	}
 
@@ -54,7 +54,7 @@ public class XPropertyHelper /* extends BaseHelper */ implements ICommonProperti
 
 	public static final XPropertyHelper from(Object hasProperties, ISheet iSheet) {
 		checkNotNull(hasProperties);
-		XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, hasProperties);
+		XPropertySet xPropSet = Lo.qi(XPropertySet.class, hasProperties);
 		return new XPropertyHelper(xPropSet, iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument());
 	}
 

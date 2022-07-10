@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.03.2018 / Michael Massee
-**/
+ * Erstellung : 10.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.sheet;
 
@@ -41,10 +41,10 @@ import com.sun.star.table.XTableRows;
 import com.sun.star.text.XText;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.util.XMergeable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -84,7 +84,7 @@ public class SheetHelper {
 
 	public boolean reNameSheet(XSpreadsheet xSheet, String newName) {
 		boolean renameOk = false;
-		XNamed xNamed = UnoRuntime.queryInterface(XNamed.class, xSheet);
+		XNamed xNamed = Lo.qi(XNamed.class, xSheet);
 
 		if (xNamed != null) {
 			xNamed.setName(newName);
@@ -343,7 +343,7 @@ public class SheetHelper {
 		try {
 			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
 					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
-			XCellSeries xCellSeries = UnoRuntime.queryInterface(XCellSeries.class, xCellRange);
+			XCellSeries xCellSeries = Lo.qi(XCellSeries.class, xCellRange);
 			xCellSeries.fillAuto(fillDirection, 1);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -355,7 +355,7 @@ public class SheetHelper {
 	 */
 	@VisibleForTesting
 	<C> C queryInterface(Class<C> clazz, Object arg) {
-		return UnoRuntime.queryInterface(clazz, arg);
+		return Lo.qi(clazz, arg);
 	}
 
 	/**
@@ -428,7 +428,7 @@ public class SheetHelper {
 		XText xText = null;
 		try {
 			XCell xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
-			xText = UnoRuntime.queryInterface(XText.class, xCell);
+			xText = Lo.qi(XText.class, xCell);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -438,7 +438,7 @@ public class SheetHelper {
 	public String getAddressFromCellAsString(XCell xCell) {
 		checkNotNull(xCell);
 
-		XCellAddressable xCellAddr = UnoRuntime.queryInterface(XCellAddressable.class, xCell);
+		XCellAddressable xCellAddr = Lo.qi(XCellAddressable.class, xCell);
 		CellAddress aAddress = xCellAddr.getCellAddress();
 		return getAddressFromColumnRow(Position.from(aAddress.Column, aAddress.Row));
 	}
@@ -510,7 +510,7 @@ public class SheetHelper {
 		try {
 			xCellRange = sheet.getCellRangeByPosition(rangePosition.getStartSpalte(), rangePosition.getStartZeile(),
 					rangePosition.getEndeSpalte(), rangePosition.getEndeZeile());
-			XMergeable xMerge = UnoRuntime.queryInterface(com.sun.star.util.XMergeable.class, xCellRange);
+			XMergeable xMerge = Lo.qi(com.sun.star.util.XMergeable.class, xCellRange);
 			xMerge.merge(true);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -525,7 +525,7 @@ public class SheetHelper {
 		try {
 			// spalte, zeile
 			XCellRange xCellRange = sheet.getCellRangeByPosition(0, zeile, 1, zeile);
-			XColumnRowRange xColRowRange = UnoRuntime.queryInterface(XColumnRowRange.class, xCellRange);
+			XColumnRowRange xColRowRange = Lo.qi(XColumnRowRange.class, xCellRange);
 			XTableRows rows = xColRowRange.getRows();
 			aColumnObj = rows.getByIndex(0);
 		} catch (IndexOutOfBoundsException | WrappedTargetException | IllegalArgumentException e) {
@@ -541,7 +541,7 @@ public class SheetHelper {
 		try {
 			// spalte, zeile
 			XCellRange xCellRange = sheet.getCellRangeByPosition(spalte, 0, spalte, 1);
-			XColumnRowRange xColRowRange = UnoRuntime.queryInterface(XColumnRowRange.class, xCellRange);
+			XColumnRowRange xColRowRange = Lo.qi(XColumnRowRange.class, xCellRange);
 			XTableColumns columns = xColRowRange.getColumns();
 			aColumnObj = columns.getByIndex(0);
 		} catch (IndexOutOfBoundsException | WrappedTargetException | IllegalArgumentException e) {
@@ -573,7 +573,7 @@ public class SheetHelper {
 		Object aRowObj = getRow(sheet, zeile);
 		XPropertySet xPropSet = null;
 		if (aRowObj != null) {
-			xPropSet = UnoRuntime.queryInterface(XPropertySet.class, aRowObj);
+			xPropSet = Lo.qi(XPropertySet.class, aRowObj);
 		}
 		return xPropSet;
 	}
@@ -603,7 +603,7 @@ public class SheetHelper {
 		Object aColumnObj = getColumn(sheet, spalte);
 		XPropertySet xPropSet = null;
 		if (aColumnObj != null) {
-			xPropSet = UnoRuntime.queryInterface(XPropertySet.class, aColumnObj);
+			xPropSet = Lo.qi(XPropertySet.class, aColumnObj);
 		}
 		return xPropSet;
 	}
@@ -665,7 +665,7 @@ public class SheetHelper {
 			xCellRange = sheet.getCellRangeByPosition(pos.getStartSpalte(), pos.getStartZeile(), pos.getEndeSpalte(),
 					pos.getEndeZeile());
 
-			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
+			XPropertySet xPropSet = Lo.qi(XPropertySet.class, xCellRange);
 			setProperties(xPropSet, properties);
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
 			logger.error(e.getMessage(), e);
@@ -685,7 +685,7 @@ public class SheetHelper {
 		XCell xCell = null;
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
-			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCell);
+			XPropertySet xPropSet = Lo.qi(XPropertySet.class, xCell);
 			xPropSet.setPropertyValue(Name, val);
 		} catch (IndexOutOfBoundsException | IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
@@ -766,7 +766,7 @@ public class SheetHelper {
 
 	public XPropertySet getCellPropertySet(XCell xCell) {
 		checkNotNull(xCell);
-		return UnoRuntime.queryInterface(XPropertySet.class, xCell);
+		return Lo.qi(XPropertySet.class, xCell);
 	}
 
 	public void setCommentInCell(XSpreadsheet xSheet, Position pos, String text) {
@@ -784,15 +784,15 @@ public class SheetHelper {
 		// XCell xCell = getCell( xSheet,pos);
 
 		// create the CellAddress struct
-		XCellAddressable xCellAddr = UnoRuntime.queryInterface(XCellAddressable.class, xCell);
+		XCellAddressable xCellAddr = Lo.qi(XCellAddressable.class, xCell);
 		CellAddress aAddress = xCellAddr.getCellAddress();
 
 		// insert an annotation
-		XSheetAnnotationsSupplier xAnnotationsSupp = UnoRuntime.queryInterface(XSheetAnnotationsSupplier.class, xSheet);
+		XSheetAnnotationsSupplier xAnnotationsSupp = Lo.qi(XSheetAnnotationsSupplier.class, xSheet);
 		XSheetAnnotations xAnnotations = xAnnotationsSupp.getAnnotations();
 		xAnnotations.insertNew(aAddress, text);
 		// make the annotation visible
-		// XSheetAnnotationAnchor xAnnotAnchor = UnoRuntime.queryInterface(XSheetAnnotationAnchor.class, xCell);
+		// XSheetAnnotationAnchor xAnnotAnchor = Lo.qi(XSheetAnnotationAnchor.class, xCell);
 		// XSheetAnnotation xAnnotation = xAnnotAnchor.getAnnotation();
 		// xAnnotation.setIsVisible(true);
 	}

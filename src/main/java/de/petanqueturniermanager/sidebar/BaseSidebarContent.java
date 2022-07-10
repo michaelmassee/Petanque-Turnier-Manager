@@ -25,7 +25,6 @@ import com.sun.star.ui.LayoutSize;
 import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XSidebarPanel;
 import com.sun.star.ui.XToolPanel;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -35,6 +34,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -57,12 +57,10 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private volatile boolean changingLayout; // stop mehrere Threads
 
 	/**
-	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen.
-	 * <br>
+	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
 	 * 1. Sidebar aus wieder an dann okay<br>
 	 * 2. nach Druckvorschau dann okay<br>
-	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht!
-	 * okay<br>
+	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht! okay<br>
 	 * <br>
 	 *
 	 * @param workingSpreadsheet
@@ -86,13 +84,13 @@ public abstract class BaseSidebarContent extends ComponentBase
 
 	private void newBaseWindow() {
 		layout = new VerticalLayout(0, 2);
-		XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
+		XMultiComponentFactory xMCF = Lo.qi(XMultiComponentFactory.class,
 				currentSpreadsheet.getxContext().getServiceManager());
-		XWindowPeer parentWindowPeer = UnoRuntime.queryInterface(XWindowPeer.class, parentWindow);
+		XWindowPeer parentWindowPeer = Lo.qi(XWindowPeer.class, parentWindow);
 		XToolkit parentToolkit = parentWindowPeer.getToolkit();
 		XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
 		windowPeer.setBackground(0xffffffff);
-		window = UnoRuntime.queryInterface(XWindow.class, windowPeer);
+		window = Lo.qi(XWindow.class, windowPeer);
 		window.setVisible(true);
 		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit,
 				windowPeer);
@@ -158,10 +156,9 @@ public abstract class BaseSidebarContent extends ComponentBase
 			return;
 		}
 
-		XModel xModel = UnoRuntime.queryInterface(XModel.class, source);
-		XSpreadsheetDocument xSpreadsheetDocument = UnoRuntime.queryInterface(XSpreadsheetDocument.class, xModel);
-		XSpreadsheetView xSpreadsheetView = UnoRuntime.queryInterface(XSpreadsheetView.class,
-				xModel.getCurrentController());
+		XModel xModel = Lo.qi(XModel.class, source);
+		XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
+		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 
 		// wenn kein XSpreadsheetDocument dann null
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
@@ -191,7 +188,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		if (window == null) {
 			throw new DisposedException("Panel is already disposed", this);
 		}
-		return UnoRuntime.queryInterface(XAccessible.class, getWindow());
+		return Lo.qi(XAccessible.class, getWindow());
 	}
 
 	// XToolPanel

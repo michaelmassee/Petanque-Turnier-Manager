@@ -17,10 +17,10 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.sheet.BaseHelper;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -79,24 +79,24 @@ public class PageStyleHelper extends BaseHelper {
 		try {
 			XSpreadsheetDocument currentSpreadsheetDocument = getWorkingSpreadsheetDocument();
 
-			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
+			XStyleFamiliesSupplier xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
 			Object pageStylesObj = xFamiliesNA.getByName("PageStyles");
-			XNameContainer xCellStylesNA = UnoRuntime.queryInterface(XNameContainer.class, pageStylesObj);
+			XNameContainer xCellStylesNA = Lo.qi(XNameContainer.class, pageStylesObj);
 
 			Object pageStyle = null;
 			try {
 				pageStyle = xCellStylesNA.getByName(styleName);
 			} catch (NoSuchElementException e) {
 				// create a new Page style
-				XMultiServiceFactory xDocServiceManager = UnoRuntime.queryInterface(XMultiServiceFactory.class, currentSpreadsheetDocument);
+				XMultiServiceFactory xDocServiceManager = Lo.qi(XMultiServiceFactory.class, currentSpreadsheetDocument);
 				// TablePageStyle
 				pageStyle = xDocServiceManager.createInstance("com.sun.star.style.PageStyle");
 				xCellStylesNA.insertByName(styleName, pageStyle);
 			}
 
 			// modify properties of the (new) style
-			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, pageStyle);
+			XPropertySet xPropSet = Lo.qi(XPropertySet.class, pageStyle);
 			pageStyleDef.formatHeaderFooter(XPropertyHelper.from(xPropSet, getISheet()));
 
 			// TODO Move this code to XPropertyHelper
@@ -111,10 +111,11 @@ public class PageStyleHelper extends BaseHelper {
 	}
 
 	public PageStyleHelper applytoSheet() throws GenerateException {
-		XPropertySet xPropertySet = UnoRuntime.queryInterface(XPropertySet.class, getXSpreadSheet());
+		XPropertySet xPropertySet = Lo.qi(XPropertySet.class, getXSpreadSheet());
 		try {
 			xPropertySet.setPropertyValue("PageStyle", pageStyleDef.getPageStyleName());
-		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException | WrappedTargetException e) {
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
 			logger.error(e.getMessage(), e);
 		}
 		return this;

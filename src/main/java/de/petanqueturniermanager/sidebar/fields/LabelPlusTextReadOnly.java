@@ -19,10 +19,10 @@ import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.style.VerticalAlignment;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
@@ -38,7 +38,8 @@ public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> impl
 	private XFixedText label;
 	private XTextComponent field;
 
-	private LabelPlusTextReadOnly(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	private LabelPlusTextReadOnly(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit,
+			XWindowPeer windowPeer) {
 		super(new GuiFactoryCreateParam(xMCF, xContext, toolkit, windowPeer));
 	}
 
@@ -50,19 +51,22 @@ public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> impl
 		return new LabelPlusTextReadOnly(guiFactoryCreateParam);
 	}
 
-	public static final LabelPlusTextReadOnly from(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	public static final LabelPlusTextReadOnly from(XMultiComponentFactory xMCF, XComponentContext xContext,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		return new LabelPlusTextReadOnly(xMCF, xContext, toolkit, windowPeer);
 	}
 
-	public static final LabelPlusTextReadOnly from(XMultiComponentFactory xMCF, WorkingSpreadsheet workingSpreadsheet, XToolkit toolkit, XWindowPeer windowPeer) {
+	public static final LabelPlusTextReadOnly from(XMultiComponentFactory xMCF, WorkingSpreadsheet workingSpreadsheet,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		return new LabelPlusTextReadOnly(xMCF, workingSpreadsheet.getxContext(), toolkit, windowPeer);
 	}
 
 	@Override
 	protected void doCreate() {
 
-		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, null);
-		label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
+		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
+				BASE_RECTANGLE, null);
+		label = Lo.qi(XFixedText.class, labelControl);
 		getLayout().addControl(labelControl);
 
 		Map<String, Object> props = new HashMap<>();
@@ -70,9 +74,10 @@ public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> impl
 		props.putIfAbsent(GuiFactory.READ_ONLY, true);
 		props.putIfAbsent(GuiFactory.ENABLED, false);
 		props.putIfAbsent(GuiFactory.VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
-		XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", this, BASE_RECTANGLE, props);
-		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, textfieldControl.getModel()));
-		field = UnoRuntime.queryInterface(XTextComponent.class, textfieldControl);
+		XControl textfieldControl = GuiFactory.createTextfield(getGuiFactoryCreateParam(), "", this, BASE_RECTANGLE,
+				props);
+		setProperties(Lo.qi(XMultiPropertySet.class, textfieldControl.getModel()));
+		field = Lo.qi(XTextComponent.class, textfieldControl);
 		getLayout().addControl(textfieldControl);
 	}
 

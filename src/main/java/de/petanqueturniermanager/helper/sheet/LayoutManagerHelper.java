@@ -13,10 +13,10 @@ import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XLayoutManager;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.ui.XUIElement;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * @author Michael Massee
@@ -29,8 +29,8 @@ public class LayoutManagerHelper {
 	// code snippet wird nicht verwendet
 
 	// XFrame xFrame = frame.getXFrame();
-	// XPropertySet xPropSet = (XPropertySet) UnoRuntime.queryInterface(XPropertySet.class, xFrame);
-	// XLayoutManager xLayoutManager = (XLayoutManager) UnoRuntime.queryInterface(XLayoutManager.class,
+	// XPropertySet xPropSet = (XPropertySet) Lo.qi(XPropertySet.class, xFrame);
+	// XLayoutManager xLayoutManager = (XLayoutManager) Lo.qi(XLayoutManager.class,
 	// xPropSet.getPropertyValue("LayoutManager"));
 
 	// public static XUIElement getInfoPanel(XComponentContext xContext) {
@@ -60,13 +60,13 @@ public class LayoutManagerHelper {
 		if (frame == null) {
 			return;
 		}
-		XPropertySet propSet = UnoRuntime.queryInterface(XPropertySet.class, frame);
+		XPropertySet propSet = Lo.qi(XPropertySet.class, frame);
 		if (propSet == null) {
 			return;
 		}
 		XLayoutManager layoutManager;
 		try {
-			layoutManager = UnoRuntime.queryInterface(XLayoutManager.class, propSet.getPropertyValue("LayoutManager"));
+			layoutManager = Lo.qi(XLayoutManager.class, propSet.getPropertyValue("LayoutManager"));
 		} catch (UnknownPropertyException | WrappedTargetException e) {
 			return;
 		}

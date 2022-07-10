@@ -20,10 +20,10 @@ import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.style.VerticalAlignment;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
@@ -40,7 +40,8 @@ public class LabelPlusNumericField extends BaseField<LabelPlusNumericField> impl
 	private XTextComponent textfield;
 	private XMultiPropertySet labelProperties;
 
-	private LabelPlusNumericField(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	private LabelPlusNumericField(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit,
+			XWindowPeer windowPeer) {
 		super(new GuiFactoryCreateParam(xMCF, xContext, toolkit, windowPeer));
 	}
 
@@ -52,29 +53,33 @@ public class LabelPlusNumericField extends BaseField<LabelPlusNumericField> impl
 		return new LabelPlusNumericField(guiFactoryCreateParam);
 	}
 
-	public static final LabelPlusNumericField from(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer) {
+	public static final LabelPlusNumericField from(XMultiComponentFactory xMCF, XComponentContext xContext,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		return new LabelPlusNumericField(xMCF, xContext, toolkit, windowPeer);
 	}
 
-	public static final LabelPlusNumericField from(XMultiComponentFactory xMCF, WorkingSpreadsheet workingSpreadsheet, XToolkit toolkit, XWindowPeer windowPeer) {
+	public static final LabelPlusNumericField from(XMultiComponentFactory xMCF, WorkingSpreadsheet workingSpreadsheet,
+			XToolkit toolkit, XWindowPeer windowPeer) {
 		return new LabelPlusNumericField(xMCF, workingSpreadsheet.getxContext(), toolkit, windowPeer);
 	}
 
 	@Override
 	protected void doCreate() {
 
-		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, null);
-		label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
-		labelProperties = UnoRuntime.queryInterface(XMultiPropertySet.class, labelControl.getModel());
+		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
+				BASE_RECTANGLE, null);
+		label = Lo.qi(XFixedText.class, labelControl);
+		labelProperties = Lo.qi(XMultiPropertySet.class, labelControl.getModel());
 		getLayout().addControl(labelControl);
 
 		Map<String, Object> props = new HashMap<>();
 		props.putIfAbsent(GuiFactory.VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
-		XControl numfieldControl = GuiFactory.createNumericField(getGuiFactoryCreateParam(), 0, this, BASE_RECTANGLE, props);
-		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, numfieldControl.getModel()));
-		field = UnoRuntime.queryInterface(XNumericField.class, numfieldControl);
+		XControl numfieldControl = GuiFactory.createNumericField(getGuiFactoryCreateParam(), 0, this, BASE_RECTANGLE,
+				props);
+		setProperties(Lo.qi(XMultiPropertySet.class, numfieldControl.getModel()));
+		field = Lo.qi(XNumericField.class, numfieldControl);
 		field.setDecimalDigits((short) 0);
-		textfield = UnoRuntime.queryInterface(XTextComponent.class, numfieldControl);
+		textfield = Lo.qi(XTextComponent.class, numfieldControl);
 		getLayout().addFixedWidthControl(numfieldControl, 40);
 	}
 

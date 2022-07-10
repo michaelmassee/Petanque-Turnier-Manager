@@ -10,7 +10,8 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XFixedText;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
+
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * @author Michael Massee
@@ -67,7 +68,7 @@ public class UILabel extends UIElement<UILabel, XFixedText> {
 	public XFixedText doInsert(XControlContainer xControlCont) {
 		super.doInsert(xControlCont);
 		Object propComponent = getxControlCont().getControl(getFieldname());
-		XFixedText xFixedText = UnoRuntime.queryInterface(XFixedText.class, propComponent);
+		XFixedText xFixedText = Lo.qi(XFixedText.class, propComponent);
 		return xFixedText;
 	}
 

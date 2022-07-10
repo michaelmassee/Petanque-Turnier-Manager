@@ -1,6 +1,6 @@
 /**
-* Erstellung : 21.05.2018 / Michael Massee
-**/
+ * Erstellung : 21.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.cellstyle;
 
@@ -14,9 +14,9 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 
 public class CellStyleHelper {
 
@@ -41,25 +41,26 @@ public class CellStyleHelper {
 		String styleName = cellStyleDef.getName();
 
 		try {
-			XSpreadsheetDocument currentSpreadsheetDocument = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+			XSpreadsheetDocument currentSpreadsheetDocument = sheet.getWorkingSpreadsheet()
+					.getWorkingSpreadsheetDocument();
 
-			XStyleFamiliesSupplier xFamiliesSupplier = UnoRuntime.queryInterface(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
+			XStyleFamiliesSupplier xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
 			Object aCellStylesObj = xFamiliesNA.getByName("CellStyles");
-			XNameContainer xCellStylesNA = UnoRuntime.queryInterface(XNameContainer.class, aCellStylesObj);
+			XNameContainer xCellStylesNA = Lo.qi(XNameContainer.class, aCellStylesObj);
 
 			Object aCellStyle = null;
 			try {
 				aCellStyle = xCellStylesNA.getByName(styleName);
 			} catch (NoSuchElementException e) {
 				// create a new cell style
-				XMultiServiceFactory xDocServiceManager = UnoRuntime.queryInterface(XMultiServiceFactory.class, currentSpreadsheetDocument);
+				XMultiServiceFactory xDocServiceManager = Lo.qi(XMultiServiceFactory.class, currentSpreadsheetDocument);
 				aCellStyle = xDocServiceManager.createInstance("com.sun.star.style.CellStyle");
 				xCellStylesNA.insertByName(styleName, aCellStyle);
 			}
 
 			// modify properties of the (new) style
-			XPropertySet xPropSet = UnoRuntime.queryInterface(XPropertySet.class, aCellStyle);
+			XPropertySet xPropSet = Lo.qi(XPropertySet.class, aCellStyle);
 			for (String propKey : cellStyleDef.getCellProperties().keySet()) {
 				xPropSet.setPropertyValue(propKey, cellStyleDef.getCellProperties().get(propKey));
 			}

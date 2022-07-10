@@ -32,8 +32,9 @@ import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.style.VerticalAlignment;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * Die Factory enthält Hilfsfunktionen zum einfacheren Erzeugen von UNO-Steuerelementen.<br>
@@ -83,7 +84,8 @@ public class GuiFactory {
 	 *
 	 * @return Ein TextArea Control (XTextComponent).
 	 */
-	public static XControl createTextArea(GuiFactoryCreateParam guiFactoryCreateParam, String text, XTextListener listener, Rectangle size, Map<String, Object> props) {
+	public static XControl createTextArea(GuiFactoryCreateParam guiFactoryCreateParam, String text,
+			XTextListener listener, Rectangle size, Map<String, Object> props) {
 		if (props == null) {
 			props = new HashMap<>();
 		}
@@ -91,8 +93,9 @@ public class GuiFactory {
 		props.putIfAbsent(V_SCROLL, true);
 		props.putIfAbsent(H_SCROLL, true);
 
-		XControl textBoxCtrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlEditModel", props, size);
-		XTextComponent textcomp = UnoRuntime.queryInterface(XTextComponent.class, textBoxCtrl);
+		XControl textBoxCtrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlEditModel", props,
+				size);
+		XTextComponent textcomp = Lo.qi(XTextComponent.class, textBoxCtrl);
 		textcomp.setText(text);
 		if (listener != null) {
 			textcomp.addTextListener(listener);
@@ -105,10 +108,11 @@ public class GuiFactory {
 	 *
 	 * @return Ein CheckBox-Control.
 	 */
-	public static XControl createCheckBox(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String label, XItemListener listener,
-			Rectangle size, Map<String, Object> props) {
-		XControl checkBoxCtrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlCheckBox", props, size);
-		XCheckBox checkBox = UnoRuntime.queryInterface(XCheckBox.class, checkBoxCtrl);
+	public static XControl createCheckBox(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit,
+			XWindowPeer windowPeer, String label, XItemListener listener, Rectangle size, Map<String, Object> props) {
+		XControl checkBoxCtrl = createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.UnoControlCheckBox",
+				props, size);
+		XCheckBox checkBox = Lo.qi(XCheckBox.class, checkBoxCtrl);
 		checkBox.setLabel(label);
 		if (listener != null) {
 			checkBox.addItemListener(listener);
@@ -123,9 +127,10 @@ public class GuiFactory {
 	 * @return Ein Button-Control.
 	 */
 
-	public static XControl createButton(GuiFactoryCreateParam guiFactoryCreateParam, String label, XActionListener listener, Rectangle size, Map<String, Object> props) {
+	public static XControl createButton(GuiFactoryCreateParam guiFactoryCreateParam, String label,
+			XActionListener listener, Rectangle size, Map<String, Object> props) {
 		XControl buttonCtrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlButton", props, size);
-		XButton button = UnoRuntime.queryInterface(XButton.class, buttonCtrl);
+		XButton button = Lo.qi(XButton.class, buttonCtrl);
 		if (label != null) {
 			button.setLabel(label);
 		}
@@ -136,9 +141,10 @@ public class GuiFactory {
 	}
 
 	@Deprecated
-	public static XControl createTextfield(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, XTextListener listener,
-			Rectangle size, Map<String, Object> props) {
-		return createTextfield(new GuiFactoryCreateParam(xMCF, context, toolkit, windowPeer), text, listener, size, props);
+	public static XControl createTextfield(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit,
+			XWindowPeer windowPeer, String text, XTextListener listener, Rectangle size, Map<String, Object> props) {
+		return createTextfield(new GuiFactoryCreateParam(xMCF, context, toolkit, windowPeer), text, listener, size,
+				props);
 	}
 
 	/**
@@ -148,7 +154,8 @@ public class GuiFactory {
 	 *
 	 * @return Ein Textfield-Control.
 	 */
-	public static XControl createTextfield(GuiFactoryCreateParam guiFactoryCreateParam, String text, XTextListener listener, Rectangle size, Map<String, Object> props) {
+	public static XControl createTextfield(GuiFactoryCreateParam guiFactoryCreateParam, String text,
+			XTextListener listener, Rectangle size, Map<String, Object> props) {
 		if (props == null) {
 			props = new HashMap<>();
 		}
@@ -157,7 +164,7 @@ public class GuiFactory {
 		props.putIfAbsent(V_SCROLL, false);
 
 		XControl controlEdit = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlEdit", props, size);
-		XTextComponent txt = UnoRuntime.queryInterface(XTextComponent.class, controlEdit);
+		XTextComponent txt = Lo.qi(XTextComponent.class, controlEdit);
 		txt.setText(text);
 		if (listener != null) {
 			txt.addTextListener(listener);
@@ -165,9 +172,8 @@ public class GuiFactory {
 		return controlEdit;
 	}
 
-	@Deprecated
-	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, String text, Rectangle size,
-			Map<String, Object> props) {
+	public static XControl createLabel(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit,
+			XWindowPeer windowPeer, String text, Rectangle size, Map<String, Object> props) {
 		return createLabel(new GuiFactoryCreateParam(xMCF, context, toolkit, windowPeer), text, size, props);
 	}
 
@@ -178,7 +184,8 @@ public class GuiFactory {
 	 *
 	 * @return Ein Label-Control
 	 */
-	public static XControl createLabel(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size, Map<String, Object> props) {
+	public static XControl createLabel(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size,
+			Map<String, Object> props) {
 
 		if (props == null) {
 			props = new HashMap<>();
@@ -186,8 +193,9 @@ public class GuiFactory {
 		props.putIfAbsent(MULTI_LINE, false);
 		props.putIfAbsent(VERTICAL_ALIGN, VerticalAlignment.MIDDLE);
 
-		XControl fixedTextCtrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlFixedText", props, size);
-		XFixedText txt = UnoRuntime.queryInterface(XFixedText.class, fixedTextCtrl);
+		XControl fixedTextCtrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlFixedText", props,
+				size);
+		XFixedText txt = Lo.qi(XFixedText.class, fixedTextCtrl);
 		txt.setText(text);
 		return fixedTextCtrl;
 	}
@@ -198,25 +206,29 @@ public class GuiFactory {
 	 * @return Ein Datenmodell für XTrees.
 	 * @throws Exception
 	 */
-	public static XMutableTreeDataModel createTreeModel(XMultiComponentFactory xMCF, XComponentContext context) throws Exception {
-		return UnoRuntime.queryInterface(XMutableTreeDataModel.class, xMCF.createInstanceWithContext("com.sun.star.awt.tree.MutableTreeDataModel", context));
+	public static XMutableTreeDataModel createTreeModel(XMultiComponentFactory xMCF, XComponentContext context)
+			throws Exception {
+		return Lo.qi(XMutableTreeDataModel.class,
+				xMCF.createInstanceWithContext("com.sun.star.awt.tree.MutableTreeDataModel", context));
 	}
 
 	/**
-	 * Erzeugt ein Baum-Steuerelement mit einem vorgegebenen Datenmodell. Das Datenmodel kann mit {@link #createTreeModel(XMultiComponentFactory, XComponentContext)} erzeugt
-	 * werden.
+	 * Erzeugt ein Baum-Steuerelement mit einem vorgegebenen Datenmodell. Das Datenmodel kann mit {@link #createTreeModel(XMultiComponentFactory, XComponentContext)} erzeugt werden.
 	 *
 	 * @return Ein Treel-Control
 	 */
-	public static XControl createTree(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit, XWindowPeer windowPeer, XMutableTreeDataModel dataModel) {
+	public static XControl createTree(XMultiComponentFactory xMCF, XComponentContext context, XToolkit toolkit,
+			XWindowPeer windowPeer, XMutableTreeDataModel dataModel) {
 		SortedMap<String, Object> props = new TreeMap<>();
 		props.putIfAbsent("DataModel", dataModel);
-		return GuiFactory.createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.tree.TreeControl", props, new Rectangle(0, 0, 400, 400));
+		return GuiFactory.createControl(xMCF, context, toolkit, windowPeer, "com.sun.star.awt.tree.TreeControl", props,
+				new Rectangle(0, 0, 400, 400));
 	}
 
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlComboBox.html
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlComboBoxModel.html
-	public static XControl createCombobox(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size, Map<String, Object> props) {
+	public static XControl createCombobox(GuiFactoryCreateParam guiFactoryCreateParam, String text, Rectangle size,
+			Map<String, Object> props) {
 		if (props == null) {
 			props = new HashMap<>();
 		}
@@ -226,13 +238,14 @@ public class GuiFactory {
 		// props.putIfAbsent("Enabled", Boolean.FALSE); // specifies that the content of the control cannot be modified by the user.
 
 		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlComboBox", props, size);
-		XTextComponent tf = UnoRuntime.queryInterface(XTextComponent.class, ctrl);
+		XTextComponent tf = Lo.qi(XTextComponent.class, ctrl);
 		tf.setText(text);
 		return ctrl;
 	}
 
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/XNumericField.html
-	public static XControl createNumericField(GuiFactoryCreateParam guiFactoryCreateParam, int value, XTextListener listener, Rectangle size, Map<String, Object> props) {
+	public static XControl createNumericField(GuiFactoryCreateParam guiFactoryCreateParam, int value,
+			XTextListener listener, Rectangle size, Map<String, Object> props) {
 
 		if (props == null) {
 			props = new HashMap<>();
@@ -240,14 +253,15 @@ public class GuiFactory {
 		props.putIfAbsent("setDecimalDigits", 0); // sets the number of decimals.
 
 		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlNumericField", props, size);
-		UnoRuntime.queryInterface(XNumericField.class, ctrl).setValue(value);
+		Lo.qi(XNumericField.class, ctrl).setValue(value);
 		if (listener != null) {
-			UnoRuntime.queryInterface(XTextComponent.class, ctrl).addTextListener(listener);
+			Lo.qi(XTextComponent.class, ctrl).addTextListener(listener);
 		}
 		return ctrl;
 	}
 
-	public static XControl createSpinField(GuiFactoryCreateParam guiFactoryCreateParam, int value, XTextListener listener, Rectangle size, SortedMap<String, Object> props) {
+	public static XControl createSpinField(GuiFactoryCreateParam guiFactoryCreateParam, int value,
+			XTextListener listener, Rectangle size, SortedMap<String, Object> props) {
 		if (props == null) {
 			props = new TreeMap<>();
 		}
@@ -256,15 +270,17 @@ public class GuiFactory {
 		return createNumericField(guiFactoryCreateParam, value, listener, size, props);
 	}
 
-	public static XControl createHLine(GuiFactoryCreateParam guiFactoryCreateParam, Rectangle size, SortedMap<String, Object> props) {
+	public static XControl createHLine(GuiFactoryCreateParam guiFactoryCreateParam, Rectangle size,
+			SortedMap<String, Object> props) {
 		return createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlFixedLine", props, size);
 	}
 
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBoxModel.html
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBox.html
-	public static XControl createListBox(GuiFactoryCreateParam guiFactoryCreateParam, XItemListener listener, Rectangle size, Map<String, Object> props) {
+	public static XControl createListBox(GuiFactoryCreateParam guiFactoryCreateParam, XItemListener listener,
+			Rectangle size, Map<String, Object> props) {
 		XControl ctrl = createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlListBox", props, size);
-		UnoRuntime.queryInterface(XListBox.class, ctrl).addItemListener(listener);
+		Lo.qi(XListBox.class, ctrl).addItemListener(listener);
 
 		return ctrl;
 	}
@@ -275,8 +291,8 @@ public class GuiFactory {
 	 * @return
 	 */
 	@Deprecated
-	public static XControl createControl(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit, XWindowPeer windowPeer, String type, Map<String, Object> props,
-			Rectangle rectangle) {
+	public static XControl createControl(XMultiComponentFactory xMCF, XComponentContext xContext, XToolkit toolkit,
+			XWindowPeer windowPeer, String type, Map<String, Object> props, Rectangle rectangle) {
 		return createControl(new GuiFactoryCreateParam(xMCF, xContext, toolkit, windowPeer), type, props, rectangle);
 	}
 
@@ -286,19 +302,22 @@ public class GuiFactory {
 	 * @param type Klasse des Steuerelements, das erzeugt werden soll. https://api.libreoffice.org/docs/idl/ref/dir_f6533bbb374262d299aa8b7962df9f04.html
 	 * @return Ein Control-Element.
 	 */
-	public static XControl createControl(GuiFactoryCreateParam guiFactoryCreateParam, String type, Map<String, Object> props, Rectangle rectangle) {
+	public static XControl createControl(GuiFactoryCreateParam guiFactoryCreateParam, String type,
+			Map<String, Object> props, Rectangle rectangle) {
 
 		try {
-			XControl control = UnoRuntime.queryInterface(XControl.class, guiFactoryCreateParam.getxMCF().createInstanceWithContext(type, guiFactoryCreateParam.getContext()));
-			XControlModel controlModel = UnoRuntime.queryInterface(XControlModel.class,
-					guiFactoryCreateParam.getxMCF().createInstanceWithContext(type + "Model", guiFactoryCreateParam.getContext()));
+			XControl control = Lo.qi(XControl.class, guiFactoryCreateParam.getxMCF().createInstanceWithContext(type,
+					guiFactoryCreateParam.getContext()));
+			XControlModel controlModel = Lo.qi(XControlModel.class, guiFactoryCreateParam.getxMCF()
+					.createInstanceWithContext(type + "Model", guiFactoryCreateParam.getContext()));
 			control.setModel(controlModel);
-			XMultiPropertySet properties = UnoRuntime.queryInterface(XMultiPropertySet.class, control.getModel());
+			XMultiPropertySet properties = Lo.qi(XMultiPropertySet.class, control.getModel());
 			if (props != null && props.size() > 0) {
-				properties.setPropertyValues(props.keySet().toArray(new String[props.size()]), props.values().toArray(new Object[props.size()]));
+				properties.setPropertyValues(props.keySet().toArray(new String[props.size()]),
+						props.values().toArray(new Object[props.size()]));
 			}
 			control.createPeer(guiFactoryCreateParam.getToolkit(), guiFactoryCreateParam.getWindowPeer());
-			XWindow controlWindow = UnoRuntime.queryInterface(XWindow.class, control);
+			XWindow controlWindow = Lo.qi(XWindow.class, control);
 			if (rectangle != null) {
 				setWindowPosSize(controlWindow, rectangle);
 			}
@@ -317,7 +336,8 @@ public class GuiFactory {
 	}
 
 	private static void setWindowPosSize(XWindow window, Rectangle posSize, int horizontalOffset, int verticalOffset) {
-		window.setPosSize(posSize.X - horizontalOffset, posSize.Y - verticalOffset, posSize.Width, posSize.Height, PosSize.POSSIZE);
+		window.setPosSize(posSize.X - horizontalOffset, posSize.Y - verticalOffset, posSize.Width, posSize.Height,
+				PosSize.POSSIZE);
 	}
 
 }

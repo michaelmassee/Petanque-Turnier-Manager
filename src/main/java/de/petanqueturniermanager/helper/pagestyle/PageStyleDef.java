@@ -3,8 +3,8 @@ package de.petanqueturniermanager.helper.pagestyle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.sheet.XHeaderFooterContent;
-import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.sheet.XPropertyHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
@@ -40,11 +40,12 @@ public class PageStyleDef {
 
 	public void formatHeaderFooter(XPropertyHelper xPropSet) {
 		checkNotNull(xPropSet);
-		if (pageProperties.getHeaderLeft() != null || pageProperties.getHeaderCenter() != null || pageProperties.getHeaderRight() != null) {
+		if (pageProperties.getHeaderLeft() != null || pageProperties.getHeaderCenter() != null
+				|| pageProperties.getHeaderRight() != null) {
 			// header
 			Object headerProp = xPropSet.getProperty(PageProperties.RIGHTPAGE_HEADER_CONTENT);
 			if (headerProp != null) {
-				XHeaderFooterContent headerFooterContent = UnoRuntime.queryInterface(XHeaderFooterContent.class, headerProp);
+				XHeaderFooterContent headerFooterContent = Lo.qi(XHeaderFooterContent.class, headerProp);
 				if (pageProperties.getHeaderLeft() != null) {
 					headerFooterContent.getLeftText().setString(pageProperties.getHeaderLeft());
 				}
@@ -58,11 +59,12 @@ public class PageStyleDef {
 			}
 		}
 
-		if (pageProperties.getFooterLeft() != null || pageProperties.getFooterCenter() != null || pageProperties.getFooterRight() != null) {
+		if (pageProperties.getFooterLeft() != null || pageProperties.getFooterCenter() != null
+				|| pageProperties.getFooterRight() != null) {
 			// footer
 			Object footerProp = xPropSet.getProperty(PageProperties.RIGHTPAGE_FOOTER_CONTENT);
 			if (footerProp != null) {
-				XHeaderFooterContent headerFooterContent = UnoRuntime.queryInterface(XHeaderFooterContent.class, footerProp);
+				XHeaderFooterContent headerFooterContent = Lo.qi(XHeaderFooterContent.class, footerProp);
 				if (pageProperties.getFooterLeft() != null) {
 					headerFooterContent.getLeftText().setString(pageProperties.getFooterLeft());
 				}

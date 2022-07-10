@@ -9,7 +9,8 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.uno.Exception;
-import com.sun.star.uno.UnoRuntime;
+
+import de.petanqueturniermanager.helper.Lo;
 
 /**
  * @author Michael Massee
@@ -45,22 +46,22 @@ public class UITextArea extends UIElement<UITextArea, XTextComponent> {
 	public XTextComponent doInsert(XControlContainer xControlCont) {
 		super.doInsert(xControlCont);
 		Object propTextComponent = getxControlCont().getControl(getFieldname());
-		XTextComponent xTextComponent = UnoRuntime.queryInterface(XTextComponent.class, propTextComponent);
+		XTextComponent xTextComponent = Lo.qi(XTextComponent.class, propTextComponent);
 		return xTextComponent;
 	}
 
 	public final UITextArea multiLine(boolean multiLine) {
-		setProperty(PROP_MULTILINE, new Boolean(multiLine));
+		setProperty(PROP_MULTILINE, Boolean.valueOf(multiLine));
 		return this;
 	}
 
 	public final UITextArea hScroll(boolean hScroll) {
-		setProperty(PROP_HSCROLL, new Boolean(hScroll));
+		setProperty(PROP_HSCROLL, Boolean.valueOf(hScroll));
 		return this;
 	}
 
 	public final UITextArea vScroll(boolean vScroll) {
-		setProperty(PROP_VSCROLL, new Boolean(vScroll));
+		setProperty(PROP_VSCROLL, Boolean.valueOf(vScroll));
 		return this;
 	}
 

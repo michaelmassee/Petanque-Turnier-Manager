@@ -18,10 +18,10 @@ import com.sun.star.sheet.XSheetOperation;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -84,8 +84,7 @@ public class RangeHelper {
 		xRangetoClear = getCellRange();
 		if (xRangetoClear != null) {
 			// --- Sheet operation. ---
-			XSheetOperation xSheetOp = UnoRuntime.queryInterface(com.sun.star.sheet.XSheetOperation.class,
-					xRangetoClear);
+			XSheetOperation xSheetOp = Lo.qi(com.sun.star.sheet.XSheetOperation.class, xRangetoClear);
 			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED
 					| CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS | CellFlags.STRING | CellFlags.STYLES
 					| CellFlags.VALUE);
@@ -99,7 +98,7 @@ public class RangeHelper {
 			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(),
 					rangePos.getStartZeile(), rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 			if (xCellRange != null) {
-				xCellRangeData = UnoRuntime.queryInterface(XCellRangeData.class, xCellRange);
+				xCellRangeData = Lo.qi(XCellRangeData.class, xCellRange);
 			}
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -189,7 +188,7 @@ public class RangeHelper {
 
 		xCellRange = getCellRange();
 		if (xCellRange != null) {
-			xCellRangesQuery = UnoRuntime.queryInterface(XCellRangesQuery.class, xCellRange);
+			xCellRangesQuery = Lo.qi(XCellRangesQuery.class, xCellRange);
 		}
 		return xCellRangesQuery;
 	}
@@ -205,7 +204,7 @@ public class RangeHelper {
 
 	public RangeHelper setArrayFormula(String formula) throws GenerateException {
 		XCellRange xCellRange = getCellRange();
-		XArrayFormulaRange xArrayFormula = UnoRuntime.queryInterface(XArrayFormulaRange.class, xCellRange);
+		XArrayFormulaRange xArrayFormula = Lo.qi(XArrayFormulaRange.class, xCellRange);
 		xArrayFormula.setArrayFormula(formula);
 		return this;
 	}
@@ -214,7 +213,7 @@ public class RangeHelper {
 		XPropertySet xPropSet = null;
 		XCellRange xCellRange = getCellRange();
 		if (xCellRange != null) {
-			xPropSet = UnoRuntime.queryInterface(XPropertySet.class, xCellRange);
+			xPropSet = Lo.qi(XPropertySet.class, xCellRange);
 		}
 		return xPropSet;
 	}

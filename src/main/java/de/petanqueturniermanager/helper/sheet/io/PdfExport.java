@@ -14,11 +14,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.io.IOException;
 import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
@@ -85,7 +85,7 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		checkNotNull(rangePosition);
 
 		Object retSel = null;
-		XSelectionSupplier xSelectionSupplier = UnoRuntime.queryInterface(XSelectionSupplier.class,
+		XSelectionSupplier xSelectionSupplier = Lo.qi(XSelectionSupplier.class,
 				getWorkingSpreadsheet().getWorkingSpreadsheetView());
 
 		XCellRange cell = TurnierSheet.from(sheetName, getWorkingSpreadsheet()).setActiv()

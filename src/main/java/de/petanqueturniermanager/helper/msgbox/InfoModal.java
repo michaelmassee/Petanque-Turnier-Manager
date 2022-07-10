@@ -1,6 +1,6 @@
 /**
-* Erstellung : 21.03.2018 / Michael Massee
-**/
+ * Erstellung : 21.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.msgbox;
 
@@ -12,10 +12,10 @@ import com.sun.star.awt.XMessageBox;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindowPeer;
-import com.sun.star.uno.UnoRuntime;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
+import de.petanqueturniermanager.helper.Lo;
 
 public class InfoModal {
 
@@ -31,20 +31,22 @@ public class InfoModal {
 			XWindow xParent = DocumentHelper.getCurrentFrame(xContext).getContainerWindow();
 
 			// // get access to the office toolkit environment
-			XToolkit xKit = UnoRuntime.queryInterface(XToolkit.class, xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", xContext));
+			XToolkit xKit = Lo.qi(XToolkit.class,
+					xContext.getServiceManager().createInstanceWithContext("com.sun.star.awt.Toolkit", xContext));
 			//
 			// describe the info box in its parameters
 			WindowDescriptor aDescriptor = new com.sun.star.awt.WindowDescriptor();
 			aDescriptor.WindowServiceName = "infobox";
 			aDescriptor.Bounds = new Rectangle(0, 0, 300, 200);
-			aDescriptor.WindowAttributes = WindowAttribute.BORDER | WindowAttribute.MOVEABLE | WindowAttribute.CLOSEABLE;
+			aDescriptor.WindowAttributes = WindowAttribute.BORDER | WindowAttribute.MOVEABLE
+					| WindowAttribute.CLOSEABLE;
 			aDescriptor.Type = WindowClass.MODALTOP;
 			aDescriptor.ParentIndex = 1;
-			aDescriptor.Parent = UnoRuntime.queryInterface(XWindowPeer.class, xParent);
+			aDescriptor.Parent = Lo.qi(XWindowPeer.class, xParent);
 			//
 			// // create the info box window
 			XWindowPeer xPeer = xKit.createWindow(aDescriptor);
-			XMessageBox xInfoBox = UnoRuntime.queryInterface(XMessageBox.class, xPeer);
+			XMessageBox xInfoBox = Lo.qi(XMessageBox.class, xPeer);
 			if (xInfoBox == null) {
 				return 0;
 			}

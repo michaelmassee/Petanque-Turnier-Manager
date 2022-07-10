@@ -17,8 +17,8 @@ import com.sun.star.awt.XListBox;
 import com.sun.star.beans.XMultiPropertySet;
 import com.sun.star.lang.EventObject;
 import com.sun.star.style.VerticalAlignment;
-import com.sun.star.uno.UnoRuntime;
 
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.konfigdialog.ComboBoxItem;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
@@ -47,9 +47,10 @@ public class LabelPlusCombobox extends BaseField<LabelPlusCombobox> implements X
 
 	@Override
 	protected void doCreate() {
-		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "", BASE_RECTANGLE, null);
-		label = UnoRuntime.queryInterface(XFixedText.class, labelControl);
-		labelProperties = UnoRuntime.queryInterface(XMultiPropertySet.class, labelControl.getModel());
+		XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
+				BASE_RECTANGLE, null);
+		label = Lo.qi(XFixedText.class, labelControl);
+		labelProperties = Lo.qi(XMultiPropertySet.class, labelControl.getModel());
 		getLayout().addControl(labelControl);
 
 		// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBoxModel.html
@@ -60,8 +61,8 @@ public class LabelPlusCombobox extends BaseField<LabelPlusCombobox> implements X
 		props.putIfAbsent("MultiSelection", false);
 
 		XControl comboControl = GuiFactory.createListBox(getGuiFactoryCreateParam(), this, BASE_RECTANGLE, props);
-		setProperties(UnoRuntime.queryInterface(XMultiPropertySet.class, comboControl.getModel()));
-		listBox = UnoRuntime.queryInterface(XListBox.class, comboControl);
+		setProperties(Lo.qi(XMultiPropertySet.class, comboControl.getModel()));
+		listBox = Lo.qi(XListBox.class, comboControl);
 		getLayout().addControl(comboControl);
 	}
 

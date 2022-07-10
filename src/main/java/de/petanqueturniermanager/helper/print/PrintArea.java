@@ -10,9 +10,9 @@ import com.sun.star.sheet.XPrintAreas;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCellRange;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
@@ -40,7 +40,7 @@ public class PrintArea {
 	public PrintArea setPrintArea(RangePosition range) {
 		checkNotNull(range);
 		XCellRange aRange = turnierSheet.getCellRangeByPosition(range);
-		CellRangeAddress aRangeAddress = UnoRuntime.queryInterface(XCellRangeAddressable.class, aRange).getRangeAddress();
+		CellRangeAddress aRangeAddress = Lo.qi(XCellRangeAddressable.class, aRange).getRangeAddress();
 		XPrintAreas printArea = turnierSheet.queryInterfaceXSpreadsheet(XPrintAreas.class);
 		printArea.setPrintAreas(new CellRangeAddress[] { aRangeAddress });
 		return this;
