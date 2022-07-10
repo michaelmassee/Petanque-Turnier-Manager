@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
  * @author Michael Massee
  *
  */
+@SuppressWarnings("serial")
 public class RowData extends ArrayList<CellData> {
 
 	public RowData() {

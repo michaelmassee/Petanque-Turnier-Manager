@@ -7,6 +7,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.beans.PropertyValue;
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.TableSortField;
 import com.sun.star.table.XCellRange;
 import com.sun.star.uno.UnoRuntime;
@@ -20,7 +22,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
-public class SortHelper extends BaseHelper {
+public class SortHelper {
 
 	// private static final Logger logger = LogManager.getLogger(SortHelper.class);
 	private final RangePosition rangePositionToSort;
@@ -30,18 +32,31 @@ public class SortHelper extends BaseHelper {
 	private boolean caseSensitive = false;
 	private boolean bindFormatsToContent = false;
 	private int[] sortSpalten = new int[] { 0 }; // default erste spalte
+	private final XSpreadsheet xSpreadsheet;
+	private final XSpreadsheetDocument workingSpreadsheetDocument;
 
-	private SortHelper(ISheet iSheet, RangePosition rangePosition) {
-		super(iSheet);
-
-		rangePositionToSort = checkNotNull(rangePosition);
+	private SortHelper(ISheet iSheet, RangePosition rangePosition) throws GenerateException {
+		this(iSheet.getXSpreadSheet(), iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), rangePosition);
 	}
 
-	public static SortHelper from(ISheet iSheet, RangePosition rangePosition) {
+	private SortHelper(XSpreadsheet xSpreadsheet, XSpreadsheetDocument xSpreadsheetDocument,
+			RangePosition rangePosition) throws GenerateException {
+		rangePositionToSort = checkNotNull(rangePosition);
+		this.xSpreadsheet = checkNotNull(xSpreadsheet);
+		workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
+	}
+
+	public static SortHelper from(ISheet iSheet, RangePosition rangePosition) throws GenerateException {
 		return new SortHelper(iSheet, rangePosition);
 	}
 
-	public static SortHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePosition) {
+	public static SortHelper from(XSpreadsheet xSpreadsheet, XSpreadsheetDocument xSpreadsheetDocument,
+			RangePosition rangePosition) throws GenerateException {
+		return new SortHelper(xSpreadsheet, xSpreadsheetDocument, rangePosition);
+	}
+
+	public static SortHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePosition)
+			throws GenerateException {
 		return new SortHelper(checkNotNull(sheetWkRef).get(), rangePosition);
 	}
 
@@ -132,10 +147,11 @@ public class SortHelper extends BaseHelper {
 	public SortHelper doSort() throws GenerateException {
 		checkNotNull(sortSpalten);
 		checkArgument(sortSpalten.length > 0);
-		// Anmrk 1.7.2022 Stimt das mit nur 3 Spalten ??<br>
+		// Anmrk 9.7.2022 in lo 6 ist das noch so
 		checkArgument(sortSpalten.length < 4); // max 3 spalten
 
-		XCellRange xCellRangeToSort = RangeHelper.from(getISheet(), rangePositionToSort).getCellRange();
+		XCellRange xCellRangeToSort = RangeHelper.from(xSpreadsheet, workingSpreadsheetDocument, rangePositionToSort)
+				.getCellRange();
 		if (xCellRangeToSort == null) {
 			return this;
 		}

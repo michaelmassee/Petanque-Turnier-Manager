@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  * @author Michael Massee
  *
  */
+@SuppressWarnings("serial")
 public class RangeData extends ArrayList<RowData> {
 
 	public RangeData() {
@@ -42,7 +43,7 @@ public class RangeData extends ArrayList<RowData> {
 		return RangePosition.from(start, endPos.spaltePlus(getAnzSpalten() - 1).zeilePlus(size() - 1));
 	}
 
-	private int getAnzSpalten() {
+	public final int getAnzSpalten() {
 		int maxSize = 0;
 		for (RowData rowdata : this) {
 			maxSize = (maxSize < rowdata.size()) ? rowdata.size() : maxSize;
