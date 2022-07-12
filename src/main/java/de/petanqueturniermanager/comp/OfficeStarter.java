@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.comp;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,6 +12,8 @@ import com.sun.star.bridge.XBridgeFactory;
 import com.sun.star.comp.helper.Bootstrap;
 import com.sun.star.comp.helper.BootstrapException;
 import com.sun.star.connection.XConnector;
+import com.sun.star.frame.XComponentLoader;
+import com.sun.star.frame.XDesktop;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.uno.XComponentContext;
@@ -22,21 +25,29 @@ import de.petanqueturniermanager.helper.Lo;
  */
 
 public class OfficeStarter {
+	private static final Logger logger = LogManager.getLogger(OfficeStarter.class);
+
 	// connect to locally running Office via port 8100
 	private static final int SOCKET_PORT = 8100;
+	// https://help.libreoffice.org/6.2/he/text/shared/guide/start_parameters.html
 	private static final String SOFFICE_BIN = "soffice";
-
-	private static final Logger logger = LogManager.getLogger(OfficeStarter.class);
 
 	private boolean usingPipes = false;
 	private XComponentContext xComponentContext = null;
+
 	private XComponent bridgeComponent = null; // this is only set if office is opened via a socket
+	private XMultiComponentFactory mcFactory;
+	private XDesktop xDesktop;
+	private XComponentLoader xComponentLoader;
+
 	private boolean headless = false;
+
+	private static AtomicBoolean isOfficeTerminated = new AtomicBoolean();
 
 	private OfficeStarter() {
 	}
 
-	public OfficeStarter from() {
+	public static OfficeStarter from() {
 		return new OfficeStarter();
 	}
 
@@ -47,6 +58,7 @@ public class OfficeStarter {
 
 	public OfficeStarter loadOffice() {
 		logger.info("Loading Office...");
+		isOfficeTerminated.set(false);
 		if (usingPipes) {
 			bootstrapContext(); // connects to office via pipes
 		} else {
@@ -54,33 +66,32 @@ public class OfficeStarter {
 		}
 
 		if (xComponentContext == null) {
-			logger.info("Office context could not be created");
-			System.exit(1);
+			String errorMsg = "Office context could not be created";
+			logger.error(errorMsg);
+			throw new RuntimeException(errorMsg);
 		}
+
+		// get the remote office service manager
+		mcFactory = xComponentContext.getServiceManager();
+		if (mcFactory == null) {
+			String errorMsg = "Office Service Manager is unavailable";
+			logger.error(errorMsg);
+			throw new RuntimeException(errorMsg);
+		}
+
+		// desktop service handles application windows and documents
+		xDesktop = Lo.createInstanceMCF(XDesktop.class, "com.sun.star.frame.Desktop", mcFactory, xComponentContext);
+		if (xDesktop == null) {
+			String errorMsg = "Could not create a desktop service";
+			logger.error(errorMsg);
+			throw new RuntimeException(errorMsg);
+		}
+
+		// XComponentLoader provides ability to load components
+		xComponentLoader = Lo.qi(XComponentLoader.class, xDesktop);
+
 		return this;
 	}
-
-	//
-	//	public static XComponentLoader loadOffice(boolean usingPipes)
-	//
-	//		// get the remote office service manager
-	//		mcFactory = xcc.getServiceManager();
-	//		if (mcFactory == null) {
-	//			System.out.println("Office Service Manager is unavailable");
-	//			System.exit(1);
-	//		}
-	//
-	//		// desktop service handles application windows and documents
-	//		xDesktop = createInstanceMCF(XDesktop.class, "com.sun.star.frame.Desktop");
-	//		if (xDesktop == null) {
-	//			System.out.println("Could not create a desktop service");
-	//			System.exit(1);
-	//		}
-	//
-	//		// XComponentLoader provides ability to load components
-	//		return Lo.qi(XComponentLoader.class, xDesktop);
-	//	} // end of loadOffice()
-	//
 
 	// connect pipes to office using the Bootstrap class
 	// i.e. see code at http://svn.apache.org/repos/asf/openoffice/symphony/trunk/main/
@@ -99,17 +110,17 @@ public class OfficeStarter {
 
 	private void socketContext() {
 		try {
-			ArrayList<String> cmd = new ArrayList<>();
-			// requires soffice to be in Windows PATH env var.
+			ArrayList<String> cmd = new ArrayList<String>();
+			// requires soffice to be in Linux PATH env var.
 			cmd.add(SOFFICE_BIN);
 			if (this.headless) {
 				cmd.add("-headless");
 			}
 			cmd.add("-accept=socket,host=localhost,port=" + SOCKET_PORT + ";urp;");
 
-			Process p = Runtime.getRuntime().exec((String[]) cmd.toArray());
+			Process p = Runtime.getRuntime().exec(cmd.stream().toArray(String[]::new));
 			if (p != null) {
-				System.out.println("Office process created");
+				logger.info("Office process created");
 			}
 			Thread.sleep(5000);
 			// Wait 5 seconds, until office is in listening mode
@@ -121,10 +132,6 @@ public class OfficeStarter {
 			XMultiComponentFactory localFactory = localContext.getServiceManager();
 
 			// connect to Office via its socket
-			/*
-			 * Object urlResolver = localFactory.createInstanceWithContext( "com.sun.star.bridge.UnoUrlResolver", localContext); XUnoUrlResolver xUrlResolver = Lo.qi(XUnoUrlResolver.class, urlResolver); Object
-			 * initObject = xUrlResolver.resolve( "uno:socket,host=localhost,port=" + SOCKET_PORT + ";urp;StarOffice.ServiceManager");
-			 */
 			XConnector connector = Lo.qi(XConnector.class,
 					localFactory.createInstanceWithContext("com.sun.star.connection.Connector", localContext));
 
@@ -151,64 +158,60 @@ public class OfficeStarter {
 			// get the remote interface XComponentContext
 			xComponentContext = Lo.qi(XComponentContext.class, defaultContext);
 		} catch (java.lang.Exception e) {
-			System.out.println("Unable to socket connect to Office");
+			logger.error("Unable to socket connect to Office", e);
 		}
 	}
-	//
-	//	// ================== office shutdown =========================
-	//
-	//	public static void closeOffice()
-	//	// tell office to terminate
-	//	{
-	//		System.out.println("Closing Office");
-	//		if (xDesktop == null) {
-	//			System.out.println("No office connection found");
-	//			return;
-	//		}
-	//
-	//		if (isOfficeTerminated) {
-	//			System.out.println("Office has already been requested to terminate");
-	//			return;
-	//		}
-	//
-	//		int numTries = 1;
-	//		while (!isOfficeTerminated && (numTries < 4)) {
-	//			delay(200);
-	//			isOfficeTerminated = tryToTerminate(numTries);
-	//			numTries++;
-	//		}
-	//	} // end of closeOffice()
-	//
-	//	public static boolean tryToTerminate(int numTries) {
-	//		try {
-	//			boolean isDead = xDesktop.terminate();
-	//			if (isDead) {
-	//				if (numTries > 1)
-	//					System.out.println(numTries + ". Office terminated");
-	//				else
-	//					System.out.println("Office terminated");
-	//			} else
-	//				System.out.println(numTries + ". Office failed to terminate");
-	//			return isDead;
-	//		} catch (com.sun.star.lang.DisposedException e) {
-	//			System.out.println("Office link disposed");
-	//			return true;
-	//		} catch (java.lang.Exception e) {
-	//			System.out.println("Termination exception: " + e);
-	//			return false;
-	//		}
-	//	} // end of tryToTerminate()
-	//
-	//	public static void killOffice()
-	//	// kill office processes using a batch file
-	//	// or use JNAUtils.killOffice()
-	//	{
-	//		try {
-	//			Runtime.getRuntime().exec("cmd /c lokill.bat");
-	//			System.out.println("Killed Office");
-	//		} catch (java.lang.Exception e) {
-	//			System.out.println("Unable to kill Office: " + e);
-	//		}
-	//	} // end of killOffice()
+
+	// ================== office shutdown =========================
+	public void closeOffice() {
+		logger.info("Closing Office");
+		if (xDesktop == null) {
+			logger.error("No office connection found");
+			return;
+		}
+
+		if (isOfficeTerminated.get()) {
+			logger.warn("Office has already been requested to terminate");
+			return;
+		}
+
+		int numTries = 1;
+		try {
+			while (!isOfficeTerminated.get() && (numTries < 4)) {
+				Thread.sleep(200);
+				isOfficeTerminated.set(tryToTerminate(numTries));
+				numTries++;
+			}
+		} catch (InterruptedException e) {
+		}
+	}
+
+	private boolean tryToTerminate(int numTries) {
+		try {
+			boolean isDead = xDesktop.terminate();
+			if (isDead) {
+				if (numTries > 1)
+					logger.info(numTries + ". Office terminated");
+				else
+					logger.info("Office terminated");
+			} else
+				logger.error(numTries + ". Office failed to terminate");
+			return isDead;
+		} catch (com.sun.star.lang.DisposedException e) {
+			logger.info("Office link disposed");
+			return true;
+		} catch (java.lang.Exception e) {
+			logger.error("Termination exception: " + e.getMessage(), e);
+			return false;
+		}
+	}
+
+	public XComponentLoader getComponentLoader() {
+		return xComponentLoader;
+	}
+
+	public XComponentContext getxComponentContext() {
+		return xComponentContext;
+	}
 
 }

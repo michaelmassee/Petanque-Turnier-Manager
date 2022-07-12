@@ -86,6 +86,9 @@ public class DocumentHelper {
 	static XSpreadsheetView getCurrentSpreadsheetView(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
 		XModel xModel = getXModel(xContext);
+		if (xModel == null) {
+			throw new NullPointerException("xModel == null");
+		}
 		return Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 	}
 

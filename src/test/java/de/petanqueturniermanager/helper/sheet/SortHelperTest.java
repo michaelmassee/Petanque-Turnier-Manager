@@ -13,41 +13,41 @@ import com.sun.star.frame.XComponentLoader;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.comp.OfficeDocumentHelper;
+import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.testutils.Calc;
-import de.petanqueturniermanager.testutils.GUI;
-import de.petanqueturniermanager.testutils.Lo;
 
 public class SortHelperTest {
 	static XComponentLoader loader;
 	static XSpreadsheetDocument doc;
+	static OfficeStarter starter = OfficeStarter.from();
 
 	@BeforeClass
 	public static void startup() {
-		loader = Lo.loadOffice(false);
-		doc = Calc.createDoc(loader);
+		loader = starter.loadOffice().getComponentLoader();
+		doc = OfficeDocumentHelper.from(loader).createCalc();
 		if (doc == null) {
 			System.out.println("Document creation failed");
 			return;
 		}
-		GUI.setVisible(doc, true);
+		OfficeDocumentHelper.setVisible(doc, true);
 	}
 
 	@AfterClass
 	public static void shutDown() {
 		if (doc != null) {
-			Lo.closeDoc(doc);
+			OfficeDocumentHelper.closeDoc(doc);
 		}
-		Lo.closeOffice();
+		starter.closeOffice();
 	}
 
 	@Test
 	public void testDoSort() throws Exception {
-
-		XSpreadsheet sheet = Calc.getSheet(doc, 0);
+		SheetHelper sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
+		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
 
 		// @formatter:off
 	    Object[][] vals = {
@@ -84,11 +84,11 @@ public class SortHelperTest {
 		List<String> expected = Arrays.asList(new String[] { "Level", "Code", "No.", "Team", "Name" });
 		assertThat(dataFromRange.get(0)).extracting(CellData::getStringVal).containsExactlyElementsOf(expected);
 
-//		BS	20	2	A	Chcomic
-//		BS	20	4	B	Ally
-//		BS	20	4	B	Chcomic
-//		BS	20	4	B	Elle
-//		BS	20	4	C	Sweet
+		//		BS	20	2	A	Chcomic
+		//		BS	20	4	B	Ally
+		//		BS	20	4	B	Chcomic
+		//		BS	20	4	B	Elle
+		//		BS	20	4	C	Sweet
 
 		List<String> expected1 = Arrays.asList(new String[] { "BS", "20", "2", "A", "Chcomic" });
 		assertThat(dataFromRange.get(1)).extracting(CellData::getStringVal).containsExactlyElementsOf(expected1);
@@ -101,10 +101,10 @@ public class SortHelperTest {
 		List<String> expected5 = Arrays.asList(new String[] { "BS", "20", "4", "C", "Sweet" });
 		assertThat(dataFromRange.get(5)).extracting(CellData::getStringVal).containsExactlyElementsOf(expected5);
 
-//		CS	30	5	A	Ally
-//		CS	30	7	C	Tom
-//		MS	10	1	A	Joker
-//		MS	10	3	B	Kevin
+		//		CS	30	5	A	Ally
+		//		CS	30	7	C	Tom
+		//		MS	10	1	A	Joker
+		//		MS	10	3	B	Kevin
 
 		List<String> expected6 = Arrays.asList(new String[] { "CS", "30", "5", "A", "Ally" });
 		assertThat(dataFromRange.get(6)).extracting(CellData::getStringVal).containsExactlyElementsOf(expected6);

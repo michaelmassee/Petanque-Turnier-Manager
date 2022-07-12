@@ -19,6 +19,7 @@ import com.sun.star.view.XSelectionSupplier;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.PropertyValueHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
@@ -132,11 +133,11 @@ public class PdfExport extends AbstractStore<PdfExport> {
 			}
 
 			if (!filterData.isEmpty()) {
-				saveprops.put(SAVE_PROP_FILTERDATA, map2Proplist(filterData));
+				saveprops.put(SAVE_PROP_FILTERDATA, PropertyValueHelper.map2Proplist(filterData));
 			}
 
 			// stores the object's persistent data to a URL and continues to be a representation of the old URL
-			getxStorable().storeToURL(pdfFile.toString(), map2Proplist(saveprops));
+			getxStorable().storeToURL(pdfFile.toString(), PropertyValueHelper.map2Proplist(saveprops));
 
 		} catch (MalformedURLException | URISyntaxException | IOException e) {
 			logger.error(e.getMessage(), e);
