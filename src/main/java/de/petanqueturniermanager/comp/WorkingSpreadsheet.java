@@ -12,6 +12,7 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XDispatchHelper;
 import com.sun.star.frame.XDispatchProvider;
+import com.sun.star.frame.XModel;
 import com.sun.star.frame.XStorable;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.XCalculatable;
@@ -41,17 +42,26 @@ public class WorkingSpreadsheet {
 		xController = DocumentHelper.getXModel(xContext).getCurrentController();
 	}
 
-	/**
-	 * @param getxContext
-	 * @param xSpreadsheetDocument
-	 * @param xSpreadsheetView
-	 */
-	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument,
-			XSpreadsheetView xSpreadsheetView) {
+	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument) {
+		XModel xModel = checkNotNull(Lo.qi(XModel.class, checkNotNull(xSpreadsheetDocument)), "XModel==null");
+		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 		this.xContext = checkNotNull(xContext);
 		workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
 		workingSpreadsheetView = checkNotNull(xSpreadsheetView);
-		xController = DocumentHelper.getXModel(xContext).getCurrentController();
+		xController = checkNotNull(xModel.getCurrentController(), "Controller == null");
+	}
+
+	/**
+	 * @deprecated use WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument)
+	 */
+	@Deprecated
+	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument,
+			XSpreadsheetView xSpreadsheetView) {
+		XModel xModel = Lo.qi(XModel.class, checkNotNull(xSpreadsheetDocument));
+		this.xContext = checkNotNull(xContext);
+		workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
+		workingSpreadsheetView = checkNotNull(xSpreadsheetView);
+		xController = xModel.getCurrentController();
 	}
 
 	public boolean compareSpreadsheetDocument(WorkingSpreadsheet workingSpreadsheet) {

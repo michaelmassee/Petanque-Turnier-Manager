@@ -19,6 +19,7 @@ import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
+import com.sun.star.container.XIndexAccess;
 import com.sun.star.container.XNamed;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
@@ -30,6 +31,7 @@ import com.sun.star.sheet.XFunctionAccess;
 import com.sun.star.sheet.XSheetAnnotations;
 import com.sun.star.sheet.XSheetAnnotationsSupplier;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
 import com.sun.star.table.CellHoriJustify;
@@ -41,6 +43,7 @@ import com.sun.star.table.XTableRows;
 import com.sun.star.text.XText;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Exception;
+import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XMergeable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -71,6 +74,11 @@ public class SheetHelper {
 
 	public SheetHelper(WorkingSpreadsheet currentSpreadsheet) {
 		this.currentSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
+	}
+
+	public SheetHelper(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument) {
+		WorkingSpreadsheet wkingSpreadsheet = new WorkingSpreadsheet(xContext, xSpreadsheetDocument);
+		this.currentSpreadsheet = new WeakRefHelper<>(checkNotNull(wkingSpreadsheet));
 	}
 
 	/**
@@ -126,6 +134,21 @@ public class SheetHelper {
 			sheetPosition = TurnierSheet.from(xSpreadsheet, currentSpreadsheet.get()).getSheetPosition();
 		}
 		return sheetPosition;
+	}
+
+	// return the spreadsheet with the specified index (0-based)
+	public XSpreadsheet getSheetByIdx(int index) {
+		XSpreadsheets sheets = getSheets();
+		XSpreadsheet sheet = null;
+		try {
+			XIndexAccess xSheetsIdx = Lo.qi(XIndexAccess.class, sheets);
+			// must convert since XSpreadsheet is a named container
+			sheet = Lo.qi(XSpreadsheet.class, xSheetsIdx.getByIndex(index));
+		} catch (Exception e) {
+
+			System.out.println("Could not access spreadsheet: " + index);
+		}
+		return sheet;
 	}
 
 	public void removeAllSheetsExclude(String sheetNameNotToRemove) {

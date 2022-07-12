@@ -24,7 +24,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CommonProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 import de.petanqueturniermanager.helper.sheet.numberformat.NumberFormatHelper;
 
-public class XPropertyHelper /* extends BaseHelper */ implements ICommonProperties {
+public class XPropertyHelper implements ICommonProperties {
 
 	private static final Logger logger = LogManager.getLogger(XPropertyHelper.class);
 
@@ -84,7 +84,7 @@ public class XPropertyHelper /* extends BaseHelper */ implements ICommonProperti
 		XPropertySetInfo propertySetInfo = xPropertySet.getPropertySetInfo();
 		Property[] properties = propertySetInfo.getProperties();
 		Arrays.asList(properties).stream().sorted((o1, o2) -> o1.Name.compareTo(o2.Name)).forEach((property) -> {
-			System.out.println(property.Name + " - " + property.Type + " - " + getProperty(property.Name));
+			logger.info(property.Name + " - " + property.Type + " - " + getProperty(property.Name));
 		});
 	}
 

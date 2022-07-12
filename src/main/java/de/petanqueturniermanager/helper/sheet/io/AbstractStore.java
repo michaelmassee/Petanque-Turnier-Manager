@@ -5,13 +5,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XStorable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -69,18 +67,6 @@ public abstract class AbstractStore<T> {
 		return (StringUtils.isEmpty(prefix) ? "" : prefix + "_")
 				+ (StringUtils.isEmpty(filePrefix1) ? "" : filePrefix1 + "_")
 				+ (StringUtils.isEmpty(filePrefix2) ? "" : filePrefix2 + "_") + orgFileName().toString();
-	}
-
-	protected final PropertyValue[] map2Proplist(Map<String, Object> saveProps) {
-		PropertyValue[] newProperties = new PropertyValue[saveProps.size()];
-		int idx = 0;
-		for (Map.Entry<String, Object> element : saveProps.entrySet()) {
-			newProperties[idx] = new com.sun.star.beans.PropertyValue();
-			newProperties[idx].Name = element.getKey();
-			newProperties[idx].Value = element.getValue();
-			idx++;
-		}
-		return newProperties;
 	}
 
 	protected final URI newLocationInSameDir(String FileName) throws MalformedURLException, URISyntaxException {

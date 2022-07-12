@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.io.IOException;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.PropertyValueHelper;
 
 /**
  * Speichern und Exportieren <br>
@@ -67,7 +68,7 @@ public class BackUp extends AbstractStore<BackUp> {
 				Map<String, Object> savprops = new HashMap<>();
 				savprops.put(SAVE_PROP_OVERWRITE, Boolean.TRUE);
 				// stores the object's persistent data to a URL and continues to be a representation of the old URL
-				getxStorable().storeToURL(newLocation.toString(), map2Proplist(savprops));
+				getxStorable().storeToURL(newLocation.toString(), PropertyValueHelper.map2Proplist(savprops));
 			}
 		} catch (MalformedURLException | URISyntaxException | IOException e) {
 			logger.error(e.getMessage(), e);
@@ -78,19 +79,19 @@ public class BackUp extends AbstractStore<BackUp> {
 
 	public BackUp doExportToHtml() {
 
-//		XStorable xStorableHTML = (XStorable) Lo.qi(XStorable.class, xSpreadsheetComponent);
-//		PropertyValue[] storeHTMLProps = new PropertyValue[1];
-//		storeHTMLProps[0] = new PropertyValue();
-//		storeHTMLProps[0].Name = "FilterName";
-//		storeHTMLProps[0].Value = "HTML (StarCalc)";
-//
-//		// In the case that the extension of the file is unknown, we add
-//		// the extension
-//		if (!(path.endsWith(".html") || path.endsWith(".HTML"))) {
-//			path = path.concat(".html");
-//		}
-//
-//		xStorableHTML.storeToURL("file:///" + path, storeHTMLProps);		
+		//		XStorable xStorableHTML = (XStorable) Lo.qi(XStorable.class, xSpreadsheetComponent);
+		//		PropertyValue[] storeHTMLProps = new PropertyValue[1];
+		//		storeHTMLProps[0] = new PropertyValue();
+		//		storeHTMLProps[0].Name = "FilterName";
+		//		storeHTMLProps[0].Value = "HTML (StarCalc)";
+		//
+		//		// In the case that the extension of the file is unknown, we add
+		//		// the extension
+		//		if (!(path.endsWith(".html") || path.endsWith(".HTML"))) {
+		//			path = path.concat(".html");
+		//		}
+		//
+		//		xStorableHTML.storeToURL("file:///" + path, storeHTMLProps);		
 
 		return this;
 	}

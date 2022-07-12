@@ -14,6 +14,7 @@ import com.sun.star.io.IOException;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.PropertyValueHelper;
 
 /**
  * Erstellung 03.07.2022 / Michael Massee
@@ -59,7 +60,7 @@ public class HtmlExport extends AbstractStore<HtmlExport> {
 			saveprops.put(SAVE_PROP_FILTER_NAME, CALC_HTML_EXPORT_FILTER);
 
 			// stores the object's persistent data to a URL and continues to be a representation of the old URL
-			getxStorable().storeToURL(htmlFile.toString(), map2Proplist(saveprops));
+			getxStorable().storeToURL(htmlFile.toString(), PropertyValueHelper.map2Proplist(saveprops));
 		} catch (MalformedURLException | URISyntaxException | IOException e) {
 			logger.error(e.getMessage(), e);
 		}
