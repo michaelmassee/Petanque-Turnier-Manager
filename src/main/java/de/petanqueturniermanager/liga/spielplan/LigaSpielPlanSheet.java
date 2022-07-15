@@ -337,7 +337,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		for (List<TeamPaarung> spielTag : alleSpieltage) {
 			for (TeamPaarung teamPaarung : spielTag) {
 				SheetRunner.testDoCancelTask();
-				RowData teamPaarungData = rangeData.newRow();
+				RowData teamPaarungData = rangeData.addNewRow();
 				teamPaarungData.newInt(teamPaarung.getA().getNr());
 				teamPaarungData.newInt(teamPaarung.getOptionalB().isPresent() ? teamPaarung.getB().getNr() : 0);
 			}
@@ -363,13 +363,13 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
 		// hinrunde
 		for (int i = 1; i <= anzSpieltage * anzTeamPaarungen; i++) {
-			RowData teamPaarungData = rangeData.newRow();
+			RowData teamPaarungData = rangeData.addNewRow();
 			teamPaarungData.newString(NR_HINRUNDE_PREFIX + i);
 		}
 
 		// rückrunde
 		for (int i = 1; i <= anzSpieltage * anzTeamPaarungen; i++) {
-			RowData teamPaarungData = rangeData.newRow();
+			RowData teamPaarungData = rangeData.addNewRow();
 			teamPaarungData.newString(NR_RUECKRUNDE_PREFIX + i);
 		}
 
@@ -450,7 +450,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		for (List<List<SpielErgebnis>> runde : list) {
 			for (List<SpielErgebnis> begegnung : runde) {
 				SheetRunner.testDoCancelTask();
-				RowData ergebnisseRow = rangeData.newRow();
+				RowData ergebnisseRow = rangeData.addNewRow();
 				int spieleTeamA = 0;
 				int spieleTeamB = 0;
 				int spielPunkteA = 0;

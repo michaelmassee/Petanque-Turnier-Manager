@@ -72,7 +72,7 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 		int anzTeams = geradeAnzahlMannschaften ? 5 : 6;
 		int cntr = 0;
 		for (String name : testNamen) {
-			RowData newTeam = data.newRow();
+			RowData newTeam = data.addNewRow();
 			newTeam.newEmpty();
 			newTeam.newString(name);
 			if (cntr++ > anzTeams) {

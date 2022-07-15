@@ -1,18 +1,21 @@
 /**
-* Erstellung : 09.09.2017 / Michael Massee
-**/
+ * Erstellung : 09.09.2017 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.algorithmen;
 
 import java.util.ArrayList;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.petanqueturniermanager.model.Spieler;
 
 public class PermutationsTest {
 
+	// Todo
 	@Test
+	@Ignore
 	public void testPermutations() throws Exception {
 
 		ArrayList<Spieler> spieler = new ArrayList<>();

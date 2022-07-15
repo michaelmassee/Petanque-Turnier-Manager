@@ -5,48 +5,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.sun.star.frame.XComponentLoader;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.sheet.XSpreadsheetDocument;
 
-import de.petanqueturniermanager.comp.OfficeDocumentHelper;
-import de.petanqueturniermanager.comp.OfficeStarter;
+import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
-public class SortHelperTest {
-	static XComponentLoader loader;
-	static XSpreadsheetDocument doc;
-	static OfficeStarter starter = OfficeStarter.from();
-
-	@BeforeClass
-	public static void startup() {
-		loader = starter.loadOffice().getComponentLoader();
-		doc = OfficeDocumentHelper.from(loader).createCalc();
-		if (doc == null) {
-			System.out.println("Document creation failed");
-			return;
-		}
-		OfficeDocumentHelper.setVisible(doc, true);
-	}
-
-	@AfterClass
-	public static void shutDown() {
-		if (doc != null) {
-			OfficeDocumentHelper.closeDoc(doc);
-		}
-		starter.closeOffice();
-	}
+public class SortHelperUITest extends BaseCalcUITest {
 
 	@Test
 	public void testDoSort() throws Exception {
-		SheetHelper sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
 		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
 
 		// @formatter:off

@@ -192,7 +192,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		int anzGesamtRunden = anzGesamtRunden();
 		RangeData data = new RangeData();
-		RowData headerZeile3 = data.newRow();
+		RowData headerZeile3 = data.addNewRow();
 
 		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
 			// 6 spalten pro Runde(Spieltag)

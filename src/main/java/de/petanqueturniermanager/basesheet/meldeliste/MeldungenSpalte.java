@@ -240,7 +240,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		RangeData spielrNrData = new RangeData();
 		spielerNummerList.stream().forEachOrdered(nr -> {
-			spielrNrData.newRow().newInt(nr);
+			spielrNrData.addNewRow().newInt(nr);
 		});
 
 		Position startPosNr = Position.from(meldungNrSpalte, getErsteDatenZiele());
