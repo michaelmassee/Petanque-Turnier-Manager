@@ -116,7 +116,7 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 		RangeData rangeData = new RangeData();
 		// for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
 		for (int anSpielerCntr = 4; anSpielerCntr < 101; anSpielerCntr++) {
-			RowData row = rangeData.newRow();
+			RowData row = rangeData.addNewRow();
 			{
 				SuperMeleeTeamRechner teamRechnerTriplette = new SuperMeleeTeamRechner(anSpielerCntr,
 						SuperMeleeMode.Triplette);

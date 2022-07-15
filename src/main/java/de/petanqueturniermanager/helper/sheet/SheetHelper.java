@@ -63,22 +63,22 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 
 public class SheetHelper {
 
+	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
+
 	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN",
 			"ISOKALENDERWOCHE" };
 	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF",
 			"ISOWEEKNUM" };
 
-	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
-
-	private final WeakRefHelper<WorkingSpreadsheet> currentSpreadsheet;
+	private final WorkingSpreadsheet currentSpreadsheet;
 
 	public SheetHelper(WorkingSpreadsheet currentSpreadsheet) {
-		this.currentSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
+		this.currentSpreadsheet = checkNotNull(currentSpreadsheet);
 	}
 
 	public SheetHelper(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument) {
 		WorkingSpreadsheet wkingSpreadsheet = new WorkingSpreadsheet(xContext, xSpreadsheetDocument);
-		this.currentSpreadsheet = new WeakRefHelper<>(checkNotNull(wkingSpreadsheet));
+		this.currentSpreadsheet = checkNotNull(wkingSpreadsheet);
 	}
 
 	/**
@@ -131,7 +131,7 @@ public class SheetHelper {
 		int sheetPosition = -1;
 		XSpreadsheet xSpreadsheet = findByName(sheetName);
 		if (xSpreadsheet != null) {
-			sheetPosition = TurnierSheet.from(xSpreadsheet, currentSpreadsheet.get()).getSheetPosition();
+			sheetPosition = TurnierSheet.from(xSpreadsheet, currentSpreadsheet).getSheetPosition();
 		}
 		return sheetPosition;
 	}
@@ -210,7 +210,11 @@ public class SheetHelper {
 	 */
 
 	public XSpreadsheets getSheets() {
-		return currentSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets();
+		checkNotNull(currentSpreadsheet, "currentSpreadsheet==null");
+		//		checkArgument(currentSpreadsheet.isPresent(), "currentSpreadsheet fehlt");
+		checkNotNull(currentSpreadsheet.getWorkingSpreadsheetDocument(), "WorkingSpreadsheetDocument==null");
+
+		return currentSpreadsheet.getWorkingSpreadsheetDocument().getSheets();
 	}
 
 	public XCell setValInCell(NumberCellValue numberCellValue) {
@@ -474,7 +478,7 @@ public class SheetHelper {
 	public String getAddressFromColumnRow(Position pos) {
 		checkNotNull(pos);
 		try {
-			XFunctionAccess xFuncAcc = currentSpreadsheet.get().createInstanceMCF(XFunctionAccess.class,
+			XFunctionAccess xFuncAcc = currentSpreadsheet.createInstanceMCF(XFunctionAccess.class,
 					"com.sun.star.sheet.FunctionAccess");
 			// https://wiki.openoffice.org/wiki/Documentation/How_Tos/Calc:_ADDRESS_function
 			// put the data in a array
@@ -495,7 +499,7 @@ public class SheetHelper {
 	 */
 
 	public void setActiveSheet(XSpreadsheet spreadsheet) {
-		TurnierSheet.from(spreadsheet, currentSpreadsheet.get()).setActiv();
+		TurnierSheet.from(spreadsheet, currentSpreadsheet).setActiv();
 	}
 
 	/**
@@ -508,7 +512,7 @@ public class SheetHelper {
 	 */
 
 	public void setTabColor(XSpreadsheet xSheet, String hex) {
-		TurnierSheet.from(xSheet, currentSpreadsheet.get()).tabColor(hex);
+		TurnierSheet.from(xSheet, currentSpreadsheet).tabColor(hex);
 	}
 
 	/**
@@ -525,7 +529,7 @@ public class SheetHelper {
 	 */
 	@Deprecated
 	public void setTabColor(XSpreadsheet xSheet, int color) {
-		TurnierSheet.from(xSheet, currentSpreadsheet.get()).tabColor(color);
+		TurnierSheet.from(xSheet, currentSpreadsheet).tabColor(color);
 	}
 
 	public XCellRange mergeRange(XSpreadsheet sheet, RangePosition rangePosition) {
@@ -746,7 +750,7 @@ public class SheetHelper {
 	public XCell getCell(XSpreadsheet xSheet, Position pos) {
 		checkNotNull(xSheet);
 		checkNotNull(pos);
-		return TurnierSheet.from(xSheet, currentSpreadsheet.get()).getCell(pos);
+		return TurnierSheet.from(xSheet, currentSpreadsheet).getCell(pos);
 	}
 
 	/**

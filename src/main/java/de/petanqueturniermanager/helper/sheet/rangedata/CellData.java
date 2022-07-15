@@ -13,7 +13,7 @@ import com.google.common.base.MoreObjects;
  */
 public class CellData {
 
-	private final Object data;
+	private Object data;
 
 	public CellData(Object data) {
 		this.data = data;
@@ -24,6 +24,18 @@ public class CellData {
 	 */
 	public final Object getData() {
 		return data;
+	}
+
+	public void setVal(Object val) {
+		data = val;
+	}
+
+	public void setIntVal(int intval) {
+		data = intval;
+	}
+
+	public void setStringVal(String val) {
+		data = val;
 	}
 
 	/**

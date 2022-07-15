@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import de.petanqueturniermanager.helper.position.Position;
@@ -30,7 +31,36 @@ public class RangeData extends ArrayList<RowData> {
 		}).collect(Collectors.toList()));
 	}
 
-	public RowData newRow() {
+	public RangeData(List<Object> data) {
+		super(checkNotNull(data).stream().map(rowdata -> {
+			return new RowData(rowdata);
+		}).collect(Collectors.toList()));
+	}
+
+	public void addNewSpalte(String val) {
+		for (RowData rowdata : this) {
+			rowdata.add(new CellData(val));
+		}
+	}
+
+	public void addNewSpalte(Integer val) {
+		for (RowData rowdata : this) {
+			rowdata.add(new CellData(val));
+		}
+	}
+
+	public void addNewEmptySpalte() {
+		for (RowData rowdata : this) {
+			rowdata.add(new CellData(""));
+		}
+	}
+
+	/**
+	 * neue Zeile hinzufuegen
+	 * 
+	 * @return
+	 */
+	public RowData addNewRow() {
 		RowData newRowData = new RowData();
 		this.add(newRowData);
 		return newRowData;

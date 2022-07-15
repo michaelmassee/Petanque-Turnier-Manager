@@ -104,7 +104,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		List<Spieler> spielrList = alleMeldungen.spieler();
 
 		for (int lnCntr = 0; lnCntr < MAX_ANZSPIELER_IN_SPALTE; lnCntr++) {
-			RowData zeileData = data.newRow();
+			RowData zeileData = data.addNewRow();
 			for (int blkCntr = 1; blkCntr <= anzBloecke; blkCntr++) {
 				int idx = lnCntr + (blkCntr - 1) * MAX_ANZSPIELER_IN_SPALTE;
 				if (idx < alleMeldungen.size()) {

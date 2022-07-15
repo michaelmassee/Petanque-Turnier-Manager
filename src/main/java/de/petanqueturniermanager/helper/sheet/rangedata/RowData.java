@@ -21,6 +21,15 @@ public class RowData extends ArrayList<CellData> {
 		super();
 	}
 
+	// ein dimension
+	public RowData(Object data) {
+		super(Arrays.asList(getRowdataArray(data)));
+	}
+
+	private static CellData[] getRowdataArray(Object data) {
+		return new CellData[] { new CellData(data) };
+	}
+
 	public RowData(Object[] data) {
 		super(Arrays.stream(checkNotNull(data)).map(rowdata -> {
 			return new CellData(rowdata);
