@@ -1,6 +1,6 @@
 /**
-* Erstellung : 22.03.2018 / Michael Massee
-**/
+ * Erstellung : 22.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
@@ -220,19 +220,19 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, SuperMeleeSheet.PTM_SPIELTAG)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielTagFormula);
-//		NumberCellValue spielTagNr = NumberCellValue
-//				.from(sheet, posSpieltagFormula, this.getKonfigurationSheet().getAktiveSpieltag().getNr())
-//				.setBorder(border);
-//		getSheetHelper().setValInCell(spielTagNr);
+		//		NumberCellValue spielTagNr = NumberCellValue
+		//				.from(sheet, posSpieltagFormula, this.getKonfigurationSheet().getAktiveSpieltag().getNr())
+		//				.setBorder(border);
+		//		getSheetHelper().setValInCell(spielTagNr);
 
 		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
 		StringCellValue spielRundeFormula = StringCellValue
 				.from(sheet, posSpielrundeFormula, SuperMeleeSheet.PTM_SPIELRUNDE).setBorder(border);
 		getSheetHelper().setFormulaInCell(spielRundeFormula);
-//		NumberCellValue spielRndNr = NumberCellValue
-//				.from(sheet, posSpielrundeFormula, this.getKonfigurationSheet().getAktiveSpielRunde().getNr())
-//				.setBorder(border);
-//		getSheetHelper().setValInCell(spielRndNr);
+		//		NumberCellValue spielRndNr = NumberCellValue
+		//				.from(sheet, posSpielrundeFormula, this.getKonfigurationSheet().getAktiveSpielRunde().getNr())
+		//				.setBorder(border);
+		//		getSheetHelper().setValInCell(spielRndNr);
 
 	}
 
@@ -314,9 +314,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
 				// ------------------------------
 				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und
-													// <999 sein
-				// ------------------------------
+				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ------------------------------
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
@@ -402,7 +400,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		return meldeListeHelper.spieltagSpalte(getSpielTag());
 	}
 
-	private int ersteSummeSpalte() throws GenerateException {
+	public int ersteSummeSpalte() throws GenerateException {
 		return letzteSpielTagSpalte() + SUMMEN_SPALTE_OFFSET;
 	}
 
