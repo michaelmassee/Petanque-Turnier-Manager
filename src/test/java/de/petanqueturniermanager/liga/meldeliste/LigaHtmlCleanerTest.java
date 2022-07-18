@@ -3,7 +3,6 @@ package de.petanqueturniermanager.liga.meldeliste;
 import java.io.File;
 import java.net.URL;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -27,6 +26,6 @@ public class LigaHtmlCleanerTest {
 		// for local test only
 		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
 		System.out.println("Copy nach " + target);
-		FileUtils.copyFile(targetHtml, target);
+		// FileUtils.copyFile(targetHtml, target);
 	}
 }

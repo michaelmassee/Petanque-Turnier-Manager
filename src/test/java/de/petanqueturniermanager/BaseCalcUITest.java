@@ -2,7 +2,9 @@ package de.petanqueturniermanager;
 
 import java.io.IOException;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import com.sun.star.frame.XComponentLoader;
@@ -20,34 +22,44 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public abstract class BaseCalcUITest {
 
-	protected static XComponentLoader loader;
-	protected static XSpreadsheetDocument doc;
 	protected static OfficeStarter starter = OfficeStarter.from();
-	protected static SheetHelper sheetHlp;
-	protected static WorkingSpreadsheet wkingSpreadsheet;
+	protected static XComponentLoader loader;
+
+	protected XSpreadsheetDocument doc;
+	protected SheetHelper sheetHlp;
+	protected WorkingSpreadsheet wkingSpreadsheet;
 
 	@BeforeClass
 	public static void startup() {
 		BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
-		BaseCalcUITest.doc = OfficeDocumentHelper.from(loader).createCalc();
-		if (BaseCalcUITest.doc == null) {
+	}
+
+	@Before
+	public void beforeTest() {
+		doc = OfficeDocumentHelper.from(loader).createCalc();
+		if (doc == null) {
 			System.out.println("Document creation failed");
 			return;
 		}
-		OfficeDocumentHelper.setVisible(BaseCalcUITest.doc, true);
-		BaseCalcUITest.wkingSpreadsheet = new WorkingSpreadsheet(BaseCalcUITest.starter.getxComponentContext(),
-				BaseCalcUITest.doc);
-		BaseCalcUITest.sheetHlp = new SheetHelper(BaseCalcUITest.starter.getxComponentContext(), BaseCalcUITest.doc);
-		// use force weil office is clossed in shutdown
-		ProcessBox.forceinit(BaseCalcUITest.starter.getxComponentContext());
+
+		OfficeDocumentHelper.setVisible(doc, true);
+		wkingSpreadsheet = new WorkingSpreadsheet(starter.getxComponentContext(), doc);
+		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
+		// use force weil calc is clossed in afterTest
+		ProcessBox.forceinit(starter.getxComponentContext());
 	}
 
 	@AfterClass
 	public static void shutDown() {
-		if (BaseCalcUITest.doc != null) {
-			OfficeDocumentHelper.closeDoc(BaseCalcUITest.doc);
-		}
 		BaseCalcUITest.starter.closeOffice();
+	}
+
+	@After
+	public void afterTest() {
+		ProcessBox.dispose();
+		if (doc != null) {
+			OfficeDocumentHelper.closeDoc(doc);
+		}
 	}
 
 	protected void waitEnter() throws IOException {

@@ -36,18 +36,18 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final Integer DEFAULT_HEADER__BACK_COLOR = Integer.valueOf("e6ebf4", 16);
 
 	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
-	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
-	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
-	private static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
+	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
+	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
+	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";
 
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Rangliste Hintergrund Gerade";
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Rangliste Hintergrund Ungerade";
-	private static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste Header";
+	public static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE = "Rangliste Hintergrund Gerade";
+	public static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE = "Rangliste Hintergrund Ungerade";
+	public static final String KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER = "Rangliste Header";
 
-	private static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
-	private static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
+	public static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
+	public static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 
-	private static final String KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN = "Zeige Arbeitsspalten"; // diesen Daten werden nur intern gebraucht, default = false
+	public static final String KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN = "Zeige Arbeitsspalten"; // diesen Daten werden nur intern gebraucht, default = false
 
 	protected final WeakRefHelper<ISheet> sheetWkRef;
 	private final DocumentPropertiesHelper docPropHelper;
