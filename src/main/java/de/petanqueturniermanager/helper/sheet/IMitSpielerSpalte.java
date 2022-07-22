@@ -14,7 +14,7 @@ public interface IMitSpielerSpalte {
 
 	int letzteDatenZeile() throws GenerateException;
 
-	int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException;
+	int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException;
 
 	int letzteZeileMitSpielerName() throws GenerateException;
 

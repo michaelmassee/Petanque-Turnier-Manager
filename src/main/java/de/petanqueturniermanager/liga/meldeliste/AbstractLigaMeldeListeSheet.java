@@ -1,6 +1,6 @@
 /**
-* Erstellung : 22.03.2018 / Michael Massee
-**/
+ * Erstellung : 22.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.liga.meldeliste;
 
@@ -165,8 +165,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 				// eigentlich musste 0 = Fehler sein wird es aber nicht
 				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
 				.styleIsFehler().applyAndDoReset(). // nr muss >0 und
-													// <999 sein
-				// ------------------------------
+																																							// <999 sein
+																																							// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ------------------------------
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
@@ -245,8 +245,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
-	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenOhneSpielerNrZeile();
+	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return meldungenSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override
