@@ -250,7 +250,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 	}
 
 	@Override
-	public int letzteDatenZeile() throws GenerateException {
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		return meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 	}
 

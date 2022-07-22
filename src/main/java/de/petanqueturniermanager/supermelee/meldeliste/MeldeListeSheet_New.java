@@ -1,6 +1,6 @@
 /**
-* Erstellung : 30.04.2018 / Michael Massee
-**/
+ * Erstellung : 30.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
@@ -37,5 +37,4 @@ public class MeldeListeSheet_New extends AbstractSupermeleeMeldeListeSheet {
 	public Logger getLogger() {
 		return logger;
 	}
-
 }

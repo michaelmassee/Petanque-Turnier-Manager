@@ -9,8 +9,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -166,6 +168,27 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			getSheetHelper().setStringValueInCell(celVal);
 			celVal.spaltePlusEins();
 		}
+	}
+
+	/**
+	 * rückwärts suche in der Spalte Spiele Nr nach regex ^\d<br>
+	 * wenn not found dann erste Daten Zeile.
+	 * 
+	 * @return Zeile
+	 * @throws GenerateException
+	 */
+
+	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
+		Map<String, Object> searchProp = new HashMap<>();
+		searchProp.put(RangeSearchHelper.SEARCH_BACKWARDS, true);
+		Position result = RangeSearchHelper
+				.from(getISheet(),
+						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
+				.searchNachRegExprInSpalte("^\\d", searchProp);
+		if (result != null) {
+			return result.getZeile();
+		}
+		return getErsteDatenZiele();
 	}
 
 	/**

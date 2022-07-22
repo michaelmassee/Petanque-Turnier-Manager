@@ -54,7 +54,16 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 		validateDoubletteBlock(testMeldeListeErstellen.getXSpreadSheet(), testMeldeListeErstellen.ersteSummeSpalte());
 		validateSpieltagSpielrunde(testMeldeListeErstellen.getXSpreadSheet(),
 				testMeldeListeErstellen.ersteSummeSpalte());
+		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().getLetzteMitDatenZeileInSpielerNrSpalte())
+				.isEqualTo(26);
+
+		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().neachsteFreieDatenZeileInSpielerNrSpalte())
+				.isEqualTo(27);
+
+		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().sucheLetzteZeileMitSpielerNummer()).isEqualTo(26);
+
 		// waitEnter();
+
 	}
 
 	private void validateSpieltagSpielrunde(XSpreadsheet xSpreadsheet, int summeSpalte) throws GenerateException {

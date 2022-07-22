@@ -12,7 +12,7 @@ public interface IMitSpielerSpalte {
 
 	int getErsteDatenZiele();
 
-	int letzteDatenZeile() throws GenerateException;
+	int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException;
 
 	int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException;
 

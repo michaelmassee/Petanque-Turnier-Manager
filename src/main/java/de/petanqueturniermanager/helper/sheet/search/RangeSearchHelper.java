@@ -5,6 +5,8 @@ package de.petanqueturniermanager.helper.sheet.search;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,6 +33,9 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
  *
  */
 public class RangeSearchHelper extends AbstractSearchHelper {
+
+	public static final String SEARCH_REGULAR_EXPRESSION = "SearchRegularExpression";
+	public static final String SEARCH_BACKWARDS = "SearchBackwards";
 
 	private static final Logger logger = LogManager.getLogger(RangeSearchHelper.class);
 	private final RangePosition rangePos;
@@ -71,8 +76,30 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 			searchDescriptor.setSearchString(regExpr);
 			// properties
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
-			searchDescriptor.setPropertyValue("SearchBackwards", false);
-			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
+			searchDescriptor.setPropertyValue(SEARCH_BACKWARDS, false);
+			searchDescriptor.setPropertyValue(SEARCH_REGULAR_EXPRESSION, true);
+			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
+			logger.fatal(e);
+		}
+		return result;
+	}
+
+	public Position searchNachRegExprInSpalte(String regExpr, Map<String, Object> properties) throws GenerateException {
+		checkNotNull(regExpr);
+
+		Position result = null;
+		try {
+			XSearchable xSearchableFromRange = getXSearchableFromRange(rangePos);
+			XSearchDescriptor searchDescriptor = xSearchableFromRange.createSearchDescriptor();
+			searchDescriptor.setSearchString(regExpr);
+			// properties
+			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
+			for (String propKey : properties.keySet()) {
+				searchDescriptor.setPropertyValue(propKey, properties.get(propKey));
+			}
+			searchDescriptor.setPropertyValue(SEARCH_REGULAR_EXPRESSION, true);
 			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
@@ -117,8 +144,8 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 			// properties
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
 			// searchDescriptor.setPropertyValue("SearchWords", true);
-			searchDescriptor.setPropertyValue("SearchBackwards", true); // letzte eintrag suchen
-			searchDescriptor.setPropertyValue("SearchRegularExpression", true);
+			searchDescriptor.setPropertyValue(SEARCH_BACKWARDS, true); // letzte eintrag suchen
+			searchDescriptor.setPropertyValue(SEARCH_REGULAR_EXPRESSION, true);
 			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
 
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
