@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.position;
 
@@ -140,13 +140,32 @@ public abstract class AbstractPosition<T> {
 		return aStr;
 	}
 
+	/**
+	 * alternativ apache.poi, ist aber eine komplette MS office lib!<br>
+	 * https://poi.apache.org/apidocs/dev/org/apache/poi/ss/util/CellReference.html#convertNumToColString-int- <br>
+	 * 
+	 * @return
+	 */
+
 	public String getSpalteString() {
-		String aStr = "";
-		if (getColumn() > 25) {
-			aStr += (char) ('A' + getColumn() / 26 - 1);
+		int excelColNum = getColumn() + 1;
+
+		StringBuilder colRef = new StringBuilder(2);
+		int colRemain = excelColNum;
+
+		while (colRemain > 0) {
+			int thisPart = colRemain % 26;
+			if (thisPart == 0) {
+				thisPart = 26;
+			}
+			colRemain = (colRemain - thisPart) / 26;
+
+			// The letter A is at 65
+			char colChar = (char) (thisPart + 64);
+			colRef.insert(0, colChar);
 		}
-		aStr += (char) ('A' + getColumn() % 26);
-		return aStr;
+
+		return colRef.toString();
 	}
 
 	@Override
@@ -154,7 +173,8 @@ public abstract class AbstractPosition<T> {
 		if (obj == null) {
 			return false;
 		}
-		return ((AbstractPosition<?>) obj).getSpalte() == this.getSpalte() && ((AbstractPosition<?>) obj).getZeile() == this.getZeile();
+		return ((AbstractPosition<?>) obj).getSpalte() == this.getSpalte()
+				&& ((AbstractPosition<?>) obj).getZeile() == this.getZeile();
 	}
 
 	@Override
