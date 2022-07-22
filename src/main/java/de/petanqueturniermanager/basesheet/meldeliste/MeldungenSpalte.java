@@ -108,7 +108,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		getISheet().processBoxinfo("Formatiere Meldungen Spalten");
 
-		int letzteDatenZeile = getLetzteDatenZeile();
+		int letzteDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 		if (letzteDatenZeile < ersteDatenZiele) {
 			// keine Daten
 			return;
@@ -176,7 +176,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * @return
 	 * @throws GenerateException
 	 */
-	public int getLetzteDatenZeile() throws GenerateException {
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		return neachsteFreieDatenZeileInSpielerNrSpalte() - 1;
 	}
 
@@ -273,7 +273,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(),
 				Position.from(meldungNrSpalte, getErsteDatenZiele()));
 		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula)
-				.setFillAutoDown(getLetzteDatenZeile()));
+				.setFillAutoDown(getLetzteMitDatenZeileInSpielerNrSpalte()));
 	}
 
 	/**
@@ -294,7 +294,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	public List<Integer> getSpielerNrList() throws GenerateException {
 		List<Integer> spielerNrList = new ArrayList<>();
-		int letzteZeile = getLetzteDatenZeile();
+		int letzteZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		if (letzteZeile >= ersteDatenZiele) {
 			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
@@ -319,7 +319,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 */
 	public List<String> getSpielerNamenList() throws GenerateException {
 		List<String> spielerNamen = new ArrayList<>();
-		int letzteZeile = getLetzteDatenZeile();
+		int letzteZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 		XSpreadsheet sheet = getXSpreadsheet();
 
 		Position posSpielerName = Position.from(getSpielerNameErsteSpalte(), ersteDatenZiele);
@@ -353,7 +353,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	public String formulaCountSpieler() throws GenerateException {
 		String ersteZelle = Position.from(meldungNrSpalte, ersteDatenZiele).getAddress();
-		String letzteZelle = Position.from(meldungNrSpalte, getLetzteDatenZeile()).getAddress();
+		String letzteZelle = Position.from(meldungNrSpalte, getLetzteMitDatenZeileInSpielerNrSpalte()).getAddress();
 
 		return "COUNTIF(" + ersteZelle + ":" + letzteZelle + ";\">=0\")"; // nur zahlen
 	}

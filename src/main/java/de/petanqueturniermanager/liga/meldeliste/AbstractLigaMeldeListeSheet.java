@@ -121,7 +121,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 		processBoxinfo("Formatiere Daten Spalten");
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		if (letzteDatenZeile < MIN_ANZAHL_MELDUNGEN_ZEILEN) {
 			letzteDatenZeile = MIN_ANZAHL_MELDUNGEN_ZEILEN;
@@ -251,7 +251,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public int letzteDatenZeile() throws GenerateException {
-		return meldungenSpalte.getLetzteDatenZeile();
+		return meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

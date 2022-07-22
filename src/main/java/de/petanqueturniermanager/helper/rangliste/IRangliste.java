@@ -20,7 +20,7 @@ public interface IRangliste extends ISheet {
 
 	int getLetzteSpalte() throws GenerateException;
 
-	int getLetzteDatenZeile() throws GenerateException;
+	int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException;
 
 	int getManuellSortSpalte() throws GenerateException;
 

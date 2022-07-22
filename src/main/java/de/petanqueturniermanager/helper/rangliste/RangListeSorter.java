@@ -53,7 +53,7 @@ public class RangListeSorter {
 
 	public void insertManuelsortSpalten(boolean isVisible) throws GenerateException {
 		// sortspalten for manuell sortieren
-		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteMitDatenZeileInSpielerNrSpalte();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
 		ColumnProperties columnProperties = ColumnProperties.from()
@@ -78,7 +78,7 @@ public class RangListeSorter {
 
 	public void insertSortValidateSpalte(boolean isVisible) throws GenerateException {
 
-		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteMitDatenZeileInSpielerNrSpalte();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 
 		XSpreadsheet sheet = getIRangliste().getXSpreadSheet();
@@ -180,7 +180,7 @@ public class RangListeSorter {
 	 * @throws GenerateException
 	 */
 	public void isErrorInSheet() throws GenerateException {
-		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteMitDatenZeileInSpielerNrSpalte();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 		XSpreadsheet sheet = getIRangliste().getXSpreadSheet();
 		int validateSpalte = validateSpalte();
@@ -201,7 +201,7 @@ public class RangListeSorter {
 		int ersteSpalte = getIRangliste().getErsteSpalte();
 		int ersteDatenZiele = getIRangliste().getErsteDatenZiele();
 		int letzteSpalte = getIRangliste().getLetzteSpalte();
-		int letzteDatenZeile = getIRangliste().getLetzteDatenZeile();
+		int letzteDatenZeile = getIRangliste().getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		getIRangliste().calculateAll(); // zum sortieren werte kalkulieren
 		List<Position> ranglisteSpalten = getIRangliste().getRanglisteSpalten();
