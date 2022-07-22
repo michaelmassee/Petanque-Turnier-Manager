@@ -182,7 +182,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	}
 
 	private int getFooterZeile() throws GenerateException {
-		return getLetzteDatenZeile() + 2;
+		return getLetzteMitDatenZeileInSpielerNrSpalte() + 2;
 	}
 
 	/**
@@ -294,7 +294,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 		int anzGesamtRunden = anzGesamtRunden();
 		int ersteSummeSpalte = getErsteSummeSpalte();
-		int letzteDatenZeile = getLetzteDatenZeile();
+		int letzteDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		RangeProperties rangeProp = RangeProperties.from()
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).centerJustify().margin(MARGIN);
@@ -517,7 +517,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	}
 
 	@Override
-	public int getLetzteDatenZeile() throws GenerateException {
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		return getErsteDatenZiele() + anzZeilen() - 1;
 	}
 

@@ -149,7 +149,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 		int spielerNrSpalte = spielerSpalte.getSpielerNrSpalte();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 		int letzteSpalte = sheet.getLetzteSpalte();
 
 		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
@@ -173,7 +173,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		// summe spalten spiele
 		// +,-,div

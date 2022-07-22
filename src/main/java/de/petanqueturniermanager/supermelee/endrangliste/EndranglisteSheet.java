@@ -161,7 +161,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		// CellBackColor
 		int spielerNrSpalte = spielerSpalte.getSpielerNrSpalte();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 		int letzteSpalte = getLetzteSpalte();
 
 		Integer streichSpieltag_geradeColor = getKonfigurationSheet()
@@ -260,7 +260,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		getSheetHelper().setStringValueInCell(headerStreichspieltag);
 		// Daten
 		RangePosition rangPos = RangePosition.from(getSchlechtesteSpielTageSpalte(), ERSTE_DATEN_ZEILE,
-				getSchlechtesteSpielTageSpalte(), getLetzteDatenZeile());
+				getSchlechtesteSpielTageSpalte(), getLetzteMitDatenZeileInSpielerNrSpalte());
 		CellProperties celRangeProp = CellProperties.from()
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
 				.setHoriJustify(CellHoriJustify.CENTER);
@@ -302,7 +302,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		// =WENNNV(SVERWEIS(A4;$'2. Spieltag Rangliste'.$A4:$D1000;4;0);"")
 
 		int anzSpieltage = getAnzahlSpieltage();
-		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
 
@@ -344,7 +344,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		int letzteSpieltagLetzteSpalte = ersteSpalteEndsumme - 1;
-		int letzteZeile = getLetzteDatenZeile();
+		int letzteZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		Position ersteSpielTagErsteZelle = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE);
 		Position letzteSpielTagLetzteZelle = Position.from(letzteSpieltagLetzteSpalte, ERSTE_DATEN_ZEILE);
@@ -526,8 +526,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	}
 
 	@Override
-	public int getLetzteDatenZeile() throws GenerateException {
-		return spielerSpalte.getLetzteDatenZeile();
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

@@ -94,7 +94,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		}
 
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
-		int letzteDatenZeile = spielerSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder();
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {

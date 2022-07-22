@@ -137,7 +137,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 			return;
 		}
 		XSpreadsheet sheet = getXSpreadSheet();
-		int letzteDatenzeile = getSpielerSpalte().getLetzteDatenZeile();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
 		List<Position> plusPunktPos = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			SheetRunner.testDoCancelTask();
@@ -209,7 +209,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 		int nichtgespieltPlus = getKonfigurationSheet().getNichtGespielteRundePlus();
 		int nichtgespieltMinus = getKonfigurationSheet().getNichtGespielteRundeMinus();
-		int letzteDatenzeile = getSpielerSpalte().getLetzteDatenZeile();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
 
@@ -408,7 +408,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	}
 
 	public void clearAll() throws GenerateException {
-		int letzteDatenzeile = getSpielerSpalte().getLetzteDatenZeile();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
 		if (letzteDatenzeile >= ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			RangePosition range = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getManuellSortSpalte(),
 					letzteDatenzeile);
@@ -424,8 +424,8 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	// --------------------------
 
 	@Override
-	public int getLetzteDatenZeile() throws GenerateException {
-		return getSpielerSpalte().getLetzteDatenZeile();
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

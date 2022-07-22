@@ -195,7 +195,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		checkNotNull(spieltag, "spieltag == null");
 		checkNotNull(meldungen, "meldungen == null");
 
-		int letzteZeile = meldeListe.getMeldungenSpalte().getLetzteDatenZeile();
+		int letzteZeile = meldeListe.getMeldungenSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		if (letzteZeile >= ERSTE_DATEN_ZEILE) {
 			// daten vorhanden

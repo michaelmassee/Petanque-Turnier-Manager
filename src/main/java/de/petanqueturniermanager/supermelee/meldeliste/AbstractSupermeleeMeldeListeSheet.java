@@ -272,7 +272,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		processBoxinfo("Formatiere Daten Spalten");
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		if (letzteDatenZeile < MIN_ANZAHL_SPIELER_ZEILEN) {
 			letzteDatenZeile = MIN_ANZAHL_SPIELER_ZEILEN;
@@ -420,7 +420,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeile();
+		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		if (letzteDatenZeile < MIN_ANZAHL_SPIELER_ZEILEN) {
 			letzteDatenZeile = MIN_ANZAHL_SPIELER_ZEILEN;
@@ -751,7 +751,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 	@Override
 	public int letzteDatenZeile() throws GenerateException {
-		return meldungenSpalte.getLetzteDatenZeile();
+		return meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

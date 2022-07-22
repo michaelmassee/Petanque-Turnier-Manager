@@ -71,7 +71,7 @@ public class RangListeSpalte {
 
 		iRanglisteSheet.get().processBoxinfo("Rangliste Spalte Aktualisieren");
 		// SummenSpalten
-		int letzteZeile = getIRanglisteSheet().getLetzteDatenZeile();
+		int letzteZeile = getIRanglisteSheet().getLetzteMitDatenZeileInSpielerNrSpalte();
 		// int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 

@@ -252,7 +252,7 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 
 	private RangeHelper getSpieltagRanglisteRange(SpieltagRanglisteSheet ranglist) throws GenerateException {
 		RangePosition rangeSplrErg = RangePosition.from(ranglist.getErsteSpalte(), ranglist.getErsteDatenZiele(),
-				ranglist.getManuellSortSpalte(), ranglist.getLetzteDatenZeile()); // 22 Aktive Spieler Meldungen
+				ranglist.getManuellSortSpalte(), ranglist.getLetzteMitDatenZeileInSpielerNrSpalte()); // 22 Aktive Spieler Meldungen
 		assertThat(rangeSplrErg.getAddress()).isEqualTo("S3:W26");
 		RangeHelper rngHlpr = RangeHelper.from(ranglist.getXSpreadSheet(),
 				wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeSplrErg);
