@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.03.2018 / Michael Massee
-**/
+ * Erstellung : 10.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.basesheet.meldeliste;
 
@@ -58,7 +58,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	private final WeakRefHelper<ISheet> sheet;
 
-	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader, int spalteMeldungNameWidth) {
+	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader,
+			int spalteMeldungNameWidth) {
 		checkNotNull(iSheet);
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
@@ -115,17 +116,20 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		// Spieler Nr
 		// -------------------------------------
-		RangePosition spielrNrdatenRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte, letzteDatenZeile);
+		RangePosition spielrNrdatenRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
+				letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange, CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR)
-				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange,
+				CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
 		// Spieler Namen
-		RangePosition datenRange = RangePosition.from(meldungNameSpalte, ersteDatenZiele, meldungNameSpalte, letzteDatenZeile);
+		RangePosition datenRange = RangePosition.from(meldungNameSpalte, ersteDatenZiele, meldungNameSpalte,
+				letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange,
-				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange, CellProperties.from().centerJustify()
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
 
 	}
 
@@ -133,11 +137,15 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		getISheet().processBoxinfo("Meldungen Spalten Header");
 
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
-				.setVertJustify(CellVertJustify2.CENTER).margin(MeldeListeKonstanten.CELL_MARGIN);
-		StringCellValue celVal = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader), HEADER_SPIELER_NR)
-				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties).setBorder(BorderFactory.from().allThin().toBorder())
-				.setCellBackColor(headerColor).setVertJustify(CellVertJustify2.CENTER);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+				.margin(MeldeListeKonstanten.CELL_MARGIN);
+		StringCellValue celVal = StringCellValue
+				.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader),
+						HEADER_SPIELER_NR)
+				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties)
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor)
+				.setVertJustify(CellVertJustify2.CENTER);
 
 		if (anzZeilenInHeader > 1) {
 			celVal.setEndPosMergeZeilePlus(1);
@@ -145,7 +153,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		getSheetHelper().setStringValueInCell(celVal); // spieler nr
 		// --------------------------------------------------------------------------------------------
 
-		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null).spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
+		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
+				.spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
@@ -160,8 +169,10 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
-	 * funktioniert nach meldung nr
-	 *
+	 * Sucht von unten nach der erste nicht leere zelle - 1<br>
+	 * Spalte spielerNr <br>
+	 * Achtung wenn bereits footer daten vorhanden, und oder wietere Daten unter der letzte Spielnr<br>
+	 * 
 	 * @return
 	 * @throws GenerateException
 	 */
@@ -170,13 +181,18 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
-	 * funktioniert nach spieler nr<br>
+	 * Sucht von unten nach der erste nicht leere zelle<br>
+	 * Spalte spielerNr <br>
+	 * Achtung wenn bereits footer daten vorhanden, und oder wietere Daten unter der letzte Spielnr<br>
 	 * return ersteDatenzeile wenn kein vorhanden
 	 *
 	 * @throws GenerateException
 	 */
 	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
-		Position result = RangeSearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN)).searchLastEmptyInSpalte();
+		Position result = RangeSearchHelper
+				.from(getISheet(),
+						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
+				.searchLastEmptyInSpalte();
 		if (result != null) {
 			return result.getZeile();
 		}
@@ -185,12 +201,14 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	/**
 	 * funktioniert nach spieler name<br>
+	 * Achtung wenn Footer oder weitere Daten nach der letzte Spielername vorhanden <br>
 	 * return 0 wenn kein Spieler vorhanden
 	 *
 	 * @throws GenerateException
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
-		Position resultFreieZelle = RangeSearchHelper.from(getISheet(), RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN))
+		Position resultFreieZelle = RangeSearchHelper.from(getISheet(),
+				RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN))
 				.searchLastNotEmptyInSpalte();
 		if (resultFreieZelle != null) {
 			return resultFreieZelle.getZeile();
@@ -206,7 +224,9 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
 		checkArgument(spielerNr > 0);
 		// muss in komplette spalte wert stehen. Deswegen mit ^ und $
-		Position result = RangeSearchHelper.from(getISheet(), RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
+		Position result = RangeSearchHelper
+				.from(getISheet(),
+						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
 				.searchNachRegExprInSpalte("^" + spielerNr + "$");
 		if (result != null) {
 			// Validieren !
@@ -219,7 +239,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		return -1;
 	}
 
-	public void alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeliste) throws GenerateException {
+	public void alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeliste)
+			throws GenerateException {
 		checkNotNull(meldeliste);
 		// spieler einfuegen wenn nicht vorhanden
 		IMeldungen<MLD_LIST_TYPE, MLDTYPE> meldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
@@ -230,7 +251,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		alleSpielerNrEinfuegen(spielerNummerList, meldeliste);
 	}
 
-	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList, IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeliste) throws GenerateException {
+	public void alleSpielerNrEinfuegen(Collection<Integer> spielerNummerList,
+			IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeliste) throws GenerateException {
 		checkNotNull(meldeliste);
 		checkNotNull(spielerNummerList);
 
@@ -248,8 +270,10 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		// filldown formula fuer name
 		String verweisAufMeldeListeFormula = meldeliste.formulaSverweisSpielernamen("INDIRECT(ADDRESS(ROW();1;4))");
-		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele()));
-		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula).setFillAutoDown(getLetzteDatenZeile()));
+		StringCellValue strCelValSpielerName = StringCellValue.from(getXSpreadsheet(),
+				Position.from(meldungNrSpalte, getErsteDatenZiele()));
+		getSheetHelper().setFormulaInCell(strCelValSpielerName.spaltePlusEins().setValue(verweisAufMeldeListeFormula)
+				.setFillAutoDown(getLetzteDatenZeile()));
 	}
 
 	/**
@@ -262,6 +286,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
+	 * Sucht in der Spalte SpielerNr inclusive alle weitere Daten in der gleiche Spalte nach gültige nummer.
+	 * 
 	 * @return sorted spielernr
 	 * @throws GenerateException
 	 */
@@ -271,7 +297,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		int letzteZeile = getLetzteDatenZeile();
 
 		if (letzteZeile >= ersteDatenZiele) {
-			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte, letzteZeile);
+			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
+					letzteZeile);
 			RangeData dataFromRange = RangeHelper.from(sheet, spielNrRange).getDataFromRange();
 			for (RowData zeile : dataFromRange) {
 				int spielerNr = zeile.get(0).getIntVal(-1);
@@ -286,7 +313,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
-	 * @return sorted spielrname
+	 * 
+	 * @return sorted spielername
 	 * @throws GenerateException
 	 */
 	public List<String> getSpielerNamenList() throws GenerateException {
@@ -397,7 +425,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		}
 
 		public <TL, T> MeldungenSpalte<TL, T> build() {
-			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader, spalteMeldungNameWidth);
+			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader,
+					spalteMeldungNameWidth);
 		}
 	}
 }

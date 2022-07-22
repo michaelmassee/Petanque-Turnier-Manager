@@ -18,7 +18,7 @@ public abstract class AbstractPosition<T> {
 
 	/**
 	 *
-	 * @param spalte (column)
+	 * @param spalte (column) max 1024
 	 * @param zeile (row)
 	 */
 
