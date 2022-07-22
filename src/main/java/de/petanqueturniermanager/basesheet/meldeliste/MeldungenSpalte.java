@@ -177,7 +177,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * @throws GenerateException
 	 */
 	public int getLetzteDatenZeile() throws GenerateException {
-		return neachsteFreieDatenOhneSpielerNrZeile() - 1;
+		return neachsteFreieDatenZeileInSpielerNrSpalte() - 1;
 	}
 
 	/**
@@ -188,7 +188,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 *
 	 * @throws GenerateException
 	 */
-	public int neachsteFreieDatenOhneSpielerNrZeile() throws GenerateException {
+	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
 		Position result = RangeSearchHelper
 				.from(getISheet(),
 						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))

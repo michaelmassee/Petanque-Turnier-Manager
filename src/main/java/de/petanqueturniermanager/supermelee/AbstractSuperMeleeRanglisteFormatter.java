@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.05.2018 / Michael Massee
-**/
+ * Erstellung : 10.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee;
 
@@ -44,8 +44,8 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 	private final WeakRefHelper<ISuperMeleePropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, ISuperMeleePropertiesSpalte propertiesSpalte,
-			IRangliste iRanglisteSheet) {
+	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte,
+			ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
 		spielerSpalteWkRef = new WeakRefHelper<>(spielerSpalte);
@@ -84,11 +84,13 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 	protected void formatZweiteZeileSpielTagSpalten(int ersteSummeSpalte) throws GenerateException {
 
 		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(ersteSummeSpalte + SPIELE_PLUS_OFFS, ZWEITE_KOPFDATEN_ZEILE), "Spiele")
+		StringCellValue headerSumme = StringCellValue
+				.from(getSheet(), Position.from(ersteSummeSpalte + SPIELE_PLUS_OFFS, ZWEITE_KOPFDATEN_ZEILE), "Spiele")
 				.setEndPosMergeSpaltePlus(2).setCellBackColor(getHeaderFarbe()).addColumnProperties(columnProperties);
-		getSheetHelper().setStringValueInCell(headerSumme.setBorder(BorderFactory.from().allThin().boldLn().forLeft().doubleLn().forRight().toBorder()));
-		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("Punkte").setEndPosMergeSpaltePlus(2)
-				.setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
+		getSheetHelper().setStringValueInCell(headerSumme
+				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().doubleLn().forRight().toBorder()));
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("Punkte")
+				.setEndPosMergeSpaltePlus(2).setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
 	}
 
 	/**
@@ -100,28 +102,34 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 	protected void formatDritteZeileSpielTagSpalten(int ersteSummeSpalte, int spalteWidth) throws GenerateException {
 
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteWidth).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+").setCellBackColor(getHeaderFarbe())
-				.setColumnProperties(columnProperties);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteWidth)
+				.setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+")
+				.setCellBackColor(getHeaderFarbe()).setColumnProperties(columnProperties);
 
-		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+").setComment("Summe Spiele +").setBorder(borderThinLeftBold()));
-		getSheetHelper().setStringValueInCell(
-				headerSumme.spalte(ersteSummeSpalte + SPIELE_MINUS_OFFS).setValue("-").setComment("Summe Spiele -").setBorder(BorderFactory.from().allThin().toBorder()));
-		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_DIV_OFFS).setValue("Δ").setComment("Summe Spiele Differenz")
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+")
+				.setComment("Summe Spiele +").setBorder(borderThinLeftBold()));
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_MINUS_OFFS).setValue("-")
+				.setComment("Summe Spiele -").setBorder(BorderFactory.from().allThin().toBorder()));
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_DIV_OFFS).setValue("Δ")
+				.setComment("Summe Spiele Differenz")
 				.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
-		getSheetHelper().setStringValueInCell(
-				headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("+").setComment("Summe Punkte +").setBorder(BorderFactory.from().allThin().toBorder()));
-		getSheetHelper().setStringValueInCell(
-				headerSumme.spalte(ersteSummeSpalte + PUNKTE_MINUS_OFFS).setValue("-").setComment("Summe Punkte -").setBorder(BorderFactory.from().allThin().toBorder()));
-		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_DIV_OFFS).setValue("Δ").setComment("Summe Punkte Differenz")
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("+")
+				.setComment("Summe Punkte +").setBorder(BorderFactory.from().allThin().toBorder()));
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_MINUS_OFFS).setValue("-")
+				.setComment("Summe Punkte -").setBorder(BorderFactory.from().allThin().toBorder()));
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_DIV_OFFS).setValue("Δ")
+				.setComment("Summe Punkte Differenz")
 				.setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
 
 	}
 
 	protected void formatErsteZeileSummeSpalte(int summeSpalte) throws GenerateException {
 		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(summeSpalte + SPIELE_PLUS_OFFS, ERSTE_KOPFDATEN_ZEILE), "Summe")
-				.setColumnProperties(columnProperties).setEndPosMergeSpaltePlus(5).setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
+		StringCellValue headerSumme = StringCellValue
+				.from(getSheet(), Position.from(summeSpalte + SPIELE_PLUS_OFFS, ERSTE_KOPFDATEN_ZEILE), "Summe")
+				.setColumnProperties(columnProperties).setEndPosMergeSpaltePlus(5)
+				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
 				.setCellBackColor(getHeaderFarbe());
 		getSheetHelper().setStringValueInCell(headerSumme);
 	}
@@ -149,7 +157,8 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
-		RanglisteGeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor).ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
+		RanglisteGeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor)
+				.ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
 
 	}
 
@@ -201,16 +210,18 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
-		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenOhneSpielerNrZeile();
-		StringCellValue stringVal = StringCellValue.from(getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile)).setHoriJustify(CellHoriJustify.LEFT)
-				.setCharHeight(8);
+		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
+		StringCellValue stringVal = StringCellValue
+				.from(getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile))
+				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
 
 		String anzSpielerFormula = "\"Anzahl Spieler: \" & " + spielerSpalte.formulaCountSpieler();
 		getSheetHelper().setFormulaInCell(stringVal.setValue(anzSpielerFormula));
 
 		stringVal.addRowProperty(ICommonProperties.HEIGHT, 350);
 
-		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue("Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +"));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(
+				"Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +"));
 
 		return stringVal;
 	}

@@ -60,7 +60,8 @@ public class MeldeListeHelperTest {
 	@Test
 	public void testTestDoppelteNamenMitUmlauten() throws Exception {
 
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Müller"), new SpielerNrName(10, "Müller") };
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Müller"),
+				new SpielerNrName(10, "Müller") };
 
 		initReturnSpielerDaten(spielerNrNameList);
 
@@ -74,7 +75,8 @@ public class MeldeListeHelperTest {
 
 	@Test
 	public void testTestDoppelteNamenMitZonderZeichenundLeerstellen() throws Exception {
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Maja   Biene"), new SpielerNrName(10, "Maja, Biene") };
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Maja   Biene"),
+				new SpielerNrName(10, "Maja, Biene") };
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
@@ -88,8 +90,8 @@ public class MeldeListeHelperTest {
 	@Test
 	public void testTestDoppelteNamenIgnoreCase() throws Exception {
 
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"), new SpielerNrName(10, "heinz"), new SpielerNrName(4, "Klaus"),
-				new SpielerNrName(12, "Heinz") };
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+				new SpielerNrName(10, "heinz"), new SpielerNrName(4, "Klaus"), new SpielerNrName(12, "Heinz") };
 
 		initReturnSpielerDaten(spielerNrNameList);
 
@@ -104,8 +106,8 @@ public class MeldeListeHelperTest {
 	@Test
 	public void testTestDoppelteSpielrNr() throws Exception {
 
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"), new SpielerNrName(12, "Petra"), new SpielerNrName(4, "Klaus"),
-				new SpielerNrName(12, "Heinz") };
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+				new SpielerNrName(12, "Petra"), new SpielerNrName(4, "Klaus"), new SpielerNrName(12, "Heinz") };
 		initReturnSpielerDaten(spielerNrNameList);
 
 		try {
@@ -119,8 +121,8 @@ public class MeldeListeHelperTest {
 	@Test
 	public void testDoppelteDaten_NoError() throws Exception {
 
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"), new SpielerNrName(10, "Petra"), new SpielerNrName(4, "Klaus"),
-				new SpielerNrName(12, "Heinz") };
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+				new SpielerNrName(10, "Petra"), new SpielerNrName(4, "Klaus"), new SpielerNrName(12, "Heinz") };
 
 		initReturnSpielerDaten(spielerNrNameList);
 
@@ -135,7 +137,8 @@ public class MeldeListeHelperTest {
 	public void testZeileOhneSpielerNamenEntfernen() throws Exception {
 
 		// Achtung: die liste wird Sortiert mit leeren namen nach unten
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"), new SpielerNrName(10, "Petra"), new SpielerNrName(12, "Heinz"),
+		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+				new SpielerNrName(10, "Petra"), new SpielerNrName(12, "Heinz"),
 				// --------------------
 				new SpielerNrName(4, "") // muss entfernt werden
 				// --------------------
@@ -143,8 +146,10 @@ public class MeldeListeHelperTest {
 
 		initReturnSpielerDaten(spielerNrNameList);
 
-		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
-		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
 
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
@@ -152,21 +157,29 @@ public class MeldeListeHelperTest {
 
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {
 
-		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
-		Position spielerNamePos = Position.from(meldeListeHelper.getSpielerNameSpalte(), MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
+				MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
+		Position spielerNamePos = Position.from(meldeListeHelper.getSpielerNameSpalte(),
+				MeldeListeKonstanten.ERSTE_DATEN_ZEILE);
 		int zeileCntr = 0;
 		for (SpielerNrName spielerNrName : spielerNrnameList) {
 			int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + zeileCntr;
-			PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos.zeile(zeile))))).thenReturn(spielerNrName.nr);
-			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerNrName.name);
+			PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+					eq(Position.from(spielerNrPos.zeile(zeile))))).thenReturn(spielerNrName.nr);
+			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+					eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerNrName.name);
 			zeileCntr++;
 		}
 
-		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
-		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
+		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
+		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
 
-		PowerMockito.when(iMeldelisteMock.neachsteFreieDatenOhneSpielerNrZeile()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
-		PowerMockito.when(meldungenSpalteMock.neachsteFreieDatenOhneSpielerNrZeile()).thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
+		PowerMockito.when(iMeldelisteMock.neachsteFreieDatenZeileInSpielerNrSpalte())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
+		PowerMockito.when(meldungenSpalteMock.neachsteFreieDatenZeileInSpielerNrSpalte())
+				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
 	}
 }
 
