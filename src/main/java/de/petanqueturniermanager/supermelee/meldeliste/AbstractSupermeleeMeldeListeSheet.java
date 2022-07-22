@@ -750,7 +750,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	@Override
-	public int letzteDatenZeile() throws GenerateException {
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		return meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 	}
 
@@ -833,5 +833,9 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	@Override
 	public int letzteZeileMitSpielerName() throws GenerateException {
 		return meldungenSpalte.letzteZeileMitSpielerName();
+	}
+
+	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
+		return meldungenSpalte.sucheLetzteZeileMitSpielerNummer();
 	}
 }

@@ -111,7 +111,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 		NumberCellValue numVal = NumberCellValue.from(meldeListe.getXSpreadSheet(),
 				Position.from(aktuelleSpieltagSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE));
 
-		int letzteDatenZeile = meldeListe.letzteDatenZeile();
+		int letzteDatenZeile = meldeListe.getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		for (int zeileCnt = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeileCnt <= letzteDatenZeile; zeileCnt++) {
 			SheetRunner.testDoCancelTask();

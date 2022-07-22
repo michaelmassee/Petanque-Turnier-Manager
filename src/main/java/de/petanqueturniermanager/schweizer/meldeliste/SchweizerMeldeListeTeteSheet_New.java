@@ -107,7 +107,7 @@ public class SchweizerMeldeListeTeteSheet_New extends AbstractSchweizerMeldeList
 	}
 
 	@Override
-	public int letzteDatenZeile() throws GenerateException {
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		// TODO Auto-generated method stub
 		return 0;
 	}
