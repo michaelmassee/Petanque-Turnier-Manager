@@ -563,4 +563,9 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
+	@Override
+	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
+		return meldungenSpalte.sucheLetzteZeileMitSpielerNummer();
+	}
+
 }

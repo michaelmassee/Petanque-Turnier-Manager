@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.03.2018 / Michael Massee
-**/
+ * Erstellung : 10.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.endrangliste;
 
@@ -528,6 +528,11 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	@Override
 	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		return spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
+	}
+
+	@Override
+	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
+		return spielerSpalte.sucheLetzteZeileMitSpielerNummer();
 	}
 
 	@Override
