@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.03.2018 / Michael Massee
-**/
+ * Erstellung : 10.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
@@ -431,6 +431,11 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	@Override
 	public int getErsteDatenZiele() {
 		return getSpielerSpalte().getErsteDatenZiele();
+	}
+
+	@Override
+	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
+		return getSpielerSpalte().sucheLetzteZeileMitSpielerNummer();
 	}
 
 	public RangListeSpalte getRangListeSpalte() {

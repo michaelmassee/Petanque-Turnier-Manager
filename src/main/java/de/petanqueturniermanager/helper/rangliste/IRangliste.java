@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.05.2018 / Michael Massee
-**/
+ * Erstellung : 10.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.rangliste;
 
@@ -21,6 +21,8 @@ public interface IRangliste extends ISheet {
 	int getLetzteSpalte() throws GenerateException;
 
 	int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException;
+
+	int sucheLetzteZeileMitSpielerNummer() throws GenerateException;
 
 	int getManuellSortSpalte() throws GenerateException;
 
