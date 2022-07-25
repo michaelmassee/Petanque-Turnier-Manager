@@ -3,12 +3,19 @@
  */
 package de.petanqueturniermanager.basesheet.konfiguration;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -29,9 +36,10 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	// Wird immer von Sheetrunner aufgerufen
 	@Override
 	public final void update() throws GenerateException {
-		// processBoxinfo("Update Konfiguration");
+		processBoxinfo("Update Konfiguration");
 		// validate SpielSystem
 		validateSpielSystem();
+		validateDocErstelltMitVersion();
 		updateTurnierSystemInDocument();
 		initPageStyles();
 		initPageStylesTurnierSystem();
@@ -61,9 +69,59 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 			TurnierSystem turnierSystemAusSheet = getTurnierSystem();
 			if (turnierSystemAusDocument != null && turnierSystemAusSheet.getId() != turnierSystemAusDocument.getId()) {
 				de.petanqueturniermanager.helper.msgbox.ProcessBox.from()
-						.fehler("Dokument wurde mit Turniersystem " + turnierSystemAusDocument + " erstellt.");
+						.fehler("Tabellenkalkulationsdokument wurde mit Turniersystem " + turnierSystemAusDocument
+								+ " erstellt.");
 				throw new GenerateException("Turniersystem '" + getTurnierSystem() + "' stimmt nicht mit Dokument '"
 						+ turnierSystemAusDocument + "' überein");
+			}
+		}
+	}
+
+	/**
+	 * Schreibt die Aktuelle Plugin Version im Dokument
+	 * 
+	 * @throws GenerateException
+	 */
+	public void setDocErstelltMitVersion() throws GenerateException {
+		DocumentHelper.setDocErstelltMitVersion(getWorkingSpreadsheet());
+	}
+
+	private void validateDocErstelltMitVersion() throws GenerateException {
+		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
+
+		TurnierSystem spielsystem = docPropHelper.getTurnierSystemAusDocument();
+
+		// haben wir ein Turnier Dokument ?
+		if (spielsystem != TurnierSystem.KEIN) {
+			// Property im Document vorhanden ?
+			String docVersion = docPropHelper.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION,
+					"unbekannt");
+			boolean versionDoMatch = false;
+			String pluginVersionNummer = ExtensionsHelper.from(getxContext()).getVersionNummer();
+			if (docVersion != null) {
+				versionDoMatch = StringUtils.compare(docVersion, pluginVersionNummer) == 0;
+			}
+
+			if (!versionDoMatch) {
+				getLogger().debug("Dokument Erstellt mit Version = " + docVersion);
+				getLogger().debug("Plugin Version = " + pluginVersionNummer);
+
+				String errMsg = "Dokument-Version '" + docVersion + "' stimmt nicht mit Plugin-Version '"
+						+ pluginVersionNummer + "' überein";
+
+				getLogger().warn("Das Turnier-Dokument wurde mit eine andere PTM Plugin-Version erstellt");
+				MessageBoxResult answer = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO_CANCEL)
+						.caption(errMsg)
+						.message("Achtung !! Das Turnier-Dokument wurde mit eine unterschiedliche"
+								+ " Turnier-Manager Plugin-Version erstellt.\n\nDie Version im Dokument Aktualisieren ?")
+						.show();
+
+				if (answer == MessageBoxResult.CANCEL) {
+					throw new GenerateException(errMsg);
+				}
+				if (answer == MessageBoxResult.YES) {
+					DocumentHelper.setDocErstelltMitVersion(getWorkingSpreadsheet());
+				}
 			}
 		}
 	}
