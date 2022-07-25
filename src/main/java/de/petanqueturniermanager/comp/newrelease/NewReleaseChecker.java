@@ -74,7 +74,7 @@ public class NewReleaseChecker {
 			boolean newRelease = checkForNewRelease(xContext);
 			if (newRelease) {
 				String latestVersionFromCacheFile = latestVersionFromCacheFile();
-				String newVer = "Neue Version von PétTurnMngr (" + latestVersionFromCacheFile + ") verfügbar.";
+				String newVer = "Neue Version von PTM (" + latestVersionFromCacheFile + ") verfügbar.";
 				ProcessBox.from().infoText(newVer);
 
 				GHRelease rel = readLatestReleaseFromCacheFile();
