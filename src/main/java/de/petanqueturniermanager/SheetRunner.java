@@ -1,7 +1,7 @@
 /**
-
-* Erstellung : 24.03.2018 / Michael Massee
-**/
+ * 
+ * Erstellung : 24.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager;
 
@@ -20,6 +20,7 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -119,6 +120,24 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	public SheetRunner backupDocumentAfterRun() {
 		backupDocumentAfterRun = true;
+		return this;
+	}
+
+	/**
+	 * prüft ob ein Turnier vorhanden. Wenn nicht dann Fehlermeldung und Exception. Abbruch.
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
+	public SheetRunner testTurnierVorhanden() throws GenerateException {
+		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(workingSpreadsheet)
+				.getTurnierSystemAusDocument();
+
+		if (turnierSystemAusDocument == TurnierSystem.KEIN) {
+			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption("Kein Turnier-Dokument").message("Kein Turnier vorhanden").show();
+			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
+		}
 		return this;
 	}
 
