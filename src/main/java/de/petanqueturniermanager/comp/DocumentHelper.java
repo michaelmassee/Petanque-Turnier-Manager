@@ -21,7 +21,13 @@ import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.text.XTextDocument;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 // https://api.libreoffice.org/examples/examples.html#Java_examples
 // https://wiki.openoffice.org/wiki/Documentation/DevGuide/OpenOffice.org_Developers_Guide
@@ -112,6 +118,24 @@ public class DocumentHelper {
 				| WrappedTargetException e) {
 			// ignore weil nicht wichtig wenn nicht funktioniert
 			// e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Speichere Plugin Version im Turnier-Dokument. Nur wenn Turnier-Dokument
+	 * 
+	 * @param workingSpreadsheet
+	 * @throws GenerateException
+	 */
+
+	public static void setDocErstelltMitVersion(WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
+		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
+		TurnierSystem spielsystem = docPropHelper.getTurnierSystemAusDocument();
+		// haben wir ein Turnier Dokument ?
+		if (spielsystem != TurnierSystem.KEIN) {
+			String pluginVersionNummer = ExtensionsHelper.from(workingSpreadsheet.getxContext()).getVersionNummer();
+			docPropHelper.setStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION, pluginVersionNummer);
+			ProcessBox.from().info("Speichere Plugin-Version '" + pluginVersionNummer + "' im Dokument.");
 		}
 	}
 

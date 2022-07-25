@@ -36,6 +36,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final Integer DEFAULT_HEADER__BACK_COLOR = Integer.valueOf("e6ebf4", 16);
 
 	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
+	public static final String KONFIG_PROP_ERSTELLT_MIT_VERSION = "Erstellt mit Version";
+
 	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
 	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
 	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER = "Meldeliste Header";

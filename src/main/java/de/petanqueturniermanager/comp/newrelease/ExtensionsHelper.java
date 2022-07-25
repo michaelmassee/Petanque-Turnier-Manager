@@ -55,7 +55,8 @@ public class ExtensionsHelper {
 		String verNr = null;
 		XPackageInformationProvider packageInformationProvider = getXPackageInformationProvider();
 		String[][] extensionList = packageInformationProvider.getExtensionList();
-		String[] pluginInfo = Arrays.asList(extensionList).stream().filter(extension -> extension[0].equals(EXTENSION_ID)).findFirst().orElse(null);
+		String[] pluginInfo = Arrays.asList(extensionList).stream()
+				.filter(extension -> extension[0].equals(EXTENSION_ID)).findFirst().orElse(null);
 		if (pluginInfo != null && pluginInfo.length > 0) {
 			verNr = pluginInfo[1];
 		}
@@ -67,7 +68,8 @@ public class ExtensionsHelper {
 	 */
 
 	public String getImageUrlDir() {
-		return StringUtils.appendIfMissing(getXPackageInformationProvider().getPackageLocation(EXTENSION_ID), "/") + "images/";
+		return StringUtils.appendIfMissing(getXPackageInformationProvider().getPackageLocation(EXTENSION_ID), "/")
+				+ "images/";
 	}
 
 }

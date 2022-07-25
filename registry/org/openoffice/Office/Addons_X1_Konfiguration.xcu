@@ -66,6 +66,21 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X1X4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Update document plugin version</value>
+									<value xml:lang="de">Update Dokument Plugin-Version</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_update_erstellt_mit_version</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							
+							
 						</node>
 					</node>
 					
