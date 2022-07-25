@@ -27,6 +27,7 @@ public class MeldeListeSheet_New extends AbstractSupermeleeMeldeListeSheet {
 				.create().isDidCreate()) {
 			SpielTagNr spielTag1 = new SpielTagNr(1);
 			setSpielTag(spielTag1);
+			getKonfigurationSheet().setDocErstelltMitVersion();
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
 			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
 			upDateSheet();

@@ -1,6 +1,6 @@
 /**
-* Erstellung : 03.05.2018 / Michael Massee
-**/
+ * Erstellung : 03.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
@@ -25,7 +25,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class AbstractSupermeleeMeldeListeSheetTest {
@@ -36,7 +35,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
-	SupermeleeTeamPaarungenSheet supermeleeTeamPaarungenMock;
+	//	SupermeleeTeamPaarungenSheet supermeleeTeamPaarungenMock;
 
 	@Before
 	public void setup() {
@@ -44,17 +43,12 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
-		supermeleeTeamPaarungenMock = PowerMockito.mock(SupermeleeTeamPaarungenSheet.class);
 
 		meldeSheet = new AbstractSupermeleeMeldeListeSheet(workingSpreadsheetMock) {
 
 			@Override
-			SupermeleeTeamPaarungenSheet initSupermeleeTeamPaarungenSheet() {
-				return supermeleeTeamPaarungenMock;
-			}
-
-			@Override
-			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(
+					WorkingSpreadsheet workingSpreadsheet) {
 				return konfigurationSheetMock;
 			}
 
@@ -100,9 +94,11 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 	private void setupReturn_from_getHeaderStringFromCell(List<String> headerList) {
 
-		Position headerPos = Position.from(meldeSheet.spieltagSpalte(SpielTagNr.from(1)), MeldeListeKonstanten.ZWEITE_HEADER_ZEILE);
+		Position headerPos = Position.from(meldeSheet.spieltagSpalte(SpielTagNr.from(1)),
+				MeldeListeKonstanten.ZWEITE_HEADER_ZEILE);
 		headerList.forEach(header -> {
-			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos)))).thenReturn(header);
+			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos))))
+					.thenReturn(header);
 			headerPos.spaltePlusEins();
 		});
 
