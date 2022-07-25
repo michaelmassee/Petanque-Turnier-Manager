@@ -1,6 +1,6 @@
 /**
-* Erstellung : 30.04.2018 / Michael Massee
-**/
+ * Erstellung : 30.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.sheet;
 
@@ -106,8 +106,11 @@ public class NewSheet extends BaseHelper {
 			turnierSheet = TurnierSheet.from(sheet, getWorkingSpreadsheet());
 			if (createNewIfExist) {
 				turnierSheet.setActiv();
-				MessageBoxResult result = MessageBox.from(getWorkingSpreadsheet().getxContext(), MessageBoxTypeEnum.WARN_YES_NO).caption("Erstelle " + sheetName)
-						.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?").forceOk(forceOkCreateNewWhenExist).show();
+				MessageBoxResult result = MessageBox
+						.from(getWorkingSpreadsheet().getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+						.caption("Erstelle " + sheetName)
+						.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?")
+						.forceOk(forceOkCreateNewWhenExist).show();
 				if (MessageBoxResult.YES != result) {
 					return this;
 				}
@@ -134,7 +137,8 @@ public class NewSheet extends BaseHelper {
 					PageStyleHelper.from(getISheet(), pageStyleDef).initDefaultFooter().create().applytoSheet();
 				} else {
 					// dann nur der default, mit copyright footer
-					PageStyleHelper.from(getISheet(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter().create().applytoSheet();
+					PageStyleHelper.from(getISheet(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter()
+							.create().applytoSheet();
 				}
 				didCreate = true;
 
@@ -152,6 +156,11 @@ public class NewSheet extends BaseHelper {
 
 	public boolean isDidCreate() {
 		return didCreate;
+	}
+
+	public NewSheet setActiv(boolean activ) {
+		setActiv = activ;
+		return this;
 	}
 
 	public NewSheet setActiv() {

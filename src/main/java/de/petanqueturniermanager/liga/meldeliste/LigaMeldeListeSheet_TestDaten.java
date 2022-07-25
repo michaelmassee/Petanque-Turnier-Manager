@@ -1,6 +1,6 @@
 /**
-* Erstellung : 24.03.2018 / Michael Massee
-**/
+ * Erstellung : 24.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.liga.meldeliste;
 
@@ -53,6 +53,7 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
+		getKonfigurationSheet().setDocErstelltMitVersion();
 		getKonfigurationSheet().setGruppennamen(LigaSpielPlanSheet_TestDaten.TEST_GRUPPE);
 		testNamenEinfuegen();
 	}

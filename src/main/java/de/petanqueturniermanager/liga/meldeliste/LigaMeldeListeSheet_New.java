@@ -1,6 +1,6 @@
 /**
-* Erstellung : 30.04.2018 / Michael Massee
-**/
+ * Erstellung : 30.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.liga.meldeliste;
 
@@ -21,7 +21,9 @@ public class LigaMeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).create()
+				.isDidCreate()) {
+			getKonfigurationSheet().setDocErstelltMitVersion();
 			upDateSheet();
 		}
 	}

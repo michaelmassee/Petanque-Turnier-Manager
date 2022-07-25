@@ -1,6 +1,6 @@
 /**
-* Erstellung : 24.03.2018 / Michael Massee
-**/
+ * Erstellung : 24.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
@@ -57,6 +57,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getKonfigurationSheet().setDocErstelltMitVersion();
 		meldeListe.setSpielTag(SpielTagNr.from(1));
 		meldeListe.setAktiveSpieltag(SpielTagNr.from(1));
 		meldeListe.setAktiveSpielRunde(SpielRundeNr.from(1));
