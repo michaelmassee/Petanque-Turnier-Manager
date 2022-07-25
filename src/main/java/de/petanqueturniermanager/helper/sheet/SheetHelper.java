@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -159,14 +160,17 @@ public class SheetHelper {
 		XSpreadsheets sheets = getSheets();
 		List<String> sheetNamesNotToRemoveList = java.util.Arrays.asList(sheetNamesNotToRemove);
 
+		List<String> notToRemoveVorhanden = sheetNamesNotToRemoveList.stream()
+				.filter(shName -> findByName(shName) != null).collect(Collectors.toList());
+
 		// Mindestens ein Sheet muss stehen bleiben
-		if (sheetNamesNotToRemoveList.isEmpty()) {
-			sheetNamesNotToRemoveList = java.util.Arrays.asList(new String[] { "leer" });
+		if (notToRemoveVorhanden.isEmpty()) {
+			notToRemoveVorhanden = java.util.Arrays.asList(new String[] { "leer" });
 			newIfNotExist("leer", (short) 1);
 		}
 
 		for (String sheetName : sheets.getElementNames()) {
-			if (!sheetNamesNotToRemoveList.contains(sheetName)) {
+			if (!notToRemoveVorhanden.contains(sheetName)) {
 				removeSheet(sheetName);
 			}
 		}
