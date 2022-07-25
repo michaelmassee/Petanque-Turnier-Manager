@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 package de.petanqueturniermanager.comp;
 
 import java.io.File;
@@ -17,6 +17,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.forme.korunde.CadrageSheet;
 import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -74,7 +75,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 	public PetanqueTurnierManagerImpl(final XComponentContext context) {
 		xContext = context;
 		PetanqueTurnierMngrSingleton.init(context);
-//		new NewReleaseChecker().udateNewReleaseInfo(context);
+		//		new NewReleaseChecker().udateNewReleaseInfo(context);
 	}
 
 	// -----------------------------------------------------------------------------------------------
@@ -162,7 +163,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		}
 	}
 
-	private boolean handleKonfiguration(String action, WorkingSpreadsheet workingSpreadsheet) {
+	private boolean handleKonfiguration(String action, WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
 		boolean didHandle = true;
 		if (!action.toLowerCase().startsWith("konfiguration")) {
 			return false;
@@ -191,6 +192,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 				// Modal Dialog
 				new FarbenDialog(workingSpreadsheet).createDialog();
 				break;
+			case "konfiguration_update_erstellt_mit_version":
+				// schreibe die aktuelle Plugin Version im Turnier Dokument
+				DocumentHelper.setDocErstelltMitVersion(workingSpreadsheet);
+				break;
 			default:
 				didHandle = false;
 			}
@@ -200,7 +205,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		return didHandle;
 	}
 
-	private boolean handleSuperMelee(String action, WorkingSpreadsheet workingSpreadsheet) {
+	private boolean handleSuperMelee(String action, WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
 		boolean didHandle = true;
 
 		switch (action) {
@@ -209,55 +214,57 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			new MeldeListeSheet_New(workingSpreadsheet).start();
 			break;
 		case "update_meldeliste":
-			new MeldeListeSheet_Update(workingSpreadsheet).start();
+			new MeldeListeSheet_Update(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "anmeldungen":
-			new AnmeldungenSheet(workingSpreadsheet).backUpDocument().start();
+			new AnmeldungenSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		case "teilnehmer":
-			new TielnehmerSheet(workingSpreadsheet).start();
+			new TielnehmerSheet(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "naechste_spieltag":
-			new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet).backUpDocument().start();
+			new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		case "meldeliste_testdaten":
 			new MeldeListeSheet_TestDaten(workingSpreadsheet).start();
 			break;
 		case "supermelee_teampaarungen":
-			new SupermeleeTeamPaarungenSheet(workingSpreadsheet).start();
+			new SupermeleeTeamPaarungenSheet(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		// ------------------------------
 		case "aktuelle_spielrunde":
-			new SpielrundeSheet_Update(workingSpreadsheet).backUpDocument().backupDocumentAfterRun().start();
+			new SpielrundeSheet_Update(workingSpreadsheet).testTurnierVorhanden().backUpDocument()
+					.backupDocumentAfterRun().start();
 			break;
 		case "naechste_spielrunde":
-			new SpielrundeSheet_Naechste(workingSpreadsheet).backUpDocument().backupDocumentAfterRun().start();
+			new SpielrundeSheet_Naechste(workingSpreadsheet).testTurnierVorhanden().backUpDocument()
+					.backupDocumentAfterRun().start();
 			break;
 		case "spielrunden_testdaten":
 			new SpielrundeSheet_TestDaten(workingSpreadsheet).start();
 			break;
 		// ------------------------------
 		case "spieltag_rangliste":
-			new SpieltagRanglisteSheet(workingSpreadsheet).backUpDocument().start();
+			new SpieltagRanglisteSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		case "spieltag_rangliste_sort":
-			new SpieltagRanglisteSheet_SortOnly(workingSpreadsheet).start();
+			new SpieltagRanglisteSheet_SortOnly(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "SpieltagRanglisteSheet_TestDaten":
 			new SpieltagRanglisteSheet_TestDaten(workingSpreadsheet).start();
 			break;
 		// ------------------------------
 		case "supermelee_endrangliste":
-			new EndranglisteSheet(workingSpreadsheet).backUpDocument().start();
+			new EndranglisteSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		case "supermelee_endrangliste_sort":
-			new EndranglisteSheet_Sort(workingSpreadsheet).start();
+			new EndranglisteSheet_Sort(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "supermelee_validate":
-			new SpielrundeSheet_Validator(workingSpreadsheet).start();
+			new SpielrundeSheet_Validator(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "supermelee_spieltagrangliste_validate":
-			new SpieltagRangliste_Validator(workingSpreadsheet).start();
+			new SpieltagRangliste_Validator(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		default:
 			didHandle = false;
@@ -283,7 +290,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		return didHandle;
 	}
 
-	private boolean handleLiga(String action, WorkingSpreadsheet workingSpreadsheet) {
+	private boolean handleLiga(String action, WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
 		boolean didHandle = true;
 		if (!action.toLowerCase().startsWith("liga")) {
 			return false;
@@ -296,23 +303,24 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		// ------------------------------
 		case "liga_update_meldeliste":
-			new LigaMeldeListeSheet_Update(workingSpreadsheet).backUpDocument().start();
+			new LigaMeldeListeSheet_Update(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		// ------------------------------
 		case "liga_testdaten_meldeliste":
 			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_spielplan":
-			new LigaSpielPlanSheet(workingSpreadsheet).backUpDocument().backupDocumentAfterRun().start();
+			new LigaSpielPlanSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun()
+					.start();
 			break;
 		case "liga_rangliste":
-			new LigaRanglisteSheet(workingSpreadsheet).backUpDocument().start();
+			new LigaRanglisteSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		case "liga_rangliste_sortieren":
-			new LigaRanglisteSheetSortOnly(workingSpreadsheet).start();
+			new LigaRanglisteSheetSortOnly(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "liga_direktvergleich":
-			new LigaRanglisteDirektvergleichSheet(workingSpreadsheet).start();
+			new LigaRanglisteDirektvergleichSheet(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "liga_spielplan_testdaten":
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, false).start();
@@ -321,7 +329,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_export":
-			new LigaMeldeListeSheet_Export(workingSpreadsheet).start();
+			new LigaMeldeListeSheet_Export(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		default:
 			didHandle = false;
