@@ -1,6 +1,6 @@
 /**
-* Erstellung : 24.03.2018 / Michael Massee
-**/
+ * Erstellung : 24.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper;
 
@@ -30,7 +30,6 @@ import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.Any;
 import com.sun.star.uno.Type;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
@@ -99,8 +98,7 @@ public class DocumentPropertiesHelper {
 		try {
 			if (source != null) {
 				XModel xModel = Lo.qi(XModel.class, source);
-				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class,
-						xModel);
+				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
 				// null dann wenn kein XSpreadsheetDocument
 				if (xSpreadsheetDocument != null) {
 					PROPLISTE.remove(xSpreadsheetDocument.hashCode());
@@ -182,8 +180,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	private XPropertyContainer getXPropertyContainer() {
-		XDocumentPropertiesSupplier xps = Lo.qi(XDocumentPropertiesSupplier.class,
-				xSpreadsheetDocument);
+		XDocumentPropertiesSupplier xps = Lo.qi(XDocumentPropertiesSupplier.class, xSpreadsheetDocument);
 		XDocumentProperties xp = xps.getDocumentProperties();
 		return xp.getUserDefinedProperties();
 	}
@@ -287,5 +284,4 @@ public class DocumentPropertiesHelper {
 	public boolean isFirstLoad() {
 		return firstLoad;
 	}
-
 }
