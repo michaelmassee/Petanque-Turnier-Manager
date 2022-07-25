@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.05.2018 / Michael Massee
-**/
+ * Erstellung : 26.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.msgbox;
 
@@ -69,6 +69,7 @@ public class MessageBox extends AbstractMessageBox {
 			switch (type) {
 			case QUESTION_YES_NO:
 			case WARN_YES_NO:
+			case WARN_YES_NO_CANCEL:
 				return MessageBoxResult.YES;
 			case QUESTION_OK_CANCEL:
 			case WARN_OK_CANCEL:
@@ -100,6 +101,9 @@ public class MessageBox extends AbstractMessageBox {
 			break;
 		case WARN_YES_NO:
 			xMessageBox = newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO);
+			break;
+		case WARN_YES_NO_CANCEL:
+			xMessageBox = newXMessageBox(MessageBoxType.WARNINGBOX, MessageBoxButtons.BUTTONS_YES_NO_CANCEL);
 			break;
 		case ERROR_OK:
 			xMessageBox = newXMessageBox(MessageBoxType.ERRORBOX, MessageBoxButtons.BUTTONS_OK);
