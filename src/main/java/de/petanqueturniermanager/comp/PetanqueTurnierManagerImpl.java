@@ -26,7 +26,9 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
@@ -321,12 +323,12 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		case "jgj_rangliste":
 			new JGJRanglisteSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
-		//		case "jgj_rangliste_sortieren":
-		//			new LigaRanglisteSheetSortOnly(workingSpreadsheet).testTurnierVorhanden().start();
-		//			break;
-		//		case "jgj_direktvergleich":
-		//			new LigaRanglisteDirektvergleichSheet(workingSpreadsheet).testTurnierVorhanden().start();
-		//			break;
+		case "jgj_rangliste_sortieren":
+			new JGJRanglisteSheetSortOnly(workingSpreadsheet).testTurnierVorhanden().start();
+			break;
+		case "jgj_direktvergleich":
+			new JGJRanglisteDirektvergleichSheet(workingSpreadsheet).testTurnierVorhanden().start();
+			break;
 
 		default:
 			didHandle = false;
