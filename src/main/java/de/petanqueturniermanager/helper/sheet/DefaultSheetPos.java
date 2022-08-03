@@ -1,6 +1,6 @@
 /**
-* Erstellung : 13.05.2018 / Michael Massee
-**/
+ * Erstellung : 13.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.sheet;
 
@@ -20,5 +20,9 @@ public class DefaultSheetPos {
 	public static final short LIGA_WORK = 2; // Liga Spielplan
 	public static final short LIGA_ENDRANGLISTE = 3;
 	public static final short LIGA_DIREKTEVERGLEICH = 4;
+
+	public static final short JGJ_WORK = 2; // Jeder gegen Jeden Spielplan
+	public static final short JGJ_ENDRANGLISTE = 3;
+	public static final short JGJ_DIREKTEVERGLEICH = 4;
 
 }

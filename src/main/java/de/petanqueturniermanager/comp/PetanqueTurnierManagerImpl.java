@@ -24,6 +24,10 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
@@ -132,6 +136,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 
 				if (!didHandle) {
 					didHandle = handleSchweizer(action, currentSpreadsheet);
+				}
+
+				if (!didHandle) {
+					didHandle = handleJerGegenJeden(action, currentSpreadsheet);
 				}
 
 				if (!didHandle) {
@@ -284,6 +292,42 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		case "koRundeAB":
 			new KoGruppeABSheet(workingSpreadsheet).start();
 			break;
+		default:
+			didHandle = false;
+		}
+		return didHandle;
+	}
+
+	private boolean handleJerGegenJeden(String action, WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
+		boolean didHandle = true;
+		if (!action.toLowerCase().startsWith("jgj")) {
+			return false;
+		}
+
+		switch (action) {
+		// ------------------------------
+		case "jgj_neue_meldeliste":
+			new JGJMeldeListeSheet_New(workingSpreadsheet).start();
+			break;
+		// ------------------------------
+		case "jgj_update_meldeliste":
+			new JGJMeldeListeSheet_Update(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
+			break;
+		// ------------------------------
+		case "jgj_spielplan":
+			new JGJSpielPlanSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun()
+					.start();
+			break;
+		case "jgj_rangliste":
+			new JGJRanglisteSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
+			break;
+		//		case "jgj_rangliste_sortieren":
+		//			new LigaRanglisteSheetSortOnly(workingSpreadsheet).testTurnierVorhanden().start();
+		//			break;
+		//		case "jgj_direktvergleich":
+		//			new LigaRanglisteDirektvergleichSheet(workingSpreadsheet).testTurnierVorhanden().start();
+		//			break;
+
 		default:
 			didHandle = false;
 		}

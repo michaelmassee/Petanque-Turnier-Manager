@@ -16,7 +16,7 @@
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
 					<!-- Liga Jeder gegen Jede -->
-					<node oor:name="A4" oor:op="fuse">
+					<node oor:name="A3" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value/>
 						</prop>
@@ -24,8 +24,8 @@
 							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="en">Round Robin</value>
-							<value xml:lang="de">Jeder gegen Jeden</value>
+							<value xml:lang="en">Liga</value>
+							<value xml:lang="de">Liga</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -33,87 +33,106 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<node oor:name="A4A1" oor:op="replace">
+							<node oor:name="A3A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">new Entrylist</value>
 									<value xml:lang="de">Neue Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_neue_meldeliste</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_neue_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
-							<node oor:name="A4A2" oor:op="replace">
+							<node oor:name="A3A2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_update_meldeliste</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_update_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A3" oor:op="replace">
+							<node oor:name="A3A3" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A4" oor:op="replace">
+							<node oor:name="A3A4" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Gameplan</value>
 									<value xml:lang="de">Spielplan</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_spielplan</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_spielplan</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 							
-							<node oor:name="A4A5" oor:op="replace">
+							<node oor:name="A3A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_rangliste</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_rangliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>	
-							<node oor:name="A4A6" oor:op="replace">
+							<node oor:name="A3A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_rangliste_sortieren</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_rangliste_sortieren</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 							
-							<node oor:name="A4A7" oor:op="replace">
+							<node oor:name="A3A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Directcomparison</value>
 									<value xml:lang="de">Direktvergleich</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_direktvergleich</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_direktvergleich</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>	
+							
+							<node oor:name="A3A8" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							
+							<node oor:name="A3A9" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Export PDF and HTML</value>
+									<value xml:lang="de">Export PDF und HTML</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_export</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>								
 							
 						</node>
 					</node>
