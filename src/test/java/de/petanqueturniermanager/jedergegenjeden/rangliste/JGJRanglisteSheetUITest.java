@@ -2,24 +2,13 @@ package de.petanqueturniermanager.jedergegenjeden.rangliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
@@ -27,9 +16,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpalte;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUITest;
@@ -99,46 +86,19 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 		//writeJGJDirektVergleichToJson(direktVergleich);
 		validateJGJDirektVergleichToJson(direktVergleich);
 
-		waitEnter();
+		// waitEnter();
 	}
 
 	private void validateJGJRanglisteToJson(JGJRanglisteSheet ranglist) throws GenerateException {
 		logger.info("validateJGJRanglisteToJson");
-
 		RangeData jgjRangliste = getRanglisteRange(ranglist).getDataFromRange();
-
 		InputStream jsonFile = JGJRanglisteSheetUITest.class.getResourceAsStream("JGJRangliste.json");
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		RangeData refJGJRangliste = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)), RangeData.class);
-
-		assertThat(jgjRangliste).hasSameSizeAs(refJGJRangliste);
-
-		int idx = 0;
-		// jede zeile vergleichen, wegen fehlermeldung 
-		for (RowData data : jgjRangliste) {
-			List<String> expected = refJGJRangliste.get(idx).stream().map(c -> c.getStringVal())
-					.collect(Collectors.toList());
-			logger.info("Validate Zeile :" + expected);
-			assertThat(data).extracting(CellData::getStringVal).containsExactlyElementsOf(expected);
-			idx++;
-		}
+		validateWithJson(jgjRangliste, jsonFile);
 	}
 
 	private void writeJGJRanglisteToJson(JGJRanglisteSheet ranglist) throws GenerateException {
 		RangeData vertikalErgRange = getRanglisteRange(ranglist).getDataFromRange();
-
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-		try {
-			File jsoFile = new File("/home/michael/tmp/JGJRangliste.json");
-			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(jsoFile))) {
-				fileStream.write(gson.toJson(vertikalErgRange));
-			}
-		} catch (JsonIOException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		writeToJson("JGJRangliste.json", vertikalErgRange);
 	}
 
 	private RangeHelper getRanglisteRange(JGJRanglisteSheet ranglist) throws GenerateException {
@@ -152,41 +112,14 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
 	private void validateJGJDirektVergleichToJson(JGJRanglisteDirektvergleichSheet ranglist) throws GenerateException {
 		logger.info("validateJGJDirektVergleichToJson");
-
 		RangeData jgjRangliste = getDirektRange(ranglist).getDataFromRange();
-
 		InputStream jsonFile = JGJRanglisteSheetUITest.class.getResourceAsStream("JGJDirektVergleich.json");
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		RangeData refJGJRangliste = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)), RangeData.class);
-
-		assertThat(jgjRangliste).hasSameSizeAs(refJGJRangliste);
-
-		int idx = 0;
-		// jede zeile vergleichen, wegen fehlermeldung 
-		for (RowData data : jgjRangliste) {
-			List<String> expected = refJGJRangliste.get(idx).stream().map(c -> c.getStringVal())
-					.collect(Collectors.toList());
-			logger.info("Validate Zeile :" + expected);
-			assertThat(data).extracting(CellData::getStringVal).containsExactlyElementsOf(expected);
-			idx++;
-		}
+		validateWithJson(jgjRangliste, jsonFile);
 	}
 
 	private void writeJGJDirektVergleichToJson(JGJRanglisteDirektvergleichSheet ranglist) throws GenerateException {
 		RangeData vertikalErgRange = getDirektRange(ranglist).getDataFromRange();
-
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-		try {
-			File jsoFile = new File("/home/michael/tmp/JGJDirektVergleich.json");
-			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(jsoFile))) {
-				fileStream.write(gson.toJson(vertikalErgRange));
-			}
-		} catch (JsonIOException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		writeToJson("JGJDirektVergleich.json", vertikalErgRange);
 	}
 
 	private RangeHelper getDirektRange(JGJRanglisteDirektvergleichSheet ranglist) throws GenerateException {
