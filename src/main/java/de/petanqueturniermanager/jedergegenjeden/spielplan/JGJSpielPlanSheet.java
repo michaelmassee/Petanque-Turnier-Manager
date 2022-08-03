@@ -59,8 +59,6 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	private static final int SPIEL_NR_SPALTE = 0; // Spalte A
 	private static final int NAME_A_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
-	//	public static final int PUNKTE_A_SPALTE = NAME_B_SPALTE + 1;
-	//	public static final int PUNKTE_B_SPALTE = PUNKTE_A_SPALTE + 1;
 	public static final int SPIELE_A_SPALTE = NAME_B_SPALTE + 1;
 	public static final int SPIELE_B_SPALTE = SPIELE_A_SPALTE + 1;
 	public static final int SPIELPNKT_A_SPALTE = SPIELE_B_SPALTE + 1;

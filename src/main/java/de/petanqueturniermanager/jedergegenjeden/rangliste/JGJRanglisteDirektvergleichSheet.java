@@ -56,8 +56,8 @@ public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private LigaSpielPlan spielPlan;
 
-	private static final int ERSTE_DATEN_ZEILE = 1; // Zeile 2
-	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
+	public static final int ERSTE_DATEN_ZEILE = 1; // Zeile 2
+	public static final int TEAM_NR_SPALTE = 0; // Spalte A=0
 	public static final int TEAM_NR_HEADER_ZEILE = 0; // zeile 1
 	public static final int ERSTE_SPALTE_DIREKTVERGLEICH = 2;
 
@@ -125,7 +125,7 @@ public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet
 		printBereichDefinieren(lastPos.getPos());
 	}
 
-	private int anzTeams() throws GenerateException {
+	public int anzTeams() throws GenerateException {
 		TeamMeldungen alleMeldungen = meldeListe.getAlleMeldungen();
 		return alleMeldungen.getMeldungen().size();
 	}

@@ -37,6 +37,12 @@ public class RangeData extends ArrayList<RowData> {
 		}).collect(Collectors.toList()));
 	}
 
+	public void addData(Object[][] data) {
+		addAll(Arrays.stream(checkNotNull(data)).map(rowdata -> {
+			return new RowData(rowdata);
+		}).collect(Collectors.toList()));
+	}
+
 	public void addNewSpalte(String val) {
 		for (RowData rowdata : this) {
 			rowdata.add(new CellData(val));
