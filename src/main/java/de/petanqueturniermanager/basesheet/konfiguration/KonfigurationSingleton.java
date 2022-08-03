@@ -10,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpalte;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
@@ -39,7 +40,10 @@ public class KonfigurationSingleton {
 					return SuperMeleePropertiesSpalte.KONFIG_PROPERTIES;
 				case SCHWEIZER:
 					return SchweizerPropertiesSpalte.KONFIG_PROPERTIES;
+				case JGJ:
+					return JGJPropertiesSpalte.KONFIG_PROPERTIES;
 				default:
+					logger.error("TurnierSystem ungültig " + turnierSystem.getBezeichnung());
 					break;
 				}
 			}
@@ -55,7 +59,8 @@ public class KonfigurationSingleton {
 	 */
 	private static TurnierSystem getTurnierSystem(WorkingSpreadsheet currentSpreadsheet) {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(currentSpreadsheet);
-		int turniersystemId = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.KEIN.getId());
+		int turniersystemId = docPropHelper.getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				TurnierSystem.KEIN.getId());
 		TurnierSystem turnierSystem = TurnierSystem.findById(turniersystemId);
 		return turnierSystem;
 	}
