@@ -22,8 +22,7 @@ public class LigaMeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).create()
-				.isDidCreate()) {
-			getKonfigurationSheet().setDocErstelltMitVersion();
+				.setDocVersionWhenNew().isDidCreate()) {
 			upDateSheet();
 		}
 	}
