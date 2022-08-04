@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -39,6 +40,7 @@ public class NewSheet extends BaseHelper {
 	private XSpreadsheet sheet = null;
 	private boolean showGrid = true;
 	private boolean createNewIfExist = true;
+	private boolean setDocVersionWhenNew = false;
 
 	private NewSheet(ISheet iSheet, String sheetName) {
 		super(iSheet);
@@ -91,6 +93,11 @@ public class NewSheet extends BaseHelper {
 		return this;
 	}
 
+	public NewSheet setDocVersionWhenNew() {
+		setDocVersionWhenNew = true;
+		return this;
+	}
+
 	/**
 	 *
 	 * @return
@@ -123,6 +130,11 @@ public class NewSheet extends BaseHelper {
 		if (sheet == null) {
 			try {
 				getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
+
+				if (setDocVersionWhenNew) {
+					DocumentHelper.setDocErstelltMitVersion(getWorkingSpreadsheet());
+				}
+
 				sheet = sheetHelper.findByName(sheetName);
 				turnierSheet = TurnierSheet.from(sheet, getWorkingSpreadsheet());
 				if (!showGrid) {
