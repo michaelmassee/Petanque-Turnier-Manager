@@ -1,6 +1,6 @@
 /**
-* Erstellung : 27.03.2018 / Michael Massee
-**/
+ * Erstellung : 27.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.position;
 
@@ -26,22 +26,24 @@ public class RangePosition {
 	}
 
 	/**
-	 * @param rangePos
-	 * @return
+	 * clone end und start Position
 	 */
+	public static RangePosition from(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
+		return new RangePosition(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
+	}
+
 	public static RangePosition from(RangePosition rangePos) {
 		checkNotNull(rangePos);
 		return from(rangePos.getStart(), rangePos.getEnde());
 	}
 
+	/**
+	 * clone Position
+	 */
 	public static RangePosition from(AbstractPosition<?> start, AbstractPosition<?> ende) {
 		checkNotNull(start);
 		checkNotNull(ende);
-		return new RangePosition(start, ende);
-	}
-
-	public static RangePosition from(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
-		return from(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
+		return from(start.getSpalte(), start.getZeile(), ende.getSpalte(), ende.getZeile());
 	}
 
 	public static RangePosition from(int startSpalte, int startZeile, AbstractPosition<?> ende) {
@@ -49,7 +51,7 @@ public class RangePosition {
 	}
 
 	public static RangePosition from(AbstractPosition<?> start, int endeSpalte, int endeZeile) {
-		return from(start, Position.from(endeSpalte, endeZeile));
+		return from(start.getSpalte(), start.getZeile(), endeSpalte, endeZeile);
 	}
 
 	/**
@@ -89,6 +91,26 @@ public class RangePosition {
 
 	public int getEndeZeile() {
 		return ende.getZeile();
+	}
+
+	public RangePosition endeZeile(int line) {
+		ende.setZeile(line);
+		return this;
+	}
+
+	public RangePosition endeSpalte(int spalte) {
+		ende.setSpalte(spalte);
+		return this;
+	}
+
+	public RangePosition starZeile(int line) {
+		start.setZeile(line);
+		return this;
+	}
+
+	public RangePosition startSpalte(int spalte) {
+		start.setSpalte(spalte);
+		return this;
 	}
 
 	public int getEndeSpalte() {
