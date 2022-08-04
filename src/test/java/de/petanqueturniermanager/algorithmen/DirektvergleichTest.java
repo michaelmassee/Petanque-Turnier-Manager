@@ -18,7 +18,7 @@ public class DirektvergleichTest {
 		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 } };
 		int[][] spielpunkte = { { 1, 4 }, { 1, 4 }, { 40, 53 }, { 1, 4 }, { 20, 65 } };
 
-		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, spielpunkte, siege);
+		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, siege, spielpunkte);
 		DirektvergleichResult resultCalc = vrgl.calc();
 
 		assertThat(resultCalc).isEqualTo(DirektvergleichResult.GEWONNEN);
@@ -33,7 +33,7 @@ public class DirektvergleichTest {
 		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 } };
 		int[][] spielpunkte = { { 1, 4 }, { 1, 4 }, { 40, 53 }, { 1, 4 }, { 20, 65 } };
 
-		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, spielpunkte, siege);
+		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, siege, spielpunkte);
 		DirektvergleichResult resultCalc = vrgl.calc();
 
 		assertThat(resultCalc).isEqualTo(DirektvergleichResult.VERLOREN);
@@ -48,7 +48,7 @@ public class DirektvergleichTest {
 		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 3, 2 } };
 		int[][] spielpunkte = { { 1, 1 }, { 1, 1 }, { 1, 1 }, { 1, 4 }, { 1, 1 } };
 
-		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, spielpunkte, siege);
+		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, siege, spielpunkte);
 		DirektvergleichResult resultCalc = vrgl.calc();
 
 		assertThat(resultCalc).isEqualTo(DirektvergleichResult.GEWONNEN);

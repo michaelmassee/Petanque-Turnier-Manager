@@ -18,7 +18,7 @@ public class Direktvergleich {
 	private final int[][] siege;
 	private final int[][] spielpunkte;
 
-	public Direktvergleich(int teamA, int teamB, int[][] paarungen, int[][] spielpunkte, int[][] siege) {
+	public Direktvergleich(int teamA, int teamB, int[][] paarungen, int[][] siege, int[][] spielpunkte) {
 		this.teamA = teamA;
 		this.teamB = teamB;
 		this.paarungen = Objects.requireNonNull(paarungen);
