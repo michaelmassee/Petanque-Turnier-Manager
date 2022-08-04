@@ -53,7 +53,6 @@ public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
 
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
-		getKonfigurationSheet().setDocErstelltMitVersion();
 		getKonfigurationSheet().setGruppennamen(LigaSpielPlanSheet_TestDaten.TEST_GRUPPE);
 		testNamenEinfuegen();
 	}
