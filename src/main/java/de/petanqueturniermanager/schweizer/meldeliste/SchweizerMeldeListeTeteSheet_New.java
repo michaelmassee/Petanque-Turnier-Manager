@@ -30,8 +30,8 @@ public class SchweizerMeldeListeTeteSheet_New extends AbstractSchweizerMeldeList
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).create()
-				.setDocVersionWhenNew().isDidCreate()) {
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
+				.setDocVersionWhenNew().create().isDidCreate()) {
 			// upDateSheet();
 		}
 	}
