@@ -54,7 +54,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile > ERSTE_DATEN_ZEILE) { // daten vorhanden
-			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
+			RangePosition rangeToSort = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE,
+					meldeListe.letzteSpielTagSpalte(), letzteSpielZeile);
 			SortHelper.from(meldeListe, rangeToSort).spalteToSort(spalteNr).aufSteigendSortieren(isAscending).doSort();
 		}
 	}
@@ -82,21 +83,27 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		int spielrNr;
 		String spielerName;
-		NumberCellValue errCelVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE)).setCharColor(ColorHelper.CHAR_COLOR_RED);
+		NumberCellValue errCelVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
+				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
-		StringCellValue errStrCelVal = StringCellValue.from(xSheet, Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE))
+		StringCellValue errStrCelVal = StringCellValue
+				.from(xSheet,
+						Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
 		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			// -------------------
 			// Spieler nr testen
 			// -------------------
-			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
+			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
+					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr > 0) {
 				if (spielrNrInSheet.contains(spielrNr)) {
 					// RED Color
-					meldeListe.getSheetHelper().setValInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
-					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr + " ist doppelt in der Meldeliste !!!");
+					meldeListe.getSheetHelper()
+							.setValInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
+					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr
+							+ " ist doppelt in der Meldeliste !!!");
 				}
 				spielrNrInSheet.add(spielrNr);
 			} else {
@@ -109,14 +116,16 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			// -------------------
 			// Supermelee hat nur ein name spalte
 			// wird trim gemacht
-			spielerName = meldeListe.getSheetHelper().getTextFromCell(xSheet, Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerZeilecntr));
+			spielerName = meldeListe.getSheetHelper().getTextFromCell(xSheet,
+					Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerZeilecntr));
 
 			if (StringUtils.isNotEmpty(spielerName)) {
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
 					// RED Color
-					meldeListe.getSheetHelper().setStringValueInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
-					throw new GenerateException(
-							"Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName + " ist doppelt in der Meldeliste. Zeile:" + spielerZeilecntr);
+					meldeListe.getSheetHelper()
+							.setStringValueInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
+					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName
+							+ " ist doppelt in der Meldeliste. Zeile:" + spielerZeilecntr);
 				}
 				spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 			}
@@ -135,7 +144,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return NewSheet.from(meldeListe, SHEETNAME).useIfExist().hideGrid().pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
+		return NewSheet.from(meldeListe, SHEETNAME).setDocVersionWhenNew().useIfExist().hideGrid()
+				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
 	}
 
 	public int getSpielerNameSpalte() {
@@ -165,7 +175,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		if (letzteZeileMitSpielerName > 0) {
 			for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
-				Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerNrZeilecntr);
+				Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(),
+						spielerNrZeilecntr);
 				String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
 				if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
 					// nr ohne spieler namen entfernen
@@ -178,8 +189,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
-		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), 999).getAddressWith$();
-		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress + ";2;0)";
+		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), 999)
+				.getAddressWith$();
+		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
+				+ ";2;0)";
 	}
 
 	/**
@@ -190,8 +203,9 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * @throws GenerateException
 	 */
 
-	public IMeldungen<MLD_LIST_TYPE, MLDTYPE> getMeldungen(final SpielTagNr spieltag, final List<SpielrundeGespielt> spielrundeGespielt,
-			IMeldungen<MLD_LIST_TYPE, MLDTYPE> meldungen) throws GenerateException {
+	public IMeldungen<MLD_LIST_TYPE, MLDTYPE> getMeldungen(final SpielTagNr spieltag,
+			final List<SpielrundeGespielt> spielrundeGespielt, IMeldungen<MLD_LIST_TYPE, MLDTYPE> meldungen)
+			throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
 		checkNotNull(meldungen, "meldungen == null");
 
@@ -202,7 +216,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			int spieltagSpalte = spieltagSpalte(spieltag);
 
 			// Use getDataArray to get an Array off all Spieler bis SpieltagSpalte
-			RangePosition rangebisSpieltagSpalte = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, spieltagSpalte, letzteZeile);
+			RangePosition rangebisSpieltagSpalte = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE,
+					spieltagSpalte, letzteZeile);
 			RangeData meldungenDaten = RangeHelper.from(meldeListe, rangebisSpieltagSpalte).getDataFromRange();
 
 			// 0 = nr
@@ -247,7 +262,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		doSort(SPIELER_NR_SPALTE, false); // hoechste nummer oben, ohne nummer nach unten
 
 		int letzteSpielerNr = 0;
-		int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
+		int spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
+				Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
 		if (spielrNr > -1) {
 			letzteSpielerNr = spielrNr;
 		}
@@ -258,9 +274,11 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		// lücken füllen
 		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));
 		for (int spielerZeilecntr = ersteZeileOhneNummer; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
-			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
+			spielrNr = meldeListe.getSheetHelper().getIntFromCell(xSheet,
+					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr == -1) {
-				meldeListe.getSheetHelper().setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
+				meldeListe.getSheetHelper()
+						.setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
 		// spieler nach Alphabet sortieren
@@ -273,9 +291,10 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 	public void insertTurnierSystemInHeader(TurnierSystem turnierSystem) throws GenerateException {
 		// oben links
-		meldeListe.getSheetHelper()
-				.setStringValueInCell(StringCellValue.from(getXSpreadSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung()).setEndPosMergeSpaltePlus(1)
-						.setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP).setShrinkToFit(true).setCharColor("00599d"));
+		meldeListe.getSheetHelper().setStringValueInCell(StringCellValue
+				.from(getXSpreadSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung())
+				.setEndPosMergeSpaltePlus(1).setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT)
+				.setVertJustify(CellVertJustify2.TOP).setShrinkToFit(true).setCharColor("00599d"));
 	}
 
 }
