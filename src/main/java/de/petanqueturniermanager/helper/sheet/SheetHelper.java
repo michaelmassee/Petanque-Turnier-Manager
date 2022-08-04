@@ -66,10 +66,11 @@ public class SheetHelper {
 
 	private static final Logger logger = LogManager.getLogger(SheetHelper.class);
 
+	// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN",
-			"ISOKALENDERWOCHE" };
-	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF",
-			"ISOWEEKNUM" };
+			"ISOKALENDERWOCHE", "ISTZAHL" };
+	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF", "ISOWEEKNUM",
+			"ISNUMBER" };
 
 	private final WorkingSpreadsheet currentSpreadsheet;
 

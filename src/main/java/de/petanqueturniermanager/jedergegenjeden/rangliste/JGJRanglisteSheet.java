@@ -127,7 +127,7 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!getAlleMeldungen().isValid()) {
 			processBoxinfo("Abbruch, ungültige Anzahl von Melungen.");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue JGJ-SpielPlan")
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neuer JGJ-SpielPlan")
 					.message("Ungültige anzahl von Melungen").show();
 			return;
 		}
@@ -362,7 +362,9 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 			for (int rndCnt = 0; rndCnt < anzRunden; rndCnt++) {
 				Position punktePlusPos = Position
 						.from(ERSTE_SPIELTAG_SPALTE + summeSpalte + (rndCnt * ANZ_RUNDEN_SPALTEN), ERSTE_DATEN_ZEILE);
-				summenFormulaSummeStr += punktePlusPos.getAddress() + ((rndCnt + 1 < anzRunden) ? "+" : "");
+				// =WENN(ISTZAHL(F5);F5;0)
+				summenFormulaSummeStr += "WENN(ISTZAHL(" + punktePlusPos.getAddress() + ");"
+						+ punktePlusPos.getAddress() + ";0)" + ((rndCnt + 1 < anzRunden) ? "+" : "");
 			}
 			StringCellValue summenFormulaSumme = StringCellValue.from(getXSpreadSheet()).setPos(summePos)
 					.setFillAutoDownZeilePlus(autoFillDownZeilePlus).setValue(summenFormulaSummeStr)
