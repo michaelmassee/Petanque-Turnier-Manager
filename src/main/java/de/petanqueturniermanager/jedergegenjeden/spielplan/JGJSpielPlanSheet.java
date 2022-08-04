@@ -38,7 +38,6 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.model.LigaSpielPlan;
-import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
@@ -59,9 +58,7 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	private static final int SPIEL_NR_SPALTE = 0; // Spalte A
 	private static final int NAME_A_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
-	public static final int SPIELE_A_SPALTE = NAME_B_SPALTE + 1;
-	public static final int SPIELE_B_SPALTE = SPIELE_A_SPALTE + 1;
-	public static final int SPIELPNKT_A_SPALTE = SPIELE_B_SPALTE + 1;
+	public static final int SPIELPNKT_A_SPALTE = NAME_B_SPALTE + 1;
 	public static final int SPIELPNKT_B_SPALTE = SPIELPNKT_A_SPALTE + 1;
 
 	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
@@ -72,6 +69,8 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	// Arbeitsspalten
 	public static final int TEAM_A_NR_SPALTE = 14; // Zeile 0
 	public static final int TEAM_B_NR_SPALTE = TEAM_A_NR_SPALTE + 1; // Zeile 0
+	public static final int SPIELE_A_SPALTE = TEAM_A_NR_SPALTE - 2;
+	public static final int SPIELE_B_SPALTE = SPIELE_A_SPALTE + 1;
 
 	private final JGJMeldeListeSheet_Update meldeListe;
 
@@ -130,10 +129,10 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 		List<List<TeamPaarung>> spielPlanRRunde = ligaSpielPlan.flipTeams().getSpielPlanClone();
 
 		insertDatenHeaderUndSpalteBreite();
-		insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde);
 		insertSpieltageDaten(spielPlanHRunde);
-		insertFormulaTeamNamen();
 		insertFormulaPunkte();
+		insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde);
+		insertFormulaTeamNamen();
 		formatieren(spielPlanHRunde);
 		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
@@ -171,10 +170,10 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 				.setValue(GlobalImpl.FORMAT_PTM_STRING_PROPERTY(LigaPropertiesSpalte.KONFIG_PROP_NAME_GRUPPE))
 				.spalte(NAME_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
+		//		getSheetHelper().setStringValueInCell(
+		//				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
-		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("SpPunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue("Spielpunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
 		ColumnProperties colProp = ColumnProperties.from().setWidth(MELDUNG_NAME_WIDTH);
@@ -184,10 +183,12 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("Team B").spalte(NAME_B_SPALTE));
 
 		// Punkte
-		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH);
+		//		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH);
+		//
+		//		getSheetHelper().setStringValueInCell(stValHeader.setValue("A").spalte(SPIELE_A_SPALTE));
+		//		getSheetHelper().setStringValueInCell(stValHeader.setValue("B").spalte(SPIELE_B_SPALTE));
 
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("A").spalte(SPIELE_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("B").spalte(SPIELE_B_SPALTE));
+		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH + 1000); // etwas breiter brauche platz zum schreiben
 
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("A").spalte(SPIELPNKT_A_SPALTE));
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("B").spalte(SPIELPNKT_B_SPALTE));
@@ -195,6 +196,7 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 
 	private void insertArbeitsspalten(List<List<TeamPaarung>> spielPlanHRunde, List<List<TeamPaarung>> spielPlanRRunde)
 			throws GenerateException {
+
 		RangeData rangeData = new RangeData();
 
 		List<List<TeamPaarung>> alleSpieltage = new ArrayList<>();
@@ -210,6 +212,7 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 				teamPaarungData.newInt(teamPaarung.getOptionalB().isPresent() ? teamPaarung.getB().getNr() : 0);
 			}
 		}
+
 		Position startPos = Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData).setRangeProperties(
 				RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
@@ -219,6 +222,9 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 				.isVisible(zeigeArbeitsSpalten);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_A_NR_SPALTE, spalteBreite);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_B_NR_SPALTE, spalteBreite);
+
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), SPIELE_A_SPALTE, spalteBreite);
+		getSheetHelper().setColumnProperties(getXSpreadSheet(), SPIELE_B_SPALTE, spalteBreite);
 
 	}
 
@@ -245,8 +251,16 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 	}
 
+	/**
+	 * in Arbeitspalten
+	 * 
+	 * @throws GenerateException
+	 */
 	private void insertFormulaPunkte() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
+
+		RangeProperties setBorder = RangeProperties.from().centerJustify()
+				.setBorder(BorderFactory.from().allThin().toBorder());
 
 		// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 		// erste nr reicht, weil beim filldown zeilenr automatisch hoch
@@ -258,7 +272,12 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 			StringCellValue formulaHeimPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaHeimPunkteStr)
 					.setPos(Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
 					.setFillAutoDown(letzteSpielZeile);
+
 			getSheetHelper().setFormulaInCell(formulaHeimPunkte);
+
+			RangePosition rangePos = RangePosition.from(formulaHeimPunkte.getPos(), formulaHeimPunkte.getPos())
+					.endeZeile(letzteSpielZeile);
+			RangeHelper.from(this, rangePos).setRangeProperties(setBorder);
 		}
 
 		// ------------------------------------------------------------------------------------
@@ -270,7 +289,12 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 			StringCellValue formulaGastPunkte = StringCellValue.from(getXSpreadSheet()).setValue(formulaGastPunkteStr)
 					.setPos(Position.from(SPIELE_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE))
 					.setFillAutoDown(letzteSpielZeile);
+
 			getSheetHelper().setFormulaInCell(formulaGastPunkte);
+
+			RangePosition rangePos = RangePosition.from(formulaGastPunkte.getPos(), formulaGastPunkte.getPos())
+					.endeZeile(letzteSpielZeile);
+			RangeHelper.from(this, rangePos).setRangeProperties(setBorder);
 		}
 
 	}
@@ -297,41 +321,13 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
-		return RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
+		int zeile = RangeSearchHelper.from(this, RangePosition.from(SPIEL_NR_SPALTE, 0, SPIEL_NR_SPALTE, 999))
 				.searchLastNotEmptyInSpalte().getZeile();
-	}
-
-	/**
-	 * @param list
-	 * @throws GenerateException
-	 */
-	public void spielErgebnisseEinlesen(List<List<List<SpielErgebnis>>> list) throws GenerateException {
-		RangeData rangeData = new RangeData();
-
-		for (List<List<SpielErgebnis>> runde : list) {
-			for (List<SpielErgebnis> begegnung : runde) {
-				SheetRunner.testDoCancelTask();
-				RowData ergebnisseRow = rangeData.addNewRow();
-				int spieleTeamA = 0;
-				int spieleTeamB = 0;
-				int spielPunkteA = 0;
-				int spielPunkteB = 0;
-
-				for (SpielErgebnis erg : begegnung) {
-					spieleTeamA += erg.siegA() ? 1 : 0;
-					spieleTeamB += erg.siegB() ? 1 : 0;
-					spielPunkteA += erg.getSpielPunkteA();
-					spielPunkteB += erg.getSpielPunkteB();
-				}
-				ergebnisseRow.newInt(spieleTeamA);
-				ergebnisseRow.newInt(spieleTeamB);
-				ergebnisseRow.newInt(spielPunkteA);
-				ergebnisseRow.newInt(spielPunkteB);
-			}
+		if (zeile == 0) {
+			throw new GenerateException("Letzte Zeile = 0, Spielernummer spalte fehlt");
 		}
-		// --------------------
-		Position startPosSpiele = Position.from(SPIELE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE);
-		RangeHelper.from(this, rangeData.getRangePosition(startPosSpiele)).setDataInRange(rangeData);
+
+		return zeile;
 	}
 
 	private void formatieren(List<List<TeamPaarung>> spielPlanHRunde) throws GenerateException {
@@ -395,7 +391,7 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 				letzteSpielZeile);
 		RangeHelper.from(this, vertikal.spalte(SPIEL_NR_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
 		RangeHelper.from(this, vertikal.spalte(NAME_B_SPALTE)).setRangeProperties(vertTrennerDoubleLeft);
-		RangeHelper.from(this, vertikal.spalte(SPIELE_A_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
+		RangeHelper.from(this, vertikal.spalte(SPIELPNKT_A_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
 		RangeHelper.from(this, vertikal.spalte(SPIELPNKT_B_SPALTE + 1)).setRangeProperties(vertTrennerBoldLeft);
 
 		// header Farbe
