@@ -41,6 +41,7 @@ public class NewSheet extends BaseHelper {
 	private boolean showGrid = true;
 	private boolean createNewIfExist = true;
 	private boolean setDocVersionWhenNew = false;
+	private boolean didCreateRun = false;
 
 	private NewSheet(ISheet iSheet, String sheetName) {
 		super(iSheet);
@@ -54,6 +55,7 @@ public class NewSheet extends BaseHelper {
 	}
 
 	public NewSheet setForceCreate(boolean force) {
+		testdidCreateRun();
 		forceOkCreateNewWhenExist = force;
 		return this;
 	}
@@ -64,11 +66,13 @@ public class NewSheet extends BaseHelper {
 	}
 
 	public NewSheet pos(short pos) {
+		testdidCreateRun();
 		this.pos = pos;
 		return this;
 	}
 
 	public NewSheet tabColor(String color) {
+		testdidCreateRun();
 		tabColor = color;
 		return this;
 	}
@@ -79,6 +83,7 @@ public class NewSheet extends BaseHelper {
 	}
 
 	public NewSheet newIfExist() {
+		testdidCreateRun();
 		createNewIfExist = true;
 		return this;
 	}
@@ -89,13 +94,21 @@ public class NewSheet extends BaseHelper {
 	 * @return
 	 */
 	public NewSheet useIfExist() {
+		testdidCreateRun();
 		createNewIfExist = false;
 		return this;
 	}
 
 	public NewSheet setDocVersionWhenNew() {
+		testdidCreateRun();
 		setDocVersionWhenNew = true;
 		return this;
+	}
+
+	private void testdidCreateRun() {
+		if (didCreateRun) {
+			throw new RuntimeException("didCreateRun ist bereits gelaufen");
+		}
 	}
 
 	/**
@@ -106,6 +119,7 @@ public class NewSheet extends BaseHelper {
 	public NewSheet create() throws GenerateException {
 		sheet = sheetHelper.findByName(sheetName);
 		didCreate = false;
+		didCreateRun = true;
 
 		TurnierSheet turnierSheet = null;
 
