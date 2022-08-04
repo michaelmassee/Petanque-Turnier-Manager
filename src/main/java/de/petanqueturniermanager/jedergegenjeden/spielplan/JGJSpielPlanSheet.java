@@ -173,20 +173,14 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 		//		getSheetHelper().setStringValueInCell(
 		//				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Spielpunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue("Ergebnis").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
 		ColumnProperties colProp = ColumnProperties.from().setWidth(MELDUNG_NAME_WIDTH);
 		stValHeader.setEndPosMerge(null).zeilePlusEins().setColumnProperties(colProp);
 		// name
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Team A").spalte(NAME_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Team B").spalte(NAME_B_SPALTE));
-
-		// Punkte
-		//		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH);
-		//
-		//		getSheetHelper().setStringValueInCell(stValHeader.setValue("A").spalte(SPIELE_A_SPALTE));
-		//		getSheetHelper().setStringValueInCell(stValHeader.setValue("B").spalte(SPIELE_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue("Mannschaft A").spalte(NAME_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue("Mannschaft B").spalte(NAME_B_SPALTE));
 
 		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH + 1000); // etwas breiter brauche platz zum schreiben
 
@@ -336,7 +330,7 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 		RangePosition allDataMitHeader = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE,
 				SPIELPNKT_B_SPALTE, letzteSpielZeile);
 		RangeProperties rangeProp = RangeProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
-				.centerJustify().setShrinkToFit(true).topMargin(110).bottomMargin(110).setCharHeight(10);
+				.centerJustify().setShrinkToFit(true).topMargin(110).bottomMargin(110).setCharHeight(12);
 		RangeHelper.from(this, allDataMitHeader).setRangeProperties(rangeProp);
 
 		// gerade ungerade
