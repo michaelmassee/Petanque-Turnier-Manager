@@ -98,12 +98,12 @@ public abstract class AbstractPosition<T> {
 		return (T) this;
 	}
 
-	private void setZeile(int zeile) {
+	public void setZeile(int zeile) {
 		checkArgument(zeile > -1, "zeile (row) ungueltige wert %d. <0 ", zeile);
 		this.zeile = zeile;
 	}
 
-	private void setSpalte(int spalte) {
+	public void setSpalte(int spalte) {
 		checkArgument(spalte > -1, "spalte (column) ungueltige wert %d. <0 ", spalte);
 		this.spalte = spalte;
 	}
