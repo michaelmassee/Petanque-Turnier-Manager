@@ -143,7 +143,7 @@ public class NewSheet extends BaseHelper {
 
 		if (sheet == null) {
 			try {
-				getWorkingSpreadsheetDocument().getSheets().insertNewByName(sheetName, pos);
+				sheetHelper.newIfNotExist(sheetName, pos);
 
 				if (setDocVersionWhenNew) {
 					DocumentHelper.setDocErstelltMitVersion(getWorkingSpreadsheet());

@@ -187,6 +187,10 @@ public class SheetHelper {
 		}
 	}
 
+	public XSpreadsheet newIfNotExist(String sheetName, int pos) {
+		return newIfNotExist(sheetName, (short) pos, null);
+	}
+
 	public XSpreadsheet newIfNotExist(String sheetName, short pos) {
 		return newIfNotExist(sheetName, pos, null);
 	}
