@@ -47,6 +47,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		this.xContext = xContext;
 		GlobalImpl.isDirty = new AtomicBoolean(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
+		// PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 	}
 
 	public static final XSingleComponentFactory __getComponentFactory(String name) {
@@ -71,9 +72,9 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
 		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+		// XSpreadsheetDocument doc = spreadsheet;
 		if (doc != null) {
-			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(
-					DocumentHelper.getCurrentSpreadsheetDocument(xContext));
+			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
 			if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
 				// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
 				// oder das Dokument hat keine properties aber PTM Funktionen.
@@ -148,4 +149,5 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	String[] getServiceNames() {
 		return serviceNames;
 	}
+
 }
