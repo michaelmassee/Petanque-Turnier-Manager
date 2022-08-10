@@ -11,8 +11,8 @@ public interface IGlobalEventListener {
 
 	// XModel xModel = Lo.qi(XModel.class, source);
 	// XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
-//	XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class,
-//			xModel.getCurrentController());
+	//	XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class,
+	//			xModel.getCurrentController());
 
 	default void onNew(@SuppressWarnings("unused") Object source) {
 	}
@@ -27,6 +27,12 @@ public interface IGlobalEventListener {
 	}
 
 	default void onViewCreated(@SuppressWarnings("unused") Object source) {
+	}
+
+	default void onLoadFinished(@SuppressWarnings("unused") Object source) {
+	}
+
+	default void onFocus(@SuppressWarnings("unused") Object source) {
 	}
 
 }

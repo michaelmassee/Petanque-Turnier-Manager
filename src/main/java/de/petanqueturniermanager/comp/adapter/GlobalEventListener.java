@@ -1,48 +1,22 @@
 /*
- * Dateiname: GlobalEventListener.java
- * Projekt  : WollMux
- * Funktion : Reagiert auf globale Ereignisse
+ * Dateiname: GlobalEventListener.java Projekt : WollMux Funktion : Reagiert auf globale Ereignisse
  *
  * Copyright (c) 2008-2019 Landeshauptstadt München
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the European Union Public Licence (EUPL),
- * version 1.0 (or any later version).
+ * This program is free software: you can redistribute it and/or modify it under the terms of the European Union Public Licence (EUPL), version 1.0 (or any later version).
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * European Union Public Licence for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the European
+ * Union Public Licence for more details.
  *
- * You should have received a copy of the European Union Public Licence
- * along with this program. If not, see
- * http://ec.europa.eu/idabc/en/document/7330
+ * You should have received a copy of the European Union Public Licence along with this program. If not, see http://ec.europa.eu/idabc/en/document/7330
  *
- * Änderungshistorie:
- * Datum      | Wer | Änderungsgrund
- * -------------------------------------------------------------------
- * 14.10.2005 | LUT | Erstellung
- * 09.11.2005 | LUT | + Logfile wird jetzt erweitert (append-modus)
- *                    + verwenden des Konfigurationsparameters SENDER_SOURCE
- *                    + Erster Start des wollmux über wm_configured feststellen.
- * 05.12.2005 | BNK | line.separator statt \n
- * 13.04.2006 | BNK | .wollmux/ Handling ausgegliedert in WollMuxFiles.
- * 20.04.2006 | LUT | Überarbeitung Code-Kommentare
- * 20.04.2006 | BNK | DEFAULT_CONTEXT ausgegliedert nach WollMuxFiles
- * 21.04.2006 | LUT | + Robusteres Verhalten bei Fehlern während dem Einlesen
- *                    von Konfigurationsdateien;
- *                    + wohldefinierte Datenstrukturen
- *                    + Flag für EventProcessor: acceptEvents
- * 08.05.2006 | LUT | + isDebugMode()
- * 10.05.2006 | BNK | +parseGlobalFunctions()
- *                  | +parseFunctionDialogs()
- * 26.05.2006 | BNK | DJ initialisierung ausgelagert nacht WollMuxFiles
- * 06.06.2006 | LUT | + Ablösung der Event-Klasse durch saubere Objektstruktur
- * 19.12.2006 | BAB | + setzen von Shortcuts im Konstruktor
- * 29.12.2006 | BNK | +registerDatasources()
- * 27.03.2007 | BNK | Default-oooEinstellungen ausgelagert nach data/...
- * 17.05.2010 | BED | Workaround für Issue #100374 bei OnSave/OnSaveAs-Events
- * -------------------------------------------------------------------
+ * Änderungshistorie: Datum | Wer | Änderungsgrund ------------------------------------------------------------------- 14.10.2005 | LUT | Erstellung 09.11.2005 | LUT | + Logfile wird jetzt erweitert
+ * (append-modus) + verwenden des Konfigurationsparameters SENDER_SOURCE + Erster Start des wollmux über wm_configured feststellen. 05.12.2005 | BNK | line.separator statt \n 13.04.2006 | BNK |
+ * .wollmux/ Handling ausgegliedert in WollMuxFiles. 20.04.2006 | LUT | Überarbeitung Code-Kommentare 20.04.2006 | BNK | DEFAULT_CONTEXT ausgegliedert nach WollMuxFiles 21.04.2006 | LUT | + Robusteres
+ * Verhalten bei Fehlern während dem Einlesen von Konfigurationsdateien; + wohldefinierte Datenstrukturen + Flag für EventProcessor: acceptEvents 08.05.2006 | LUT | + isDebugMode() 10.05.2006 | BNK |
+ * +parseGlobalFunctions() | +parseFunctionDialogs() 26.05.2006 | BNK | DJ initialisierung ausgelagert nacht WollMuxFiles 06.06.2006 | LUT | + Ablösung der Event-Klasse durch saubere Objektstruktur
+ * 19.12.2006 | BAB | + setzen von Shortcuts im Konstruktor 29.12.2006 | BNK | +registerDatasources() 27.03.2007 | BNK | Default-oooEinstellungen ausgelagert nach data/... 17.05.2010 | BED |
+ * Workaround für Issue #100374 bei OnSave/OnSaveAs-Events -------------------------------------------------------------------
  *
  * @author Christoph Lutz (D-III-ITD 5.1)
  *
@@ -74,17 +48,23 @@ public class GlobalEventListener implements XEventListener {
 	private static final Logger logger = LogManager.getLogger(GlobalEventListener.class);
 
 	private static final String ON_SAVE_AS = "OnSaveAs";
-
 	private static final String ON_SAVE = "OnSave";
-
 	private static final String ON_UNLOAD = "OnUnload";
-
 	private static final String ON_CREATE = "OnCreate";
-
-	private static final String ON_VIEW_CREATED = "OnViewCreated";
-
 	private static final String ON_NEW = "OnNew";
+
+	private static final String ON_FOCUS = "OnFocus";
+	private static final String ON_LOAD_FINISHED = "OnLoadFinished";
+	private static final String ON_VIEW_CREATED = "OnViewCreated";
 	private static final String ON_LOAD = "OnLoad";
+	// private static final String ON_LOAD_DONE = "OnLoadDone";
+
+	//	08.08.2022 21:52:34,750 DEBUG d.p.c.a.GlobalEventListener OnLoadFinished
+	//	08.08.2022 21:52:34,751 DEBUG d.p.c.a.GlobalEventListener OnTitleChanged
+	//	08.08.2022 21:52:34,968 DEBUG d.p.c.a.GlobalEventListener OnFocus
+	//	08.08.2022 21:52:34,970 DEBUG d.p.c.a.GlobalEventListener OnViewCreated
+	//	08.08.2022 21:52:35,046 DEBUG d.p.c.a.GlobalEventListener OnLoad
+
 	private static final String ON_UNFOCUS = "OnUnfocus";
 
 	private final List<IGlobalEventListener> listeners;
@@ -101,10 +81,6 @@ public class GlobalEventListener implements XEventListener {
 		// Der try-catch-Block verhindert, daß die Funktion und damit der
 		// ganze Listener ohne Fehlermeldung abstürzt.
 		try {
-			// Zur Optimierung werden hier gemeinsame Code-Teile auf das Nötigste
-			// reduziert. Es gibt viele Events, die den WollMux überhaupt nicht
-			// interessieren, da sollte der WollMux nichts tun (auch ein UNO-Cast kann hier
-			// schon unnötig Performance fressen)
 			if (docEvent.Source == null) {
 				return;
 			}
@@ -112,6 +88,7 @@ public class GlobalEventListener implements XEventListener {
 			logger.debug(event);
 
 			// https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/List_of_Supported_Events
+			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1document_1_1Events.html
 			if (ON_CREATE.equals(event)) {
 				onCreate(docEvent.Source);
 			} else if (ON_VIEW_CREATED.equals(event)) {
@@ -124,10 +101,14 @@ public class GlobalEventListener implements XEventListener {
 				onSaveOrSaveAs(docEvent.Source);
 			} else if (ON_NEW.equals(event)) {
 				onNew(docEvent.Source);
-			} else if (ON_LOAD.equals(event)) {
+			} else if (ON_LOAD_FINISHED.equals(event)) { // 1
+				onLoadFinished(docEvent.Source);
+			} else if (ON_LOAD.equals(event)) { // 5
 				onLoad(docEvent.Source);
 			} else if (ON_UNFOCUS.equals(event)) {
 				onUnfocus(docEvent.Source);
+			} else if (ON_FOCUS.equals(event)) {
+				onFocus(docEvent.Source);
 			}
 
 		} catch (Throwable t) {
@@ -158,6 +139,17 @@ public class GlobalEventListener implements XEventListener {
 		}
 	}
 
+	private void onLoadFinished(Object source) {
+		for (IGlobalEventListener listner : listeners) {
+			try {
+				listner.onLoadFinished(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
+
+		}
+	}
+
 	/**
 	 * @param source
 	 */
@@ -169,6 +161,16 @@ public class GlobalEventListener implements XEventListener {
 				logger.error(e.getMessage(), e);
 			}
 
+		}
+	}
+
+	private void onFocus(Object source) {
+		for (IGlobalEventListener listner : listeners) {
+			try {
+				listner.onFocus(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
 		}
 	}
 
