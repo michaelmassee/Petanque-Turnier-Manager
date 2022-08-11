@@ -133,7 +133,10 @@ public class LigaHtmlCleaner {
 			bodyNew.append("<hr>");
 			bodyNew.append("<A NAME=\"table0\"><h1>Meldeliste</h1></A>");
 
-			anmeldungenClone.selectFirst("tr:containsWholeText(Turniersystem: Liga)").remove();
+			Element turnierSystem = anmeldungenClone.selectFirst("tr:containsWholeText(Turniersystem: Liga)");
+			if (turnierSystem != null) {
+				turnierSystem.remove();
+			}
 			anmeldungenClone.appendTo(bodyNew);
 		}
 	}
@@ -231,41 +234,36 @@ public class LigaHtmlCleaner {
 		return true;
 	}
 
+	// <comment>Meldenummer (manuell nicht ändern)</comment>
 	private Element findAnmeldungenTable(Document ligaHtmlOrg) {
-		// <td colspan=2 height="22" align="left" valign=top><b><font color="#00599D">Turniersystem: Liga</font></b></td>
-		try {
-			return ligaHtmlOrg.selectFirst("table:containsWholeText(Turniersystem: Liga)").clone();
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-		return null;
+		return selectClone(ligaHtmlOrg, "table:containsWholeText(Meldenummer \\(manuell nicht ändern\\))",
+				"Anmeldungen");
 	}
 
 	// <td style="border-top: 1px solid #000000; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000" rowspan=2 align="center" valign=middle
 	// bgcolor="#E6EBF4">KW</td>
 	private Element findSpielplanTable(Document ligaHtmlOrg) {
-		try {
-			return ligaHtmlOrg.selectFirst("table:containsWholeText(KW):containsWholeText(Datum)").clone();
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-		return null;
+		return selectClone(ligaHtmlOrg, "table:containsWholeText(KW):containsWholeText(Datum)", "Spielplan");
 	}
 
 	// Platz
 	private Element findRanglisteTable(Document ligaHtmlOrg) {
-		try {
-			return ligaHtmlOrg.selectFirst("table:containsWholeText(Platz)").clone();
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
-		return null;
+		return selectClone(ligaHtmlOrg, "table:containsWholeText(Platz)", "Rangliste");
 	}
 
 	// Unentschieden
 	private Element findDirektvergleichTable(Document ligaHtmlOrg) {
+		return selectClone(ligaHtmlOrg, "table:containsWholeText(Unentschieden)", "Direktvergleich");
+	}
+
+	private Element selectClone(Document ligaHtmlOrg, String selString, String tableName) {
 		try {
-			return ligaHtmlOrg.selectFirst("table:containsWholeText(Unentschieden)").clone();
+			Element spielPlan = ligaHtmlOrg.selectFirst(selString);
+			if (spielPlan != null) {
+				return spielPlan.clone();
+			} else {
+				logger.warn(tableName + " nicht gefunden");
+			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
