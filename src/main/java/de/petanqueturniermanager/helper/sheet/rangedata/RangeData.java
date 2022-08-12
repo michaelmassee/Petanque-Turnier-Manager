@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.petanqueturniermanager.helper.position.AbstractPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
@@ -72,7 +73,7 @@ public class RangeData extends ArrayList<RowData> {
 		return newRowData;
 	}
 
-	public RangePosition getRangePosition(Position start) {
+	public RangePosition getRangePosition(AbstractPosition<?> start) {
 		checkNotNull(start);
 		checkArgument(size() > 0);
 		Position endPos = Position.from(start);
