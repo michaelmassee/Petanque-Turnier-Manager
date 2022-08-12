@@ -33,7 +33,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 public class RangeHelper {
 
 	private static final Logger logger = LogManager.getLogger(RangeHelper.class);
-	private final RangePosition rangePos;
+	private RangePosition rangePos;
 	private final XSpreadsheet xSpreadsheet;
 	private final XSpreadsheetDocument workingSpreadsheetDocument;
 
@@ -51,6 +51,11 @@ public class RangeHelper {
 	public static RangeHelper from(XSpreadsheet xSpreadsheet, XSpreadsheetDocument workingSpreadsheetDocument,
 			RangePosition rangePos) throws GenerateException {
 		return new RangeHelper(xSpreadsheet, workingSpreadsheetDocument, rangePos);
+	}
+
+	public static RangeHelper from(XSpreadsheet xSpreadsheet, XSpreadsheetDocument workingSpreadsheetDocument,
+			int startSpalte, int startZeile) throws GenerateException {
+		return from(xSpreadsheet, workingSpreadsheetDocument, RangePosition.from(startSpalte, startZeile));
 	}
 
 	public static RangeHelper from(ISheet sheet, RangePosition rangePos) throws GenerateException {
@@ -123,15 +128,29 @@ public class RangeHelper {
 		return new RangeData(data);
 	}
 
+	public RangeHelper setDataInRange(Object[][] rangeData, boolean adjustEndPosToDataRange) throws GenerateException {
+		return setDataInRange(new RangeData(rangeData), adjustEndPosToDataRange);
+	}
+
+	public RangeHelper setDataInRange(RangeData rangeData) throws GenerateException {
+		return setDataInRange(rangeData, false);
+	}
+
 	/**
 	 * grid in sheet schnell ! mit daten füllen<br>
-	 * !! rangeData muss genau mit rangepos übereinstimmen<br>
-	 * wenn rangedata leer dann pasiert nichts
+	 * !! wenn autorange = false, rangeData muss genau mit rangepos übereinstimmen<br>
+	 * wenn rangedata leer dann pasiert nichts<br>
+	 * adjustEndPosToDataRange ist true dan wird der endpos beim setDataInRange an der size der daten angepasst
 	 *
 	 * @return null when error
 	 * @throws GenerateException fehler wenn die größe nicht übereinstimt
 	 */
-	public RangeHelper setDataInRange(RangeData rangeData) throws GenerateException {
+	public RangeHelper setDataInRange(RangeData rangeData, boolean adjustEndPosToDataRange) throws GenerateException {
+
+		// adjust endpos to dataArray size
+		if (adjustEndPosToDataRange) {
+			this.rangePos = rangeData.getRangePosition(rangePos.getStart());
+		}
 
 		XCellRangeData xCellRangeData = getXCellRangeData();
 		if (xCellRangeData != null) {
@@ -152,6 +171,7 @@ public class RangeHelper {
 				throw new GenerateException("Anzahl Spalten stimmen nicht überein. range:" + rangePos.getAnzahlSpalten()
 						+ " array:" + dataArray[0].length);
 			}
+
 			xCellRangeData.setDataArray(dataArray);
 		}
 		return this;

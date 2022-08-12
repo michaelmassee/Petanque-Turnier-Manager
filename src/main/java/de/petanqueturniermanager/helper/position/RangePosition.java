@@ -37,6 +37,14 @@ public class RangePosition {
 		return from(rangePos.getStart(), rangePos.getEnde());
 	}
 
+	public static RangePosition from(int startSpalte, int startZeile) {
+		return from(startSpalte, startZeile, startSpalte, startZeile);
+	}
+
+	public static RangePosition from(AbstractPosition<?> pos) {
+		return from(pos.getSpalte(), pos.getZeile());
+	}
+
 	/**
 	 * clone Position
 	 */
