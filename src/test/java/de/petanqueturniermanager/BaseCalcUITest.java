@@ -35,7 +35,11 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
- * Erstellung 13.07.2022 / Michael Massee
+ * Erstellung 13.07.2022 / Michael Massee<br>
+ * hier wird eine seperate Instance erstellt, nur ueber in Socket werden die Sheets angesteuert.<br>
+ * das bedeutet das das Propertie Plugin nicht die gleiche Daten hat !<br>
+ * siehe GlobalImpl.getDocumentPropertiesHelper()
+ * 
  */
 
 public abstract class BaseCalcUITest {
