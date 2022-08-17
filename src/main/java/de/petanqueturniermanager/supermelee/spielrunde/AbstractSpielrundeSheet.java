@@ -1,6 +1,6 @@
 /**
-* Erstellung : 29.03.2018 / Michael Massee
-**/
+ * Erstellung : 29.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.spielrunde;
 
@@ -593,7 +593,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		}
 
 		setSpielRundeNr(neueSpielrundeNr);
-		getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 
 		if (meldungen.spieler().size() < 4) {
 			throw new GenerateException("Fehler beim erstellen von Spielrunde. Kann für Spieltag "
@@ -617,6 +616,9 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;
 		}
+
+		// neue Spielrunde speichern, sheet vorhanden
+		getKonfigurationSheet().setAktiveSpielRunde(getSpielRundeNr());
 
 		// Triplette oder Doublette Mode ?
 
@@ -660,7 +662,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			datenErsteSpalte();
 			datenformatieren(getXSpreadSheet());
 			spielrundeProperties(getXSpreadSheet());
-			getKonfigurationSheet().setAktiveSpielRunde(neueSpielrundeNr);
 			wennNurDoubletteRundeDannSpaltenAusblenden(getXSpreadSheet(), doubletteRunde);
 			// TODO
 			// int anzZeilen = spielTagInfosEinfuegen();
@@ -669,10 +670,12 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			if (getKonfigurationSheet().getSpielrundePlan()) {
 				new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
 			}
+
 		} catch (AlgorithmenException e) {
 			getLogger().error(e.getMessage(), e);
 			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			getSheetHelper().removeSheet(getSheetName(getSpielTag(), getSpielRundeNr()));
+			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(getSpielRundeNr().getNr() - 1));
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen")
 					.message(e.getMessage()).show();
 			throw new RuntimeException(e); // komplett raus
