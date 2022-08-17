@@ -151,5 +151,8 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		} catch (Exception e) {
 			assertThat(e).hasCauseInstanceOf(GenerateException.class);
 		}
+		// rundenr muss weiter gezaehlt werden ! weil Runde wurde trotz Validate Fehler erstellt
+		validateAnzSpielrundeInMeldeliste(4, docPropHelper);
+		// waitEnter();
 	}
 }
