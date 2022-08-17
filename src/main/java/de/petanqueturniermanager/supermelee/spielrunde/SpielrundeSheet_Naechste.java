@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +28,15 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		if (naechsteSpielrundeEinfuegen()) {
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
+
+			//			// Spieltag rangliste vorhanden ?
+			//			SpieltagRanglisteSheet spieltagRanglisteSheet = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
+			//			String ranglisteSheetName = spieltagRanglisteSheet.getSheetName(getSpielTag());
+			//			XSpreadsheet xSpieltagRanglisteSheet = getSheetHelper().findByName(ranglisteSheetName);
+			//			if (xSpieltagRanglisteSheet != null) {
+			//				spieltagRanglisteSheet.generate(getSpielTag());
+			//			}
+
 			// sicher gehen das aktive spielrunde sheet ist activ
 			getSheetHelper().setActiveSheet(getXSpreadSheet());
 		}
@@ -47,10 +56,10 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		int neueSpielrunde = aktuelleSpielrunde.getNr();
 		if (getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr())) != null) {
 			neueSpielrunde++;
-			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrunde));
 		}
 
-		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), neueSpielrunde - 1);
+		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(),
+				neueSpielrunde - 1);
 		return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde));
 	}
 
