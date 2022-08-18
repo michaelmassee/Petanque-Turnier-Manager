@@ -153,6 +153,11 @@ public class SheetHelper {
 		return sheet;
 	}
 
+	public int getAnzSheets() {
+		XSpreadsheets sheets = getSheets();
+		return sheets.getElementNames().length;
+	}
+
 	public void removeAllSheetsExclude(String sheetNameNotToRemove) {
 		removeAllSheetsExclude(new String[] { sheetNameNotToRemove });
 	}

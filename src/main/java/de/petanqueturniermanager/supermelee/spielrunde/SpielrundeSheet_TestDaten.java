@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -131,7 +131,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			}
 		}
 		SheetRunner.testDoCancelTask();
-		spieltagRanglisteSheet.generate();
+		spieltagRanglisteSheet.generate(getSpielTag());
 		new SpieltagRangliste_Validator(getWorkingSpreadsheet()).doValidate(getSpielTag());
 
 		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());

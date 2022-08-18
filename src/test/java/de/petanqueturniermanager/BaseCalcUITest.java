@@ -28,6 +28,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -46,12 +47,13 @@ public abstract class BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
 
-	protected static OfficeStarter starter = OfficeStarter.from();
+	final protected static OfficeStarter starter = OfficeStarter.from();
 	protected static XComponentLoader loader;
 
 	protected XSpreadsheetDocument doc;
 	protected SheetHelper sheetHlp;
 	protected WorkingSpreadsheet wkingSpreadsheet;
+	protected DocumentPropertiesHelper docPropHelper;
 
 	@BeforeClass
 	public static void startup() {
@@ -69,6 +71,7 @@ public abstract class BaseCalcUITest {
 		OfficeDocumentHelper.setVisible(doc, true);
 		wkingSpreadsheet = new WorkingSpreadsheet(starter.getxComponentContext(), doc);
 		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
+		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		// use force weil calc is clossed in afterTest
 		ProcessBox.forceinit(starter.getxComponentContext());
 	}

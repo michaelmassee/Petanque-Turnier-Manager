@@ -1,6 +1,6 @@
 /**
-* Erstellung : 14.04.2018 / Michael Massee
-**/
+ * Erstellung : 14.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
@@ -31,7 +31,8 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 	private final int anzSpaltenInSpielrunde;
 	private final int ersteSpielRundeSpalte;
 
-	SpieltagRanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde, MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, int ersteSpielRundeSpalte,
+	SpieltagRanglisteFormatter(ISpielTagRangliste rangliste, int anzSpaltenInSpielrunde,
+			MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, int ersteSpielRundeSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
 		checkNotNull(rangliste);
@@ -53,32 +54,59 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		// -------------------------
 		// spielrunden spalten
 		// -------------------------
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerPlus = StringCellValue.from(sheet, Position.from(ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+").addColumnProperties(columnProperties)
-				.setCellBackColor(getHeaderFarbe());
+		ColumnProperties columnProperties = ColumnProperties.from()
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+		StringCellValue headerPlus = StringCellValue
+				.from(sheet, Position.from(ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+")
+				.addColumnProperties(columnProperties).setCellBackColor(getHeaderFarbe());
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
 
 		headerPlus.setBorder(borderThinLeftBold());
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
 			int plusSpalte = ersteSpielRundeSpalte + ((spielRunde - 1) * 2);
-			getSheetHelper().setStringValueInCell(headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
-			getSheetHelper().setStringValueInCell(headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
+			getSheetHelper().setStringValueInCell(
+					headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
+			getSheetHelper().setStringValueInCell(
+					headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
 
 			// Runden Counter
-			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde).zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setComment(null);
+			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde)
+					.zeile(ZWEITE_KOPFDATEN_ZEILE).setEndPosMergeSpaltePlus(1).setComment(null);
 			getSheetHelper().setStringValueInCell(headerRndCounter);
 		}
 		// Erste Zeile Runde
 		TableBorder2 border = BorderFactory.from().allBold().thinLn().forBottom().toBorder();
-		StringCellValue rundeHeaderBez = StringCellValue.from(sheet).zeile(ERSTE_KOPFDATEN_ZEILE).spalte(ersteSpielRundeSpalte).setEndPosMergeSpaltePlus((anzRunden * 2) - 1)
-				.setValue("Runde").setCellBackColor(getHeaderFarbe()).setBorder(border);
+		StringCellValue rundeHeaderBez = StringCellValue.from(sheet).zeile(ERSTE_KOPFDATEN_ZEILE)
+				.spalte(ersteSpielRundeSpalte).setEndPosMergeSpaltePlus((anzRunden * 2) - 1).setValue("Runde")
+				.setCellBackColor(getHeaderFarbe()).setBorder(border);
 		getSheetHelper().setStringValueInCell(rundeHeaderBez);
 
 		// -------------------------
 		// summen spalten
 		// -------------------------
 		formatEndSummen(rangliste.getErsteSummeSpalte());
+	}
+
+	/**
+	 * anzahl runden in sheet zählen
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
+
+	public int countAnzahlRunden() throws GenerateException {
+		int anzRunden = 0;
+		Position rundeNrPos = Position.from(ersteSpielRundeSpalte, ZWEITE_KOPFDATEN_ZEILE);
+		for (int spielRunde = 1; spielRunde <= 1000; spielRunde++) {
+			Integer rundeNrFromSheet = getSheetHelper().getIntFromCell(getSheet(), rundeNrPos);
+			if (rundeNrFromSheet != spielRunde) {
+				break;
+			}
+			rundeNrPos.spaltePlus(2);
+			anzRunden++;
+		}
+		return anzRunden;
 	}
 
 	public void formatDaten() throws GenerateException {
@@ -98,7 +126,8 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder();
 
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
-			Position posPunktePlusStart = Position.from(ersteSpielRundeSpalte + ((spielRunde - 1) * anzSpaltenInSpielrunde), ersteDatenZeile);
+			Position posPunktePlusStart = Position
+					.from(ersteSpielRundeSpalte + ((spielRunde - 1) * anzSpaltenInSpielrunde), ersteDatenZeile);
 			Position posPunkteMinusEnd = Position.from(posPunktePlusStart).spaltePlusEins().zeile(letzteDatenZeile);
 			RangePosition datenRange = RangePosition.from(posPunktePlusStart, posPunkteMinusEnd);
 			getSheetHelper().setPropertyInRange(rangliste.getXSpreadSheet(), datenRange, TABLE_BORDER2, border);
@@ -118,8 +147,8 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();
-		getSheetHelper()
-				.setStringValueInCell(stringVal.zeilePlusEins().setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(
+				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 
 		return stringVal;
 	}

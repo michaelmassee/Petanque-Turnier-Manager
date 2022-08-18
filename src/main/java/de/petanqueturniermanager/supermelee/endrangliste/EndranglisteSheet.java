@@ -507,7 +507,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 	@Override
 	public int getAnzahlSpieltage() throws GenerateException {
-		return spieltagRanglisteSheet.countNumberOfSpieltage();
+		return spieltagRanglisteSheet.countNumberOfRanglisten();
 	}
 
 	@Override

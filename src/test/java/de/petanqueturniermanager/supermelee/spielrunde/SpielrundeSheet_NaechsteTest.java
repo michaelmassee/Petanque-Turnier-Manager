@@ -60,7 +60,7 @@ public class SpielrundeSheet_NaechsteTest {
 			}
 
 			@Override
-			public Integer getAnzGespielteSpieltage() throws GenerateException {
+			public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
 				return 1;
 			}
 

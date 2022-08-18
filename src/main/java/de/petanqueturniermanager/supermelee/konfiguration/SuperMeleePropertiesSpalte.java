@@ -194,7 +194,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	 * @throws GenerateException
 	 */
 	@Override
-	public Integer getAnzGespielteSpieltage() throws GenerateException {
+	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE);
 	}
 
