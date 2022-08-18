@@ -74,21 +74,22 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	@Override
 	protected void doRun() throws GenerateException {
-		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		generate();
+		generate(getKonfigurationSheet().getAktiveSpieltag());
 	}
 
-	public void generate() throws GenerateException {
+	public void generate(SpielTagNr spielTagNr) throws GenerateException {
+		setSpieltagNr(spielTagNr);
+
 		MeldeListeSheet_Update meldeliste = new MeldeListeSheet_Update(getWorkingSpreadsheet());
 		meldeliste.setSpielTag(getSpieltagNr());
 		aktuelleSpielrundeSheet.setSpielTag(getSpieltagNr());
 
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 
 		if (anzSpielRunden == 0) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK).caption("Spieltagrangliste")
-					.message("Kein Spielrunden vorhanden").show();
+					.message("Keine Spielrunden vorhanden").show();
 			return;
 		}
 
@@ -128,11 +129,22 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 
+	/**
+	 * Die Anzahl an Spielrunden im Rangliste-Sheet zahlen
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
+
+	public int countNumberOfSpielrundenInSheet() throws GenerateException {
+		return ranglisteFormatter.countAnzahlRunden();
+	}
+
 	protected void updateSummenSpalten() throws GenerateException {
 
 		processBoxinfo("Summenspalten Aktualisieren");
 
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 		if (anzSpielRunden < 1) {
 			return;
 		}
@@ -205,7 +217,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		processBoxinfo("Spieltag(e) Ergebnisse Einfuegen");
 
 		XSpreadsheet sheet = getXSpreadSheet();
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 
 		int nichtgespieltPlus = getKonfigurationSheet().getNichtGespielteRundePlus();
 		int nichtgespieltMinus = getKonfigurationSheet().getNichtGespielteRundeMinus();
@@ -306,7 +318,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	public int getErsteSummeSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRunden(spieltag);
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(spieltag);
 		return ERSTE_SPIELRUNDE_SPALTE + (anzSpielRunden * 2);
 	}
 
@@ -333,7 +345,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		return spielerNrlist;
 	}
 
-	public int countNumberOfSpieltage() throws GenerateException {
+	public int countNumberOfRanglisten() throws GenerateException {
 		int anz = 0;
 
 		XSpreadsheets sheets = getSheetHelper().getSheets();
@@ -444,7 +456,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	@Override
 	public int getAnzahlRunden() throws GenerateException {
-		return aktuelleSpielrundeSheet.countNumberOfSpielRunden(getSpieltagNr());
+		return aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 	}
 
 	@Override
@@ -479,6 +491,10 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	@Override
 	public void calculateAll() {
 		getxCalculatable().calculateAll();
+	}
+
+	public SpielrundeSheet_Update getAktuelleSpielrundeSheet() {
+		return aktuelleSpielrundeSheet;
 	}
 
 }

@@ -87,8 +87,8 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public Integer getAnzGespielteSpieltage() throws GenerateException {
-		return propertiesSpalte.getAnzGespielteSpieltage();
+	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
+		return propertiesSpalte.getMaxAnzGespielteSpieltage();
 	}
 
 	@Override

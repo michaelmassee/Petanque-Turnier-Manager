@@ -866,7 +866,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			throws GenerateException {
 		SpielTagNr aktuelleSpielTag = getSpielTag();
 
-		Integer maxAnzGespielteSpieltage = getAnzGespielteSpieltage();
+		Integer maxAnzGespielteSpieltage = getMaxAnzGespielteSpieltage();
 		int bisVergangeneSpieltag = aktuelleSpielTag.getNr() - 1 - maxAnzGespielteSpieltage;
 		if (bisVergangeneSpieltag < 0) {
 			bisVergangeneSpieltag = 0;
@@ -879,8 +879,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		gespieltenRundenEinlesen(aktiveMeldungen, getSpielTag(), abSpielrunde, bisSpielrunde);
 	}
 
-	public Integer getAnzGespielteSpieltage() throws GenerateException {
-		return getKonfigurationSheet().getAnzGespielteSpieltage();
+	/**
+	 * 
+	 * @return anzahl spieltage die bei der neu auslosung eingelesen wird (hat zusammen
+	 * @throws GenerateException
+	 */
+	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
+		return getKonfigurationSheet().getMaxAnzGespielteSpieltage();
 	}
 
 	/**

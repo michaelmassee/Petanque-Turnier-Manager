@@ -72,7 +72,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
 		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
-		// XSpreadsheetDocument doc = spreadsheet;
 		if (doc != null) {
 			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
 			if (hlpr.isEmpty() && hlpr.isFirstLoad()) {

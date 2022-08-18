@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -42,7 +42,8 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 			return;
 		}
 
-		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), aktuelleSpielrunde.getNr() - 1);
+		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(),
+				aktuelleSpielrunde.getNr() - 1);
 		if (neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde)) {
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 			// sicher gehen das aktive spielrunde sheet ist activ
@@ -71,7 +72,8 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr,
+							spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.A));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
@@ -81,7 +83,8 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
-					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr, spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
+					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr,
+							spielerNrPos, ERSTE_SPALTE_ERGEBNISSE, SpielRundeTeam.B));
 				}
 				spielerNrPos.spaltePlusEins();
 			}
@@ -90,14 +93,20 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		return spielerSpielrundeErgebnisse;
 	}
 
-	public int countNumberOfSpielRunden(SpielTagNr spieltag) throws GenerateException {
+	/**
+	 * anzahl spierunden sheets zaehlen mit lücken
+	 * 
+	 * @param spieltag
+	 * @return
+	 * @throws GenerateException
+	 */
+	public int countNumberOfSpielRundenSheets(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
 		int anz = 0;
-		for (int rdnCntr = 1; rdnCntr < 999; rdnCntr++) {
+		int anzSheets = getSheetHelper().getAnzSheets();
+		for (int rdnCntr = 1; rdnCntr <= anzSheets; rdnCntr++) {
 			if (getSheetHelper().findByName(getSheetName(spieltag, SpielRundeNr.from(rdnCntr))) != null) {
 				anz++;
-			} else {
-				break;
 			}
 		}
 		return anz;

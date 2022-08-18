@@ -1,9 +1,10 @@
 /**
-* Erstellung : 10.03.2018 / Michael Massee
-**/
+ * Erstellung : 10.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -27,8 +28,28 @@ public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 					.message(errorMsg).show();
 		} else {
 			getSheetHelper().setActiveSheet(sheet);
-			getRangListeSorter().doSort();
+
+			if (!istDieAnzahlSpieltageInDerRanglisteGleichMitDerAnzahlderSpieltagesheets()) {
+				String errorMsg = "Die Anzahl der Spielrunden in der Rangliste stimt nicht überein mit der Anzahl der gespielten Speilrunden.";
+				MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+						.caption("Fehler beim Sortieren von Rangliste").message(errorMsg).show();
+			} else {
+				getRangListeSorter().doSort();
+			}
 		}
+	}
+
+	/**
+	 * Testet ob die Anzahle der Spielrunden mit der anzahl der Spielrundensheets übereinstimmt
+	 * 
+	 * @return true wenn gleich
+	 * @throws GenerateException
+	 */
+	@VisibleForTesting
+	boolean istDieAnzahlSpieltageInDerRanglisteGleichMitDerAnzahlderSpieltagesheets() throws GenerateException {
+		int anzSpielrundenSheets = getAktuelleSpielrundeSheet().countNumberOfSpielRundenSheets(getSpieltagNr());
+		int numberOfSpielrundenInSheet = countNumberOfSpielrundenInSheet();
+		return anzSpielrundenSheets == numberOfSpielrundenInSheet;
 	}
 
 }

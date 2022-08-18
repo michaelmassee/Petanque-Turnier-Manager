@@ -6,10 +6,13 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.sheet.XSpreadsheet;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Naechste.class);
@@ -29,13 +32,13 @@ public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
 		if (naechsteSpielrundeEinfuegen()) {
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
 
-			//			// Spieltag rangliste vorhanden ?
-			//			SpieltagRanglisteSheet spieltagRanglisteSheet = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
-			//			String ranglisteSheetName = spieltagRanglisteSheet.getSheetName(getSpielTag());
-			//			XSpreadsheet xSpieltagRanglisteSheet = getSheetHelper().findByName(ranglisteSheetName);
-			//			if (xSpieltagRanglisteSheet != null) {
-			//				spieltagRanglisteSheet.generate(getSpielTag());
-			//			}
+			// Spieltag rangliste vorhanden ?
+			SpieltagRanglisteSheet spieltagRanglisteSheet = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
+			String ranglisteSheetName = spieltagRanglisteSheet.getSheetName(getSpielTag());
+			XSpreadsheet xSpieltagRanglisteSheet = getSheetHelper().findByName(ranglisteSheetName);
+			if (xSpieltagRanglisteSheet != null) {
+				spieltagRanglisteSheet.generate(getSpielTag());
+			}
 
 			// sicher gehen das aktive spielrunde sheet ist activ
 			getSheetHelper().setActiveSheet(getXSpreadSheet());

@@ -33,6 +33,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -53,11 +55,99 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	public void testRangliste() throws GenerateException, IOException {
+	public void testRanglisteOK() throws GenerateException, IOException {
 
+		erstelleTestSpielrunden(4, true);
+
+		// Rangliste erstellen
+		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
+		ranglist.run();
+
+		assertThat(ranglist.getAnzahlRunden()).isEqualTo(4);
+		assertThat(ranglist.sucheLetzteZeileMitSpielerNummer()).isEqualTo(25);
+		assertThat(ranglist.getLetzteMitDatenZeileInSpielerNrSpalte()).isEqualTo(28);
+		assertThat(ranglist.getRangListeSpalte().getRangListeSpalte()).isEqualTo(2);
+		assertThat(ranglist.getErsteDatenZiele()).isEqualTo(3);
+		assertThat(ranglist.getManuellSortSpalte()).isEqualTo(18);
+		assertThat(ranglist.countNumberOfRanglisten()).isEqualTo(1);
+
+		// Validate
+		// writeSpieltagRanglisteToJson(ranglist);
+		validateSpieltagRanglisteToJson(ranglist, 1);
+
+		validateSpielTagErgebnisseEinlesen(ranglist);
+		// waitEnter();
+	}
+
+	/**
+	 * Wenn eine neue Spielrunde und Rangliste vorhanden, dann muss die Rangliste mit der neue Spielrunde, neu erstellt werden.
+	 * 
+	 * @throws GenerateException
+	 * @throws IOException
+	 */
+
+	@Test
+	public void testUpdateRanglisteWennNeueSpielrunde() throws GenerateException, IOException {
+		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		erstelleTestSpielrunden(2, false);
+
+		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
+		ranglist.run();// rangliste erstellen
+		assertThat(ranglist.countNumberOfSpielrundenInSheet()).isEqualTo(2);
+
+		// testen ob rangliste mit neue Spieltag aktualisiert wird
+		// Weitere leeren Spielrunde erstellen, mit rangliste update !
+		spielrundeSheetNaechste.run(); // 3 Runde ohne Daten !!!
+		assertThat(ranglist.countNumberOfSpielrundenInSheet()).isEqualTo(3);
+
+		// sortieren
+		new SpieltagRanglisteSheet_SortOnly(wkingSpreadsheet).run();
+		// validieren
+		// writeSpieltagRanglisteToJson(ranglist);
+		validateSpieltagRanglisteToJson(ranglist, 2);
+		// waitEnter();
+	}
+
+	@Test
+	public void testSortRanglisteMitUngleicheAnzahlAnSpielrunden() throws GenerateException, IOException {
+		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		erstelleTestSpielrunden(2, false);
+
+		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
+		ranglist.run();// rangliste erstellen
+
+		spielrundeSheetNaechste.run(); // 3 Runde ohne Daten !!!
+
+		assertThat(ranglist.countNumberOfSpielrundenInSheet()).isEqualTo(3);
+
+		// sortieren
+		SpieltagRanglisteSheet_SortOnly spieltagRanglisteSheet_SortOnly = new SpieltagRanglisteSheet_SortOnly(
+				wkingSpreadsheet);
+		spieltagRanglisteSheet_SortOnly.run();
+
+		assertThat(spieltagRanglisteSheet_SortOnly
+				.istDieAnzahlSpieltageInDerRanglisteGleichMitDerAnzahlderSpieltagesheets()).isTrue();
+
+		// 1 Spieltag 1 SpielRunde löschen
+		String spielrundeName = spielrundeSheetNaechste.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1));
+		XSpreadsheet spielrunde1 = sheetHlp.findByName(spielrundeName);
+		assertThat(spielrunde1).isNotNull();
+		sheetHlp.removeSheet(spielrundeName);
+		spielrunde1 = sheetHlp.findByName(spielrundeName);
+		assertThat(spielrunde1).isNull();
+
+		// sortieren
+		// spieltagRanglisteSheet_SortOnly.run(); fehler box
+		assertThat(spieltagRanglisteSheet_SortOnly
+				.istDieAnzahlSpieltageInDerRanglisteGleichMitDerAnzahlderSpieltagesheets()).isFalse();
+
+		// waitEnter();
+	}
+
+	private void erstelleTestSpielrunden(int anzRunden, boolean validateRunden) throws GenerateException {
 		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
 
-		for (int spielrundeNr = 1; spielrundeNr < 5; spielrundeNr++) {
+		for (int spielrundeNr = 1; spielrundeNr <= anzRunden; spielrundeNr++) {
 
 			spielrundeSheetNaechste.run(); // no thread 1. Runde
 
@@ -91,27 +181,10 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 
 			// validate vertikal ergebnisse
 			// writeVertikalToJson(spielrunde, spielrundeNr);
-			validatVertikalWithJson(spielrunde, spielrundeNr);
+			if (validateRunden) {
+				validatVertikalWithJson(spielrunde, spielrundeNr);
+			}
 		}
-
-		// Rangliste erstellen
-		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
-		ranglist.run();
-
-		assertThat(ranglist.getAnzahlRunden()).isEqualTo(4);
-		assertThat(ranglist.sucheLetzteZeileMitSpielerNummer()).isEqualTo(25);
-		assertThat(ranglist.getLetzteMitDatenZeileInSpielerNrSpalte()).isEqualTo(28);
-		assertThat(ranglist.getRangListeSpalte().getRangListeSpalte()).isEqualTo(2);
-		assertThat(ranglist.getErsteDatenZiele()).isEqualTo(3);
-		assertThat(ranglist.getManuellSortSpalte()).isEqualTo(18);
-
-		// Validate
-		// writeSpieltagRanglisteToJson(ranglist);
-		validateSpieltagRanglisteToJson(ranglist);
-
-		validateSpielTagErgebnisseEinlesen(ranglist);
-
-		// waitEnter();
 	}
 
 	private void validateSpielTagErgebnisseEinlesen(SpieltagRanglisteSheet ranglist) throws GenerateException {
@@ -289,12 +362,18 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 		}
 	}
 
-	private void validateSpieltagRanglisteToJson(SpieltagRanglisteSheet ranglist) throws GenerateException {
+	private void validateSpieltagRanglisteToJson(SpieltagRanglisteSheet ranglist, int ranglisteNr)
+			throws GenerateException {
 		logger.info("validateSpieltagRanglisteToJson");
 
-		RangeData spieltagRangliste = getSpieltagRanglisteRange(ranglist).getDataFromRange();
+		RangeHelper spieltagRanglisteRange = getSpieltagRanglisteRange(ranglist);
+		if (ranglisteNr == 1) {
+			assertThat(spieltagRanglisteRange.getRangePos().getAddress()).isEqualTo("A4:V26");
+		}
+		RangeData spieltagRangliste = spieltagRanglisteRange.getDataFromRange();
 
-		InputStream jsonFile = SpieltagRanglisteSheetUITest.class.getResourceAsStream("SpieltagRangliste.json");
+		InputStream jsonFile = SpieltagRanglisteSheetUITest.class
+				.getResourceAsStream("SpieltagRangliste_" + ranglisteNr + ".json");
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		RangeData refspieltagRangliste = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)),
 				RangeData.class);
@@ -315,7 +394,6 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	private RangeHelper getSpieltagRanglisteRange(SpieltagRanglisteSheet ranglist) throws GenerateException {
 		RangePosition rangeSplrErg = RangePosition.from(ranglist.getErsteSpalte(), ranglist.getErsteDatenZiele(),
 				ranglist.getManuellSortSpalte() + 3, ranglist.sucheLetzteZeileMitSpielerNummer()); // 22 Aktive Spieler Meldungen
-		assertThat(rangeSplrErg.getAddress()).isEqualTo("A4:V26");
 		RangeHelper rngHlpr = RangeHelper.from(ranglist.getXSpreadSheet(),
 				wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeSplrErg);
 		return rngHlpr;

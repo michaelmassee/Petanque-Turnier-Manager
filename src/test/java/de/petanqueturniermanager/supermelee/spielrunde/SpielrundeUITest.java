@@ -38,14 +38,11 @@ public class SpielrundeUITest extends BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(SpielrundeUITest.class);
 
-	private DocumentPropertiesHelper docPropHelper;
-
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
 		TestMeldeListeErstellen testMeldeListeErstellen = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
 		int anzMeldungen = testMeldeListeErstellen.run();
-		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 	}
 
@@ -56,6 +53,17 @@ public class SpielrundeUITest extends BaseCalcUITest {
 			spielrundeSheetNaechste.run(); // no thread
 			validateAnzSpielrundeInMeldeliste(runde, docPropHelper);
 		}
+
+		// die maximale anzahl an Spieltage die bei der neu auslosung eingelesen werden
+		assertThat(spielrundeSheetNaechste.getMaxAnzGespielteSpieltage()).isEqualTo(99);
+		assertThat(spielrundeSheetNaechste.getSpielTag().getNr()).isEqualTo(1);
+		assertThat(docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 999))
+				.isEqualTo(1);
+
+		int anzSpielRunden = new SpielrundeSheet_Update(wkingSpreadsheet)
+				.countNumberOfSpielRundenSheets(spielrundeSheetNaechste.getSpielTag());
+		assertThat(anzSpielRunden).isEqualTo(4);
+
 		// waitEnter();
 	}
 
