@@ -27,7 +27,9 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
 
 /**
@@ -37,12 +39,14 @@ import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
 public class SpielrundeUITest extends BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(SpielrundeUITest.class);
+	private MeldeListeSheet_New meldeListeSheetNew;
 
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
-		TestMeldeListeErstellen testMeldeListeErstellen = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
-		int anzMeldungen = testMeldeListeErstellen.run();
+		TestMeldeListeErstellen testMeldeListe = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
+		int anzMeldungen = testMeldeListe.run();
+		meldeListeSheetNew = testMeldeListe.getMeldeListeSheetNew();
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 	}
 
@@ -65,6 +69,89 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		assertThat(anzSpielRunden).isEqualTo(4);
 
 		// waitEnter();
+	}
+
+	@Test
+	public void testSpielrundeDoublette() throws IOException, GenerateException {
+		docPropHelper.setStringProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE,
+				SuperMeleeMode.Doublette.getKey());
+		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		spielrundeSheetNaechste.run(); // no thread
+
+		// paarungen einlesen
+		XSpreadsheet spielrunde1 = sheetHlp.findByName("1.1. Spielrunde");
+		assertThat(spielrunde1).isNotNull();
+
+		RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,
+				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE + 5, // Team A + B
+				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 4); // 5 paarungen weil Doublette mode
+		RangeHelper rngHlpr = RangeHelper.from(spielrunde1, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				rangeSplrNr);
+		RangeData data = rngHlpr.getDataFromRange();
+		assertThat(data).isNotNull().isNotEmpty().hasSize(5);
+		// paarungen 1-3 nur Doublette
+		for (int i = 0; i < 4; i++) {
+			assertThat(data.get(i).get(0).getStringVal()).isNotBlank();
+			assertThat(data.get(i).get(1).getStringVal()).isNotBlank();
+			assertThat(data.get(i).get(2).getStringVal()).isBlank();
+			assertThat(data.get(4).get(3).getStringVal()).isNotBlank();
+			assertThat(data.get(4).get(4).getStringVal()).isNotBlank();
+			assertThat(data.get(i).get(5).getStringVal()).isBlank();
+		}
+
+		// paarungen 5 Tripeltes
+		assertThat(data.get(4).get(0).getStringVal()).isNotBlank();
+		assertThat(data.get(4).get(1).getStringVal()).isNotBlank();
+		assertThat(data.get(4).get(2).getStringVal()).isNotBlank();
+		assertThat(data.get(4).get(3).getStringVal()).isNotBlank();
+		assertThat(data.get(4).get(4).getStringVal()).isNotBlank();
+		assertThat(data.get(4).get(5).getStringVal()).isNotBlank();
+		//		waitEnter();
+	}
+
+	/**
+	 * testet in Triplette modus ob nur Doublette Runde möglich
+	 * 
+	 * @throws IOException
+	 * @throws GenerateException
+	 */
+	@Test
+	public void testSpielrundeModeTripletteNurDoublettesRunde() throws IOException, GenerateException {
+		docPropHelper.setStringProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE,
+				SuperMeleeMode.Triplette.getKey());
+		docPropHelper.setBooleanProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN, true);
+
+		// erste 2 Meldungen auf inaktiv damit nur doublette paarungen moeglich
+		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
+		int spielerNameErsteSpalte = meldeListeSheetNew.getMeldungenSpalte().getSpielerNameErsteSpalte();
+		int aktivSpalte = spielerNameErsteSpalte + 2;
+		sheetHlp.clearValInCell(meldeListeSheetNew.getXSpreadSheet(), Position.from(aktivSpalte, ersteDatenZeile));
+		sheetHlp.clearValInCell(meldeListeSheetNew.getXSpreadSheet(), Position.from(aktivSpalte, ersteDatenZeile + 1));
+
+		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		spielrundeSheetNaechste.setForceOk(true); // DialogBox returns OK
+		spielrundeSheetNaechste.run(); // no thread 
+
+		// paarungen einlesen
+		XSpreadsheet spielrunde1 = sheetHlp.findByName("1.1. Spielrunde");
+		assertThat(spielrunde1).isNotNull();
+
+		RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,
+				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE + 5, // Team A + B
+				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 4); // 5 paarungen weil Doublette mode
+		RangeHelper rngHlpr = RangeHelper.from(spielrunde1, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				rangeSplrNr);
+		RangeData data = rngHlpr.getDataFromRange();
+		assertThat(data).isNotNull().isNotEmpty().hasSize(5);
+		// paarungen 1-3 nur Doublette
+		for (int i = 0; i < 5; i++) {
+			assertThat(data.get(i).get(0).getStringVal()).isNotBlank();
+			assertThat(data.get(i).get(1).getStringVal()).isNotBlank();
+			assertThat(data.get(i).get(2).getStringVal()).isBlank();
+			assertThat(data.get(4).get(3).getStringVal()).isNotBlank();
+			assertThat(data.get(4).get(4).getStringVal()).isNotBlank();
+			assertThat(data.get(i).get(5).getStringVal()).isBlank();
+		}
 	}
 
 	/**

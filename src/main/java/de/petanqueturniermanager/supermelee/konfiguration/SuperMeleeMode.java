@@ -8,7 +8,17 @@ package de.petanqueturniermanager.supermelee.konfiguration;
  *
  */
 public enum SuperMeleeMode {
-	Triplette, // aufüllen mit Doublettes
-	Doublette // aufüllen mit Triplettes
+	Triplette("T"), // aufüllen mit Doublettes
+	Doublette("D"); // aufüllen mit Triplettes
+
+	private final String key;
+
+	SuperMeleeMode(String key) {
+		this.key = key;
+	}
+
+	public String getKey() {
+		return key;
+	}
 
 }
