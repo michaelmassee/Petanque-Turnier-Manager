@@ -1,6 +1,6 @@
 /**
-* Erstellung : 05.04.2018 / Michael Massee
-**/
+ * Erstellung : 05.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
@@ -47,6 +47,8 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
 	private static final String KONFIG_PROP_SETZ_POS = "Setzpositionen beachten"; // Default true
+	// wenn nur Doublettes oder Triplettes mögliche dann fragen bei derRunde Generierung. Default false
+	public static final String KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN = "Gleiche Paarungen";
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
 
 	static {
@@ -91,8 +93,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.addAuswahl("N", "Durchnummerieren (1-n)").addAuswahl("R", "Zufällig vergeben").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SUPERMELEE_MODE)
-				.setDefaultVal("T").setDescription("Spielrunden Modus\r\nT=Triplette\r\nD=Doublette"))
-				.addAuswahl("T", "Triplette").addAuswahl("D", "Doublette").inSideBar());
+				.setDefaultVal(SuperMeleeMode.Triplette.getKey())
+				.setDescription("Spielrunden Modus\r\nT=Triplette\r\nD=Doublette"))
+				.addAuswahl(SuperMeleeMode.Triplette.getKey(), "Triplette")
+				.addAuswahl(SuperMeleeMode.Doublette.getKey(), "Doublette").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE)
 				.setDefaultVal(99)
@@ -111,6 +115,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SETZ_POS).setDefaultVal(true)
 				.inSideBar().setDescription(
 						"Bei der Generierung von Spielrunden, Setzpositionen aus der Meldeliste beachten. Default=J"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN)
+				.setDefaultVal(false).inSideBar().setDescription(
+						"Wenn true, und wenn die Anzahl der Meldungen, nur eine Doublettes oder Triplettes Runde ermöglichen, dann bei der Generierung von Spielrunden Fragen."));
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -226,6 +234,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
+	public boolean getGleichePaarungenAktiv() throws GenerateException {
+		return readBooleanProperty(KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN);
+	}
+
+	@Override
 	public final void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
 	}
@@ -244,4 +257,5 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
 	}
+
 }

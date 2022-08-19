@@ -1,6 +1,6 @@
 /**
-* Erstellung : 06.05.2018 / Michael Massee
-**/
+ * Erstellung : 06.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
@@ -134,6 +134,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		return getPropertiesSpalte().getAktiveSpielRunde();
+	}
+
+	@Override
+	public boolean getGleichePaarungenAktiv() throws GenerateException {
+		return getPropertiesSpalte().getGleichePaarungenAktiv();
 	}
 
 	@Override

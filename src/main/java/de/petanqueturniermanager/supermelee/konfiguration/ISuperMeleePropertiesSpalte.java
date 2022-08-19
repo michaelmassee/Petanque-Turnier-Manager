@@ -1,6 +1,6 @@
 /**
-* Erstellung : 05.04.2018 / Michael Massee
-**/
+ * Erstellung : 05.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
@@ -52,5 +52,7 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 	boolean getSpielrundePlan() throws GenerateException;
 
 	boolean getSetzPositionenAktiv() throws GenerateException;
+
+	boolean getGleichePaarungenAktiv() throws GenerateException;
 
 }

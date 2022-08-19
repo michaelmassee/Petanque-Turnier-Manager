@@ -98,6 +98,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
+	private boolean forceOk = false; // wird fuer Test verwendet
 
 	public AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spielrunde");
@@ -571,7 +572,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr)
 			throws GenerateException {
-		return neueSpielrunde(meldungen, neueSpielrundeNr, false);
+		return neueSpielrunde(meldungen, neueSpielrundeNr, isForceOk());
 	}
 
 	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force)
@@ -623,9 +624,12 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// Triplette oder Doublette Mode ?
 
 		// -------------------------------
-		boolean doubletteRunde = false;
-		boolean tripletteRunde = false;
-		boolean isKannNurDoublette = superMeleeTeamRechner.isNurDoubletteMoeglich();
+		boolean doubletteRunde = false; // nur doublettes vorhanden
+		boolean tripletteRunde = false; // nur triplettes vorhanden
+		boolean isKannNurDoublette = false;
+		if (getKonfigurationSheet().getGleichePaarungenAktiv()) { // Sachverhalt beachten ? default false
+			isKannNurDoublette = superMeleeTeamRechner.isNurDoubletteMoeglich();
+		}
 		// abfrage nur doublette runde ?
 		if (superMeleeMode == SuperMeleeMode.Triplette && isKannNurDoublette) {
 			MessageBox msgbox = MessageBox.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force)
@@ -636,9 +640,10 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 				doubletteRunde = true;
 			}
 		} else if (superMeleeMode == SuperMeleeMode.Doublette && isKannNurDoublette) {
-			doubletteRunde = true;
+			doubletteRunde = true; // nur doublettes
 		}
 
+		// testdaten
 		if (force && isKannNurDoublette) {
 			doubletteRunde = true;
 		}
@@ -1001,5 +1006,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	public void setSpielRundeNr(SpielRundeNr spielrunde) {
 		checkNotNull(spielrunde);
 		spielRundeNr = spielrunde;
+	}
+
+	public boolean isForceOk() {
+		return forceOk;
+	}
+
+	public void setForceOk(boolean forceOk) {
+		this.forceOk = forceOk;
 	}
 }
