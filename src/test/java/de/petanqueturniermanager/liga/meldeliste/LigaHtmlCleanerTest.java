@@ -40,6 +40,11 @@ public class LigaHtmlCleanerTest {
 		assertThat(refHtml).isNotNull();
 		assertThat(targetHtml.exists());
 
+		// for local test only
+		//		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
+		//		System.out.println("Copy nach " + target);
+		//		FileUtils.copyFile(targetHtml, target);
+
 		List<String> reflist = Files.readAllLines(Paths.get(refHtml.toURI()));
 		List<String> targetlist = Files.readAllLines(Paths.get(targetHtml.toURI()));
 
@@ -48,9 +53,5 @@ public class LigaHtmlCleanerTest {
 			assertThat(reflist.get(i)).isEqualTo(targetlist.get(i));
 		});
 
-		// for local test only
-		// File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
-		//		System.out.println("Copy nach " + target);
-		//		FileUtils.copyFile(targetHtml, target);
 	}
 }
