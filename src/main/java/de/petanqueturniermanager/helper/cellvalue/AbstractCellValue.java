@@ -1,6 +1,6 @@
 /**
-* Erstellung : 27.03.2018 / Michael Massee
-**/
+ * Erstellung : 27.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.cellvalue;
 
@@ -336,6 +336,12 @@ abstract public class AbstractCellValue<T extends ICellValue, V> {
 	@SuppressWarnings("unchecked")
 	public T removeCellBackColor() {
 		this.cellProperties.removeCellBackColor();
+		return (T) this;
+	}
+
+	@SuppressWarnings("unchecked")
+	public T removeCharColor() {
+		this.cellProperties.removeCharColor();
 		return (T) this;
 	}
 

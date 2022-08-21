@@ -149,6 +149,10 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return remove(CELL_BACK_COLOR);
 	}
 
+	public T removeCharColor() {
+		return remove(CHAR_COLOR);
+	}
+
 	/**
 	 * ist in inspector als Typ Long ? aber muss als int, sonnst iligalargument exception
 	 *

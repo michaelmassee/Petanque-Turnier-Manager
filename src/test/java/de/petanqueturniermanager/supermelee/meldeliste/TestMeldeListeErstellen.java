@@ -2,10 +2,21 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
@@ -22,9 +33,12 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 public class TestMeldeListeErstellen {
 
+	private static final Logger logger = LogManager.getLogger(TestMeldeListeErstellen.class);
+
+	private static final String TESTNAMEN_1000_CSV = "testnamen_1000.csv";
 	private final WorkingSpreadsheet wkingSpreadsheet;
 	private final XSpreadsheetDocument doc;
-	private MeldeListeSheet_New meldeListeSheetNew;
+	private final MeldeListeSheet_New meldeListeSheetNew;
 
 	public static List<String> setzPos1 = Arrays.asList(new String[] { "Cummings, Kay", "Morgenroth, Waldtraut" });
 	public static List<String> setzPos2 = Arrays.asList(new String[] { "Barber, Arne", "Weaver, Erwin" });
@@ -32,18 +46,35 @@ public class TestMeldeListeErstellen {
 	public static List<String> ausgestiegen = Arrays.asList(new String[] { "Töpfer, Lilian" });
 
 	public TestMeldeListeErstellen(WorkingSpreadsheet wkingSpreadsheet, XSpreadsheetDocument doc) {
+		meldeListeSheetNew = new MeldeListeSheet_New(wkingSpreadsheet);
 		this.wkingSpreadsheet = wkingSpreadsheet;
 		this.doc = doc;
 	}
 
 	public int run() throws GenerateException {
-		meldeListeSheetNew = new MeldeListeSheet_New(wkingSpreadsheet);
+
 		meldeListeSheetNew.run(); // do not start a Thread ! 
 		int anzMeldungen = testMeldungenEinfuegen();
 		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !
 
 		return anzMeldungen;
+	}
+
+	public int initMitAlleDieSpielen(int anzMeldungen) throws GenerateException {
+		meldeListeSheetNew.run(); // do not start a Thread ! 
+		int anzdidInsertMeldungen = testMeldungenEinfuegenAllepielen(anzMeldungen, 0);
+		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
+		meldeListeSheetUpdate.run();// do not start a Thread !
+		return anzdidInsertMeldungen;
+	}
+
+	public int addMitAlleDieSpielen(int anzMeldungen) throws GenerateException {
+		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
+		int anzdidInsertMeldungen = testMeldungenEinfuegenAllepielen(anzMeldungen, anzbereitsinListe);
+		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
+		meldeListeSheetUpdate.run();// do not start a Thread !
+		return anzdidInsertMeldungen;
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
@@ -58,13 +89,31 @@ public class TestMeldeListeErstellen {
 		return meldeListeSheetNew.ersteSummeSpalte();
 	}
 
+	private int testMeldungenEinfuegenAllepielen(int anzMeldungen, int skip) throws GenerateException {
+
+		int ersteDatenZeile = getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
+		ersteDatenZeile += skip;
+		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getSpielerNameErsteSpalte();
+		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
+
+		List<String> listeMitTestNamen = listeMitTestNamen(anzMeldungen, skip);
+		RangeData data = new RangeData(listeMitTestNamen);
+		data.addNewEmptySpalte(); // setz position
+		data.addNewSpalte(1); // alle spielen
+
+		Position startPos = Position.from(spielerNameErsteSpalte, ersteDatenZeile);
+		RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).setDataInRange(data, true);
+
+		return listeMitTestNamen.size();
+	}
+
 	private int testMeldungenEinfuegen() throws GenerateException {
 
 		int ersteDatenZeile = getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
 		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getSpielerNameErsteSpalte();
 		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
 
-		List<Object> listeMitTestNamen = listeMitTestNamen();
+		List<String> listeMitTestNamen = listeMitTestNamen();
 		RangeData data = new RangeData(listeMitTestNamen);
 		data.addNewEmptySpalte(); // setz position
 		data.addNewSpalte(1); // alle spielen
@@ -99,9 +148,8 @@ public class TestMeldeListeErstellen {
 	}
 
 	// http://migano.de/testdaten.php
-
-	public List<Object> listeMitTestNamen() {
-		List<Object> testNamen = new ArrayList<>();
+	public List<String> listeMitTestNamen() {
+		List<String> testNamen = new ArrayList<>();
 
 		testNamen.add("Wegner, Silas");
 		testNamen.add("Wright, Silvia");
@@ -130,5 +178,39 @@ public class TestMeldeListeErstellen {
 		testNamen.add("Crawford, Lorena");
 		return testNamen;
 	}
+
+	public List<String> listeMitTestNamen(int anzahl) {
+		return listeMitTestNamen(anzahl, 0);
+	}
+
+	public List<String> listeMitTestNamen(int anzahl, int skip) {
+		List<String> testNamen = new ArrayList<>();
+
+		InputStream csvFile = TestMeldeListeErstellen.class.getResourceAsStream(TESTNAMEN_1000_CSV);
+
+		if (csvFile == null) {
+			String errmsg = TESTNAMEN_1000_CSV + " File not found";
+			logger.error(errmsg);
+			throw new NullPointerException(errmsg);
+		}
+
+		CSVParser parser = new CSVParserBuilder().withSeparator(';').withIgnoreQuotations(true).build();
+
+		try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvFile)).withSkipLines(1 + skip)
+				.withCSVParser(parser).build()) {
+			String[] nextLine;
+			int anzRead = 1;
+			while ((nextLine = reader.readNext()) != null && anzRead <= anzahl) {
+				testNamen.add(nextLine[2] + ", " + nextLine[1]);
+				anzRead++;
+			}
+
+		} catch (IOException | CsvException e) {
+			logger.error(e.getMessage(), e);
+		}
+		return testNamen;
+	}
+
+	// 
 
 }

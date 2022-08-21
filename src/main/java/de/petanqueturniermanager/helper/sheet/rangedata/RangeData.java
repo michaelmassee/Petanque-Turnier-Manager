@@ -32,7 +32,7 @@ public class RangeData extends ArrayList<RowData> {
 		}).collect(Collectors.toList()));
 	}
 
-	public RangeData(List<Object> data) {
+	public RangeData(List<?> data) {
 		super(checkNotNull(data).stream().map(rowdata -> {
 			return new RowData(rowdata);
 		}).collect(Collectors.toList()));

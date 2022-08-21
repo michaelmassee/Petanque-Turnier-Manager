@@ -92,6 +92,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public Integer getMaxAnzSpielerInSpalte() throws GenerateException {
+		return propertiesSpalte.getMaxAnzSpielerInSpalte();
+	}
+
+	@Override
 	public boolean getSpielrunde1Header() throws GenerateException {
 		return propertiesSpalte.getSpielrunde1Header();
 	}

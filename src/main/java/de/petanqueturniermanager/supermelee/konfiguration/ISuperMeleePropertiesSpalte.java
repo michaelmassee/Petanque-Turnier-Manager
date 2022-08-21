@@ -39,6 +39,8 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getMaxAnzGespielteSpieltage() throws GenerateException;
 
+	Integer getMaxAnzSpielerInSpalte() throws GenerateException;
+
 	@Override
 	String getFusszeileLinks() throws GenerateException;
 

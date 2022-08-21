@@ -19,7 +19,6 @@ import com.sun.star.sheet.XSpreadsheet;
  */
 
 import de.petanqueturniermanager.BaseCalcUITest;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.Position;
@@ -47,7 +46,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		TestMeldeListeErstellen testMeldeListe = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
 		int anzMeldungen = testMeldeListe.run();
 		meldeListeSheetNew = testMeldeListe.getMeldeListeSheetNew();
-		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
+
 	}
 
 	@Test
