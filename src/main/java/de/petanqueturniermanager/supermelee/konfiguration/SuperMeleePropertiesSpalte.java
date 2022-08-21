@@ -43,6 +43,9 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
 	// anzahl spieltage die bei der neu auslosung eingelesen wird (hat zusammen
 	private static final String KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE = "Anzahl gespielte Spieltage";
+	public static final String KONFIG_PROP_ANZ_SPIELER_IN_SPALTE = "Anz. Spieler in Spalte"; // ab wann neue Spalte Speilrundeplan
+	private static final int MAX_ANZSPIELER_IN_SPALTE = 30;
+
 	private static final String KONFIG_PROP_SPIELRUNDE_1_HEADER = "Spielrunde, Spieltag in 1. Kopfzeile"; // spieltag in header ?
 	public static final String KONFIG_PROP_SUPERMELEE_MODE = "Supermêlée Modus"; // Default Triplette / optional Doublette
 	private static final String KONFIG_PROP_SPIELRUNDE_PLAN = "Spielrunde Plan"; // Default false
@@ -103,6 +106,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDescription(
 						"Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)")
 				.inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_SPIELER_IN_SPALTE)
+				.setDefaultVal(MAX_ANZSPIELER_IN_SPALTE)
+				.setDescription("Ab wann (Anzahl Spieler) neue Spalte in Spielplan.").inSideBar());
 
 		KONFIG_PROPERTIES.add(
 				ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
@@ -204,6 +211,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
 		return readIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE);
+	}
+
+	@Override
+	public Integer getMaxAnzSpielerInSpalte() throws GenerateException {
+		return readIntProperty(KONFIG_PROP_ANZ_SPIELER_IN_SPALTE);
 	}
 
 	/**

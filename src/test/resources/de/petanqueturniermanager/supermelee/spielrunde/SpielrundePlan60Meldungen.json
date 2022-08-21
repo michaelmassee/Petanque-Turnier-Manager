@@ -1,0 +1,959 @@
+[
+  [
+    {
+      "data": "Spielrunde 1"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": "Nr."
+    },
+    {
+      "data": "Name"
+    },
+    {
+      "data": "Bahn"
+    },
+    {
+      "data": "Team"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Nr."
+    },
+    {
+      "data": "Name"
+    },
+    {
+      "data": "Bahn"
+    },
+    {
+      "data": "Team"
+    }
+  ],
+  [
+    {
+      "data": 1.0
+    },
+    {
+      "data": "Asmus, Rigobert"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 44.0
+    },
+    {
+      "data": "Knuth, Brandolf"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 31.0
+    },
+    {
+      "data": "Bäder, Rita"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 45.0
+    },
+    {
+      "data": "Krischer, Max"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Bieder, Maria"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 46.0
+    },
+    {
+      "data": "Meiners, Borwin"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 32.0
+    },
+    {
+      "data": "Bitsch, Sieghardt"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 47.0
+    },
+    {
+      "data": "Meinzer, Berndt"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Bohnet, Collin"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 18.0
+    },
+    {
+      "data": "Molz, Kornelia"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 33.0
+    },
+    {
+      "data": "Bremen, Ehrentraut"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 19.0
+    },
+    {
+      "data": "Murphy, Ehrentraut"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Burmeister, Selma"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 20.0
+    },
+    {
+      "data": "Ney, Hartwig"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 34.0
+    },
+    {
+      "data": "Ciftci, Detmar"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 21.0
+    },
+    {
+      "data": "Nuber, Joana"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 35.0
+    },
+    {
+      "data": "Doege, Evi"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 48.0
+    },
+    {
+      "data": "Ott, Manfried"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Dold, Otbert"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 49.0
+    },
+    {
+      "data": "Panitz, Sibylla"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Döll, Muthild"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 22.0
+    },
+    {
+      "data": "Petter, Roseliese"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Eisenhardt, Annkatrin"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 50.0
+    },
+    {
+      "data": "Puls, Gaby"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Elsen, Angelika"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 51.0
+    },
+    {
+      "data": "Quadt, Ingelotte"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 36.0
+    },
+    {
+      "data": "Enzmann, Gesine"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 23.0
+    },
+    {
+      "data": "Radde, Engelbert"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Erl, Siska"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 24.0
+    },
+    {
+      "data": "Rentschler, Theodeline"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 10.0
+    },
+    {
+      "data": "Gentsch, Rotraut"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 25.0
+    },
+    {
+      "data": "Reuß, Birk"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 11.0
+    },
+    {
+      "data": "Gerhard, Niko"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": "Romero, Imke"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 12.0
+    },
+    {
+      "data": "Goetze, Eustachius"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 53.0
+    },
+    {
+      "data": "Runkel, Annika"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 37.0
+    },
+    {
+      "data": "Görgens, Gerlach"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 54.0
+    },
+    {
+      "data": "Scheld, Wernhard"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 13.0
+    },
+    {
+      "data": "Grau, Franka"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 55.0
+    },
+    {
+      "data": "Schneeweiß, Eveline"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 38.0
+    },
+    {
+      "data": "Härle, Annika"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 26.0
+    },
+    {
+      "data": "Siegrist, Helfrid"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 39.0
+    },
+    {
+      "data": "Hempel, Willhart"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 27.0
+    },
+    {
+      "data": "Stabel, Sophie"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 40.0
+    },
+    {
+      "data": "Herget, Diethmar"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 56.0
+    },
+    {
+      "data": "Staub, Irmintraud"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 14.0
+    },
+    {
+      "data": "Husmann, Isedore"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 57.0
+    },
+    {
+      "data": "Steinborn, Joana"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 41.0
+    },
+    {
+      "data": "Hüttel, Gretchen"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 58.0
+    },
+    {
+      "data": "Steinbrink, Diethelm"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 15.0
+    },
+    {
+      "data": "Jakobs, Anett"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 59.0
+    },
+    {
+      "data": "Stocker, Benjamin"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 16.0
+    },
+    {
+      "data": "Kamps, Felix"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 28.0
+    },
+    {
+      "data": "Tafel, Rosa"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 42.0
+    },
+    {
+      "data": "Karch, Erhardt"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 60.0
+    },
+    {
+      "data": "Thielemann, Michaela"
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": 43.0
+    },
+    {
+      "data": "Kieslich, Zoé"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": "B"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 29.0
+    },
+    {
+      "data": "Thielmann, Kreszenzia"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": "B"
+    }
+  ],
+  [
+    {
+      "data": 17.0
+    },
+    {
+      "data": "Knöpfle, Collin"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": "A"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": 30.0
+    },
+    {
+      "data": "Witschel, Danny"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": "A"
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ]
+]

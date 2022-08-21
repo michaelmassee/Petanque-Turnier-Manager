@@ -125,7 +125,7 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 		// spalten formatieren
 
 		// .setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER).setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
+		RangeProperties rangePropNr = RangeProperties.from().setHoriJustify(CellHoriJustify.CENTER).setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
 		ColumnProperties columnPropNr = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 
 		ColumnProperties columnPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH);

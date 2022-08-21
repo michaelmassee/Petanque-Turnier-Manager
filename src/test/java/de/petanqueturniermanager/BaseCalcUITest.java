@@ -25,6 +25,7 @@ import com.google.gson.JsonIOException;
 import com.sun.star.frame.XComponentLoader;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -72,6 +73,7 @@ public abstract class BaseCalcUITest {
 		wkingSpreadsheet = new WorkingSpreadsheet(starter.getxComponentContext(), doc);
 		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
 		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
+		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		// use force weil calc is clossed in afterTest
 		ProcessBox.forceinit(starter.getxComponentContext());
 	}
@@ -111,7 +113,7 @@ public abstract class BaseCalcUITest {
 		}
 	}
 
-	protected void writeToJson(String fileName, RangeData rangeData) {
+	public void writeToJson(String fileName, RangeData rangeData) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 		try {

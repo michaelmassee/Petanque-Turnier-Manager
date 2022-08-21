@@ -53,6 +53,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
@@ -249,6 +250,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		case "naechste_spielrunde":
 			new SpielrundeSheet_Naechste(workingSpreadsheet).testTurnierVorhanden().backUpDocument()
 					.backupDocumentAfterRun().start();
+			break;
+		case "super_spielrundeplan":
+			new SpielrundePlan(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "spielrunden_testdaten":
 			new SpielrundeSheet_TestDaten(workingSpreadsheet).start();

@@ -117,15 +117,28 @@
 									<value>_self</value>
 								</prop>
 							</node>
-
+							
 							<node oor:name="A1B3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Play Roundplan</value>
+									<value xml:lang="de">Spielrundeplan</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?super_spielrundeplan</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A1B4" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
 
-							<node oor:name="A1B4" oor:op="replace">
+							<node oor:name="A1B5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List</value>
 									<value xml:lang="de">Spieltag Rangliste</value>
@@ -138,7 +151,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B5" oor:op="replace">
+							<node oor:name="A1B6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List Sort</value>
 									<value xml:lang="de">Spieltag Rangliste Sortieren</value>
@@ -152,7 +165,7 @@
 							</node>
 
 
-							<node oor:name="A1B6" oor:op="replace">
+							<node oor:name="A1B7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next competition day</value>
 									<value xml:lang="de">Nächste Spieltag</value>
@@ -165,13 +178,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B7" oor:op="replace">
+							<node oor:name="A1B8" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A1B8" oor:op="replace">
+							<node oor:name="A1B9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste</value>
@@ -184,8 +197,7 @@
 								</prop>
 							</node>
 
-
-							<node oor:name="A1B9" oor:op="replace">
+							<node oor:name="A1B10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste Sortieren</value>

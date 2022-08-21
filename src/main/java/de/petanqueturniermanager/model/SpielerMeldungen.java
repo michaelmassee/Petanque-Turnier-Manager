@@ -14,11 +14,11 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /*
-* Meldungen.java
-*
-* Erstellung     : 06.09.2017 / Michael Massee
-*
-*/
+ * Meldungen.java
+ *
+ * Erstellung : 06.09.2017 / Michael Massee
+ *
+ */
 
 public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 

@@ -143,7 +143,7 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 		assertThat(pruefListe.size()).isEqualTo(anzMeldungen);
 	}
 
-	private void validateMeldungen(RangeData dataFromRange, int anzMeldungen, List<Object> listeMitTestNamen) {
+	private void validateMeldungen(RangeData dataFromRange, int anzMeldungen, List<String> listeMitTestNamen) {
 
 		HashSet<String> pruefListe = new HashSet();
 		dataFromRange.stream().map(r -> {

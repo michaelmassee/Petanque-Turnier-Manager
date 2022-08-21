@@ -101,7 +101,7 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 
 		ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
 		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
-				.setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_SPIELER_NR);
+				.setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
 
 		ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH);
 

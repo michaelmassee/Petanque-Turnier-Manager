@@ -482,11 +482,10 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		// back color
 		Integer headerFarbe = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-		// CellBackColor
 
 		String ersteHeader = "Spielrunde " + spielRunde.getNr();
 		if (getKonfigurationSheet().getSpielrunde1Header()) { // spieltag in header ?
-			ersteHeader = "Spieltag " + spieltag.getNr() + " " + ersteHeader;
+			ersteHeader = spieltag.getNr() + ". Spieltag - " + ersteHeader;
 		}
 
 		StringCellValue headerVal = StringCellValue.from(sheet, ersteHeaderZeile, ersteHeader)
@@ -673,7 +672,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			printBereichDefinieren(getXSpreadSheet());
 			// Spielrundeplan, ! nur hier instance erstellen
 			if (getKonfigurationSheet().getSpielrundePlan()) {
-				new SpielrundePlan(getWorkingSpreadsheet()).generate(meldungen);
+				new SpielrundePlan(getWorkingSpreadsheet()).generate();
 			}
 
 		} catch (AlgorithmenException e) {
