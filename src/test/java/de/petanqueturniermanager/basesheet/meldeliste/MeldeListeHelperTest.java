@@ -133,28 +133,6 @@ public class MeldeListeHelperTest {
 		}
 	}
 
-	@Test
-	public void testZeileOhneSpielerNamenEntfernen() throws Exception {
-
-		// Achtung: die liste wird Sortiert mit leeren namen nach unten
-		SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
-				new SpielerNrName(10, "Petra"), new SpielerNrName(12, "Heinz"),
-				// --------------------
-				new SpielerNrName(4, "") // muss entfernt werden
-				// --------------------
-		};
-
-		initReturnSpielerDaten(spielerNrNameList);
-
-		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
-				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
-		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
-				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
-
-		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
-		verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
-	}
-
 	private void initReturnSpielerDaten(SpielerNrName[] spielerNrnameList) throws GenerateException {
 
 		Position spielerNrPos = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
@@ -181,6 +159,28 @@ public class MeldeListeHelperTest {
 		PowerMockito.when(meldungenSpalteMock.neachsteFreieDatenZeileInSpielerNrSpalte())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
 	}
+
+	@Test
+			public void testZeileOhneErsteSpielerNamenEntfernen() throws Exception {
+		
+				// Achtung: die liste wird Sortiert mit leeren namen nach unten
+				SpielerNrName[] spielerNrNameList = new SpielerNrName[] { new SpielerNrName(32, "Anna"),
+						new SpielerNrName(10, "Petra"), new SpielerNrName(12, "Heinz"),
+						// --------------------
+						new SpielerNrName(4, "") // muss entfernt werden
+						// --------------------
+				};
+		
+				initReturnSpielerDaten(spielerNrNameList);
+		
+				PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
+						.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+				PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
+						.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
+		
+				meldeListeHelper.zeileOhneErsteSpielerNamenEntfernen();
+				verify(sheetHelperMock, times(1)).clearValInCell(any(XSpreadsheet.class), any(Position.class));
+			}
 }
 
 class SpielerNrName {

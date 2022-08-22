@@ -163,7 +163,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		formatSpielTagSpalte(getSpielTag());
 
 		// eventuelle luecken in spiele namen nach unten sortieren
-		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.zeileOhneErsteSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 
 		doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
@@ -398,7 +398,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 	@Override
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		return meldeListeHelper.formulaSverweisSpielernamen(spielrNrAdresse);
+		return meldeListeHelper.formulaSverweisErsteSpielernamen(spielrNrAdresse);
 	}
 
 	@Override
@@ -795,7 +795,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 			final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
 
 		boolean setzPositionenAktiv = getKonfigurationSheet().getSetzPositionenAktiv();
-		return (SpielerMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt,
+		return (SpielerMeldungen) meldeListeHelper.getMeldungenForSpieltag(spieltag, spielrundeGespielt,
 				new SpielerMeldungen(setzPositionenAktiv));
 	}
 

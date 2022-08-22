@@ -158,7 +158,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * @throws GenerateException
 	 */
 
-	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
+	public void zeileOhneErsteSpielerNamenEntfernen() throws GenerateException {
 		meldeListe.processBoxinfo("Zeilen ohne Spielernamen entfernen");
 
 		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
@@ -187,7 +187,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		}
 	}
 
-	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
+	public String formulaSverweisErsteSpielernamen(String spielrNrAdresse) {
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
 		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), 999)
 				.getAddressWith$();
@@ -196,14 +196,16 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	/**
-	 *
+	 * Diese Methode funktioniert nur wenn mode= Tete<br>
+	 * Spielsystem Supermelee
+	 * 
 	 * @param spieltag
 	 * @param spielrundeGespielt list mit Flags. null für alle
 	 * @return
 	 * @throws GenerateException
 	 */
 
-	public IMeldungen<MLD_LIST_TYPE, MLDTYPE> getMeldungen(final SpielTagNr spieltag,
+	public IMeldungen<MLD_LIST_TYPE, MLDTYPE> getMeldungenForSpieltag(final SpielTagNr spieltag,
 			final List<SpielrundeGespielt> spielrundeGespielt, IMeldungen<MLD_LIST_TYPE, MLDTYPE> meldungen)
 			throws GenerateException {
 		checkNotNull(spieltag, "spieltag == null");
@@ -281,6 +283,9 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 						.setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
+	}
+
+	public void sortNachErsteSpielerName() throws GenerateException {
 		// spieler nach Alphabet sortieren
 		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true);
 	}

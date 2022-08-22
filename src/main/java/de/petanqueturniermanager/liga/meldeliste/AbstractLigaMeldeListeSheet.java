@@ -107,7 +107,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		// --------------------- TODO doppelt code entfernen
 
 		// eventuelle luecken in spiele namen nach unten sortieren
-		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.zeileOhneErsteSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true); // nach nr sortieren
 		meldungenSpalte.formatDaten();
@@ -200,7 +200,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	@Override
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		return meldeListeHelper.formulaSverweisSpielernamen(spielrNrAdresse);
+		return meldeListeHelper.formulaSverweisErsteSpielernamen(spielrNrAdresse);
 	}
 
 	@Override
@@ -231,7 +231,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 
 	private TeamMeldungen meldeListeHelperGetMeldungen(final SpielTagNr spieltag,
 			final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
-		return (TeamMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt, new TeamMeldungen());
+		return (TeamMeldungen) meldeListeHelper.getMeldungenForSpieltag(spieltag, spielrundeGespielt,
+				new TeamMeldungen());
 	}
 
 	@Override
