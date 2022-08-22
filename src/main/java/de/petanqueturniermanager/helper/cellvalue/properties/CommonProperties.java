@@ -123,6 +123,10 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 		return put(SHRINK_TO_FIT, shrink);
 	}
 
+	public T setShrinkToFit() {
+		return put(SHRINK_TO_FIT, true);
+	}
+
 	/**
 	 * @param vertjustify Type = CellVertJustify2
 	 * @return
