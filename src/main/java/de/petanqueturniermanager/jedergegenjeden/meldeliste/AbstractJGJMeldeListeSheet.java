@@ -2,9 +2,7 @@ package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.List;
 
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
@@ -13,14 +11,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
 import de.petanqueturniermanager.model.Team;
@@ -33,7 +23,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldeliste<TeamMeldungen, Team> {
 
-	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 5; // Tabelle immer mit min anzahl von zeilen formatieren
+	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 30; // Tabelle immer mit min anzahl von zeilen formatieren
 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
@@ -49,7 +39,8 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 		super(workingSpreadsheet, prefix);
 		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
-				.formation(Formation.TETE).build();
+				.formation(Formation.TRIPLETTE).minAnzahlAnzeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN)
+				.propertiesSpalte(getKonfigurationSheet()).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
@@ -67,11 +58,11 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 		// --------------------- TODO doppelt code entfernen
 
 		// eventuelle luecken in spiele namen nach unten sortieren
-		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
+		meldeListeHelper.zeileOhneErsteSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true); // nach nr sortieren
 		meldungenSpalte.formatDaten();
-		formatDaten();
+		// formatDaten();
 
 	}
 
@@ -79,77 +70,47 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 
 		processBoxinfo("Formatiere Daten Spalten");
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
-
-		if (letzteDatenZeile < MIN_ANZAHL_MELDUNGEN_ZEILEN) {
-			letzteDatenZeile = MIN_ANZAHL_MELDUNGEN_ZEILEN;
-		}
-
-		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
-			// keine Daten
-			return;
-		}
-
-		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(),
-				letzteDatenZeile);
-
-		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
-
-		// gerade / ungrade hintergrund farbe
-		// CellBackColor
-		Integer geradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade();
-		Integer unGeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
-		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(
-				geradeColor);
-		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(
-				unGeradeColor);
-
-		// TODO Doppelte Code
-		// Spieler Nummer
-		// -----------------------------------------------
-		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
-				letzteDatenZeile);
-		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
-		// ------------------------------
-				formulaIsText().styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und
-																																							// <999 sein
-																																							// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-		// -----------------------------------------------
-
-		// TODO Doppelte Code
-		// -----------------------------------------------
-		// Spieler Namen
-		// -----------------------------------------------
-		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE,
-				getSpielerNameErsteSpalte(), letzteDatenZeile);
-		String conditionfindDoppeltNamen = "COUNTIF("
-				+ Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
-		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
-				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-		// -----------------------------------------------
+		//		// TODO Doppelte Code
+		//		// Spieler Nummer
+		//		// -----------------------------------------------
+		//		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
+		//				letzteDatenZeile);
+		//		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
+		//				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		//		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
+		//		// ------------------------------
+		//				formulaIsText().styleIsFehler().applyAndDoReset().
+		//				// ------------------------------
+		//				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
+		//				// ------------------------------
+		//				// eigentlich musste 0 = Fehler sein wird es aber nicht
+		//				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
+		//				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
+		//				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
+		//				// ------------------------------
+		//				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		//		// -----------------------------------------------
+		//
+		//		// TODO Doppelte Code
+		//		// -----------------------------------------------
+		//		// Spieler Namen
+		//		// -----------------------------------------------
+		//		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE,
+		//				getSpielerNameErsteSpalte(), letzteDatenZeile);
+		//		String conditionfindDoppeltNamen = "COUNTIF("
+		//				+ Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";"
+		//				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		//		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
+		//		// ------------------------------
+		//				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
+		//				.applyAndDoReset().
+		//				// ------------------------------
+		//				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
+		//				.applyAndDoReset().
+		//				// ------------------------------
+		//				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
+		//				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		//		// -----------------------------------------------
 	}
 
 	public int getSpielerNameErsteSpalte() {
@@ -158,7 +119,7 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 
 	@Override
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
-		return meldeListeHelper.formulaSverweisSpielernamen(spielrNrAdresse);
+		return meldeListeHelper.formulaSverweisErsteSpielernamen(spielrNrAdresse);
 	}
 
 	@Override
@@ -189,7 +150,8 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 
 	private TeamMeldungen meldeListeHelperGetMeldungen(final SpielTagNr spieltag,
 			final List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
-		return (TeamMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt, new TeamMeldungen());
+		return (TeamMeldungen) meldeListeHelper.getMeldungenForSpieltag(spieltag, spielrundeGespielt,
+				new TeamMeldungen());
 	}
 
 	@Override

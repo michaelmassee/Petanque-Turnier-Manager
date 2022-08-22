@@ -16,6 +16,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
+import com.sun.star.sheet.ConditionOperator2;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -43,6 +44,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	private final RangePosition rangePos;
 	private boolean doClear = false;
 	private ConditionOperator conditionOperator;
+	private ConditionOperator2 conditionOperator2;
 	private String formula1;
 	private String formula2;
 	private String styleName;
@@ -68,6 +70,11 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper operator(ConditionOperator conditionOperator) {
 		this.conditionOperator = conditionOperator;
+		return this;
+	}
+
+	public ConditionalFormatHelper operator(ConditionOperator2 conditionOperator2) {
+		this.conditionOperator2 = conditionOperator2;
 		return this;
 	}
 
@@ -155,6 +162,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	public ConditionalFormatHelper reset() throws GenerateException {
 		doClear = false;
 		conditionOperator = null;
+		conditionOperator2 = null;
 		formula1 = null;
 		formula2 = null;
 		styleName = null;
@@ -171,7 +179,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper applyAndDoReset() throws GenerateException {
 		checkNotNull(conditionOperator);
-		checkNotNull(formula1);
+		// checkNotNull(formula1);
 		checkNotNull(styleName);
 
 		XPropertySet xPropSet = RangeHelper.from(getISheet(), rangePos).getPropertySet();
@@ -191,16 +199,27 @@ public class ConditionalFormatHelper extends BaseHelper {
 			} else {
 				aCondition = new PropertyValue[3];
 			}
+
 			int idx = 0;
+
 			aCondition[idx] = new com.sun.star.beans.PropertyValue();
 			aCondition[idx].Name = "Operator";
-			aCondition[idx].Value = conditionOperator;
+
+			if (conditionOperator != null) {
+				aCondition[idx].Value = conditionOperator;
+			} else if (conditionOperator2 != null) {
+				aCondition[idx].Value = conditionOperator2;
+			} else {
+				throw new NullPointerException("conditionOperator fehlt");
+			}
 
 			// string Formula1 contains the value or formula for the operation.
-			idx++;
-			aCondition[idx] = new com.sun.star.beans.PropertyValue();
-			aCondition[idx].Name = "Formula1";
-			aCondition[idx].Value = formula1;
+			if (formula1 != null) {
+				idx++;
+				aCondition[idx] = new com.sun.star.beans.PropertyValue();
+				aCondition[idx].Name = "Formula1";
+				aCondition[idx].Value = formula1;
+			}
 
 			// string Formula2 contains the second value or formula for the operation (used with ConditionOperator::BETWEEN or ConditionOperator::NOT_BETWEEN operations).
 			if (formula2 != null) {

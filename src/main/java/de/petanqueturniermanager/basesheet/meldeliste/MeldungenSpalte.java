@@ -19,21 +19,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.lang.IndexOutOfBoundsException;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.XCell;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
@@ -41,6 +46,15 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.IMeldungen;
+
+/**
+ * Nr + 1-3 Namen + Alias
+ * 
+ * @author michael
+ *
+ * @param <MLD_LIST_TYPE>
+ * @param <MLDTYPE>
+ */
 
 public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldelistetyp
 
@@ -57,25 +71,29 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final int meldungNameSpalte;
 	private final int anzZeilenInHeader; // weiviele Zeilen sollen in header verwendet werden
 	private final int spalteMeldungNameWidth;
+	private final int minAnzahlAnzeilen; // 
+	private final IPropertiesSpalte propertiesSpalte;
 
 	private final WeakRefHelper<ISheet> sheet;
 
 	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader,
-			int spalteMeldungNameWidth) {
-		checkNotNull(iSheet);
+			int spalteMeldungNameWidth, int minAnzahlAnzeilen, IPropertiesSpalte propertiesSpalte) {
+
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
 		checkArgument(anzZeilenInHeader > 0);
-		checkNotNull(formation);
 		checkArgument(spalteMeldungNameWidth > 1);
+		checkArgument(minAnzahlAnzeilen > 1);
 
 		this.ersteDatenZiele = ersteDatenZiele;
 		this.anzZeilenInHeader = anzZeilenInHeader;
 		this.spalteMeldungNameWidth = spalteMeldungNameWidth;
 		meldungNrSpalte = spielerNrSpalte;
 		meldungNameSpalte = spielerNrSpalte + 1;
-		sheet = new WeakRefHelper<>(iSheet);
-		this.formation = formation;
+		sheet = new WeakRefHelper<>(checkNotNull(iSheet));
+		this.formation = checkNotNull(formation);
+		this.minAnzahlAnzeilen = minAnzahlAnzeilen;
+		this.propertiesSpalte = checkNotNull(propertiesSpalte);
 	}
 
 	/**
@@ -111,19 +129,18 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		getISheet().processBoxinfo("Formatiere Meldungen Spalten");
 
 		int letzteDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
+
+		if (letzteDatenZeile < minAnzahlAnzeilen) {
+			letzteDatenZeile = minAnzahlAnzeilen;
+		}
+
 		if (letzteDatenZeile < ersteDatenZiele) {
 			// keine Daten
 			return;
 		}
 
-		// Spieler Nr
-		// -------------------------------------
-		RangePosition spielrNrdatenRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
-				letzteDatenZeile);
+		formatSpielrnSpalte(letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange,
-				CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
 		// Spieler Namen
@@ -132,6 +149,43 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange, CellProperties.from().centerJustify()
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
+
+	}
+
+	private void formatSpielrnSpalte(int letzteDatenZeile) throws GenerateException {
+
+		RangePosition spielrNrdatenRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
+				letzteDatenZeile);
+
+		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange,
+				CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_BLACK)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+						.setShrinkToFit());
+		// gerade / ungrade hintergrund farbe
+		Integer geradeColor = propertiesSpalte.getMeldeListeHintergrundFarbeGerade();
+		Integer unGeradeColor = propertiesSpalte.getMeldeListeHintergrundFarbeUnGerade();
+
+		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(
+				geradeColor);
+		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(
+				unGeradeColor);
+
+		// -----------------------------------------------
+		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(meldungNrSpalte, 0).getSpalteAddressWith$() + ";"
+				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		ConditionalFormatHelper.from(sheet.get(), spielrNrdatenRange).clear().
+		// ------------------------------
+				formulaIsText().styleIsFehler().applyAndDoReset().
+				// ------------------------------
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
+				// ------------------------------
+				// eigentlich musste 0 = Fehler sein wird es aber nicht
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
+				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
+				// ------------------------------
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		// -----------------------------------------------		
 
 	}
 
@@ -414,6 +468,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		private int spielerNrSpalte;
 		private int anzZeilenInHeader = 1; // default ein zeile
 		private int spalteMeldungNameWidth = DEFAULT_MELDUNG_NAME_WIDTH;
+		private int minAnzahlAnzeilen = 20; // default = 20 Zeilen
+		private IPropertiesSpalte propertiesSpalte;
 
 		private ISheet iSheet;
 
@@ -442,6 +498,16 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			return this;
 		}
 
+		public Bldr minAnzahlAnzeilen(int minAnzahlAnzeilen) {
+			this.minAnzahlAnzeilen = minAnzahlAnzeilen;
+			return this;
+		}
+
+		public Bldr propertiesSpalte(IPropertiesSpalte propertiesSpalte) {
+			this.propertiesSpalte = propertiesSpalte;
+			return this;
+		}
+
 		public Bldr sheet(ISheet iSheet) {
 			this.iSheet = iSheet;
 			return this;
@@ -449,7 +515,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		public <TL, T> MeldungenSpalte<TL, T> build() {
 			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader,
-					spalteMeldungNameWidth);
+					spalteMeldungNameWidth, minAnzahlAnzeilen, propertiesSpalte);
 		}
 	}
 }
