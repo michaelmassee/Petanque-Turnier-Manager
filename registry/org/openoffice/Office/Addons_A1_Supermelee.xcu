@@ -34,7 +34,7 @@
 							<value>_self</value>
 						</prop>
 						<node oor:name="Submenu">
-							<node oor:name="A1A1" oor:op="replace">
+							<node oor:name="A1AAA" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">New Entrylist</value>
 									<value xml:lang="de">Neue Meldeliste</value>
@@ -47,7 +47,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1A2" oor:op="replace">
+							<node oor:name="A1AAB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
@@ -60,7 +60,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1A3" oor:op="replace">
+							<node oor:name="A1AAC" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Registrations</value>
 									<value xml:lang="de">Anmeldungen</value>
@@ -73,7 +73,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1A4" oor:op="replace">
+							<node oor:name="A1AAD" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Playerlist</value>
 									<value xml:lang="de">Teilnehmer</value>
@@ -86,13 +86,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1A5" oor:op="replace">
+							<node oor:name="A1AAE" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A1B1" oor:op="replace">
+							<node oor:name="A1ABA" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Current Play-Round</value>
 									<value xml:lang="de">Aktuelle Spielrunde</value>
@@ -105,7 +105,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B2" oor:op="replace">
+							<node oor:name="A1ABB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next Play-Round</value>
 									<value xml:lang="de">Nächste Spielrunde</value>
@@ -118,7 +118,7 @@
 								</prop>
 							</node>
 							
-							<node oor:name="A1B3" oor:op="replace">
+							<node oor:name="A1ABC" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Play Roundplan</value>
 									<value xml:lang="de">Spielrundeplan</value>
@@ -131,14 +131,14 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B4" oor:op="replace">
+							<node oor:name="A1ABD" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
 
-							<node oor:name="A1B5" oor:op="replace">
+							<node oor:name="A1ACA" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List</value>
 									<value xml:lang="de">Spieltag Rangliste</value>
@@ -151,7 +151,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B6" oor:op="replace">
+							<node oor:name="A1ACB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List Sort</value>
 									<value xml:lang="de">Spieltag Rangliste Sortieren</value>
@@ -165,7 +165,7 @@
 							</node>
 
 
-							<node oor:name="A1B7" oor:op="replace">
+							<node oor:name="A1ACD" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next competition day</value>
 									<value xml:lang="de">Nächste Spieltag</value>
@@ -178,13 +178,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B8" oor:op="replace">
+							<node oor:name="A1ACE" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A1B9" oor:op="replace">
+							<node oor:name="A1ADA" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste</value>
@@ -197,7 +197,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1B10" oor:op="replace">
+							<node oor:name="A1ADB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste Sortieren</value>
@@ -210,13 +210,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1C1" oor:op="replace">
+							<node oor:name="A1ADC" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A1C2" oor:op="replace">
+							<node oor:name="A1AEA" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Team-Pairings</value>
 									<value xml:lang="de">Team-Paarungen</value>
@@ -229,7 +229,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1C3" oor:op="replace">
+							<node oor:name="A1AEB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate competition day</value>
 									<value xml:lang="de">Spieltag Prüfen</value>
@@ -242,7 +242,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A1C4" oor:op="replace">
+							<node oor:name="A1AEC" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate Rankinglist</value>
 									<value xml:lang="de">Rangliste Prüfen</value>
