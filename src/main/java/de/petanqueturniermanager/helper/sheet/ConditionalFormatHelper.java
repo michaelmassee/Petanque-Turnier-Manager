@@ -44,7 +44,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	private final RangePosition rangePos;
 	private boolean doClear = false;
 	private ConditionOperator conditionOperator;
-	private ConditionOperator2 conditionOperator2;
+	private int conditionOperator2;
 	private String formula1;
 	private String formula2;
 	private String styleName;
@@ -73,8 +73,14 @@ public class ConditionalFormatHelper extends BaseHelper {
 		return this;
 	}
 
-	public ConditionalFormatHelper operator(ConditionOperator2 conditionOperator2) {
+	public ConditionalFormatHelper operator(int conditionOperator2) {
 		this.conditionOperator2 = conditionOperator2;
+		return this;
+	}
+
+	public ConditionalFormatHelper zellwertIstMehrmalsVorhanden() {
+		this.conditionOperator2 = ConditionOperator2.DUPLICATE;
+		this.conditionOperator = null;
 		return this;
 	}
 
@@ -162,7 +168,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	public ConditionalFormatHelper reset() throws GenerateException {
 		doClear = false;
 		conditionOperator = null;
-		conditionOperator2 = null;
+		conditionOperator2 = 0;
 		formula1 = null;
 		formula2 = null;
 		styleName = null;
@@ -178,7 +184,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 	 */
 
 	public ConditionalFormatHelper applyAndDoReset() throws GenerateException {
-		checkNotNull(conditionOperator);
+		// checkNotNull(conditionOperator);
 		// checkNotNull(formula1);
 		checkNotNull(styleName);
 
@@ -207,7 +213,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 			if (conditionOperator != null) {
 				aCondition[idx].Value = conditionOperator;
-			} else if (conditionOperator2 != null) {
+			} else if (conditionOperator2 != 0) {
 				aCondition[idx].Value = conditionOperator2;
 			} else {
 				throw new NullPointerException("conditionOperator fehlt");

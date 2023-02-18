@@ -86,7 +86,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	public AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
 		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
-				.spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
+				.spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.SUPERMELEE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
