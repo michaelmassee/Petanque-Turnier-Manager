@@ -1,22 +1,24 @@
 /**
-* Erstellung : 22.03.2018 / Michael Massee
-**/
+ * Erstellung : 22.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.basesheet.meldeliste;
 
 public enum Formation {
 
-	TETE(1, "Tête"), // Formé
-	DOUBLETTE(2, "Doublette"), // Formé
-	TRIPLETTE(3, "Triplette"), // Formé
-	MELEE(4, "Mêlée"); // wenn die Teamgroese nicht festeht, wird z.b. bei Supermelee gebraucht
+	TETE(1, "Tête", 1), // Formé
+	DOUBLETTE(2, "Doublette", 2), // Formé
+	TRIPLETTE(3, "Triplette", 3), // Formé
+	SUPERMELEE(4, "SuperMêlée", 1);
 
 	private final String bezeichnung;
 	private final int id;
+	private final int anzSpielerImTeam;
 
-	private Formation(int id, String bezeichnung) {
+	private Formation(int id, String bezeichnung, int anzSpielerImTeam) {
 		this.id = id;
 		this.bezeichnung = bezeichnung;
+		this.anzSpielerImTeam = anzSpielerImTeam;
 	}
 
 	public String getBezeichnung() {
@@ -39,6 +41,10 @@ public enum Formation {
 			}
 		}
 		return null;
+	}
+
+	public int getAnzSpielerImTeam() {
+		return anzSpielerImTeam;
 	}
 
 }

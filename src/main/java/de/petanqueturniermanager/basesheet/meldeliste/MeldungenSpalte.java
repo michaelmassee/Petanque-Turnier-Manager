@@ -48,7 +48,7 @@ import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.IMeldungen;
 
 /**
- * Nr + 1-3 Namen + Alias
+ * fuer Ranglisten etc ....
  * 
  * @author michael
  *
@@ -73,6 +73,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final int spalteMeldungNameWidth;
 	private final int minAnzahlAnzeilen; // 
 	private final IPropertiesSpalte propertiesSpalte;
+	private final MeldungenNrSpalte meldungenNrSpalte;
 
 	private final WeakRefHelper<ISheet> sheet;
 
@@ -94,6 +95,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		this.formation = checkNotNull(formation);
 		this.minAnzahlAnzeilen = minAnzahlAnzeilen;
 		this.propertiesSpalte = checkNotNull(propertiesSpalte);
+		this.meldungenNrSpalte = new MeldungenNrSpalte(spielerNrSpalte, iSheet, ersteDatenZiele, MAX_ANZ_MELDUNGEN);
 	}
 
 	/**
@@ -109,19 +111,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	public int getAnzahlSpielerNamenSpalten() {
-		switch (formation) {
-		case TETE:
-			return 1;
-		case DOUBLETTE:
-			return 2;
-		case TRIPLETTE:
-			return 3;
-		case MELEE:
-			return 1;
-		default:
-			break;
-		}
-		return 0;
+		return formation.getAnzSpielerImTeam();
 	}
 
 	public void formatDaten() throws GenerateException {
@@ -239,37 +229,6 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 				.from(getISheet(),
 						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
 				.searchNachRegExprInSpalte("^\\d", searchProp);
-		if (result != null) {
-			return result.getZeile();
-		}
-		return getErsteDatenZiele();
-	}
-
-	/**
-	 * Sucht von unten nach der erste nicht leere zelle - 1<br>
-	 * Spalte spielerNr <br>
-	 * Achtung wenn bereits footer daten vorhanden, und oder wietere Daten unter der letzte Spielnr<br>
-	 * 
-	 * @return
-	 * @throws GenerateException
-	 */
-	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return neachsteFreieDatenZeileInSpielerNrSpalte() - 1;
-	}
-
-	/**
-	 * Sucht von unten nach der erste nicht leere zelle<br>
-	 * Spalte spielerNr <br>
-	 * Achtung wenn bereits footer daten vorhanden, und oder wietere Daten unter der letzte Spielnr<br>
-	 * return ersteDatenzeile wenn kein vorhanden
-	 *
-	 * @throws GenerateException
-	 */
-	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
-		Position result = RangeSearchHelper
-				.from(getISheet(),
-						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
-				.searchLastEmptyInSpalte();
 		if (result != null) {
 			return result.getZeile();
 		}

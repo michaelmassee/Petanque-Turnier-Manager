@@ -33,6 +33,8 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
+ * bassisfunktionen fuer Meldelisten
+ * 
  * @author Michael Massee
  *
  */
