@@ -6,6 +6,14 @@ package de.petanqueturniermanager.helper.sheet;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -133,6 +141,32 @@ public class SortHelper {
 		return this;
 	}
 
+	public SortHelper doSort() throws GenerateException {
+		checkNotNull(sortSpalten);
+		checkArgument(sortSpalten.length > 0);
+
+		// in bloecke von max 3 aufteilen
+		//sortSpalten
+		// doSortMax3Spalten
+		return this;
+	}
+
+	/**
+	 * das Array sortspalten aufteilen in mehrere bloecke von max 3 in reverse order
+	 */
+	@VisibleForTesting
+	List<int[]> splitSortBloecke(int[] sortSpaltenToSplit) {
+		ArrayList<int[]> bloecke = new ArrayList<>();
+		Map<Integer, List<Integer>> groups = Arrays.stream(sortSpaltenToSplit).boxed()
+				.collect(Collectors.groupingBy(s -> (s - 1) / 3));
+
+		//		bloecke = groups.values().stream().collect(Collectors.toList());
+
+		Collections.reverse(bloecke);
+
+		return bloecke;
+	}
+
 	/**
 	 * Sorting records. Sorting arranges the visible cells on the sheet.<br>
 	 * Anmrk 1.7.2022 Stimt das mit nur 3 Spalten ??<br>
@@ -144,24 +178,27 @@ public class SortHelper {
 	 * @throws GenerateException
 	 */
 
-	public SortHelper doSort() throws GenerateException {
-		checkNotNull(sortSpalten);
-		checkArgument(sortSpalten.length > 0);
+	private void doSortMax3Spalten(int[] sortMax3Spalten) throws GenerateException {
+
+		checkNotNull(sortMax3Spalten);
+		checkArgument(sortMax3Spalten.length > 0);
+
 		// Anmrk 9.7.2022 in lo 6 ist das noch so
-		checkArgument(sortSpalten.length < 4); // max 3 spalten
+		checkArgument(sortMax3Spalten.length < 4); // max 3 spalten
 
 		XCellRange xCellRangeToSort = RangeHelper.from(xSpreadsheet, workingSpreadsheetDocument, rangePositionToSort)
 				.getCellRange();
+
 		if (xCellRangeToSort == null) {
-			return this;
+			return;
 		}
 
 		XSortable xSortable = Lo.qi(XSortable.class, xCellRangeToSort);
-		TableSortField[] sortFields = new TableSortField[sortSpalten.length];
+		TableSortField[] sortFields = new TableSortField[sortMax3Spalten.length];
 
-		for (int sortSpalteIdx = 0; sortSpalteIdx < sortSpalten.length; sortSpalteIdx++) {
+		for (int sortSpalteIdx = 0; sortSpalteIdx < sortMax3Spalten.length; sortSpalteIdx++) {
 			TableSortField sortField = new TableSortField();
-			sortField.Field = sortSpalten[sortSpalteIdx]; // 0 = erste spalte
+			sortField.Field = sortMax3Spalten[sortSpalteIdx]; // 0 = erste spalte
 			sortField.IsAscending = aufSteigendSortieren;
 			sortField.IsCaseSensitive = caseSensitive;
 			sortFields[sortSpalteIdx] = sortField;
@@ -180,7 +217,6 @@ public class SortHelper {
 		aSortDesc[1] = propVal;
 
 		xSortable.sort(aSortDesc);
-		return this;
 	}
 
 }
