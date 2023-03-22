@@ -53,6 +53,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	// wenn nur Doublettes oder Triplettes mögliche dann fragen bei derRunde Generierung. Default false
 	public static final String KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN = "Gleiche Paarungen";
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
+	public static final String KONFIG_PROP_ENDRANGLISTE_SORT_MODE = "Endrangliste Sortiermodus"; // 
 
 	static {
 
@@ -126,6 +127,12 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN)
 				.setDefaultVal(false).inSideBar().setDescription(
 						"Wenn true, und wenn die Anzahl der Meldungen, nur eine Doublettes oder Triplettes Runde ermöglichen, dann bei der Generierung von Spielrunden Fragen."));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ENDRANGLISTE_SORT_MODE)
+				.setDefaultVal(SuprMleEndranglisteSortMode.Siege.getKey())
+				.setDescription("Endrangliste Sortiermodus\r\nS=Siege\r\nT=Siege,Spieltage"))
+				.addAuswahl(SuprMleEndranglisteSortMode.Siege.getKey(), "Siege")
+				.addAuswahl(SuprMleEndranglisteSortMode.SiegeTage.getKey(), "Siege,Spieltage"));
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -268,6 +275,17 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
+	}
+
+	@Override
+	public SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
+
+		String prop = readStringProperty(KONFIG_PROP_ENDRANGLISTE_SORT_MODE);
+		if (null != prop && prop.trim().equalsIgnoreCase("d")) {
+			return SuprMleEndranglisteSortMode.SiegeTage;
+		}
+		return SuprMleEndranglisteSortMode.Siege;
+
 	}
 
 }
