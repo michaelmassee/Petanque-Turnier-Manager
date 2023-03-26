@@ -17,29 +17,38 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
     src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/libreoffice-logo.png" alt="Logo">
 
 
-
-* [Libreoffice ab Version 6](https://de.libreoffice.org/get-help/system-requirements/)
-* [Java ab Version 11](https://www.java.com/de/download/help/sysreq.xml)
+* [Libreoffice ab Version 7](https://de.libreoffice.org/get-help/system-requirements/)
+* [Java ab Version 17](https://www.java.com/de/download/help/sysreq.xml)
 
 
 ## - Java Installieren -
 
 ### --- Korekte Java Version 32/64 ---
-[LibreOffice: Das richtige JRE installieren](https://www.youtube.com/watch?v=Qbd9JHKIo2c)<br>
+[LibreOffice: Das richtige JRE installieren](https://wiki.documentfoundation.org/DE/Das_richtige_JRE_installieren)<br>
 
-### --- Adopt Open JDK ---
-OpenJDK 11 **(LTS)**<br>
-HotSpot<br>
-[Download AdoptOpenJDK](https://adoptopenjdk.net/)<br>
+### --- Temurin Adoptium JDK ---
+https://adoptium.net/de/ **(LTS)**<br>
+[Download Java 17](https://adoptium.net/de/)<br>
 
-### --- Oracle ---
-Oracle Java ab 2019 nur noch für Privat gebrauch Kostenfrei<br>
-[Download Oracle Java ab 11](https://www.java.com/de/download/manual.jsp)<br>
+### --- Oracle Java ---
+[Java Downloads](https://www.oracle.com/de/java/technologies/downloads/)<br>
+
 
 ## - Libreoffice Installieren -
 
-LibreOffice Calc ab Version 6.0 oder höher<br>
-[Download LibreOffice](https://de.libreoffice.org/download/libreoffice-fresh/)
+LibreOffice Calc ab Version 7.0 oder höher<br>
+[Download LibreOffice](https://de.libreoffice.org/download/download/)<br>
+
+
+## - In Libreoffice die richtige Version aktivieren -
+
+Wählen Sie im Menü Extras ▸ Optionen ▸ LibreOffice ▸ Erweitert.<br>
+Im Dialog „Optionen LibreOffice Erweitert“ setzen Sie unter „Java Optionen“ ein Häkchen bei "Eine Java-Laufzeitumgebung verwenden".<br>
+Sollte hier kein Eintrag vorhanden sein, gehen Sie auf hinzufügen und wählen die JRE aus und OK<br>
+<br>
+
+<img src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/java_version_in_settings.png" alt= “Setting Java Version” width="50%">
+
 
 ## - Turnierleitung Extension Installieren -
 
