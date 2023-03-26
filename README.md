@@ -47,8 +47,9 @@ Im Dialog „Optionen LibreOffice Erweitert“ setzen Sie unter „Java Optionen
 Sollte hier kein Eintrag vorhanden sein, gehen Sie auf hinzufügen und wählen die JRE aus und OK<br>
 <br>
 
-<img src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/java_version_in_settings.png" alt= “Setting Java Version” width="50%">
-
+<img src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/java_version_in_settings.png"
+alt= “Setting Java Version”
+width="50%">
 
 ## - Turnierleitung Extension Installieren -
 
