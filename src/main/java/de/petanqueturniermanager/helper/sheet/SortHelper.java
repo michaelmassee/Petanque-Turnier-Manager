@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -145,9 +146,12 @@ public class SortHelper {
 		checkNotNull(sortSpalten);
 		checkArgument(sortSpalten.length > 0);
 
-		// in bloecke von max 3 aufteilen
-		//sortSpalten
-		// doSortMax3Spalten
+		// in bloecke von max 3 aufteilen, reverse order
+		List<List<Integer>> sortBloecke = splitSortBloecke(sortSpalten);
+		for (List<Integer> block : sortBloecke) {
+			doSortMax3Spalten(block);
+		}
+
 		return this;
 	}
 
@@ -155,12 +159,16 @@ public class SortHelper {
 	 * das Array sortspalten aufteilen in mehrere bloecke von max 3 in reverse order
 	 */
 	@VisibleForTesting
-	List<int[]> splitSortBloecke(int[] sortSpaltenToSplit) {
-		ArrayList<int[]> bloecke = new ArrayList<>();
-		Map<Integer, List<Integer>> groups = Arrays.stream(sortSpaltenToSplit).boxed()
-				.collect(Collectors.groupingBy(s -> (s - 1) / 3));
+	List<List<Integer>> splitSortBloecke(int[] sortSpaltenToSplit) {
 
-		//		bloecke = groups.values().stream().collect(Collectors.toList());
+		final int chunkSize = 3;
+		final AtomicInteger counter = new AtomicInteger();
+
+		Map<Integer, List<Integer>> groups = Arrays.stream(sortSpaltenToSplit).boxed()
+				.collect(Collectors.groupingBy(s -> counter.getAndIncrement() / chunkSize));
+
+		List<List<Integer>> bloecke = new ArrayList<>();
+		bloecke = groups.values().stream().collect(Collectors.toList());
 
 		Collections.reverse(bloecke);
 
@@ -173,18 +181,21 @@ public class SortHelper {
 	 * In Calc, you can sort by up to three criteria, with each criterion applied one after the other..<br>
 	 * Bug mit nur 3 ist gefixt ?<br>
 	 * https://bugs.documentfoundation.org/show_bug.cgi?id=45747&redirected_from=fdo<br>
+	 * 26.03.2023 still no Fix in 7.0.0<br>
+	 * https://bugs.documentfoundation.org/show_bug.cgi?id=135242<br>
+	 * https://ask.libreoffice.org/t/macro-sort-only-allows-3-criteria/26617/12<br>
 	 *
 	 * @return
 	 * @throws GenerateException
 	 */
 
-	private void doSortMax3Spalten(int[] sortMax3Spalten) throws GenerateException {
+	private void doSortMax3Spalten(List<Integer> sortMax3Spalten) throws GenerateException {
 
 		checkNotNull(sortMax3Spalten);
-		checkArgument(sortMax3Spalten.length > 0);
+		checkArgument(sortMax3Spalten.size() > 0);
 
-		// Anmrk 9.7.2022 in lo 6 ist das noch so
-		checkArgument(sortMax3Spalten.length < 4); // max 3 spalten
+		// lo 7 ist das noch so
+		checkArgument(sortMax3Spalten.size() < 4); // max 3 spalten
 
 		XCellRange xCellRangeToSort = RangeHelper.from(xSpreadsheet, workingSpreadsheetDocument, rangePositionToSort)
 				.getCellRange();
@@ -194,14 +205,16 @@ public class SortHelper {
 		}
 
 		XSortable xSortable = Lo.qi(XSortable.class, xCellRangeToSort);
-		TableSortField[] sortFields = new TableSortField[sortMax3Spalten.length];
+		TableSortField[] sortFields = new TableSortField[sortMax3Spalten.size()];
 
-		for (int sortSpalteIdx = 0; sortSpalteIdx < sortMax3Spalten.length; sortSpalteIdx++) {
+		int idx = 0;
+		for (Integer spalteToSort : sortMax3Spalten) {
 			TableSortField sortField = new TableSortField();
-			sortField.Field = sortMax3Spalten[sortSpalteIdx]; // 0 = erste spalte
+			sortField.Field = spalteToSort; // 0 = erste spalte
 			sortField.IsAscending = aufSteigendSortieren;
 			sortField.IsCaseSensitive = caseSensitive;
-			sortFields[sortSpalteIdx] = sortField;
+			sortFields[idx] = sortField;
+			idx++;
 		}
 
 		PropertyValue[] aSortDesc = new PropertyValue[2];
