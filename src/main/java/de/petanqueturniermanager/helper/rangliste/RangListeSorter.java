@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.05.2018 / Michael Massee
-**/
+ * Erstellung : 10.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.rangliste;
 
@@ -220,7 +220,7 @@ public class RangListeSorter {
 		sortHelper(toSortRange, sortSpalten);
 	}
 
-	protected void sortHelper(RangePosition toSortRange, int[] sortSpalten) throws GenerateException {
+	private void sortHelper(RangePosition toSortRange, int[] sortSpalten) throws GenerateException {
 		SortHelper.from(getIRangliste(), toSortRange).abSteigendSortieren().spaltenToSort(sortSpalten).doSort();
 	}
 
