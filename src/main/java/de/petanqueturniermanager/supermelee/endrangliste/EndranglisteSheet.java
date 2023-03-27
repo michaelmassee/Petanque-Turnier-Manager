@@ -49,6 +49,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -83,7 +84,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte;
 	private final EndRanglisteFormatter endRanglisteFormatter;
 	private final RangListeSpalte rangListeSpalte;
-	private final SuperMeleeEndRangListeSorter rangListeSorter;
+	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Endrangliste");
@@ -94,7 +95,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte,
 				ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
-		rangListeSorter = new SuperMeleeEndRangListeSorter(this);
+		rangListeSorter = new RangListeSorter(this);
 	}
 
 	@Override
@@ -548,7 +549,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
 	}
 
-	protected SuperMeleeEndRangListeSorter getRangListeSorter() {
+	protected RangListeSorter getRangListeSorter() {
 		return rangListeSorter;
 	}
 
@@ -573,12 +574,16 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		return getRanglisteSpalten(ersteSpalteEndsumme, ERSTE_DATEN_ZEILE);
 	}
 
+	/**
+	 * get Ranglistenspalten to sort
+	 */
+
 	@Override
 	protected List<Position> getRanglisteSpalten(int ersteSpalteEndsumme, int ersteDatenZeile)
 			throws GenerateException {
 
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteDatenZeile);
-		Position anSpielTageZelle1 = Position.from(anzSpielTageSpalte(), ersteDatenZeile);
+		Position anzSpielTageZelle1 = Position.from(anzSpielTageSpalte(), ersteDatenZeile);
 		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteDatenZeile);
 		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteDatenZeile);
 		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ersteDatenZeile);
@@ -589,7 +594,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		Position[] arraylist = null;
 
 		if (suprMleEndranglisteSortMode == SuprMleEndranglisteSortMode.SiegeTage) { // Anzahl gespielte Tage mit sortieren
-			arraylist = new Position[] { summeSpielGewonnenZelle1, anSpielTageZelle1, summeSpielDiffZelle1,
+			arraylist = new Position[] { summeSpielGewonnenZelle1, anzSpielTageZelle1, summeSpielDiffZelle1,
 					punkteDiffZelle1, punkteGewonnenZelle1 };
 		} else {
 			arraylist = new Position[] { summeSpielGewonnenZelle1, summeSpielDiffZelle1, punkteDiffZelle1,
