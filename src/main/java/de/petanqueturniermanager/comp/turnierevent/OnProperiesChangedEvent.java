@@ -18,7 +18,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 public class OnProperiesChangedEvent implements ITurnierEvent {
 
 	private final XSpreadsheetDocument xSpreadsheetDocument;
-	private HashMap<String, List> changed = new HashMap<>();
+	private HashMap<String, List<String>> changed = new HashMap<>();
 
 	public OnProperiesChangedEvent(XSpreadsheetDocument xSpreadsheetDocument) {
 		this.xSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);

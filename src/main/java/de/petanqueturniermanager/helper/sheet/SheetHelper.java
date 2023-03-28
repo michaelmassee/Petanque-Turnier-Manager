@@ -758,7 +758,7 @@ public class SheetHelper {
 
 	public XPropertySet setColumnWidth(XSpreadsheet sheet, int spalte, int width) {
 		checkNotNull(sheet);
-		return setColumnProperty(sheet, spalte, "Width", new Integer(width));
+		return setColumnProperty(sheet, spalte, "Width", Integer.valueOf(width));
 	}
 
 	public XCell getCell(XSpreadsheet xSheet, Position pos) {
