@@ -47,7 +47,7 @@ public class RowData extends ArrayList<CellData> {
 	}
 
 	public CellData newInt(int val) {
-		CellData cellData = new CellData(new Integer(val));
+		CellData cellData = new CellData(Integer.valueOf(val));
 		this.add(cellData);
 		return cellData;
 	}
