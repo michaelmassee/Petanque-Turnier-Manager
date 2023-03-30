@@ -196,7 +196,7 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 			return sp.getSpielerNr() == 10;
 		}).findFirst();
 
-		assertThat(spieler10.isPresent());
+		assertThat(spieler10).isPresent();
 
 		SpielerSpieltagErgebnis spieler10SpieltagErgebnis = spieler10.get();
 		assertThat(spieler10SpieltagErgebnis.getPosPunktePlus().getAddress()).isEqualTo("O5");

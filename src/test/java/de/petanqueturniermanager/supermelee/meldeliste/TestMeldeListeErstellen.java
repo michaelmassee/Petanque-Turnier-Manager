@@ -39,6 +39,7 @@ public class TestMeldeListeErstellen {
 	private final WorkingSpreadsheet wkingSpreadsheet;
 	private final XSpreadsheetDocument doc;
 	private final MeldeListeSheet_New meldeListeSheetNew;
+	private final MeldeListeSheet_Update meldeListeSheetUpdate;
 
 	public static List<String> setzPos1 = Arrays.asList(new String[] { "Cummings, Kay", "Morgenroth, Waldtraut" });
 	public static List<String> setzPos2 = Arrays.asList(new String[] { "Barber, Arne", "Weaver, Erwin" });
@@ -47,6 +48,7 @@ public class TestMeldeListeErstellen {
 
 	public TestMeldeListeErstellen(WorkingSpreadsheet wkingSpreadsheet, XSpreadsheetDocument doc) {
 		meldeListeSheetNew = new MeldeListeSheet_New(wkingSpreadsheet);
+		meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		this.wkingSpreadsheet = wkingSpreadsheet;
 		this.doc = doc;
 	}
@@ -72,9 +74,14 @@ public class TestMeldeListeErstellen {
 	public int addMitAlleDieSpielen(int anzMeldungen) throws GenerateException {
 		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
 		int anzdidInsertMeldungen = testMeldungenEinfuegenAllepielen(anzMeldungen, anzbereitsinListe);
-		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !
 		return anzdidInsertMeldungen;
+	}
+
+	public void addMitAlleDieSpielenSpieltag(int spieltag) throws GenerateException {
+		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
+		meldeListeSheetUpdate.run();// do not start a Thread !
+
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
