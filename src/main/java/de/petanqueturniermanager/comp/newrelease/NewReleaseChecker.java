@@ -166,7 +166,6 @@ public class NewReleaseChecker {
 		return Paths.get(RELEASE_FILE);
 	}
 
-	@VisibleForTesting
 	GHRelease readLatestReleaseFromCacheFile() {
 		GHRelease ret = null;
 		Path pathReleaseFile = getReleaseFile();
