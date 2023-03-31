@@ -104,11 +104,7 @@ abstract public class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		for (int spielTagcntr = 1; spielTagcntr < 90; spielTagcntr++) {
 			String header = getSheetHelper().getTextFromCell(getXSpreadSheet(), posHeader);
 
-			if (StringUtils.isEmpty(header)) {
-				break;
-			}
-
-			if (header != null && header.contains(spielTagHeader(SpielTagNr.from(spielTagcntr)))) {
+			if (StringUtils.isNotBlank(header) && header.contains(spielTagHeader(SpielTagNr.from(spielTagcntr)))) {
 				anzSpieltage++;
 			} else {
 				break;
