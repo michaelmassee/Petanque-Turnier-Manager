@@ -65,14 +65,14 @@ public class DownloadExtension extends SheetRunner {
 
 		GHRelease latest = newReleaseChecker.readLatestReleaseFromCacheFile();
 		if (latest == null) {
-			ProcessBox().fehler("Kein Version verfügbar.");
+			processBox().fehler("Kein Version verfügbar.");
 			return;
 		}
 
 		GHAsset oxtAsset = newReleaseChecker.getDownloadGHAsset();
 		URL downloadURL = newReleaseChecker.getDownloadURL(oxtAsset);
 		if (downloadURL == null || oxtAsset == null) {
-			ProcessBox().fehler("kein " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
+			processBox().fehler("kein " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
 			return;
 		}
 		processBoxinfo("GitHub Version " + latest.getName());
@@ -105,12 +105,12 @@ public class DownloadExtension extends SheetRunner {
 				if (selectedPath.canWrite()) {
 					FileUtils.copyURLToFile(downloadURL, targetFile, 10000, 10000);
 				} else {
-					ProcessBox().fehler("keine Schreibrechte");
+					processBox().fehler("keine Schreibrechte");
 				}
-				ProcessBox().infoText("");
+				processBox().infoText("");
 			} catch (IOException | URISyntaxException e) {
 				logger.error(e);
-				ProcessBox().fehler(e.getMessage());
+				processBox().fehler(e.getMessage());
 			}
 		} else {
 			processBoxinfo("Abbruch");

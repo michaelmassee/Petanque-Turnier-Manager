@@ -42,23 +42,23 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 		}
 
 		upDateSheet();
-		ProcessBox().info("Exportiere nach PDF");
+		processBox().info("Exportiere nach PDF");
 
 		LigaSpielPlanSheet ligaSpielPlanSheet = new LigaSpielPlanSheet(getWorkingSpreadsheet());
 		String fileNamePdfSpielplan = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.SHEET_NAMEN)
 				.range(ligaSpielPlanSheet.printBereichRangePosition()).prefix1(LigaSpielPlanSheet.SHEET_NAMEN)
 				.doExport().toString();
-		ProcessBox().info(fileNamePdfSpielplan);
+		processBox().info(fileNamePdfSpielplan);
 
 		LigaRanglisteSheet ligaRanglisteSheet = new LigaRanglisteSheet(getWorkingSpreadsheet());
 		String fileNamePdfRangliste = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
 				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport()
 				.toString();
-		ProcessBox().info(fileNamePdfRangliste);
+		processBox().info(fileNamePdfRangliste);
 
-		ProcessBox().info("Exportiere nach HTML");
+		processBox().info("Exportiere nach HTML");
 		URI htmlExportFile = HtmlExport.from(getWorkingSpreadsheet()).doExport();
-		ProcessBox().info(htmlExportFile.toString());
+		processBox().info(htmlExportFile.toString());
 		cleanUpLigaHtml(htmlExportFile, fileNamePdfSpielplan, fileNamePdfRangliste);
 	}
 
@@ -69,7 +69,7 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 
 	private void cleanUpLigaHtml(URI htmlExportFileUri, String fileNamePdfSpielplan, String fileNamePdfRangliste) {
 
-		ProcessBox().info("Clean und reformat html");
+		processBox().info("Clean und reformat html");
 
 		String fileNameOnlyPdfSpielplan = FilenameUtils.getName(fileNamePdfSpielplan);
 		String fileNameOnlyPdfRangliste = FilenameUtils.getName(fileNamePdfRangliste);
@@ -78,23 +78,23 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 
 			String baseDownloadUrl = StringUtils.strip(getKonfigurationSheet().getBaseDownloadUrl());
 			if (StringUtils.isEmpty(baseDownloadUrl)) {
-				ProcessBox().info("Warning: Download URL Verzeichnis fehlt in der Turnier Konfiguration");
+				processBox().info("Warning: Download URL Verzeichnis fehlt in der Turnier Konfiguration");
 			} else {
-				ProcessBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
+				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
 			}
 
 			String ligaLogoUr = StringUtils.strip(getKonfigurationSheet().getLigaLogoUr());
 			if (StringUtils.isEmpty(ligaLogoUr)) {
-				ProcessBox().info("Warning: Liga logo fehlt in der Turnier Konfiguration");
+				processBox().info("Warning: Liga logo fehlt in der Turnier Konfiguration");
 			} else {
-				ProcessBox().info("Liga logo: " + ligaLogoUr);
+				processBox().info("Liga logo: " + ligaLogoUr);
 			}
 
 			String gruppennamen = StringUtils.strip(getKonfigurationSheet().getGruppennamen());
 			if (StringUtils.isEmpty(gruppennamen)) {
-				ProcessBox().info("Warning: Gruppennamen fehlt in der Turnier Konfiguration");
+				processBox().info("Warning: Gruppennamen fehlt in der Turnier Konfiguration");
 			} else {
-				ProcessBox().info("Gruppennamen: " + gruppennamen);
+				processBox().info("Gruppennamen: " + gruppennamen);
 			}
 
 			File htmlExportFile = new File(htmlExportFileUri);
@@ -105,7 +105,7 @@ public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
 					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)
 					.pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
 
-			ProcessBox().info(cleanHtml.toString());
+			processBox().info(cleanHtml.toString());
 		} catch (IOException | GenerateException e) {
 			logger.error(e.getMessage(), e);
 		}

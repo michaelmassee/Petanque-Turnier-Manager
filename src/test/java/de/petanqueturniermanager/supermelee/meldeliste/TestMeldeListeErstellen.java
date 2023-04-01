@@ -22,10 +22,12 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * Erstellung 16.07.2022 / Michael Massee
@@ -78,10 +80,28 @@ public class TestMeldeListeErstellen {
 		return anzdidInsertMeldungen;
 	}
 
-	public void addMitAlleDieSpielenSpieltag(int spieltag) throws GenerateException {
-		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
-		meldeListeSheetUpdate.run();// do not start a Thread !
+	/**
+	 * Spalte komplett mit 1
+	 * 
+	 * @param spieltag
+	 * @throws GenerateException
+	 */
 
+	public void addMitAlleDieSpielenAktuelleSpieltag(int spieltag) throws GenerateException {
+		meldeListeSheetNew.setSpielTag(SpielTagNr.from(spieltag));
+		meldeListeSheetNew.setAktiveSpieltag(SpielTagNr.from(spieltag));
+		meldeListeSheetUpdate.setSpielTag(SpielTagNr.from(spieltag));
+		meldeListeSheetUpdate.setAktiveSpieltag(meldeListeSheetNew.getSpielTag());
+		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
+		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
+		int spielTagSpalte = meldeListeSheetUpdate.aktuelleSpieltagSpalte();
+
+		Position from = Position.from(spielTagSpalte, ersteDatenZeile);
+		NumberCellValue setValue = NumberCellValue.from(getXSpreadSheet()).setPos(from)
+				.setFillAutoDownZeilePlus(anzbereitsinListe).setValue(1);
+		meldeListeSheetUpdate.getSheetHelper().setValInCell(setValue);
+
+		meldeListeSheetUpdate.run();
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
