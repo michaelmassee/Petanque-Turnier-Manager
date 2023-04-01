@@ -442,7 +442,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 					throw new RuntimeException("Doppelte Spieler in Runde " + spielRunde + " Spieler " + spieler);
 				}
 
-				getSheetHelper().setValInCell(numberCellValue.setValue((double) spieler.getNr()));
+				getSheetHelper().setNumberValueInCell(numberCellValue.setValue((double) spieler.getNr()));
 				verweisAufSpielerNamenEinfuegen(numberCellValue.getPos());
 				numberCellValue.spaltePlusEins();
 				spielrNr.add(spieler.getNr());
@@ -734,12 +734,12 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		// "Aktiv"
 		int anzAktiv = meldeListe.getAnzahlAktiveSpieler(getSpielTag());
 		getSheetHelper().setStringValueInCell(propName.setValue("Aktiv :").setComment("Anzahl Spieler in diese Runde"));
-		getSheetHelper().setValInCell(propVal.setValue((double) anzAktiv));
+		getSheetHelper().setNumberValueInCell(propVal.setValue((double) anzAktiv));
 
 		int anzAusg = meldeListe.getAusgestiegenSpieler(getSpielTag());
 		getSheetHelper().setStringValueInCell(propName.zeilePlusEins().setValue("Ausgestiegen :")
 				.setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
-		getSheetHelper().setValInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
+		getSheetHelper().setNumberValueInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 
 		SuperMeleeMode superMeleeMode = getKonfigurationSheet().getSuperMeleeMode();
 

@@ -22,7 +22,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -97,9 +97,9 @@ public class TestMeldeListeErstellen {
 		int spielTagSpalte = meldeListeSheetUpdate.aktuelleSpieltagSpalte();
 
 		Position from = Position.from(spielTagSpalte, ersteDatenZeile);
-		NumberCellValue setValue = NumberCellValue.from(getXSpreadSheet()).setPos(from)
-				.setFillAutoDownZeilePlus(anzbereitsinListe).setValue(1);
-		meldeListeSheetUpdate.getSheetHelper().setValInCell(setValue);
+		StringCellValue value = StringCellValue.from(getXSpreadSheet()).setPos(from)
+				.setFillAutoDownZeilePlus(anzbereitsinListe - 1).setValue(1);
+		meldeListeSheetUpdate.getSheetHelper().setStringValueInCell(value);
 
 		meldeListeSheetUpdate.run();
 	}
