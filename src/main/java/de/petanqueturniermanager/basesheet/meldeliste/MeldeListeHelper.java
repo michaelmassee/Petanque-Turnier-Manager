@@ -101,7 +101,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				if (spielrNrInSheet.contains(spielrNr)) {
 					// RED Color
 					meldeListe.getSheetHelper()
-							.setValInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
+							.setNumberValueInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
 					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr
 							+ " ist doppelt in der Meldeliste !!!");
 				}
@@ -278,7 +278,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					Position.from(SPIELER_NR_SPALTE, spielerZeilecntr));
 			if (spielrNr == -1) {
 				meldeListe.getSheetHelper()
-						.setValInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
+						.setNumberValueInCell(celVal.setValue((double) ++letzteSpielerNr).zeile(spielerZeilecntr));
 			}
 		}
 		// spieler nach Alphabet sortieren

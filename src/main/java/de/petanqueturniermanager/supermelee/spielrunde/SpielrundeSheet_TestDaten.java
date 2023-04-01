@@ -125,8 +125,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 					int valB = (welchenTeamHatGewonnen == 0 ? gewinnerPunkte : verliererPunkte);
 
 					NumberCellValue numberCellValue = NumberCellValue.from(sheet, pos, valA);
-					getSheetHelper().setValInCell(numberCellValue);
-					getSheetHelper().setValInCell(numberCellValue.spaltePlusEins().setValue((double) valB));
+					getSheetHelper().setNumberValueInCell(numberCellValue);
+					getSheetHelper().setNumberValueInCell(numberCellValue.spaltePlusEins().setValue((double) valB));
 				}
 			}
 		}

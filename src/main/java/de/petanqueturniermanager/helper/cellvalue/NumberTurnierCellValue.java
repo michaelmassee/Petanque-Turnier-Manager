@@ -9,7 +9,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import de.petanqueturniermanager.helper.position.Position;
 
 /**
- * @TODO Wird noch verwendet ?
+ * @TODO Remove, wird noch verwendet ?
  */
 public class NumberTurnierCellValue extends AbstractCellValue<NumberTurnierCellValue, Double>
 		implements ICellValue<Double> {

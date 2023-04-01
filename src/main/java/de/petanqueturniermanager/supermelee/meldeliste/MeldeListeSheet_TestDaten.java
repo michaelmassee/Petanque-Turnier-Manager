@@ -82,9 +82,9 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 			int spielerZeile = meldeListe.getSpielerZeileNr(spieler.getNr());
 			numVal.zeile(spielerZeile);
 			if (randomNum == 2) {
-				getSheetHelper().setValInCell(numVal.setValue((double) randomNum));
+				getSheetHelper().setNumberValueInCell(numVal.setValue((double) randomNum));
 			} else {
-				getSheetHelper().setValInCell(numVal.setValue((double) 1));
+				getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
 			}
 		}
 
@@ -95,7 +95,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 			for (Spieler spieler : spielerList) {
 				int spielerZeile = meldeListe.getSpielerZeileNr(spieler.getNr());
 				numVal.zeile(spielerZeile);
-				getSheetHelper().setValInCell(numVal.setValue((double) 1));
+				getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
 				cntr--;
 				if (cntr < 0) {
 					break;
@@ -119,7 +119,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
 			numVal.zeile(zeileCnt);
 			if (randomNum == 1) {
-				getSheetHelper().setValInCell(numVal.setValue((double) 1));
+				getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
 			}
 		}
 	}
@@ -161,7 +161,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
 				// zum test spielrnr vorgeben, mix in nr erreichen
-				getSheetHelper().setValInCell(spielrNr.setValue((double) spielerCntr + 1));
+				getSheetHelper().setNumberValueInCell(spielrNr.setValue((double) spielerCntr + 1));
 			} else {
 				// andere Nummer leer
 				getSheetHelper().setStringValueInCell(StringCellValue.from(spielrNr).setValue(""));

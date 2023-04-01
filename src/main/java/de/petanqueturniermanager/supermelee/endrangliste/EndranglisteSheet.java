@@ -275,7 +275,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			SpielTagNr spielTagNr = schlechtesteSpieltag(spielerNr);
 			int spielerZeile = spielerSpalte.getSpielerZeileNr(spielerNr);
 			if (spielTagNr != null && spielerZeile > 0) {
-				getSheetHelper().setValInCell(
+				getSheetHelper().setNumberValueInCell(
 						numberCellValueSchlechtesteSpielTag.zeile(spielerZeile).setValue((double) spielTagNr.getNr()));
 			}
 		}

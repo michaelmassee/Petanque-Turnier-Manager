@@ -229,7 +229,7 @@ public class SheetHelper {
 		return currentSpreadsheet.getWorkingSpreadsheetDocument().getSheets();
 	}
 
-	public XCell setValInCell(NumberCellValue numberCellValue) {
+	public XCell setNumberValueInCell(NumberCellValue numberCellValue) {
 		checkNotNull(numberCellValue);
 		XCell xCell = setValInCell(numberCellValue.getSheet(), numberCellValue.getPos(), numberCellValue.getValue());
 		handleAbstractCellValue(numberCellValue, xCell);
