@@ -22,7 +22,6 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -91,15 +90,16 @@ public class TestMeldeListeErstellen {
 		meldeListeSheetNew.setSpielTag(SpielTagNr.from(spieltag));
 		meldeListeSheetNew.setAktiveSpieltag(SpielTagNr.from(spieltag));
 		meldeListeSheetUpdate.setSpielTag(SpielTagNr.from(spieltag));
-		meldeListeSheetUpdate.setAktiveSpieltag(meldeListeSheetNew.getSpielTag());
+		meldeListeSheetUpdate.setAktiveSpieltag(SpielTagNr.from(spieltag));
+
 		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
 		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
 		int spielTagSpalte = meldeListeSheetUpdate.aktuelleSpieltagSpalte();
 
-		Position from = Position.from(spielTagSpalte, ersteDatenZeile);
-		StringCellValue value = StringCellValue.from(getXSpreadSheet()).setPos(from)
-				.setFillAutoDownZeilePlus(anzbereitsinListe - 1).setValue(1);
-		meldeListeSheetUpdate.getSheetHelper().setStringValueInCell(value);
+		Position startPos = Position.from(spielTagSpalte, ersteDatenZeile);
+		RangeData data = new RangeData(anzbereitsinListe, 1);
+		RangeHelper.from(getMeldeListeSheetNew().getXSpreadSheet(), doc, data.getRangePosition(startPos))
+				.setDataInRange(data, true);
 
 		meldeListeSheetUpdate.run();
 	}
