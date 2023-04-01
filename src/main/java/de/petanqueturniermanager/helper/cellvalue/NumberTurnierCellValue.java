@@ -1,6 +1,6 @@
 /**
-* Erstellung : 27.03.2018 / Michael Massee
-**/
+ * Erstellung : 27.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.cellvalue;
 
@@ -8,7 +8,11 @@ import org.apache.commons.lang3.math.NumberUtils;
 
 import de.petanqueturniermanager.helper.position.Position;
 
-public class NumberTurnierCellValue extends AbstractCellValue<NumberTurnierCellValue, Double> implements ICellValue<Double> {
+/**
+ * @TODO Wird noch verwendet ?
+ */
+public class NumberTurnierCellValue extends AbstractCellValue<NumberTurnierCellValue, Double>
+		implements ICellValue<Double> {
 
 	protected NumberTurnierCellValue() {
 	}
