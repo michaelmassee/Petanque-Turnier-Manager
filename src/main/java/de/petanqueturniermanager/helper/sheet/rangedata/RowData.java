@@ -8,7 +8,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * @author Michael Massee
@@ -21,6 +20,11 @@ public class RowData extends ArrayList<CellData> {
 		super();
 	}
 
+	public RowData(Integer... intVals) {
+		super();
+		Arrays.stream(intVals).forEach(this::newInt);
+	}
+
 	// ein dimension
 	public RowData(Object data) {
 		super(Arrays.asList(getRowdataArray(data)));
@@ -31,9 +35,7 @@ public class RowData extends ArrayList<CellData> {
 	}
 
 	public RowData(Object[] data) {
-		super(Arrays.stream(checkNotNull(data)).map(rowdata -> {
-			return new CellData(rowdata);
-		}).collect(Collectors.toList()));
+		super(Arrays.stream(checkNotNull(data)).map(CellData::new).toList());
 	}
 
 	public CellData getLast() {
@@ -41,7 +43,7 @@ public class RowData extends ArrayList<CellData> {
 	}
 
 	public CellData newString(String val) {
-		CellData cellData = new CellData(new String(val));
+		CellData cellData = new CellData(val);
 		this.add(cellData);
 		return cellData;
 	}
@@ -56,7 +58,7 @@ public class RowData extends ArrayList<CellData> {
 	 *
 	 */
 	public CellData newEmpty() {
-		CellData cellData = new CellData(new String());
+		CellData cellData = new CellData("");
 		this.add(cellData);
 		return cellData;
 	}
@@ -70,11 +72,11 @@ public class RowData extends ArrayList<CellData> {
 
 		int idx = 0;
 		for (CellData cellData : this) {
-			dataArray[idx++] = (cellData.getData() != null) ? cellData.getData() : new String();
+			dataArray[idx++] = (cellData.getData() != null) ? cellData.getData() : "";
 		}
 		// array auffuellen
 		while (idx < arraySize) {
-			dataArray[idx++] = new String();
+			dataArray[idx++] = "";
 		}
 
 		return dataArray;
