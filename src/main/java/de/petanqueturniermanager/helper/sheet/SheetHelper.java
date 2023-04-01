@@ -380,6 +380,9 @@ public class SheetHelper {
 			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
 					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 			XCellSeries xCellSeries = Lo.qi(XCellSeries.class, xCellRange);
+			// fillAuto(com.sun.star.sheet.FillDirection arg0, int arg1);
+			// nFillDirection	specifies the direction to fill the rows/columns of the range.
+			// nSourceCount	contains the number of cells in each row/column used to constitute the fill algorithm.
 			xCellSeries.fillAuto(fillDirection, 1);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
