@@ -12,10 +12,12 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
-import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
 
 /**
  * Erstellung 28.03.2023 / Michael Massee
@@ -27,12 +29,15 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 
 	private DocumentPropertiesHelper docPropHelper;
 
+	private MeldeListeSheet_NeuerSpieltag meldeListeSheet_NeuerSpieltag;
 	private SpieltagRanglisteSheet spieltagRangliste;
 
-	private MeldeListeSheet_NeuerSpieltag meldeListeSheet_NeuerSpieltag;
+	private SpielrundeSheet_Naechste spielrundeSheetNaechste;
 	private TestMeldeListeErstellen testMeldeListeErstellen;
+	private RanglisteTestDaten<EndranglisteSheetUITest> ranglisteTestDaten;
 
 	private static final int ANZ_MELDUNGEN = 20;
+	private static final int ANZ_RUNDEN = 3;
 
 	@Before
 	public void testMeldeListeErstellen() throws GenerateException {
@@ -42,25 +47,25 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		spieltagRangliste = new SpieltagRanglisteSheet(wkingSpreadsheet);
 		meldeListeSheet_NeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(wkingSpreadsheet);
+		spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		ranglisteTestDaten = new RanglisteTestDaten<>(wkingSpreadsheet, sheetHlp, this);
 	}
 
 	@Test
 	public void testRanglisteOK() throws GenerateException, IOException {
 		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
-		meldeListeSheet_NeuerSpieltag.run();
-		testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(2);
-
-		// waitEnter();
-	}
-
-	private void generateTestSpieltag(int tag) throws GenerateException {
-		spieltagRangliste.run();
+		ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, SpielTagNr.from(1));
+		//		waitEnter();
 	}
 
 	@Test
 	@Ignore
-	public void generateAndSaveTestDatenToJsonFiles() throws IOException {
-		new SpieltagRanglisteSheet_TestDaten(wkingSpreadsheet).run();
+	public void generateAndSaveTestDatenToJsonFiles() throws IOException, GenerateException {
+		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+
+		// testrunden erstellen
+		SpielTagNr spieltag = SpielTagNr.from(1);
+		ranglisteTestDaten.generateSpielrundenJsonFilesIntmp(ANZ_RUNDEN, spieltag);
 
 		waitEnter();
 	}

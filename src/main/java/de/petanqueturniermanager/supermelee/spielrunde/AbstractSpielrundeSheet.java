@@ -293,7 +293,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
-		Position letzteZeile = letzteSpielrNrPosition();
+		Position letzteZeile = letzteErgbnissPosition();
 
 		// header
 		// -------------------------
@@ -689,7 +689,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	private void printBereichDefinieren(XSpreadsheet sheet) throws GenerateException {
 		processBoxinfo("Print-Bereich");
-		Position letzteZeile = letzteSpielrNrPosition();
+		Position letzteZeile = letzteErgbnissPosition();
 		PrintArea.from(sheet, getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
 	}
@@ -718,7 +718,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		processBoxinfo("Spielrunde Properties einfügen");
 
-		Position datenEnd = letzteSpielrNrPosition();
+		Position datenEnd = letzteErgbnissPosition();
 
 		CellProperties cellPropBez = CellProperties.from().margin(150).setHoriJustify(CellHoriJustify.RIGHT)
 				.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder());
@@ -755,7 +755,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		// gitter
 		Position datenStart = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		Position datenEnd = letzteSpielrNrPosition();
+		Position datenEnd = letzteErgbnissPosition();
 
 		// bis zur mitte mit normal gitter
 		RangePosition datenRangeErsteHaelfte = RangePosition.from(datenStart,
@@ -831,13 +831,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	/**
-	 * rechts unten, letzte ergebnis zelle
+	 * rechts unten, letzte ergebniss pos
 	 *
 	 * @return
 	 * @throws GenerateException
 	 */
 
-	protected Position letzteSpielrNrPosition() throws GenerateException {
+	public Position letzteErgbnissPosition() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
@@ -965,7 +965,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 */
 
 	protected void clearSheet() throws GenerateException {
-		Position letzteZeile = letzteSpielrNrPosition();
+		Position letzteZeile = letzteErgbnissPosition();
 
 		if (letzteZeile == null) {
 			return; // keine Daten
