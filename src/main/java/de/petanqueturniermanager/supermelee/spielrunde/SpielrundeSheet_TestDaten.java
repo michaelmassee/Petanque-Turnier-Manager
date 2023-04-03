@@ -89,12 +89,26 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		tielnehmerSheet.generate();
 
 		int maxspielrundeNr = 4;
+		genRunden(maxspielrundeNr, true);
+
+		SheetRunner.testDoCancelTask();
+		spieltagRanglisteSheet.generate(getSpielTag());
+		new SpieltagRangliste_Validator(getWorkingSpreadsheet()).doValidate(getSpielTag());
+
+		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
+		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));
+
+		spieltagRanglisteSheet.isErrorInSheet();
+	}
+
+	public void genRunden(int maxspielrundeNr, boolean shuffleAktivInaktiv) throws GenerateException {
+		naechsteSpielrundeSheet.setSpielTag(getSpielTag());
 
 		for (int spielrundeNr = 1; spielrundeNr <= maxspielrundeNr; spielrundeNr++) {
 			SheetRunner.testDoCancelTask();
 			setSpielRundeNr(SpielRundeNr.from(spielrundeNr));
 
-			if (spielrundeNr > 1) {
+			if (shuffleAktivInaktiv && spielrundeNr > 1) {
 				meldeListeTestDatenGenerator.spielerAufAktivInaktivMischen(getSpielTag());
 			}
 
@@ -109,7 +123,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			// spiel test ergebnisse einfuegen
 			// ------------------------------------
 			XSpreadsheet sheet = getXSpreadSheet();
-			Position letztePos = letzteSpielrNrPosition();
+			Position letztePos = letzteErgbnissPosition();
 
 			if (letztePos != null && sheet != null) {
 				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile(); zeileCntr++) {
@@ -130,13 +144,6 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 				}
 			}
 		}
-		SheetRunner.testDoCancelTask();
-		spieltagRanglisteSheet.generate(getSpielTag());
-		new SpieltagRangliste_Validator(getWorkingSpreadsheet()).doValidate(getSpielTag());
-
-		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
-		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(maxspielrundeNr));
-
-		spieltagRanglisteSheet.isErrorInSheet();
 	}
+
 }
