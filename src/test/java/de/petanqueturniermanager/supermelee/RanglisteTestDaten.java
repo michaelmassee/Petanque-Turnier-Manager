@@ -73,9 +73,8 @@ public class RanglisteTestDaten<C> {
 		for (int spielrundeNrCntr = 1; spielrundeNrCntr <= anzRunden; spielrundeNrCntr++) {
 
 			SpielRundeNr spielrundeNr = SpielRundeNr.from(spielrundeNrCntr);
-
-			spielrundeSheetNaechste.run(); // no thread 1. Runde
-			spielrundeSheetNaechste.setSpielRundeNr(spielrundeNr);
+			spielrundeSheetNaechste.run();
+			//spielrundeSheetNaechste.naechsteSpielrundeEinfuegen(spieltag, SpielRundeNr.from(spielrundeNrCntr));
 			Position letzteErgbnissPosition = spielrundeSheetNaechste.letzteErgbnissPosition(); // ist auch die letzte Zeile in der Tabelle
 
 			XSpreadsheet spielrunde = sheetHlp.findByName(spieltag.getNr() + "." + spielrundeNrCntr + ". Spielrunde");

@@ -86,11 +86,11 @@ public class TestMeldeListeErstellen {
 	 * @throws GenerateException
 	 */
 
-	public void addMitAlleDieSpielenAktuelleSpieltag(int spieltag) throws GenerateException {
-		meldeListeSheetNew.setSpielTag(SpielTagNr.from(spieltag));
-		meldeListeSheetNew.setAktiveSpieltag(SpielTagNr.from(spieltag));
-		meldeListeSheetUpdate.setSpielTag(SpielTagNr.from(spieltag));
-		meldeListeSheetUpdate.setAktiveSpieltag(SpielTagNr.from(spieltag));
+	public void addMitAlleDieSpielenAktuelleSpieltag(SpielTagNr spieltag) throws GenerateException {
+		meldeListeSheetNew.setSpielTag(spieltag);
+		meldeListeSheetNew.setAktiveSpieltag(spieltag);
+		meldeListeSheetUpdate.setSpielTag(spieltag);
+		meldeListeSheetUpdate.setAktiveSpieltag(spieltag);
 
 		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
 		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
