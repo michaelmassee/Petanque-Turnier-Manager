@@ -14,7 +14,6 @@ import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIEL
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
@@ -87,7 +86,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Endrangliste");
+		super(workingSpreadsheet, SHEETNAME);
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
 		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
 				.anzZeilenInHeader(2).sheet(this).formation(Formation.MELEE)
@@ -168,14 +167,14 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 		int letzteSpalte = getLetzteSpalte();
 
-		Integer streichSpieltag_geradeColor = getKonfigurationSheet()
+		Integer streichSpieltagGeradeColor = getKonfigurationSheet()
 				.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
-		Integer streichSpieltag_unGeradeColor = getKonfigurationSheet()
+		Integer streichSpieltagUnGeradeColor = getKonfigurationSheet()
 				.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
 		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(
-				streichSpieltag_geradeColor);
+				streichSpieltagGeradeColor);
 		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(
-				streichSpieltag_unGeradeColor);
+				streichSpieltagUnGeradeColor);
 
 		Integer geradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade();
@@ -338,7 +337,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 	/**
 	 * Anzahl gespielte Spieltage<br>
-	 * =ZÄHLENWENN(D4:AG4;"<>")/6
+	 * =ANZAHL(D10:U10)/6 <br>
+	 * =ZÄHLENWENN(D4:AG4;"<>")/6 -> ab 7.5 not working !
 	 *
 	 * @throws GenerateException
 	 */
@@ -353,8 +353,10 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		Position ersteSpielTagErsteZelle = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE);
 		Position letzteSpielTagLetzteZelle = Position.from(letzteSpieltagLetzteSpalte, ERSTE_DATEN_ZEILE);
 
-		String formula = "=COUNTIF(" + ersteSpielTagErsteZelle.getAddress() + ":"
-				+ letzteSpielTagLetzteZelle.getAddress() + ";\"<>\")/" + ANZAHL_SPALTEN_IN_SUMME;
+		// =ANZAHL(D10:U10)/6
+
+		String formula = "=ANZAHL(" + ersteSpielTagErsteZelle.getAddress() + ":"
+				+ letzteSpielTagLetzteZelle.getAddress() + ")/" + ANZAHL_SPALTEN_IN_SUMME;
 
 		// letzte Spalte ist anzahl spieltage
 		ColumnProperties celColumProp = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
@@ -406,7 +408,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 			SheetRunner.testDoCancelTask();
-			if (schlechtesteSpielTag.getNr() != spieltagCntr) {
+			if (schlechtesteSpielTag == null || schlechtesteSpielTag.getNr() != spieltagCntr) {
 				int ersteSpieltagSummeSpalte = ERSTE_SPIELTAG_SPALTE + ((spieltagCntr - 1) * ANZAHL_SPALTEN_IN_SUMME);
 				for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME; summeSpalteCntr++) {
 					SheetRunner.testDoCancelTask();
@@ -443,14 +445,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			return null;
 		}
 		List<SpielerSpieltagErgebnis> spielerSpieltagErgebnisse = spielerErgebnisseEinlesen(spielrNr);
-		spielerSpieltagErgebnisse.sort(new Comparator<SpielerSpieltagErgebnis>() {
-			@Override
-			public int compare(SpielerSpieltagErgebnis o1, SpielerSpieltagErgebnis o2) {
-				// schlechteste oben
-				return o1.reversedCompareTo(o2);
-			}
-		});
-		if (spielerSpieltagErgebnisse.size() > 0) {
+		spielerSpieltagErgebnisse.sort((o1, o2) -> o1.reversedCompareTo(o2));
+		if (!spielerSpieltagErgebnisse.isEmpty()) {
 			return spielerSpieltagErgebnisse.get(0).getSpielTag();
 		}
 		return null;
