@@ -12,11 +12,13 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
-import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 /**
@@ -31,13 +33,13 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 
 	private MeldeListeSheet_NeuerSpieltag meldeListeSheet_NeuerSpieltag;
 	private SpieltagRanglisteSheet spieltagRangliste;
-
-	private SpielrundeSheet_Naechste spielrundeSheetNaechste;
 	private TestMeldeListeErstellen testMeldeListeErstellen;
+	private EndranglisteSheet endranglisteSheet;
 	private RanglisteTestDaten<EndranglisteSheetUITest> ranglisteTestDaten;
 
 	private static final int ANZ_MELDUNGEN = 20;
 	private static final int ANZ_RUNDEN = 3;
+	private static final int ANZ_SPIELTAGE = 3;
 
 	@Before
 	public void testMeldeListeErstellen() throws GenerateException {
@@ -47,15 +49,32 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		spieltagRangliste = new SpieltagRanglisteSheet(wkingSpreadsheet);
 		meldeListeSheet_NeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(wkingSpreadsheet);
-		spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
 		ranglisteTestDaten = new RanglisteTestDaten<>(wkingSpreadsheet, sheetHlp, this);
+		endranglisteSheet = new EndranglisteSheet(wkingSpreadsheet);
 	}
 
 	@Test
 	public void testRanglisteOK() throws GenerateException, IOException {
 		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
-		ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, SpielTagNr.from(1));
-		//		waitEnter();
+
+		// testrunden erstellen
+		for (int i = 1; i <= ANZ_SPIELTAGE; i++) {
+			SpielTagNr spieltag = SpielTagNr.from(i);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag); // in konfig speichern
+			meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1)); // in konfig speichern
+
+			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+			if (i == 1) { // 2 mit 1 spieltag weniger
+				Position clear = Position.from(3, 10); // D:11  Gerhard Niko 
+				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear).setValue(""));
+				Position clear2 = Position.from(3, 11); // D:12  Grau Franka  
+				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear2).setValue(""));
+			}
+			ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, spieltag); // von json dateien laden
+			spieltagRangliste.run(); // rangliste erstellen
+		}
+		endranglisteSheet.run();
+		waitEnter();
 	}
 
 	@Test
@@ -64,8 +83,17 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
 
 		// testrunden erstellen
-		SpielTagNr spieltag = SpielTagNr.from(1);
-		ranglisteTestDaten.generateSpielrundenJsonFilesIntmp(ANZ_RUNDEN, spieltag);
+		for (int i = 1; i <= 1; i++) {
+			SpielTagNr spieltag = SpielTagNr.from(i);
+			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+			if (i == 1) { // 2 mit 1 spieltag weniger
+				Position clear = Position.from(3, 10); // D:11  Gerhard Niko 
+				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear).setValue(""));
+				Position clear2 = Position.from(3, 11); // D:12  Grau Franka  
+				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear2).setValue(""));
+			}
+			ranglisteTestDaten.generateSpielrundenJsonFilesIntmp(ANZ_RUNDEN, spieltag); // json dateien erstellen
+		}
 
 		waitEnter();
 	}
