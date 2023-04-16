@@ -69,10 +69,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR).setDescription("Spielrunde Header-Hintergrundfarbe")
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("Spielrunde Header-Hintergrundfarbe")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty
@@ -281,7 +281,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
 
 		String prop = readStringProperty(KONFIG_PROP_ENDRANGLISTE_SORT_MODE);
-		if (null != prop && prop.trim().equalsIgnoreCase("d")) {
+		if (null != prop && prop.trim().equalsIgnoreCase(SuprMleEndranglisteSortMode.SiegeTage.getKey())) {
 			return SuprMleEndranglisteSortMode.SiegeTage;
 		}
 		return SuprMleEndranglisteSortMode.Siege;
