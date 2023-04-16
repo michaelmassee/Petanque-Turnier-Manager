@@ -32,8 +32,8 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final TableBorder2 HEADER_BORDER = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 	public static final String HEADER_BACK_COLOR = "#dedbd3";
 	public static final Integer DEFAULT_GERADE_BACK_COLOR = Integer.valueOf("e1e9f7", 16);
-	public static final Integer DEFAULT_UNGERADE__BACK_COLOR = Integer.valueOf("c0d6f7", 16);
-	public static final Integer DEFAULT_HEADER__BACK_COLOR = Integer.valueOf("e6ebf4", 16);
+	public static final Integer DEFAULT_UNGERADE_BACK_COLOR = Integer.valueOf("c0d6f7", 16);
+	public static final Integer DEFAULT_HEADER_BACK_COLOR = Integer.valueOf("e6ebf4", 16);
 
 	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
 	public static final String KONFIG_PROP_ERSTELLT_MIT_VERSION = "Erstellt mit Version";
@@ -65,20 +65,20 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für gerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Rangliste Hintergrundfarbe für gerade Zeilen")
 				.inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
 				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR)
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
 				.setDescription("Rangliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN)
@@ -98,7 +98,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		return new DocumentPropertiesHelper(wkspreadSheet);
 	}
 
-	abstract protected List<ConfigProperty<?>> getKonfigProperties();
+	protected abstract List<ConfigProperty<?>> getKonfigProperties();
 
 	protected WorkingSpreadsheet getWorkingSpreadsheet() {
 		return sheetWkRef.get().getWorkingSpreadsheet();
@@ -110,7 +110,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
 	 * @throws GenerateException
 	 */
-	public int readIntProperty(String key) throws GenerateException {
+	public int readIntProperty(String key) {
 		Integer val = null;
 		Object defaultVal = getDefaultProp(key);
 		val = docPropHelper.getIntProperty(key, (defaultVal == null) ? 0 : (Integer) defaultVal);
@@ -122,7 +122,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * @param name
 	 * @throws GenerateException
 	 */
-	public void writeIntProperty(String key, Integer val) throws GenerateException {
+	public void writeIntProperty(String key, Integer val) {
 		docPropHelper.setIntProperty(key, val);
 	}
 
@@ -131,18 +131,16 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	 *
 	 * @param key = property
 	 * @return Integer, -1 wenn keine Farbe, null when not found
-	 * @throws GenerateException
 	 */
-	public Integer readCellBackColorProperty(String key) throws GenerateException {
+	public Integer readCellBackColorProperty(String key) {
 		return readIntProperty(key);
 	}
 
 	/**
 	 * @param name
 	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
-	 * @throws GenerateException
 	 */
-	public String readStringProperty(String key) throws GenerateException {
+	public String readStringProperty(String key) {
 		String val = null;
 
 		// value aus Document properties lesen
@@ -151,11 +149,11 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 		return val;
 	}
 
-	public Boolean readBooleanProperty(String key) throws GenerateException {
+	public Boolean readBooleanProperty(String key) {
 		return StringTools.stringToBoolean(readStringProperty(key));
 	}
 
-	public void setStringProperty(String key, String val) throws GenerateException {
+	public void setStringProperty(String key, String val) {
 		docPropHelper.setStringProperty(key, val);
 	}
 
