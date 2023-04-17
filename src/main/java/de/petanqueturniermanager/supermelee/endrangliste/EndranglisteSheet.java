@@ -589,7 +589,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 		Position[] arraylist = null;
 
-		if (suprMleEndranglisteSortMode == SuprMleEndranglisteSortMode.SiegeTage) { // Anzahl gespielte Tage mit sortieren
+		if (suprMleEndranglisteSortMode == SuprMleEndranglisteSortMode.ANZTAGE) { // Anzahl gespielte Tage mit sortieren
 			arraylist = new Position[] { summeSpielGewonnenZelle1, anzSpielTageZelle1, summeSpielDiffZelle1,
 					punkteDiffZelle1, punkteGewonnenZelle1 };
 		} else {

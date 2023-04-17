@@ -121,7 +121,7 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		// ----------------------------------------------------------------------------------------------------
 
 		docPropHelper.setStringProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_ENDRANGLISTE_SORT_MODE,
-				SuprMleEndranglisteSortMode.SiegeTage.getKey());
+				SuprMleEndranglisteSortMode.ANZTAGE.getKey());
 		endranglisteSheet.run(); // neuen Scheet wird erstellt
 
 		rngHlpr = endranglisteRange(endranglisteSheet.getXSpreadSheet()); // neu einlesen !
