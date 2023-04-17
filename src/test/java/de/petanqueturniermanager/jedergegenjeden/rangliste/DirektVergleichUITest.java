@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -35,8 +33,6 @@ public class DirektVergleichUITest extends BaseCalcUITest {
 	static final int FORMULA_3_ZEILE = FORMULA_2_ZEILE + 1;
 	static final int FORMULA_4_ZEILE = FORMULA_3_ZEILE + 1;
 	static final int FORMULA_5_ZEILE = FORMULA_4_ZEILE + 1;
-
-	private static final Logger logger = LogManager.getLogger(DirektVergleichUITest.class);
 
 	private static final String TEST_SHEET_NAME = "Direktvergleich Test";
 

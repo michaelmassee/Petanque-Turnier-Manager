@@ -97,9 +97,14 @@ public abstract class BaseCalcUITest {
 	}
 
 	protected void validateWithJson(RangeData rangeData, InputStream jsonFile) {
+
+		assertThat(jsonFile).isNotNull();
+		assertThat(rangeData).isNotNull().isNotEmpty();
+
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 		RangeData refRangeData = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)), RangeData.class);
 
+		assertThat(refRangeData).isNotNull().isNotEmpty();
 		assertThat(rangeData).hasSameSizeAs(refRangeData);
 
 		int idx = 0;

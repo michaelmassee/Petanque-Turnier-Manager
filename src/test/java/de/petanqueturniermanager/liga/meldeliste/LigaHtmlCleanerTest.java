@@ -38,7 +38,7 @@ public class LigaHtmlCleanerTest {
 
 		URL refHtml = LigaHtmlCleanerTest.class.getResource("LigaGeneratedClean_ref.html");
 		assertThat(refHtml).isNotNull();
-		assertThat(targetHtml.exists());
+		assertThat(targetHtml).exists();
 
 		// for local test only
 		//		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");

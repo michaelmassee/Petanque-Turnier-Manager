@@ -14,11 +14,13 @@ import de.petanqueturniermanager.helper.position.Position;
  *
  */
 @SuppressWarnings("rawtypes")
-public abstract class AbstractCellValueWithSheet<T extends AbstractCellValueWithSheet, V> extends AbstractCellValue<T, V> implements ICellValueWithSheet<V> {
+public abstract class AbstractCellValueWithSheet<T extends AbstractCellValueWithSheet, V>
+		extends AbstractCellValue<T, V> implements ICellValueWithSheet<V> {
 
 	private XSpreadsheet sheet;
 
-	protected AbstractCellValueWithSheet() {
+	protected AbstractCellValueWithSheet(XSpreadsheet sheet) {
+		this(sheet, Position.from(0, 0));
 	}
 
 	protected AbstractCellValueWithSheet(XSpreadsheet sheet, Position pos) {
@@ -43,4 +45,5 @@ public abstract class AbstractCellValueWithSheet<T extends AbstractCellValueWith
 		this.sheet = checkNotNull(sheet);
 		return (T) this;
 	}
+
 }

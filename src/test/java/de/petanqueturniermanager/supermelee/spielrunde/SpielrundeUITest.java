@@ -216,8 +216,8 @@ public class SpielrundeUITest extends BaseCalcUITest {
 			});
 		}).findFirst();
 
-		assertThat(nrzumTauschen.isPresent());
-		assertThat(nrzumTauschen.get().isPresent());
+		assertThat(nrzumTauschen).isPresent();
+		assertThat(nrzumTauschen.get()).isPresent();
 
 		Optional<CellData> nrzumTauschenOpt = nrzumTauschen.get();
 		CellData cellDataZumTauschen = nrzumTauschenOpt.get();
@@ -228,7 +228,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		// spielernr 2 Zelle suchen
 		Optional<CellData> splrNr2 = splrNrRange.stream().flatMap(r -> r.stream())
 				.filter(c -> c.getIntVal(-1) == nrSpieler2).findFirst();
-		assertThat(splrNr2.isPresent());
+		assertThat(splrNr2).isPresent();
 		// wow endlich tauschen
 		logger.info("switch " + intValNr + " with " + nrSpieler2);
 		splrNr2.get().setIntVal(intValNr);

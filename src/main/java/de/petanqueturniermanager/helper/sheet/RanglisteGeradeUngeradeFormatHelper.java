@@ -32,7 +32,7 @@ public class RanglisteGeradeUngeradeFormatHelper {
 	private final ISheet sheet;
 	private final RangePosition rangePos;
 	private int geradeColor = BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR;
-	private int ungeradeColor = BasePropertiesSpalte.DEFAULT_UNGERADE__BACK_COLOR;
+	private int ungeradeColor = BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR;
 	private int validateSpalteNr = -1;
 	private Optional<Integer> redCharEqualToValue = Optional.empty();
 	private Optional<Integer> greenCharEqualToValue = Optional.empty();
