@@ -119,7 +119,7 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 			spierNrVal.setValue((double) spieler.getNr());
 			nameFormula.setValue(meldeliste.formulaSverweisSpielernamen(spierNrVal.getPos().getAddress()));
 
-			getSheetHelper().setValInCell(spierNrVal);
+			getSheetHelper().setNumberValueInCell(spierNrVal);
 			getSheetHelper().setFormulaInCell(nameFormula);
 
 			spierNrVal.zeilePlusEins();

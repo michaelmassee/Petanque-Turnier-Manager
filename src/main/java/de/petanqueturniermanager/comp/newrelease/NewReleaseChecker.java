@@ -46,6 +46,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
  */
 public class NewReleaseChecker {
 	public static final String EXTENSION_FILE_SUFFIX = "oxt";
+	public static final String EXTENSION_FILE_PREFIX = "petanqueturniermanager";
 	private static final String GITHUB_PETANQUE_TURNIER_MANAGER = "michaelmassee/Petanque-Turnier-Manager";
 
 	private static final Logger logger = LogManager.getLogger(NewReleaseChecker.class);
@@ -165,7 +166,6 @@ public class NewReleaseChecker {
 		return Paths.get(RELEASE_FILE);
 	}
 
-	@VisibleForTesting
 	GHRelease readLatestReleaseFromCacheFile() {
 		GHRelease ret = null;
 		Path pathReleaseFile = getReleaseFile();
@@ -223,9 +223,11 @@ public class NewReleaseChecker {
 		GHRelease latestRelease = getLatestReleaseFromGitHub();
 		if (latestRelease != null && !latestRelease.isPrerelease()) {
 			try {
-				List<GHAsset> assets = latestRelease.getAssets();
+				List<GHAsset> assets = latestRelease.listAssets().toList();
+
 				otxAsset = assets.stream().filter(ghasset -> {
-					return ghasset.getName().toLowerCase().endsWith(EXTENSION_FILE_SUFFIX);
+					String lwrName = ghasset.getName().toLowerCase();
+					return lwrName.endsWith(EXTENSION_FILE_SUFFIX) && lwrName.startsWith(EXTENSION_FILE_PREFIX);
 				}).findFirst().orElse(null);
 			} catch (IOException e) {
 				logger.error(e);

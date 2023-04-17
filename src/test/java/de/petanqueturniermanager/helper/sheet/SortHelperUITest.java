@@ -41,12 +41,7 @@ public class SortHelperUITest extends BaseCalcUITest {
 
 		assertThat(rangePos.getAddress()).isEqualTo("A1:E10");
 
-		// in 2 schritte weil max 3 spalten to sort
-		int[] sortSpalten = { 3, 4 }; // 0 = erste spalte
-		SortHelper.from(sheet, doc, rangePos).aufSteigendSortieren().spaltenToSort(sortSpalten).doSort();
-
-		// in 2 schritte weil max 3 spalten to sort
-		int[] sortSpalten2 = { 0, 1, 2 }; // 0 = erste spalte
+		int[] sortSpalten2 = { 0, 1, 2, 3, 4 }; // 0 = erste spalte
 		SortHelper.from(sheet, doc, rangePos).aufSteigendSortieren().spaltenToSort(sortSpalten2).doSort();
 
 		RangeData dataFromRange = RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).getDataFromRange();

@@ -2,9 +2,8 @@ package de.petanqueturniermanager.algorithmen;
 
 import static org.assertj.core.api.Assertions.assertThat;
 /*
-* PaarungenTest.java
-* Erstellung     : 31.08.2017 / Michael Massee
-*/
+ * PaarungenTest.java Erstellung : 31.08.2017 / Michael Massee
+ */
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -115,7 +114,7 @@ public class SuperMeleePaarungenTest {
 
 		for (Team team : spielRunde.teams()) {
 			for (Spieler spielr : team.spieler()) {
-				assertThat(!spielrNr.contains(spielr.getNr()));
+				assertThat(!spielrNr.contains(spielr.getNr())).isTrue();
 				spielrNr.add(spielr.getNr());
 			}
 		}

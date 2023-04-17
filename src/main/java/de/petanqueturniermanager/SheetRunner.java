@@ -46,7 +46,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	private boolean backupDocumentAfterRun;
 
-	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {
+	protected SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet, "WorkingSpreadsheet==null");
 		turnierSystem = checkNotNull(spielSystem, "SpielSystem==null");
 		sheetHelper = new SheetHelper(workingSpreadsheet);
@@ -54,7 +54,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		this.backupDocumentAfterRun = false;
 	}
 
-	public SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
+	protected SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
 		this(workingSpreadsheet, spielSystem, null);
 	}
 
@@ -70,7 +70,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		}
 	}
 
-	public final static void cancelRunner() {
+	public static final void cancelRunner() {
 		if (runner != null) {
 			runner.interrupt();
 		}
@@ -84,7 +84,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			boolean isFehler = false;
 
 			try {
-				ProcessBox().run();
+				processBox().run();
 				if (turnierSystem != TurnierSystem.KEIN) {
 					updateKonfigurationSheet();
 				}
@@ -93,16 +93,16 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				handleGenerateException(e);
 			} catch (Exception e) {
 				isFehler = true;
-				ProcessBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage())
+				processBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage())
 						.fehler("Siehe log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning.set(false); // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
 				if (isFehler) {
-					ProcessBox().visible().fehler("!! FEHLER !!").ready();
+					processBox().visible().fehler("!! FEHLER !!").ready();
 				} else {
-					ProcessBox().visible().info("**FERTIG**").ready();
+					processBox().visible().info("**FERTIG**").ready();
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
@@ -165,11 +165,11 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
-			ProcessBox().info("Verarbeitung abgebrochen");
+			processBox().info(VERARBEITUNG_ABGEBROCHEN);
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage())
 					.show();
 		} else {
-			ProcessBox().fehler(e.getMessage());
+			processBox().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage())
 					.show();
@@ -207,10 +207,10 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 	// for mocking
 	public void processBoxinfo(String infoMsg) {
-		ProcessBox().info(infoMsg);
+		processBox().info(infoMsg);
 	}
 
-	public ProcessBox ProcessBox() {
+	public ProcessBox processBox() {
 		return ProcessBox.from().prefix(logPrefix);
 	}
 

@@ -160,7 +160,7 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 	 * @return
 	 */
 	public T setRotateAngle(int angle) {
-		return put(ROTATEANGLE, new Integer(angle));
+		return put(ROTATEANGLE, Integer.valueOf(angle));
 	}
 
 	public T setCellbackgroundTransparent(boolean isTransparent) {
@@ -168,19 +168,19 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 	}
 
 	public T topMargin(int margin) {
-		return put(TOP_MARGIN, new Integer(margin));
+		return put(TOP_MARGIN, Integer.valueOf(margin));
 	}
 
 	public T bottomMargin(int margin) {
-		return put(BOTTOM_MARGIN, new Integer(margin));
+		return put(BOTTOM_MARGIN, Integer.valueOf(margin));
 	}
 
 	public T leftMargin(int margin) {
-		return put(LEFT_MARGIN, new Integer(margin));
+		return put(LEFT_MARGIN, Integer.valueOf(margin));
 	}
 
 	public T rightMargin(int margin) {
-		return put(RIGHT_MARGIN, new Integer(margin));
+		return put(RIGHT_MARGIN, Integer.valueOf(margin));
 	}
 
 	public T margin(int margin) {
