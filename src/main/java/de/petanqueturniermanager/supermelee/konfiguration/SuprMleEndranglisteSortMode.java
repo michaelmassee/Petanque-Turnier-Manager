@@ -7,8 +7,8 @@ package de.petanqueturniermanager.supermelee.konfiguration;
 public enum SuprMleEndranglisteSortMode {
 
 	//@formatter:off
-	Siege("S"),
-	SiegeTage("T");
+	DEFAULT("D"),
+	ANZTAGE("T");
 	//@formatter:on
 
 	private final String key;

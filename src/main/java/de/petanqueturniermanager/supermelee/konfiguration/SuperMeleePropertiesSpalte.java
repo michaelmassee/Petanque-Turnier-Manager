@@ -129,10 +129,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 						"Wenn true, und wenn die Anzahl der Meldungen, nur eine Doublettes oder Triplettes Runde ermöglichen, dann bei der Generierung von Spielrunden Fragen."));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ENDRANGLISTE_SORT_MODE)
-				.setDefaultVal(SuprMleEndranglisteSortMode.Siege.getKey())
-				.setDescription("Endrangliste Sortiermodus\r\nS=Siege\r\nT=Siege,Spieltage"))
-				.addAuswahl(SuprMleEndranglisteSortMode.Siege.getKey(), "Siege")
-				.addAuswahl(SuprMleEndranglisteSortMode.SiegeTage.getKey(), "Siege,Spieltage"));
+				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription(
+						"Endrangliste Sortiermodus\r\nD=Spiele +, Spiele Div, ...\r\nT=Spiele +, Anzahl gespielte Spieltage, ..."))
+				.addAuswahl(SuprMleEndranglisteSortMode.DEFAULT.getKey(), "Default,Sp+,SpΔ,PktΔ,Pkt+")
+				.addAuswahl(SuprMleEndranglisteSortMode.ANZTAGE.getKey(), "Sp+,AnzTage,SpΔ,PktΔ,Pkt+"));
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -281,10 +281,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
 
 		String prop = readStringProperty(KONFIG_PROP_ENDRANGLISTE_SORT_MODE);
-		if (null != prop && prop.trim().equalsIgnoreCase(SuprMleEndranglisteSortMode.SiegeTage.getKey())) {
-			return SuprMleEndranglisteSortMode.SiegeTage;
+		if (null != prop && prop.trim().equalsIgnoreCase(SuprMleEndranglisteSortMode.ANZTAGE.getKey())) {
+			return SuprMleEndranglisteSortMode.ANZTAGE;
 		}
-		return SuprMleEndranglisteSortMode.Siege;
+		return SuprMleEndranglisteSortMode.DEFAULT;
 
 	}
 
