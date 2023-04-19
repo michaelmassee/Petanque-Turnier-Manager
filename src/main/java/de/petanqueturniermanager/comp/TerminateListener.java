@@ -20,7 +20,7 @@ public class TerminateListener implements XTerminateListener {
 
 	private static TerminateListener terminateListener = null;
 
-	public static void addThisListenerOnce(XComponentContext context) {
+	public static synchronized void addThisListenerOnce(XComponentContext context) {
 		if (terminateListener == null) {
 			XDesktop currentDesktop = DocumentHelper.getCurrentDesktop(context);
 			terminateListener = new TerminateListener();
@@ -29,11 +29,9 @@ public class TerminateListener implements XTerminateListener {
 	}
 
 	/**
-	 * Is called when the master environment (e.g., desktop) is about to
-	 * terminate.<br>
+	 * Is called when the master environment (e.g., desktop) is about to terminate.<br>
 	 * Termination can be intercepted by throwing TerminationVetoException.<br>
-	 * Interceptor will be the new owner of desktop and should call
-	 * XDesktop::terminate() after finishing his own operations.
+	 * Interceptor will be the new owner of desktop and should call XDesktop::terminate() after finishing his own operations.
 	 */
 
 	@Override
