@@ -7,8 +7,6 @@ import java.net.URL;
 import java.nio.file.Path;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.sun.star.frame.XStorable;
 
@@ -26,8 +24,6 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
  *
  */
 public abstract class AbstractStore<T> {
-
-	private static final Logger logger = LogManager.getLogger(AbstractStore.class);
 
 	protected static final String SAVE_PROP_FILTER_NAME = "FilterName";
 	protected static final String SAVE_PROP_OVERWRITE = "Overwrite";

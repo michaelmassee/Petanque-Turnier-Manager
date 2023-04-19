@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.gson.Gson;
@@ -33,6 +32,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
@@ -44,20 +44,21 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheetUITest.class);
 
 	private DocumentPropertiesHelper docPropHelper;
+	private RanglisteTestDaten<SpieltagRanglisteSheetUITest> ranglisteTestDaten;
 
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
 		TestMeldeListeErstellen testMeldeListeErstellen = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
-		int anzMeldungen = testMeldeListeErstellen.run();
+		testMeldeListeErstellen.run();
 		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
+		ranglisteTestDaten = new RanglisteTestDaten<>(wkingSpreadsheet, sheetHlp, this);
 	}
 
 	@Test
 	public void testRanglisteOK() throws GenerateException, IOException {
-
-		erstelleTestSpielrunden(4, true);
+		ranglisteTestDaten.erstelleTestSpielrunden(4, true);
 
 		// Rangliste erstellen
 		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
@@ -89,7 +90,7 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	@Test
 	public void testUpdateRanglisteWennNeueSpielrunde() throws GenerateException, IOException {
 		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
-		erstelleTestSpielrunden(2, false);
+		ranglisteTestDaten.erstelleTestSpielrunden(2, false);
 
 		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
 		ranglist.run();// rangliste erstellen
@@ -111,7 +112,7 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	@Test
 	public void testSortRanglisteMitUngleicheAnzahlAnSpielrunden() throws GenerateException, IOException {
 		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
-		erstelleTestSpielrunden(2, false);
+		ranglisteTestDaten.erstelleTestSpielrunden(2, false);
 
 		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
 		ranglist.run();// rangliste erstellen
@@ -144,59 +145,16 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 		// waitEnter();
 	}
 
-	private void erstelleTestSpielrunden(int anzRunden, boolean validateRunden) throws GenerateException {
-		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
-
-		for (int spielrundeNr = 1; spielrundeNr <= anzRunden; spielrundeNr++) {
-
-			spielrundeSheetNaechste.run(); // no thread 1. Runde
-
-			XSpreadsheet spielrunde = sheetHlp.findByName("1." + spielrundeNr + ". Spielrunde");
-			assertThat(spielrunde).isNotNull();
-
-			RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,
-					SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE + 5, // Team A + B
-					SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 3); // 4 paarungen
-			RangeHelper rngHlpr = RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-					rangeSplrNr);
-
-			// feste spielrunden aus json dateien laden
-			InputStream jsonFile = SpieltagRanglisteSheetUITest.class
-					.getResourceAsStream("runde" + spielrundeNr + ".json");
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-			RangeData rundeSpielerNrData = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)),
-					RangeData.class);
-
-			rngHlpr.setDataInRange(rundeSpielerNrData);
-
-			// Ergebnisse eintragen
-			RangePosition rangeSpielErg = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPALTE_ERGEBNISSE,
-					SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.ERSTE_SPALTE_ERGEBNISSE + 1, // Team A + B
-					SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 3); // 4 paarungen
-			RangeHelper rngHlprSpielErg = RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-					rangeSpielErg);
-
-			RangeData ergebnisseDataRunde = new RangeData(getErgebnisse(spielrundeNr));
-			rngHlprSpielErg.setDataInRange(ergebnisseDataRunde);
-
-			// validate vertikal ergebnisse
-			// writeVertikalToJson(spielrunde, spielrundeNr);
-			if (validateRunden) {
-				validatVertikalWithJson(spielrunde, spielrundeNr);
-			}
-		}
-	}
-
 	private void validateSpielTagErgebnisseEinlesen(SpieltagRanglisteSheet ranglist) throws GenerateException {
 		List<SpielerSpieltagErgebnis> ergebnisse = ranglist.spielTagErgebnisseEinlesen();
-		assertThat(ergebnisse.size()).isEqualTo(23); // 23 aktive meldungen
+		assertThat(ergebnisse).hasSize(23); // 23 aktive meldungen
 
 		// stichprobe 10 = Hoffmann, Arne
 		Optional<SpielerSpieltagErgebnis> spieler10 = ergebnisse.stream().filter(sp -> {
 			return sp.getSpielerNr() == 10;
 		}).findFirst();
 
-		assertThat(spieler10.isPresent());
+		assertThat(spieler10).isPresent();
 
 		SpielerSpieltagErgebnis spieler10SpieltagErgebnis = spieler10.get();
 		assertThat(spieler10SpieltagErgebnis.getPosPunktePlus().getAddress()).isEqualTo("O5");
@@ -211,138 +169,6 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(spieler10SpieltagErgebnis.getSpielMinus()).isEqualTo(1);
 		assertThat(spieler10SpieltagErgebnis.getSpielDiv()).isEqualTo(2);
 		assertThat(spieler10SpieltagErgebnis.getSpielTagNr()).isEqualTo(1);
-	}
-
-	private Object[][] getErgebnisse(int spielrunde) {
-		Object[][] testDataRunde = null;
-		switch (spielrunde) {
-		case 1:
-			//@formatter:off
-				testDataRunde = new Object [][] {
-						{13,10}, 
-						{8,13}, 
-						{13,6},
-						{13,0}
-						};
-			//@formatter:on
-			break;
-		case 2:
-			//@formatter:off
-				testDataRunde = new Object [][] {
-						{4,13}, 
-						{13,1}, 
-						{13,9},
-						{13,3}
-						};
-			//@formatter:on
-			break;
-		case 3:
-			//@formatter:off
-				testDataRunde = new Object [][] {
-						{13,11}, 
-						{4,13}, 
-						{0,13},
-						{13,7}
-						};
-			//@formatter:on
-			break;
-		case 4:
-			//@formatter:off
-				testDataRunde = new Object [][] {
-						{13,12}, 
-						{13,5}, 
-						{9,13},
-						{8,13}
-						};
-			//@formatter:on
-			break;
-		}
-
-		return testDataRunde;
-	}
-
-	@Test
-	@Ignore
-	public void generateJsonFilesIntmp() throws GenerateException {
-		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
-
-		for (int rundeCntr = 1; rundeCntr < 5; rundeCntr++) {
-			spielrundeSheetNaechste.run(); // no thread naechste Runde
-
-			XSpreadsheet spielrunde1 = sheetHlp.findByName("1." + rundeCntr + ". Spielrunde");
-			assertThat(spielrunde1).isNotNull();
-
-			RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,
-					SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE + 5, // Team A + B
-					SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 3); // 4 paarungen
-			RangeHelper rngHlpr = RangeHelper.from(spielrunde1, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-					rangeSplrNr);
-			RangeData runde1SplrNrRange = rngHlpr.getDataFromRange();
-
-			Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-			try {
-				File jsoFile = new File("/home/michael/tmp/runde" + rundeCntr + ".json");
-				try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(jsoFile))) {
-					fileStream.write(gson.toJson(runde1SplrNrRange));
-				}
-			} catch (JsonIOException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
-	}
-
-	private RangeHelper getVertikalErgRange(XSpreadsheet spielrunde) throws GenerateException {
-		RangePosition rangeSplrErg = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE,
-				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.SPALTE_VERTIKALE_ERGEBNISSE_BA_NR,
-				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 23); // 22 Aktive Spieler Meldungen
-		assertThat(rangeSplrErg.getAddress()).isEqualTo("S3:W26");
-		RangeHelper rngHlpr = RangeHelper.from(spielrunde, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
-				rangeSplrErg);
-		return rngHlpr;
-
-	}
-
-	private void writeVertikalToJson(XSpreadsheet spielrunde, int rundeCntr) throws GenerateException {
-		RangeData vertikalErgRange = getVertikalErgRange(spielrunde).getDataFromRange();
-
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-		try {
-			File jsoFile = new File("/home/michael/tmp/runde" + rundeCntr + "-vertikal.json");
-			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(jsoFile))) {
-				fileStream.write(gson.toJson(vertikalErgRange));
-			}
-		} catch (JsonIOException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-	}
-
-	private void validatVertikalWithJson(XSpreadsheet spielrunde, int rundeCntr) throws GenerateException {
-
-		RangeData vertikalErgRangeVonSpielrunde = getVertikalErgRange(spielrunde).getDataFromRange();
-
-		InputStream jsonFile = SpieltagRanglisteSheetUITest.class
-				.getResourceAsStream("runde" + rundeCntr + "-vertikal.json");
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		RangeData refSpielergData = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)), RangeData.class);
-
-		assertThat(vertikalErgRangeVonSpielrunde).hasSameSizeAs(refSpielergData);
-
-		int idx = 0;
-		// jede zeile vergleichen, wegen fehlermeldung 
-		for (RowData data : vertikalErgRangeVonSpielrunde) {
-			List<String> expected1 = refSpielergData.get(idx).stream().map(c -> c.getStringVal())
-					.collect(Collectors.toList());
-			assertThat(data).extracting(CellData::getStringVal).containsExactlyElementsOf(expected1);
-			idx++;
-		}
 	}
 
 	private void writeSpieltagRanglisteToJson(SpieltagRanglisteSheet ranglist) throws GenerateException {

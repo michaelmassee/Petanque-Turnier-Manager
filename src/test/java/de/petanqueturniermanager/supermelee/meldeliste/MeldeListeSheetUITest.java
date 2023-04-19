@@ -128,7 +128,7 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 	}
 
 	private void valaditeNr(RangeData dataFromRange, int anzMeldungen) {
-		HashSet<Integer> pruefListe = new HashSet();
+		HashSet<Integer> pruefListe = new HashSet<>();
 		dataFromRange.stream().map(r -> {
 			return r.get(0); // erste spalte mit Nr
 		}).forEach(celData -> {
@@ -145,7 +145,7 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 
 	private void validateMeldungen(RangeData dataFromRange, int anzMeldungen, List<String> listeMitTestNamen) {
 
-		HashSet<String> pruefListe = new HashSet();
+		HashSet<String> pruefListe = new HashSet<>();
 		dataFromRange.stream().map(r -> {
 			return r.get(1); // 2 spalte mit Namen
 		}).forEach(celData -> {

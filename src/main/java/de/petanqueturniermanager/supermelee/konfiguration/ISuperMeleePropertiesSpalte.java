@@ -57,4 +57,6 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	boolean getGleichePaarungenAktiv() throws GenerateException;
 
+	SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException;
+
 }

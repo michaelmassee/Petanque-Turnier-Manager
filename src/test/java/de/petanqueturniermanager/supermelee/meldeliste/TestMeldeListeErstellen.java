@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
  * Erstellung 16.07.2022 / Michael Massee
@@ -39,6 +40,7 @@ public class TestMeldeListeErstellen {
 	private final WorkingSpreadsheet wkingSpreadsheet;
 	private final XSpreadsheetDocument doc;
 	private final MeldeListeSheet_New meldeListeSheetNew;
+	private final MeldeListeSheet_Update meldeListeSheetUpdate;
 
 	public static List<String> setzPos1 = Arrays.asList(new String[] { "Cummings, Kay", "Morgenroth, Waldtraut" });
 	public static List<String> setzPos2 = Arrays.asList(new String[] { "Barber, Arne", "Weaver, Erwin" });
@@ -47,6 +49,7 @@ public class TestMeldeListeErstellen {
 
 	public TestMeldeListeErstellen(WorkingSpreadsheet wkingSpreadsheet, XSpreadsheetDocument doc) {
 		meldeListeSheetNew = new MeldeListeSheet_New(wkingSpreadsheet);
+		meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		this.wkingSpreadsheet = wkingSpreadsheet;
 		this.doc = doc;
 	}
@@ -72,9 +75,33 @@ public class TestMeldeListeErstellen {
 	public int addMitAlleDieSpielen(int anzMeldungen) throws GenerateException {
 		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
 		int anzdidInsertMeldungen = testMeldungenEinfuegenAllepielen(anzMeldungen, anzbereitsinListe);
-		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !
 		return anzdidInsertMeldungen;
+	}
+
+	/**
+	 * Spalte komplett mit 1
+	 * 
+	 * @param spieltag
+	 * @throws GenerateException
+	 */
+
+	public void addMitAlleDieSpielenAktuelleSpieltag(SpielTagNr spieltag) throws GenerateException {
+		meldeListeSheetNew.setSpielTag(spieltag);
+		meldeListeSheetNew.setAktiveSpieltag(spieltag);
+		meldeListeSheetUpdate.setSpielTag(spieltag);
+		meldeListeSheetUpdate.setAktiveSpieltag(spieltag);
+
+		int anzbereitsinListe = meldeListeSheetNew.getAlleMeldungen().size();
+		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
+		int spielTagSpalte = meldeListeSheetUpdate.aktuelleSpieltagSpalte();
+
+		Position startPos = Position.from(spielTagSpalte, ersteDatenZeile);
+		RangeData data = new RangeData(anzbereitsinListe, 1);
+		RangeHelper.from(getMeldeListeSheetNew().getXSpreadSheet(), doc, data.getRangePosition(startPos))
+				.setDataInRange(data, true);
+
+		meldeListeSheetUpdate.run();
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {

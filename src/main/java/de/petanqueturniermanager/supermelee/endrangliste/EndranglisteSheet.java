@@ -8,10 +8,12 @@ import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.ANZAH
 import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
 import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_MINUS_OFFS;
 import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIELE_DIV_OFFS;
 import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIELE_MINUS_OFFS;
+import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.SPIELE_PLUS_OFFS;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
@@ -46,6 +48,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -56,10 +59,10 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeRangListeSorter;
 import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
@@ -80,10 +83,10 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte;
 	private final EndRanglisteFormatter endRanglisteFormatter;
 	private final RangListeSpalte rangListeSpalte;
-	private final SuperMeleeRangListeSorter rangListeSorter;
+	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Endrangliste");
+		super(workingSpreadsheet, SHEETNAME);
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
 		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
 				.anzZeilenInHeader(2).sheet(this).formation(Formation.SUPERMELEE)
@@ -91,7 +94,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte,
 				ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
-		rangListeSorter = new SuperMeleeRangListeSorter(this);
+		rangListeSorter = new RangListeSorter(this);
 	}
 
 	@Override
@@ -164,14 +167,14 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
 		int letzteSpalte = getLetzteSpalte();
 
-		Integer streichSpieltag_geradeColor = getKonfigurationSheet()
+		Integer streichSpieltagGeradeColor = getKonfigurationSheet()
 				.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
-		Integer streichSpieltag_unGeradeColor = getKonfigurationSheet()
+		Integer streichSpieltagUnGeradeColor = getKonfigurationSheet()
 				.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
 		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(
-				streichSpieltag_geradeColor);
+				streichSpieltagGeradeColor);
 		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(
-				streichSpieltag_unGeradeColor);
+				streichSpieltagUnGeradeColor);
 
 		Integer geradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade();
@@ -271,7 +274,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			SpielTagNr spielTagNr = schlechtesteSpieltag(spielerNr);
 			int spielerZeile = spielerSpalte.getSpielerZeileNr(spielerNr);
 			if (spielTagNr != null && spielerZeile > 0) {
-				getSheetHelper().setValInCell(
+				getSheetHelper().setNumberValueInCell(
 						numberCellValueSchlechtesteSpielTag.zeile(spielerZeile).setValue((double) spielTagNr.getNr()));
 			}
 		}
@@ -334,7 +337,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 	/**
 	 * Anzahl gespielte Spieltage<br>
-	 * =ZÄHLENWENN(D4:AG4;"<>")/6
+	 * =ANZAHL(D10:U10)/6 <br>
+	 * =ZÄHLENWENN(D4:AG4;"<>")/6 -> ab 7.5 not working !
 	 *
 	 * @throws GenerateException
 	 */
@@ -349,8 +353,10 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		Position ersteSpielTagErsteZelle = Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE);
 		Position letzteSpielTagLetzteZelle = Position.from(letzteSpieltagLetzteSpalte, ERSTE_DATEN_ZEILE);
 
-		String formula = "=COUNTIF(" + ersteSpielTagErsteZelle.getAddress() + ":"
-				+ letzteSpielTagLetzteZelle.getAddress() + ";\"<>\")/" + ANZAHL_SPALTEN_IN_SUMME;
+		// =ANZAHL(D10:U10)/6
+
+		String formula = "=ANZAHL(" + ersteSpielTagErsteZelle.getAddress() + ":"
+				+ letzteSpielTagLetzteZelle.getAddress() + ")/" + ANZAHL_SPALTEN_IN_SUMME;
 
 		// letzte Spalte ist anzahl spieltage
 		ColumnProperties celColumProp = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
@@ -402,7 +408,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 			SheetRunner.testDoCancelTask();
-			if (schlechtesteSpielTag.getNr() != spieltagCntr) {
+			if (schlechtesteSpielTag == null || schlechtesteSpielTag.getNr() != spieltagCntr) {
 				int ersteSpieltagSummeSpalte = ERSTE_SPIELTAG_SPALTE + ((spieltagCntr - 1) * ANZAHL_SPALTEN_IN_SUMME);
 				for (int summeSpalteCntr = 0; summeSpalteCntr < ANZAHL_SPALTEN_IN_SUMME; summeSpalteCntr++) {
 					SheetRunner.testDoCancelTask();
@@ -439,14 +445,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			return null;
 		}
 		List<SpielerSpieltagErgebnis> spielerSpieltagErgebnisse = spielerErgebnisseEinlesen(spielrNr);
-		spielerSpieltagErgebnisse.sort(new Comparator<SpielerSpieltagErgebnis>() {
-			@Override
-			public int compare(SpielerSpieltagErgebnis o1, SpielerSpieltagErgebnis o2) {
-				// schlechteste oben
-				return o1.reversedCompareTo(o2);
-			}
-		});
-		if (spielerSpieltagErgebnisse.size() > 0) {
+		spielerSpieltagErgebnisse.sort((o1, o2) -> o1.reversedCompareTo(o2));
+		if (!spielerSpieltagErgebnisse.isEmpty()) {
 			return spielerSpieltagErgebnisse.get(0).getSpielTag();
 		}
 		return null;
@@ -545,14 +545,8 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		return getLetzteSpalte() + ERSTE_SORTSPALTE_OFFSET;
 	}
 
-	protected SuperMeleeRangListeSorter getRangListeSorter() {
+	protected RangListeSorter getRangListeSorter() {
 		return rangListeSorter;
-	}
-
-	@Override
-	public List<Position> getRanglisteSpalten() throws GenerateException {
-		int ersteSpalteEndsumme = getErsteSummeSpalte();
-		return getRanglisteSpalten(ersteSpalteEndsumme, ERSTE_DATEN_ZEILE);
 	}
 
 	@Override
@@ -568,6 +562,42 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	@Override
 	public void calculateAll() {
 		getxCalculatable().calculateAll();
+	}
+
+	@Override
+	public List<Position> getRanglisteSpalten() throws GenerateException {
+		int ersteSpalteEndsumme = getErsteSummeSpalte();
+		return getRanglisteSpalten(ersteSpalteEndsumme, ERSTE_DATEN_ZEILE);
+	}
+
+	/**
+	 * get Ranglistenspalten to sort
+	 */
+
+	@Override
+	protected List<Position> getRanglisteSpalten(int ersteSpalteEndsumme, int ersteDatenZeile)
+			throws GenerateException {
+
+		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteDatenZeile);
+		Position anzSpielTageZelle1 = Position.from(anzSpielTageSpalte(), ersteDatenZeile);
+		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteDatenZeile);
+		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteDatenZeile);
+		Position punkteGewonnenZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_PLUS_OFFS, ersteDatenZeile);
+
+		SuprMleEndranglisteSortMode suprMleEndranglisteSortMode = getKonfigurationSheet()
+				.getSuprMleEndranglisteSortMode();
+
+		Position[] arraylist = null;
+
+		if (suprMleEndranglisteSortMode == SuprMleEndranglisteSortMode.ANZTAGE) { // Anzahl gespielte Tage mit sortieren
+			arraylist = new Position[] { summeSpielGewonnenZelle1, anzSpielTageZelle1, summeSpielDiffZelle1,
+					punkteDiffZelle1, punkteGewonnenZelle1 };
+		} else {
+			arraylist = new Position[] { summeSpielGewonnenZelle1, summeSpielDiffZelle1, punkteDiffZelle1,
+					punkteGewonnenZelle1 };
+		}
+
+		return Arrays.asList(arraylist);
 	}
 
 }

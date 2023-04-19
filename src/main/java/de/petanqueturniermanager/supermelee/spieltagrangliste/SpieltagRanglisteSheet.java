@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -39,7 +40,6 @@ import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SuperMeleeRangListeSorter;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
@@ -60,7 +60,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final SpieltagRanglisteFormatter ranglisteFormatter;
-	private final SuperMeleeRangListeSorter rangListeSorter;
+	private final RangListeSorter rangListeSorter;
 
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spieltag Rangliste");
@@ -69,7 +69,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		ranglisteFormatter = new SpieltagRanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, getSpielerSpalte(),
 				ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
-		rangListeSorter = new SuperMeleeRangListeSorter(this);
+		rangListeSorter = new RangListeSorter(this);
 	}
 
 	@Override
@@ -468,7 +468,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		rangListeSorter.isErrorInSheet();
 	}
 
-	protected SuperMeleeRangListeSorter getRangListeSorter() {
+	protected RangListeSorter getRangListeSorter() {
 		return rangListeSorter;
 	}
 

@@ -1,6 +1,6 @@
 /**
-* Erstellung : 05.04.2018 / Michael Massee
-**/
+ * Erstellung : 05.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.sheet;
 
@@ -23,14 +23,11 @@ public class WeakRefHelper<T> {
 	}
 
 	public final boolean isPresent() {
-		if (!this.wkRef.isEnqueued() && this.wkRef.get() != null) {
-			return true;
-		}
-		return false;
+		return !this.wkRef.refersTo(null) && this.wkRef.get() != null;
 	}
 
 	public final T get() {
-		if (!this.wkRef.isEnqueued()) {
+		if (!this.wkRef.refersTo(null)) {
 			return this.wkRef.get();
 		}
 		// darf nicht passieren
