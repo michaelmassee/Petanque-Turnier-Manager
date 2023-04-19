@@ -94,7 +94,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 			getSheetHelper().setActiveSheet(ranglisteNachCadrage.getSheet());
 			for (Team team : ranglisteOhneCadrage.getTeamListe()) {
 				NumberCellValue teamRangliste = NumberCellValue.from(ranglisteNachCadrage.getSheet(), posTeamNr).setValue((double) team.getNr());
-				getSheetHelper().setValInCell(teamRangliste);
+				getSheetHelper().setNumberValueInCell(teamRangliste);
 				posTeamNr.zeilePlusEins();
 			}
 		}

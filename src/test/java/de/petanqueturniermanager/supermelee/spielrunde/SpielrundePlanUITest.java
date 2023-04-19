@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -18,19 +16,15 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
 
 public class SpielrundePlanUITest extends BaseCalcUITest {
 
-	private static final Logger logger = LogManager.getLogger(SpielrundeUITest.class);
-	private MeldeListeSheet_New meldeListeSheetNew;
 	private TestMeldeListeErstellen testMeldeListe;
 
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		testMeldeListe = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
-		meldeListeSheetNew = testMeldeListe.getMeldeListeSheetNew();
 	}
 
 	@Test

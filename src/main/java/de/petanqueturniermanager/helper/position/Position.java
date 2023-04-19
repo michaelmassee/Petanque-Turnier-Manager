@@ -1,6 +1,6 @@
 /**
-* Erstellung : 26.03.2018 / Michael Massee
-**/
+ * Erstellung : 26.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.position;
 
@@ -22,6 +22,10 @@ public class Position extends AbstractPosition<Position> {
 	 */
 	public static Position from(int spalte, int zeile) {
 		return new Position(spalte, zeile);
+	}
+
+	public static Position from(String spalte, int zeile) {
+		return new Position(spalteStringToNumber(spalte), zeile);
 	}
 
 	public static Position from(AbstractPosition<?> pos) {

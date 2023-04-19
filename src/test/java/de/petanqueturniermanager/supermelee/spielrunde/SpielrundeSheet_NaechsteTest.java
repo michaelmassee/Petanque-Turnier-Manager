@@ -40,7 +40,8 @@ public class SpielrundeSheet_NaechsteTest {
 		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
 
 			@Override
-			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(
+					WorkingSpreadsheet workingSpreadsheet) {
 				return konfigurationSheetMock;
 			}
 
@@ -76,18 +77,25 @@ public class SpielrundeSheet_NaechsteTest {
 
 		XSpreadsheet spielTag1Runde1Mock = PowerMockito.mock(XSpreadsheet.class);
 
-		Position pospielerNr = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE, AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		Position pospielerNr = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE,
+				AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
 
 		int[] spielerNr = { 3, 4, 8, // Team A
 				12, 6, 9 }; // Team B
 		int idx = 0;
 		for (int teamCntr = 1; teamCntr <= 2; teamCntr++) { // Team A & B
 			for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
-				pospielerNr.spalte(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
-				PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(pospielerNr)))).thenReturn(spielerNr[idx++]);
+				pospielerNr.spalte(
+						AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
+				PowerMockito
+						.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(pospielerNr))))
+						.thenReturn(spielerNr[idx++]);
 			}
 		}
-		PowerMockito.when(sheetHelperMock.findByName(spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1)))).thenReturn(spielTag1Runde1Mock);
+		PowerMockito
+				.when(sheetHelperMock
+						.findByName(spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1))))
+				.thenReturn(spielTag1Runde1Mock);
 
 		SpielerMeldungen meldungen = new SpielerMeldungen();
 		for (idx = 0; idx < spielerNr.length; idx++) {
@@ -110,8 +118,8 @@ public class SpielrundeSheet_NaechsteTest {
 		assertThat(meldungen.findSpielerByNr(nr)).isNotNull();
 		assertThat(meldungen.findSpielerByNr(nr)).isEqualTo(Spieler.from(nr));
 		assertThat(meldungen.findSpielerByNr(nr).anzahlMitSpieler()).isEqualTo(2);
-		assertThat(meldungen.findSpielerByNr(nr).warImTeamMit(warimTeammitA));
-		assertThat(meldungen.findSpielerByNr(nr).warImTeamMit(warimTeammitB));
+		assertThat(meldungen.findSpielerByNr(nr).warImTeamMit(warimTeammitA)).isTrue();
+		assertThat(meldungen.findSpielerByNr(nr).warImTeamMit(warimTeammitB)).isTrue();
 
 	}
 

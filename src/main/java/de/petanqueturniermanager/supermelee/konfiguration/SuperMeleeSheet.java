@@ -17,6 +17,7 @@ import com.google.common.annotations.VisibleForTesting;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -57,8 +58,9 @@ public abstract class SuperMeleeSheet extends SheetRunner {
 		return konfigurationSheet;
 	}
 
-	// Gleiche reihenfolge in Speiltag und endrangliste
-	protected List<Position> getRanglisteSpalten(int ersteSpalteEndsumme, int ersteDatenZeile) {
+	// Gleiche reihenfolge in Speiltag und Endrangliste
+	protected List<Position> getRanglisteSpalten(int ersteSpalteEndsumme, int ersteDatenZeile)
+			throws GenerateException {
 		Position summeSpielGewonnenZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_PLUS_OFFS, ersteDatenZeile);
 		Position summeSpielDiffZelle1 = Position.from(ersteSpalteEndsumme + SPIELE_DIV_OFFS, ersteDatenZeile);
 		Position punkteDiffZelle1 = Position.from(ersteSpalteEndsumme + PUNKTE_DIV_OFFS, ersteDatenZeile);

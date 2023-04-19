@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.ImageAlign;
@@ -38,7 +36,6 @@ import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBackgrColorAndColorChooser>
 		implements XActionListener {
 
-	private static final Logger logger = LogManager.getLogger(LabelPlusBackgrColorAndColorChooser.class);
 	// https://www.flaticon.com/free-icon/color-wheel_1373048 = color chooser
 	public static final String btnImage = "sidebar-colorpicker.png"; // 24x24
 

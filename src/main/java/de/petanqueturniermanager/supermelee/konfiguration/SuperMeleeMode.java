@@ -8,8 +8,10 @@ package de.petanqueturniermanager.supermelee.konfiguration;
  *
  */
 public enum SuperMeleeMode {
+	//@formatter:off
 	Triplette("T"), // aufüllen mit Doublettes
 	Doublette("D"); // aufüllen mit Triplettes
+	//@formatter:on
 
 	private final String key;
 

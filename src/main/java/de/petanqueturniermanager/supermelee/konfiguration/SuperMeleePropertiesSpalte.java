@@ -53,6 +53,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	// wenn nur Doublettes oder Triplettes mögliche dann fragen bei derRunde Generierung. Default false
 	public static final String KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN = "Gleiche Paarungen";
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
+	public static final String KONFIG_PROP_ENDRANGLISTE_SORT_MODE = "Endrangliste Sortiermodus"; // 
 
 	static {
 
@@ -68,10 +69,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
 				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR).setDescription("Spielrunde Header-Hintergrundfarbe")
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("Spielrunde Header-Hintergrundfarbe")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty
@@ -126,6 +127,12 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN)
 				.setDefaultVal(false).inSideBar().setDescription(
 						"Wenn true, und wenn die Anzahl der Meldungen, nur eine Doublettes oder Triplettes Runde ermöglichen, dann bei der Generierung von Spielrunden Fragen."));
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ENDRANGLISTE_SORT_MODE)
+				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription(
+						"Endrangliste Sortiermodus\r\nD=Spiele +, Spiele Div, ...\r\nT=Spiele +, Anzahl gespielte Spieltage, ..."))
+				.addAuswahl(SuprMleEndranglisteSortMode.DEFAULT.getKey(), "Default,Sp+,SpΔ,PktΔ,Pkt+")
+				.addAuswahl(SuprMleEndranglisteSortMode.ANZTAGE.getKey(), "Sp+,AnzTage,SpΔ,PktΔ,Pkt+"));
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -268,6 +275,17 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
 		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
+	}
+
+	@Override
+	public SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
+
+		String prop = readStringProperty(KONFIG_PROP_ENDRANGLISTE_SORT_MODE);
+		if (null != prop && prop.trim().equalsIgnoreCase(SuprMleEndranglisteSortMode.ANZTAGE.getKey())) {
+			return SuprMleEndranglisteSortMode.ANZTAGE;
+		}
+		return SuprMleEndranglisteSortMode.DEFAULT;
+
 	}
 
 }

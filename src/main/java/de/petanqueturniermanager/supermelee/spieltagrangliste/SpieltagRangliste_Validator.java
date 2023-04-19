@@ -54,7 +54,7 @@ public class SpieltagRangliste_Validator extends AbstractSpieltagRangliste {
 		setSpieltagNr(spielTagNr);
 		spielrundeSheetValidator.setSpielTag(spielTagNr);
 		validateSpieler();
-		ProcessBox().info("Kein fehler gefunden in \"" + getSheetName(getSpieltagNr()) + "\"");
+		processBox().info("Kein fehler gefunden in \"" + getSheetName(getSpieltagNr()) + "\"");
 	}
 
 	private void validateSpieler() throws GenerateException {

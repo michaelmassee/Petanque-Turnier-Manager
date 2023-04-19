@@ -19,11 +19,10 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpalte;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
-import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUITest;
 
 public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
-	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheetUITest.class);
+	private static final Logger logger = LogManager.getLogger(JGJRanglisteSheetUITest.class);
 
 	private DocumentPropertiesHelper docPropHelper;
 
@@ -31,7 +30,7 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 	public void testMeldeListeErstelln() throws GenerateException {
 		JGJTestMeldeListeErstellen testMeldeListeErstellen = new JGJTestMeldeListeErstellen(wkingSpreadsheet, doc);
 
-		int anzMeldungen = testMeldeListeErstellen.run();
+		testMeldeListeErstellen.run();
 		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		docPropHelper.setStringProperty(JGJPropertiesSpalte.KONFIG_PROP_NAME_GRUPPE, "Gruppe Test");

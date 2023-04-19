@@ -1,6 +1,6 @@
 /**
-* Erstellung : 27.03.2018 / Michael Massee
-**/
+ * Erstellung : 27.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.helper.cellvalue;
 
@@ -16,13 +16,13 @@ import de.petanqueturniermanager.helper.position.Position;
 
 public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue, String> {
 
-	private StringCellValue() {
-		super();
-	}
-
 	private StringCellValue(XSpreadsheet sheet, Position pos, String value) {
 		super(sheet, pos);
 		setValue(value);
+	}
+
+	public StringCellValue(XSpreadsheet sheet) {
+		super(sheet);
 	}
 
 	public StringCellValue setValue(Number value) {
@@ -38,7 +38,7 @@ public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue,
 	}
 
 	public static final StringCellValue from(AbstractCellValueWithSheet<?, ?> cellVal) {
-		StringCellValue stringCellValue = new StringCellValue();
+		StringCellValue stringCellValue = new StringCellValue(cellVal.getSheet());
 		stringCellValue.copyCommonAttr(cellVal).setValue(cellVal.getValue().toString());
 		return stringCellValue;
 	}

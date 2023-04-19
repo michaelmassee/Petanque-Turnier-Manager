@@ -49,12 +49,12 @@ public class RangeHelper {
 	}
 
 	public static RangeHelper from(XSpreadsheet xSpreadsheet, XSpreadsheetDocument workingSpreadsheetDocument,
-			RangePosition rangePos) throws GenerateException {
+			RangePosition rangePos) {
 		return new RangeHelper(xSpreadsheet, workingSpreadsheetDocument, rangePos);
 	}
 
 	public static RangeHelper from(XSpreadsheet xSpreadsheet, XSpreadsheetDocument workingSpreadsheetDocument,
-			int startSpalte, int startZeile) throws GenerateException {
+			int startSpalte, int startZeile) {
 		return from(xSpreadsheet, workingSpreadsheetDocument, RangePosition.from(startSpalte, startZeile));
 	}
 
@@ -80,9 +80,8 @@ public class RangeHelper {
 	 * Alles ! wegputzen
 	 *
 	 * @return
-	 * @throws GenerateException
 	 */
-	public RangeHelper clearRange() throws GenerateException {
+	public RangeHelper clearRange() {
 		checkNotNull(rangePos);
 
 		XCellRange xRangetoClear;
@@ -97,7 +96,7 @@ public class RangeHelper {
 		return this;
 	}
 
-	private XCellRangeData getXCellRangeData() throws GenerateException {
+	private XCellRangeData getXCellRangeData() {
 		XCellRangeData xCellRangeData = null;
 		try {
 			XCellRange xCellRange = getXSpreadSheet().getCellRangeByPosition(rangePos.getStartSpalte(),
@@ -119,7 +118,7 @@ public class RangeHelper {
 	 * @return null when error
 	 * @throws GenerateException
 	 */
-	public RangeData getDataFromRange() throws GenerateException {
+	public RangeData getDataFromRange() {
 		Object[][] data = new Object[][] {};
 		XCellRangeData xCellRangeData = getXCellRangeData();
 		if (xCellRangeData != null) {
@@ -177,7 +176,7 @@ public class RangeHelper {
 		return this;
 	}
 
-	public XCellRange getCellRange() throws GenerateException {
+	public XCellRange getCellRange() {
 
 		checkNotNull(rangePos);
 
@@ -197,10 +196,9 @@ public class RangeHelper {
 	 * not used
 	 *
 	 * @return
-	 * @throws GenerateException
 	 */
 	@SuppressWarnings("unused")
-	private XCellRangesQuery getCellRangesQuery() throws GenerateException {
+	private XCellRangesQuery getCellRangesQuery() {
 		checkNotNull(rangePos);
 
 		XCellRange xCellRange = null;
@@ -213,7 +211,7 @@ public class RangeHelper {
 		return xCellRangesQuery;
 	}
 
-	public RangeHelper setRangeProperties(RangeProperties rangeProp) throws GenerateException {
+	public RangeHelper setRangeProperties(RangeProperties rangeProp) {
 		XPropertyHelper.from(getCellRange(), getWorkingSpreadsheetDocument()).setProperties(rangeProp);
 		return this;
 	}
@@ -222,14 +220,14 @@ public class RangeHelper {
 		return workingSpreadsheetDocument;
 	}
 
-	public RangeHelper setArrayFormula(String formula) throws GenerateException {
+	public RangeHelper setArrayFormula(String formula) {
 		XCellRange xCellRange = getCellRange();
 		XArrayFormulaRange xArrayFormula = Lo.qi(XArrayFormulaRange.class, xCellRange);
 		xArrayFormula.setArrayFormula(formula);
 		return this;
 	}
 
-	public XPropertySet getPropertySet() throws GenerateException {
+	public XPropertySet getPropertySet() {
 		XPropertySet xPropSet = null;
 		XCellRange xCellRange = getCellRange();
 		if (xCellRange != null) {

@@ -160,15 +160,6 @@ public class DocumentPropertiesHelper {
 		boolean didExist = false;
 		XPropertyContainer xpc = getXPropertyContainer();
 
-		// userProperties.addProperty(property,
-		// com.sun.star.beans.PropertyAttribute.REMOVEABLE,
-		// new Any(Type.STRING, value));
-		// const short BOUND = 2
-		// indicates that a PropertyChangeEvent will be fired to all registered
-		// XPropertyChangeListeners whenever the value of this property changes.
-		// PropertyAttribute.READONLY hat kein auswirkung ?
-		// PropertyAttribute.READONLY
-
 		try {
 			xpc.addProperty(name, (short) 0, new Any(Type.STRING, val));
 		} catch (PropertyExistException e) {
@@ -223,8 +214,8 @@ public class DocumentPropertiesHelper {
 			}
 		}
 
-		if (propVal != null && propVal instanceof String) {
-			return (String) propVal;
+		if (propVal instanceof String strval) {
+			return strval;
 		}
 		return defaultVal;
 	}

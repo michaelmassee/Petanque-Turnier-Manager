@@ -9,7 +9,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import de.petanqueturniermanager.helper.position.AbstractPosition;
 import de.petanqueturniermanager.helper.position.Position;
@@ -26,22 +25,23 @@ public class RangeData extends ArrayList<RowData> {
 		super();
 	}
 
+	public RangeData(int anzZeilen, Integer... intSpalteVals) {
+		while (anzZeilen-- > 0) {
+			RowData dta = new RowData(intSpalteVals);
+			add(dta);
+		}
+	}
+
 	public RangeData(Object[][] data) {
-		super(Arrays.stream(checkNotNull(data)).map(rowdata -> {
-			return new RowData(rowdata);
-		}).collect(Collectors.toList()));
+		super(Arrays.stream(checkNotNull(data)).map(RowData::new).toList());
 	}
 
 	public RangeData(List<?> data) {
-		super(checkNotNull(data).stream().map(rowdata -> {
-			return new RowData(rowdata);
-		}).collect(Collectors.toList()));
+		super(checkNotNull(data).stream().map(RowData::new).toList());
 	}
 
 	public void addData(Object[][] data) {
-		addAll(Arrays.stream(checkNotNull(data)).map(rowdata -> {
-			return new RowData(rowdata);
-		}).collect(Collectors.toList()));
+		addAll(Arrays.stream(checkNotNull(data)).map(RowData::new).toList());
 	}
 
 	public void addNewSpalte(String val) {

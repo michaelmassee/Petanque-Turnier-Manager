@@ -1,12 +1,12 @@
 #UNO project configuration file
-#Mon Jun 13 22:07:00 CEST 2022
+#Tue Mar 21 23:53:51 CET 2023
 project.prefix=de.petanqueturniermanager
-project.ooo=LibreOffice 6.4
+project.ooo=LibreOffice 7.3
 project.language=Java
 regclassname=de.petanqueturniermanager.comp.RegistrationHandler
 project.idl=/idl
 project.implementation=comp
 project.build=build
-project.sdk=6.4.7.2
+project.sdk=7.3.7.2
 project.srcdir=/src/main/java
-javaversion=java11
+javaversion=java17

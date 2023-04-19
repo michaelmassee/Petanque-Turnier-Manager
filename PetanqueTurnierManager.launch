@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.libreoffice.ide.eclipse.core.launchlibreoffice">
-<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/PetanqueTurnierManager"/>
-</listAttribute>
-<listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
-<listEntry value="4"/>
-</listAttribute>
-<stringAttribute key="org.eclipse.debug.core.SOURCE_PATH_COMPUTER_ID" value="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"/>
-<stringAttribute key="org.eclipse.debug.core.source_locator_id" value="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
-<listAttribute key="org.eclipse.debug.ui.favoriteGroups">
-<listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
-<listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
-</listAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="PetanqueTurnierManager"/>
-<stringAttribute key="org.libreoffice.ide.eclipse.core.PACKAGE_CONTENT_PATHS" value="registry/org/openoffice/Office/Addons.xcu:registry/org/openoffice/Office/Addons_Liga.xcu:registry/org/openoffice/Office/Addons_Testdaten.xcu"/>
-<stringAttribute key="org.libreoffice.ide.eclipse.core.PROJECT_ATTR" value="PetanqueTurnierManager"/>
-<booleanAttribute key="org.libreoffice.ide.eclipse.core.USE_CLEAN_USER_INSTALLATION_ATTR" value="true"/>
+    <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
+        <listEntry value="/PetanqueTurnierManager"/>
+    </listAttribute>
+    <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
+        <listEntry value="4"/>
+    </listAttribute>
+    <stringAttribute key="org.eclipse.debug.core.SOURCE_PATH_COMPUTER_ID" value="org.eclipse.jdt.launching.sourceLookup.javaSourcePathComputer"/>
+    <stringAttribute key="org.eclipse.debug.core.source_locator_id" value="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
+    <listAttribute key="org.eclipse.debug.ui.favoriteGroups">
+        <listEntry value="org.eclipse.debug.ui.launchGroup.debug"/>
+        <listEntry value="org.eclipse.debug.ui.launchGroup.run"/>
+    </listAttribute>
+    <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="PetanqueTurnierManager"/>
+    <stringAttribute key="org.libreoffice.ide.eclipse.core.PACKAGE_CONTENT_PATHS" value="registry/org/openoffice/Office/Addons.xcu:registry/org/openoffice/Office/Addons_Liga.xcu:registry/org/openoffice/Office/Addons_Testdaten.xcu"/>
+    <stringAttribute key="org.libreoffice.ide.eclipse.core.PROJECT_ATTR" value="PetanqueTurnierManager"/>
+    <booleanAttribute key="org.libreoffice.ide.eclipse.core.USE_CLEAN_USER_INSTALLATION_ATTR" value="true"/>
 </launchConfiguration>

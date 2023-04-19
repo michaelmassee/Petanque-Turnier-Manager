@@ -20,7 +20,7 @@ import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 
 @SuppressWarnings("rawtypes")
-abstract public class AbstractCellValue<T extends ICellValue, V> {
+public abstract class AbstractCellValue<T extends ICellValue, V> {
 
 	public static final int ROTATEANGLE_PLUS_90 = 27000;
 

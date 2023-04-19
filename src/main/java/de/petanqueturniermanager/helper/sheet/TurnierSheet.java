@@ -140,7 +140,7 @@ public class TurnierSheet {
 			XPropertySet xPropSet = Lo.qi(com.sun.star.beans.XPropertySet.class, wkRefxSpreadsheet.get());
 			if (xPropSet != null) {
 				try {
-					xPropSet.setPropertyValue("TabColor", new Integer(color));
+					xPropSet.setPropertyValue("TabColor", Integer.valueOf(color));
 				} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 						| WrappedTargetException e) {
 					logger.error(e.getMessage(), e);

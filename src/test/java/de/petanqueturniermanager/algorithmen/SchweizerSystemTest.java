@@ -37,8 +37,10 @@ public class SchweizerSystemTest {
 		assertThat(ersteRunde.get(2).getB()).isNull(); // freilos
 
 		// flatten list for validate
-		List<Team> teamList = ersteRunde.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
-				.sorted((t1, t2) -> Integer.compare((t1 != null) ? t1.getNr() : 9999, (t2 != null) ? t2.getNr() : 9999)).collect(Collectors.toList());
+		List<Team> teamList = ersteRunde.stream()
+				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
+				.sorted((t1, t2) -> Integer.compare((t1 != null) ? t1.getNr() : 9999, (t2 != null) ? t2.getNr() : 9999))
+				.collect(Collectors.toList());
 
 		assertThat(teamList.size()).isEqualTo(6); // mit null (freilos)
 
@@ -68,7 +70,8 @@ public class SchweizerSystemTest {
 		assertThat(ersteRunde.get(2).getB()).isNotNull(); // kein freilos
 
 		// flatten list for validate
-		List<Team> teamList = ersteRunde.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
+		List<Team> teamList = ersteRunde.stream()
+				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
 				.sorted((t1, t2) -> Integer.compare(t1.getNr(), t2.getNr())).collect(Collectors.toList());
 
 		assertThat(teamList.size()).isEqualTo(6);
@@ -132,7 +135,8 @@ public class SchweizerSystemTest {
 		assertThat(resultRunde2.size()).isEqualTo(4);
 
 		// flatten list for validate
-		List<Team> teamListresult = resultRunde2.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		List<Team> teamListresult = resultRunde2.stream()
+				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
 		assertThat(teamListresult.size()).isEqualTo(8);
 		validateGegnerList(teamListresult, 2);
 
@@ -173,7 +177,8 @@ public class SchweizerSystemTest {
 		assertThat(resultRunde3.size()).isEqualTo(4);
 
 		// flatten list for validate
-		List<Team> teamListresultRunde3 = resultRunde3.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		List<Team> teamListresultRunde3 = resultRunde3.stream()
+				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
 		assertThat(teamListresultRunde3.size()).isEqualTo(8);
 		validateGegnerList(teamListresultRunde3, 3);
 
@@ -210,7 +215,8 @@ public class SchweizerSystemTest {
 		assertThat(resultRunde4.size()).isEqualTo(4);
 
 		// flatten list for validate
-		List<Team> teamListresultRunde4 = resultRunde4.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
+		List<Team> teamListresultRunde4 = resultRunde4.stream()
+				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).collect(Collectors.toList());
 		assertThat(teamListresultRunde4.size()).isEqualTo(8);
 		validateGegnerList(teamListresultRunde4, 4);
 
@@ -237,7 +243,8 @@ public class SchweizerSystemTest {
 
 		for (Team team : teamListe) {
 			if (anzGegner > -1) {
-				assertThat(team.anzGegner()).as("Team nr %d ungueltige anzahl gegner", team.getNr()).isEqualTo(anzGegner);
+				assertThat(team.anzGegner()).as("Team nr %d ungueltige anzahl gegner", team.getNr())
+						.isEqualTo(anzGegner);
 			}
 
 			for (Integer gegnerNr : team.getGegner()) {
@@ -245,7 +252,7 @@ public class SchweizerSystemTest {
 				// in der liste suchen
 				Team gegnerTeam = teamListe.stream().filter(tm -> tm.getNr() == gegnerNr).findFirst().orElse(null);
 				assertThat(gegnerTeam).isNotNull();
-				assertThat(gegnerTeam.hatAlsGegner(team));
+				assertThat(gegnerTeam.hatAlsGegner(team)).isTrue();
 			}
 		}
 	}

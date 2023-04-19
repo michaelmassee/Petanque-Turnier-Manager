@@ -41,9 +41,9 @@ public class SpielRundeInSheet {
 		Position posPaarungen = Position.from(grpCntr * 2, ERSTEZEILE);
 		for (TeamPaarung teamPaarung : spielRunde.getTeamPaarungen()) {
 			NumberCellValue teamA = NumberCellValue.from(spreadsheet, posPaarungen).setValue((double) teamPaarung.getA().getNr());
-			getSheetHelper().setValInCell(teamA);
+			getSheetHelper().setNumberValueInCell(teamA);
 			NumberCellValue teamB = NumberCellValue.from(teamA).spaltePlusEins().setValue((double) teamPaarung.getB().getNr());
-			getSheetHelper().setValInCell(teamB);
+			getSheetHelper().setNumberValueInCell(teamB);
 			posPaarungen.zeilePlusEins();
 		}
 

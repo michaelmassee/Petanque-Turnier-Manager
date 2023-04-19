@@ -5,12 +5,13 @@
 package de.petanqueturniermanager.helper.position;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.MoreObjects;
 
 public abstract class AbstractPosition<T> {
-	private int zeile;
-	private int spalte;
+	private int zeile; // 0 = 1. Zeile  
+	private int spalte; // 0 = 1. Spalte
 
 	// Nur Package
 	AbstractPosition() {
@@ -22,7 +23,7 @@ public abstract class AbstractPosition<T> {
 	 * @param zeile (row)
 	 */
 
-	public AbstractPosition(int spalte, int zeile) {
+	protected AbstractPosition(int spalte, int zeile) {
 		checkArgument(spalte > -1, "spalte (column) ungueltige wert %s. <0 ", spalte);
 		checkArgument(zeile > -1, "zeile (row) ungueltige wert %s. <0 ", zeile);
 		this.setZeile(zeile);
@@ -148,31 +149,56 @@ public abstract class AbstractPosition<T> {
 	 */
 
 	public String getSpalteString() {
-		int excelColNum = getColumn() + 1;
-
-		StringBuilder colRef = new StringBuilder(2);
-		int colRemain = excelColNum;
-
-		while (colRemain > 0) {
-			int thisPart = colRemain % 26;
-			if (thisPart == 0) {
-				thisPart = 26;
-			}
-			colRemain = (colRemain - thisPart) / 26;
-
-			// The letter A is at 65
-			char colChar = (char) (thisPart + 64);
-			colRef.insert(0, colChar);
-		}
-
-		return colRef.toString();
+		return spalteNrToString(getColumn());
 	}
+
+	/**
+	 * 1. Spalte =0
+	 * 
+	 * @param name "AAA"
+	 * @return spaltenummer
+	 */
+	public static int spalteStringToNumber(String name) {
+		checkNotNull(name);
+		int number = 0;
+		for (int i = 0; i < name.length(); i++) {
+			number = number * 26 + (name.charAt(i) - ('A' - 1));
+		}
+		return number - 1;
+	}
+
+	/**
+	 * 1. Spalte =0
+	 * 
+	 * @param number -1 >
+	 * @return spalte String "A"
+	 */
+
+	public static String spalteNrToString(int number) {
+		checkArgument(number > -1);
+		number++;
+		StringBuilder sb = new StringBuilder();
+		while (number-- > 0) {
+			sb.append((char) ('A' + (number % 26)));
+			number /= 26;
+		}
+		return sb.reverse().toString();
+	}
+
+	/**
+	 * equal is true when spalte und zeile ==
+	 */
 
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) {
 			return false;
 		}
+
+		if (!(obj instanceof AbstractPosition<?>)) {
+			return false;
+		}
+
 		return ((AbstractPosition<?>) obj).getSpalte() == this.getSpalte()
 				&& ((AbstractPosition<?>) obj).getZeile() == this.getZeile();
 	}

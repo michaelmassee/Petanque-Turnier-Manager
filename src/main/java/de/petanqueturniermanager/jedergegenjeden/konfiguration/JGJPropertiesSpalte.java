@@ -37,10 +37,10 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Spielplan Hintergrundfarbe für gerade Zeilen")
 				.inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE)
-				.setDefaultVal(DEFAULT_UNGERADE__BACK_COLOR)
+				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
 				.setDescription("Spielplan Hintergrundfarbe für ungerade Zeilen").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER__BACK_COLOR).setDescription("Spielplan Header-Hintergrundfarbe")
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("Spielplan Header-Hintergrundfarbe")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)

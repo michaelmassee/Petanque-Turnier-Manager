@@ -32,8 +32,9 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
 
-abstract public class AbstractSuperMeleeRanglisteFormatter {
+public abstract class AbstractSuperMeleeRanglisteFormatter {
 
 	public static final int ENDSUMME_NUMBER_WIDTH = MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH + 110;
 	public static final int ERSTE_KOPFDATEN_ZEILE = 0;
@@ -44,7 +45,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 	private final WeakRefHelper<ISuperMeleePropertiesSpalte> propertiesSpaltewkRef;
 	private final WeakRefHelper<IRangliste> iRanglisteSheet;
 
-	public AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte,
+	protected AbstractSuperMeleeRanglisteFormatter(MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte, IRangliste iRanglisteSheet) {
 		checkNotNull(spielerSpalte);
 		checkNotNull(propertiesSpalte);
@@ -202,8 +203,7 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 	}
 
 	public Integer getHeaderFarbe() throws GenerateException {
-		Integer headerColor = getPropertiesSpaltewkRef().get().getRanglisteHeaderFarbe();
-		return headerColor;
+		return getPropertiesSpaltewkRef().get().getRanglisteHeaderFarbe();
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
@@ -220,8 +220,14 @@ abstract public class AbstractSuperMeleeRanglisteFormatter {
 
 		stringVal.addRowProperty(ICommonProperties.HEIGHT, 350);
 
-		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(
-				"Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +"));
+		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
+		SuprMleEndranglisteSortMode suprMleEndranglisteSortMode = propertiesSpalte.getSuprMleEndranglisteSortMode();
+
+		String sortInfoString = "Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +";
+		if (SuprMleEndranglisteSortMode.ANZTAGE == suprMleEndranglisteSortMode) {
+			sortInfoString = "Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +,2. Anz Spieltage, 3. Spiele Δ, 4. Punkte Δ, 5. Punkte +";
+		}
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(sortInfoString));
 
 		return stringVal;
 	}

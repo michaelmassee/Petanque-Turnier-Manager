@@ -145,7 +145,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 
 			int spielerNrSpalte = spierNrVal.getPos().getSpalte();
 			spierNrVal.setValue((double) spieler.getNr());
-			getSheetHelper().setValInCell(spierNrVal);
+			getSheetHelper().setNumberValueInCell(spierNrVal);
 
 			// spieler name
 			nameFormula.setValue(meldeliste.formulaSverweisSpielernamen(spierNrVal.getPos().getAddress()));

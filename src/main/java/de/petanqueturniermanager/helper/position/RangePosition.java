@@ -28,6 +28,18 @@ public class RangePosition {
 	/**
 	 * clone end und start Position
 	 */
+	public static RangePosition from(String startSpalte, int startZeile, int endeSpalte, int endeZeile) {
+		return new RangePosition(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
+	}
+
+	public static RangePosition from(String startSpalte, int startZeile, String endeSpalte, int endeZeile) {
+		return new RangePosition(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
+	}
+
+	public static RangePosition from(int startSpalte, int startZeile, String endeSpalte, int endeZeile) {
+		return new RangePosition(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
+	}
+
 	public static RangePosition from(int startSpalte, int startZeile, int endeSpalte, int endeZeile) {
 		return new RangePosition(Position.from(startSpalte, startZeile), Position.from(endeSpalte, endeZeile));
 	}

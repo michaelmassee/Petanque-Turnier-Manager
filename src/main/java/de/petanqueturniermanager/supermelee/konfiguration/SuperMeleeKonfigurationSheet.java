@@ -152,6 +152,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public final SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
+		return getPropertiesSpalte().getSuprMleEndranglisteSortMode();
+	}
+
+	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			String propNameKey = SuperMeleePropertiesSpalte.PROP_SPIELTAG_KOPFZEILE(spieltagCntr);

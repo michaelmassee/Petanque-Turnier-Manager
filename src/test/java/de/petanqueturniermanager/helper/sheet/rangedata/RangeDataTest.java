@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.helper.sheet.rangedata;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,14 +16,12 @@ public class RangeDataTest {
 		Object[][] testData = { { "sadd", 1, 10 }, { "qqwwqqw", 2, 30 }, { "dffdfsdfs", 3, 40 } };
 
 		RangeData rangeData = new RangeData(testData);
-		assert !rangeData.isEmpty();
-		assert rangeData.size() == 3;
-		assert rangeData.get(0) != null;
-		assert rangeData.get(0).getLast() != null;
-		assert rangeData.get(0).getLast().getIntVal(-1) == 10;
-		assert rangeData.get(0).size() == 3;
+		assertThat(rangeData).isNotEmpty().hasSize(3);
+		assertThat(rangeData.get(0)).isNotNull().hasSize(3);
+		assertThat(rangeData.get(0).getLast()).isNotNull();
+		assertThat(rangeData.get(0).getLast().getIntVal(-1)).isEqualTo(10);
 		RowData elem1 = rangeData.get(0);
-		assert elem1.get(0).getStringVal().equals("sadd");
+		assertEquals("sadd", elem1.get(0).getStringVal());
 	}
 
 	@Test
@@ -39,6 +38,18 @@ public class RangeDataTest {
 
 		List<String> expected2 = Arrays.asList(new String[] { "dffdfsdfs" });
 		assertThat(rangeData.get(2)).extracting(CellData::getStringVal).containsExactlyElementsOf(expected2);
+
+	}
+
+	@Test
+	public void testRangeDataIntIntegerArray() {
+		RangeData rangeData = new RangeData(5, 10, 4, 8);
+
+		assertThat(rangeData).hasSize(5);
+		assertThat(rangeData.get(0)).hasSize(3);
+		assertThat(rangeData.get(0).get(0).getIntVal(0)).isEqualTo(10);
+		assertThat(rangeData.get(0).get(1).getIntVal(0)).isEqualTo(4);
+		assertThat(rangeData.get(0).get(2).getIntVal(0)).isEqualTo(8);
 
 	}
 

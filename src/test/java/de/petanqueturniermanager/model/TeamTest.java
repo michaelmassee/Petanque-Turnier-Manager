@@ -43,7 +43,8 @@ public class TeamTest {
 	@Test
 	public void testHatZusammenGespieltAberNichtMitTeam() throws Exception {
 		Spieler nichtimTeamHatzusamengespieltmitNichtImTeamA = Spieler.from(6);
-		Spieler nichtimTeamHatzusamengespieltmitNichtImTeamB = Spieler.from(7).addWarImTeamMitWennNichtVorhanden(nichtimTeamHatzusamengespieltmitNichtImTeamA);
+		Spieler nichtimTeamHatzusamengespieltmitNichtImTeamB = Spieler.from(7)
+				.addWarImTeamMitWennNichtVorhanden(nichtimTeamHatzusamengespieltmitNichtImTeamA);
 		boolean result = team.hatZusammenGespieltMit(nichtimTeamHatzusamengespieltmitNichtImTeamA);
 		assertThat(result).isFalse();
 		result = team.hatZusammenGespieltMit(nichtimTeamHatzusamengespieltmitNichtImTeamB);
@@ -54,11 +55,11 @@ public class TeamTest {
 	public void testRemoveGegner() throws Exception {
 		Team team2 = Team.from(2);
 		team.addGegner(team2);
-		assertThat(team.getGegner().size()).isEqualTo(1);
-		assertThat(team2.getGegner().size()).isEqualTo(1);
+		assertThat(team.getGegner()).hasSize(1);
+		assertThat(team2.getGegner()).hasSize(1);
 		team.removeGegner(team2);
-		assertThat(team.getGegner().size()).isEqualTo(0);
-		assertThat(team2.getGegner().size()).isEqualTo(0);
+		assertThat(team.getGegner()).isEmpty();
+		assertThat(team2.getGegner()).isEmpty();
 	}
 
 	@Test
@@ -67,10 +68,10 @@ public class TeamTest {
 		team.addGegner(team2);
 		team.addGegner(Team.from(2));
 		team.addGegner(Team.from(1)); // sich selbst
-		assertThat(team.getGegner().size()).isEqualTo(1);
-		assertThat(team.getGegner().contains(2));
+		assertThat(team.getGegner()).hasSize(1);
+		assertThat(team.getGegner()).contains(2);
 
-		assertThat(team2.getGegner().size()).isEqualTo(1);
-		assertThat(team2.getGegner().contains(1));
+		assertThat(team2.getGegner()).hasSize(1);
+		assertThat(team2.getGegner()).contains(1);
 	}
 }

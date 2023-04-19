@@ -1,7 +1,7 @@
 /**
-* Erstellung : 21.04.2019 / Michael Massee
-
-**/
+ * Erstellung : 21.04.2019 / Michael Massee
+ * 
+ **/
 
 package de.petanqueturniermanager.helper.cellvalue;
 
@@ -12,10 +12,11 @@ import de.petanqueturniermanager.helper.position.Position;
 /**
  * neue Version von StringCellValue
  * 
- * @author Michael Massee
+ * @TODO Remove, wird noch verwendet ?
  */
 
-public class StringTurnierCellValue extends AbstractCellValue<StringTurnierCellValue, String> implements ICellValue<String> {
+public class StringTurnierCellValue extends AbstractCellValue<StringTurnierCellValue, String>
+		implements ICellValue<String> {
 
 	protected StringTurnierCellValue() {
 		super();

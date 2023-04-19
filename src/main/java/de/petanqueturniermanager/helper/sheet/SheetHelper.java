@@ -6,9 +6,9 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.HashMap;
+import java.text.MessageFormat;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -68,9 +68,9 @@ public class SheetHelper {
 
 	// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN",
-			"ISOKALENDERWOCHE", "ISTZAHL" };
+			"ISOKALENDERWOCHE", "ISTZAHL", "ANZAHL", "ANZAHL2", "ZÄHLENWENN" };
 	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF", "ISOWEEKNUM",
-			"ISNUMBER" };
+			"ISNUMBER", "COUNT", "COUNTA", "COUNTIF" };
 
 	private final WorkingSpreadsheet currentSpreadsheet;
 
@@ -147,8 +147,7 @@ public class SheetHelper {
 			// must convert since XSpreadsheet is a named container
 			sheet = Lo.qi(XSpreadsheet.class, xSheetsIdx.getByIndex(index));
 		} catch (Exception e) {
-
-			System.out.println("Could not access spreadsheet: " + index);
+			logger.error(String.format("Could not access spreadsheet: %d", index));
 		}
 		return sheet;
 	}
@@ -167,11 +166,11 @@ public class SheetHelper {
 		List<String> sheetNamesNotToRemoveList = java.util.Arrays.asList(sheetNamesNotToRemove);
 
 		List<String> notToRemoveVorhanden = sheetNamesNotToRemoveList.stream()
-				.filter(shName -> findByName(shName) != null).collect(Collectors.toList());
+				.filter(shName -> findByName(shName) != null).toList();
 
 		// Mindestens ein Sheet muss stehen bleiben
 		if (notToRemoveVorhanden.isEmpty()) {
-			notToRemoveVorhanden = java.util.Arrays.asList(new String[] { "leer" });
+			notToRemoveVorhanden = java.util.Arrays.asList("leer");
 			newIfNotExist("leer", (short) 1);
 		}
 
@@ -225,13 +224,12 @@ public class SheetHelper {
 
 	public XSpreadsheets getSheets() {
 		checkNotNull(currentSpreadsheet, "currentSpreadsheet==null");
-		//		checkArgument(currentSpreadsheet.isPresent(), "currentSpreadsheet fehlt");
 		checkNotNull(currentSpreadsheet.getWorkingSpreadsheetDocument(), "WorkingSpreadsheetDocument==null");
 
 		return currentSpreadsheet.getWorkingSpreadsheetDocument().getSheets();
 	}
 
-	public XCell setValInCell(NumberCellValue numberCellValue) {
+	public XCell setNumberValueInCell(NumberCellValue numberCellValue) {
 		checkNotNull(numberCellValue);
 		XCell xCell = setValInCell(numberCellValue.getSheet(), numberCellValue.getPos(), numberCellValue.getValue());
 		handleAbstractCellValue(numberCellValue, xCell);
@@ -258,8 +256,7 @@ public class SheetHelper {
 	public XCell setValInCell(XSpreadsheet sheet, Position pos, NumberCellValue cellValue) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
-		XCell xCell = setValInCell(sheet, pos, cellValue.getValue());
-		return xCell;
+		return setValInCell(sheet, pos, cellValue.getValue());
 	}
 
 	public XCell setFormulaInCell(StringCellValue stringVal) {
@@ -320,8 +317,6 @@ public class SheetHelper {
 
 		XCell xCell = null;
 		try {
-			// --- Get cell B3 by position - (column, row) ---
-			// xCell = xSheet.getCellByPosition(1, 2);
 			xCell = cellVal.getSheet().getCellByPosition(cellVal.getPos().getSpalte(), cellVal.getPos().getZeile());
 			handleAbstractCellValue(cellVal, xCell);
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
@@ -385,6 +380,9 @@ public class SheetHelper {
 			XCellRange xCellRange = sheet.getCellRangeByPosition(rangePos.getStartSpalte(), rangePos.getStartZeile(),
 					rangePos.getEndeSpalte(), rangePos.getEndeZeile());
 			XCellSeries xCellSeries = Lo.qi(XCellSeries.class, xCellRange);
+			// fillAuto(com.sun.star.sheet.FillDirection arg0, int arg1);
+			// nFillDirection	specifies the direction to fill the rows/columns of the range.
+			// nSourceCount	contains the number of cells in each row/column used to constitute the fill algorithm.
 			xCellSeries.fillAuto(fillDirection, 1);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -415,14 +413,9 @@ public class SheetHelper {
 
 		XCell xCell = null;
 		try {
-			// --- Get cell B3 by position - (column, row) ---
-			// xCell = xSheet.getCellByPosition(1, 2);
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 			XText xText = queryInterface(XText.class, xCell);
-			if (ueberschreiben) {
-				xText.setString(val);
-			} else if (StringUtils.isBlank(xText.getString())) {
-				// Checks if a CharSequence is empty (""), null or whitespace only.
+			if (ueberschreiben || StringUtils.isBlank(xText.getString())) {
 				xText.setString(val);
 			}
 		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
@@ -541,7 +534,7 @@ public class SheetHelper {
 	 * @param xSheet
 	 * @param color int val. convert from hex z.b. Integer.valueOf(0x003399), Integer.parseInt("003399", 16)
 	 */
-	@Deprecated
+	@Deprecated(since = "01.04.2023")
 	public void setTabColor(XSpreadsheet xSheet, int color) {
 		TurnierSheet.from(xSheet, currentSpreadsheet).tabColor(color);
 	}
@@ -650,15 +643,11 @@ public class SheetHelper {
 	}
 
 	public void setProperties(XPropertySet xPropSet, CellProperties properties) {
-		properties.forEach((key, value) -> {
-			setProperty(xPropSet, key, value);
-		});
+		properties.forEach((key, value) -> setProperty(xPropSet, key, value));
 	}
 
-	public void setProperties(XPropertySet xPropSet, HashMap<String, Object> properties) {
-		properties.forEach((key, value) -> {
-			setProperty(xPropSet, key, value);
-		});
+	public void setProperties(XPropertySet xPropSet, Map<String, Object> properties) {
+		properties.forEach((key, value) -> setProperty(xPropSet, key, value));
 	}
 
 	public void setProperty(XPropertySet xPropSet, String key, Object val) {
@@ -670,7 +659,7 @@ public class SheetHelper {
 			xPropSet.setPropertyValue(key, val);
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
-			logger.error("Property '" + key + "' = '" + val + "'\r" + e.getMessage(), e);
+			logger.error(MessageFormat.format("Property ''{0}'' = ''{1}''\r{2}", key, val, e.getMessage()), e);
 		}
 	}
 
@@ -717,20 +706,22 @@ public class SheetHelper {
 	/**
 	 * @return xcell, null whenn error or not found
 	 */
-	public XCell setPropertyInCell(XSpreadsheet sheet, Position pos, String Name, Object val) {
+	public XCell setPropertyInCell(XSpreadsheet sheet, Position pos, String name, Object val) {
 		checkNotNull(sheet);
 		checkNotNull(pos);
-		checkNotNull(Name);
+		checkNotNull(name);
 		checkNotNull(val);
 
 		XCell xCell = null;
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 			XPropertySet xPropSet = Lo.qi(XPropertySet.class, xCell);
-			xPropSet.setPropertyValue(Name, val);
+			xPropSet.setPropertyValue(name, val);
 		} catch (IndexOutOfBoundsException | IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {
-			logger.error("\n***** Fehler beim Property in Zelle:" + Name + "=" + val + " *****\n" + e.getMessage(), e);
+			logger.error(
+					String.format("%n***** Fehler beim Property in Zelle:%s=%s *****%n%s", name, val, e.getMessage()),
+					e);
 		}
 		return xCell;
 	}
@@ -744,7 +735,7 @@ public class SheetHelper {
 	 *
 	 * @deprecated
 	 */
-	@Deprecated
+	@Deprecated(since = "01.40.2023")
 	public XPropertySet setColumnCellHoriJustify(XSpreadsheet sheet, int spalte, CellHoriJustify cellHoriJustify) {
 		checkNotNull(sheet);
 		// HoriJustify ,VertJustify ,Orientation
@@ -758,7 +749,7 @@ public class SheetHelper {
 
 	public XPropertySet setColumnWidth(XSpreadsheet sheet, int spalte, int width) {
 		checkNotNull(sheet);
-		return setColumnProperty(sheet, spalte, "Width", new Integer(width));
+		return setColumnProperty(sheet, spalte, "Width", Integer.valueOf(width));
 	}
 
 	public XCell getCell(XSpreadsheet xSheet, Position pos) {
@@ -822,8 +813,6 @@ public class SheetHelper {
 		checkNotNull(text);
 		checkNotNull(xCell);
 
-		// XCell xCell = getCell( xSheet,pos);
-
 		// create the CellAddress struct
 		XCellAddressable xCellAddr = Lo.qi(XCellAddressable.class, xCell);
 		CellAddress aAddress = xCellAddr.getCellAddress();
@@ -832,10 +821,7 @@ public class SheetHelper {
 		XSheetAnnotationsSupplier xAnnotationsSupp = Lo.qi(XSheetAnnotationsSupplier.class, xSheet);
 		XSheetAnnotations xAnnotations = xAnnotationsSupp.getAnnotations();
 		xAnnotations.insertNew(aAddress, text);
-		// make the annotation visible
-		// XSheetAnnotationAnchor xAnnotAnchor = Lo.qi(XSheetAnnotationAnchor.class, xCell);
-		// XSheetAnnotation xAnnotation = xAnnotAnchor.getAnnotation();
-		// xAnnotation.setIsVisible(true);
+
 	}
 
 	/**
