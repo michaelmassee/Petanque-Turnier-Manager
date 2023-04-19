@@ -27,7 +27,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	private static final String SERVICE_NAME = "de.petanqueturniermanager.addin.GlobalAddIn";
 	private static final String[] serviceNames = { SERVICE_NAME };
 
-	private static AtomicBoolean isDirty;
+	private static AtomicBoolean isDirty = new AtomicBoolean(false);
 
 	// =de.petanqueturniermanager.addin.GlobalAddIn.ptmspielrunde()
 	public static final String PTM_INT_PROPERTY = SERVICE_NAME + ".ptmintproperty";
@@ -45,7 +45,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
 		this.xContext = xContext;
-		GlobalImpl.isDirty = new AtomicBoolean(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
 		// PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 	}

@@ -1,6 +1,6 @@
 /**
  * Erstellung 12.04.2020 / Michael Massee
-
+ * 
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
@@ -21,11 +21,11 @@ public abstract class SchweizerSheet extends SheetRunner {
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public SchweizerSheet(WorkingSpreadsheet workingSpreadsheet) {
+	protected SchweizerSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, null);
 	}
 
-	public SchweizerSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
+	protected SchweizerSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
 		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, logPrefix);
 		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
 	}

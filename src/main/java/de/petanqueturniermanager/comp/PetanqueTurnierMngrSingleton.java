@@ -36,6 +36,9 @@ public class PetanqueTurnierMngrSingleton {
 
 	private static AtomicBoolean didRun = new AtomicBoolean(); // is volatile
 
+	private PetanqueTurnierMngrSingleton() {
+	}
+
 	/**
 	 * der erste Konstruktur macht Init <br>
 	 * wird und kann mehrmals aufgerufen !!
@@ -65,7 +68,7 @@ public class PetanqueTurnierMngrSingleton {
 	}
 
 	// register global EventListener
-	private static final void globalEventListener(XComponentContext context) {
+	private static final synchronized void globalEventListener(XComponentContext context) {
 		if (globalEventListener != null) {
 			return;
 		}
@@ -95,21 +98,15 @@ public class PetanqueTurnierMngrSingleton {
 
 	// ---------------------------------------------------------------------------------------------
 	public static void addTurnierEventListener(ITurnierEventListener listner) {
-		if (turnierEventHandler != null) {
-			turnierEventHandler.addTurnierEventListener(listner);
-		}
+		turnierEventHandler.addTurnierEventListener(listner);
 	}
 
 	public static void removeTurnierEventListener(ITurnierEventListener listner) {
-		if (turnierEventHandler != null) {
-			turnierEventHandler.removeTurnierEventListener(listner);
-		}
+		turnierEventHandler.removeTurnierEventListener(listner);
 	}
 
 	public static void triggerTurnierEventListener(TurnierEventType type, ITurnierEvent eventObj) {
-		if (turnierEventHandler != null) {
-			turnierEventHandler.trigger(type, eventObj);
-		}
+		turnierEventHandler.trigger(type, eventObj);
 	}
 
 	// ---------------------------------------------------------------------------------------------
@@ -117,9 +114,7 @@ public class PetanqueTurnierMngrSingleton {
 		if (globalEventListener != null) {
 			globalEventListener.disposing(null);
 		}
-		if (turnierEventHandler != null) {
-			turnierEventHandler.disposing();
-		}
+		turnierEventHandler.disposing();
 	}
 
 }
