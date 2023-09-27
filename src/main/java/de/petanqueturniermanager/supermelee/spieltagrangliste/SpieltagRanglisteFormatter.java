@@ -24,6 +24,7 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
 
 public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter {
 
@@ -151,6 +152,11 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 
 		return stringVal;
+	}
+
+	@Override
+	protected SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() {
+		return SuprMleEndranglisteSortMode.DEFAULT;
 	}
 
 }

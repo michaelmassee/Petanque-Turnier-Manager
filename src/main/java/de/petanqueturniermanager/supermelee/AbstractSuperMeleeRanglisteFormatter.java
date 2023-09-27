@@ -220,8 +220,8 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 
 		stringVal.addRowProperty(ICommonProperties.HEIGHT, 350);
 
-		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
-		SuprMleEndranglisteSortMode suprMleEndranglisteSortMode = propertiesSpalte.getSuprMleEndranglisteSortMode();
+		// ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
+		SuprMleEndranglisteSortMode suprMleEndranglisteSortMode = getSuprMleEndranglisteSortMode();
 
 		String sortInfoString = "Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +";
 		if (SuprMleEndranglisteSortMode.ANZTAGE == suprMleEndranglisteSortMode) {
@@ -231,4 +231,6 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 
 		return stringVal;
 	}
+
+	protected abstract SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode();
 }
