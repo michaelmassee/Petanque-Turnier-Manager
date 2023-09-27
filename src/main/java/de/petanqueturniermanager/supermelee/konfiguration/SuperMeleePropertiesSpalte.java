@@ -278,7 +278,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
-	public SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
+	public SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() {
 
 		String prop = readStringProperty(KONFIG_PROP_ENDRANGLISTE_SORT_MODE);
 		if (null != prop && prop.trim().equalsIgnoreCase(SuprMleEndranglisteSortMode.ANZTAGE.getKey())) {

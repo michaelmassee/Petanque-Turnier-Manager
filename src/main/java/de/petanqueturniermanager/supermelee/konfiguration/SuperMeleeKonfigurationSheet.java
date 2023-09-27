@@ -152,7 +152,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public final SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() throws GenerateException {
+	public final SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() {
 		return getPropertiesSpalte().getSuprMleEndranglisteSortMode();
 	}
 

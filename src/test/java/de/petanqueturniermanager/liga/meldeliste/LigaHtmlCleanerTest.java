@@ -50,7 +50,7 @@ public class LigaHtmlCleanerTest {
 
 		IntStream.range(0, reflist.size()).forEach(i -> {
 			logger.info("Validate " + reflist.get(i));
-			assertThat(reflist.get(i)).isEqualTo(targetlist.get(i));
+			assertThat(targetlist.get(i)).isEqualTo(reflist.get(i));
 		});
 
 	}
