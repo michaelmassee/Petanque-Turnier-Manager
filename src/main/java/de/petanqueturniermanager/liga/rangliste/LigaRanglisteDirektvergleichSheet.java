@@ -35,7 +35,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -52,7 +52,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
 
-	private final LigaMeldeListeSheet_Update meldeListe;
+	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private LigaSpielPlan ligaSpielPlan;
 
@@ -74,8 +74,8 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	}
 
 	@VisibleForTesting
-	LigaMeldeListeSheet_Update initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		return new LigaMeldeListeSheet_Update(workingSpreadsheet);
+	LigaMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new LigaMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
 	@Override

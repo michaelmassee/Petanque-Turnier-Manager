@@ -1,6 +1,6 @@
 /**
-* Erstellung : 30.06.2022 / Michael Massee
-**/
+ * Erstellung : 30.06.2022 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.liga.meldeliste;
 
@@ -26,11 +26,11 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *
  */
 
-public class LigaMeldeListeSheet_Export extends AbstractLigaMeldeListeSheet {
+public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 
-	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_Export.class);
+	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetExport.class);
 
-	public LigaMeldeListeSheet_Export(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaMeldeListeSheetExport(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Liga Export");
 	}
 

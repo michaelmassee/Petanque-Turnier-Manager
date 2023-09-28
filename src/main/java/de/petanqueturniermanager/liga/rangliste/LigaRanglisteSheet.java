@@ -44,7 +44,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -68,7 +68,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	private static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
-	private final LigaMeldeListeSheet_Update meldeListe;
+	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final RangListeSorter rangListeSorter;
 
 	/**
@@ -86,8 +86,8 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	}
 
 	@VisibleForTesting
-	LigaMeldeListeSheet_Update initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		return new LigaMeldeListeSheet_Update(workingSpreadsheet);
+	LigaMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new LigaMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
 	@Override
