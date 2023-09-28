@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -86,12 +87,13 @@ public class LigaHtmlCleaner {
 		Document ligaHtmlOrg;
 		Document ligaHtmlNew;
 		try {
+			htmlTargetFile.createNewFile(); // new if not exist
+
 			ligaHtmlOrg = Jsoup.parse(htmlOrgFile);
 			ligaHtmlNew = newLigaDocument();
 
+			addMetaTagsToHeader(ligaHtmlNew);
 			addStyleInHeader(ligaHtmlNew);
-
-			htmlTargetFile.createNewFile();
 
 			Element bodyNew = ligaHtmlNew.select("body").first();
 
@@ -116,7 +118,8 @@ public class LigaHtmlCleaner {
 				bodyNew.append(PTM_IMAGE);
 			}
 
-			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(htmlTargetFile))) {
+			try (BufferedWriter fileStream = new BufferedWriter(
+					new FileWriter(htmlTargetFile, StandardCharsets.UTF_8))) {
 				fileStream.write(ligaHtmlNew.outerHtml());
 			}
 
@@ -281,7 +284,14 @@ public class LigaHtmlCleaner {
 		}
 	}
 
+	private void addMetaTagsToHeader(Document ligaHtmlNew) {
+		Element headEl = ligaHtmlNew.selectFirst("head");
+		// <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+		headEl.appendElement("meta").attr("http-equiv", "content-type").attr("content", "text/html; charset=utf-8");
+	}
+
 	private void addStyleInHeader(Document ligaHtmlNew) {
+
 		Element headEl = ligaHtmlNew.selectFirst("head");
 		Element styleEl = headEl.append("<style></style>").selectFirst("style");
 		styleEl.append("body,div,table,thead,tbody,tfoot,tr,th,td,p { font-family:\"Liberation Sans\"}");

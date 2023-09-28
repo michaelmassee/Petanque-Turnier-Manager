@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Rule;
@@ -41,9 +42,9 @@ public class LigaHtmlCleanerTest {
 		assertThat(targetHtml).exists();
 
 		// for local test only
-		//		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
-		//		System.out.println("Copy nach " + target);
-		//		FileUtils.copyFile(targetHtml, target);
+		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
+		System.out.println("Copy nach " + target);
+		FileUtils.copyFile(targetHtml, target);
 
 		List<String> reflist = Files.readAllLines(Paths.get(refHtml.toURI()));
 		List<String> targetlist = Files.readAllLines(Paths.get(targetHtml.toURI()));
