@@ -22,6 +22,7 @@ public class LigaHtmlCleanerTest {
 
 	static String BFL_LOGO_URL = "http://bc-linden.de/oeffentlich/bfl/logo.png";
 	static String PDF_BASE_URL = "http://bc-linden.de/oeffentlich/bfl/";
+	static String PDF_IMAGE_URL = "http://bc-linden.de/images/bclinden/pdf-download.png";
 
 	@Rule
 	public TemporaryFolder folder = new TemporaryFolder();
@@ -34,8 +35,8 @@ public class LigaHtmlCleanerTest {
 		assertThat(htmlOrgUrl).isNotNull();
 
 		LigaHtmlCleaner ligaHtmlCleaner = new LigaHtmlCleaner(htmlOrgUrl.toURI(), targetHtml);
-		ligaHtmlCleaner.logoUrl(BFL_LOGO_URL).ranglistePdfName("rangliste.pdf").spielplanPdfName("spielplan.pdf")
-				.pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
+		ligaHtmlCleaner.logoUrl(BFL_LOGO_URL).pdfImageUrl(PDF_IMAGE_URL).ranglistePdfName("rangliste.pdf")
+				.spielplanPdfName("spielplan.pdf").pdfDownloadBaseUrl(PDF_BASE_URL).cleanUp();
 
 		URL refHtml = LigaHtmlCleanerTest.class.getResource("LigaGeneratedClean_ref.html");
 		assertThat(refHtml).isNotNull();

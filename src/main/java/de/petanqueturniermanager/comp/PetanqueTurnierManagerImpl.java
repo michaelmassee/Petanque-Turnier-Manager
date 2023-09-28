@@ -33,7 +33,7 @@ import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Export;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetExport;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
@@ -379,7 +379,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_export":
-			new LigaMeldeListeSheet_Export(workingSpreadsheet).testTurnierVorhanden().start();
+			new LigaMeldeListeSheetExport(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		default:
 			didHandle = false;

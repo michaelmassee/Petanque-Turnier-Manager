@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -32,6 +31,7 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	// html export
 	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppennamen";
 	public static final String KONFIG_PROP_LOGO_URL = "Liga-Logo Url"; // (png)";
+	public static final String KONFIG_PROP_PDF_IMG_URL = "Pdf-Img Url"; // (png)";
 	public static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer der Download von Spielpläne";
 
 	static {
@@ -50,17 +50,21 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription("Kopfzeile Links").inSideBar());
+				.setDescription(KONFIG_PROP_KOPF_ZEILE_LINKS).inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription("Kopfzeile Mitte").inSideBar());
+				.setDescription(KONFIG_PROP_KOPF_ZEILE_MITTE).inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription("Kopfzeile Rechts").inSideBar());
+				.setDescription(KONFIG_PROP_KOPF_ZEILE_RECHTS).inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
 				.setDescription("Name der Gruppe in dieses Dokument.").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_LOGO_URL).setDefaultVal("")
-				.setDescription("Url zur Liga Logo Datei").inSideBar());
+				.setDescription("Url zur Liga Logo Datei"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_PDF_IMG_URL)
+				.setDefaultVal("http://bc-linden.de/images/bclinden/pdf-download.png")
+				.setDescription("Url zur Pdf Download-Image"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL).setDefaultVal("")
 				.setDescription("Bases Url fuer den Download von Spielpläne, Ranglisten, etc..").inSideBar());
@@ -81,53 +85,58 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
-	public Integer getSpielPlanHeaderFarbe() throws GenerateException {
+	public Integer getSpielPlanHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER);
 	}
 
 	@Override
-	public String getKopfZeileLinks() throws GenerateException {
+	public String getKopfZeileLinks() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_LINKS);
 	}
 
 	@Override
-	public String getKopfZeileMitte() throws GenerateException {
+	public String getKopfZeileMitte() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE);
 	}
 
 	@Override
-	public String getKopfZeileRechts() throws GenerateException {
+	public String getKopfZeileRechts() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);
 	}
 
 	@Override
-	public String getGruppennamen() throws GenerateException {
+	public String getGruppennamen() {
 		return readStringProperty(KONFIG_PROP_NAME_GRUPPE);
 	}
 
 	@Override
-	public void setGruppennamen(String name) throws GenerateException {
+	public void setGruppennamen(String name) {
 		setStringProperty(KONFIG_PROP_NAME_GRUPPE, name);
 	}
 
 	@Override
-	public String getBaseDownloadUrl() throws GenerateException {
+	public String getBaseDownloadUrl() {
 		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
 	}
 
 	@Override
-	public String getLigaLogoUr() throws GenerateException {
+	public String getLigaLogoUr() {
 		return readStringProperty(KONFIG_PROP_LOGO_URL);
+	}
+
+	@Override
+	public String getPdfImageUr() {
+		return readStringProperty(KONFIG_PROP_PDF_IMG_URL);
 	}
 
 }

@@ -56,60 +56,65 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected void initPageStylesTurnierSystem() throws GenerateException {
+	protected void initPageStylesTurnierSystem() {
 		// default page Style
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks())
 				.setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create();
 	}
 
 	@Override
-	public Integer getSpielPlanHeaderFarbe() throws GenerateException {
+	public Integer getSpielPlanHeaderFarbe() {
 		return propertiesSpalte.getSpielPlanHeaderFarbe();
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeUnGerade() {
 		return propertiesSpalte.getSpielPlanHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeGerade() {
 		return propertiesSpalte.getSpielPlanHintergrundFarbeGerade();
 	}
 
 	@Override
-	public String getKopfZeileLinks() throws GenerateException {
+	public String getKopfZeileLinks() {
 		return propertiesSpalte.getKopfZeileLinks();
 	}
 
 	@Override
-	public String getKopfZeileMitte() throws GenerateException {
+	public String getKopfZeileMitte() {
 		return propertiesSpalte.getKopfZeileMitte();
 	}
 
 	@Override
-	public String getKopfZeileRechts() throws GenerateException {
+	public String getKopfZeileRechts() {
 		return propertiesSpalte.getKopfZeileRechts();
 	}
 
 	@Override
-	public String getGruppennamen() throws GenerateException {
+	public String getGruppennamen() {
 		return propertiesSpalte.getGruppennamen();
 	}
 
 	@Override
-	public void setGruppennamen(String name) throws GenerateException {
+	public void setGruppennamen(String name) {
 		propertiesSpalte.setGruppennamen(name);
 	}
 
 	@Override
-	public String getBaseDownloadUrl() throws GenerateException {
+	public String getBaseDownloadUrl() {
 		return propertiesSpalte.getBaseDownloadUrl();
 	}
 
 	@Override
-	public String getLigaLogoUr() throws GenerateException {
+	public String getLigaLogoUr() {
 		return propertiesSpalte.getLigaLogoUr();
+	}
+
+	@Override
+	public String getPdfImageUr() {
+		return propertiesSpalte.getPdfImageUr();
 	}
 
 }

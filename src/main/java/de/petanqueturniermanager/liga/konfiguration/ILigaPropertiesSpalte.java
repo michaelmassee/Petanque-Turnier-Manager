@@ -3,32 +3,32 @@
  */
 package de.petanqueturniermanager.liga.konfiguration;
 
-import de.petanqueturniermanager.exception.GenerateException;
-
 /**
  * @author Michael Massee
  *
  */
 public interface ILigaPropertiesSpalte {
 
-	Integer getSpielPlanHeaderFarbe() throws GenerateException;
+	Integer getSpielPlanHeaderFarbe();
 
-	Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException;
+	Integer getSpielPlanHintergrundFarbeUnGerade();
 
-	Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException;
+	Integer getSpielPlanHintergrundFarbeGerade();
 
-	String getKopfZeileLinks() throws GenerateException;
+	String getKopfZeileLinks();
 
-	String getKopfZeileMitte() throws GenerateException;
+	String getKopfZeileMitte();
 
-	String getKopfZeileRechts() throws GenerateException;
+	String getKopfZeileRechts();
 
-	String getGruppennamen() throws GenerateException;
+	String getGruppennamen();
 
-	String getBaseDownloadUrl() throws GenerateException;
+	String getBaseDownloadUrl();
 
-	String getLigaLogoUr() throws GenerateException;
+	String getLigaLogoUr();
 
-	void setGruppennamen(String name) throws GenerateException;
+	void setGruppennamen(String name);
+
+	String getPdfImageUr();
 
 }
