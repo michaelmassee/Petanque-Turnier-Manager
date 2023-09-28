@@ -35,11 +35,12 @@ public class LigaHtmlCleaner {
 	private final File htmlOrgFile;
 	private final File htmlTargetFile;
 	private String logoUrl = null;
+	private String pdfImageUrl = null;
 	private String pdfDownloadBaseUrl = null;
 	private String spielplanPdfName = null;
 	private String ranglistePdfName = null;
 
-	private static String PDF_IMAGE = "<img src=\"http://bc-linden.de/images/bclinden/pdf-download.png\" align=\"right\" style=\"width:50px;;margin-right:10px;\">";
+	private static String PDF_IMAGE = "<img src=\"%s\" align=\"right\" style=\"width:50px;margin-right:10px;\">";
 
 	private static String PTM_IMAGE = "<a href=\"https://michaelmassee.github.io/Petanque-Turnier-Manager/\">"
 			+ "<img src=\"https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/petanqueturniermanager-logo-256px.png\" align=\"right\" "
@@ -75,6 +76,11 @@ public class LigaHtmlCleaner {
 
 	public LigaHtmlCleaner logoUrl(String logoUrl) {
 		this.logoUrl = logoUrl;
+		return this;
+	}
+
+	public LigaHtmlCleaner pdfImageUrl(String pdfImageUrl) {
+		this.pdfImageUrl = pdfImageUrl;
 		return this;
 	}
 
@@ -307,9 +313,9 @@ public class LigaHtmlCleaner {
 	}
 
 	private String formatPdfDownloadLink(String pdfname) {
-		if (pdfDownloadBaseUrl != null && pdfname != null) {
+		if (pdfDownloadBaseUrl != null && pdfname != null && pdfImageUrl != null) {
 			String dwnlLink = pdfDownloadBaseUrl + pdfname;
-			return "<a href=\"" + dwnlLink + "\" download>" + PDF_IMAGE + "</a>";
+			return "<a href=\"" + dwnlLink + "\" download>" + String.format(PDF_IMAGE, pdfImageUrl) + "</a>";
 		}
 		return null;
 	}
