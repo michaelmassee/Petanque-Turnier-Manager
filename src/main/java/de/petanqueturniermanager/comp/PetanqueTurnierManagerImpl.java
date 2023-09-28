@@ -34,9 +34,9 @@ import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Export;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_New;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
@@ -349,15 +349,15 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		switch (action) {
 		// ------------------------------
 		case "liga_neue_meldeliste":
-			new LigaMeldeListeSheet_New(workingSpreadsheet).start();
+			new LigaMeldeListeSheetNew(workingSpreadsheet).start();
 			break;
 		// ------------------------------
 		case "liga_update_meldeliste":
-			new LigaMeldeListeSheet_Update(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
+			new LigaMeldeListeSheetUpdate(workingSpreadsheet).testTurnierVorhanden().backUpDocument().start();
 			break;
 		// ------------------------------
 		case "liga_testdaten_meldeliste":
-			new LigaMeldeListeSheet_TestDaten(workingSpreadsheet, true).start();
+			new LigaMeldeListeSheetTestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_spielplan":
 			new LigaSpielPlanSheet(workingSpreadsheet).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun()

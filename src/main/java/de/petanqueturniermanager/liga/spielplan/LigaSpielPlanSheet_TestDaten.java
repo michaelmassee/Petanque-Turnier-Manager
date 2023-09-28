@@ -11,7 +11,7 @@ import de.petanqueturniermanager.algorithmen.JederGegenJeden;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -44,7 +44,7 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
 		getKonfigurationSheet().setGruppennamen(TEST_GRUPPE);
 		// Meldeliste
-		new LigaMeldeListeSheet_TestDaten(getWorkingSpreadsheet(), (mitFreispiel) ? false : true).testNamenEinfuegen();
+		new LigaMeldeListeSheetTestDaten(getWorkingSpreadsheet(), (mitFreispiel) ? false : true).testNamenEinfuegen();
 		generate();
 
 		// Rangliste

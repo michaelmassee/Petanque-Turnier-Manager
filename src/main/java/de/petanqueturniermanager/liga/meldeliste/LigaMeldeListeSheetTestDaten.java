@@ -26,22 +26,22 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet_TestDaten;
 
-public class LigaMeldeListeSheet_TestDaten extends LigaSheet implements ISheet {
+public class LigaMeldeListeSheetTestDaten extends LigaSheet implements ISheet {
 
-	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_TestDaten.class);
+	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetTestDaten.class);
 
-	private final LigaMeldeListeSheet_New meldeListe;
+	private final LigaMeldeListeSheetNew meldeListe;
 	private final boolean geradeAnzahlMannschaften;
 
-	public LigaMeldeListeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet, boolean geradeAnzahlMannschaften) {
+	public LigaMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, boolean geradeAnzahlMannschaften) {
 		super(workingSpreadsheet);
-		meldeListe = new LigaMeldeListeSheet_New(workingSpreadsheet);
+		meldeListe = new LigaMeldeListeSheetNew(workingSpreadsheet);
 		this.geradeAnzahlMannschaften = geradeAnzahlMannschaften;
 	}
 
 	@Override
 	public Logger getLogger() {
-		return LigaMeldeListeSheet_TestDaten.logger;
+		return LigaMeldeListeSheetTestDaten.logger;
 	}
 
 	@Override

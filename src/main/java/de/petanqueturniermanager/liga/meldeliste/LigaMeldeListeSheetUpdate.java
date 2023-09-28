@@ -10,10 +10,10 @@ import org.apache.logging.log4j.Logger;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 
-public class LigaMeldeListeSheet_Update extends AbstractLigaMeldeListeSheet {
-	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_Update.class);
+public class LigaMeldeListeSheetUpdate extends AbstractLigaMeldeListeSheet {
+	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetUpdate.class);
 
-	public LigaMeldeListeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 	}
 

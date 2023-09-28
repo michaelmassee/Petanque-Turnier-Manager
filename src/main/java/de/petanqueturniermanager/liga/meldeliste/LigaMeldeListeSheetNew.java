@@ -12,10 +12,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 
-public class LigaMeldeListeSheet_New extends AbstractLigaMeldeListeSheet {
-	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheet_New.class);
+public class LigaMeldeListeSheetNew extends AbstractLigaMeldeListeSheet {
+	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetNew.class);
 
-	public LigaMeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaMeldeListeSheetNew(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 	}
 

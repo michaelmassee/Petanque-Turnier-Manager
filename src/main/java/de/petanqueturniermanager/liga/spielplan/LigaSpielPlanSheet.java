@@ -40,7 +40,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
-import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheet_Update;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -82,7 +82,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	public static final int TEAM_A_NR_SPALTE = 14; // Zeile 0
 	public static final int TEAM_B_NR_SPALTE = TEAM_A_NR_SPALTE + 1; // Zeile 0
 
-	private final LigaMeldeListeSheet_Update meldeListe;
+	private final LigaMeldeListeSheetUpdate meldeListe;
 
 	/**
 	 * @param workingSpreadsheet
@@ -93,8 +93,8 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	}
 
 	@VisibleForTesting
-	LigaMeldeListeSheet_Update initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		return new LigaMeldeListeSheet_Update(workingSpreadsheet);
+	LigaMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new LigaMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
 	@Override
@@ -436,7 +436,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	/**
 	 * @return the meldeListe
 	 */
-	protected final LigaMeldeListeSheet_Update getMeldeListe() {
+	protected final LigaMeldeListeSheetUpdate getMeldeListe() {
 		return meldeListe;
 	}
 
