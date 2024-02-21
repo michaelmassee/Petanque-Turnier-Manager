@@ -37,7 +37,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste<TeamMeldungen, Team> {
 
-	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 4; // Tabelle immer mit min anzahl von zeilen formatieren
+	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 7; // +1 (6 meldungen) Tabelle immer mit min anzahl von zeilen formatieren
 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
@@ -104,7 +104,7 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 		// ------
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		getMeldungenSpalte().insertHeaderInSheet(headerBackColor);
-		// --------------------- TODO doppelt code entfernen
+		// TODO doppelt code entfernen
 
 		// eventuelle luecken in spiele namen nach unten sortieren
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
@@ -164,9 +164,8 @@ abstract public class AbstractLigaMeldeListeSheet extends LigaSheet implements I
 				// ------------------------------
 				// eigentlich musste 0 = Fehler sein wird es aber nicht
 				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und
-																																							// <999 sein
-																																							// ------------------------------
+				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
+				// ------------------------------
 				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
 				// ------------------------------
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();

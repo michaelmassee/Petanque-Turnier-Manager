@@ -20,7 +20,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  * @author Michael Massee
  *
  */
-public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
+public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 
 	public static final String TEST_GRUPPE = "Test Gruppe";
 	private final boolean mitFreispiel;
@@ -28,7 +28,7 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public LigaSpielPlanSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet, boolean mitFreispiel) {
+	public LigaSpielPlanSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, boolean mitFreispiel) {
 		super(workingSpreadsheet);
 		this.mitFreispiel = mitFreispiel;
 	}
@@ -42,9 +42,9 @@ public class LigaSpielPlanSheet_TestDaten extends LigaSpielPlanSheet {
 
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
-		getKonfigurationSheet().setGruppennamen(TEST_GRUPPE);
+		getKonfigurationSheet().setGruppenname(TEST_GRUPPE);
 		// Meldeliste
-		new LigaMeldeListeSheetTestDaten(getWorkingSpreadsheet(), (mitFreispiel) ? false : true).testNamenEinfuegen();
+		new LigaMeldeListeSheetTestDaten(getWorkingSpreadsheet(), !mitFreispiel).testNamenEinfuegen();
 		generate();
 
 		// Rangliste

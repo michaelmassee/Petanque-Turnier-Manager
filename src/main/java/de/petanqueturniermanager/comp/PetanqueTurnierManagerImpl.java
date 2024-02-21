@@ -41,7 +41,7 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteDirektvergleichShee
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
-import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet_TestDaten;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeTeteSheet_New;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
@@ -373,10 +373,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			new LigaRanglisteDirektvergleichSheet(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
 		case "liga_spielplan_testdaten":
-			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, false).start();
+			new LigaSpielPlanSheetTestDaten(workingSpreadsheet, false).start();
 			break;
 		case "liga_spielplan_testdaten_mit_freispiel":
-			new LigaSpielPlanSheet_TestDaten(workingSpreadsheet, true).start();
+			new LigaSpielPlanSheetTestDaten(workingSpreadsheet, true).start();
 			break;
 		case "liga_export":
 			new LigaMeldeListeSheetExport(workingSpreadsheet).testTurnierVorhanden().start();

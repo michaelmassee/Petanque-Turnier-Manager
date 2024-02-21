@@ -26,7 +26,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
 	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
 
-	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppennamen";
+	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppenname";
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
@@ -99,12 +99,12 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	}
 
 	@Override
-	public String getGruppennamen() throws GenerateException {
+	public String getGruppenname() throws GenerateException {
 		return readStringProperty(KONFIG_PROP_NAME_GRUPPE);
 	}
 
 	@Override
-	public void setGruppennamen(String name) throws GenerateException {
+	public void setGruppenname(String name) throws GenerateException {
 		setStringProperty(KONFIG_PROP_NAME_GRUPPE, name);
 	}
 

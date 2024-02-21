@@ -88,13 +88,13 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	}
 
 	@Override
-	public String getGruppennamen() throws GenerateException {
-		return propertiesSpalte.getGruppennamen();
+	public String getGruppenname() throws GenerateException {
+		return propertiesSpalte.getGruppenname();
 	}
 
 	@Override
-	public void setGruppennamen(String name) throws GenerateException {
-		propertiesSpalte.setGruppennamen(name);
+	public void setGruppenname(String name) throws GenerateException {
+		propertiesSpalte.setGruppenname(name);
 	}
 
 }
