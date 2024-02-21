@@ -19,7 +19,7 @@ public interface IJGJProperiesSpalte {
 
 	String getKopfZeileRechts() throws GenerateException;
 
-	String getGruppennamen() throws GenerateException;
+	String getGruppenname() throws GenerateException;
 
-	void setGruppennamen(String name) throws GenerateException;
+	void setGruppenname(String name) throws GenerateException;
 }

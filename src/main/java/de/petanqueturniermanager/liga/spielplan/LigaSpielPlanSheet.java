@@ -46,7 +46,6 @@ import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
-import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 
 /**
  * @author Michael Massee
@@ -54,7 +53,7 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
  */
 public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
-	private static final Logger LOGGER = LogManager.getLogger(SpielrundePlan.class);
+	private static final Logger LOGGER = LogManager.getLogger(LigaSpielPlanSheet.class);
 	private static final String SHEET_COLOR = "b0f442";
 	public static final String SHEET_NAMEN = "Spielplan";
 
@@ -162,17 +161,17 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		return RangePosition.from(linksOben, rechtsUnten);
 	}
 
-//	private void inspect() throws GenerateException {
-////	 test code
-//		Position testPos = Position.from(1, 2);
-//		getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(), testPos).setValue("22.10.2020"));
-//		XCell cell = getSheetHelper().getCell(getXSpreadSheet(), testPos);
-//		XPropertyHelper testCellProp = XPropertyHelper.from(cell);
-//
-//		testCellProp.inpectPropertySet();
-//		NumberFormatHelper.from(this, testCellProp).setformat();
-//		testCellProp.inpectPropertySet();
-//	}
+	//	private void inspect() throws GenerateException {
+	////	 test code
+	//		Position testPos = Position.from(1, 2);
+	//		getSheetHelper().setStringValueInCell(StringCellValue.from(getXSpreadSheet(), testPos).setValue("22.10.2020"));
+	//		XCell cell = getSheetHelper().getCell(getXSpreadSheet(), testPos);
+	//		XPropertyHelper testCellProp = XPropertyHelper.from(cell);
+	//
+	//		testCellProp.inpectPropertySet();
+	//		NumberFormatHelper.from(this, testCellProp).setformat();
+	//		testCellProp.inpectPropertySet();
+	//	}
 
 	private void insertDatumFormulaUndFormatierungen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();

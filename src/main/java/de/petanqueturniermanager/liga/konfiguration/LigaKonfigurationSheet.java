@@ -93,13 +93,13 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public String getGruppennamen() {
-		return propertiesSpalte.getGruppennamen();
+	public String getGruppenname() {
+		return propertiesSpalte.getGruppenname();
 	}
 
 	@Override
-	public void setGruppennamen(String name) {
-		propertiesSpalte.setGruppennamen(name);
+	public void setGruppenname(String name) {
+		propertiesSpalte.setGruppenname(name);
 	}
 
 	@Override

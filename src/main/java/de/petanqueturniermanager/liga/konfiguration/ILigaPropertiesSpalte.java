@@ -21,13 +21,13 @@ public interface ILigaPropertiesSpalte {
 
 	String getKopfZeileRechts();
 
-	String getGruppennamen();
+	String getGruppenname();
 
 	String getBaseDownloadUrl();
 
 	String getLigaLogoUr();
 
-	void setGruppennamen(String name);
+	void setGruppenname(String name);
 
 	String getPdfImageUr();
 

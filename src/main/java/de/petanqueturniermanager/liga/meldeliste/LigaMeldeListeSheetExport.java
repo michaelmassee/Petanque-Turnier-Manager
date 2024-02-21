@@ -97,11 +97,11 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 				processBox().info("Pdf Image: " + pdfImgUr);
 			}
 
-			String gruppennamen = StringUtils.strip(getKonfigurationSheet().getGruppennamen());
-			if (StringUtils.isEmpty(gruppennamen)) {
-				processBox().info("Warning: Gruppennamen fehlt in der Turnier Konfiguration");
+			String gruppenname = StringUtils.strip(getKonfigurationSheet().getGruppenname());
+			if (StringUtils.isEmpty(gruppenname)) {
+				processBox().info("Warning: Gruppenname fehlt in der Turnier Konfiguration");
 			} else {
-				processBox().info("Gruppennamen: " + gruppennamen);
+				processBox().info("Gruppenname: " + gruppenname);
 			}
 
 			File htmlExportFile = new File(htmlExportFileUri);
