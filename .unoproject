@@ -9,4 +9,3 @@ project.implementation=comp
 project.build=build
 project.sdk=7.3.7.2
 project.srcdir=/src/main/java
-javaversion=java17
