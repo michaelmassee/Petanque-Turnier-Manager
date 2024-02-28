@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHAsset;
@@ -25,7 +26,6 @@ import org.kohsuke.github.GHRepository;
 import org.kohsuke.github.GitHub;
 import org.kohsuke.github.GitHubBuilder;
 
-import com.g00fy2.versioncompare.Version;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -37,6 +37,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import io.github.g00fy2.versioncompare.Version;
 
 /**
  * Test Github if new Release available
@@ -140,7 +141,7 @@ public class NewReleaseChecker {
 			// wenn kein Prerelease
 			Gson gson = new GsonBuilder().setPrettyPrinting()
 					.addSerializationExclusionStrategy(new ReleaseExclusionStrategy()).create();
-			logger.info("Write latest release = " + latestRelease.getName());
+			logger.log(Level.INFO, "Write latest release = {}", latestRelease.getName());
 			try (BufferedWriter writer = Files.newBufferedWriter(getReleaseFile())) {
 				writer.write(gson.toJson(latestRelease));
 			} catch (IOException e) {
@@ -201,12 +202,12 @@ public class NewReleaseChecker {
 			if (!isUpdateThreadRunning.get()) {
 				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
 				String latestVersionFromCacheFile = latestVersionFromCacheFile();
-				logger.debug("Instalierte Release = " + versionNummer);
-				logger.debug("Letzte GitHub Release = " + latestVersionFromCacheFile);
+				logger.log(Level.DEBUG, "Instalierte Release = {}", versionNummer);
+				logger.log(Level.DEBUG, "Letzte GitHub Release = {}", latestVersionFromCacheFile);
 				if (latestVersionFromCacheFile != null) {
 					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromCacheFile);
 					if (newVersionAvailable) {
-						logger.debug("Neue Version = " + newVersionAvailable);
+						logger.log(Level.DEBUG, "Neue Version = {}", newVersionAvailable);
 					}
 				}
 			}
