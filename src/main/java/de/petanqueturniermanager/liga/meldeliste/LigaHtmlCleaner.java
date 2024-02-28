@@ -176,24 +176,57 @@ public class LigaHtmlCleaner {
 			if (reihenfolgeEL != null) {
 				reihenfolgeEL.remove();
 			}
-			Element fontElePlatz = ranglisteClone.selectFirst("font:containsWholeOwnText(Platz)");
-			Element fontElePlatzParent = fontElePlatz.parent();
-			fontElePlatz.remove();
-			Element pPlatz = new Element("p");
-			pPlatz.attr("class", CLASS_TXTROTATE);
-			pPlatz.appendText("Platz");
-			pPlatz.appendTo(fontElePlatzParent);
 
-			Element tdEleBegegnung = ranglisteClone.selectFirst("td:containsOwn(Begegn)");
-			for (TextNode txNode : tdEleBegegnung.textNodes()) {
-				txNode.remove();
+			// ********************************************************
+			// in der Rangliste der header Platz drehen
+			// ********************************************************
+			{
+				Element fontElePlatz = ranglisteClone.selectFirst("font:containsWholeOwnText(Platz)");
+				if (fontElePlatz != null) {
+					Element fontElePlatzParent = fontElePlatz.parent();
+					fontElePlatz.remove();
+					Element pPlatz = new Element("p");
+					pPlatz.attr("class", CLASS_TXTROTATE);
+					pPlatz.appendText("Platz");
+					pPlatz.appendTo(fontElePlatzParent);
+				} else {
+					logger.warn("Header 'Platz' in Rangliste nicht gefunden");
+				}
 			}
 
-			Element pBegn = new Element("p");
-			pBegn.attr("class", CLASS_TXTROTATE);
-			pBegn.attr("style", "font-size:15px;");
-			pBegn.appendText("Begegn.");
-			pBegn.appendTo(tdEleBegegnung);
+			// ********************************************************
+			// in der Rangliste der header Begegn drehen
+			// ********************************************************
+			{
+				Element fontBegegnung = ranglisteClone.selectFirst("font:containsWholeOwnText(Begegn.)");
+				if (fontBegegnung != null) {
+					Element fontEleBegegnParent = fontBegegnung.parent();
+					fontBegegnung.remove();
+					Element pPlatz = new Element("p");
+					pPlatz.attr("class", CLASS_TXTROTATE);
+					pPlatz.appendText("Begegn.");
+					pPlatz.appendTo(fontEleBegegnParent);
+				} else {
+					// wenn nicht in <font>
+					Element tdEleBegegnung = ranglisteClone.selectFirst("td:containsOwn(Begegn.)");
+					if (tdEleBegegnung != null) {
+						for (TextNode txNode : tdEleBegegnung.textNodes()) {
+							txNode.remove();
+						}
+
+						Element pBegn = new Element("p");
+						pBegn.attr("class", CLASS_TXTROTATE);
+						pBegn.attr("style", "font-size:15px;");
+						pBegn.appendText("Begegn.");
+						pBegn.appendTo(tdEleBegegnung);
+
+					} else {
+						logger.warn("Header 'Begegn.' in Rangliste nicht gefunden");
+					}
+				}
+			}
+
+			// ********************************************************
 
 			bodyNew.append("<hr>");
 			String formatPdfDownloadLink = formatPdfDownloadLink(ranglistePdfName);
@@ -203,7 +236,9 @@ public class LigaHtmlCleaner {
 			bodyNew.append("<A NAME=\"table2\"><h1>Rangliste</h1></A>");
 			bodyNew.append("<p style=\"font-size:80%\">" + reihenfolge + "</p>");
 			ranglisteClone.appendTo(bodyNew);
-		} else {
+		} else
+
+		{
 			return false;
 		}
 		return true;

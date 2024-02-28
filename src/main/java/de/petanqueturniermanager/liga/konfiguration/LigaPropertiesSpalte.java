@@ -32,7 +32,7 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppenname";
 	public static final String KONFIG_PROP_LOGO_URL = "Liga-Logo Url"; // (png)";
 	public static final String KONFIG_PROP_PDF_IMG_URL = "Pdf-Img Url"; // (png)";
-	public static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer der Download von Spielpläne";
+	public static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer den Download von Spielpläne";
 
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES);
