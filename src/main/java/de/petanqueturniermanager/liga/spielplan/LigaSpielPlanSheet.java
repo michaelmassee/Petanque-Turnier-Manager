@@ -63,7 +63,9 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	private static final int KW_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int WOCHENTAG_SPALTE = KW_SPALTE + 1;
 	private static final int DATUM_SPALTE = WOCHENTAG_SPALTE + 1;
-	private static final int NAME_A_SPALTE = DATUM_SPALTE + 1;
+	private static final int UHRZEIT_SPALTE = DATUM_SPALTE + 1;
+	private static final int ORT_SPALTE = UHRZEIT_SPALTE + 1;
+	private static final int NAME_A_SPALTE = ORT_SPALTE + 1;
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
 	public static final int PUNKTE_A_SPALTE = NAME_B_SPALTE + 1;
 	public static final int PUNKTE_B_SPALTE = PUNKTE_A_SPALTE + 1;
@@ -260,7 +262,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		RangePosition vertikal = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_SPIELTAG_HEADER_ZEILE, SPIEL_NR_SPALTE,
 				letzteSpielZeile);
 		RangeHelper.from(this, vertikal.spalte(SPIEL_NR_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
-		RangeHelper.from(this, vertikal.spalte(DATUM_SPALTE)).setRangeProperties(vertTrennerBoldRight);
+		RangeHelper.from(this, vertikal.spalte(ORT_SPALTE)).setRangeProperties(vertTrennerBoldRight);
 		RangeHelper.from(this, vertikal.spalte(NAME_B_SPALTE)).setRangeProperties(vertTrennerDoubleLeft);
 		RangeHelper.from(this, vertikal.spalte(PUNKTE_A_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
 		RangeHelper.from(this, vertikal.spalte(SPIELPNKT_B_SPALTE + 1)).setRangeProperties(vertTrennerBoldLeft);
@@ -291,6 +293,12 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 		colPropErsteSpalten.setWidth(2000);
 		getSheetHelper()
 				.setStringValueInCell(stValHeader.setValue("Datum").spalte(DATUM_SPALTE).setEndPosMergeZeilePlus(1));
+
+		getSheetHelper().setStringValueInCell(
+				stValHeader.setValue("Uhrzeit").spalte(UHRZEIT_SPALTE).setEndPosMergeZeilePlus(1));
+
+		getSheetHelper()
+				.setStringValueInCell(stValHeader.setValue("Ort").spalte(ORT_SPALTE).setEndPosMergeZeilePlus(1));
 
 		// header erste Zeile
 		getSheetHelper().setFormulaInCell(stValHeader
