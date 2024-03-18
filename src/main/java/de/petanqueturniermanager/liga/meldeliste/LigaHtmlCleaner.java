@@ -86,7 +86,7 @@ public class LigaHtmlCleaner {
 	}
 
 	public LigaHtmlCleaner pdfDownloadBaseUrl(String pdfDownloadBaseUrl) {
-		this.pdfDownloadBaseUrl = StringUtils.appendIfMissing(pdfDownloadBaseUrl, "\\");
+		this.pdfDownloadBaseUrl = StringUtils.appendIfMissing(pdfDownloadBaseUrl, "/");
 		return this;
 	}
 
