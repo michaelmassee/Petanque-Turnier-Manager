@@ -63,11 +63,12 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 				.setDescription("Url zur Liga Logo Datei"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_PDF_IMG_URL)
-				.setDefaultVal("http://bc-linden.de/images/bclinden/pdf-download.png")
-				.setDescription("Url zur Pdf Download-Image"));
+				.setDefaultVal("pdf-download.png").setDescription("Url zur Pdf Download-Image"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL).setDefaultVal("")
-				.setDescription("Bases Url fuer den Download von Spielpläne, Ranglisten, etc..").inSideBar());
+				.setDescription(
+						"Bases Url fuer den Download von Spielpläne, Ranglisten, etc.. Default ist gleiche Ordner.")
+				.inSideBar());
 	}
 
 	/**

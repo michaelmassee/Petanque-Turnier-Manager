@@ -29,7 +29,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
-import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
+import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
 
 /**
  * Mehrere Spielrunden testen + rangliste
@@ -43,7 +43,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
-		TestMeldeListeErstellen testMeldeListe = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
+		TestSuperMeleeMeldeListeErstellen testMeldeListe = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
 		int anzMeldungen = testMeldeListe.run();
 		meldeListeSheetNew = testMeldeListe.getMeldeListeSheetNew();
 
@@ -122,7 +122,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 
 		// erste 2 Meldungen auf inaktiv damit nur doublette paarungen moeglich
 		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
-		int spielerNameErsteSpalte = meldeListeSheetNew.getMeldungenSpalte().getSpielerNameErsteSpalte();
+		int spielerNameErsteSpalte = meldeListeSheetNew.getMeldungenSpalte().getErsteMeldungNameSpalte();
 		int aktivSpalte = spielerNameErsteSpalte + 2;
 		sheetHlp.clearValInCell(meldeListeSheetNew.getXSpreadSheet(), Position.from(aktivSpalte, ersteDatenZeile));
 		sheetHlp.clearValInCell(meldeListeSheetNew.getXSpreadSheet(), Position.from(aktivSpalte, ersteDatenZeile + 1));

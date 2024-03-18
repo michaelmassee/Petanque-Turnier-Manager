@@ -157,6 +157,13 @@ public class SheetHelper {
 		return sheets.getElementNames().length;
 	}
 
+	/**
+	 * mit empty list
+	 */
+	public void removeAllSheetsExclude() {
+		removeAllSheetsExclude(new String[] {});
+	}
+
 	public void removeAllSheetsExclude(String sheetNameNotToRemove) {
 		removeAllSheetsExclude(new String[] { sheetNameNotToRemove });
 	}

@@ -42,7 +42,7 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
-import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeTeteSheet_New;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -394,8 +394,8 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		}
 		switch (action) {
 		// ------------------------------
-		case "schweizer_neue_meldeliste_tete":
-			new SchweizerMeldeListeTeteSheet_New(workingSpreadsheet).start();
+		case "schweizer_neue_meldeliste":
+			new SchweizerMeldeListeSheetNew(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;

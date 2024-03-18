@@ -23,6 +23,7 @@ import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
 
@@ -53,7 +54,8 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 
-		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SUPERMELEE)
+				.prefix(getLogPrefix()).validate()) {
 			return;
 		}
 

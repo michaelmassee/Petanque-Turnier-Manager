@@ -12,16 +12,20 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
+import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellstyle.AbstractHintergrundFarbeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -42,6 +46,29 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public MeldeListeHelper(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> newMeldeListe) {
 		meldeListe = checkNotNull(newMeldeListe);
+	}
+
+	public void insertFormulaFuerDoppelteNamen(int erstNameSpalte, int letzteNamespalte, int letzteDatenZeile,
+			ISheet sheet, AbstractHintergrundFarbeStyle meldungenHintergrundFarbeGeradeStyle,
+			AbstractHintergrundFarbeStyle meldungenHintergrundFarbeUnGeradeStyle) throws GenerateException {
+		// -----------------------------------------------
+		// Spieler Namen prüfen auf doppelte namen
+		// -----------------------------------------------
+		RangePosition nameSetPosRange = RangePosition.from(erstNameSpalte, ERSTE_DATEN_ZEILE, letzteNamespalte,
+				letzteDatenZeile);
+		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(erstNameSpalte, 0).getSpalteAddressWith$() + ";"
+				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		ConditionalFormatHelper.from(sheet, nameSetPosRange).clear().
+		// ------------------------------
+				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
+				.applyAndDoReset().
+				// ------------------------------
+				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
+				.applyAndDoReset().
+				// ------------------------------
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
+				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		// -----------------------------------------------
 	}
 
 	/**
@@ -88,7 +115,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		StringCellValue errStrCelVal = StringCellValue
 				.from(xSheet,
-						Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE))
+						Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), ERSTE_DATEN_ZEILE))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
 		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
@@ -117,7 +144,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			// Supermelee hat nur ein name spalte
 			// wird trim gemacht
 			spielerName = meldeListe.getSheetHelper().getTextFromCell(xSheet,
-					Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), spielerZeilecntr));
+					Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), spielerZeilecntr));
 
 			if (StringUtils.isNotEmpty(spielerName)) {
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
@@ -161,7 +188,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
 		meldeListe.processBoxinfo("Zeilen ohne Spielernamen entfernen");
 
-		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
+		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = meldeListe.neachsteFreieDatenZeileInSpielerNrSpalte();
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
@@ -175,7 +202,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 		if (letzteZeileMitSpielerName > 0) {
 			for (int spielerNrZeilecntr = letzteZeileMitSpielerName; spielerNrZeilecntr < letzteNrZeile; spielerNrZeilecntr++) {
-				Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(),
+				Position posSpielerName = Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(),
 						spielerNrZeilecntr);
 				String spielerNamen = meldeListe.getSheetHelper().getTextFromCell(xSheet, posSpielerName);
 				if (StringUtils.isBlank(spielerNamen)) { // null oder leer oder leerzeichen
@@ -189,7 +216,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
-		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), 999)
+		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), 999)
 				.getAddressWith$();
 		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
 				+ ";2;0)";
@@ -236,7 +263,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public int setzPositionSpalte() {
-		return meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte() + 1;
+		return meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte() + 1;
 	}
 
 	public int ersteSpieltagSpalte() {
@@ -282,7 +309,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			}
 		}
 		// spieler nach Alphabet sortieren
-		doSort(meldeListe.getMeldungenSpalte().getSpielerNameErsteSpalte(), true);
+		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true);
 	}
 
 	/**

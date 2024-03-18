@@ -24,16 +24,19 @@ public class NewTestDatenValidator {
 
 	private final WorkingSpreadsheet wkSheet;
 	private final SheetHelper sheetHelper;
+	private final TurnierSystem turnierSystem;
 	private String nextLogPrefix;
 
-	private NewTestDatenValidator(WorkingSpreadsheet wkSheet, SheetHelper sheetHelper) {
+	private NewTestDatenValidator(WorkingSpreadsheet wkSheet, SheetHelper sheetHelper, TurnierSystem turnierSystem) {
 		this.wkSheet = wkSheet;
 		this.sheetHelper = sheetHelper;
+		this.turnierSystem = turnierSystem;
 		nextLogPrefix = null;
 	}
 
-	public static NewTestDatenValidator from(WorkingSpreadsheet wkSheet, SheetHelper sheetHelper) {
-		return new NewTestDatenValidator(wkSheet, sheetHelper);
+	public static NewTestDatenValidator from(WorkingSpreadsheet wkSheet, SheetHelper sheetHelper,
+			TurnierSystem turnierSystem) {
+		return new NewTestDatenValidator(wkSheet, sheetHelper, turnierSystem);
 	}
 
 	/**
@@ -50,7 +53,7 @@ public class NewTestDatenValidator {
 	 * @return true to continue
 	 */
 	public final boolean validate() {
-		if (isSuperMeleeVorhanden() || isLigaVorhanden()) {
+		if (isTurnierVorhanden()) {
 			MessageBoxResult result = MessageBox.from(wkSheet.getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
 					.caption("Daten sind bereits vorhanden")
 					.message("Achtung: Turnier-Daten sind bereits vorhanden.\r\nLöschen und neu erstellen ?").show();
@@ -62,15 +65,9 @@ public class NewTestDatenValidator {
 		return true;
 	}
 
-	public final boolean isSuperMeleeVorhanden() {
+	public final boolean isTurnierVorhanden() {
 		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(wkSheet).getTurnierSystemAusDocument();
-		return turnierSystemAusDocument == TurnierSystem.SUPERMELEE
-				&& sheetHelper.findByName(MeldeListeKonstanten.SHEETNAME) != null;
-	}
-
-	public final boolean isLigaVorhanden() {
-		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(wkSheet).getTurnierSystemAusDocument();
-		return turnierSystemAusDocument == TurnierSystem.LIGA
+		return turnierSystemAusDocument == turnierSystem
 				&& sheetHelper.findByName(MeldeListeKonstanten.SHEETNAME) != null;
 	}
 

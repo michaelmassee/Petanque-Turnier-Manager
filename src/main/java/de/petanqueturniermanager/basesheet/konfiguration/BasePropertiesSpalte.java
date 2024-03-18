@@ -16,6 +16,8 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -174,6 +176,18 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public final Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE);
+	}
+
+	@Override
+	public final MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle()
+			throws GenerateException {
+		return new MeldungenHintergrundFarbeGeradeStyle(getMeldeListeHintergrundFarbeGerade());
+	}
+
+	@Override
+	public final MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle()
+			throws GenerateException {
+		return new MeldungenHintergrundFarbeUnGeradeStyle(getMeldeListeHintergrundFarbeUnGerade());
 	}
 
 	@Override

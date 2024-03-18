@@ -85,7 +85,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 	protected AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
-		meldungenSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
+		meldungenSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
 				.spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
@@ -159,7 +159,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 
-		doSort(meldungenSpalte.getSpielerNameErsteSpalte(), true); // nach namen sortieren
+		doSort(meldungenSpalte.getErsteMeldungNameSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
 		insertInfoBlock();
 		meldungenSpalte.formatDaten();
@@ -270,12 +270,10 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		Integer geradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade();
-		Integer unGeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
-		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(
-				geradeColor);
-		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(
-				unGeradeColor);
+		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = getKonfigurationSheet()
+				.getMeldeListeHintergrundFarbeGeradeStyle();
+		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet()
+				.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
 		// Meldung Nummer: gerade + ungerade + prufe auf doppelte nummer
 		// TODO Move this nach Meldungen
@@ -388,7 +386,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 	@Override
 	public int getSpielerNameSpalte() {
-		return meldungenSpalte.getSpielerNameErsteSpalte();
+		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	private void updateSpieltageSummenSpalten() throws GenerateException {
@@ -798,7 +796,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	public int getSpielerNameErsteSpalte() {
-		return meldungenSpalte.getSpielerNameErsteSpalte();
+		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	/**

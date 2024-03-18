@@ -31,7 +31,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldeliste<TeamMeldungen, Team> {
+abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 5; // Tabelle immer mit min anzahl von zeilen formatieren
 
@@ -47,7 +47,7 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 
 	public AbstractJGJMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
 		super(workingSpreadsheet, prefix);
-		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
@@ -100,12 +100,10 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		Integer geradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeGerade();
-		Integer unGeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
-		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = new MeldungenHintergrundFarbeGeradeStyle(
-				geradeColor);
-		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = new MeldungenHintergrundFarbeUnGeradeStyle(
-				unGeradeColor);
+		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = getKonfigurationSheet()
+				.getMeldeListeHintergrundFarbeGeradeStyle();
+		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet()
+				.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
 		// TODO Doppelte Code
 		// Spieler Nummer
@@ -130,30 +128,13 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 		// -----------------------------------------------
 
-		// TODO Doppelte Code
-		// -----------------------------------------------
-		// Spieler Namen
-		// -----------------------------------------------
-		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE,
-				getSpielerNameErsteSpalte(), letzteDatenZeile);
-		String conditionfindDoppeltNamen = "COUNTIF("
-				+ Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
-		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
-				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-		// -----------------------------------------------
+		meldeListeHelper.insertFormulaFuerDoppelteNamen(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1, letzteDatenZeile,
+				this, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+
 	}
 
 	public int getSpielerNameErsteSpalte() {
-		return meldungenSpalte.getSpielerNameErsteSpalte();
+		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	@Override
@@ -242,7 +223,7 @@ public abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMe
 
 	@Override
 	public int getSpielerNameSpalte() {
-		return meldungenSpalte.getSpielerNameErsteSpalte();
+		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	@Override
