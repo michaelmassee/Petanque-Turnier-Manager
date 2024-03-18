@@ -79,7 +79,7 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 	 */
 	public JGJRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "JGJ-RanglisteSheet");
-		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(2).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);

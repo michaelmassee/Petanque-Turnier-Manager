@@ -36,7 +36,7 @@ import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
-import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
+import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 
 public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
@@ -49,7 +49,7 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
-		TestMeldeListeErstellen testMeldeListeErstellen = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
+		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
 		testMeldeListeErstellen.run();
 		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);

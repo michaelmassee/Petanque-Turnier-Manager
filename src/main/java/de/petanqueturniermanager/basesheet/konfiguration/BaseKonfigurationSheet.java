@@ -13,6 +13,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -24,12 +26,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * @author Michael Massee
  */
-abstract public class BaseKonfigurationSheet extends SheetRunner implements IPropertiesSpalte, IKonfigurationSheet {
+public abstract class BaseKonfigurationSheet extends SheetRunner implements IPropertiesSpalte, IKonfigurationSheet {
 
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public BaseKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
+	protected BaseKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
 		super(workingSpreadsheet, spielSystem);
 	}
 
@@ -132,8 +134,20 @@ abstract public class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
+	public final MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle()
+			throws GenerateException {
+		return getPropertiesSpalte().getMeldeListeHintergrundFarbeGeradeStyle();
+	}
+
+	@Override
 	public final Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException {
 		return getPropertiesSpalte().getMeldeListeHintergrundFarbeUnGerade();
+	}
+
+	@Override
+	public final MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle()
+			throws GenerateException {
+		return getPropertiesSpalte().getMeldeListeHintergrundFarbeUnGeradeStyle();
 	}
 
 	@Override

@@ -16,7 +16,7 @@
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
 					<!-- Schweizer -->
-					<node oor:name="A4" oor:op="fuse">
+					<node oor:name="A5" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value/>
 						</prop>
@@ -33,13 +33,13 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<node oor:name="A4A1" oor:op="replace">
+							<node oor:name="A5A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">new Entrylist</value>
-									<value xml:lang="de">Neue Meldeliste Tête</value>
+									<value xml:lang="de">Neue Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?schweizer_neue_meldeliste_tete</value>
+									<value>service:de.petanqueturniermanager.MenuJobExecute?schweizer_neue_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

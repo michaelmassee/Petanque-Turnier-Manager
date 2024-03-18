@@ -53,7 +53,7 @@ public class JGJTestMeldeListeErstellen {
 	private int testMeldungenEinfuegen() throws GenerateException {
 
 		int ersteDatenZeile = getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
-		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getSpielerNameErsteSpalte();
+		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getErsteMeldungNameSpalte();
 		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
 
 		List<Object> listeMitTestNamen = listeMitTestNamen();

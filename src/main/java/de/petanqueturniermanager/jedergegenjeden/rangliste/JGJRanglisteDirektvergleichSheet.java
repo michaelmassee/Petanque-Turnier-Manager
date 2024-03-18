@@ -66,7 +66,7 @@ public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet
 	 */
 	public JGJRanglisteDirektvergleichSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "JGJ-RanglisteSheet");
-		meldungenSpalte = MeldungenSpalte.Builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(1).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);

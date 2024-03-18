@@ -40,7 +40,7 @@ abstract class AbstractSpieltagRangliste extends SuperMeleeSheet implements IShe
 	public AbstractSpieltagRangliste(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
 		super(workingSpreadsheet, logPrefix);
 
-		spielerSpalte = MeldungenSpalte.Builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).anzZeilenInHeader(2).formation(Formation.MELEE)
+		spielerSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).anzZeilenInHeader(2).formation(Formation.MELEE)
 				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
 	}
 

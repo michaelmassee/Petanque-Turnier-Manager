@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -85,7 +86,7 @@ public class LigaHtmlCleaner {
 	}
 
 	public LigaHtmlCleaner pdfDownloadBaseUrl(String pdfDownloadBaseUrl) {
-		this.pdfDownloadBaseUrl = pdfDownloadBaseUrl;
+		this.pdfDownloadBaseUrl = StringUtils.appendIfMissing(pdfDownloadBaseUrl, "\\");
 		return this;
 	}
 
@@ -348,8 +349,16 @@ public class LigaHtmlCleaner {
 	}
 
 	private String formatPdfDownloadLink(String pdfname) {
-		if (pdfDownloadBaseUrl != null && pdfname != null && pdfImageUrl != null) {
-			String dwnlLink = pdfDownloadBaseUrl + pdfname;
+		if (pdfname != null && pdfImageUrl != null) {
+
+			String dwnlLink;
+
+			if (pdfDownloadBaseUrl != null) {
+				dwnlLink = pdfDownloadBaseUrl + pdfname;
+			} else {
+				dwnlLink = pdfname;
+			}
+
 			return "<a href=\"" + dwnlLink + "\" download>" + String.format(PDF_IMAGE, pdfImageUrl) + "</a>";
 		}
 		return null;

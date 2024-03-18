@@ -4,6 +4,8 @@
 package de.petanqueturniermanager.basesheet.konfiguration;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 
 /**
  * @author Michael Massee
@@ -13,7 +15,11 @@ public interface IPropertiesSpalte {
 
 	Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException;
 
+	MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle() throws GenerateException;
+
 	Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException;
+
+	MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle() throws GenerateException;
 
 	Integer getMeldeListeHeaderFarbe() throws GenerateException;
 

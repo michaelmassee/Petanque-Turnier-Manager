@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.schweizer.konfiguration;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
  * @author Michael Massee
@@ -16,5 +17,7 @@ public interface ISchweizerPropertiesSpalte {
 	String getKopfZeileMitte() throws GenerateException;
 
 	String getKopfZeileRechts() throws GenerateException;
+
+	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException;
 
 }

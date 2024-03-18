@@ -1,6 +1,6 @@
 /**
  * Erstellung 12.04.2020 / Michael Massee
-
+ * 
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
@@ -14,19 +14,19 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public abstract class SchweizerSheet extends SheetRunner {
 
-	protected static final int LIGA_MELDUNG_NAME_WIDTH = 8000;
-
+	public static final TurnierSystem TURNIERSYSTEM = TurnierSystem.SCHWEIZER;
+	protected static final int MELDUNG_NAME_WIDTH = 8000;
 	private SchweizerKonfigurationSheet konfigurationSheet;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public SchweizerSheet(WorkingSpreadsheet workingSpreadsheet) {
+	protected SchweizerSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, null);
 	}
 
-	public SchweizerSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, logPrefix);
+	protected SchweizerSheet(WorkingSpreadsheet workingSpreadsheet, String logPrefix) {
+		super(workingSpreadsheet, TURNIERSYSTEM, logPrefix);
 		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
 	}
 

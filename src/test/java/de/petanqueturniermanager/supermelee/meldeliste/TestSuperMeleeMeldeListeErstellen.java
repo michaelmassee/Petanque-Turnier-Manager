@@ -2,26 +2,16 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
-import com.opencsv.exceptions.CsvException;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.TestnamenLoader;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -32,24 +22,23 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * Erstellung 16.07.2022 / Michael Massee
  */
 
-public class TestMeldeListeErstellen {
+public class TestSuperMeleeMeldeListeErstellen {
 
-	private static final Logger logger = LogManager.getLogger(TestMeldeListeErstellen.class);
-
-	private static final String TESTNAMEN_1000_CSV = "testnamen_1000.csv";
 	private final WorkingSpreadsheet wkingSpreadsheet;
 	private final XSpreadsheetDocument doc;
 	private final MeldeListeSheet_New meldeListeSheetNew;
 	private final MeldeListeSheet_Update meldeListeSheetUpdate;
+	private final TestnamenLoader testnamenLoader;
 
 	public static List<String> setzPos1 = Arrays.asList(new String[] { "Cummings, Kay", "Morgenroth, Waldtraut" });
 	public static List<String> setzPos2 = Arrays.asList(new String[] { "Barber, Arne", "Weaver, Erwin" });
 	public static List<String> nichtmitspielen = Arrays.asList(new String[] { "Karrer, Milan", "Schaeffer, Thorsten" });
 	public static List<String> ausgestiegen = Arrays.asList(new String[] { "Töpfer, Lilian" });
 
-	public TestMeldeListeErstellen(WorkingSpreadsheet wkingSpreadsheet, XSpreadsheetDocument doc) {
+	public TestSuperMeleeMeldeListeErstellen(WorkingSpreadsheet wkingSpreadsheet, XSpreadsheetDocument doc) {
 		meldeListeSheetNew = new MeldeListeSheet_New(wkingSpreadsheet);
 		meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
+		testnamenLoader = new TestnamenLoader();
 		this.wkingSpreadsheet = wkingSpreadsheet;
 		this.doc = doc;
 	}
@@ -58,7 +47,6 @@ public class TestMeldeListeErstellen {
 
 		meldeListeSheetNew.run(); // do not start a Thread ! 
 		int anzMeldungen = testMeldungenEinfuegen();
-		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !
 
 		return anzMeldungen;
@@ -67,7 +55,6 @@ public class TestMeldeListeErstellen {
 	public int initMitAlleDieSpielen(int anzMeldungen) throws GenerateException {
 		meldeListeSheetNew.run(); // do not start a Thread ! 
 		int anzdidInsertMeldungen = testMeldungenEinfuegenAllepielen(anzMeldungen, 0);
-		MeldeListeSheet_Update meldeListeSheetUpdate = new MeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !
 		return anzdidInsertMeldungen;
 	}
@@ -120,10 +107,10 @@ public class TestMeldeListeErstellen {
 
 		int ersteDatenZeile = getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
 		ersteDatenZeile += skip;
-		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getSpielerNameErsteSpalte();
+		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getErsteMeldungNameSpalte();
 		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
 
-		List<String> listeMitTestNamen = listeMitTestNamen(anzMeldungen, skip);
+		List<String> listeMitTestNamen = testnamenLoader.listeMitTestNamen(anzMeldungen, skip);
 		RangeData data = new RangeData(listeMitTestNamen);
 		data.addNewEmptySpalte(); // setz position
 		data.addNewSpalte(1); // alle spielen
@@ -137,7 +124,7 @@ public class TestMeldeListeErstellen {
 	private int testMeldungenEinfuegen() throws GenerateException {
 
 		int ersteDatenZeile = getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
-		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getSpielerNameErsteSpalte();
+		int spielerNameErsteSpalte = getMeldeListeSheetNew().getMeldungenSpalte().getErsteMeldungNameSpalte();
 		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
 
 		List<String> listeMitTestNamen = listeMitTestNamen();
@@ -203,38 +190,6 @@ public class TestMeldeListeErstellen {
 		testNamen.add("Schreiber, Justus");
 		testNamen.add("Weaver, Erwin");
 		testNamen.add("Crawford, Lorena");
-		return testNamen;
-	}
-
-	public List<String> listeMitTestNamen(int anzahl) {
-		return listeMitTestNamen(anzahl, 0);
-	}
-
-	public List<String> listeMitTestNamen(int anzahl, int skip) {
-		List<String> testNamen = new ArrayList<>();
-
-		InputStream csvFile = TestMeldeListeErstellen.class.getResourceAsStream(TESTNAMEN_1000_CSV);
-
-		if (csvFile == null) {
-			String errmsg = TESTNAMEN_1000_CSV + " File not found";
-			logger.error(errmsg);
-			throw new NullPointerException(errmsg);
-		}
-
-		CSVParser parser = new CSVParserBuilder().withSeparator(';').withIgnoreQuotations(true).build();
-
-		try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvFile)).withSkipLines(1 + skip)
-				.withCSVParser(parser).build()) {
-			String[] nextLine;
-			int anzRead = 1;
-			while ((nextLine = reader.readNext()) != null && anzRead <= anzahl) {
-				testNamen.add(nextLine[2] + ", " + nextLine[1]);
-				anzRead++;
-			}
-
-		} catch (IOException | CsvException e) {
-			logger.error(e.getMessage(), e);
-		}
 		return testNamen;
 	}
 

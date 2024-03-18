@@ -8,18 +8,19 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
-import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee
  */
-public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet implements ISchweizerPropertiesSpalte, IKonfigurationSheet {
+public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
+		implements ISchweizerPropertiesSpalte, IKonfigurationSheet {
 
 	private static final Logger logger = LogManager.getLogger(SchweizerKonfigurationSheet.class);
 
@@ -50,15 +51,15 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet implemen
 	}
 
 	@Override
-	protected IPropertiesSpalte getPropertiesSpalte() {
+	protected SchweizerPropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
 	}
 
 	@Override
 	protected void initPageStylesTurnierSystem() throws GenerateException {
 		// default page Style
-		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks()).setHeaderCenter(getKopfZeileMitte())
-				.setHeaderRight(getKopfZeileRechts()).create();
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks())
+				.setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create();
 	}
 
 	@Override
@@ -74,6 +75,11 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet implemen
 	@Override
 	public String getKopfZeileRechts() throws GenerateException {
 		return propertiesSpalte.getKopfZeileRechts();
+	}
+
+	@Override
+	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
+		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
 	}
 
 }

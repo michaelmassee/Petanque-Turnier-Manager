@@ -16,15 +16,15 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.TestMeldeListeErstellen;
+import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
 
 public class SpielrundePlanUITest extends BaseCalcUITest {
 
-	private TestMeldeListeErstellen testMeldeListe;
+	private TestSuperMeleeMeldeListeErstellen testMeldeListe;
 
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
-		testMeldeListe = new TestMeldeListeErstellen(wkingSpreadsheet, doc);
+		testMeldeListe = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
 	}
 
 	@Test

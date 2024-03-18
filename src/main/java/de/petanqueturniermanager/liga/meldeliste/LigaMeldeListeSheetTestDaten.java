@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class LigaMeldeListeSheetTestDaten extends LigaSheet implements ISheet {
 
@@ -47,7 +48,8 @@ public class LigaMeldeListeSheetTestDaten extends LigaSheet implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 
-		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.LIGA)
+				.prefix(getLogPrefix()).validate()) {
 			return;
 		}
 

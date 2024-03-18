@@ -77,9 +77,7 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 		try {
 
 			String baseDownloadUrl = StringUtils.strip(getKonfigurationSheet().getBaseDownloadUrl());
-			if (StringUtils.isEmpty(baseDownloadUrl)) {
-				processBox().info("Warning: Download URL Verzeichnis fehlt in der Turnier Konfiguration");
-			} else {
+			if (StringUtils.isNotEmpty(baseDownloadUrl)) {
 				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
 			}
 
@@ -110,7 +108,7 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
 			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(ligaLogoUr)
 					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)
-					.pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
+					.pdfImageUrl(pdfImgUr).pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
 
 			processBox().info(cleanHtml.toString());
 		} catch (IOException e) {

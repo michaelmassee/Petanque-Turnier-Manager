@@ -1,6 +1,6 @@
 /**
-* Erstellung : 07.05.2018 / Michael Massee
-**/
+ * Erstellung : 07.05.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
@@ -15,6 +15,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator;
 
@@ -44,7 +45,8 @@ public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
 	@Override
 	protected void doRun() throws GenerateException {
 
-		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper()).prefix(getLogPrefix()).validate()) {
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SUPERMELEE)
+				.prefix(getLogPrefix()).validate()) {
 			return;
 		}
 

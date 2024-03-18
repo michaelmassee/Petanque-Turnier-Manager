@@ -42,6 +42,13 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.model.IMeldungen;
 
+/**
+ * wird in melde undrangliste verwendet
+ * 
+ * @param <MLD_LIST_TYPE>
+ * @param <MLDTYPE>
+ */
+
 public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldelistetyp
 
 	public static final int MAX_ANZ_MELDUNGEN = 999;
@@ -54,7 +61,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final Formation formation;
 	private final int ersteDatenZiele; // Zeile 1 = 0
 	private final int meldungNrSpalte; // Spalte A=0, B=1
-	private final int meldungNameSpalte;
+	private final int ersteMeldungNameSpalte; // spalte der erste Spieler im Team
+	private final int letzteMeldungNameSpalte; // spalte der letze Spieler im Team
 	private final int anzZeilenInHeader; // weiviele Zeilen sollen in header verwendet werden
 	private final int spalteMeldungNameWidth;
 
@@ -69,13 +77,15 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		checkNotNull(formation);
 		checkArgument(spalteMeldungNameWidth > 1);
 
+		this.formation = checkNotNull(formation);
 		this.ersteDatenZiele = ersteDatenZiele;
 		this.anzZeilenInHeader = anzZeilenInHeader;
 		this.spalteMeldungNameWidth = spalteMeldungNameWidth;
-		meldungNrSpalte = spielerNrSpalte;
-		meldungNameSpalte = spielerNrSpalte + 1;
-		sheet = new WeakRefHelper<>(iSheet);
-		this.formation = formation;
+		this.meldungNrSpalte = spielerNrSpalte;
+		this.ersteMeldungNameSpalte = spielerNrSpalte + 1;
+		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.formation.getAnzSpieler() - 1;
+		this.sheet = new WeakRefHelper<>(iSheet);
+
 	}
 
 	/**
@@ -91,20 +101,14 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	public int getAnzahlSpielerNamenSpalten() {
-		switch (formation) {
-		case TETE:
-			return 1;
-		case DOUBLETTE:
-			return 2;
-		case TRIPLETTE:
-			return 3;
-		case MELEE:
-			return 1;
-		default:
-			break;
-		}
-		return 0;
+		return formation.getAnzSpieler();
 	}
+
+	/**
+	 * Spieler nr und namen spalten formatieren
+	 * 
+	 * @throws GenerateException
+	 */
 
 	public void formatDaten() throws GenerateException {
 
@@ -126,8 +130,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
-		// Spieler Namen
-		RangePosition datenRange = RangePosition.from(meldungNameSpalte, ersteDatenZiele, meldungNameSpalte,
+		RangePosition datenRange = RangePosition.from(ersteMeldungNameSpalte, ersteDatenZiele, letzteMeldungNameSpalte,
 				letzteDatenZeile);
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange, CellProperties.from().centerJustify()
@@ -156,7 +159,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		// --------------------------------------------------------------------------------------------
 
 		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
-				.spalte(meldungNameSpalte).setValue(HEADER_SPIELER_NAME)
+				.spalte(ersteMeldungNameSpalte).setValue(HEADER_SPIELER_NAME)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
@@ -230,9 +233,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 * @throws GenerateException
 	 */
 	public int letzteZeileMitSpielerName() throws GenerateException {
-		Position resultFreieZelle = RangeSearchHelper.from(getISheet(),
-				RangePosition.from(meldungNameSpalte, getErsteDatenZiele(), meldungNameSpalte, MAX_ANZ_MELDUNGEN))
-				.searchLastNotEmptyInSpalte();
+		Position resultFreieZelle = RangeSearchHelper.from(getISheet(), RangePosition.from(ersteMeldungNameSpalte,
+				getErsteDatenZiele(), ersteMeldungNameSpalte, MAX_ANZ_MELDUNGEN)).searchLastNotEmptyInSpalte();
 		if (resultFreieZelle != null) {
 			return resultFreieZelle.getZeile();
 		}
@@ -345,7 +347,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		int letzteZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 		XSpreadsheet sheet = getXSpreadsheet();
 
-		Position posSpielerName = Position.from(getSpielerNameErsteSpalte(), ersteDatenZiele);
+		Position posSpielerName = Position.from(getErsteMeldungNameSpalte(), ersteDatenZiele);
 
 		if (letzteZeile >= ersteDatenZiele) {
 			for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
@@ -389,8 +391,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		return meldungNrSpalte;
 	}
 
-	public int getSpielerNameErsteSpalte() {
-		return meldungNameSpalte;
+	public int getErsteMeldungNameSpalte() {
+		return ersteMeldungNameSpalte;
 	}
 
 	private final XSpreadsheet getXSpreadsheet() throws GenerateException {
@@ -401,7 +403,11 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		return sheet.get();
 	}
 
-	public static final Bldr Builder() {
+	public int getLetzteMeldungNameSpalte() {
+		return letzteMeldungNameSpalte;
+	}
+
+	public static final Bldr builder() {
 		return new Bldr();
 	}
 
@@ -418,7 +424,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		private ISheet iSheet;
 
 		public Bldr formation(Formation formation) {
-			this.formation = formation;
+			this.formation = checkNotNull(formation);
 			return this;
 		}
 
@@ -443,7 +449,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		}
 
 		public Bldr sheet(ISheet iSheet) {
-			this.iSheet = iSheet;
+			this.iSheet = checkNotNull(iSheet);
 			return this;
 		}
 
@@ -452,4 +458,5 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 					spalteMeldungNameWidth);
 		}
 	}
+
 }
