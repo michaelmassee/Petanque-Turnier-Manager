@@ -54,11 +54,11 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 
 		List<String> testNamen = testnamenLoader.listeMitTestNamen(30); // Triplette 10 Teams
 
-		Position posSpielerName1 = Position.from(meldeListe.getSpielerNameSpalte(),
+		Position posSpielerName1 = Position.from(meldeListe.getSpielerNameErsteSpalte(),
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		Position posSpielerName2 = Position.from(meldeListe.getSpielerNameSpalte() + 1,
+		Position posSpielerName2 = Position.from(meldeListe.getSpielerNameErsteSpalte() + 1,
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		Position posSpielerName3 = Position.from(meldeListe.getSpielerNameSpalte() + 2,
+		Position posSpielerName3 = Position.from(meldeListe.getSpielerNameErsteSpalte() + 2,
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		StringCellValue spielrNamen1 = StringCellValue.from(meldelisteSheet, posSpielerName1);
 		StringCellValue spielrNamen2 = StringCellValue.from(meldelisteSheet, posSpielerName2);

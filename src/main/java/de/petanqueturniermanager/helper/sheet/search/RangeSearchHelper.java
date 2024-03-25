@@ -139,14 +139,17 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 		Position result = null;
 		try {
 			XSearchable xSearchableFromRange = getXSearchableFromRange(rangePos);
-			XSearchDescriptor searchDescriptor = xSearchableFromRange.createSearchDescriptor();
-			searchDescriptor.setSearchString(".*");
-			// properties
-			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
-			// searchDescriptor.setPropertyValue("SearchWords", true);
-			searchDescriptor.setPropertyValue(SEARCH_BACKWARDS, true); // letzte eintrag suchen
-			searchDescriptor.setPropertyValue(SEARCH_REGULAR_EXPRESSION, true);
-			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
+
+			if (xSearchableFromRange != null) {
+				XSearchDescriptor searchDescriptor = xSearchableFromRange.createSearchDescriptor();
+				searchDescriptor.setSearchString(".*");
+				// properties
+				// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
+				// searchDescriptor.setPropertyValue("SearchWords", true);
+				searchDescriptor.setPropertyValue(SEARCH_BACKWARDS, true); // letzte eintrag suchen
+				searchDescriptor.setPropertyValue(SEARCH_REGULAR_EXPRESSION, true);
+				result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);
+			}
 
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
 				| WrappedTargetException e) {

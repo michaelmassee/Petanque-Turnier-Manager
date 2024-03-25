@@ -141,7 +141,7 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 
 		List<String> testNamen = testnamenLoader.listeMitTestNamen(ANZ_TESTNAMEN);
 
-		Position posSpielerName = Position.from(meldeListe.getSpielerNameSpalte(),
+		Position posSpielerName = Position.from(meldeListe.getSpielerNameErsteSpalte(),
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);

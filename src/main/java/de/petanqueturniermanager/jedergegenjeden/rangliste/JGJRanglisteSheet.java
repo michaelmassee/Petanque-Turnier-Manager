@@ -154,7 +154,7 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 
 		insertHeader();
 		formatData();
-		meldungenSpalte.formatDaten();
+		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		addFooter();
 		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();

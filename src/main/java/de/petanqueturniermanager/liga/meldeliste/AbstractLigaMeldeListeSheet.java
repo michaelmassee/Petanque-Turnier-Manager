@@ -8,7 +8,6 @@ import java.util.List;
 
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
@@ -17,11 +16,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -53,7 +49,7 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 		super(workingSpreadsheet, prefix);
 		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
-				.formation(Formation.TETE).build();
+				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
@@ -110,35 +106,26 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true); // nach nr sortieren
-		meldungenSpalte.formatDaten();
+		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten();
 
 		// TurnierSystem
-		// meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
+		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
 	}
 
 	void formatDaten() throws GenerateException {
 
 		processBoxinfo("Formatiere Daten Spalten");
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
+		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
-		if (letzteDatenZeile < MIN_ANZAHL_MELDUNGEN_ZEILEN) {
-			letzteDatenZeile = MIN_ANZAHL_MELDUNGEN_ZEILEN;
-		}
-
-		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
-			// keine Daten
-			return;
-		}
-
-		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(),
-				letzteDatenZeile);
-
-		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
+		//		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(),
+		//				letzteDatenZeile);
+		//
+		//		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
+		//				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+		//						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+		//						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
@@ -169,13 +156,9 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 		// -----------------------------------------------
 
-		meldeListeHelper.insertFormulaFuerDoppelteNamen(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1, letzteDatenZeile,
-				this, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1,
+				letzteDatenZeile, this, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
-	}
-
-	public int getSpielerNameErsteSpalte() {
-		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	@Override
@@ -249,6 +232,11 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 		return meldungenSpalte.getSpielerNrList();
 	}
 
+	@Override
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		return meldungenSpalte.getLetzteDatenZeileUseMin();
+	}
+
 	/**
 	 * @return the spielerSpalte
 	 */
@@ -263,7 +251,7 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 	}
 
 	@Override
-	public int getSpielerNameSpalte() {
+	public int getSpielerNameErsteSpalte() {
 		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 

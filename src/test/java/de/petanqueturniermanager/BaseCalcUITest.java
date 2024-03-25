@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.sun.star.frame.XComponentLoader;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
@@ -31,6 +32,8 @@ import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -118,14 +121,30 @@ public abstract class BaseCalcUITest {
 		}
 	}
 
+	public void writeToJson(String fileName, RangePosition rangePosition, XSpreadsheet xSpreadsheet,
+			XSpreadsheetDocument xSpreadsheetDocument) {
+		writeToJson(fileName, rangeDateFromRangePosition(rangePosition, xSpreadsheet, xSpreadsheetDocument));
+	}
+
+	public RangeData rangeDateFromRangePosition(RangePosition rangePosition, XSpreadsheet xSpreadsheet,
+			XSpreadsheetDocument xSpreadsheetDocument) {
+		RangeHelper rngHlpr = RangeHelper.from(xSpreadsheet, xSpreadsheetDocument, rangePosition);
+		return rngHlpr.getDataFromRange();
+	}
+
 	public void writeToJson(String fileName, RangeData rangeData) {
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
 		try {
-			File jsoFile = new File("/home/michael/tmp/", fileName);
-			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(jsoFile))) {
+			String currentUsersHomeDir = System.getProperty("user.home");
+			String baseDir = currentUsersHomeDir + File.separator;
+			File jsonFile = new File(baseDir, fileName);
+			System.out.println("Write : " + jsonFile);
+
+			try (BufferedWriter fileStream = new BufferedWriter(new FileWriter(jsonFile))) {
 				fileStream.write(gson.toJson(rangeData));
 			}
+
 		} catch (JsonIOException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

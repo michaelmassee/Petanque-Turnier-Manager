@@ -120,7 +120,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 
 		spielerEinfuegen();
 		spielerSpalte.insertHeaderInSheet(headerColor);
-		spielerSpalte.formatDaten();
+		spielerSpalte.formatSpielrNrUndNamenspalten();
 		endRanglisteFormatter.updateHeader();
 
 		spielTageEinfuegen();

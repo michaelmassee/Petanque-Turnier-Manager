@@ -30,7 +30,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  */
 abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implements IMeldeliste<TeamMeldungen, Team> {
 
-	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 5; // Tabelle immer mit min anzahl von zeilen formatieren
+	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 32; // Tabelle immer mit min anzahl von zeilen formatieren
 
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
@@ -46,7 +46,7 @@ abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implement
 		super(workingSpreadsheet, prefix);
 		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
-				.formation(Formation.TRIPLETTE).build();
+				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TRIPLETTE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
@@ -66,23 +66,26 @@ abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implement
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true); // nach nr sortieren
-		meldungenSpalte.formatDaten(); // nur die meldungen spalten formatieren
+		meldungenSpalte.formatSpielrNrUndNamenspalten(); // Format NR + namen Spalten
 
-		int letzteDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
+		// ---------------------------------------------------------
+		int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
 		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = getKonfigurationSheet()
 				.getMeldeListeHintergrundFarbeGeradeStyle();
 		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet()
 				.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
-		meldeListeHelper.insertFormulaFuerDoppelteNamen(meldungenSpalte.getErsteMeldungNameSpalte(),
+		// Spieler Nummer
+		// -----------------------------------------------
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(letzteDatenZeile, this,
+				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+		// -----------------------------------------------
+
+		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(meldungenSpalte.getErsteMeldungNameSpalte(),
 				meldungenSpalte.getLetzteMeldungNameSpalte(), letzteDatenZeile, this,
 				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
-	}
-
-	public int getSpielerNameErsteSpalte() {
-		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	@Override
@@ -141,6 +144,11 @@ abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implement
 	}
 
 	@Override
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		return meldungenSpalte.getLetzteDatenZeileUseMin();
+	}
+
+	@Override
 	public int getErsteDatenZiele() {
 		return meldungenSpalte.getErsteDatenZiele();
 	}
@@ -169,7 +177,7 @@ abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implement
 	}
 
 	@Override
-	public int getSpielerNameSpalte() {
+	public int getSpielerNameErsteSpalte() {
 		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
