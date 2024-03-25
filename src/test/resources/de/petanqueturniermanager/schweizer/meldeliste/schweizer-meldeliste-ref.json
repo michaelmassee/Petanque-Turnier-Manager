@@ -1,0 +1,464 @@
+[
+  [
+    {
+      "data": "Nr"
+    },
+    {
+      "data": "Name"
+    },
+    {
+      "data": "Name"
+    },
+    {
+      "data": "Name"
+    }
+  ],
+  [
+    {
+      "data": 1.0
+    },
+    {
+      "data": "Bieder, Maria"
+    },
+    {
+      "data": "Erl, Siska"
+    },
+    {
+      "data": "Witschel, Danny"
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Burmeister, Selma"
+    },
+    {
+      "data": "Radde, Engelbert"
+    },
+    {
+      "data": "Thielmann, Kreszenzia"
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Dold, Otbert"
+    },
+    {
+      "data": "Asmus, Rigobert"
+    },
+    {
+      "data": "Petter, Roseliese"
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Döll, Muthild"
+    },
+    {
+      "data": "Gerhard, Niko"
+    },
+    {
+      "data": "Rentschler, Theodeline"
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Eisenhardt, Annkatrin"
+    },
+    {
+      "data": "Siegrist, Helfrid"
+    },
+    {
+      "data": "Knöpfle, Collin"
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Grau, Franka"
+    },
+    {
+      "data": "Ney, Hartwig"
+    },
+    {
+      "data": "Elsen, Angelika"
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Husmann, Isedore"
+    },
+    {
+      "data": "Bohnet, Collin"
+    },
+    {
+      "data": "Murphy, Ehrentraut"
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Molz, Kornelia"
+    },
+    {
+      "data": "Kamps, Felix"
+    },
+    {
+      "data": "Goetze, Eustachius"
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Nuber, Joana"
+    },
+    {
+      "data": "Reuß, Birk"
+    },
+    {
+      "data": "Jakobs, Anett"
+    }
+  ],
+  [
+    {
+      "data": 10.0
+    },
+    {
+      "data": "Tafel, Rosa"
+    },
+    {
+      "data": "Stabel, Sophie"
+    },
+    {
+      "data": "Gentsch, Rotraut"
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ]
+]

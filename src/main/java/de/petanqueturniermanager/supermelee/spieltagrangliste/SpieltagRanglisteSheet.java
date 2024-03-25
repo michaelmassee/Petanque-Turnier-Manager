@@ -107,7 +107,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
 		ergebnisseFormulaEinfuegen();
 		updateSummenSpalten();
-		getSpielerSpalte().formatDaten();
+		getSpielerSpalte().formatSpielrNrUndNamenspalten();
 		getRangListeSpalte().upDateRanglisteSpalte();
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.formatDaten();

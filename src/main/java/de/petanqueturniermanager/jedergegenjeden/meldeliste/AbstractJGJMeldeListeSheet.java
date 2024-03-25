@@ -2,9 +2,7 @@ package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.List;
 
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
@@ -13,14 +11,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
-import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
 import de.petanqueturniermanager.model.Team;
@@ -41,15 +33,15 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public AbstractJGJMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+	protected AbstractJGJMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, "JGJ-Meldeliste");
 	}
 
-	public AbstractJGJMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
+	protected AbstractJGJMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
 		super(workingSpreadsheet, prefix);
 		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
-				.formation(Formation.TETE).build();
+				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
@@ -64,13 +56,13 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 		// ------
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		getMeldungenSpalte().insertHeaderInSheet(headerBackColor);
-		// --------------------- TODO doppelt code entfernen
 
 		// eventuelle luecken in spiele namen nach unten sortieren
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 		meldeListeHelper.doSort(meldungenSpalte.getSpielerNrSpalte(), true); // nach nr sortieren
-		meldungenSpalte.formatDaten();
+
+		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten();
 
 	}
@@ -79,24 +71,7 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 
 		processBoxinfo("Formatiere Daten Spalten");
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
-
-		if (letzteDatenZeile < MIN_ANZAHL_MELDUNGEN_ZEILEN) {
-			letzteDatenZeile = MIN_ANZAHL_MELDUNGEN_ZEILEN;
-		}
-
-		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
-			// keine Daten
-			return;
-		}
-
-		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(),
-				letzteDatenZeile);
-
-		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
+		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
@@ -105,36 +80,15 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet()
 				.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
-		// TODO Doppelte Code
 		// Spieler Nummer
 		// -----------------------------------------------
-		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
-				letzteDatenZeile);
-		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
-		// ------------------------------
-				formulaIsText().styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und
-																																							// <999 sein
-																																							// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(letzteDatenZeile, this,
+				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 		// -----------------------------------------------
 
-		meldeListeHelper.insertFormulaFuerDoppelteNamen(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1, letzteDatenZeile,
-				this, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1,
+				letzteDatenZeile, this, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
-	}
-
-	public int getSpielerNameErsteSpalte() {
-		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
 	@Override
@@ -208,6 +162,11 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 		return meldungenSpalte.getSpielerNrList();
 	}
 
+	@Override
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		return meldungenSpalte.getLetzteDatenZeileUseMin();
+	}
+
 	/**
 	 * @return the spielerSpalte
 	 */
@@ -222,7 +181,7 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 	}
 
 	@Override
-	public int getSpielerNameSpalte() {
+	public int getSpielerNameErsteSpalte() {
 		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 

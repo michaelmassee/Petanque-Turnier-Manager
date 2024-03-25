@@ -1,6 +1,6 @@
 /**
-* Erstellung : 10.03.2018 / Michael Massee
-**/
+ * Erstellung : 10.03.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.basesheet.meldeliste;
 
@@ -25,6 +25,8 @@ public interface IMeldeliste<T, M> extends ISheet, MeldeListeKonstanten, IMitSpi
 
 	int letzteSpielTagSpalte() throws GenerateException;
 
-	int getSpielerNameSpalte();
+	int getSpielerNameErsteSpalte();
+
+	int getLetzteDatenZeileUseMin() throws GenerateException;
 
 }

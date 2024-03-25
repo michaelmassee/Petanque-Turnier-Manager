@@ -65,11 +65,12 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final int letzteMeldungNameSpalte; // spalte der letze Spieler im Team
 	private final int anzZeilenInHeader; // weiviele Zeilen sollen in header verwendet werden
 	private final int spalteMeldungNameWidth;
+	private final int minAnzZeilen;
 
-	private final WeakRefHelper<ISheet> sheet;
+	private final WeakRefHelper<ISheet> sheetWkRef;
 
 	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader,
-			int spalteMeldungNameWidth) {
+			int spalteMeldungNameWidth, int minAnzZeilen) {
 		checkNotNull(iSheet);
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
@@ -84,8 +85,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		this.meldungNrSpalte = spielerNrSpalte;
 		this.ersteMeldungNameSpalte = spielerNrSpalte + 1;
 		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.formation.getAnzSpieler() - 1;
-		this.sheet = new WeakRefHelper<>(iSheet);
-
+		this.sheetWkRef = new WeakRefHelper<>(iSheet);
+		this.minAnzZeilen = minAnzZeilen;
 	}
 
 	/**
@@ -105,20 +106,17 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	/**
-	 * Spieler nr und namen spalten formatieren
+	 * Spieler nr und namen spalten formatieren <br>
+	 * SpielerNr Gray CHAR_COLOR_GRAY_SPIELER_NR
 	 * 
 	 * @throws GenerateException
 	 */
 
-	public void formatDaten() throws GenerateException {
+	public void formatSpielrNrUndNamenspalten() throws GenerateException {
 
 		getISheet().processBoxinfo("Formatiere Meldungen Spalten");
 
-		int letzteDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
-		if (letzteDatenZeile < ersteDatenZiele) {
-			// keine Daten
-			return;
-		}
+		int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
 		// Spieler Nr
 		// -------------------------------------
@@ -130,10 +128,11 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 		// -------------------------------------
 
-		RangePosition datenRange = RangePosition.from(ersteMeldungNameSpalte, ersteDatenZiele, letzteMeldungNameSpalte,
-				letzteDatenZeile);
+		// Namen
+		RangePosition namenDataRange = RangePosition.from(ersteMeldungNameSpalte, ersteDatenZiele,
+				letzteMeldungNameSpalte, letzteDatenZeile);
 
-		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), datenRange, CellProperties.from().centerJustify()
+		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), namenDataRange, CellProperties.from().centerJustify()
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setShrinkToFit(true));
 
 	}
@@ -204,6 +203,26 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 */
 	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
 		return neachsteFreieDatenZeileInSpielerNrSpalte() - 1;
+	}
+
+	/**
+	 * Letzte Datenzeile incl minimum anzahl von meldungen zielen
+	 * 
+	 * @return
+	 * @throws GenerateException
+	 */
+
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		// erste  Zeile = 0
+		int letztDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
+		int anzZeilen = letztDatenZeile - ersteDatenZiele + 1;
+
+		if (anzZeilen < minAnzZeilen) {
+			letztDatenZeile = ersteDatenZiele + minAnzZeilen - 1; // weil 1 und letzte zeile mit daten
+		}
+
+		return letztDatenZeile;
+
 	}
 
 	/**
@@ -324,7 +343,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		if (letzteZeile >= ersteDatenZiele) {
 			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
 					letzteZeile);
-			RangeData dataFromRange = RangeHelper.from(sheet, spielNrRange).getDataFromRange();
+			RangeData dataFromRange = RangeHelper.from(sheetWkRef, spielNrRange).getDataFromRange();
 			for (RowData zeile : dataFromRange) {
 				int spielerNr = zeile.get(0).getIntVal(-1);
 				if (spielerNr < 1) {
@@ -400,7 +419,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	private final ISheet getISheet() {
-		return sheet.get();
+		return sheetWkRef.get();
 	}
 
 	public int getLetzteMeldungNameSpalte() {
@@ -420,6 +439,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		private int spielerNrSpalte;
 		private int anzZeilenInHeader = 1; // default ein zeile
 		private int spalteMeldungNameWidth = DEFAULT_MELDUNG_NAME_WIDTH;
+		private int minAnzZeilen = 1;
 
 		private ISheet iSheet;
 
@@ -430,6 +450,11 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		public Bldr ersteDatenZiele(int ersteDatenZiele) {
 			this.ersteDatenZiele = ersteDatenZiele;
+			return this;
+		}
+
+		public Bldr minAnzZeilen(int minAnzZeilen) {
+			this.minAnzZeilen = minAnzZeilen;
 			return this;
 		}
 
@@ -455,7 +480,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		public <TL, T> MeldungenSpalte<TL, T> build() {
 			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader,
-					spalteMeldungNameWidth);
+					spalteMeldungNameWidth, minAnzZeilen);
 		}
 	}
 

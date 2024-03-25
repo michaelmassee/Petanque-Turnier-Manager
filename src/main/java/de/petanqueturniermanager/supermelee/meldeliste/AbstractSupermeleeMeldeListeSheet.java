@@ -86,7 +86,8 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	protected AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Meldeliste");
 		meldungenSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
-				.spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this).formation(Formation.MELEE).build();
+				.minAnzZeilen(MIN_ANZAHL_SPIELER_ZEILEN).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
+				.formation(Formation.MELEE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
@@ -162,7 +163,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		doSort(meldungenSpalte.getErsteMeldungNameSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
 		insertInfoBlock();
-		meldungenSpalte.formatDaten();
+		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten();
 
 		// TurnierSystem
@@ -249,16 +250,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		processBoxinfo("Formatiere Daten Spalten");
 
-		int letzteDatenZeile = meldungenSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
-
-		if (letzteDatenZeile < MIN_ANZAHL_SPIELER_ZEILEN) {
-			letzteDatenZeile = MIN_ANZAHL_SPIELER_ZEILEN;
-		}
-
-		if (letzteDatenZeile < ERSTE_DATEN_ZEILE) {
-			// keine Daten
-			return;
-		}
+		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
 		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(),
 				letzteDatenZeile);
@@ -385,7 +377,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	@Override
-	public int getSpielerNameSpalte() {
+	public int getSpielerNameErsteSpalte() {
 		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
@@ -795,16 +787,17 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				new SpielerMeldungen(setzPositionenAktiv));
 	}
 
-	public int getSpielerNameErsteSpalte() {
-		return meldungenSpalte.getErsteMeldungNameSpalte();
-	}
-
 	/**
 	 * @param SpielRundeNr
 	 * @throws GenerateException
 	 */
 	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {
 		getKonfigurationSheet().setAktiveSpielRunde(spielRundeNr);
+	}
+
+	@Override
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		return meldungenSpalte.getLetzteDatenZeileUseMin();
 	}
 
 	/**

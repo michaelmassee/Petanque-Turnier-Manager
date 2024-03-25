@@ -20,9 +20,12 @@ import com.sun.star.table.CellVertJustify2;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.cellstyle.AbstractHintergrundFarbeStyle;
+import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -48,9 +51,57 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		meldeListe = checkNotNull(newMeldeListe);
 	}
 
-	public void insertFormulaFuerDoppelteNamen(int erstNameSpalte, int letzteNamespalte, int letzteDatenZeile,
-			ISheet sheet, AbstractHintergrundFarbeStyle meldungenHintergrundFarbeGeradeStyle,
-			AbstractHintergrundFarbeStyle meldungenHintergrundFarbeUnGeradeStyle) throws GenerateException {
+	/**
+	 * Formatiere SpeilerNr Spalte bis ersteNamespalte<br>
+	 * doppelte Formatierung meldungenSpalte.formatDaten()
+	 * 
+	 * 
+	 * @param erstNameSpalte
+	 * @param letzteDatenZeile
+	 * @throws GenerateException
+	 */
+
+	@Deprecated
+	public void formatNrSpalteBisInclErsteNamespalte(int erstNameSpalte, int letzteDatenZeile)
+			throws GenerateException {
+
+		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, erstNameSpalte,
+				letzteDatenZeile);
+
+		meldeListe.getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
+				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
+	}
+
+	public void insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(int letzteDatenZeile, ISheet sheet,
+			MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle) throws GenerateException {
+
+		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
+				letzteDatenZeile);
+		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
+				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		ConditionalFormatHelper.from(sheet, nrSetPosRange).clear().
+		// ------------------------------
+				formulaIsText().styleIsFehler().applyAndDoReset().
+				// ------------------------------
+				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
+				// ------------------------------
+				// eigentlich musste 0 = Fehler sein wird es aber nicht
+				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
+				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
+				// ------------------------------
+				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
+				// ------------------------------
+				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+
+	}
+
+	public void insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(int erstNameSpalte, int letzteNamespalte,
+			int letzteDatenZeile, ISheet sheet,
+			MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle) throws GenerateException {
 		// -----------------------------------------------
 		// Spieler Namen prüfen auf doppelte namen
 		// -----------------------------------------------
@@ -176,7 +227,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public int getSpielerNameSpalte() {
-		return meldeListe.getSpielerNameSpalte();
+		return meldeListe.getSpielerNameErsteSpalte();
 	}
 
 	/**
