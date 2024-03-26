@@ -6,7 +6,6 @@ package de.petanqueturniermanager.liga.meldeliste;
 
 import java.util.List;
 
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -21,9 +20,6 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGer
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -134,27 +130,9 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet()
 				.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
-		// TODO Doppelte Code
 		// Spieler Nummer
-		// -----------------------------------------------
-		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
-				letzteDatenZeile);
-		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
-		// ------------------------------
-				formulaIsText().styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
-				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-		// -----------------------------------------------
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(letzteDatenZeile, this,
+				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
 		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1,
 				letzteDatenZeile, this, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);

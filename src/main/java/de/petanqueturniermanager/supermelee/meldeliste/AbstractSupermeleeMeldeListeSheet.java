@@ -53,7 +53,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0
 	public static final int ZEILE_FORMATION = 0; // Zeile 0
 
-	public static final int MIN_ANZAHL_SPIELER_ZEILEN = 200; // Tablle immer mit min anzahl von zeilen formatieren
+	public static final int MIN_ANZAHL_SPIELER_ZEILEN = 100; // Tablle immer mit min anzahl von zeilen formatieren
 
 	public static final int SUMMEN_SPALTE_OFFSET = 2; // 2 Spalten weiter zur letzte Spieltag
 	public static final int SUMMEN_ERSTE_ZEILE = ERSTE_DATEN_ZEILE + 5; // Zeile 3
@@ -252,6 +252,8 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
+		// Spieler NR bis letzte Spieltag
+		// ----------------------------------------------
 		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(),
 				letzteDatenZeile);
 
@@ -268,46 +270,14 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				.getMeldeListeHintergrundFarbeUnGeradeStyle();
 
 		// Meldung Nummer: gerade + ungerade + prufe auf doppelte nummer
-		// TODO Move this nach Meldungen
-		// -----------------------------------------------
-		RangePosition nrSetPosRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE,
-				letzteDatenZeile);
-		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nrSetPosRange).clear().
-		// ------------------------------
-				formulaIsText().styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-		// -----------------------------------------------
+		meldeListeHelper.insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(letzteDatenZeile, this,
+				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
 		// -----------------------------------------------
 		// Spieler Namen: gerade + ungerade + prufe auf doppelte namen
-		// TODO Move this nach Abstract Meldungen
-		// -----------------------------------------------
-		RangePosition nameSetPosRange = RangePosition.from(getSpielerNameErsteSpalte(), ERSTE_DATEN_ZEILE,
-				getSpielerNameErsteSpalte(), letzteDatenZeile);
-		String conditionfindDoppeltNamen = "COUNTIF("
-				+ Position.from(getSpielerNameErsteSpalte(), 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(this, nameSetPosRange).clear().
-		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
-				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-		// -----------------------------------------------
-
+		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(meldungenSpalte.getErsteMeldungNameSpalte(),
+				meldungenSpalte.getLetzteMeldungNameSpalte(), letzteDatenZeile, this,
+				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 		// -----------------------------------------------
 		// setzposition spalte
 		// -----------------------------------------------

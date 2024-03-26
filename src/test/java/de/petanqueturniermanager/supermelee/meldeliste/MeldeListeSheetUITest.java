@@ -27,7 +27,8 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 	@Test
 	public void testMeldeListe() throws IOException, GenerateException {
 
-		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
+		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(
+				wkingSpreadsheet, doc);
 		int anzMeldungen = testMeldeListeErstellen.run();
 
 		int spielerNameErsteSpalte = testMeldeListeErstellen.getMeldeListeSheetNew().getMeldungenSpalte()
