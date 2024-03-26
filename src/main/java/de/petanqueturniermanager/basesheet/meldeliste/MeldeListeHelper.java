@@ -20,12 +20,10 @@ import com.sun.star.table.CellVertJustify2;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -49,29 +47,6 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public MeldeListeHelper(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> newMeldeListe) {
 		meldeListe = checkNotNull(newMeldeListe);
-	}
-
-	/**
-	 * Formatiere SpeilerNr Spalte bis ersteNamespalte<br>
-	 * doppelte Formatierung meldungenSpalte.formatDaten()
-	 * 
-	 * 
-	 * @param erstNameSpalte
-	 * @param letzteDatenZeile
-	 * @throws GenerateException
-	 */
-
-	@Deprecated
-	public void formatNrSpalteBisInclErsteNamespalte(int erstNameSpalte, int letzteDatenZeile)
-			throws GenerateException {
-
-		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, erstNameSpalte,
-				letzteDatenZeile);
-
-		meldeListe.getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
-				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 	}
 
 	public void insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(int letzteDatenZeile, ISheet sheet,
