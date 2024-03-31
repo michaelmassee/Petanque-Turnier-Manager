@@ -28,15 +28,17 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetTestDaten.class);
 	private SchweizerMeldeListeSheetNew meldeListe;
 	private final TestnamenLoader testnamenLoader;
+	private final int anzTeams;
 
-	public SchweizerMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet) {
+	public SchweizerMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
 		super(workingSpreadsheet);
 		meldeListe = new SchweizerMeldeListeSheetNew(workingSpreadsheet);
 		testnamenLoader = new TestnamenLoader();
+		this.anzTeams = anzTeams;
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
+	public void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), SchweizerSheet.TURNIERSYSTEM)
 				.prefix(getLogPrefix()).validate()) {
 			return;
@@ -52,7 +54,7 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 		XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
 		getSheetHelper().setActiveSheet(meldelisteSheet);
 
-		List<String> testNamen = testnamenLoader.listeMitTestNamen(30); // Triplette 10 Teams
+		List<String> testNamen = testnamenLoader.listeMitTestNamen(anzTeams * 3);
 
 		Position posSpielerName1 = Position.from(meldeListe.getSpielerNameErsteSpalte(),
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);

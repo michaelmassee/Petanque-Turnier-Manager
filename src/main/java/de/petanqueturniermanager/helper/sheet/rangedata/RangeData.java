@@ -73,6 +73,12 @@ public class RangeData extends ArrayList<RowData> {
 		return newRowData;
 	}
 
+	public RowData addNewRow(Integer... intVals) {
+		RowData newRowData = new RowData(intVals);
+		this.add(newRowData);
+		return newRowData;
+	}
+
 	public RangePosition getRangePosition(AbstractPosition<?> start) {
 		checkNotNull(start);
 		checkArgument(size() > 0);

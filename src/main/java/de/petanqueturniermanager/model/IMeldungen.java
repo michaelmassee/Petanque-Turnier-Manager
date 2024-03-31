@@ -16,4 +16,6 @@ public interface IMeldungen<T, M> {
 
 	List<IMeldung<M>> getMeldungen();
 
+	public int size();
+
 }

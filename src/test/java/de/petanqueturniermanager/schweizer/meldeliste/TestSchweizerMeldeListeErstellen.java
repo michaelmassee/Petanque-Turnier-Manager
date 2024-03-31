@@ -23,7 +23,7 @@ public class TestSchweizerMeldeListeErstellen {
 	public TestSchweizerMeldeListeErstellen(WorkingSpreadsheet wkingSpreadsheet, XSpreadsheetDocument doc) {
 		this.wkingSpreadsheet = wkingSpreadsheet;
 		this.doc = doc;
-		this.schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet);
+		this.schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, 32); // 32 teams
 	}
 
 	public int run() throws GenerateException {

@@ -125,7 +125,7 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 			// spiel test ergebnisse einfuegen
 			// ------------------------------------
 			XSpreadsheet sheet = getXSpreadSheet();
-			Position letztePos = letzteErgbnissPosition();
+			Position letztePos = letztePositionRechtsUnten();
 
 			if (letztePos != null && sheet != null) {
 				for (int zeileCntr = ERSTE_DATEN_ZEILE; zeileCntr <= letztePos.getZeile(); zeileCntr++) {

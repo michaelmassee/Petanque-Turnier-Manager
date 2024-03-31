@@ -274,8 +274,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			RangeData meldungenDaten = RangeHelper.from(meldeListe, rangebisSpieltagSpalte).getDataFromRange();
 
 			// 0 = nr
-			// 1 = name
-			// 2 = setzpos
+			// 1-3 = namen je nach Modus, Tete,Doubl,Tripl
+			// 4 = setzpos
 			// letzte ! spalte = aktuelle Spieltag status
 			for (RowData meldungZeile : meldungenDaten) {
 				int isAktivStatus = meldungZeile.getLast().getIntVal(-1);

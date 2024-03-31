@@ -55,6 +55,8 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		for (int runde = 1; runde < 5; runde++) { // 4 runden
 			spielrundeSheetNaechste.run(); // no thread
 			validateAnzSpielrundeInMeldeliste(runde, docPropHelper);
+			Position letztePositionRechtsUnten = spielrundeSheetNaechste.letztePositionRechtsUnten(); // I6
+			assertThat(letztePositionRechtsUnten.getAddress()).isEqualTo("I6");
 		}
 
 		// die maximale anzahl an Spieltage die bei der neu auslosung eingelesen werden
@@ -67,7 +69,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 				.countNumberOfSpielRundenSheets(spielrundeSheetNaechste.getSpielTag());
 		assertThat(anzSpielRunden).isEqualTo(4);
 
-		// waitEnter();
+		//waitEnter();
 	}
 
 	@Test
@@ -76,6 +78,9 @@ public class SpielrundeUITest extends BaseCalcUITest {
 				SuperMeleeMode.Doublette.getKey());
 		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
 		spielrundeSheetNaechste.run(); // no thread
+
+		Position letztePositionRechtsUnten = spielrundeSheetNaechste.letztePositionRechtsUnten();
+		assertThat(letztePositionRechtsUnten.getAddress()).isEqualTo("I7");
 
 		// paarungen einlesen
 		XSpreadsheet spielrunde1 = sheetHlp.findByName("1.1. Spielrunde");
@@ -131,6 +136,9 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		spielrundeSheetNaechste.setForceOk(true); // DialogBox returns OK
 		spielrundeSheetNaechste.run(); // no thread 
 
+		Position letztePositionRechtsUnten = spielrundeSheetNaechste.letztePositionRechtsUnten();
+		assertThat(letztePositionRechtsUnten.getAddress()).isEqualTo("I7");
+
 		// paarungen einlesen
 		XSpreadsheet spielrunde1 = sheetHlp.findByName("1.1. Spielrunde");
 		assertThat(spielrunde1).isNotNull();
@@ -179,7 +187,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 			validateAnzSpielrundeInMeldeliste(runde, docPropHelper);
 		}
 
-		// 2 sheets manipulieren um doppelte aulosung zu faken
+		// 2 sheets manipulieren um doppelte auslosung zu faken
 		XSpreadsheet spielrunde2 = sheetHlp.findByName("1.2. Spielrunde");
 		assertThat(spielrunde2).isNotNull();
 

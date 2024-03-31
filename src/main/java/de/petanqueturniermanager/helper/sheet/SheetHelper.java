@@ -48,6 +48,8 @@ import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XMergeable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.AbstractCellValueWithSheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -431,6 +433,10 @@ public class SheetHelper {
 		return xCell;
 	}
 
+	public Integer getIntFromCell(ISheet iSheet, Position pos) throws GenerateException {
+		return getIntFromCell(checkNotNull(iSheet).getXSpreadSheet(), pos);
+	}
+
 	/**
 	 * @param sheet
 	 * @param spalte,column, 0 = erste spalte = A
@@ -619,6 +625,11 @@ public class SheetHelper {
 		return xPropSet;
 	}
 
+	public XPropertySet setColumnProperties(ISheet sheet, int spalte, ColumnProperties properties)
+			throws GenerateException {
+		return setColumnProperties(checkNotNull(sheet).getXSpreadSheet(), spalte, properties);
+	}
+
 	// ColumnProperties
 	public XPropertySet setColumnProperties(XSpreadsheet sheet, int spalte, ColumnProperties properties) {
 		checkNotNull(sheet);
@@ -689,6 +700,11 @@ public class SheetHelper {
 		CellProperties properties = CellProperties.from();
 		properties.put(key, val);
 		return setPropertiesInRange(sheet, pos, properties);
+	}
+
+	public XCellRange setPropertiesInRange(ISheet iSheet, RangePosition pos, CellProperties properties)
+			throws GenerateException {
+		return setPropertiesInRange(checkNotNull(iSheet).getXSpreadSheet(), pos, properties);
 	}
 
 	public XCellRange setPropertiesInRange(XSpreadsheet sheet, RangePosition pos, CellProperties properties) {

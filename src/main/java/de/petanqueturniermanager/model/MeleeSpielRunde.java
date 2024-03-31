@@ -10,11 +10,11 @@ import com.google.common.base.MoreObjects;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 
 /*
-* SpielRunde.java
-*
-* Erstellung     : 07.09.2017 / Michael Massee
-*
-*/
+ * SpielRunde.java
+ *
+ * Erstellung : 07.09.2017 / Michael Massee
+ *
+ */
 public class MeleeSpielRunde extends NrComparable {
 	private final ArrayList<Team> teams;
 
@@ -57,6 +57,7 @@ public class MeleeSpielRunde extends NrComparable {
 		}
 	}
 
+	// Team A oder B Spielt keine rolle
 	public MeleeSpielRunde addTeamsWennNichtVorhanden(List<Team> teams) throws AlgorithmenException {
 		for (Team team : teams) {
 			addTeamWennNichtVorhanden(team);
@@ -64,6 +65,7 @@ public class MeleeSpielRunde extends NrComparable {
 		return this;
 	}
 
+	// Team A oder B Spielt keine rolle
 	public MeleeSpielRunde addTeamWennNichtVorhanden(Team team) throws AlgorithmenException {
 		if (!teams.contains(team)) {
 			validateSpielerTeam(team);
