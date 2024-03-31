@@ -24,7 +24,7 @@ public class SchweizerMeldeListeSheetNewUITest extends BaseCalcUITest {
 
 	@Before
 	public void setup() {
-		this.schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet);
+		this.schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, 10); // 10 Teams
 	}
 
 	@Test

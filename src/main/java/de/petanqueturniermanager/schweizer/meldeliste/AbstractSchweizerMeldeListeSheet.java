@@ -28,7 +28,8 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
  * @author Michael Massee
  *
  */
-abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implements IMeldeliste<TeamMeldungen, Team> {
+public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet
+		implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 32; // Tabelle immer mit min anzahl von zeilen formatieren
 

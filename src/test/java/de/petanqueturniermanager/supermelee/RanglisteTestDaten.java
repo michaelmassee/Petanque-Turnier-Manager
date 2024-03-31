@@ -75,7 +75,7 @@ public class RanglisteTestDaten<C> {
 			SpielRundeNr spielrundeNr = SpielRundeNr.from(spielrundeNrCntr);
 			spielrundeSheetNaechste.run();
 			//spielrundeSheetNaechste.naechsteSpielrundeEinfuegen(spieltag, SpielRundeNr.from(spielrundeNrCntr));
-			Position letzteErgbnissPosition = spielrundeSheetNaechste.letzteErgbnissPosition(); // ist auch die letzte Zeile in der Tabelle
+			Position letzteErgbnissPosition = spielrundeSheetNaechste.letztePositionRechtsUnten(); // ist auch die letzte Zeile in der Tabelle
 
 			XSpreadsheet spielrunde = sheetHlp.findByName(spieltag.getNr() + "." + spielrundeNrCntr + ". Spielrunde");
 			assertThat(spielrunde).isNotNull();
@@ -191,7 +191,7 @@ public class RanglisteTestDaten<C> {
 			// Paarungen Block
 			// ------------------------------------------------------------------------------
 			spielrundeSheetNaechste.setSpielRundeNr(SpielRundeNr.from(rundeCntr));
-			Position letzteErgbnissPosition = spielrundeSheetNaechste.letzteErgbnissPosition(); // ist auch die letzte Zeile in der Tabelle
+			Position letzteErgbnissPosition = spielrundeSheetNaechste.letztePositionRechtsUnten(); // ist auch die letzte Zeile in der Tabelle
 
 			RangeHelper rngHlpr = spielRundeRangeHlpr(letzteErgbnissPosition, spielrunde);
 			RangeData rundeSplrNrRange = rngHlpr.getDataFromRange();

@@ -78,4 +78,9 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
 	}
 
+	@Override
+	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
+	}
+
 }

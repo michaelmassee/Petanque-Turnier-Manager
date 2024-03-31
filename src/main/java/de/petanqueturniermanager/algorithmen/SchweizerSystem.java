@@ -8,7 +8,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -61,7 +60,8 @@ public class SchweizerSystem {
 		Collections.shuffle(teamListe);
 
 		// now sort nach Setzpos
-		List<Team> sortedTeamList = teamListe.stream().sorted((m1, m2) -> Integer.compare(m1.getSetzPos(), m2.getSetzPos())).collect(Collectors.toList());
+		List<Team> sortedTeamList = teamListe.stream()
+				.sorted((m1, m2) -> Integer.compare(m1.getSetzPos(), m2.getSetzPos())).toList();
 		// split into 2 List Team A/Team B
 		List<List<Team>> partition = ListUtils.partition(sortedTeamList, anzTeamPaarungen);
 
@@ -69,8 +69,10 @@ public class SchweizerSystem {
 		List<Team> listATeams = partition.get(0);
 		List<Team> listBTeams = partition.get(1);
 		int listBSize = listBTeams.size();
-		List<TeamPaarung> retList = IntStream.range(0, anzTeamPaarungen).mapToObj(i -> {
-			return new TeamPaarung(listATeams.get(i), (((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null)).addGegner();
+		return IntStream.range(0, anzTeamPaarungen).mapToObj(i -> {
+			return new TeamPaarung(listATeams.get(i),
+					(((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null))
+					.addGegner();
 		}).sorted((tp1, tp2) -> {
 			// Freilos an letzte Stelle
 			if (tp1.getB() == null) {
@@ -79,13 +81,16 @@ public class SchweizerSystem {
 				return -1;
 			}
 			return Integer.compare(tp1.getA().getNr(), tp2.getA().getNr());
-		}).collect(Collectors.toList());
+		}).toList();
 
-		return retList;
 	}
 
 	/**
-	 * die meldungen mussen in rangliste reihenfolge vorliegen
+	 * die meldungen mussen in rangliste reihenfolge vorliegen<br>
+	 * 
+	 * nach der ersten Runde wird das Feld geteilt in Sieger und Verlierer.<br>
+	 * In der zweiten Runde und in den folgenden Runden spielen stets Teams gegeneinander,<br>
+	 * die gleich viele Siege, Niederlagen oder Siege/Niederlagen haben.
 	 *
 	 * @return
 	 */
@@ -98,8 +103,9 @@ public class SchweizerSystem {
 
 		// zuerst freilos vergeben
 		if (freiSpiel) {
-			Team freilosTeam = IntStream.range(0, teamListe.size()).mapToObj(i -> teamListe.get(teamListe.size() - i - 1)).filter(team -> team.isHatteFreilos() == false)
-					.findFirst().orElse(teamListe.get(0));
+			Team freilosTeam = IntStream.range(0, teamListe.size())
+					.mapToObj(i -> teamListe.get(teamListe.size() - i - 1))
+					.filter(team -> team.isHatteFreilos() == false).findFirst().orElse(teamListe.get(0));
 			freilosTeam.setHatteFreilos(true);
 			freilosTeam.setHatGegner(true);
 			teamPaarungList.add(new TeamPaarung(freilosTeam));
@@ -107,8 +113,8 @@ public class SchweizerSystem {
 
 		for (Team team : teamListe) {
 			if (!team.isHatGegner()) {
-				List<Team> restTeams = teamListe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).collect(Collectors.toList());
-				if (restTeams.size() > 0) {
+				List<Team> restTeams = teamListe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).toList();
+				if (!restTeams.isEmpty()) {
 					Team gegner = findeGegner(team, restTeams);
 					if (gegner != null) {
 						// gegner gefunden
@@ -142,7 +148,7 @@ public class SchweizerSystem {
 				return -1;
 			}
 			return 0;
-		}).collect(Collectors.toList());
+		}).toList();
 	}
 
 	@VisibleForTesting
@@ -256,14 +262,13 @@ public class SchweizerSystem {
 	}
 
 	public List<Team> flattenTeampaarungen(List<TeamPaarung> paarungen) {
-		return paarungen.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB())).sorted((team1, team2) -> {
-			if (team1 == null) {
-				return 1;
-			} else if (team2 == null) {
-				return 1;
-			}
-			return Integer.compare(team1.getNr(), team2.getNr());
-		}).collect(Collectors.toList());
+		return paarungen.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
+				.sorted((team1, team2) -> {
+					if (team1 == null || team2 == null) {
+						return 1;
+					}
+					return Integer.compare(team1.getNr(), team2.getNr());
+				}).toList();
 	}
 
 	/**

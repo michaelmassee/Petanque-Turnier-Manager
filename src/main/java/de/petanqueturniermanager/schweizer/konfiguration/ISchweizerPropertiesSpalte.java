@@ -20,4 +20,6 @@ public interface ISchweizerPropertiesSpalte {
 
 	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException;
 
+	SpielRundeNr getAktiveSpielRunde() throws GenerateException;
+
 }

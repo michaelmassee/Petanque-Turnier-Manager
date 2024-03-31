@@ -10,6 +10,10 @@ package de.petanqueturniermanager.helper.sheet;
 
 public class DefaultSheetPos {
 
+	private DefaultSheetPos() {
+
+	}
+
 	public static final short MELDELISTE = 0;
 	public static final short SUPERMELEE_TEAMS = 2;
 	public static final short SUPERMELEE_ENDRANGLISTE = 3;
@@ -24,5 +28,9 @@ public class DefaultSheetPos {
 	public static final short JGJ_WORK = 2; // Jeder gegen Jeden Spielplan
 	public static final short JGJ_ENDRANGLISTE = 3;
 	public static final short JGJ_DIREKTEVERGLEICH = 4;
+
+	public static final short SCHWEIZER_WORK = 2; // Schweizer Spielrunden
+	public static final short SCHWEIZER_ENDRANGLISTE = 3;
+	public static final short SCHWEIZER_DIREKTEVERGLEICH = 4;
 
 }

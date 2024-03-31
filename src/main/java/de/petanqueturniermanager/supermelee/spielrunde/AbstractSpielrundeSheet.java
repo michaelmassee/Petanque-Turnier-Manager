@@ -13,12 +13,10 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.VERT_JUSTIFY;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.IntStream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,6 +32,7 @@ import com.sun.star.table.TableBorder2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.SuperMeleePaarungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -59,6 +58,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -95,14 +95,16 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
+	private final SpielrundeHelper spielrundeHelper;
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
 	private boolean forceOk = false; // wird fuer Test verwendet
 
-	public AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
+	protected AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spielrunde");
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
+		spielrundeHelper = new SpielrundeHelper(this);
 	}
 
 	@VisibleForTesting
@@ -288,84 +290,89 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 * @throws GenerateException
 	 */
 	private void datenErsteSpalte() throws GenerateException {
-
-		processBoxinfo("Erste Spalte Daten einfügen");
-
-		XSpreadsheet sheet = getXSpreadSheet();
+		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
+		Integer letzteZeile = letztePositionRechtsUnten().getZeile();
 		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
-		Position letzteZeile = letzteErgbnissPosition();
 
-		// header
-		// -------------------------
-		// spalte paarungen Nr oder Spielbahn-Nummer
-		// -------------------------
-		ColumnProperties columnProperties = ColumnProperties.from().setVertJustify(CellVertJustify2.CENTER)
-				.setHoriJustify(CellHoriJustify.CENTER);
-		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn)) {
-			columnProperties.setWidth(500); // Paarungen cntr
-			getSheetHelper().setColumnProperties(sheet, NUMMER_SPALTE_RUNDESPIELPLAN, columnProperties);
-		} else {
-			// Spielbahn Spalte header
-			columnProperties.setWidth(900); // Paarungen cntr
-			Position posErsteHeaderZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
-			Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-			StringCellValue headerValue = StringCellValue.from(sheet, posErsteHeaderZelle).setRotateAngle(27000)
-					.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder())
-					.setCellBackColor(headerColor).setCharHeight(14).setColumnProperties(columnProperties)
-					.setEndPosMergeZeilePlus(1).setValue("Bahn").setComment("Spielbahn");
-			getSheetHelper().setStringValueInCell(headerValue);
+		spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile,
+				NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, headerColor);
 
-			RangePosition nbrRange = RangePosition.from(posErsteHeaderZelle,
-					letzteZeile.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
-			getSheetHelper().setPropertiesInRange(sheet, nbrRange, CellProperties.from().setCharHeight(16));
-		}
-
-		// Daten
-		Position posErsteDatenZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn)
-				|| StringUtils.equalsIgnoreCase("N", spielrundeSpielbahn)) {
-			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
-			formulaCellValue.setValue("=ROW()-" + ERSTE_DATEN_ZEILE).setFillAutoDown(letzteZeile.getZeile());
-			getSheetHelper().setFormulaInCell(formulaCellValue);
-		} else if (StringUtils.startsWithIgnoreCase(spielrundeSpielbahn, "R")) {
-			// Rx = Spielbahn -> random x = optional = max anzahl von Spielbahnen
-			// anzahl paarungen ?
-			int anzPaarungen = letzteZeile.getZeile() - ERSTE_DATEN_ZEILE + 1;
-			int letzteBahnNr = anzPaarungen;
-
-			// ist eine letzte bahnummer vorhanden ?
-			if (spielrundeSpielbahn.length() > 1) {
-				try {
-					letzteBahnNr = Integer.parseInt(spielrundeSpielbahn.substring(1).trim());
-				} catch (NumberFormatException | NullPointerException nfe) {
-					// just ignore when no number found
-				}
-			}
-
-			ArrayList<Integer> bahnnummern = new ArrayList<>();
-			// fill
-			for (int i = 1; i <= anzPaarungen; i++) {
-				if (i <= letzteBahnNr) {
-					bahnnummern.add(i);
-				} else {
-					bahnnummern.add(0); // platzhalter = spielpaarungen ohne bahnnummer
-				}
-			}
-			// mishen
-			Collections.shuffle(bahnnummern);
-			StringCellValue stringCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
-			for (Integer bahnnr : bahnnummern) {
-				if (bahnnr > 0) { // es kann sein das wir lücken haben, = teampaarungen ohne bahnnummer
-					stringCellValue.setValue(bahnnr);
-					getSheetHelper().setStringValueInCell(stringCellValue);
-				}
-				stringCellValue.zeilePlusEins();
-			}
-		}
+		//		XSpreadsheet sheet = getXSpreadSheet();
+		//		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
+		//		Position letzteZeile = letztePositionRechtsUnten();
+		//
+		//		// header
+		//		// -------------------------
+		//		// spalte paarungen Nr oder Spielbahn-Nummer
+		//		// -------------------------
+		//		ColumnProperties columnProperties = ColumnProperties.from().setVertJustify(CellVertJustify2.CENTER)
+		//				.setHoriJustify(CellHoriJustify.CENTER);
+		//		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn)) {
+		//			columnProperties.setWidth(500); // Paarungen cntr
+		//			getSheetHelper().setColumnProperties(sheet, NUMMER_SPALTE_RUNDESPIELPLAN, columnProperties);
+		//		} else {
+		//			// Spielbahn Spalte header
+		//			columnProperties.setWidth(900); // Paarungen cntr
+		//			Position posErsteHeaderZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
+		//			Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
+		//			StringCellValue headerValue = StringCellValue.from(sheet, posErsteHeaderZelle).setRotateAngle(27000)
+		//					.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder())
+		//					.setCellBackColor(headerColor).setCharHeight(14).setColumnProperties(columnProperties)
+		//					.setEndPosMergeZeilePlus(1).setValue("Bahn").setComment("Spielbahn");
+		//			getSheetHelper().setStringValueInCell(headerValue);
+		//
+		//			RangePosition nbrRange = RangePosition.from(posErsteHeaderZelle,
+		//					letzteZeile.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
+		//			getSheetHelper().setPropertiesInRange(sheet, nbrRange, CellProperties.from().setCharHeight(16));
+		//		}
+		//
+		//		// Daten
+		//		Position posErsteDatenZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
+		//		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn)
+		//				|| StringUtils.equalsIgnoreCase("N", spielrundeSpielbahn)) {
+		//			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
+		//			formulaCellValue.setValue("=ROW()-" + ERSTE_DATEN_ZEILE).setFillAutoDown(letzteZeile.getZeile());
+		//			getSheetHelper().setFormulaInCell(formulaCellValue);
+		//		} else if (StringUtils.startsWithIgnoreCase(spielrundeSpielbahn, "R")) {
+		//			// Rx = Spielbahn -> random x = optional = max anzahl von Spielbahnen
+		//			// anzahl paarungen ?
+		//			int anzPaarungen = letzteZeile.getZeile() - ERSTE_DATEN_ZEILE + 1;
+		//			int letzteBahnNr = anzPaarungen;
+		//
+		//			// ist eine letzte bahnummer vorhanden ?
+		//			if (spielrundeSpielbahn.length() > 1) {
+		//				try {
+		//					letzteBahnNr = Integer.parseInt(spielrundeSpielbahn.substring(1).trim());
+		//				} catch (NumberFormatException | NullPointerException nfe) {
+		//					// just ignore when no number found
+		//				}
+		//			}
+		//
+		//			ArrayList<Integer> bahnnummern = new ArrayList<>();
+		//			// fill
+		//			for (int i = 1; i <= anzPaarungen; i++) {
+		//				if (i <= letzteBahnNr) {
+		//					bahnnummern.add(i);
+		//				} else {
+		//					bahnnummern.add(0); // platzhalter = spielpaarungen ohne bahnnummer
+		//				}
+		//			}
+		//			// mishen
+		//			Collections.shuffle(bahnnummern);
+		//			StringCellValue stringCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
+		//			for (Integer bahnnr : bahnnummern) {
+		//				if (bahnnr > 0) { // es kann sein das wir lücken haben, = teampaarungen ohne bahnnummer
+		//					stringCellValue.setValue(bahnnr);
+		//					getSheetHelper().setStringValueInCell(stringCellValue);
+		//				}
+		//				stringCellValue.zeilePlusEins();
+		//			}
+		//		}
 	}
 
 	/**
-	 * bereich rechts neben der tabelle
+	 * bereich rechts neben der tabelle<br>
+	 * matrix mit spieler nr Team A+B
 	 *
 	 * @param spielRunde
 	 * @throws GenerateException
@@ -649,20 +656,20 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		SuperMeleePaarungen paarungen = new SuperMeleePaarungen();
 		try {
-			MeleeSpielRunde spielRundeSheet;
+			MeleeSpielRunde meleeSpielRunde;
 			if (superMeleeMode == SuperMeleeMode.Triplette) {
-				spielRundeSheet = paarungen.neueSpielrundeTripletteMode(neueSpielrundeNr.getNr(), meldungen,
+				meleeSpielRunde = paarungen.neueSpielrundeTripletteMode(neueSpielrundeNr.getNr(), meldungen,
 						doubletteRunde);
 			} else {
-				spielRundeSheet = paarungen.neueSpielrundeDoubletteMode(neueSpielrundeNr.getNr(), meldungen,
+				meleeSpielRunde = paarungen.neueSpielrundeDoubletteMode(neueSpielrundeNr.getNr(), meldungen,
 						tripletteRunde);
 			}
 
-			spielRundeSheet.validateSpielerTeam(null);
-			headerPaarungen(getXSpreadSheet(), spielRundeSheet);
+			meleeSpielRunde.validateSpielerTeam(null);
+			headerPaarungen(getXSpreadSheet(), meleeSpielRunde);
 			headerSpielerNr(getXSpreadSheet());
-			spielerNummerEinfuegen(spielRundeSheet);
-			vertikaleErgbnisseFormulaEinfuegen(spielRundeSheet);
+			spielerNummerEinfuegen(meleeSpielRunde);
+			vertikaleErgbnisseFormulaEinfuegen(meleeSpielRunde);
 			datenErsteSpalte();
 			datenformatieren(getXSpreadSheet());
 			spielrundeProperties(getXSpreadSheet());
@@ -689,7 +696,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	private void printBereichDefinieren(XSpreadsheet sheet) throws GenerateException {
 		processBoxinfo("Print-Bereich");
-		Position letzteZeile = letzteErgbnissPosition();
+		Position letzteZeile = letztePositionRechtsUnten();
 		PrintArea.from(sheet, getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
 	}
@@ -718,7 +725,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		processBoxinfo("Spielrunde Properties einfügen");
 
-		Position datenEnd = letzteErgbnissPosition();
+		Position datenEnd = letztePositionRechtsUnten();
 
 		CellProperties cellPropBez = CellProperties.from().margin(150).setHoriJustify(CellHoriJustify.RIGHT)
 				.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder());
@@ -755,7 +762,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 		// gitter
 		Position datenStart = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		Position datenEnd = letzteErgbnissPosition();
+		Position datenEnd = letztePositionRechtsUnten();
 
 		// bis zur mitte mit normal gitter
 		RangePosition datenRangeErsteHaelfte = RangePosition.from(datenStart,
@@ -831,30 +838,34 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	/**
-	 * rechts unten, letzte ergebniss pos
-	 *
-	 * @return
+	 * Position rechts unten in der Tabelle <br>
+	 * suche in der 1 spieler spalte nach der letzte zeile<br>
+	 * Achtung spieler paarungen mussen vorhanden sein
+	 * 
+	 * @return pos mit letzte zeile spieler A, Spalte Erste Spalte ergebnisse +1
 	 * @throws GenerateException
 	 */
 
-	public Position letzteErgbnissPosition() throws GenerateException {
-		XSpreadsheet sheet = getXSpreadSheet();
-		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
+	public Position letztePositionRechtsUnten() throws GenerateException {
+		Position spielerNrPos = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE); // spieler pos in der matrix rechts neben der tabelle
 
-		if (getSheetHelper().getIntFromCell(sheet, pos) == -1) {
+		if (getSheetHelper().getIntFromCell(this, spielerNrPos) == -1) {
 			return null; // Keine Daten
 		}
 
-		int maxCntr = 999;
-		while (maxCntr-- > 0) {
-			int spielrNr = getSheetHelper().getIntFromCell(sheet, pos);
-			if (spielrNr < 1) {
-				pos.zeilePlus(-1);
-				break;
-			}
-			pos.zeilePlusEins();
+		RangePosition erstSpielrNrRange = RangePosition.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE,
+				ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE + 999);
+
+		// alle Daten einlesen
+		RangeData nrDaten = RangeHelper.from(this, erstSpielrNrRange).getDataFromRange();
+		// erste pos ohne int value
+		int index = IntStream.range(0, nrDaten.size())
+				.filter(nrDatenIdx -> nrDaten.get(nrDatenIdx).get(0).getIntVal(-1) == -1).findFirst().orElse(-1);
+		if (index > 0) {
+			spielerNrPos.zeilePlus(index - 1);
 		}
-		return pos.spalte(ERSTE_SPALTE_ERGEBNISSE + 1);
+
+		return spielerNrPos.spalte(ERSTE_SPALTE_ERGEBNISSE + 1);
 	}
 
 	/**
@@ -965,7 +976,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 */
 
 	protected void clearSheet() throws GenerateException {
-		Position letzteZeile = letzteErgbnissPosition();
+		Position letzteZeile = letztePositionRechtsUnten();
 
 		if (letzteZeile == null) {
 			return; // keine Daten

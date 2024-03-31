@@ -82,4 +82,9 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
 	}
 
+	@Override
+	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+		return getPropertiesSpalte().getAktiveSpielRunde();
+	}
+
 }

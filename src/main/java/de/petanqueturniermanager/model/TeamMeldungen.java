@@ -73,6 +73,10 @@ public class TeamMeldungen implements IMeldungen<TeamMeldungen, Team> {
 		return new ArrayList<>(teamList);
 	}
 
+	public int size() {
+		return teamList.size();
+	}
+
 	/**
 	 * @param i
 	 */
