@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.supermelee.konfiguration;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -35,7 +36,9 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getNichtGespielteRundeMinus() throws GenerateException;
 
-	String getSpielrundeSpielbahn() throws GenerateException;
+	SpielrundeSpielbahn getSpielrundeSpielbahn() throws GenerateException;
+
+	void setSpielrundeSpielbahn(SpielrundeSpielbahn option);
 
 	Integer getMaxAnzGespielteSpieltage() throws GenerateException;
 

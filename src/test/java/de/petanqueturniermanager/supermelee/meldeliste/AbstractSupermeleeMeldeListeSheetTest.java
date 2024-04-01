@@ -53,7 +53,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			}
 
 			@Override
-			protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+			public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
 				return konfigurationSheetMock;
 			}
 

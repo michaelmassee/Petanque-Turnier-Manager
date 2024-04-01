@@ -3,8 +3,6 @@ package de.petanqueturniermanager.basesheet.spielrunde;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
@@ -40,8 +38,8 @@ public class SpielrundeHelper {
 	 *
 	 * @throws GenerateException
 	 */
-	public void datenErsteSpalte(String spielrundeSpielbahnFlagAusKonfig, int erstZeile, int letzteZeile, int nrSpalte,
-			int headerZeile, Integer headerColor) throws GenerateException {
+	public void datenErsteSpalte(SpielrundeSpielbahn spielrundeSpielbahnFlagAusKonfig, int erstZeile, int letzteZeile,
+			int nrSpalte, int headerZeile, Integer headerColor) throws GenerateException {
 
 		sheet.processBoxinfo("Erste Spalte Daten einfügen");
 
@@ -55,8 +53,7 @@ public class SpielrundeHelper {
 		// -------------------------
 		ColumnProperties columnProperties = ColumnProperties.from().setVertJustify(CellVertJustify2.CENTER)
 				.setHoriJustify(CellHoriJustify.CENTER);
-		if (StringUtils.isBlank(spielrundeSpielbahnFlagAusKonfig)
-				|| StringUtils.equalsIgnoreCase("X", spielrundeSpielbahnFlagAusKonfig)) {
+		if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.X) {
 			columnProperties.setWidth(500); // Paarungen cntr
 			sheet.getSheetHelper().setColumnProperties(sheet, nrSpalte, columnProperties);
 		} else {
@@ -73,36 +70,20 @@ public class SpielrundeHelper {
 		}
 
 		// Daten
-
-		if (StringUtils.isBlank(spielrundeSpielbahnFlagAusKonfig)
-				|| StringUtils.equalsIgnoreCase("X", spielrundeSpielbahnFlagAusKonfig)
-				|| StringUtils.equalsIgnoreCase("N", spielrundeSpielbahnFlagAusKonfig)) {
+		if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.X
+				|| spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.N) {
 			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
 			formulaCellValue.setValue("=ROW()-" + erstZeile).setFillAutoDown(letzteZeile);
 			sheet.getSheetHelper().setFormulaInCell(formulaCellValue);
-		} else if (StringUtils.startsWithIgnoreCase(spielrundeSpielbahnFlagAusKonfig, "R")) {
-			// Rx = Spielbahn -> random x = optional = max anzahl von Spielbahnen
+		} else if (spielrundeSpielbahnFlagAusKonfig == SpielrundeSpielbahn.R) {
+			// R = Spielbahn -> random x 
 			// anzahl paarungen ?
 			int anzPaarungen = letzteZeile - erstZeile + 1;
-			int letzteBahnNr = anzPaarungen;
-
-			// ist eine letzte bahnummer vorhanden ?
-			if (spielrundeSpielbahnFlagAusKonfig.length() > 1) {
-				try {
-					letzteBahnNr = Integer.parseInt(spielrundeSpielbahnFlagAusKonfig.substring(1).trim());
-				} catch (NumberFormatException | NullPointerException nfe) {
-					// just ignore when no number found
-				}
-			}
 
 			ArrayList<Integer> bahnnummern = new ArrayList<>();
 			// fill
 			for (int i = 1; i <= anzPaarungen; i++) {
-				if (i <= letzteBahnNr) {
-					bahnnummern.add(i);
-				} else {
-					bahnnummern.add(0); // platzhalter = spielpaarungen ohne bahnnummer
-				}
+				bahnnummern.add(i);
 			}
 			// mishen
 			Collections.shuffle(bahnnummern);

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
@@ -91,10 +92,12 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 						.setDefaultVal(13).setDescription("Minuspunkte nicht gespielte Runde").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
-				.setDefaultVal("X").setDescription(
+				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription(
 						"Spalte Spielbahn in Spielrunde.\r\nX=Keine Spalte\r\nL=Leere Spalte (händisch ausfüllen)\r\nN=Durchnummerieren\r\nR=Random"))
-				.addAuswahl("X", "Keine Spalte").addAuswahl("L", "Leere Spalte")
-				.addAuswahl("N", "Durchnummerieren (1-n)").addAuswahl("R", "Zufällig vergeben").inSideBar());
+				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
+				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
+				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
+				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SUPERMELEE_MODE)
 				.setDefaultVal(SuperMeleeMode.Triplette.getKey())
@@ -196,8 +199,13 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
-	public String getSpielrundeSpielbahn() throws GenerateException {
-		return readStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN);
+	public SpielrundeSpielbahn getSpielrundeSpielbahn() {
+		return SpielrundeSpielbahn.valueOf(readStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN));
+	}
+
+	@Override
+	public void setSpielrundeSpielbahn(SpielrundeSpielbahn option) {
+		setStringProperty(KONFIG_PROP_SPIELRUNDE_SPIELBAHN, option.name());
 	}
 
 	@Override

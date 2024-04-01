@@ -54,7 +54,7 @@ public abstract class SuperMeleeSheet extends SheetRunner {
 	}
 
 	@Override
-	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+	public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
 		return konfigurationSheet;
 	}
 

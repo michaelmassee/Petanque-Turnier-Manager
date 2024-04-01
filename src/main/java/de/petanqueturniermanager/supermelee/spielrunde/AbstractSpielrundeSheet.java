@@ -33,6 +33,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.SuperMeleePaarungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -292,7 +293,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	private void datenErsteSpalte() throws GenerateException {
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
 		Integer letzteZeile = letztePositionRechtsUnten().getZeile();
-		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
+		SpielrundeSpielbahn spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 
 		spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile,
 				NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, headerColor);
