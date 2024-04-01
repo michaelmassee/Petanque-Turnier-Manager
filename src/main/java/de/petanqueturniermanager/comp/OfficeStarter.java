@@ -118,6 +118,8 @@ public class OfficeStarter {
 			}
 			cmd.add("-accept=socket,host=localhost,port=" + SOCKET_PORT + ";urp;");
 
+			logger.info(String.join(",", cmd));
+
 			Process p = Runtime.getRuntime().exec(cmd.stream().toArray(String[]::new));
 			if (p != null) {
 				logger.info("Office process created");

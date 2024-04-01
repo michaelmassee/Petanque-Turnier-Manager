@@ -1,6 +1,6 @@
 /**
-* Erstellung : 24.04.2018 / Michael Massee
-**/
+ * Erstellung : 24.04.2018 / Michael Massee
+ **/
 
 package de.petanqueturniermanager.supermelee.spielrunde;
 
@@ -48,12 +48,13 @@ public class SpielrundeSheet_UpdateTest {
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheetMock) {
 
 			@Override
-			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(
+					WorkingSpreadsheet workingSpreadsheet) {
 				return konfigurationSheetMock;
 			}
 
 			@Override
-			protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+			public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
 				return konfigurationSheetMock;
 			}
 
@@ -101,7 +102,8 @@ public class SpielrundeSheet_UpdateTest {
 		setupReturn_from_getIntFromCell(spielpaarungen);
 		// ----------------------------------------
 
-		List<SpielerSpielrundeErgebnis> result = aktuelleSpielrundeSheet.ergebnisseEinlesen().getSpielerSpielrundeErgebnis();
+		List<SpielerSpielrundeErgebnis> result = aktuelleSpielrundeSheet.ergebnisseEinlesen()
+				.getSpielerSpielrundeErgebnis();
 
 		// ----------------------------------------
 		// Validate
@@ -127,7 +129,8 @@ public class SpielrundeSheet_UpdateTest {
 		assertThat(result.get(14).getSpielerNr()).isEqualTo(teamABLine3[4]);
 
 		// Maximal 4 zeilen, nach der erste leere zeile sollte abgebrochen werden
-		Mockito.verify(sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class), any(Position.class));
+		Mockito.verify(sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class),
+				any(Position.class));
 
 	}
 
@@ -148,11 +151,14 @@ public class SpielrundeSheet_UpdateTest {
 	}
 
 	private void setupReturn_from_getIntFromCell(List<int[]> spielpaarungen) {
-		Position spielerNrPos = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE, AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE,
+				AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
 		spielpaarungen.forEach(spielpaarung -> {
 			for (int spielerSpalte = 0; spielerSpalte < 6; spielerSpalte++) {
 				if (spielpaarung[spielerSpalte] > 0) {
-					PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos)))).thenReturn(spielpaarung[spielerSpalte]);
+					PowerMockito.when(
+							sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos))))
+							.thenReturn(spielpaarung[spielerSpalte]);
 				}
 				spielerNrPos.spaltePlusEins();
 			}

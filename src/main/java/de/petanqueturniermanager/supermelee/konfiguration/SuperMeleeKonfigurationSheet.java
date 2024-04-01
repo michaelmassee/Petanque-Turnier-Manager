@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
@@ -82,8 +83,13 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public String getSpielrundeSpielbahn() throws GenerateException {
+	public SpielrundeSpielbahn getSpielrundeSpielbahn() {
 		return propertiesSpalte.getSpielrundeSpielbahn();
+	}
+
+	@Override
+	public void setSpielrundeSpielbahn(SpielrundeSpielbahn option) {
+		propertiesSpalte.setSpielrundeSpielbahn(option);
 	}
 
 	@Override

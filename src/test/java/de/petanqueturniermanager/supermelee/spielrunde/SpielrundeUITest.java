@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.primitives.Ints;
 import com.sun.star.sheet.XSpreadsheet;
 
 /**
@@ -19,6 +20,7 @@ import com.sun.star.sheet.XSpreadsheet;
  */
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.Position;
@@ -257,4 +259,66 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		validateAnzSpielrundeInMeldeliste(4, docPropHelper);
 		// waitEnter();
 	}
+
+	@Test
+	public void testSpielrundeErsteSpalteMitUnterschiedlicheBahnKonfiguration() throws IOException, GenerateException {
+		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		Position headerpos = Position.from(0, 0);
+
+		spielrundeSheetNaechste.run(); // no thread
+		// default ist nur lfd nr A3:A6
+		RangePosition rangeNrSpalte = RangePosition.from(SpielrundeSheet_Naechste.NUMMER_SPALTE_RUNDESPIELPLAN,
+				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE, SpielrundeSheet_Naechste.NUMMER_SPALTE_RUNDESPIELPLAN,
+				SpielrundeSheet_Naechste.ERSTE_DATEN_ZEILE + 4); // 4 paarungen + leer zeile
+
+		XSpreadsheet spielrunde1 = sheetHlp.findByName("1.1. Spielrunde");
+		assertThat(spielrunde1).isNotNull();
+		RangeHelper rngHlpr = RangeHelper.from(spielrunde1, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				rangeNrSpalte);
+		RangeData nrData = rngHlpr.getDataFromRange();
+		assertThat(nrData).isNotNull().isNotEmpty().hasSize(5);
+		assertThat(nrData).extracting(t -> t.get(0).getIntVal(-1)).containsExactly(1, 2, 3, 4, -1);
+		String headerStr = sheetHlp.getTextFromCell(spielrunde1, headerpos);
+		assertThat(headerStr).isEmpty();
+
+		//**************************************************************************************************
+
+		assertThat(spielrundeSheetNaechste.getKonfigurationSheet().getSpielrundeSpielbahn())
+				.isEqualTo(SpielrundeSpielbahn.X);
+
+		spielrundeSheetNaechste.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.L); // leere spalte
+		spielrundeSheetNaechste.run(); // no thread
+		XSpreadsheet spielrunde2 = sheetHlp.findByName("1.2. Spielrunde");
+		assertThat(spielrunde2).isNotNull();
+		headerStr = sheetHlp.getTextFromCell(spielrunde2, headerpos);
+		assertThat(headerStr).isNotNull().isEqualTo("Bahn");
+
+		//**************************************************************************************************		
+
+		spielrundeSheetNaechste.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.N); // Durchnummerieren
+		spielrundeSheetNaechste.run(); // no thread
+		XSpreadsheet spielrunde3 = sheetHlp.findByName("1.3. Spielrunde");
+		assertThat(spielrunde3).isNotNull();
+		nrData = rngHlpr.getDataFromRange();
+		assertThat(nrData).isNotNull().isNotEmpty().hasSize(5);
+		assertThat(nrData).extracting(t -> t.get(0).getIntVal(-1)).containsExactly(1, 2, 3, 4, -1);
+		headerStr = sheetHlp.getTextFromCell(spielrunde3, headerpos);
+		assertThat(headerStr).isNotNull().isEqualTo("Bahn");
+
+		//**************************************************************************************************
+
+		spielrundeSheetNaechste.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R); // random
+		spielrundeSheetNaechste.run(); // no thread
+		XSpreadsheet spielrunde4 = sheetHlp.findByName("1.4. Spielrunde");
+		assertThat(spielrunde4).isNotNull();
+		nrData = rngHlpr.getDataFromRange();
+		assertThat(nrData).isNotNull().isNotEmpty().hasSize(5);
+		assertThat(nrData).extracting(t -> t.get(0).getIntVal(-1)).containsAll(Ints.asList(1, 2, 3, 4, -1));
+		headerStr = sheetHlp.getTextFromCell(spielrunde4, headerpos);
+		assertThat(headerStr).isNotNull().isEqualTo("Bahn");
+
+		// waitEnter();
+
+	}
+
 }
