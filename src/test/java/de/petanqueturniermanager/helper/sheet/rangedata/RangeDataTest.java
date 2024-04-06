@@ -1,14 +1,78 @@
 package de.petanqueturniermanager.helper.sheet.rangedata;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import de.petanqueturniermanager.helper.position.AbstractPosition;
+import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.position.RangePosition;
+
 public class RangeDataTest {
+
+	private RangeData rangeData;
+
+	@Before
+	public void setUp() {
+		rangeData = new RangeData();
+		rangeData.addNewRow(1, 2, 3);
+		rangeData.addNewRow(4, 5, 6);
+		rangeData.addNewRow(7, 8, 9);
+	}
+
+	@Test
+	public void testGetAnzSpalten() {
+		assertEquals(3, rangeData.getAnzSpalten());
+	}
+
+	@Test
+	public void testToDataArray() {
+		Object[][] expected = { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+		assertArrayEquals(expected, rangeData.toDataArray());
+	}
+
+	@Test
+	public void testAddNewRow() {
+		int initialSize = rangeData.size();
+		rangeData.addNewRow(10, 11, 12);
+		assertEquals(initialSize + 1, rangeData.size());
+	}
+
+	@Test
+	public void testAddNewSpalte() {
+		rangeData.addNewSpalte("A");
+		for (RowData rowData : rangeData) {
+			assertEquals("A", rowData.get(rowData.size() - 1).getStringVal());
+		}
+	}
+
+	@Test
+	public void testGetRangePosition() {
+		AbstractPosition<?> startPosition = Position.from(1, 1); // Assuming 1-based indexing
+		RangePosition rangePosition = rangeData.getRangePosition(startPosition);
+		assertEquals(startPosition, rangePosition.getStart());
+		assertEquals(3, rangePosition.getEnde().getSpalte());
+		assertEquals(3, rangePosition.getEnde().getZeile());
+	}
+
+	@Test
+	public void testRangeDataIntList() throws Exception {
+		Object[][] testData = { { 8, 10 }, { 7, 30 }, { 9, 42 } };
+		RangeData rangeData = new RangeData(testData);
+		assertThat(rangeData).isNotEmpty().hasSize(3);
+
+		List<CellData> collect = rangeData.stream().flatMap(Collection::stream).toList();
+
+		assertThat(collect).isNotEmpty().hasSize(6);
+		assertThat(collect).extracting(t -> t.getIntVal(-1)).containsExactly(8, 10, 7, 30, 9, 42);
+	}
 
 	@Test
 	public void testRangeData() throws Exception {
