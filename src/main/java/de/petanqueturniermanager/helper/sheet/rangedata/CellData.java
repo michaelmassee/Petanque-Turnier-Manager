@@ -39,12 +39,21 @@ public class CellData {
 	}
 
 	/**
+	 * wenn data = null or not a number then return defaultval
+	 * 
+	 * @return
+	 */
+	public int getIntVal() {
+		return getIntVal(-1);
+	}
+
+	/**
 	 * @param defaultval wenn data = null or not a number then return defaultval
 	 */
 	public int getIntVal(int defaultval) {
 		if (data != null) {
-			if (data instanceof String && NumberUtils.isParsable((String) data)) {
-				return NumberUtils.toInt((String) data);
+			if (data instanceof String string && NumberUtils.isParsable(string)) {
+				return NumberUtils.toInt(string);
 			} else if (data instanceof Number) {
 				return (int) ((Number) data).doubleValue();
 			}
