@@ -46,7 +46,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
 		TestSuperMeleeMeldeListeErstellen testMeldeListe = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
-		int anzMeldungen = testMeldeListe.run();
+		testMeldeListe.run();
 		meldeListeSheetNew = testMeldeListe.getMeldeListeSheetNew();
 
 	}
@@ -112,7 +112,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		assertThat(data.get(4).get(3).getStringVal()).isNotBlank();
 		assertThat(data.get(4).get(4).getStringVal()).isNotBlank();
 		assertThat(data.get(4).get(5).getStringVal()).isNotBlank();
-		//		waitEnter();
+		// waitEnter();
 	}
 
 	/**

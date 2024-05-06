@@ -3,6 +3,7 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
@@ -38,6 +39,7 @@ public class SchweizerSpielrundeSheetTestDaten extends SchweizerAbstractSpielrun
 	 */
 	public void generate() throws GenerateException {
 		schweizerMeldeListeSheetTestDaten.doRun();
+		schweizerSpielrundeSheetNaechste.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
 
 		// 1. Spielrunde erstellen
 		schweizerSpielrundeSheetNaechste.doRun();

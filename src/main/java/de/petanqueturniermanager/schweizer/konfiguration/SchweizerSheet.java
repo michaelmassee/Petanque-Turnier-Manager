@@ -31,7 +31,7 @@ public abstract class SchweizerSheet extends SheetRunner {
 	}
 
 	@Override
-	protected SchweizerKonfigurationSheet getKonfigurationSheet() {
+	public SchweizerKonfigurationSheet getKonfigurationSheet() {
 		return konfigurationSheet;
 	}
 }

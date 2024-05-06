@@ -168,9 +168,9 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 		int letzteSpalte = getLetzteSpalte();
 
 		Integer streichSpieltagGeradeColor = getKonfigurationSheet()
-				.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
+				.getRanglisteHintergrundFarbeStreichSpieltagGerade();
 		Integer streichSpieltagUnGeradeColor = getKonfigurationSheet()
-				.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
+				.getRanglisteHintergrundFarbeStreichSpieltagUnGerade();
 		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(
 				streichSpieltagGeradeColor);
 		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(

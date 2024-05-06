@@ -49,7 +49,8 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	@Before
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
-		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
+		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(
+				wkingSpreadsheet, doc);
 		testMeldeListeErstellen.run();
 		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
