@@ -36,33 +36,33 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeUnGerade() {
 		return propertiesSpalte.getSpielPlanHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeGerade() {
 		return propertiesSpalte.getSpielPlanHintergrundFarbeGerade();
 	}
 
 	@Override
-	public String getKopfZeileLinks() throws GenerateException {
+	public String getKopfZeileLinks() {
 		return propertiesSpalte.getKopfZeileLinks();
 	}
 
 	@Override
-	public String getKopfZeileMitte() throws GenerateException {
+	public String getKopfZeileMitte() {
 		return propertiesSpalte.getKopfZeileMitte();
 	}
 
 	@Override
-	public String getKopfZeileRechts() throws GenerateException {
+	public String getKopfZeileRechts() {
 		return propertiesSpalte.getKopfZeileRechts();
 
 	}
 
 	@Override
-	protected void initPageStylesTurnierSystem() throws GenerateException {
+	protected void initPageStylesTurnierSystem() {
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks())
 				.setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create();
 	}
