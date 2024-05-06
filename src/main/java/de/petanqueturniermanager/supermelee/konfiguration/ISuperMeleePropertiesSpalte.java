@@ -6,59 +6,64 @@ package de.petanqueturniermanager.supermelee.konfiguration;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
-import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
-	SpielTagNr getAktiveSpieltag() throws GenerateException;
+	SpielTagNr getAktiveSpieltag();
 
-	void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException;
+	void setAktiveSpieltag(SpielTagNr spieltag);
 
-	SpielRundeNr getAktiveSpielRunde() throws GenerateException;
+	SpielRundeNr getAktiveSpielRunde();
 
-	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException;
+	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde);
 
-	Integer getSpielRundeNeuAuslosenAb() throws GenerateException;
+	Integer getSpielRundeNeuAuslosenAb();
 
-	Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException;
+	Integer getSpielRundeHintergrundFarbeGerade();
 
-	Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException;
+	SpielrundeHintergrundFarbeGeradeStyle getSpielRundeHintergrundFarbeGeradeStyle();
 
-	Integer getSpielRundeHeaderFarbe() throws GenerateException;
+	Integer getSpielRundeHintergrundFarbeUnGerade();
 
-	Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException;
+	SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle();
 
-	Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException;
+	Integer getSpielRundeHeaderFarbe();
 
-	Integer getNichtGespielteRundePlus() throws GenerateException;
+	Integer getRanglisteHintergrundFarbeStreichSpieltagGerade();
 
-	Integer getNichtGespielteRundeMinus() throws GenerateException;
+	Integer getRanglisteHintergrundFarbeStreichSpieltagUnGerade();
 
-	SpielrundeSpielbahn getSpielrundeSpielbahn() throws GenerateException;
+	Integer getNichtGespielteRundePlus();
+
+	Integer getNichtGespielteRundeMinus();
+
+	SpielrundeSpielbahn getSpielrundeSpielbahn();
 
 	void setSpielrundeSpielbahn(SpielrundeSpielbahn option);
 
-	Integer getMaxAnzGespielteSpieltage() throws GenerateException;
+	Integer getMaxAnzGespielteSpieltage();
 
-	Integer getMaxAnzSpielerInSpalte() throws GenerateException;
-
-	@Override
-	String getFusszeileLinks() throws GenerateException;
+	Integer getMaxAnzSpielerInSpalte();
 
 	@Override
-	String getFusszeileMitte() throws GenerateException;
+	String getFusszeileLinks();
 
-	boolean getSpielrunde1Header() throws GenerateException;
+	@Override
+	String getFusszeileMitte();
 
-	SuperMeleeMode getSuperMeleeMode() throws GenerateException;
+	boolean getSpielrunde1Header();
 
-	boolean getSpielrundePlan() throws GenerateException;
+	SuperMeleeMode getSuperMeleeMode();
 
-	boolean getSetzPositionenAktiv() throws GenerateException;
+	boolean getSpielrundePlan();
 
-	boolean getGleichePaarungenAktiv() throws GenerateException;
+	boolean getSetzPositionenAktiv();
+
+	boolean getGleichePaarungenAktiv();
 
 	SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode();
 

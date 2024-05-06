@@ -11,7 +11,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.StringTools;
@@ -109,8 +108,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	/**
 	 *
 	 * @param name
-	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
-	 * @throws GenerateException
+	 * @return defaultVal aus ConfigProperty, -1 wenn fehler @
 	 */
 	public int readIntProperty(String key) {
 		Integer val = null;
@@ -121,8 +119,7 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	/**
 	 *
-	 * @param name
-	 * @throws GenerateException
+	 * @param name @
 	 */
 	public void writeIntProperty(String key, Integer val) {
 		docPropHelper.setIntProperty(key, val);
@@ -169,59 +166,57 @@ abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	@Override
-	public final Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException {
+	public final Integer getMeldeListeHintergrundFarbeGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public final Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException {
+	public final Integer getMeldeListeHintergrundFarbeUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
-	public final MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle()
-			throws GenerateException {
+	public final MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle() {
 		return new MeldungenHintergrundFarbeGeradeStyle(getMeldeListeHintergrundFarbeGerade());
 	}
 
 	@Override
-	public final MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle()
-			throws GenerateException {
+	public final MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle() {
 		return new MeldungenHintergrundFarbeUnGeradeStyle(getMeldeListeHintergrundFarbeUnGerade());
 	}
 
 	@Override
-	public Integer getMeldeListeHeaderFarbe() throws GenerateException {
+	public Integer getMeldeListeHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER);
 	}
 
 	@Override
-	public final String getFusszeileLinks() throws GenerateException {
+	public final String getFusszeileLinks() {
 		return readStringProperty(KONFIG_PROP_FUSSZEILE_LINKS);
 	}
 
 	@Override
-	public final String getFusszeileMitte() throws GenerateException {
+	public final String getFusszeileMitte() {
 		return readStringProperty(KONFIG_PROP_FUSSZEILE_MITTE);
 	}
 
 	@Override
-	public final boolean zeigeArbeitsSpalten() throws GenerateException {
+	public final boolean zeigeArbeitsSpalten() {
 		return readBooleanProperty(KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN);
 	}
 
 	@Override
-	public Integer getRanglisteHeaderFarbe() throws GenerateException {
+	public Integer getRanglisteHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER);
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
+	public Integer getRanglisteHintergrundFarbeGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getRanglisteHintergrundFarbeUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
 	}
 
