@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -69,42 +68,42 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getSpielPlanHintergrundFarbeUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
-	public Integer getSpielPlanHeaderFarbe() throws GenerateException {
+	public Integer getSpielPlanHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER);
 	}
 
 	@Override
-	public String getKopfZeileLinks() throws GenerateException {
+	public String getKopfZeileLinks() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_LINKS);
 	}
 
 	@Override
-	public String getKopfZeileMitte() throws GenerateException {
+	public String getKopfZeileMitte() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE);
 	}
 
 	@Override
-	public String getKopfZeileRechts() throws GenerateException {
+	public String getKopfZeileRechts() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);
 	}
 
 	@Override
-	public String getGruppenname() throws GenerateException {
+	public String getGruppenname() {
 		return readStringProperty(KONFIG_PROP_NAME_GRUPPE);
 	}
 
 	@Override
-	public void setGruppenname(String name) throws GenerateException {
+	public void setGruppenname(String name) {
 		setStringProperty(KONFIG_PROP_NAME_GRUPPE, name);
 	}
 
