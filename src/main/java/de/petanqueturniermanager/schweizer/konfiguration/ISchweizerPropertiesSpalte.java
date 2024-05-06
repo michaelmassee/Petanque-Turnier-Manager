@@ -3,7 +3,9 @@
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
-import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
@@ -12,14 +14,28 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  */
 public interface ISchweizerPropertiesSpalte {
 
-	String getKopfZeileLinks() throws GenerateException;
+	String getKopfZeileLinks();
 
-	String getKopfZeileMitte() throws GenerateException;
+	String getKopfZeileMitte();
 
-	String getKopfZeileRechts() throws GenerateException;
+	String getKopfZeileRechts();
 
-	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException;
+	void setAktiveSpielRunde(SpielRundeNr neueSpielrunde);
 
-	SpielRundeNr getAktiveSpielRunde() throws GenerateException;
+	SpielRundeNr getAktiveSpielRunde();
+
+	Integer getSpielRundeHintergrundFarbeGerade();
+
+	SpielrundeHintergrundFarbeGeradeStyle getSpielRundeHintergrundFarbeGeradeStyle();
+
+	Integer getSpielRundeHintergrundFarbeUnGerade();
+
+	SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle();
+
+	Integer getSpielRundeHeaderFarbe();
+
+	SpielrundeSpielbahn getSpielrundeSpielbahn();
+
+	void setSpielrundeSpielbahn(SpielrundeSpielbahn option);
 
 }

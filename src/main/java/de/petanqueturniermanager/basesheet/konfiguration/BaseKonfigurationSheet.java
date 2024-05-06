@@ -47,9 +47,9 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		initPageStylesTurnierSystem();
 	}
 
-	protected abstract void initPageStylesTurnierSystem() throws GenerateException;
+	protected abstract void initPageStylesTurnierSystem();
 
-	private void initPageStyles() throws GenerateException {
+	private void initPageStyles() {
 		// default page Style footer zeilen
 		// sicher gehen das änderungen ankommen
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte())
@@ -129,44 +129,42 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
-	public final Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException {
+	public final Integer getMeldeListeHintergrundFarbeGerade() {
 		return getPropertiesSpalte().getMeldeListeHintergrundFarbeGerade();
 	}
 
 	@Override
-	public final MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle()
-			throws GenerateException {
+	public final MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle() {
 		return getPropertiesSpalte().getMeldeListeHintergrundFarbeGeradeStyle();
 	}
 
 	@Override
-	public final Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException {
+	public final Integer getMeldeListeHintergrundFarbeUnGerade() {
 		return getPropertiesSpalte().getMeldeListeHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public final MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle()
-			throws GenerateException {
+	public final MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle() {
 		return getPropertiesSpalte().getMeldeListeHintergrundFarbeUnGeradeStyle();
 	}
 
 	@Override
-	public final Integer getMeldeListeHeaderFarbe() throws GenerateException {
+	public final Integer getMeldeListeHeaderFarbe() {
 		return getPropertiesSpalte().getMeldeListeHeaderFarbe();
 	}
 
 	@Override
-	public final String getFusszeileLinks() throws GenerateException {
+	public final String getFusszeileLinks() {
 		return getPropertiesSpalte().getFusszeileLinks();
 	}
 
 	@Override
-	public final String getFusszeileMitte() throws GenerateException {
+	public final String getFusszeileMitte() {
 		return getPropertiesSpalte().getFusszeileMitte();
 	}
 
 	@Override
-	public final boolean zeigeArbeitsSpalten() throws GenerateException {
+	public final boolean zeigeArbeitsSpalten() {
 		return getPropertiesSpalte().zeigeArbeitsSpalten();
 	}
 
@@ -181,17 +179,17 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
-	public final Integer getRanglisteHintergrundFarbeGerade() throws GenerateException {
+	public final Integer getRanglisteHintergrundFarbeGerade() {
 		return getPropertiesSpalte().getRanglisteHintergrundFarbeGerade();
 	}
 
 	@Override
-	public final Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException {
+	public final Integer getRanglisteHintergrundFarbeUnGerade() {
 		return getPropertiesSpalte().getRanglisteHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public final Integer getRanglisteHeaderFarbe() throws GenerateException {
+	public final Integer getRanglisteHeaderFarbe() {
 		return getPropertiesSpalte().getRanglisteHeaderFarbe();
 	}
 

@@ -3,7 +3,6 @@
  */
 package de.petanqueturniermanager.basesheet.konfiguration;
 
-import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 
@@ -13,26 +12,26 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGer
  */
 public interface IPropertiesSpalte {
 
-	Integer getMeldeListeHintergrundFarbeGerade() throws GenerateException;
+	Integer getMeldeListeHintergrundFarbeGerade();
 
-	MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle() throws GenerateException;
+	MeldungenHintergrundFarbeGeradeStyle getMeldeListeHintergrundFarbeGeradeStyle();
 
-	Integer getMeldeListeHintergrundFarbeUnGerade() throws GenerateException;
+	Integer getMeldeListeHintergrundFarbeUnGerade();
 
-	MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle() throws GenerateException;
+	MeldungenHintergrundFarbeUnGeradeStyle getMeldeListeHintergrundFarbeUnGeradeStyle();
 
-	Integer getMeldeListeHeaderFarbe() throws GenerateException;
+	Integer getMeldeListeHeaderFarbe();
 
-	Integer getRanglisteHintergrundFarbeGerade() throws GenerateException;
+	Integer getRanglisteHintergrundFarbeGerade();
 
-	Integer getRanglisteHintergrundFarbeUnGerade() throws GenerateException;
+	Integer getRanglisteHintergrundFarbeUnGerade();
 
-	Integer getRanglisteHeaderFarbe() throws GenerateException;
+	Integer getRanglisteHeaderFarbe();
 
-	String getFusszeileLinks() throws GenerateException;
+	String getFusszeileLinks();
 
-	String getFusszeileMitte() throws GenerateException;
+	String getFusszeileMitte();
 
-	boolean zeigeArbeitsSpalten() throws GenerateException;
+	boolean zeigeArbeitsSpalten();
 
 }
