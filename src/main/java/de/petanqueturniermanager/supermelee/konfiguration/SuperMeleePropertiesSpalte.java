@@ -11,6 +11,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -159,42 +161,42 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
-	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
+	public Integer getSpielRundeHintergrundFarbeGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getSpielRundeHintergrundFarbeUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
-	public Integer getSpielRundeHeaderFarbe() throws GenerateException {
+	public Integer getSpielRundeHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER);
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
+	public Integer getRanglisteHintergrundFarbeStreichSpieltagGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE);
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
+	public Integer getRanglisteHintergrundFarbeStreichSpieltagUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
-	public Integer getSpielRundeNeuAuslosenAb() throws GenerateException {
+	public Integer getSpielRundeNeuAuslosenAb() {
 		return readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN);
 	}
 
 	@Override
-	public Integer getNichtGespielteRundePlus() throws GenerateException {
+	public Integer getNichtGespielteRundePlus() {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS);
 	}
 
 	@Override
-	public Integer getNichtGespielteRundeMinus() throws GenerateException {
+	public Integer getNichtGespielteRundeMinus() {
 		return readIntProperty(KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS);
 	}
 
@@ -209,7 +211,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
-	public SuperMeleeMode getSuperMeleeMode() throws GenerateException {
+	public SuperMeleeMode getSuperMeleeMode() {
 		String prop = readStringProperty(KONFIG_PROP_SUPERMELEE_MODE);
 		if (null != prop && prop.trim().equalsIgnoreCase("d")) {
 			return SuperMeleeMode.Doublette;
@@ -224,12 +226,12 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	 * @throws GenerateException
 	 */
 	@Override
-	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
+	public Integer getMaxAnzGespielteSpieltage() {
 		return readIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE);
 	}
 
 	@Override
-	public Integer getMaxAnzSpielerInSpalte() throws GenerateException {
+	public Integer getMaxAnzSpielerInSpalte() {
 		return readIntProperty(KONFIG_PROP_ANZ_SPIELER_IN_SPALTE);
 	}
 
@@ -237,7 +239,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	 * spieltag in header ?
 	 */
 	@Override
-	public boolean getSpielrunde1Header() throws GenerateException {
+	public boolean getSpielrunde1Header() {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_1_HEADER);
 	}
 
@@ -246,7 +248,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	 * @throws GenerateException
 	 */
 	@Override
-	public boolean getSpielrundePlan() throws GenerateException {
+	public boolean getSpielrundePlan() {
 		return readBooleanProperty(KONFIG_PROP_SPIELRUNDE_PLAN);
 	}
 
@@ -256,32 +258,32 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
-	public boolean getSetzPositionenAktiv() throws GenerateException {
+	public boolean getSetzPositionenAktiv() {
 		return readBooleanProperty(KONFIG_PROP_SETZ_POS);
 	}
 
 	@Override
-	public boolean getGleichePaarungenAktiv() throws GenerateException {
+	public boolean getGleichePaarungenAktiv() {
 		return readBooleanProperty(KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN);
 	}
 
 	@Override
-	public final void setAktiveSpielRunde(SpielRundeNr spielrunde) throws GenerateException {
+	public final void setAktiveSpielRunde(SpielRundeNr spielrunde) {
 		writeIntProperty(KONFIG_PROP_NAME_SPIELRUNDE, spielrunde.getNr());
 	}
 
 	@Override
-	public final void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+	public final void setAktiveSpieltag(SpielTagNr spieltag) {
 		writeIntProperty(KONFIG_PROP_NAME_SPIELTAG, spieltag.getNr());
 	}
 
 	@Override
-	public SpielTagNr getAktiveSpieltag() throws GenerateException {
+	public SpielTagNr getAktiveSpieltag() {
 		return SpielTagNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELTAG));
 	}
 
 	@Override
-	public SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+	public SpielRundeNr getAktiveSpielRunde() {
 		return SpielRundeNr.from(readIntProperty(KONFIG_PROP_NAME_SPIELRUNDE));
 	}
 
@@ -294,6 +296,16 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		}
 		return SuprMleEndranglisteSortMode.DEFAULT;
 
+	}
+
+	@Override
+	public SpielrundeHintergrundFarbeGeradeStyle getSpielRundeHintergrundFarbeGeradeStyle() {
+		return new SpielrundeHintergrundFarbeGeradeStyle(getSpielRundeHintergrundFarbeGerade());
+	}
+
+	@Override
+	public SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle() {
+		return new SpielrundeHintergrundFarbeUnGeradeStyle(getSpielRundeHintergrundFarbeUnGerade());
 	}
 
 }

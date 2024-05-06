@@ -12,6 +12,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -43,42 +45,42 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public Integer getSpielRundeHintergrundFarbeGerade() throws GenerateException {
+	public Integer getSpielRundeHintergrundFarbeGerade() {
 		return propertiesSpalte.getSpielRundeHintergrundFarbeGerade();
 	}
 
 	@Override
-	public Integer getSpielRundeHintergrundFarbeUnGerade() throws GenerateException {
+	public Integer getSpielRundeHintergrundFarbeUnGerade() {
 		return propertiesSpalte.getSpielRundeHintergrundFarbeUnGerade();
 	}
 
 	@Override
-	public Integer getSpielRundeHeaderFarbe() throws GenerateException {
+	public Integer getSpielRundeHeaderFarbe() {
 		return propertiesSpalte.getSpielRundeHeaderFarbe();
 	}
 
 	@Override
-	public Integer getSpielRundeNeuAuslosenAb() throws GenerateException {
+	public Integer getSpielRundeNeuAuslosenAb() {
 		return propertiesSpalte.getSpielRundeNeuAuslosenAb();
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_Gerade() throws GenerateException {
-		return propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_Gerade();
+	public Integer getRanglisteHintergrundFarbeStreichSpieltagGerade() {
+		return propertiesSpalte.getRanglisteHintergrundFarbeStreichSpieltagGerade();
 	}
 
 	@Override
-	public Integer getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade() throws GenerateException {
-		return propertiesSpalte.getRanglisteHintergrundFarbe_StreichSpieltag_UnGerade();
+	public Integer getRanglisteHintergrundFarbeStreichSpieltagUnGerade() {
+		return propertiesSpalte.getRanglisteHintergrundFarbeStreichSpieltagUnGerade();
 	}
 
 	@Override
-	public Integer getNichtGespielteRundePlus() throws GenerateException {
+	public Integer getNichtGespielteRundePlus() {
 		return propertiesSpalte.getNichtGespielteRundePlus();
 	}
 
 	@Override
-	public Integer getNichtGespielteRundeMinus() throws GenerateException {
+	public Integer getNichtGespielteRundeMinus() {
 		return propertiesSpalte.getNichtGespielteRundeMinus();
 	}
 
@@ -93,32 +95,32 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
+	public Integer getMaxAnzGespielteSpieltage() {
 		return propertiesSpalte.getMaxAnzGespielteSpieltage();
 	}
 
 	@Override
-	public Integer getMaxAnzSpielerInSpalte() throws GenerateException {
+	public Integer getMaxAnzSpielerInSpalte() {
 		return propertiesSpalte.getMaxAnzSpielerInSpalte();
 	}
 
 	@Override
-	public boolean getSpielrunde1Header() throws GenerateException {
+	public boolean getSpielrunde1Header() {
 		return propertiesSpalte.getSpielrunde1Header();
 	}
 
 	@Override
-	public SuperMeleeMode getSuperMeleeMode() throws GenerateException {
+	public SuperMeleeMode getSuperMeleeMode() {
 		return propertiesSpalte.getSuperMeleeMode();
 	}
 
 	@Override
-	public boolean getSpielrundePlan() throws GenerateException {
+	public boolean getSpielrundePlan() {
 		return propertiesSpalte.getSpielrundePlan();
 	}
 
 	@Override
-	public boolean getSetzPositionenAktiv() throws GenerateException {
+	public boolean getSetzPositionenAktiv() {
 		return propertiesSpalte.getSetzPositionenAktiv();
 	}
 
@@ -133,27 +135,27 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public final SpielTagNr getAktiveSpieltag() throws GenerateException {
+	public final SpielTagNr getAktiveSpieltag() {
 		return getPropertiesSpalte().getAktiveSpieltag();
 	}
 
 	@Override
-	public final void setAktiveSpieltag(SpielTagNr spieltag) throws GenerateException {
+	public final void setAktiveSpieltag(SpielTagNr spieltag) {
 		getPropertiesSpalte().setAktiveSpieltag(spieltag);
 	}
 
 	@Override
-	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+	public final SpielRundeNr getAktiveSpielRunde() {
 		return getPropertiesSpalte().getAktiveSpielRunde();
 	}
 
 	@Override
-	public boolean getGleichePaarungenAktiv() throws GenerateException {
+	public boolean getGleichePaarungenAktiv() {
 		return getPropertiesSpalte().getGleichePaarungenAktiv();
 	}
 
 	@Override
-	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
+	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) {
 		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
 	}
 
@@ -163,7 +165,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected void initPageStylesTurnierSystem() throws GenerateException {
+	protected void initPageStylesTurnierSystem() {
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			String propNameKey = SuperMeleePropertiesSpalte.PROP_SPIELTAG_KOPFZEILE(spieltagCntr);
 			String spielTagKopfzeile = propertiesSpalte.readStringProperty(propNameKey);
@@ -173,6 +175,16 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 						.setHeaderCenter(spielTagKopfzeile).create();
 			}
 		}
+	}
+
+	@Override
+	public SpielrundeHintergrundFarbeGeradeStyle getSpielRundeHintergrundFarbeGeradeStyle() {
+		return getPropertiesSpalte().getSpielRundeHintergrundFarbeGeradeStyle();
+	}
+
+	@Override
+	public SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle() {
+		return getPropertiesSpalte().getSpielRundeHintergrundFarbeUnGeradeStyle();
 	}
 
 }

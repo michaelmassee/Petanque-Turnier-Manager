@@ -8,8 +8,11 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -56,35 +59,70 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected void initPageStylesTurnierSystem() throws GenerateException {
+	protected void initPageStylesTurnierSystem() {
 		// default page Style
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setHeaderLeft(getKopfZeileLinks())
 				.setHeaderCenter(getKopfZeileMitte()).setHeaderRight(getKopfZeileRechts()).create();
 	}
 
 	@Override
-	public String getKopfZeileLinks() throws GenerateException {
+	public String getKopfZeileLinks() {
 		return propertiesSpalte.getKopfZeileLinks();
 	}
 
 	@Override
-	public String getKopfZeileMitte() throws GenerateException {
+	public String getKopfZeileMitte() {
 		return propertiesSpalte.getKopfZeileMitte();
 	}
 
 	@Override
-	public String getKopfZeileRechts() throws GenerateException {
+	public String getKopfZeileRechts() {
 		return propertiesSpalte.getKopfZeileRechts();
 	}
 
 	@Override
-	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) throws GenerateException {
+	public final void setAktiveSpielRunde(SpielRundeNr neueSpielrunde) {
 		getPropertiesSpalte().setAktiveSpielRunde(neueSpielrunde);
 	}
 
 	@Override
-	public final SpielRundeNr getAktiveSpielRunde() throws GenerateException {
+	public final SpielRundeNr getAktiveSpielRunde() {
 		return getPropertiesSpalte().getAktiveSpielRunde();
+	}
+
+	@Override
+	public Integer getSpielRundeHintergrundFarbeGerade() {
+		return getPropertiesSpalte().getSpielRundeHintergrundFarbeGerade();
+	}
+
+	@Override
+	public SpielrundeHintergrundFarbeGeradeStyle getSpielRundeHintergrundFarbeGeradeStyle() {
+		return getPropertiesSpalte().getSpielRundeHintergrundFarbeGeradeStyle();
+	}
+
+	@Override
+	public Integer getSpielRundeHintergrundFarbeUnGerade() {
+		return getPropertiesSpalte().getSpielRundeHintergrundFarbeUnGerade();
+	}
+
+	@Override
+	public SpielrundeHintergrundFarbeUnGeradeStyle getSpielRundeHintergrundFarbeUnGeradeStyle() {
+		return getPropertiesSpalte().getSpielRundeHintergrundFarbeUnGeradeStyle();
+	}
+
+	@Override
+	public Integer getSpielRundeHeaderFarbe() {
+		return getPropertiesSpalte().getSpielRundeHeaderFarbe();
+	}
+
+	@Override
+	public SpielrundeSpielbahn getSpielrundeSpielbahn() {
+		return propertiesSpalte.getSpielrundeSpielbahn();
+	}
+
+	@Override
+	public void setSpielrundeSpielbahn(SpielrundeSpielbahn option) {
+		propertiesSpalte.setSpielrundeSpielbahn(option);
 	}
 
 }
