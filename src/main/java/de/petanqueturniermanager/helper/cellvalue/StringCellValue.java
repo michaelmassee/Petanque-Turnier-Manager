@@ -43,6 +43,13 @@ public class StringCellValue extends AbstractCellValueWithSheet<StringCellValue,
 		return stringCellValue;
 	}
 
+	/**
+	 * @param iSheet
+	 * @param pos is cloned
+	 * @return
+	 * @throws GenerateException
+	 */
+
 	public static StringCellValue from(ISheet iSheet, Position pos) throws GenerateException {
 		return from(checkNotNull(iSheet).getXSpreadSheet(), pos);
 	}
