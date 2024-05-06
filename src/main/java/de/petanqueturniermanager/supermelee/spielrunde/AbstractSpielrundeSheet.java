@@ -41,8 +41,6 @@ import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
-import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -105,7 +103,9 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	protected AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Spielrunde");
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
-		spielrundeHelper = new SpielrundeHelper(this);
+		spielrundeHelper = new SpielrundeHelper(this,
+				getKonfigurationSheet().getSpielRundeHintergrundFarbeGeradeStyle(),
+				getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGeradeStyle());
 	}
 
 	@VisibleForTesting
@@ -154,7 +154,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	/**
-	 * 3 spalten vertikale ergebnisse fuer die ragesrangliste
+	 * 3 spalten vertikale ergebnisse fuer die tagesrangliste
 	 *
 	 * @throws GenerateException
 	 */
@@ -296,79 +296,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		SpielrundeSpielbahn spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
 
 		spielrundeHelper.datenErsteSpalte(spielrundeSpielbahn, ERSTE_DATEN_ZEILE, letzteZeile,
-				NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, headerColor);
-
-		//		XSpreadsheet sheet = getXSpreadSheet();
-		//		String spielrundeSpielbahn = getKonfigurationSheet().getSpielrundeSpielbahn();
-		//		Position letzteZeile = letztePositionRechtsUnten();
-		//
-		//		// header
-		//		// -------------------------
-		//		// spalte paarungen Nr oder Spielbahn-Nummer
-		//		// -------------------------
-		//		ColumnProperties columnProperties = ColumnProperties.from().setVertJustify(CellVertJustify2.CENTER)
-		//				.setHoriJustify(CellHoriJustify.CENTER);
-		//		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn)) {
-		//			columnProperties.setWidth(500); // Paarungen cntr
-		//			getSheetHelper().setColumnProperties(sheet, NUMMER_SPALTE_RUNDESPIELPLAN, columnProperties);
-		//		} else {
-		//			// Spielbahn Spalte header
-		//			columnProperties.setWidth(900); // Paarungen cntr
-		//			Position posErsteHeaderZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE);
-		//			Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
-		//			StringCellValue headerValue = StringCellValue.from(sheet, posErsteHeaderZelle).setRotateAngle(27000)
-		//					.setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder())
-		//					.setCellBackColor(headerColor).setCharHeight(14).setColumnProperties(columnProperties)
-		//					.setEndPosMergeZeilePlus(1).setValue("Bahn").setComment("Spielbahn");
-		//			getSheetHelper().setStringValueInCell(headerValue);
-		//
-		//			RangePosition nbrRange = RangePosition.from(posErsteHeaderZelle,
-		//					letzteZeile.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
-		//			getSheetHelper().setPropertiesInRange(sheet, nbrRange, CellProperties.from().setCharHeight(16));
-		//		}
-		//
-		//		// Daten
-		//		Position posErsteDatenZelle = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		//		if (StringUtils.isBlank(spielrundeSpielbahn) || StringUtils.equalsIgnoreCase("X", spielrundeSpielbahn)
-		//				|| StringUtils.equalsIgnoreCase("N", spielrundeSpielbahn)) {
-		//			StringCellValue formulaCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
-		//			formulaCellValue.setValue("=ROW()-" + ERSTE_DATEN_ZEILE).setFillAutoDown(letzteZeile.getZeile());
-		//			getSheetHelper().setFormulaInCell(formulaCellValue);
-		//		} else if (StringUtils.startsWithIgnoreCase(spielrundeSpielbahn, "R")) {
-		//			// Rx = Spielbahn -> random x = optional = max anzahl von Spielbahnen
-		//			// anzahl paarungen ?
-		//			int anzPaarungen = letzteZeile.getZeile() - ERSTE_DATEN_ZEILE + 1;
-		//			int letzteBahnNr = anzPaarungen;
-		//
-		//			// ist eine letzte bahnummer vorhanden ?
-		//			if (spielrundeSpielbahn.length() > 1) {
-		//				try {
-		//					letzteBahnNr = Integer.parseInt(spielrundeSpielbahn.substring(1).trim());
-		//				} catch (NumberFormatException | NullPointerException nfe) {
-		//					// just ignore when no number found
-		//				}
-		//			}
-		//
-		//			ArrayList<Integer> bahnnummern = new ArrayList<>();
-		//			// fill
-		//			for (int i = 1; i <= anzPaarungen; i++) {
-		//				if (i <= letzteBahnNr) {
-		//					bahnnummern.add(i);
-		//				} else {
-		//					bahnnummern.add(0); // platzhalter = spielpaarungen ohne bahnnummer
-		//				}
-		//			}
-		//			// mishen
-		//			Collections.shuffle(bahnnummern);
-		//			StringCellValue stringCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
-		//			for (Integer bahnnr : bahnnummern) {
-		//				if (bahnnr > 0) { // es kann sein das wir lücken haben, = teampaarungen ohne bahnnummer
-		//					stringCellValue.setValue(bahnnr);
-		//					getSheetHelper().setStringValueInCell(stringCellValue);
-		//				}
-		//				stringCellValue.zeilePlusEins();
-		//			}
-		//		}
+				NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, ZWEITE_HEADER_ZEILE, headerColor);
 	}
 
 	/**
@@ -762,14 +690,14 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		processBoxinfo("Daten Formatieren");
 
 		// gitter
-		Position datenStart = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
+		Position datenStartOhneNrSpalte = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
 		Position datenEnd = letztePositionRechtsUnten();
 
 		// bis zur mitte mit normal gitter
-		RangePosition datenRangeErsteHaelfte = RangePosition.from(datenStart,
+		RangePosition datenRangeErsteHaelfteOhneNummer = RangePosition.from(datenStartOhneNrSpalte,
 				Position.from(ERSTE_SPALTE_RUNDESPIELPLAN + 2, datenEnd.getZeile()));
 		TableBorder2 border = BorderFactory.from().allThin().boldLn().forTop().toBorder();
-		getSheetHelper().setPropertyInRange(sheet, datenRangeErsteHaelfte, TABLE_BORDER2, border);
+		getSheetHelper().setPropertyInRange(sheet, datenRangeErsteHaelfteOhneNummer, TABLE_BORDER2, border);
 
 		// zweite haelfte doppelte linie links
 		RangePosition datenRangeZweiteHaelfte = RangePosition
@@ -783,49 +711,61 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			getSheetHelper().setRowProperty(sheet, zeileCntr, HEIGHT, 800);
 		}
 
+		// gerade / ungrade hintergrund farbe
+		// CellBackColor
+
+		// formatiereGeradeUngradeSpielpaarungen
+		// ----------------------------------------
+
+		RangePosition datenRangeSpielpaarungen = RangePosition.from(
+				Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE),
+				datenEnd.spalte(ERSTE_SPALTE_ERGEBNISSE - 1));
+
+		spielrundeHelper.formatiereGeradeUngradeSpielpaarungen(this, datenRangeSpielpaarungen,
+				getKonfigurationSheet().getSpielRundeHintergrundFarbeGeradeStyle(),
+				getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGeradeStyle());
+
+		//		Integer geradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
+		//		Integer unGeradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGerade();
+		//		SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle = new SpielrundeHintergrundFarbeGeradeStyle(
+		//				geradeColor);
+		//		SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle = new SpielrundeHintergrundFarbeUnGeradeStyle(
+		//				unGeradeColor);
+		//
+		//		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).clear().formulaIsEvenRow()
+		//				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
+		//		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).formulaIsOddRow()
+		//				.operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+
+		// ----------------------------------------
+
+		//		// erste Spalte, mit prüfung auf doppelte nummer
+		//		Position posNrSpalte = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
+		//		RangePosition datenRangeErsteSpalte = RangePosition.from(posNrSpalte,
+		//				datenEnd.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
+		//
+		//		FehlerStyle fehlerStyle = new FehlerStyle();
+		//		String conditionfindDoppelt = "COUNTIF(" + posNrSpalte.getSpalteAddressWith$() + ";"
+		//				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		//		String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
+		//		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
+		//		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr)
+		//				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
+		//
+		//		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow()
+		//				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
+		//		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow()
+		//				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+
+		// ergebniss spalten mit prüfung auf >=0 <=13
+
 		// Ergebnis Zellen
+		datenEnd = letztePositionRechtsUnten(); // weil datenEnd geändert wurde, neu einlesen
 		RangePosition ergbenissRange = RangePosition.from(Position.from(ERSTE_SPALTE_ERGEBNISSE, ERSTE_DATEN_ZEILE),
 				Position.from(datenEnd));
 		getSheetHelper().setPropertyInRange(sheet, ergbenissRange, CHAR_HEIGHT, 16);
 		getSheetHelper().setPropertyInRange(sheet, ergbenissRange, CHAR_WEIGHT, FontWeight.BOLD);
 
-		// gerade / ungrade hintergrund farbe
-		// CellBackColor
-		RangePosition datenRangeOhneErsteSpalteOhneErgebnis = RangePosition.from(
-				Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE),
-				datenEnd.spalte(ERSTE_SPALTE_ERGEBNISSE - 1));
-
-		Integer geradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeGerade();
-		Integer unGeradeColor = getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGerade();
-		SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle = new SpielrundeHintergrundFarbeGeradeStyle(
-				geradeColor);
-		SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle = new SpielrundeHintergrundFarbeUnGeradeStyle(
-				unGeradeColor);
-
-		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).clear().formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
-		ConditionalFormatHelper.from(this, datenRangeOhneErsteSpalteOhneErgebnis).formulaIsOddRow()
-				.operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-
-		// erste Spalte, mit prüfung auf doppelte nummer
-		Position posNrSpalte = Position.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
-		RangePosition datenRangeErsteSpalte = RangePosition.from(posNrSpalte,
-				datenEnd.spalte(NUMMER_SPALTE_RUNDESPIELPLAN));
-
-		FehlerStyle fehlerStyle = new FehlerStyle();
-		String conditionfindDoppelt = "COUNTIF(" + posNrSpalte.getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		String conditionNotEmpty = ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>\"\"";
-		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
-		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr)
-				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
-
-		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
-		ConditionalFormatHelper.from(this, datenRangeErsteSpalte).formulaIsOddRow()
-				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-
-		// ergebniss spalten mit prüfung auf >=0 <=13
 		ConditionalFormatHelper.from(this, ergbenissRange).clear().formula1("0").formula2("13")
 				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
 		// test if Text mit FORMULA
@@ -833,9 +773,9 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		ConditionalFormatHelper.from(this, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
+				.style(getKonfigurationSheet().getSpielRundeHintergrundFarbeGeradeStyle()).applyAndDoReset();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow()
-				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+				.style(getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGeradeStyle()).applyAndDoReset();
 	}
 
 	/**

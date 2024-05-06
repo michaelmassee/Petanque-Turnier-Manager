@@ -37,11 +37,11 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 	/**
 	 * @param workingSpreadsheet
 	 */
-	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+	protected AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, "Liga-Meldeliste");
 	}
 
-	public AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
+	protected AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
 		super(workingSpreadsheet, prefix);
 		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
@@ -96,8 +96,6 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 		// ------
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		getMeldungenSpalte().insertHeaderInSheet(headerBackColor);
-		// TODO doppelt code entfernen
-
 		// eventuelle luecken in spiele namen nach unten sortieren
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
@@ -114,14 +112,6 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 		processBoxinfo("Formatiere Daten Spalten");
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
-
-		//		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, getSpielerNameErsteSpalte(),
-		//				letzteDatenZeile);
-		//
-		//		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
-		//				CellProperties.from().setVertJustify(CellVertJustify2.CENTER)
-		//						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
-		//						.setCharColor(ColorHelper.CHAR_COLOR_BLACK).setCellBackColor(-1).setShrinkToFit(true));
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor

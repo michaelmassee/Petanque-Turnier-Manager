@@ -83,7 +83,7 @@ public class SpielrundePlanUITest extends BaseCalcUITest {
 		// stichprobe
 		Position letzteZeile = Position.from(0, 16); // A17 = letzte zeile
 		Integer letzteZeileNr = sheetHlp.getIntFromCell(spielrundePlan.getXSpreadSheet(), letzteZeile);
-		assertThat(letzteZeileNr).isNotNull().isGreaterThan(0);
+		assertThat(letzteZeileNr).isNotNull().isPositive();
 
 		Position leereZeile = Position.from(0, 17);
 		Integer leereZeileNr = sheetHlp.getIntFromCell(spielrundePlan.getXSpreadSheet(), leereZeile); // A19 = muss leer sein
