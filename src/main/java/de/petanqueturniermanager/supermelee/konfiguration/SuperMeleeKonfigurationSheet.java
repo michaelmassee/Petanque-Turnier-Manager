@@ -29,7 +29,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	private final SuperMeleePropertiesSpalte propertiesSpalte;
 
 	// Package weil nur in SuperMeleeSheet verwendet werden darf
-	SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+	public SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
 		propertiesSpalte = new SuperMeleePropertiesSpalte(this);
 	}
@@ -130,7 +130,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected ISuperMeleePropertiesSpalte getPropertiesSpalte() {
+	public ISuperMeleePropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
 	}
 

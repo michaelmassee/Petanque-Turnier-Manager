@@ -26,7 +26,7 @@ import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
  * @author Michael Massee
  *
  */
-abstract public class BasePropertiesSpalte implements IPropertiesSpalte {
+public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final int PROP_CELL_MARGIN = 150;
 	public static final int HEADER_HEIGHT = 800;

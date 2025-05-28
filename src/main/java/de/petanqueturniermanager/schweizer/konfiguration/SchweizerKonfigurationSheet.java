@@ -54,7 +54,7 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected SchweizerPropertiesSpalte getPropertiesSpalte() {
+	public SchweizerPropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
 	}
 

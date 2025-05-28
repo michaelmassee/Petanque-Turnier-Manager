@@ -94,7 +94,7 @@ public class DocumentPropertiesHelper {
 	/**
 	 * Document close
 	 */
-	public synchronized static void removeDocument(Object source) {
+	public static synchronized void removeDocument(Object source) {
 		try {
 			if (source != null) {
 				XModel xModel = Lo.qi(XModel.class, source);
