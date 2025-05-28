@@ -51,7 +51,7 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	protected IPropertiesSpalte getPropertiesSpalte() {
+	public IPropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
 	}
 

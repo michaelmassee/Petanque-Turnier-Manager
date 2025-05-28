@@ -10,14 +10,17 @@ import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
@@ -29,6 +32,7 @@ public class SpielrundeSheet_NaechsteTest {
 	MeldeListeSheet_New MeldeListeSheet_NewMock;
 	SheetHelper sheetHelperMock;
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
+	ISuperMeleePropertiesSpalte iSuperMeleePropertiesSpalteMock;
 
 	@Before
 	public void setup() {
@@ -36,8 +40,21 @@ public class SpielrundeSheet_NaechsteTest {
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		MeldeListeSheet_NewMock = PowerMockito.mock(MeldeListeSheet_New.class);
 		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
+		iSuperMeleePropertiesSpalteMock = PowerMockito.mock(ISuperMeleePropertiesSpalte.class);
+
+		PowerMockito.when(konfigurationSheetMock.getPropertiesSpalte()).thenReturn(iSuperMeleePropertiesSpalteMock);
+		PowerMockito.when(iSuperMeleePropertiesSpalteMock.getMeldeListeHintergrundFarbeGeradeStyle())
+				.thenReturn(new MeldungenHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
+
+		//		PowerMockito.when(konfigurationSheetMock.getMeldeListeHintergrundFarbeGeradeStyle())
+		//				.thenReturn(new MeldungenHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
 
 		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
+
+			@Override
+			public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+				return konfigurationSheetMock;
+			}
 
 			@Override
 			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(

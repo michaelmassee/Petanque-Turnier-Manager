@@ -196,6 +196,6 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	/**
 	 * @return the propertiesSpalte
 	 */
-	protected abstract IPropertiesSpalte getPropertiesSpalte();
+	public abstract IPropertiesSpalte getPropertiesSpalte();
 
 }

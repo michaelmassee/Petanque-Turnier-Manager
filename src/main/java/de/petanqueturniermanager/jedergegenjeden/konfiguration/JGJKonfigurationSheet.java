@@ -68,7 +68,7 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	}
 
 	@Override
-	protected IPropertiesSpalte getPropertiesSpalte() {
+	public IPropertiesSpalte getPropertiesSpalte() {
 		return propertiesSpalte;
 	}
 
