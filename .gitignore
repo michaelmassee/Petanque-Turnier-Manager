@@ -8,3 +8,9 @@ dist/**
 /libs-test/**
 /.gradle/
 *.classpath
+
+# Eclipse IDE files
+.project
+.settings/
+*.launch
+.externalToolBuilders/
