@@ -104,9 +104,14 @@ task buildOXT(type: Zip) {
         into ''
     }
     
-    // Manifest
+    // META-INF manifest
     from('META-INF') {
         into 'META-INF'
+    }
+    
+    // UNO Components registration
+    from('.') {
+        include '*.components'
     }
     
     // Description and configuration files
@@ -119,10 +124,12 @@ task buildOXT(type: Zip) {
         into 'description'
     }
     
+    // Registry configuration (XCU files)
     from('registry') {
         into 'registry'
     }
     
+    // Images
     from('images') {
         into 'images'
     }
@@ -132,7 +139,7 @@ task buildOXT(type: Zip) {
         into 'idl'
     }
     
-    // URD files
+    // URD files (compiled IDL)
     from('build/urd') {
         into 'urd'
     }
