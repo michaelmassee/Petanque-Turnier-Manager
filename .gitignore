@@ -1,16 +1,40 @@
-bin/**
-**/*.class
-dist/**
-/bin/
-/build/
-.gradle/**
-/libs/**
-/libs-test/**
-/.gradle/
-*.classpath
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+libs/
+libs-test/
+
+# IDE
+.idea/
+*.iml
+*.iws
+.vscode/
+!.vscode/launch.json
+!.vscode/tasks.json
 
 # Eclipse IDE files
 .project
+.classpath
 .settings/
 *.launch
 .externalToolBuilders/
+bin/
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+*.oxt
+dist/
+
+# LibreOffice
+.ooo-debug/
