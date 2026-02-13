@@ -20,6 +20,13 @@ libs-test/
 *.launch
 .externalToolBuilders/
 bin/
+.checkstyle
+
+# Eclipse UNO Plugin (deprecated)
+.unoproject
+types.rdb
+package.properties
+xcu-backup/
 
 # Java
 *.class

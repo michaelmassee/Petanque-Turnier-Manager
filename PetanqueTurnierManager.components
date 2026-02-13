@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <components xmlns="http://openoffice.org/2010/uno-components">
+    <!-- Global AddIn - Calc Functions -->
     <component loader="com.sun.star.loader.Java2" uri="">
         <implementation name="de.petanqueturniermanager.addins.GlobalImpl">
             <service name="de.petanqueturniermanager.addin.GlobalAddIn"/>
             <service name="com.sun.star.sheet.AddIn"/>
+        </implementation>
+    </component>
+    
+    <!-- Menu Job Executor -->
+    <component loader="com.sun.star.loader.Java2" uri="">
+        <implementation name="de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl">
+            <service name="de.petanqueturniermanager.MenuJobExecute"/>
+            <service name="com.sun.star.task.JobExecutor"/>
         </implementation>
     </component>
 </components>

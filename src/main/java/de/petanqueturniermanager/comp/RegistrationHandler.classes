@@ -1,5 +1,11 @@
+# Active UNO Component Implementations
+# This file is used for backward compatibility with old registration mechanism
+# Modern .components file should be used instead
+
+de.petanqueturniermanager.addins.GlobalImpl
 de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl
+
+# Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl
 #de.petanqueturniermanager.comp.ProtocolHandler
 #de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory
-de.petanqueturniermanager.addins.GlobalImpl
