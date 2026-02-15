@@ -50,6 +50,15 @@ dependencies {
         "${libreOfficeClassesPath}/jurt.jar",
         "${libreOfficeClassesPath}/juh.jar"
     )
+    
+    // LibreOffice SDK für Tests - use testImplementation so classes are available at runtime
+    testImplementation fileTree(dir: libreOfficeClassesPath, include: ['*.jar'])
+    testImplementation files(
+        "${libreOfficeClassesPath}/ridl.jar",
+        "${libreOfficeClassesPath}/unoil.jar",
+        "${libreOfficeClassesPath}/jurt.jar",
+        "${libreOfficeClassesPath}/juh.jar"
+    )
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.assertj:assertj-core:3.25.3'

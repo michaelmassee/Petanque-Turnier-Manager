@@ -51,7 +51,9 @@ public abstract class BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
 
-	final protected static OfficeStarter starter = OfficeStarter.from();
+	final protected static OfficeStarter starter = OfficeStarter.from()
+			.headless(true)
+			.userInstallation("file:///tmp/lo_test_profile_" + System.currentTimeMillis());
 	protected static XComponentLoader loader;
 
 	protected XSpreadsheetDocument doc;
