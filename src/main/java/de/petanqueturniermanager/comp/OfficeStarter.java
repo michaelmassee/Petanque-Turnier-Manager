@@ -41,6 +41,7 @@ public class OfficeStarter {
 	private XComponentLoader xComponentLoader;
 
 	private boolean headless = false;
+	private String userInstallation = null; // custom user profile directory
 
 	private static AtomicBoolean isOfficeTerminated = new AtomicBoolean();
 
@@ -53,6 +54,16 @@ public class OfficeStarter {
 
 	public OfficeStarter usingPipes(boolean usingPipes) {
 		this.usingPipes = usingPipes;
+		return this;
+	}
+
+	public OfficeStarter headless(boolean headless) {
+		this.headless = headless;
+		return this;
+	}
+
+	public OfficeStarter userInstallation(String userInstallation) {
+		this.userInstallation = userInstallation;
 		return this;
 	}
 
@@ -114,9 +125,14 @@ public class OfficeStarter {
 			// requires soffice to be in Linux PATH env var.
 			cmd.add(SOFFICE_BIN);
 			if (this.headless) {
-				cmd.add("-headless");
+				cmd.add("--headless");
 			}
-			cmd.add("-accept=socket,host=localhost,port=" + SOCKET_PORT + ";urp;");
+			cmd.add("--accept=socket,host=localhost,port=" + SOCKET_PORT + ";urp;");
+			if (userInstallation != null) {
+				cmd.add("-env:UserInstallation=" + userInstallation);
+			}
+			cmd.add("--norestore");
+			cmd.add("--nofirststartwizard");
 
 			logger.info(String.join(",", cmd));
 
@@ -124,8 +140,9 @@ public class OfficeStarter {
 			if (p != null) {
 				logger.info("Office process created");
 			}
-			Thread.sleep(5000);
-			// Wait 5 seconds, until office is in listening mode
+			// Wait longer for office to start in test environments
+			Thread.sleep(8000);
+			// Wait 8 seconds, until office is in listening mode
 
 			// Create a local Component Context
 			XComponentContext localContext = Bootstrap.createInitialComponentContext(null);
