@@ -83,11 +83,11 @@ task buildPluginJar(type: Jar) {
     dependsOn classes, copyRuntimeLibs
     archiveFileName.set("${project.name}-${version}.jar")
     
-    from sourceSets.main.output.classesDirs
+    from sourceSets.main.output
     
     manifest {
         attributes(
-            'RegistrationClassName': 'de.petanqueturniermanager.addins.GlobalImpl',
+            'RegistrationClassName': 'de.petanqueturniermanager.comp.RegistrationHandler',
             'Class-Path': configurations.runtimeClasspath.collect { 
                 "libs/${it.name}" 
             }.join(' ')
@@ -111,11 +111,6 @@ task buildOXT(type: Zip) {
     // META-INF manifest
     from('META-INF') {
         into 'META-INF'
-    }
-    
-    // UNO Components registration
-    from('.') {
-        include '*.components'
     }
     
     // Description and configuration files
