@@ -1,0 +1,17 @@
+// Project-specific init script to override global ~/.gradle/init.gradle
+// This prevents the global init script from redirecting all repository access
+// to an unreachable internal Artifactory server
+
+allprojects {
+    buildscript {
+        repositories {
+            mavenCentral()
+            mavenLocal()
+        }
+    }
+    
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+}
