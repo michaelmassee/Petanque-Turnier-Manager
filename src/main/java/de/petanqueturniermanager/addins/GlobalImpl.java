@@ -12,14 +12,13 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.addin.XGlobal;
 import de.petanqueturniermanager.algorithmen.Direktvergleich;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
+public final class GlobalImpl extends AbstractAddInImpl {
 	static final Logger logger = LogManager.getLogger(GlobalImpl.class);
 
 	private final XComponentContext xContext;
@@ -89,7 +88,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return null;
 	}
 
-	@Override
 	public int ptmintproperty(String arg0) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
@@ -104,7 +102,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return 0;
 	}
 
-	@Override
 	public String ptmstringproperty(String arg0) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
@@ -119,7 +116,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return "fehler";
 	}
 
-	@Override
 	public String ptmturniersystem() {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
@@ -133,7 +129,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		return GlobalImpl.isDirty.getAndSet(newval);
 	}
 
-	@Override
 	public int ptmdirektvergleich(int teamA, int teamB, int[][] paarungen, int[][] siege, int[][] spielpunkte) {
 		Direktvergleich dvrgl = new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte);
 		return dvrgl.calc().getCode();

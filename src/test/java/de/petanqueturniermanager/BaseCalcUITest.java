@@ -51,7 +51,9 @@ public abstract class BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
 
-	final protected static OfficeStarter starter = OfficeStarter.from();
+	final protected static OfficeStarter starter = OfficeStarter.from()
+			. headless(true)
+			.userInstallation("file://" + System.getProperty("user.home") + "/.config/libreoffice/4");
 	protected static XComponentLoader loader;
 
 	protected XSpreadsheetDocument doc;
