@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="http://openoffice.org/2001/manifest">
+    <!-- Java UNO Component -->
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.uno-component;type=Java" 
+        manifest:full-path="PetanqueTurnierManager-1.0.0.jar"/>
+    
+    <!-- Global AddIn Registration -->
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/GlobalAddIn.xcu"/>
+    
+    <!-- Addon Menu Configurations -->
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_A1_Supermelee.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_A3_Liga.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_A4_JederGJeden.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_A5_Schweizer.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_X1_Konfiguration.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_X2_Download.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_Y1_Testdaten.xcu"/>
+    <manifest:file-entry 
+        manifest:media-type="application/vnd.sun.star.configuration-data" 
+        manifest:full-path="registry/org/openoffice/Office/Addons_Z_Stop.xcu"/>
+</manifest:manifest>

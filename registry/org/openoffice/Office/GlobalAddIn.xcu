@@ -32,8 +32,11 @@
 						<value xml:lang="en">Petanque Turniermanager, get int value of Propertry</value>
 						<value xml:lang="de">Petanque Turniermanager, Integer Wert von Property</value>
 					</prop>
+					<prop oor:name="CompatibilityName">
+						<value xml:lang="en">AutoAddIn.Legacy.INTPROPERTY</value>
+					</prop>
 					<node oor:name="Parameters">
-						<node oor:name="PropertyName" oor:op="replace">
+						<node oor:name="propname" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">PTM PropertyName</value>
 								<value xml:lang="de">PTM Propertynamen</value>
@@ -58,8 +61,11 @@
 						<value xml:lang="en">Petanque Turniermanager, get string value of Propertry</value>
 						<value xml:lang="de">Petanque Turniermanager, String Wert von Property</value>
 					</prop>
+					<prop oor:name="CompatibilityName">
+						<value xml:lang="en">AutoAddIn.Legacy.STRINGPROPERTY</value>
+					</prop>
 					<node oor:name="Parameters">
-						<node oor:name="PropertyName" oor:op="replace">
+						<node oor:name="propname" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">PTM PropertyName</value>
 								<value xml:lang="de">PTM Propertynamen</value>

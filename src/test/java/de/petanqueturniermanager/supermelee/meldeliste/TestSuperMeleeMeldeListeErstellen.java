@@ -45,6 +45,10 @@ public class TestSuperMeleeMeldeListeErstellen {
 
 	public int run() throws GenerateException {
 
+		// Setze Spieltag und Spielrunde für den Test
+		meldeListeSheetNew.setSpielTag(SpielTagNr.from(1));
+		meldeListeSheetNew.setAktiveSpieltag(SpielTagNr.from(1));
+		
 		meldeListeSheetNew.run(); // do not start a Thread ! 
 		int anzMeldungen = testMeldungenEinfuegen();
 		meldeListeSheetUpdate.run();// do not start a Thread !
