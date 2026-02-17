@@ -183,33 +183,32 @@ public class GlobalImplUITest extends BaseCalcUITest {
 
 	@Test
 	public void testPropertyUpdate() throws GenerateException {
-		// Test: Property ändern und Formel sollte neuen Wert liefern
+		// Test: Zwei Formeln lesen verschiedene Properties mit unterschiedlichen Werten.
+		// Hinweis: Property-Update nach Formel-Einfügen kann nicht getestet werden,
+		// weil Test (socket bridge) und Plugin (soffice) in getrennten JVMs laufen
+		// und DocumentPropertiesHelper einen statischen Cache pro Dokument hat.
 		String propName = SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG;
-		
-		// Initialer Wert
+		String propName2 = SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE;
+
 		docPropHelper.setIntProperty(propName, 1);
+		docPropHelper.setIntProperty(propName2, 7);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SUPERMELEE.getId());
 
 		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
-		Position testPos = Position.from(0, 10); // A11
-		
-		sheetHlp.setFormulaInCell(sheet, testPos, "=PTM.ALG.INTPROPERTY(\"" + propName + "\")");
-		
-		// Property ändern
-		docPropHelper.setIntProperty(propName, 7);
-		
-		// Formel sollte immer noch korrekt sein
-		// LibreOffice speichert Formeln intern mit vollem Pfad
-		assertThat(sheetHlp.getFormulaFromCell(sheet, testPos))
-			.contains("INTPROPERTY")
-			.contains(propName);
-		
-		// Bei installiertem Plugin sollte der neue Wert erscheinen
-		// (Hinweis: Calc neu berechnet Formeln automatisch bei Property-Änderungen)
-		int value = sheetHlp.getIntFromCell(sheet, testPos);
-		if (value > 0) {
-			// Plugin ist geladen und Formel wurde evaluiert
-			assertThat(value).isEqualTo(7);
-		}
+		Position testPos1 = Position.from(0, 10); // A11
+		Position testPos2 = Position.from(0, 11); // A12
+
+		sheetHlp.setFormulaInCell(sheet, testPos1, "=PTM.ALG.INTPROPERTY(\"" + propName + "\")");
+		sheetHlp.setFormulaInCell(sheet, testPos2, "=PTM.ALG.INTPROPERTY(\"" + propName2 + "\")");
+
+		// Formeln korrekt aufgelöst
+		assertThat(sheetHlp.getFormulaFromCell(sheet, testPos1))
+			.containsIgnoringCase("INTPROPERTY").contains(propName);
+		assertThat(sheetHlp.getFormulaFromCell(sheet, testPos2))
+			.containsIgnoringCase("INTPROPERTY").contains(propName2);
+
+		// Verschiedene Properties liefern verschiedene Werte
+		assertThat(sheetHlp.getIntFromCell(sheet, testPos1)).as("Spieltag").isEqualTo(1);
+		assertThat(sheetHlp.getIntFromCell(sheet, testPos2)).as("Spielrunde").isEqualTo(7);
 	}
 }
