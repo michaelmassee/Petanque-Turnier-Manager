@@ -94,6 +94,12 @@ task buildPluginJar(type: Jar) {
     
     from sourceSets.main.output
     
+    // UNO components-Datei ins JAR META-INF (LibreOffice Standard-Location)
+    from('.') {
+        include 'PetanqueTurnierManager.components'
+        into 'META-INF'
+    }
+    
     manifest {
         attributes(
             'RegistrationClassName': 'de.petanqueturniermanager.comp.RegistrationHandler',
@@ -105,10 +111,29 @@ task buildPluginJar(type: Jar) {
 }
 
 // Task zum Erstellen der OXT-Datei (LibreOffice Extension)
+// IDL zu RDB kompilieren (UNO Type Registry für AddIn-Funktionen)
+task compileIdl(type: Exec) {
+    group = 'LibreOffice'
+    description = 'Kompiliert IDL-Dateien zu einer RDB Type-Registry'
+    def unoidlWrite = "${libreOfficePath}/sdk/bin/unoidl-write"
+    def typesRdb = "${libreOfficePath}/program/types.rdb"
+    def offapiRdb = "${libreOfficePath}/program/types/offapi.rdb"
+    def idlFile = file('idl/de/petanqueturniermanager/AddInGlobal.idl')
+    def outputRdb = file("$buildDir/rdb/AddInGlobal.rdb")
+
+    inputs.file idlFile
+    outputs.file outputRdb
+
+    doFirst {
+        outputRdb.parentFile.mkdirs()
+    }
+    commandLine unoidlWrite, typesRdb, offapiRdb, idlFile, outputRdb
+}
+
 task buildOXT(type: Zip) {
     group = 'LibreOffice'
     description = 'Erstellt die OXT-Datei (LibreOffice Extension)'
-    dependsOn buildPluginJar, copyRuntimeLibs
+    dependsOn buildPluginJar, copyRuntimeLibs, compileIdl
     archiveFileName.set("${project.name}-${version}.oxt")
     destinationDirectory.set(file("$buildDir/distributions"))
     
@@ -151,10 +176,10 @@ task buildOXT(type: Zip) {
     from('idl') {
         into 'idl'
     }
-    
-    // URD files (compiled IDL)
-    from('build/urd') {
-        into 'urd'
+
+    // RDB Type Registry (kompiliert aus IDL)
+    from("$buildDir/rdb") {
+        include '*.rdb'
     }
 }
 
@@ -205,6 +230,11 @@ task debugLibreOffice(type: Exec) {
         println "LibreOffice wird im Debug-Modus gestartet..."
         println "Verbinde deinen Debugger mit Port 5005"
     }
+}
+
+// Tests benötigen die aktuelle OXT, damit das Plugin vor dem Test installiert werden kann
+test {
+    dependsOn buildOXT
 }
 
 // Build-Task

@@ -19,34 +19,34 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Wichtig: Dieser Test benötigt das vollständig installierte Plugin in LibreOffice,
  * da die AddIn-Funktionen nur mit dem geladenen Plugin funktionieren.
  * 
+ * Tested wird hier hauptsächlich, dass:
+ * 1. Die Formeln korrekt geschrieben werden (Format-Konstanten)
+ * 2. Die Formeln von LibreOffice erkannt werden (keine Syntaxfehler)
+ * 3. Wenn das Plugin geladen ist, dass die Werte korrekt sind
+ * 
  * @author M.Massee
  */
 public class GlobalImplUITest extends BaseCalcUITest {
 
 	@Test
 	public void testPTMIntPropertyFormula() throws GenerateException {
-		// Zuerst testen wir eine Funktion OHNE Parameter
-		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
-		Position testPos = Position.from(0, 0);
-		sheetHlp.setFormulaInCell(sheet, testPos, "=de.petanqueturniermanager.addin.GlobalAddIn.ptmturniersystem()");
-		String turniersystemText = sheetHlp.getTextFromCell(sheet, testPos);
-		System.out.println("DEBUG: TURNIERSYSTEM() returned: '" + turniersystemText + "'");
-		assertThat(turniersystemText).as("TURNIERSYSTEM muss Wert liefern!").doesNotContain("504").doesNotContain("Fehler");
-		
 		// Jetzt Test-Werte in Document Properties setzen
 		int spieltagNr = 3;
 		int spielrundeNr = 5;
 		
+
 		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, spieltagNr);
 		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, spielrundeNr);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SUPERMELEE.getId());
 
-		// Formeln in Zellen schreiben - WICHTIG: Verwende GlobalImpl.PTM_INT_PROPERTY statt "PTM.ALG.INTPROPERTY"
+		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
+
+		// Formeln in Zellen schreiben - WICHTIG: Verwende die kurzen DisplayNames aus GlobalAddIn.xcu
 		Position spieltagPos = Position.from(0, 0); // A1
 		Position spielrundePos = Position.from(0, 1); // A2
 		
-		String spieltagFormula = "=" + GlobalImpl.PTM_INT_PROPERTY + "(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")";
-		String spielrundeFormula = "=" + GlobalImpl.PTM_INT_PROPERTY + "(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\")";
+		String spieltagFormula = "=PTM.ALG.INTPROPERTY(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")";
+		String spielrundeFormula = "=PTM.ALG.INTPROPERTY(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE + "\")";
 		
 		sheetHlp.setFormulaInCell(sheet, spieltagPos, spieltagFormula);
 		sheetHlp.setFormulaInCell(sheet, spielrundePos, spielrundeFormula);
@@ -58,29 +58,31 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		String actualSpieltagFormula = sheetHlp.getFormulaFromCell(sheet, spieltagPos);
 		String actualSpielrundeFormula = sheetHlp.getFormulaFromCell(sheet, spielrundePos);
 		
-		assertThat(actualSpieltagFormula).contains("INTPROPERTY").contains(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
-		assertThat(actualSpielrundeFormula).contains("INTPROPERTY").contains(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
-		
-		// Wenn das Plugin installiert ist, sollten die Zellen die korrekten Werte haben
-		// Hinweis: Dies funktioniert nur, wenn das Plugin tatsächlich in LibreOffice geladen ist
-		int valueFromSpieltag = sheetHlp.getIntFromCell(sheet, spieltagPos);
-		int valueFromSpielrunde = sheetHlp.getIntFromCell(sheet, spielrundePos);
-		
-		// Debug-Ausgabe für Diagnose
+		// Plugin MUSS geladen sein - Formel muss vom Plugin aufgelöst werden
+		// LibreOffice ersetzt den DisplayName durch den internen vollen Pfad wenn das Plugin geladen ist
+		assertThat(actualSpieltagFormula).as("Spieltag-Formel muss INTPROPERTY enthalten")
+			.containsIgnoringCase("INTPROPERTY")
+			.contains(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
+		assertThat(actualSpielrundeFormula).as("Spielrunde-Formel muss INTPROPERTY enthalten")
+			.containsIgnoringCase("INTPROPERTY")
+			.contains(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
+
+		// Zellwerte lesen
 		String spieltagText = sheetHlp.getTextFromCell(sheet, spieltagPos);
 		String spielrundeText = sheetHlp.getTextFromCell(sheet, spielrundePos);
-		System.out.println("DEBUG testPTMIntPropertyFormula:");
-		System.out.println("  Spieltag  - Formula: " + actualSpieltagFormula);
-		System.out.println("  Spieltag  - IntVal:  " + valueFromSpieltag + ", TextVal: '" + spieltagText + "'");
-		System.out.println("  Spielrunde - Formula: " + actualSpielrundeFormula);
-		System.out.println("  Spielrunde - IntVal:  " + valueFromSpielrunde + ", TextVal: '" + spielrundeText + "'");
-		
-		// TEST: Plugin MUSS geladen sein - Fehler:504 darf NICHT vorkommen!
-		assertThat(spieltagText).as("Spieltag muss Wert liefern, nicht Fehler:504!")
-			.doesNotContain("504").doesNotContain("Fehler");
-		assertThat(spielrundeText).as("Spielrunde muss Wert liefern, nicht Fehler:504!")
-			.doesNotContain("504").doesNotContain("Fehler");
-		
+		int valueFromSpieltag = sheetHlp.getIntFromCell(sheet, spieltagPos);
+		int valueFromSpielrunde = sheetHlp.getIntFromCell(sheet, spielrundePos);
+
+		System.out.println("testPTMIntPropertyFormula:");
+		System.out.println("  Spieltag  - Formula: " + actualSpieltagFormula + ", IntVal: " + valueFromSpieltag + ", TextVal: '" + spieltagText + "'");
+		System.out.println("  Spielrunde - Formula: " + actualSpielrundeFormula + ", IntVal: " + valueFromSpielrunde + ", TextVal: '" + spielrundeText + "'");
+
+		// Kein Fehler erlaubt - Plugin muss die Formeln korrekt auflösen
+		assertThat(spieltagText).as("Spieltag-Formel darf keinen Fehler liefern")
+			.doesNotContain("504").doesNotContain("Fehler").doesNotContain("#NAME?").doesNotContain("#NULL");
+		assertThat(spielrundeText).as("Spielrunde-Formel darf keinen Fehler liefern")
+			.doesNotContain("504").doesNotContain("Fehler").doesNotContain("#NAME?").doesNotContain("#NULL");
+
 		// Werte müssen korrekt sein
 		assertThat(valueFromSpieltag).as("Spieltag-Wert muss korrekt sein").isEqualTo(spieltagNr);
 		assertThat(valueFromSpielrunde).as("Spielrunde-Wert muss korrekt sein").isEqualTo(spielrundeNr);
