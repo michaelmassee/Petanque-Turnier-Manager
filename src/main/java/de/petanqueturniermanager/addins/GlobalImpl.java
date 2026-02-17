@@ -17,21 +17,29 @@ import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.addin.XGlobal;
 
-public final class GlobalImpl extends AbstractAddInImpl {
+public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	static final Logger logger = LogManager.getLogger(GlobalImpl.class);
 
 	private final XComponentContext xContext;
 	private static final String implName = GlobalImpl.class.getName();
 	private static final String SERVICE_NAME = "de.petanqueturniermanager.addin.GlobalAddIn";
-	private static final String[] serviceNames = { SERVICE_NAME };
+	// WICHTIG: Beide Services müssen registriert sein!
+	private static final String[] serviceNames = { 
+		SERVICE_NAME,
+		"com.sun.star.sheet.AddIn"  // Standard AddIn Service
+	};
 
 	private static AtomicBoolean isDirty;
 
-	// =de.petanqueturniermanager.addin.GlobalAddIn.ptmspielrunde()
-	public static final String PTM_INT_PROPERTY = SERVICE_NAME + ".ptmintproperty";
-	public static final String PTM_STRING_PROPERTY = SERVICE_NAME + ".ptmstringproperty";
-	public static final String PTM_DIREKTVERGLEICH = SERVICE_NAME + ".ptmdirektvergleich";
+	// DisplayNames aus GlobalAddIn.xcu - diese werden für Formeln in Calc verwendet
+	// =PTM.ALG.INTPROPERTY("propertyname")
+	// Hinweis: Das "=" wird automatisch von setFormulaInCell() hinzugefügt
+	public static final String PTM_INT_PROPERTY = "PTM.ALG.INTPROPERTY";
+	public static final String PTM_STRING_PROPERTY = "PTM.ALG.STRINGPROPERTY";
+	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIREKTVERGLEICH";
+	public static final String PTM_TURNIERSYSTEM = "PTM.ALG.TURNIERSYSTEM";
 
 	public static final String FORMAT_PTM_INT_PROPERTY(String propName) {
 		return PTM_INT_PROPERTY + "(\"" + propName + "\")";
@@ -46,7 +54,6 @@ public final class GlobalImpl extends AbstractAddInImpl {
 		this.xContext = xContext;
 		GlobalImpl.isDirty = new AtomicBoolean(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
-		// PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 	}
 
 	public static final XSingleComponentFactory __getComponentFactory(String name) {
@@ -70,52 +77,60 @@ public final class GlobalImpl extends AbstractAddInImpl {
 	 */
 
 	private DocumentPropertiesHelper getDocumentPropertiesHelper() {
-		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
-		if (doc != null) {
-			DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
-			if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
-				// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
-				// oder das Dokument hat keine properties aber PTM Funktionen.
-				logger.debug("properties isFirstLoad and isEmpty=true");
-				GlobalImpl.isDirty.set(true);
-				return null;
+		try {
+			XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+			if (doc != null) {
+				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
+				if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
+					// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
+					// oder das Dokument hat keine properties aber PTM Funktionen.
+					logger.debug("properties isFirstLoad and isEmpty=true");
+					GlobalImpl.isDirty.set(true);
+					return null;
+				}
+				return hlpr;
 			}
-			return hlpr;
+			// das hat nicht funktioniert
+			GlobalImpl.isDirty.set(true);
+			logger.debug("XSpreadsheetDocument = null");
+		} catch (Exception e) {
+			logger.error("getDocumentPropertiesHelper", e);
+			GlobalImpl.isDirty.set(true);
 		}
-		// das hat nicht funktioniert
-		GlobalImpl.isDirty.set(true);
-		logger.debug("XSpreadsheetDocument = null");
 		return null;
 	}
 
-	public int ptmintproperty(String arg0) {
+	@Override
+	public int ptmintproperty(String propname) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
-			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
-				Integer propVal = hlpr.getIntProperty(arg0, 0);
-				logger.debug("return:" + arg0 + "=" + propVal);
+			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+				Integer propVal = hlpr.getIntProperty(propname, 0);
+				logger.debug("return:" + propname + "=" + propVal);
 				return propVal;
 			}
 		}
 		return 0;
 	}
 
-	public String ptmstringproperty(String arg0) {
+	@Override
+	public String ptmstringproperty(String propname) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
 
-			if (!StringUtils.isAllBlank(arg0) && turnierSystemAusDocument != TurnierSystem.KEIN) {
-				String propVal = hlpr.getStringProperty(arg0, "Property '" + arg0 + "' fehlt.");
-				logger.debug("return:" + arg0 + "=" + propVal);
+			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+				String propVal = hlpr.getStringProperty(propname, "Property '" + propname + "' fehlt.");
+				logger.debug("return:" + propname + "=" + propVal);
 				return propVal;
 			}
 		}
 		return "fehler";
 	}
 
+	@Override
 	public String ptmturniersystem() {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
@@ -129,8 +144,9 @@ public final class GlobalImpl extends AbstractAddInImpl {
 		return GlobalImpl.isDirty.getAndSet(newval);
 	}
 
-	public int ptmdirektvergleich(int teamA, int teamB, int[][] paarungen, int[][] siege, int[][] spielpunkte) {
-		Direktvergleich dvrgl = new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte);
+	@Override
+	public int ptmdirektvergleich(int teamA, int teamB, int[][] begegnungen, int[][] siege, int[][] spielpunkte) {
+		Direktvergleich dvrgl = new Direktvergleich(teamA, teamB, begegnungen, siege, spielpunkte);
 		return dvrgl.calc().getCode();
 	}
 

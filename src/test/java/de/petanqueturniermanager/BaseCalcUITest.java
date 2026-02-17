@@ -51,8 +51,10 @@ public abstract class BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
 
+	// Verwende die UserInstallation ~/.config/libreoffice/4, wo das Plugin installiert ist
+	// (via: unopkg add --force build/distributions/PetanqueTurnierManager-1.0.0.oxt)
 	final protected static OfficeStarter starter = OfficeStarter.from()
-			. headless(true)
+			.headless(true)
 			.userInstallation("file://" + System.getProperty("user.home") + "/.config/libreoffice/4");
 	protected static XComponentLoader loader;
 
@@ -63,7 +65,36 @@ public abstract class BaseCalcUITest {
 
 	@BeforeClass
 	public static void startup() {
+		installExtension();
 		BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
+	}
+
+	/**
+	 * Installiert das Plugin (OXT) in LibreOffice bevor die Tests starten.
+	 * Die OXT wird vom Gradle buildOXT Task gebaut (test dependsOn buildOXT).
+	 */
+	private static void installExtension() {
+		File projectDir = new File(System.getProperty("user.dir"));
+		File oxtFile = new File(projectDir, "build/distributions/PetanqueTurnierManager-1.0.0.oxt");
+
+		if (!oxtFile.exists()) {
+			throw new RuntimeException("OXT nicht gefunden: " + oxtFile.getAbsolutePath()
+					+ " - bitte zuerst './gradlew buildOXT' ausführen");
+		}
+
+		logger.info("Installiere Extension: " + oxtFile.getAbsolutePath());
+		try {
+			ProcessBuilder pb = new ProcessBuilder("unopkg", "add", "--force", oxtFile.getAbsolutePath());
+			pb.inheritIO();
+			Process process = pb.start();
+			int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				throw new RuntimeException("unopkg add fehlgeschlagen mit Exit-Code: " + exitCode);
+			}
+			logger.info("Extension erfolgreich installiert");
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException("Fehler beim Installieren der Extension", e);
+		}
 	}
 
 	@Before

@@ -136,7 +136,9 @@ public class OfficeStarter {
 
 			logger.info(String.join(",", cmd));
 
-			Process p = Runtime.getRuntime().exec(cmd.stream().toArray(String[]::new));
+			ProcessBuilder pb = new ProcessBuilder(cmd);
+			pb.inheritIO();
+			Process p = pb.start();
 			if (p != null) {
 				logger.info("Office process created");
 			}

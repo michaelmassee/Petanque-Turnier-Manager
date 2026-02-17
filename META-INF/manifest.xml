@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest:manifest xmlns:manifest="http://openoffice.org/2001/manifest">
     <!-- Java UNO Component -->
-    <manifest:file-entry 
-        manifest:media-type="application/vnd.sun.star.uno-component;type=Java" 
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.uno-component;type=Java"
         manifest:full-path="PetanqueTurnierManager-1.0.0.jar"/>
+
+    <!-- UNO Type Registry (kompiliert aus IDL - benötigt für AddIn-Funktionen) -->
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.uno-typelibrary;type=RDB"
+        manifest:full-path="AddInGlobal.rdb"/>
     
     <!-- Global AddIn Registration -->
     <manifest:file-entry 
