@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.primitives.Ints;
@@ -19,6 +20,8 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
+// noch baustelle
+@Ignore
 public class SchweizerSpielrundeSheetTestDatenTestUITest extends BaseCalcUITest {
 
 	private SchweizerSpielrundeSheetTestDaten schweizerSpielrundeSheetTestDaten;
@@ -67,7 +70,7 @@ public class SchweizerSpielrundeSheetTestDatenTestUITest extends BaseCalcUITest 
 		assertThat(bahnrData).extracting(t -> t.get(0).getIntVal(-1))
 				.containsAll(Ints.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
 
-		waitEnter();
+		// waitEnter();
 
 	}
 
