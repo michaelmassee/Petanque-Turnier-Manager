@@ -1,80 +1,77 @@
 
 plugins {
     id 'java'
-    id 'eclipse'
+    id 'application'
+}
+
+group = 'de.petanqueturniermanager'
+version = '1.0.0'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
     mavenCentral()
 }
 
+// Configuration properties
+def libreOfficePath = findProperty('libreoffice.path') ?: '/usr/lib/libreoffice'
+def libreOfficeClassesPath = "${libreOfficePath}/program/classes"
+def extensionId = 'de.petanqueturniermanager.PetanqueTurnierManager'
+
+configurations {
+    libreoffice
+}
+
 dependencies {
-    def libreofficeVersion='7.3.6'
 
     implementation 'com.google.guava:guava:33.0.0-jre'
-    implementation 'org.apache.commons:commons-lang3:3.+'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
-    implementation 'org.apache.commons:commons-text:1.+'
-    implementation 'commons-io:commons-io:2.+'
-    implementation 'org.apache.logging.log4j:log4j-core:2.+'
-    implementation 'org.kohsuke:github-api:1.+'
-    implementation 'com.google.code.gson:gson:2.10.+'
+    implementation 'org.apache.commons:commons-text:1.11.0'
+    implementation 'commons-io:commons-io:2.15.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.23.0'
+    implementation 'org.kohsuke:github-api:1.318'
+    implementation 'com.google.code.gson:gson:2.10.1'
     implementation 'io.github.g00fy2:versioncompare:1.5.0'
-    implementation 'org.jsoup:jsoup:1.+'   // html parser
-    implementation 'com.opencsv:opencsv:+'  // csv reader and writer
-//    compileOnly "org.libreoffice:jurt:${libreofficeVersion}"
-//    compileOnly "org.libreoffice:juh:${libreofficeVersion}"
-//    compileOnly "org.libreoffice:unoil:${libreofficeVersion}"
-//    compileOnly "org.libreoffice:ridl:${libreofficeVersion}"
+    implementation 'org.jsoup:jsoup:1.17.2'
+    implementation 'com.opencsv:opencsv:5.9'
 
-    testImplementation 'junit:junit:4.+'
-    testImplementation 'org.assertj:assertj-core:3.+'
-    testImplementation 'org.mockito:mockito-core:3.+'
-    testImplementation 'org.powermock:powermock-api-mockito2:2.+'
+    // LibreOffice SDK dependencies - using local installation
+    compileOnly fileTree(dir: libreOfficeClassesPath, include: ['*.jar'])
+    compileOnly files(
+        "${libreOfficeClassesPath}/ridl.jar",
+        "${libreOfficeClassesPath}/unoil.jar",
+        "${libreOfficeClassesPath}/jurt.jar",
+        "${libreOfficeClassesPath}/juh.jar"
+    )
+    
+    // LibreOffice SDK für Tests - use testImplementation so classes are available at runtime
+    testImplementation fileTree(dir: libreOfficeClassesPath, include: ['*.jar'])
+    testImplementation files(
+        "${libreOfficeClassesPath}/ridl.jar",
+        "${libreOfficeClassesPath}/unoil.jar",
+        "${libreOfficeClassesPath}/jurt.jar",
+        "${libreOfficeClassesPath}/juh.jar"
+    )
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.9'
 }
 
 configurations.all {
 	exclude group: 'commons-collections', module: 'commons-collections'
 }
 
-eclipse {
-    classpath {
-       downloadSources=true
-       downloadJavadoc = true
-    }
-}
-
-eclipse.project {
-      // https://docs.gradle.org/current/dsl/org.gradle.plugins.ide.eclipse.model.EclipseProject.html
-      natures 'org.libreoffice.ide.eclipse.core.unonature', 'org.eclipse.buildship.core.gradleprojectnature'
-      buildCommand 'org.libreoffice.ide.eclipse.core.types'
-}
-
-eclipse.classpath.file {
-   withXml {
-    /**
-     def node = it.asNode()
-     def alreadyExistLibreOffice = node.find { entry ->
-      entry.path.text().endsWith ("LibreOffice 6.2") 
-     }
-     if (!alreadyExistLibreOffice) {
-		node.appendNode('classpathentry', 
-		        [kind: 'con', path: 'org.libreoffice.ide.eclipse.java.OOO_CONTAINER/LibreOffice 6.2'])
-	}
-	
-**/		
-	// <classpathentry kind="lib" path="build"/>
-	 def alreadyExistLibBuild = node.find { entry ->
-       entry.kind.text().equals ("lib") &&  entry.path.text().equals ("build")
-     }
-     
-     if (!alreadyExistLibBuild) {
-		node.appendNode('classpathentry', 
-		        [kind: 'lib', path: 'build'])
-	}
-  }
+application {
+    mainClass = 'de.petanqueturniermanager.SheetRunner'
 }
 
 task cleanCache (type: Delete) {
@@ -82,6 +79,171 @@ task cleanCache (type: Delete) {
 }
 
 task copyRuntimeLibs(type: Sync) {
-   	from configurations.runtimeClasspath
-   	into "libs"
+    group = 'LibreOffice'
+    description = 'Kopiert Runtime-Dependencies für die OXT'
+    from configurations.runtimeClasspath
+    into "$buildDir/runtime-libs"
+}
+
+// Task zum Erstellen des JAR mit UNO Registration
+task buildPluginJar(type: Jar) {
+    group = 'LibreOffice'
+    description = 'Erstellt das JAR mit UNO Registration und Class-Path zu libs'
+    dependsOn classes, copyRuntimeLibs
+    archiveFileName.set("${project.name}-${version}.jar")
+    
+    from sourceSets.main.output
+    
+    // UNO components-Datei ins JAR META-INF (LibreOffice Standard-Location)
+    from('.') {
+        include 'PetanqueTurnierManager.components'
+        into 'META-INF'
+    }
+    
+    manifest {
+        attributes(
+            'RegistrationClassName': 'de.petanqueturniermanager.comp.RegistrationHandler',
+            'Class-Path': configurations.runtimeClasspath.collect { 
+                "libs/${it.name}" 
+            }.join(' ')
+        )
+    }
+}
+
+// Task zum Erstellen der OXT-Datei (LibreOffice Extension)
+// IDL zu RDB kompilieren (UNO Type Registry für AddIn-Funktionen)
+task compileIdl(type: Exec) {
+    group = 'LibreOffice'
+    description = 'Kompiliert IDL-Dateien zu einer RDB Type-Registry'
+    def unoidlWrite = "${libreOfficePath}/sdk/bin/unoidl-write"
+    def typesRdb = "${libreOfficePath}/program/types.rdb"
+    def offapiRdb = "${libreOfficePath}/program/types/offapi.rdb"
+    def idlFile = file('idl/de/petanqueturniermanager/AddInGlobal.idl')
+    def outputRdb = file("$buildDir/rdb/AddInGlobal.rdb")
+
+    inputs.file idlFile
+    outputs.file outputRdb
+
+    doFirst {
+        outputRdb.parentFile.mkdirs()
+    }
+    commandLine unoidlWrite, typesRdb, offapiRdb, idlFile, outputRdb
+}
+
+task buildOXT(type: Zip) {
+    group = 'LibreOffice'
+    description = 'Erstellt die OXT-Datei (LibreOffice Extension)'
+    dependsOn buildPluginJar, copyRuntimeLibs, compileIdl
+    archiveFileName.set("${project.name}-${version}.oxt")
+    destinationDirectory.set(file("$buildDir/distributions"))
+    
+    // JAR-Datei hinzufügen
+    from(buildPluginJar.archiveFile) {
+        into ''
+    }
+    
+    // META-INF manifest
+    from('META-INF') {
+        into 'META-INF'
+    }
+    
+    // Description and configuration files
+    from('.') {
+        include 'description.xml'
+    }
+    
+    from('description') {
+        include '*.txt'
+        into 'description'
+    }
+    
+    // Registry configuration (XCU files)
+    from('registry') {
+        into 'registry'
+    }
+    
+    // Images
+    from('images') {
+        into 'images'
+    }
+    
+    // Runtime dependencies (libs)
+    from("$buildDir/runtime-libs") {
+        into 'libs'
+    }
+    
+    // IDL files
+    from('idl') {
+        into 'idl'
+    }
+
+    // RDB Type Registry (kompiliert aus IDL)
+    from("$buildDir/rdb") {
+        include '*.rdb'
+    }
+}
+
+// Task zum Installieren der Extension in LibreOffice
+task installExtension(type: Exec) {
+    group = 'LibreOffice'
+    description = 'Installiert die erstellte Extension in LibreOffice'
+    dependsOn buildOXT
+    def oxtFile = "${buildDir}/distributions/${project.name}-${version}.oxt"
+    commandLine 'unopkg', 'add', '-f', oxtFile
+    
+    doFirst {
+        println "Installiere Extension: ${oxtFile}"
+    }
+}
+
+// Task zum Deinstallieren der Extension
+task uninstallExtension(type: Exec) {
+    group = 'LibreOffice'
+    description = 'Deinstalliert die Extension aus LibreOffice'
+    commandLine 'unopkg', 'remove', extensionId
+    ignoreExitValue = true
+    
+    doFirst {
+        println "Deinstalliere Extension: ${extensionId}"
+    }
+}
+
+// Task zum Neuinstallieren
+task reinstallExtension {
+    group = 'LibreOffice'
+    description = 'De-/Neuinstallation der Extension'
+    dependsOn uninstallExtension, installExtension
+    installExtension.mustRunAfter uninstallExtension
+}
+
+// Debug-Task: Startet LibreOffice mit Debug-Port
+task debugLibreOffice(type: Exec) {
+    group = 'LibreOffice'
+    description = 'Startet LibreOffice im Debug-Modus mit JDWP'
+    dependsOn reinstallExtension
+    
+    environment 'JAVA_TOOL_OPTIONS', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005'
+    
+    commandLine 'libreoffice', '--calc'
+    
+    doFirst {
+        println "LibreOffice wird im Debug-Modus gestartet..."
+        println "Verbinde deinen Debugger mit Port 5005"
+    }
+}
+
+// Tests benötigen die aktuelle OXT, damit das Plugin vor dem Test installiert werden kann
+test {
+    dependsOn buildOXT
+}
+
+// Build-Task
+task buildPlugin {
+    group = 'LibreOffice'
+    description = 'High-level Task: Baut die OXT und zeigt Ausgabepfad'
+    dependsOn buildOXT
+
+    doLast {
+        println "Plugin erfolgreich gebaut: ${buildDir}/distributions/${project.name}-${version}.oxt"
+    }
 }

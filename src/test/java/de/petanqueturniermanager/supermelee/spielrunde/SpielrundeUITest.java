@@ -279,7 +279,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		assertThat(nrData).isNotNull().isNotEmpty().hasSize(5);
 		assertThat(nrData).extracting(t -> t.get(0).getIntVal(-1)).containsExactly(1, 2, 3, 4, -1);
 		String headerStr = sheetHlp.getTextFromCell(spielrunde1, headerpos);
-		assertThat(headerStr).isEmpty();
+		assertThat(headerStr).isEqualTo("#");
 
 		//**************************************************************************************************
 
