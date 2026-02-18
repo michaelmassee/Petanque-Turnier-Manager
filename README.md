@@ -28,7 +28,7 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 ### --- Temurin Adoptium JDK ---
 https://adoptium.net/de/ **(LTS)**<br>
-[Download Java 21](https://adoptium.net/de/)<br>
+[Download Java 25](https://adoptium.net/de/)<br>
 
 ### --- Oracle Java ---
 [Java Downloads](https://www.oracle.com/de/java/technologies/downloads/)<br>
