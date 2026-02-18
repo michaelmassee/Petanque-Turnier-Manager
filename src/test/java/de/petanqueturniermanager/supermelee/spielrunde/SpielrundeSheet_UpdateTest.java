@@ -19,8 +19,11 @@ import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -44,6 +47,10 @@ public class SpielrundeSheet_UpdateTest {
 		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
 		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
 		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
+		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeGeradeStyle())
+				.thenReturn(new SpielrundeHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
+		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeUnGeradeStyle())
+				.thenReturn(new SpielrundeHintergrundFarbeUnGeradeStyle(BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR));
 
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheetMock) {
 

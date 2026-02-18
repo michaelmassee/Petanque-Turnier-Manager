@@ -14,6 +14,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.Spieler;
@@ -45,9 +47,11 @@ public class SpielrundeSheet_NaechsteTest {
 		PowerMockito.when(konfigurationSheetMock.getPropertiesSpalte()).thenReturn(iSuperMeleePropertiesSpalteMock);
 		PowerMockito.when(iSuperMeleePropertiesSpalteMock.getMeldeListeHintergrundFarbeGeradeStyle())
 				.thenReturn(new MeldungenHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
-
-		//		PowerMockito.when(konfigurationSheetMock.getMeldeListeHintergrundFarbeGeradeStyle())
-		//				.thenReturn(new MeldungenHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
+		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeGeradeStyle())
+				.thenReturn(new SpielrundeHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
+		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeUnGeradeStyle())
+				.thenReturn(
+						new SpielrundeHintergrundFarbeUnGeradeStyle(BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR));
 
 		spielrundeSheet = new SpielrundeSheet_Naechste(workingSpreadsheetMock) {
 
@@ -113,6 +117,13 @@ public class SpielrundeSheet_NaechsteTest {
 				.when(sheetHelperMock
 						.findByName(spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1))))
 				.thenReturn(spielTag1Runde1Mock);
+
+		// PAARUNG_CNTR_SPALTE in der nächsten Zeile = -1 → Schleife endet nach der 1.
+		// Paarung
+		Position posPaarungCntr = Position.from(AbstractSpielrundeSheet.PAARUNG_CNTR_SPALTE,
+				AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 1);
+		PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(posPaarungCntr)))
+				.thenReturn(-1);
 
 		SpielerMeldungen meldungen = new SpielerMeldungen();
 		for (idx = 0; idx < spielerNr.length; idx++) {
