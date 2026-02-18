@@ -3,7 +3,7 @@
     <!-- Java UNO Component -->
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.uno-component;type=Java"
-        manifest:full-path="PetanqueTurnierManager-1.0.0.jar"/>
+        manifest:full-path="PetanqueTurnierManager.jar"/>
 
     <!-- UNO Type Registry (kompiliert aus IDL - benötigt für AddIn-Funktionen) -->
     <manifest:file-entry

@@ -92,7 +92,7 @@ task buildPluginJar(type: Jar) {
     group = 'LibreOffice'
     description = 'Erstellt das JAR mit UNO Registration und Class-Path zu libs'
     dependsOn classes, copyRuntimeLibs
-    archiveFileName.set("${project.name}-${version}.jar")
+    archiveFileName.set("${project.name}.jar")
     
     from sourceSets.main.output
     
