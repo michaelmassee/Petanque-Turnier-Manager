@@ -5,7 +5,9 @@ plugins {
 }
 
 group = 'de.petanqueturniermanager'
-version = '1.0.0'
+// Version aus description.xml lesen
+def descriptionXml = new groovy.xml.XmlSlurper(false, false).parse(file('description.xml'))
+version = descriptionXml.version.@value.text()
 
 java {
     toolchain {
