@@ -24,7 +24,7 @@ repositories {
 // Configuration properties
 def libreOfficePath = findProperty('libreoffice.path') ?: '/usr/lib/libreoffice'
 def libreOfficeClassesPath = "${libreOfficePath}/program/classes"
-def extensionId = 'de.petanqueturniermanager.PetanqueTurnierManager'
+def extensionId = descriptionXml.identifier.@value.text()
 
 configurations {
     libreoffice
