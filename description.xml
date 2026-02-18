@@ -4,7 +4,7 @@
 	<identifier value="de.petanqueturniermanager"/>
 	<platform value="all"/>
 	<dependencies>
-		<OpenOffice.org-minimal-version d:name="4.1" value="4.1"/>
+		<OpenOffice.org-minimal-version d:name="7.0" value="7.0"/>
 	</dependencies>
 	<update-information>
 		<src xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager/releases"/>

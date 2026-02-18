@@ -18,7 +18,7 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 
 * [Libreoffice ab Version 7](https://de.libreoffice.org/get-help/system-requirements/)
-* [Java ab Version 17](https://www.java.com/de/download/help/sysreq.xml)
+* [Java ab Version 21](https://www.java.com/de/download/help/sysreq.xml)
 
 
 ## - Java Installieren -
@@ -28,7 +28,7 @@ Eine Pétanque/Boule Turnierleitungssoftware für LibreOffice Calc.<br>
 
 ### --- Temurin Adoptium JDK ---
 https://adoptium.net/de/ **(LTS)**<br>
-[Download Java 17](https://adoptium.net/de/)<br>
+[Download Java 21](https://adoptium.net/de/)<br>
 
 ### --- Oracle Java ---
 [Java Downloads](https://www.oracle.com/de/java/technologies/downloads/)<br>
