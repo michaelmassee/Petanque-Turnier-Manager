@@ -135,8 +135,8 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet
 	}
 
 	@Override
-	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return meldungenSpalte.naechsteFreieDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

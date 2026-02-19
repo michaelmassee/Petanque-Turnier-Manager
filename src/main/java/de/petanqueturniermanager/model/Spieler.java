@@ -89,7 +89,7 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	}
 
 	/**
-	 * Spieler gegenseitig in der Liste war im team hinzufügen
+	 * Spieler gegenseitig zur warImTeamMit-Liste hinzufügen, wenn nicht vorhanden
 	 *
 	 * @param spieler
 	 */

@@ -106,7 +106,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
-			new NewReleaseChecker().udateNewReleaseInfo(getxContext());
+			new NewReleaseChecker().updateNewReleaseInfo(getxContext());
 			autoSave();
 			if (!isFehler && backupDocumentAfterRun) {
 				backUpDocument("2"); // after run
@@ -114,7 +114,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch")
-					.message("Die Verarbeitung wurde nicht gestartet, weil bereits eine Aktive vorhanden.").show();
+					.message("Die Verarbeitung wurde nicht gestartet, weil bereits eine aktive Verarbeitung läuft.").show();
 		}
 	}
 

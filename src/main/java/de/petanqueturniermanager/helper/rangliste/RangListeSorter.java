@@ -151,7 +151,7 @@ public class RangListeSorter {
 				.isVisible(isVisible);
 		StringCellValue validateHeader = StringCellValue
 				.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).addColumnProperties(columnProperties)
-				.setValue("Err"); // Ueberschrift Validate Spalte
+				.setValue("Err"); // Überschrift Validate Spalte
 
 		if (isVisible) {
 			validateHeader.setComment("Validate Spalte");
@@ -162,7 +162,7 @@ public class RangListeSorter {
 	}
 
 	/**
-	 * vergleiche wert in aktuelle zeile mit eine zeile oben<br>
+	 * vergleiche Wert in aktueller Zeile mit einer Zeile oben<br>
 	 * 1 = 1 zeile oben zeile -1 <br>
 	 * 2 = aktuelle zeile
 	 *

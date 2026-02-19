@@ -199,8 +199,8 @@ public class SuperMeleePaarungen {
 	private void teamAuffuellen(int teamSize, SpielerMeldungen meldungen, MeleeSpielRunde spielrunde, Team newTeamInRunde) throws AlgorithmenException {
 		boolean konnteTauschen = true;
 		while (newTeamInRunde.size() != teamSize && meldungen.spielerOhneTeam().size() > 0 && konnteTauschen) {
-			// team noch nicht vollständig, versuche zu tauschen mit ein Spieler
-			// aus ein andere Team
+			// team noch nicht vollständig, versuche zu tauschen mit einem Spieler
+			// aus einem anderen Team
 			konnteTauschen = false;
 			for (Spieler spielerOhneTeam : meldungen.spielerOhneTeam()) {
 				Spieler tauschSpieler = kannTauschenMitSpielerOhneTeam(spielerOhneTeam, newTeamInRunde, spielrunde.teams());

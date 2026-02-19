@@ -62,7 +62,7 @@ public class NewReleaseChecker {
 	private static AtomicBoolean didInform = new AtomicBoolean(); // is volatile
 
 	// !! Wird einmal aufgerufen
-	public void runUdateCache() {
+	public void runUpdateCache() {
 		runUpdateCacheFileOnceThread(); // update release info
 	}
 
@@ -71,7 +71,7 @@ public class NewReleaseChecker {
 	 * 
 	 * @param xContext
 	 */
-	public void udateNewReleaseInfo(XComponentContext xContext) {
+	public void updateNewReleaseInfo(XComponentContext xContext) {
 		if (didUpdateCacheFile.get() && !didInform.getAndSet(true)) {
 			boolean newRelease = checkForNewRelease(xContext);
 			if (newRelease) {

@@ -138,8 +138,8 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 	}
 
 	@Override
-	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return meldungenSpalte.naechsteFreieDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

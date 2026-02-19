@@ -128,7 +128,7 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * fuegt ein neues Property zu Document hinzu wenn nicht verhanden<br>
+	 * fügt ein neues Property zum Dokument hinzu, wenn nicht vorhanden<br>
 	 * speichert der neue wert
 	 * 
 	 */

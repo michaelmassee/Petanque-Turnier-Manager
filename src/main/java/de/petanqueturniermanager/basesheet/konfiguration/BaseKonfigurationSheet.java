@@ -111,11 +111,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 				String errMsg = "Dokument-Version '" + docVersion + "' stimmt nicht mit Plugin-Version '"
 						+ pluginVersionNummer + "' überein";
 
-				getLogger().warn("Das Turnier-Dokument wurde mit eine andere PTM Plugin-Version erstellt");
+				getLogger().warn("Das Turnier-Dokument wurde mit einer anderen PTM Plugin-Version erstellt");
 				MessageBoxResult answer = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO_CANCEL)
 						.caption(errMsg)
-						.message("Achtung !! Das Turnier-Dokument wurde mit einer unterschiedliche"
-								+ " Turnier-Manager Plugin-Version erstellt.\n\nDie Version im Dokument Aktualisieren ?")
+						.message("Achtung !! Das Turnier-Dokument wurde mit einer unterschiedlichen"
+								+ " Turnier-Manager Plugin-Version erstellt.\n\nDie Version im Dokument aktualisieren?")
 						.show();
 
 				if (answer == MessageBoxResult.CANCEL) {

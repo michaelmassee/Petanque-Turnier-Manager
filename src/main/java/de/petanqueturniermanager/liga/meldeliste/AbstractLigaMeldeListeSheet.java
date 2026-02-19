@@ -176,8 +176,8 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 	}
 
 	@Override
-	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return meldungenSpalte.naechsteFreieDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

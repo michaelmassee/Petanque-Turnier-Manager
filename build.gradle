@@ -234,9 +234,11 @@ task debugLibreOffice(type: Exec) {
     }
 }
 
-// Tests benötigen die aktuelle OXT, damit das Plugin vor dem Test installiert werden kann
+// Tests benötigen die aktuelle OXT installiert – reinstallExtension baut und installiert sie
 test {
-    dependsOn buildOXT
+    dependsOn reinstallExtension
+    // UITests starten LibreOffice auf Port 8100 – nur ein Worker gleichzeitig erlaubt
+    maxParallelForks = 1
 }
 
 // Build-Task

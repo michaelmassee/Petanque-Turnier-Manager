@@ -82,7 +82,7 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 	public PetanqueTurnierManagerImpl(final XComponentContext context) {
 		xContext = context;
 		PetanqueTurnierMngrSingleton.init(context);
-		//		new NewReleaseChecker().udateNewReleaseInfo(context);
+		//		new NewReleaseChecker().updateNewReleaseInfo(context);
 	}
 
 	// -----------------------------------------------------------------------------------------------

@@ -63,7 +63,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final int meldungNrSpalte; // Spalte A=0, B=1
 	private final int ersteMeldungNameSpalte; // spalte der erste Spieler im Team
 	private final int letzteMeldungNameSpalte; // spalte der letze Spieler im Team
-	private final int anzZeilenInHeader; // weiviele Zeilen sollen in header verwendet werden
+	private final int anzZeilenInHeader; // wie viele Zeilen sollen in header verwendet werden
 	private final int spalteMeldungNameWidth;
 	private final int minAnzZeilen;
 
@@ -196,13 +196,13 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	/**
 	 * Sucht von unten nach der erste nicht leere zelle - 1<br>
 	 * Spalte spielerNr <br>
-	 * Achtung wenn bereits footer daten vorhanden, und oder wietere Daten unter der letzte Spielnr<br>
+	 * Achtung wenn bereits footer daten vorhanden, und oder weitere Daten unter der letzten Spielnr<br>
 	 * 
 	 * @return
 	 * @throws GenerateException
 	 */
 	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return neachsteFreieDatenZeileInSpielerNrSpalte() - 1;
+		return naechsteFreieDatenZeileInSpielerNrSpalte() - 1;
 	}
 
 	/**
@@ -228,12 +228,12 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	/**
 	 * Sucht von unten nach der erste nicht leere zelle<br>
 	 * Spalte spielerNr <br>
-	 * Achtung wenn bereits footer daten vorhanden, und oder wietere Daten unter der letzte Spielnr<br>
+	 * Achtung wenn bereits footer daten vorhanden, und oder weitere Daten unter der letzten Spielnr<br>
 	 * return ersteDatenzeile wenn kein vorhanden
 	 *
 	 * @throws GenerateException
 	 */
-	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
 		Position result = RangeSearchHelper
 				.from(getISheet(),
 						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))

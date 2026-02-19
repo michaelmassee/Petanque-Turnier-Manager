@@ -16,7 +16,7 @@
 				</prop>
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
-					<!-- Test MenuJobExecutee -->
+					<!-- Test MenuJobExecute -->
 					<!-- ****************************************************************** -->
 					<node oor:name="Y1" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
@@ -109,7 +109,7 @@
 							</node>
 							<node oor:name="A8" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Liga, Gameplan odd Numbr</value>
+									<value xml:lang="en">Liga, Gameplan odd Number</value>
 									<value xml:lang="de">Liga, Spielplan mit Freispiel</value>
 								</prop>
 								<prop oor:name="URL">

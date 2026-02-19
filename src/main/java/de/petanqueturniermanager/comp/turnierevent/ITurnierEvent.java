@@ -11,6 +11,6 @@ import com.sun.star.sheet.XSpreadsheetDocument;
  */
 public interface ITurnierEvent {
 
-	XSpreadsheetDocument getWorkingSpreadsheetDocument(); // von welchen Document wurde der Event ausgelöst
+	XSpreadsheetDocument getWorkingSpreadsheetDocument(); // von welchem Dokument wurde das Event ausgelöst
 
 }

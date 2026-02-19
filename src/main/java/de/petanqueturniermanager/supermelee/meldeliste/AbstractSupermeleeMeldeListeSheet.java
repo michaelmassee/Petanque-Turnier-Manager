@@ -687,8 +687,8 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	@Override
-	public int neachsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
-		return meldungenSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return meldungenSpalte.naechsteFreieDatenZeileInSpielerNrSpalte();
 	}
 
 	@Override

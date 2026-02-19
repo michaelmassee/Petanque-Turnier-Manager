@@ -131,7 +131,7 @@ public class SchweizerSystem {
 							// gegner wieder herstellen von den invalid teams weil die in den vorrunden bereits gegen einander gespielt haben
 							restTeams.get(0).addGegner(team);
 						}
-						// invalid oder wenn tausch statgefunden hat, Valid paarung hinzufügen
+						// invalid oder wenn Tausch stattgefunden hat, valid Paarung hinzufügen
 						teamPaarungList.add(invalid.addGegner().setHatGegner());
 					}
 				} else {

@@ -215,7 +215,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		meldeListe.processBoxinfo("Zeilen ohne Spielernamen entfernen");
 
 		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
-		int letzteNrZeile = meldeListe.neachsteFreieDatenZeileInSpielerNrSpalte();
+		int letzteNrZeile = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte();
 		if (letzteNrZeile < ERSTE_DATEN_ZEILE) { // daten vorhanden ?
 			return; // keine Daten
 		}
@@ -322,7 +322,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		}
 
 		// Zeile erste Meldung ohne Nummer, weil ohne nummer nach unten sortiert
-		int ersteZeileOhneNummer = meldeListe.neachsteFreieDatenZeileInSpielerNrSpalte(); // letzte Zeile ohne Spieler Nr
+		int ersteZeileOhneNummer = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte(); // letzte Zeile ohne Spieler Nr
 
 		// lücken füllen
 		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE));

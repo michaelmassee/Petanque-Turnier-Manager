@@ -210,7 +210,7 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
-		int ersteFooterZeile = spielerSpalte.neachsteFreieDatenZeileInSpielerNrSpalte();
+		int ersteFooterZeile = spielerSpalte.naechsteFreieDatenZeileInSpielerNrSpalte();
 		StringCellValue stringVal = StringCellValue
 				.from(getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);

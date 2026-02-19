@@ -63,7 +63,7 @@ public class PetanqueTurnierMngrSingleton {
 		globalEventListener(context);
 		ProcessBox.init(context); // der muss zuerst
 		TerminateListener.addThisListenerOnce(context);
-		new NewReleaseChecker().runUdateCache();
+		new NewReleaseChecker().runUpdateCache();
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 	}
 

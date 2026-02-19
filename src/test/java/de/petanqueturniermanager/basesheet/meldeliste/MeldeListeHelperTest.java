@@ -176,9 +176,9 @@ public class MeldeListeHelperTest {
 		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
 
-		PowerMockito.when(iMeldelisteMock.neachsteFreieDatenZeileInSpielerNrSpalte())
+		PowerMockito.when(iMeldelisteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
-		PowerMockito.when(meldungenSpalteMock.neachsteFreieDatenZeileInSpielerNrSpalte())
+		PowerMockito.when(meldungenSpalteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
 	}
 }

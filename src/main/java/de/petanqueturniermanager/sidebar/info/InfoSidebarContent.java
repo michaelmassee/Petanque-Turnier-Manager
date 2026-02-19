@@ -53,7 +53,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		super(workingSpreadsheet, parentWindow, xSidebar);
 	}
 
-	// nur einmal hinzu fügen
+	// nur einmal hinzufügen
 	private void addGlobalFields() {
 		if (didAddGlobalFields) {
 			return;

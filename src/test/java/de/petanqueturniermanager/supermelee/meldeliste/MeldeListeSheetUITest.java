@@ -58,7 +58,7 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().getLetzteMitDatenZeileInSpielerNrSpalte())
 				.isEqualTo(26);
 
-		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().neachsteFreieDatenZeileInSpielerNrSpalte())
+		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().naechsteFreieDatenZeileInSpielerNrSpalte())
 				.isEqualTo(27);
 
 		assertThat(testMeldeListeErstellen.getMeldeListeSheetNew().sucheLetzteZeileMitSpielerNummer()).isEqualTo(26);

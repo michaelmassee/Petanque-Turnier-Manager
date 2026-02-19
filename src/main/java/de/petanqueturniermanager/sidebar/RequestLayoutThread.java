@@ -12,7 +12,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.ui.XSidebar;
 
 /**
- * requestLayout aufrufen mit eine verzögerung von 2 sec
+ * requestLayout aufrufen mit einer Verzögerung von 2 sec
  * 
  * @author Michael Massee
  *
@@ -45,7 +45,7 @@ class RequestLayoutThreadInt extends Thread {
 	public void run() {
 		try {
 			// Pause for 2 sekunden
-			// Ist MEGA dirty, verzweifelte versuch LO CoreDumps :-( in griff zu kriegen
+			// Ist MEGA dirty, verzweifelter Versuch, LO CoreDumps :-( in den Griff zu kriegen
 			Thread.sleep(2000);
 			logger.debug("xSidebar.requestLayout");
 			xSidebar.requestLayout();

@@ -16,6 +16,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
@@ -52,7 +53,7 @@ public abstract class BaseCalcUITest {
 	private static final Logger logger = LogManager.getLogger(BaseCalcUITest.class);
 
 	// Verwende die UserInstallation ~/.config/libreoffice/4, wo das Plugin installiert ist
-	// (via: unopkg add --force build/distributions/PetanqueTurnierManager-1.0.0.oxt)
+	// (via: ./gradlew reinstallExtension)
 	final protected static OfficeStarter starter = OfficeStarter.from()
 			.headless(true)
 			.userInstallation("file://" + System.getProperty("user.home") + "/.config/libreoffice/4");
@@ -65,35 +66,70 @@ public abstract class BaseCalcUITest {
 
 	@BeforeClass
 	public static void startup() {
-		installExtension();
-		BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
+		try {
+			installExtension();
+			BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
+		} catch (RuntimeException e) {
+			Assume.assumeNoException(
+					"LibreOffice nicht verfügbar oder Extension nicht installierbar – UITest wird übersprungen. "
+							+ "Bitte sicherstellen dass LibreOffice installiert ist und './gradlew buildOXT' ausgeführt wurde.",
+					e);
+		}
 	}
 
 	/**
-	 * Installiert das Plugin (OXT) in LibreOffice bevor die Tests starten.
-	 * Die OXT wird vom Gradle buildOXT Task gebaut (test dependsOn buildOXT).
+	 * Deinstalliert die alte Extension-Version und installiert die aktuelle OXT.<br>
+	 * Wird automatisch von Gradle via reinstallExtension gebaut (test dependsOn reinstallExtension).<br>
+	 * Für IDE-Starts: OXT muss vorher mit './gradlew buildOXT' gebaut worden sein.
 	 */
-	private static void installExtension() {
-		File projectDir = new File(System.getProperty("user.dir"));
-		File oxtFile = new File(projectDir, "build/distributions/PetanqueTurnierManager-1.0.0.oxt");
-
-		if (!oxtFile.exists()) {
-			throw new RuntimeException("OXT nicht gefunden: " + oxtFile.getAbsolutePath()
-					+ " - bitte zuerst './gradlew buildOXT' ausführen");
+	private static synchronized void installExtension() {
+		// Veraltete Lock-Datei entfernen, falls vorhanden
+		File lockFile = new File(System.getProperty("user.home") + "/.config/libreoffice/4/.lock");
+		if (lockFile.exists()) {
+			logger.warn("Veraltete Lock-Datei gefunden, wird entfernt: " + lockFile.getAbsolutePath());
+			lockFile.delete();
 		}
 
+		// OXT-Datei suchen
+		File projectDir = new File(System.getProperty("user.dir"));
+		File distDir = new File(projectDir, "build/distributions");
+		File[] oxtFiles = distDir.listFiles((dir, name) -> name.startsWith("PetanqueTurnierManager") && name.endsWith(".oxt"));
+		if (oxtFiles == null || oxtFiles.length == 0) {
+			throw new RuntimeException("OXT nicht gefunden in: " + distDir.getAbsolutePath()
+					+ " – bitte zuerst './gradlew buildOXT' ausführen");
+		}
+		File oxtFile = oxtFiles[0];
+
+		// Alte Version entfernen (Fehler werden ignoriert, z.B. wenn noch nicht installiert)
+		runUnokg(true, "remove", "de.petanqueturniermanager");
+
+		// Neue Version installieren
 		logger.info("Installiere Extension: " + oxtFile.getAbsolutePath());
+		int exitCode = runUnokg(false, "add", "-f", oxtFile.getAbsolutePath());
+		if (exitCode != 0) {
+			throw new RuntimeException("unopkg add fehlgeschlagen mit Exit-Code: " + exitCode);
+		}
+		logger.info("Extension erfolgreich installiert");
+	}
+
+	private static int runUnokg(boolean ignoreError, String... args) {
 		try {
-			ProcessBuilder pb = new ProcessBuilder("unopkg", "add", "--force", oxtFile.getAbsolutePath());
+			String[] cmd = new String[args.length + 1];
+			cmd[0] = "unopkg";
+			System.arraycopy(args, 0, cmd, 1, args.length);
+			ProcessBuilder pb = new ProcessBuilder(cmd);
 			pb.inheritIO();
-			Process process = pb.start();
-			int exitCode = process.waitFor();
-			if (exitCode != 0) {
-				throw new RuntimeException("unopkg add fehlgeschlagen mit Exit-Code: " + exitCode);
+			int exitCode = pb.start().waitFor();
+			if (!ignoreError && exitCode != 0) {
+				logger.warn("unopkg " + String.join(" ", args) + " fehlgeschlagen mit Exit-Code: " + exitCode);
 			}
-			logger.info("Extension erfolgreich installiert");
+			return exitCode;
 		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException("Fehler beim Installieren der Extension", e);
+			if (ignoreError) {
+				logger.warn("unopkg " + String.join(" ", args) + " fehlgeschlagen: " + e.getMessage());
+				return -1;
+			}
+			throw new RuntimeException("Fehler beim Ausführen von unopkg " + String.join(" ", args), e);
 		}
 	}
 

@@ -39,7 +39,7 @@ Modernisiere das Projekt wie das Referenzprojekt ohne IDL:
 
 ### Manueller Build (falls Script nicht funktioniert):
 ```bash
-# Global init.gradle temporär deakt ivieren
+# Global init.gradle temporär deaktivieren
 mv ~/.gradle/init.gradle ~/.gradle/init.gradle.backup
 
 # Bauen

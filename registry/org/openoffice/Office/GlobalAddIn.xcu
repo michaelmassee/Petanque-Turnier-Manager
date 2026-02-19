@@ -29,7 +29,7 @@
 						<value xml:lang="de">PTM.ALG.INTPROPERTY</value>
 					</prop>
 					<prop oor:name="Description">
-						<value xml:lang="en">Petanque Turniermanager, get int value of Propertry</value>
+						<value xml:lang="en">Petanque Turniermanager, get int value of Property</value>
 						<value xml:lang="de">Petanque Turniermanager, Integer-Wert einer Property</value>
 					</prop>
 					<prop oor:name="CompatibilityName">
@@ -58,7 +58,7 @@
 						<value xml:lang="de">PTM.ALG.STRINGPROPERTY</value>
 					</prop>
 					<prop oor:name="Description">
-						<value xml:lang="en">Petanque Turniermanager, get string value of Propertry</value>
+						<value xml:lang="en">Petanque Turniermanager, get string value of Property</value>
 						<value xml:lang="de">Petanque Turniermanager, String-Wert einer Property</value>
 					</prop>
 					<prop oor:name="CompatibilityName">
