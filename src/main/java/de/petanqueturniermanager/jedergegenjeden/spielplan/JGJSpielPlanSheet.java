@@ -111,9 +111,9 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
 
 		if (!meldungen.isValid()) {
-			processBoxinfo("Abbruch, ungültige anzahl von Meldungen.");
+			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue JGJ-SpielPlan")
-					.message("Ungültige anzahl von Meldungen").show();
+					.message("Ungültige Anzahl von Meldungen").show();
 			return;
 		}
 

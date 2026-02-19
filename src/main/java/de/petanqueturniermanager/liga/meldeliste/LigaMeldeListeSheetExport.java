@@ -83,21 +83,21 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 
 			String ligaLogoUr = StringUtils.strip(getKonfigurationSheet().getLigaLogoUr());
 			if (StringUtils.isEmpty(ligaLogoUr)) {
-				processBox().info("Warning: Liga logo fehlt in der Turnier Konfiguration");
+				processBox().info("Warnung: Liga-Logo fehlt in der Turnierkonfiguration");
 			} else {
-				processBox().info("Liga logo: " + ligaLogoUr);
+				processBox().info("Liga-Logo: " + ligaLogoUr);
 			}
 
 			String pdfImgUr = StringUtils.strip(getKonfigurationSheet().getPdfImageUr());
 			if (StringUtils.isEmpty(pdfImgUr)) {
-				processBox().info("Warning: Pdf Image fehlt in der Turnier Konfiguration");
+				processBox().info("Warnung: PDF-Image fehlt in der Turnierkonfiguration");
 			} else {
-				processBox().info("Pdf Image: " + pdfImgUr);
+				processBox().info("PDF-Image: " + pdfImgUr);
 			}
 
 			String gruppenname = StringUtils.strip(getKonfigurationSheet().getGruppenname());
 			if (StringUtils.isEmpty(gruppenname)) {
-				processBox().info("Warning: Gruppenname fehlt in der Turnier Konfiguration");
+				processBox().info("Warnung: Gruppenname fehlt in der Turnierkonfiguration");
 			} else {
 				processBox().info("Gruppenname: " + gruppenname);
 			}

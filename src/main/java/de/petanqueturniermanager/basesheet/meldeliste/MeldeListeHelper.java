@@ -120,7 +120,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * @throws GenerateException wenn doppelt daten
 	 */
 	public void testDoppelteMeldungen() throws GenerateException {
-		meldeListe.processBoxinfo("Prüfe Doppelte Daten in Meldungen");
+		meldeListe.processBoxinfo("Prüfe doppelte Daten in Meldungen");
 		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();

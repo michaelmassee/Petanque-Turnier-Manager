@@ -125,9 +125,9 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!getAlleMeldungen().isValid()) {
-			processBoxinfo("Abbruch, ungültige Anzahl von Melungen.");
+			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
-					.message("Ungültige anzahl von Melungen").show();
+					.message("Ungültige Anzahl von Meldungen").show();
 			return;
 		}
 

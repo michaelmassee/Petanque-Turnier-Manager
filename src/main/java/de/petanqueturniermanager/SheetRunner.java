@@ -94,7 +94,7 @@ public abstract class SheetRunner extends Thread implements Runnable {
 			} catch (Exception e) {
 				isFehler = true;
 				processBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage())
-						.fehler("Siehe log für weitere Infos");
+						.fehler("Siehe Log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				SheetRunner.isRunning.set(false); // Immer an erste stelle diesen flag zurück

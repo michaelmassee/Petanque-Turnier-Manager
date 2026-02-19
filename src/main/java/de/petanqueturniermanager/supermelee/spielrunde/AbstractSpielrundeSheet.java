@@ -309,7 +309,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	protected void spielerNummerEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
 
-		processBoxinfo("Spieler Nummer einfügen");
+		processBoxinfo("Spielernummer einfügen");
 
 		checkArgument(spielRunde.getNr() == getSpielRundeNr().getNr());
 
@@ -474,7 +474,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	}
 
 	private void headerSpielerNr(XSpreadsheet sheet) throws GenerateException {
-		processBoxinfo("Header Spieler Nummer ");
+		processBoxinfo("Header Spielernummer");
 
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER)
@@ -652,7 +652,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	 */
 	private void spielrundeProperties(XSpreadsheet sheet) throws GenerateException {
 
-		processBoxinfo("Spielrunde Properties einfügen");
+		processBoxinfo("Spielrunden-Properties einfügen");
 
 		Position datenEnd = letztePositionRechtsUnten();
 

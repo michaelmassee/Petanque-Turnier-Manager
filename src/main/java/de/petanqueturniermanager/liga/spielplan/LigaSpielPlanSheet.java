@@ -121,9 +121,9 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
-			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
+			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
-					.message("Ungültige anzahl von Melungen").show();
+					.message("Ungültige Anzahl von Meldungen").show();
 			return;
 		}
 

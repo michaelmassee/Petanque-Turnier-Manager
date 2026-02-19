@@ -103,9 +103,9 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!alleMeldungen.isValid()) {
-			processBoxinfo("Abbruch, ungültige anzahl von Melungen.");
+			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
-					.message("Ungültige anzahl von Melungen").show();
+					.message("Ungültige Anzahl von Meldungen").show();
 			return;
 		}
 
@@ -213,7 +213,7 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	}
 
 	private void addConditionalFormuleForDirektVergleichReturnCode() throws GenerateException {
-		processBoxinfo("Conditional Formule für Codes");
+		processBoxinfo("Bedingte Formel für Codes");
 
 		RangePosition rangePosDirektCode = RangePosition.from(ERSTE_SPALTE_DIREKTVERGLEICH, ERSTE_DATEN_ZEILE,
 				ERSTE_SPALTE_DIREKTVERGLEICH + anzTeams() - 1, ERSTE_DATEN_ZEILE + anzTeams() - 1);
