@@ -61,18 +61,18 @@ public class DownloadExtension extends SheetRunner {
 		ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
 
 		processBoxinfo("Start Download von Pétanque-Turnier-Manager");
-		processBoxinfo("Aktuell instalierte Version " + extensionsHelper.getVersionNummer());
+		processBoxinfo("Aktuell installierte Version " + extensionsHelper.getVersionNummer());
 
 		GHRelease latest = newReleaseChecker.readLatestReleaseFromCacheFile();
 		if (latest == null) {
-			processBox().fehler("Kein Version verfügbar.");
+			processBox().fehler("Keine Version verfügbar.");
 			return;
 		}
 
 		GHAsset oxtAsset = newReleaseChecker.getDownloadGHAsset();
 		URL downloadURL = newReleaseChecker.getDownloadURL(oxtAsset);
 		if (downloadURL == null || oxtAsset == null) {
-			processBox().fehler("kein " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
+			processBox().fehler("keine " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
 			return;
 		}
 		processBoxinfo("GitHub Version " + latest.getName());
@@ -93,7 +93,7 @@ public class DownloadExtension extends SheetRunner {
 					processBoxinfo("Datei bereits vorhanden " + targetFile);
 					MessageBoxResult answerBereitsVorhanden = MessageBox
 							.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption("Datei bereits vorhanden")
-							.message("Datei " + targetFile + " bereits vorhanden.\r\nÜberschreiben ?").show();
+							.message("Datei " + targetFile + " bereits vorhanden.\r\nÜberschreiben?").show();
 					if (answerBereitsVorhanden == MessageBoxResult.NO) {
 						processBoxinfo("Abbruch");
 						return;
