@@ -32,7 +32,7 @@
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Examples</value>
-							<value xml:lang="de">Beispiel Turniere</value>
+							<value xml:lang="de">Beispielturniere</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -67,7 +67,7 @@
 							<node oor:name="A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Supermêlée, Generate 5 Complete Playdays</value>
-									<value xml:lang="de">Supermêlée, generiere 5 Komplette Spieltagen</value>
+									<value xml:lang="de">Supermêlée, generiere 5 komplette Spieltage</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?SpieltagRanglisteSheet_TestDaten</value>

@@ -16,7 +16,7 @@
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, Turnier System.</value>
-						<value xml:lang="de">Petanque Turniermanager, Turnier System.</value>
+						<value xml:lang="de">Petanque Turniermanager, Turniersystem.</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
@@ -30,7 +30,7 @@
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, get int value of Propertry</value>
-						<value xml:lang="de">Petanque Turniermanager, Integer Wert von Property</value>
+						<value xml:lang="de">Petanque Turniermanager, Integer-Wert einer Property</value>
 					</prop>
 					<prop oor:name="CompatibilityName">
 						<value xml:lang="en">AutoAddIn.Legacy.INTPROPERTY</value>
@@ -59,7 +59,7 @@
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, get string value of Propertry</value>
-						<value xml:lang="de">Petanque Turniermanager, String Wert von Property</value>
+						<value xml:lang="de">Petanque Turniermanager, String-Wert einer Property</value>
 					</prop>
 					<prop oor:name="CompatibilityName">
 						<value xml:lang="en">AutoAddIn.Legacy.STRINGPROPERTY</value>
@@ -88,7 +88,7 @@
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, calculate direct comparison.</value>
-						<value xml:lang="de">Petanque Turniermanager, führt einen Direktvergleich von Ergebnisse zwischen 2 Teams durch.</value>
+						<value xml:lang="de">Petanque Turniermanager, führt einen Direktvergleich von Ergebnissen zwischen 2 Teams durch.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="teamA" oor:op="replace">
@@ -114,11 +114,11 @@
 						<node oor:name="begegnungen" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">Game encounters</value>
-								<value xml:lang="de">Spiel Begegnungen</value>
+								<value xml:lang="de">Spielbegegnungen</value>
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">2D Array of Game encounters</value>
-								<value xml:lang="de">2D Array von Spiel Begegnungen</value>
+								<value xml:lang="de">2D-Array von Spielbegegnungen</value>
 							</prop>
 						</node>
 						<node oor:name="siege" oor:op="replace">
@@ -128,7 +128,7 @@
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">2D Array of wins</value>
-								<value xml:lang="de">2D Array von Siege</value>
+								<value xml:lang="de">2D-Array von Siegen</value>
 							</prop>
 						</node>
 						<node oor:name="spielpunkte" oor:op="replace">
@@ -138,7 +138,7 @@
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">2D Array of Gamepoints</value>
-								<value xml:lang="de">2D Array von Spielpunkte</value>
+								<value xml:lang="de">2D-Array von Spielpunkten</value>
 							</prop>
 						</node>
 					</node>

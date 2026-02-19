@@ -48,7 +48,7 @@
 							<node oor:name="A4A2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
-									<value xml:lang="de">Meldeliste Aktualisieren</value>
+									<value xml:lang="de">Meldeliste aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_update_meldeliste</value>

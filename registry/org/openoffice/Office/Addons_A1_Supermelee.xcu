@@ -50,7 +50,7 @@
 							<node oor:name="A1AAB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
-									<value xml:lang="de">Meldeliste Aktualisieren</value>
+									<value xml:lang="de">Meldeliste aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?update_meldeliste</value>
@@ -121,7 +121,7 @@
 							<node oor:name="A1ABC" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Play Roundplan</value>
-									<value xml:lang="de">Spielrundeplan</value>
+									<value xml:lang="de">Spielrundenplan</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?super_spielrundeplan</value>
@@ -154,7 +154,7 @@
 							<node oor:name="A1ACB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List Sort</value>
-									<value xml:lang="de">Spieltag Rangliste Sortieren</value>
+									<value xml:lang="de">Spieltag-Rangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?spieltag_rangliste_sort</value>
@@ -168,7 +168,7 @@
 							<node oor:name="A1ACD" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Next competition day</value>
-									<value xml:lang="de">Nächste Spieltag</value>
+									<value xml:lang="de">Nächster Spieltag</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?naechste_spieltag</value>
@@ -200,7 +200,7 @@
 							<node oor:name="A1ADB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Final Rankinglist</value>
-									<value xml:lang="de">Endrangliste Sortieren</value>
+									<value xml:lang="de">Endrangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_endrangliste_sort</value>
@@ -232,7 +232,7 @@
 							<node oor:name="A1AEB" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate competition day</value>
-									<value xml:lang="de">Spieltag Prüfen</value>
+									<value xml:lang="de">Spieltag prüfen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_validate</value>
@@ -245,7 +245,7 @@
 							<node oor:name="A1AEC" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate Rankinglist</value>
-									<value xml:lang="de">Rangliste Prüfen</value>
+									<value xml:lang="de">Rangliste prüfen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_spieltagrangliste_validate</value>

@@ -28,7 +28,7 @@
 					<node oor:name="Z2" oor:op="replace">
 						<prop oor:name="Title">
 							<value xml:lang="en">~Cancel Processing</value>
-							<value xml:lang="de">~Stop verarbeitung</value>
+							<value xml:lang="de">~Verarbeitung abbrechen</value>
 						</prop>
 						<prop oor:name="URL">
 							<value>service:de.petanqueturniermanager.MenuJobExecute?abbruch</value>
