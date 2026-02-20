@@ -222,6 +222,79 @@ public class LigaRanglisteSheetUITest extends BaseCalcUITest {
 		{ 0, 2, 0, 1,  4, 13 }
 	};
 
+	/**
+	 * Prüft Sortierung nach dem 4. Kriterium: Spielpunkte Δ<br>
+	 * Beta(2) und Gamma(3) haben gleiche Punkte+(6), Spiele+(3) und Spielpunkte+(58),<br>
+	 * aber Beta hat SpPkt-Delta=+6, Gamma hat SpPkt-Delta=0.<br>
+	 * Erwartete Reihenfolge: Alpha(1), Beta(2), Gamma(3), Delta(4)
+	 */
+	@Test
+	public void testSortierungNachSpielPunkteDelta() throws GenerateException {
+		// Spielplan erstellen
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+
+		// Paarungen eintragen
+		RangeData paarungen = new RangeData(SPIELPAARUNGEN_HR);
+		paarungen.addData(SPIELPAARUNGEN_RR);
+		RangePosition rangePaarungen = RangePosition.from(LigaSpielPlanSheet.TEAM_A_NR_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				LigaSpielPlanSheet.TEAM_A_NR_SPALTE + paarungen.getAnzSpalten() - 1,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + paarungen.size() - 1);
+		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangePaarungen)
+				.setDataInRange(paarungen);
+
+		// Ergebnisse: Beta(2) und Gamma(3) gleich bei Punkte+(6), Spiele+(3) und SpPkt+(58),
+		// aber Beta hat SpPkt-Delta=+6, Gamma hat SpPkt-Delta=0
+		RangeData ergebnisse = new RangeData(ERGEBNISSE_SPPKT_DELTA_HR);
+		ergebnisse.addData(ERGEBNISSE_SPPKT_DELTA_RR);
+		RangePosition rangeErgebnisse = RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				LigaSpielPlanSheet.SPIELPNKT_B_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + ergebnisse.size() - 1);
+		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeErgebnisse)
+				.setDataInRange(ergebnisse);
+
+		// Rangliste erstellen
+		LigaRanglisteSheet rangliste = new LigaRanglisteSheet(wkingSpreadsheet);
+		rangliste.run();
+
+		// Team-Nummern in Rang-Reihenfolge lesen
+		int ersteDatenZeile = rangliste.getErsteDatenZiele();
+		int letzteZeile = rangliste.sucheLetzteZeileMitSpielerNummer();
+		RangeData teamNrData = RangeHelper.from(rangliste.getXSpreadSheet(),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				RangePosition.from(0, ersteDatenZeile, 0, letzteZeile)).getDataFromRange();
+
+		// Erwartete Reihenfolge: Alpha(1), Beta(2), Gamma(3), Delta(4)
+		assertThat(teamNrData).hasSize(4);
+		assertThat(teamNrData.get(0).get(0).getIntVal()).as("Rang 1: Alpha").isEqualTo(1);
+		assertThat(teamNrData.get(1).get(0).getIntVal()).as("Rang 2: Beta (SpPkt-Delta +6)").isEqualTo(2);
+		assertThat(teamNrData.get(2).get(0).getIntVal()).as("Rang 3: Gamma (SpPkt-Delta 0)").isEqualTo(3);
+		assertThat(teamNrData.get(3).get(0).getIntVal()).as("Rang 4: Delta").isEqualTo(4);
+
+		// Summen-Spalten lesen: Punkte+(0), Spiele+(2), SpPkt+(5), SpPktDelta(7)
+		int ersteSumme = rangliste.getErsteSummeSpalte();
+		RangeData summenData = RangeHelper.from(rangliste.getXSpreadSheet(),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				RangePosition.from(ersteSumme, ersteDatenZeile, ersteSumme + 7, letzteZeile)).getDataFromRange();
+
+		RowData betaSummen = summenData.get(1);
+		RowData gammaSummen = summenData.get(2);
+
+		// Punkte+, Spiele+ und Spielpunkte+ muessen gleich sein (1., 2. und 3. Kriterium)
+		assertThat(betaSummen.get(0).getIntVal()).as("Beta Punkte+").isEqualTo(6);
+		assertThat(gammaSummen.get(0).getIntVal()).as("Gamma Punkte+").isEqualTo(6);
+		assertThat(betaSummen.get(2).getIntVal()).as("Beta Spiele+").isEqualTo(3);
+		assertThat(gammaSummen.get(2).getIntVal()).as("Gamma Spiele+").isEqualTo(3);
+		assertThat(betaSummen.get(5).getIntVal()).as("Beta SpPkt+").isEqualTo(58);
+		assertThat(gammaSummen.get(5).getIntVal()).as("Gamma SpPkt+").isEqualTo(58);
+
+		// SpPkt-Delta ist der Tiebreaker (4. Kriterium): Beta(+6) > Gamma(0)
+		assertThat(betaSummen.get(7).getIntVal()).as("Beta SpPkt-Delta").isEqualTo(6);
+		assertThat(gammaSummen.get(7).getIntVal()).as("Gamma SpPkt-Delta").isEqualTo(0);
+	}
+
 	// Ergebnisse Hinrunde fuer SpielPunkte+ Test
 	// Team 1 gewinnt alle, Team 4 verliert alle
 	// Team 2 und 3: gleiche Punkte+(6) und Spiele+(3), aber Beta SpPkt+(66) > Gamma SpPkt+(53)
@@ -252,6 +325,35 @@ public class LigaRanglisteSheetUITest extends BaseCalcUITest {
 		// Runde 6: (2,1) → 1 gewinnt als B, (4,3) → 3 gewinnt als B
 		{ 0, 2, 0, 1,  9, 13 },
 		{ 0, 2, 0, 1,  5, 10 }
+	};
+
+	// Ergebnisse fuer SpielPunkte-Delta Test
+	// Alpha gewinnt alle, Delta verliert alle
+	// Beta und Gamma: gleiche Punkte+(6), Spiele+(3), SpPkt+(58), aber Beta SpPktΔ(+6) > Gamma SpPktΔ(0)
+	// Gamma schlaegt Beta in HR (13:9), Beta schlaegt Gamma in RR (13:3)
+	// Alpha schlaegt Beta mit 13:5 (beide Male), Alpha schlaegt Gamma mit 13:8 (beide Male)
+	private static final Object[][] ERGEBNISSE_SPPKT_DELTA_HR = new Object[][] {
+		// Runde 1: (1,4) → Alpha gewinnt, (2,3) → Gamma gewinnt
+		{ 2, 0, 1, 0, 13,  5 },
+		{ 0, 2, 0, 1,  9, 13 },
+		// Runde 2: (1,3) → Alpha gewinnt, (4,2) → Beta gewinnt als B
+		{ 2, 0, 1, 0, 13,  8 },
+		{ 0, 2, 0, 1,  5, 13 },
+		// Runde 3: (1,2) → Alpha gewinnt, (3,4) → Gamma gewinnt
+		{ 2, 0, 1, 0, 13,  5 },
+		{ 2, 0, 1, 0, 13,  5 }
+	};
+
+	private static final Object[][] ERGEBNISSE_SPPKT_DELTA_RR = new Object[][] {
+		// Runde 4: (4,1) → Alpha gewinnt als B, (3,2) → Beta gewinnt als B
+		{ 0, 2, 0, 1,  5, 13 },
+		{ 0, 2, 0, 1,  3, 13 },
+		// Runde 5: (3,1) → Alpha gewinnt als B, (2,4) → Beta gewinnt
+		{ 0, 2, 0, 1,  8, 13 },
+		{ 2, 0, 1, 0, 13,  5 },
+		// Runde 6: (2,1) → Alpha gewinnt als B, (4,3) → Gamma gewinnt als B
+		{ 0, 2, 0, 1,  5, 13 },
+		{ 0, 2, 0, 1,  5, 13 }
 	};
 
 	// @formatter:on
