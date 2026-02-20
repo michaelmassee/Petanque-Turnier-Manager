@@ -239,6 +239,8 @@ test {
     dependsOn reinstallExtension
     // UITests starten LibreOffice auf Port 8100 – nur ein Worker gleichzeitig erlaubt
     maxParallelForks = 1
+    // Im Gradle-Build immer headless; manuelle IDE-Starts verwenden headless=false (Standard)
+    systemProperty 'uitest.headless', 'true'
 }
 
 // Build-Task

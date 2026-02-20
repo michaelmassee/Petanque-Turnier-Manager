@@ -55,7 +55,7 @@ public abstract class BaseCalcUITest {
 	// Verwende die UserInstallation ~/.config/libreoffice/4, wo das Plugin installiert ist
 	// (via: ./gradlew reinstallExtension)
 	final protected static OfficeStarter starter = OfficeStarter.from()
-			.headless(true)
+			.headless(Boolean.parseBoolean(System.getProperty("uitest.headless", "false")))
 			.userInstallation("file://" + System.getProperty("user.home") + "/.config/libreoffice/4");
 	protected static XComponentLoader loader;
 

@@ -177,7 +177,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
 		getSheetHelper().setStringValueInCell(stringVal.setValue(
-				"Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte Δ, 4. Direktvergleich"));
+				"Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte +, 4. Spielpunkte Δ, 5. Direktvergleich, 6. das Los"));
 		return stringVal;
 	}
 
@@ -534,11 +534,12 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	@Override
 	public List<Position> getRanglisteSpalten() throws GenerateException {
 		int punktespalte = getErsteSummeSpalte();
-		Position sort1 = Position.from(punktespalte, getErsteDatenZiele());
-		Position sort2 = Position.from(punktespalte + 2, getErsteDatenZiele());
-		Position sort3 = Position.from(punktespalte + 7, getErsteDatenZiele());
+		Position sort1 = Position.from(punktespalte, getErsteDatenZiele());     // Punkte +
+		Position sort2 = Position.from(punktespalte + 2, getErsteDatenZiele()); // Spiele +
+		Position sort3 = Position.from(punktespalte + 5, getErsteDatenZiele()); // Spielpunkte +
+		Position sort4 = Position.from(punktespalte + 7, getErsteDatenZiele()); // Spielpunkte Δ
 
-		Position[] arraylist = new Position[] { sort1, sort2, sort3 };
+		Position[] arraylist = new Position[] { sort1, sort2, sort3, sort4 };
 		return Arrays.asList(arraylist);
 	}
 
