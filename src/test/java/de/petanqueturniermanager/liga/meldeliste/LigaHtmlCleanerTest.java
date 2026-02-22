@@ -12,9 +12,9 @@ import java.util.stream.IntStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import java.nio.file.Path;
 
 public class LigaHtmlCleanerTest {
 
@@ -24,12 +24,12 @@ public class LigaHtmlCleanerTest {
 	static String PDF_BASE_URL = "http://bc-linden.de/oeffentlich/bfl/";
 	static String PDF_IMAGE_URL = "http://bc-linden.de/images/bclinden/pdf-download.png";
 
-	@Rule
-	public TemporaryFolder folder = new TemporaryFolder();
+	@TempDir
+	Path tempDir;
 
 	@Test
 	public void testCleanUp() throws Exception {
-		File targetHtml = folder.newFile("LigaGeneratedClean.html");
+		File targetHtml = tempDir.resolve("LigaGeneratedClean.html").toFile();
 
 		URL htmlOrgUrl = LigaHtmlCleanerTest.class.getResource("LigaGruppe2.html");
 		assertThat(htmlOrgUrl).isNotNull();

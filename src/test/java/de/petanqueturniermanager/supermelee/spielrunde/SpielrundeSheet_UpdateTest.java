@@ -12,8 +12,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -39,7 +39,7 @@ public class SpielrundeSheet_UpdateTest {
 	XSpreadsheet xSpreadsheetMock;
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
 
-	@Before
+	@BeforeEach
 	public void setup() throws Exception {
 		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
 		meldeListeSheetMock = Mockito.mock(AbstractSupermeleeMeldeListeSheet.class);

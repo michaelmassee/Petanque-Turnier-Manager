@@ -1,10 +1,11 @@
 package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TeamPaarungTest {
 
@@ -27,11 +28,10 @@ public class TeamPaarungTest {
 		assertThat(paarung.getB()).isNull();
 	}
 
-	@SuppressWarnings("unused")
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testTeamPaarungmitEqual() throws Exception {
 		Team teamA = Team.from(1);
-		new TeamPaarung(teamA, teamA);
+		assertThrows(IllegalArgumentException.class, () -> new TeamPaarung(teamA, teamA));
 	}
 
 	@Test

@@ -1,26 +1,27 @@
 package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testet die abstrakte Basisklasse NrComparable via der konkreten Klasse Team.
  */
 public class NrComparableTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testKonstruktorNrNull() throws Exception {
-        Team.from(0);
+        assertThrows(IllegalArgumentException.class, () -> Team.from(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testKonstruktorNrNegativ() throws Exception {
-        Team.from(-1);
+        assertThrows(IllegalArgumentException.class, () -> Team.from(-1));
     }
 
     @Test

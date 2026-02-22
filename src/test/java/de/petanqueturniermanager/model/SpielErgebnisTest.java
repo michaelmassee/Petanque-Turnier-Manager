@@ -1,8 +1,9 @@
 package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SpielErgebnisTest {
 
@@ -69,14 +70,14 @@ public class SpielErgebnisTest {
         assertThat(ergebnis.siegB()).isFalse();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNegativePunkteANichtErlaubt() throws Exception {
-        new SpielErgebnis(-1, 5);
+        assertThrows(IllegalArgumentException.class, () -> new SpielErgebnis(-1, 5));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNegativePunkteBNichtErlaubt() throws Exception {
-        new SpielErgebnis(5, -1);
+        assertThrows(IllegalArgumentException.class, () -> new SpielErgebnis(5, -1));
     }
 
 }

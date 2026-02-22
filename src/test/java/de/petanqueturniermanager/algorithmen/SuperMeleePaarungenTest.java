@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 /*
  * PaarungenTest.java Erstellung : 31.08.2017 / Michael Massee
  */
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.spy;
@@ -16,9 +16,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -34,7 +34,7 @@ public class SuperMeleePaarungenTest {
 	List<Team> teams;
 	SpielerMeldungen meldungen;
 
-	@Before
+	@BeforeEach
 	public void setup() throws AlgorithmenException {
 		// this.paarungen = new TripletteDoublPaarungen();
 		paarungen = spy(SuperMeleePaarungen.class);
@@ -239,7 +239,7 @@ public class SuperMeleePaarungenTest {
 				int spielerNr = spielerNr(teamNr, i, 3);
 				Spieler testSpieler = spielerteam.findSpielerByNr(spielerNr);
 				assertNotNull(testSpieler);
-				assertEquals("Spieler " + testSpieler.getNr(), 2, testSpieler.anzahlMitSpieler());
+				assertEquals(2, testSpieler.anzahlMitSpieler(), "Spieler " + testSpieler.getNr());
 			}
 		}
 
@@ -295,7 +295,7 @@ public class SuperMeleePaarungenTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void testNeueSpielrundeTripletteMode_Fail_in_runde_vier() throws Exception {
 		// @formatter:off
 			// SpielRunde{Nr=1, Teams=[Team{nr=1, Spieler=[9,12,10]},Team{nr=2, Spieler=[6,1,7]},Team{nr=3,Spieler=[2,8,4]},Team{nr=4, Spieler=[5,3,11]}]}

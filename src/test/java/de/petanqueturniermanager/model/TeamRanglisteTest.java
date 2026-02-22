@@ -1,8 +1,9 @@
 package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TeamRanglisteTest {
 
@@ -17,11 +18,13 @@ public class TeamRanglisteTest {
 		assertThat(liste.getTeamListe()).hasSize(2);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testAddDoubleTeams() throws Exception {
-		TeamRangliste liste = new TeamRangliste();
-		liste.add(Team.from(1));
-		liste.add(Team.from(1));
+		assertThrows(IllegalArgumentException.class, () -> {
+			TeamRangliste liste = new TeamRangliste();
+			liste.add(Team.from(1));
+			liste.add(Team.from(1));
+		});
 	}
 
 }

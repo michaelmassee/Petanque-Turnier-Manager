@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.primitives.Ints;
 import com.sun.star.sheet.XSpreadsheet;
@@ -21,13 +21,13 @@ import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 // noch baustelle
-@Ignore
+@Disabled
 public class SchweizerSpielrundeSheetTestDatenTestUITest extends BaseCalcUITest {
 
 	private SchweizerSpielrundeSheetTestDaten schweizerSpielrundeSheetTestDaten;
 	// private SchweizerSpielrundeSheetNaechste spielrundeSheetNaechste;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.schweizerSpielrundeSheetTestDaten = new SchweizerSpielrundeSheetTestDaten(wkingSpreadsheet);
 		//		this.spielrundeSheetNaechste = new SchweizerSpielrundeSheetNaechste(wkingSpreadsheet);

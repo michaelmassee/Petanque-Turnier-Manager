@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
  * Erstellung 09.03.2023 / Michael Massee
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 public class SortHelperTest {

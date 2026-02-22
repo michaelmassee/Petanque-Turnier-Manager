@@ -6,8 +6,8 @@ package de.petanqueturniermanager.algorithmen;
 
 import java.util.ArrayList;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.model.Spieler;
 
@@ -15,7 +15,7 @@ public class PermutationsTest {
 
 	// Todo
 	@Test
-	@Ignore
+	@Disabled
 	public void testPermutations() throws Exception {
 
 		ArrayList<Spieler> spieler = new ArrayList<>();

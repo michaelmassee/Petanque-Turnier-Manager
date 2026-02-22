@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -46,7 +46,7 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 	private DocumentPropertiesHelper docPropHelper;
 	private RanglisteTestDaten<SpieltagRanglisteSheetUITest> ranglisteTestDaten;
 
-	@Before
+	@BeforeEach
 	public void testMeldeListeErstelln() throws GenerateException {
 		// erst mal eine meldeListe erstellen
 		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(

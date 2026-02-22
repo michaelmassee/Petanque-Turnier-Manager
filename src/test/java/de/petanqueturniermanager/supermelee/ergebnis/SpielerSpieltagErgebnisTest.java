@@ -1,26 +1,27 @@
 package de.petanqueturniermanager.supermelee.ergebnis;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielerSpieltagErgebnisTest {
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testKonstruktorSpielTagNull() throws Exception {
-        new SpielerSpieltagErgebnis(null, 1);
+        assertThrows(NullPointerException.class, () -> new SpielerSpieltagErgebnis(null, 1));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testKonstruktorUngueltigeSpielerNr() throws Exception {
-        new SpielerSpieltagErgebnis(SpielTagNr.from(1), 0);
+        assertThrows(IllegalArgumentException.class, () -> new SpielerSpieltagErgebnis(SpielTagNr.from(1), 0));
     }
 
     @Test

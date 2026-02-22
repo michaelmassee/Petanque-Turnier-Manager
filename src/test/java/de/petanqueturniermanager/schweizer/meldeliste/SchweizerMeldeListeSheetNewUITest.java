@@ -1,13 +1,13 @@
 package de.petanqueturniermanager.schweizer.meldeliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -22,7 +22,7 @@ public class SchweizerMeldeListeSheetNewUITest extends BaseCalcUITest {
 
 	private SchweizerMeldeListeSheetTestDaten schweizerMeldeListeSheetTestDaten;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		this.schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(wkingSpreadsheet, 10); // 10 Teams
 	}

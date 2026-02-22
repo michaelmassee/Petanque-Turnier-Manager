@@ -7,8 +7,8 @@ import java.io.InputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
@@ -26,7 +26,7 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
 	private DocumentPropertiesHelper docPropHelper;
 
-	@Before
+	@BeforeEach
 	public void testMeldeListeErstelln() throws GenerateException {
 		JGJTestMeldeListeErstellen testMeldeListeErstellen = new JGJTestMeldeListeErstellen(wkingSpreadsheet, doc);
 

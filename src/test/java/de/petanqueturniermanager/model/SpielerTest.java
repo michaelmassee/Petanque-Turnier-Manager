@@ -5,16 +5,16 @@
 package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SpielerTest {
 
 	Spieler spieler;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		spieler = Spieler.from(1);
 	}

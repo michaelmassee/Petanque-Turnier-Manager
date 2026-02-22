@@ -1,8 +1,9 @@
 package de.petanqueturniermanager.algorithmen;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -13,26 +14,25 @@ import de.petanqueturniermanager.model.TeamRangliste;
 
 public class KoRundeTeamPaarungenTest {
 
-	@SuppressWarnings("unused")
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testConstructorEmptyGeneratSpielRunde() throws Exception {
-		new KoRundeTeamPaarungen(new TeamRangliste());
+		assertThrows(IllegalArgumentException.class, () -> new KoRundeTeamPaarungen(new TeamRangliste()));
 	}
 
-	@SuppressWarnings("unused")
-	@Test(expected = NullPointerException.class)
+	@Test
 	public void testConstructorNull() throws Exception {
-		new KoRundeTeamPaarungen(null);
+		assertThrows(NullPointerException.class, () -> new KoRundeTeamPaarungen(null));
 	}
 
-	@SuppressWarnings("unused")
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void testConstructorUngeradeAnzahlGeneratSpielRunde() throws Exception {
-		TeamRangliste teamRangliste = new TeamRangliste();
-		teamRangliste.add(Team.from(1));
-		teamRangliste.add(Team.from(2));
-		teamRangliste.add(Team.from(3));
-		new KoRundeTeamPaarungen(teamRangliste);
+		assertThrows(IllegalArgumentException.class, () -> {
+			TeamRangliste teamRangliste = new TeamRangliste();
+			teamRangliste.add(Team.from(1));
+			teamRangliste.add(Team.from(2));
+			teamRangliste.add(Team.from(3));
+			new KoRundeTeamPaarungen(teamRangliste);
+		});
 	}
 
 	@Test

@@ -2,8 +2,8 @@ package de.petanqueturniermanager.helper.sheet;
 
 import static org.mockito.ArgumentMatchers.any;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -18,7 +18,7 @@ public class SheetHelperTest {
 	private XSpreadsheet xSpreadsheetMock;
 	private WorkingSpreadsheet workingSpreadsheetMock;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
 		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);

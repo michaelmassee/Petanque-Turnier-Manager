@@ -1,23 +1,24 @@
 package de.petanqueturniermanager.supermelee.ergebnis;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SpielerEndranglisteErgebnisTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testKonstruktorUngueltigeNr() throws Exception {
-        new SpielerEndranglisteErgebnis(0);
+        assertThrows(IllegalArgumentException.class, () -> new SpielerEndranglisteErgebnis(0));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testKonstruktorNegativeNr() throws Exception {
-        new SpielerEndranglisteErgebnis(-1);
+        assertThrows(IllegalArgumentException.class, () -> new SpielerEndranglisteErgebnis(-1));
     }
 
     @Test

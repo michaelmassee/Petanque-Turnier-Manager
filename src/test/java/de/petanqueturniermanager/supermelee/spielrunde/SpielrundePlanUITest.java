@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -22,7 +22,7 @@ public class SpielrundePlanUITest extends BaseCalcUITest {
 
 	private TestSuperMeleeMeldeListeErstellen testMeldeListe;
 
-	@Before
+	@BeforeEach
 	public void testMeldeListeErstelln() throws GenerateException {
 		testMeldeListe = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
 	}

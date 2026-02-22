@@ -3,12 +3,12 @@ package de.petanqueturniermanager.konfigdialog.dialog.mainkonfig;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import de.petanqueturniermanager.helper.msgbox.DialogTools;
 
-@org.junit.Ignore
+@org.junit.jupiter.api.Disabled
 public class MainKonfigDialogTest {
 
 	DialogTools dialogToolsMock = Mockito.mock(DialogTools.class);

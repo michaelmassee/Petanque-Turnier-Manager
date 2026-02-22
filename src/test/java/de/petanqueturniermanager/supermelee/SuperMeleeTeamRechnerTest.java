@@ -1,10 +1,10 @@
 package de.petanqueturniermanager.supermelee;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashSet;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
@@ -30,9 +30,9 @@ public class SuperMeleeTeamRechnerTest {
 		for (int anzahlMeldungen = 10; anzahlMeldungen < 60; anzahlMeldungen++) {
 			teamRechner = new SuperMeleeTeamRechner(anzahlMeldungen);
 			String fehlrmldg = "Fehler beim AnzahlSpieler " + anzahlMeldungen + " ";
-			assertEquals(fehlrmldg, anzahlMeldungen, teamRechner.getAnzTriplette() * 3 + teamRechner.getAnzDoublette() * 2);
+			assertEquals(anzahlMeldungen, teamRechner.getAnzTriplette() * 3 + teamRechner.getAnzDoublette() * 2, fehlrmldg);
 			if (nurDoublette.contains(anzahlMeldungen)) {
-				assertEquals(fehlrmldg, true, teamRechner.isNurDoubletteMoeglich());
+				assertEquals(true, teamRechner.isNurDoubletteMoeglich(), fehlrmldg);
 			}
 		}
 	}

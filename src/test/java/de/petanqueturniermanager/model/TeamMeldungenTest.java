@@ -1,18 +1,19 @@
 package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TeamMeldungenTest {
 
     private TeamMeldungen meldungen;
 
-    @Before
+    @BeforeEach
     public void setup() {
         meldungen = new TeamMeldungen();
     }
@@ -53,19 +54,19 @@ public class TeamMeldungenTest {
         assertThat(meldungen.size()).isEqualTo(2);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testAddTeamListeNull() throws Exception {
-        meldungen.addTeamWennNichtVorhanden((List<Team>) null);
+        assertThrows(NullPointerException.class, () -> meldungen.addTeamWennNichtVorhanden((List<Team>) null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddTeamListeLeer() throws Exception {
-        meldungen.addTeamWennNichtVorhanden(Arrays.asList());
+        assertThrows(IllegalArgumentException.class, () -> meldungen.addTeamWennNichtVorhanden(Arrays.asList()));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testAddTeamNull() throws Exception {
-        meldungen.addTeamWennNichtVorhanden((Team) null);
+        assertThrows(NullPointerException.class, () -> meldungen.addTeamWennNichtVorhanden((Team) null));
     }
 
     @Test
