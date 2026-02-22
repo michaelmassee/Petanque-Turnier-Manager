@@ -6,7 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -38,18 +38,18 @@ public class SpielrundeSheet_NaechsteTest {
 
 	@Before
 	public void setup() {
-		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
-		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		MeldeListeSheet_NewMock = PowerMockito.mock(MeldeListeSheet_New.class);
-		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
-		iSuperMeleePropertiesSpalteMock = PowerMockito.mock(ISuperMeleePropertiesSpalte.class);
+		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
+		sheetHelperMock = Mockito.mock(SheetHelper.class);
+		MeldeListeSheet_NewMock = Mockito.mock(MeldeListeSheet_New.class);
+		konfigurationSheetMock = Mockito.mock(SuperMeleeKonfigurationSheet.class);
+		iSuperMeleePropertiesSpalteMock = Mockito.mock(ISuperMeleePropertiesSpalte.class);
 
-		PowerMockito.when(konfigurationSheetMock.getPropertiesSpalte()).thenReturn(iSuperMeleePropertiesSpalteMock);
-		PowerMockito.when(iSuperMeleePropertiesSpalteMock.getMeldeListeHintergrundFarbeGeradeStyle())
+		Mockito.when(konfigurationSheetMock.getPropertiesSpalte()).thenReturn(iSuperMeleePropertiesSpalteMock);
+		Mockito.when(iSuperMeleePropertiesSpalteMock.getMeldeListeHintergrundFarbeGeradeStyle())
 				.thenReturn(new MeldungenHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
-		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeGeradeStyle())
+		Mockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeGeradeStyle())
 				.thenReturn(new SpielrundeHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
-		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeUnGeradeStyle())
+		Mockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeUnGeradeStyle())
 				.thenReturn(
 						new SpielrundeHintergrundFarbeUnGeradeStyle(BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR));
 
@@ -96,7 +96,7 @@ public class SpielrundeSheet_NaechsteTest {
 	@Test
 	public void testGespieltenRundenEinlesen() throws Exception {
 
-		XSpreadsheet spielTag1Runde1Mock = PowerMockito.mock(XSpreadsheet.class);
+		XSpreadsheet spielTag1Runde1Mock = Mockito.mock(XSpreadsheet.class);
 
 		Position pospielerNr = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE,
 				AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
@@ -108,12 +108,12 @@ public class SpielrundeSheet_NaechsteTest {
 			for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
 				pospielerNr.spalte(
 						AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
-				PowerMockito
+				Mockito
 						.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(pospielerNr))))
 						.thenReturn(spielerNr[idx++]);
 			}
 		}
-		PowerMockito
+		Mockito
 				.when(sheetHelperMock
 						.findByName(spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1))))
 				.thenReturn(spielTag1Runde1Mock);
@@ -122,7 +122,7 @@ public class SpielrundeSheet_NaechsteTest {
 		// Paarung
 		Position posPaarungCntr = Position.from(AbstractSpielrundeSheet.PAARUNG_CNTR_SPALTE,
 				AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 1);
-		PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(posPaarungCntr)))
+		Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(posPaarungCntr)))
 				.thenReturn(-1);
 
 		SpielerMeldungen meldungen = new SpielerMeldungen();

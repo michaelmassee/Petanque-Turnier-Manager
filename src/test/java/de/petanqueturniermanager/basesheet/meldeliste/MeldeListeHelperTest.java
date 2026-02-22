@@ -9,7 +9,7 @@ import static org.mockito.Mockito.verify;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -30,13 +30,13 @@ public class MeldeListeHelperTest {
 	@SuppressWarnings("unchecked")
 	@Before
 	public void init() throws GenerateException {
-		iMeldelisteMock = PowerMockito.mock(IMeldeliste.class);
-		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		meldungenSpalteMock = PowerMockito.mock(MeldungenSpalte.class);
-		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
+		iMeldelisteMock = Mockito.mock(IMeldeliste.class);
+		sheetHelperMock = Mockito.mock(SheetHelper.class);
+		meldungenSpalteMock = Mockito.mock(MeldungenSpalte.class);
+		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
 
-		PowerMockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
-		PowerMockito.when(iMeldelisteMock.getSheetHelper()).thenReturn(sheetHelperMock);
+		Mockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
+		Mockito.when(iMeldelisteMock.getSheetHelper()).thenReturn(sheetHelperMock);
 
 		meldeListeHelper = new MeldeListeHelper<SpielerMeldungen, Spieler>(iMeldelisteMock) {
 			@Override
@@ -146,9 +146,9 @@ public class MeldeListeHelperTest {
 
 		initReturnSpielerDaten(spielerNrNameList);
 
-		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
+		Mockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
-		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
+		Mockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrNameList.length - 2);
 
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
@@ -164,21 +164,21 @@ public class MeldeListeHelperTest {
 		int zeileCntr = 0;
 		for (SpielerNrName spielerNrName : spielerNrnameList) {
 			int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + zeileCntr;
-			PowerMockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
+			Mockito.when(sheetHelperMock.getIntFromCell(any(XSpreadsheet.class),
 					eq(Position.from(spielerNrPos.zeile(zeile))))).thenReturn(spielerNrName.nr);
-			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
+			Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
 					eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerNrName.name);
 			zeileCntr++;
 		}
 
-		PowerMockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
+		Mockito.when(iMeldelisteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
-		PowerMockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
+		Mockito.when(meldungenSpalteMock.letzteZeileMitSpielerName())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length - 1);
 
-		PowerMockito.when(iMeldelisteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
+		Mockito.when(iMeldelisteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
-		PowerMockito.when(meldungenSpalteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
+		Mockito.when(meldungenSpalteMock.naechsteFreieDatenZeileInSpielerNrSpalte())
 				.thenReturn(MeldeListeKonstanten.ERSTE_DATEN_ZEILE + spielerNrnameList.length);
 	}
 }

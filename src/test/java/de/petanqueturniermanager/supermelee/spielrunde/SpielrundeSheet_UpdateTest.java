@@ -15,7 +15,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -42,14 +41,14 @@ public class SpielrundeSheet_UpdateTest {
 
 	@Before
 	public void setup() throws Exception {
-		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
-		meldeListeSheetMock = PowerMockito.mock(AbstractSupermeleeMeldeListeSheet.class);
-		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
-		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
-		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeGeradeStyle())
+		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
+		meldeListeSheetMock = Mockito.mock(AbstractSupermeleeMeldeListeSheet.class);
+		sheetHelperMock = Mockito.mock(SheetHelper.class);
+		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
+		konfigurationSheetMock = Mockito.mock(SuperMeleeKonfigurationSheet.class);
+		Mockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeGeradeStyle())
 				.thenReturn(new SpielrundeHintergrundFarbeGeradeStyle(BasePropertiesSpalte.DEFAULT_GERADE_BACK_COLOR));
-		PowerMockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeUnGeradeStyle())
+		Mockito.when(konfigurationSheetMock.getSpielRundeHintergrundFarbeUnGeradeStyle())
 				.thenReturn(new SpielrundeHintergrundFarbeUnGeradeStyle(BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR));
 
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheetMock) {
@@ -163,7 +162,7 @@ public class SpielrundeSheet_UpdateTest {
 		spielpaarungen.forEach(spielpaarung -> {
 			for (int spielerSpalte = 0; spielerSpalte < 6; spielerSpalte++) {
 				if (spielpaarung[spielerSpalte] > 0) {
-					PowerMockito.when(
+					Mockito.when(
 							sheetHelperMock.getIntFromCell(any(XSpreadsheet.class), eq(Position.from(spielerNrPos))))
 							.thenReturn(spielpaarung[spielerSpalte]);
 				}

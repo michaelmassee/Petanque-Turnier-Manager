@@ -4,14 +4,14 @@ import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 import de.petanqueturniermanager.helper.msgbox.DialogTools;
 
 @org.junit.Ignore
 public class MainKonfigDialogTest {
 
-	DialogTools dialogToolsMock = PowerMockito.mock(DialogTools.class);
+	DialogTools dialogToolsMock = Mockito.mock(DialogTools.class);
 
 	@Test
 	public void testLayout() {

@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.text.XText;
@@ -21,8 +20,8 @@ public class SheetHelperTest {
 
 	@Before
 	public void setUp() {
-		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
-		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
+		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
+		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
 		sheetHelper = new SheetHelper(workingSpreadsheetMock);
 	}
 
@@ -34,7 +33,7 @@ public class SheetHelperTest {
 
 		String testWert = "Testwert";
 
-		XText xTextMock = PowerMockito.mock(XText.class);
+		XText xTextMock = Mockito.mock(XText.class);
 
 		sheetHelper = new SheetHelper(workingSpreadsheetMock) {
 			@SuppressWarnings("unchecked")
@@ -45,14 +44,14 @@ public class SheetHelperTest {
 		};
 		Position testPos = Position.from(spalte, zeile);
 
-		PowerMockito.when(xTextMock.getString()).thenReturn("     ");
+		Mockito.when(xTextMock.getString()).thenReturn("     ");
 		sheetHelper.setStringValueInCell(xSpreadsheetMock, testPos, testWert, true);// überschreiben
 		Mockito.verify(xTextMock, Mockito.times(1)).setString(testWert);
 
 		sheetHelper.setStringValueInCell(xSpreadsheetMock, testPos, testWert, false); // überschreiben weil leer
 		Mockito.verify(xTextMock, Mockito.times(2)).setString(testWert);
 
-		PowerMockito.when(xTextMock.getString()).thenReturn("bla bla");
+		Mockito.when(xTextMock.getString()).thenReturn("bla bla");
 		sheetHelper.setStringValueInCell(xSpreadsheetMock, testPos, testWert, true); // überschreiben
 		Mockito.verify(xTextMock, Mockito.times(3)).setString(testWert);
 

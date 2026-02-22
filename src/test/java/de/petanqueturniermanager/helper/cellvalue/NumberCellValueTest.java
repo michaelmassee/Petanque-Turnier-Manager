@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -22,7 +22,7 @@ public class NumberCellValueTest {
 
 	@Before
 	public void setup() {
-		spreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
+		spreadsheetMock = Mockito.mock(XSpreadsheet.class);
 	}
 
 	@Test

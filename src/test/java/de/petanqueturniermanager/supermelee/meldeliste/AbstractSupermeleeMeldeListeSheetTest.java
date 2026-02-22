@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
-import org.powermock.api.mockito.PowerMockito;
+import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -39,10 +39,10 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 	@Before
 	public void setup() {
-		workingSpreadsheetMock = PowerMockito.mock(WorkingSpreadsheet.class);
-		sheetHelperMock = PowerMockito.mock(SheetHelper.class);
-		xSpreadsheetMock = PowerMockito.mock(XSpreadsheet.class);
-		konfigurationSheetMock = PowerMockito.mock(SuperMeleeKonfigurationSheet.class);
+		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
+		sheetHelperMock = Mockito.mock(SheetHelper.class);
+		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
+		konfigurationSheetMock = Mockito.mock(SuperMeleeKonfigurationSheet.class);
 
 		meldeSheet = new AbstractSupermeleeMeldeListeSheet(workingSpreadsheetMock) {
 
@@ -97,7 +97,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		Position headerPos = Position.from(meldeSheet.spieltagSpalte(SpielTagNr.from(1)),
 				MeldeListeKonstanten.ZWEITE_HEADER_ZEILE);
 		headerList.forEach(header -> {
-			PowerMockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos))))
+			Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class), eq(Position.from(headerPos))))
 					.thenReturn(header);
 			headerPos.spaltePlusEins();
 		});
