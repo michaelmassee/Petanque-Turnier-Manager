@@ -4,10 +4,10 @@
 
 package de.petanqueturniermanager.model;
 
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Assertions.fail;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
 
@@ -15,7 +15,7 @@ public class MeleeSpielRundeTest {
 
 	private MeleeSpielRunde spielRunde;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		spielRunde = new MeleeSpielRunde(1);
 	}

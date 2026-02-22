@@ -2,7 +2,7 @@ package de.petanqueturniermanager.helper.sheet.rangedata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class RowDataTest {
 

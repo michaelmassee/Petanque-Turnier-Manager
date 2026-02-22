@@ -2,8 +2,8 @@ package de.petanqueturniermanager.forme.korunde;
 
 import java.io.IOException;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -18,7 +18,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 public class KoGruppeABSheetUITest extends BaseCalcUITest {
 
 	@Test
-	@Ignore // TODO
+	@Disabled // TODO
 	public void testKoGruppe() throws IOException, GenerateException {
 		new KoGruppeABSheet(wkingSpreadsheet).run();
 

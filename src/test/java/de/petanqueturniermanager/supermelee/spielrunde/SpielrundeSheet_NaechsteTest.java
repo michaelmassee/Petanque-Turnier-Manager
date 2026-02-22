@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -36,7 +36,7 @@ public class SpielrundeSheet_NaechsteTest {
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
 	ISuperMeleePropertiesSpalte iSuperMeleePropertiesSpalteMock;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
 		sheetHelperMock = Mockito.mock(SheetHelper.class);

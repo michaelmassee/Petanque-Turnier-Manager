@@ -6,30 +6,28 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.kohsuke.github.GHRelease;
 
 public class NewReleaseCheckerTest {
 
-	@Rule
-	public TemporaryFolder folder = new TemporaryFolder();
+	@TempDir
+	Path tempDir;
 
 	Path testFile;
 	private NewReleaseChecker newReleaseChecker;
 	private String testFileStr = "release.info";
 
-	@Before
+	@BeforeEach
 	public void setup() throws IOException {
 
 		// XComponentContext xComponentContextMock =
 		// PowerMockito.mock(XComponentContext.class);
 
-		testFile = Paths.get(folder.newFile(testFileStr).toURI());
+		testFile = tempDir.resolve(testFileStr);
 		newReleaseChecker = new NewReleaseChecker() {
 			@Override
 			Path getReleaseFile() {

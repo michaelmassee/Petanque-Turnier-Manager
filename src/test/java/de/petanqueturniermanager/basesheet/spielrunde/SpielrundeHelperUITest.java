@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.EmptyISheet;
@@ -31,7 +31,7 @@ public class SpielrundeHelperUITest extends BaseCalcUITest {
 	SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle;
 	SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle;
 
-	@Before
+	@BeforeEach
 	public void beforeTestSpielrundeHelper() throws GenerateException {
 		emptyISheet = new EmptyISheet(wkingSpreadsheet, TurnierSystem.SUPERMELEE, "testErsteSpalte");
 		emptyISheet.initSheet();

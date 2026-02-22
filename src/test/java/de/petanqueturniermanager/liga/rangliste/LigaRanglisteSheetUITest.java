@@ -7,8 +7,8 @@ import java.io.InputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -28,7 +28,7 @@ public class LigaRanglisteSheetUITest extends BaseCalcUITest {
 
 	private static final String LIGA_RANGLISTE_JSON = "LigaRangliste.json";
 
-	@Before
+	@BeforeEach
 	public void testMeldeListeErstellen() throws GenerateException {
 		LigaTestMeldeListeErstellen testMeldeListeErstellen = new LigaTestMeldeListeErstellen(wkingSpreadsheet, doc);
 		testMeldeListeErstellen.run();

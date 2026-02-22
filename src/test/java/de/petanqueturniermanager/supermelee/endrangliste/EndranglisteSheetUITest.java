@@ -5,9 +5,9 @@ import java.io.InputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -54,7 +54,7 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 	private static final String ENDRANGLISTESHEETUITEST_ANZ_TAGE_REFFILE = "EndranglisteSheetUITestRefSortByAnzTage.json";
 	private static final String ENDRANGLISTESHEETUITEST_ANZ_TAGE_REFFILE_VALIDATE = "EndranglisteSheetUITestValidateRefSortByAnzTage.json";
 
-	@Before
+	@BeforeEach
 	public void testMeldeListeErstellen() throws GenerateException {
 		// erst mal eine meldeListe erstellen
 		testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
@@ -147,7 +147,7 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void generateAndSaveTestDatenToJsonFiles() throws IOException, GenerateException {
 		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
 

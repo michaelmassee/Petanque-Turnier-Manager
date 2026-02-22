@@ -7,8 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -28,7 +28,7 @@ public class MeldeListeHelperTest {
 	XSpreadsheet xSpreadsheetMock;
 
 	@SuppressWarnings("unchecked")
-	@Before
+	@BeforeEach
 	public void init() throws GenerateException {
 		iMeldelisteMock = Mockito.mock(IMeldeliste.class);
 		sheetHelperMock = Mockito.mock(SheetHelper.class);

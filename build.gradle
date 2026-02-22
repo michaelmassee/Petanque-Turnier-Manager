@@ -62,7 +62,8 @@ dependencies {
         "${libreOfficeClassesPath}/juh.jar"
     )
 
-    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.14.3'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.assertj:assertj-core:3.27.6'
     testImplementation 'org.mockito:mockito-core:5.21.0'
 }
@@ -240,6 +241,7 @@ test {
     maxParallelForks = 1
     // Im Gradle-Build immer headless; manuelle IDE-Starts verwenden headless=false (Standard)
     systemProperty 'uitest.headless', 'true'
+    useJUnitPlatform()
 }
 
 // Build-Task

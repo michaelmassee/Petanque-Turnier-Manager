@@ -13,8 +13,8 @@ import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -37,7 +37,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
 	//	SupermeleeTeamPaarungenSheet supermeleeTeamPaarungenMock;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
 		sheetHelperMock = Mockito.mock(SheetHelper.class);

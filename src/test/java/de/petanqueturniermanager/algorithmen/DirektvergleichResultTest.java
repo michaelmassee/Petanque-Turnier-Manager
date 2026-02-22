@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.annotation.processing.Generated;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @Generated(value = "org.junit-tools-1.1.0")
 public class DirektvergleichResultTest {

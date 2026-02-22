@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -64,16 +64,15 @@ public abstract class BaseCalcUITest {
 	protected WorkingSpreadsheet wkingSpreadsheet;
 	protected DocumentPropertiesHelper docPropHelper;
 
-	@BeforeClass
+	@BeforeAll
 	public static void startup() {
 		try {
 			installExtension();
 			BaseCalcUITest.loader = starter.loadOffice().getComponentLoader();
 		} catch (RuntimeException e) {
-			Assume.assumeNoException(
+			Assumptions.abort(
 					"LibreOffice nicht verfügbar oder Extension nicht installierbar – UITest wird übersprungen. "
-							+ "Bitte sicherstellen dass LibreOffice installiert ist und './gradlew buildOXT' ausgeführt wurde.",
-					e);
+							+ "Bitte sicherstellen dass LibreOffice installiert ist und './gradlew buildOXT' ausgeführt wurde.");
 		}
 	}
 
@@ -133,7 +132,7 @@ public abstract class BaseCalcUITest {
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void beforeTest() {
 		doc = OfficeDocumentHelper.from(loader).createCalc();
 		if (doc == null) {
@@ -150,12 +149,12 @@ public abstract class BaseCalcUITest {
 		ProcessBox.forceinit(starter.getxComponentContext());
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void shutDown() {
 		BaseCalcUITest.starter.closeOffice();
 	}
 
-	@After
+	@AfterEach
 	public void afterTest() {
 		ProcessBox.dispose();
 		if (doc != null) {

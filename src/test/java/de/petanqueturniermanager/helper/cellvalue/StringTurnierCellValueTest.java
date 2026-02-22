@@ -2,7 +2,7 @@ package de.petanqueturniermanager.helper.cellvalue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.helper.position.Position;
 

@@ -2,8 +2,8 @@ package de.petanqueturniermanager.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class TeamTest {
 
@@ -13,7 +13,7 @@ public class TeamTest {
 	Spieler c;
 	Spieler d;
 
-	@Before
+	@BeforeEach
 	public void init() throws Exception {
 		team = Team.from(1);
 		a = Spieler.from(1);
