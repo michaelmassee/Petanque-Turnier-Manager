@@ -86,7 +86,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 
 	@Test
 	public void testCountAnzSpieltageInMeldeliste() throws Exception {
-		String[] header = { "1. Spieltag", "2. Spieltag", "3. Spieltag", "Spieltag" };
+		String[] header = { "Spieltag 1", "Spieltag 2", "Spieltag 3", "Spieltag" };
 		setupReturn_from_getHeaderStringFromCell(Arrays.asList(header));
 		int result = meldeSheet.countAnzSpieltageInMeldeliste();
 		assertThat(result).isEqualTo(3);

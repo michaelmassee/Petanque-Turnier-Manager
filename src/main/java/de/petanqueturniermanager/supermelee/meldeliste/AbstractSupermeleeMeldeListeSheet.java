@@ -318,7 +318,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	 * @throws GenerateException
 	 */
 	public String spielTagHeader(SpielTagNr spieltag) {
-		return spieltag.getNr() + ". " + SPIELTAG_HEADER_STR;
+		return SPIELTAG_HEADER_STR + " " + spieltag.getNr();
 	}
 
 	@Override
