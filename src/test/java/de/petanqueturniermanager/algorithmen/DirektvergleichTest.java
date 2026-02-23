@@ -2,12 +2,118 @@ package de.petanqueturniermanager.algorithmen;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.annotation.processing.Generated;
-
 import org.junit.jupiter.api.Test;
 
-@Generated(value = "org.junit-tools-1.1.0")
 public class DirektvergleichTest {
+
+	@Test
+	public void testCalc_teamAGewinntDurchMehrSiege() {
+		int teamA = 1, teamB = 2;
+		int[][] paarungen = { { 1, 2 } };
+		int[][] siege = { { 2, 1 } };
+		int[][] spielpunkte = { { 10, 8 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
+	}
+
+	@Test
+	public void testCalc_teamBGewinntDurchMehrSiege() {
+		int teamA = 1, teamB = 2;
+		int[][] paarungen = { { 1, 2 } };
+		int[][] siege = { { 1, 2 } };
+		int[][] spielpunkte = { { 10, 8 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.VERLOREN);
+	}
+
+	@Test
+	public void testCalc_gleichstandSiege_teamAGewinntDurchSpielPunkte() {
+		int teamA = 1, teamB = 2;
+		int[][] paarungen = { { 1, 2 } };
+		int[][] siege = { { 1, 1 } };
+		int[][] spielpunkte = { { 13, 10 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
+	}
+
+	@Test
+	public void testCalc_gleichstandSiege_teamBGewinntDurchSpielPunkte() {
+		int teamA = 1, teamB = 2;
+		int[][] paarungen = { { 1, 2 } };
+		int[][] siege = { { 1, 1 } };
+		int[][] spielpunkte = { { 8, 13 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.VERLOREN);
+	}
+
+	@Test
+	public void testCalc_gleichstandSiegeUndSpielPunkte_gleich() {
+		int teamA = 1, teamB = 2;
+		int[][] paarungen = { { 1, 2 } };
+		int[][] siege = { { 1, 1 } };
+		int[][] spielpunkte = { { 10, 10 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GLEICH);
+	}
+
+	@Test
+	public void testCalc_keinePaarungZwischenTeams_keinErgebnis() {
+		int teamA = 1, teamB = 2;
+		// Paarungen enthalten nur andere Teams
+		int[][] paarungen = { { 3, 4 }, { 5, 6 } };
+		int[][] siege = { { 1, 1 }, { 1, 1 } };
+		int[][] spielpunkte = { { 10, 10 }, { 10, 10 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.KEINERGEBNIS);
+	}
+
+	@Test
+	public void testCalc_mehrereSpiele_ergebnisseWerdenSummiert() {
+		int teamA = 1, teamB = 2;
+		// Zwei Spiele zwischen Team 1 und Team 2
+		int[][] paarungen = { { 1, 2 }, { 1, 2 } };
+		int[][] siege = { { 2, 1 }, { 1, 0 } }; // teamA gesamt: 3, teamB: 1 -> GEWONNEN
+		int[][] spielpunkte = { { 13, 5 }, { 7, 3 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
+	}
+
+	@Test
+	public void testCalc_paarungenInUmgekehrterReihenfolge() {
+		int teamA = 1, teamB = 2;
+		// Paarung ist B vs A (umgekehrte Reihenfolge im Array)
+		int[][] paarungen = { { 2, 1 } };
+		// In Paarung {2,1}: Index 0 = teamB, Index 1 = teamA
+		// siege[0][1]=3 geht an teamA, siege[0][0]=1 geht an teamB
+		int[][] siege = { { 1, 3 } };
+		int[][] spielpunkte = { { 5, 10 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
+	}
+
+	@Test
+	public void testCalc_ungueltigeTeamNummer_fehler() {
+		int[][] paarungen = { { 1, 2 } };
+		int[][] siege = { { 1, 1 } };
+		int[][] spielpunkte = { { 10, 10 } };
+
+		assertThat(new Direktvergleich(0, 2, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.FEHLER);
+		assertThat(new Direktvergleich(-1, 2, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.FEHLER);
+		assertThat(new Direktvergleich(1, 0, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.FEHLER);
+	}
+
+	// Bestehende Tests aus frueherer Version
 
 	@Test
 	public void testCalcWinSpielPnkt() throws Exception {
