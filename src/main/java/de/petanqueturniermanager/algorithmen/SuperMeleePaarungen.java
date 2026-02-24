@@ -8,12 +8,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.annotations.VisibleForTesting;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
-import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
@@ -27,8 +30,11 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
  */
 public class SuperMeleePaarungen {
 
-	private static int DUMMY_SPIELER_START_NR = 10000;
-	private static int DUMMY_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
+	private static final Logger logger = LogManager.getLogger(SuperMeleePaarungen.class);
+
+	private static final int DUMMY_SPIELER_START_NR = 10000;
+	private static final int DUMMY_SPIELER_SETZPOS = 999; // damit die nicht im gleichen Team gelost werden
+	private static final int MAX_RETRY = 100;
 
 	public MeleeSpielRunde neueSpielrunde(int rndNr, SpielerMeldungen meldungen) throws AlgorithmenException {
 		return neueSpielrundeTripletteMode(rndNr, meldungen, false);
@@ -55,23 +61,11 @@ public class SuperMeleePaarungen {
 			throw new AlgorithmenException("Keine Triplette Spielrunde möglich");
 		}
 
-		MeleeSpielRunde spielRunde = null;
+		MeleeSpielRunde spielRunde;
 		if (nurTriplette) {
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
 		} else {
-			int anzDoubletteOrg = teamRechner.getAnzDoublette();
-			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-				// dummy spieler einfuegen damit wir genau die anzahl spieler haben um triplette generieren können
-				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr).setSetzPos(DUMMY_SPIELER_SETZPOS));
-			}
-			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
-
-			// dummies wieder entfernen
-			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-				Spieler spieler = Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr);
-				spielRunde.removeSpieler(spieler);
-				meldungen.removeSpieler(spieler);
-			}
+			spielRunde = generiereSpielrundeTripletteMitDummies(rndNr, teamRechner.getAnzDoublette(), meldungen);
 		}
 		spielRunde.sortiereTeamsNachGroese();
 		spielRunde.validateSpielerTeam(null);
@@ -83,11 +77,10 @@ public class SuperMeleePaarungen {
 	 *
 	 * @param rndNr
 	 * @param meldungen
-	 * @param nurTriplette
+	 * @param nurDoublette
 	 * @return
 	 * @throws AlgorithmenException
 	 */
-
 	public MeleeSpielRunde neueSpielrundeTripletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurDoublette) throws AlgorithmenException {
 		checkNotNull(meldungen, "Meldungen = null");
 
@@ -101,25 +94,32 @@ public class SuperMeleePaarungen {
 			throw new AlgorithmenException("Keine Doublette Spielrunde möglich");
 		}
 
-		MeleeSpielRunde spielRunde = null;
+		MeleeSpielRunde spielRunde;
 		if (nurDoublette) {
 			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 2, meldungen);
 		} else {
-			int anzDoubletteOrg = teamRechner.getAnzDoublette();
-			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-				// dummy spieler einfuegen damit wir genau die anzahl spieler haben um triplette generieren können
-				meldungen.addSpielerWennNichtVorhanden(Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr).setSetzPos(DUMMY_SPIELER_SETZPOS));
-			}
-			spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
-			// dummies wieder entfernen
-			for (int doublDummyCntr = 0; doublDummyCntr < anzDoubletteOrg; doublDummyCntr++) {
-				Spieler spieler = Spieler.from(DUMMY_SPIELER_START_NR + doublDummyCntr);
-				spielRunde.removeSpieler(spieler);
-				meldungen.removeSpieler(spieler);
-			}
+			spielRunde = generiereSpielrundeTripletteMitDummies(rndNr, teamRechner.getAnzDoublette(), meldungen);
 		}
 		spielRunde.sortiereTeamsNachGroese();
 		spielRunde.validateSpielerTeam(null);
+		return spielRunde;
+	}
+
+	/**
+	 * Generiert eine Triplette-Spielrunde, indem Dummy-Spieler für die Doublette-Slots eingefügt
+	 * und nach der Generierung wieder entfernt werden.
+	 */
+	private MeleeSpielRunde generiereSpielrundeTripletteMitDummies(int rndNr, int anzDummies, SpielerMeldungen meldungen)
+			throws AlgorithmenException {
+		for (int i = 0; i < anzDummies; i++) {
+			meldungen.addSpielerWennNichtVorhanden(Spieler.from(DUMMY_SPIELER_START_NR + i).setSetzPos(DUMMY_SPIELER_SETZPOS));
+		}
+		MeleeSpielRunde spielRunde = generiereNeuSpielrundeMitFesteTeamGroese(rndNr, 3, meldungen);
+		for (int i = 0; i < anzDummies; i++) {
+			Spieler dummy = Spieler.from(DUMMY_SPIELER_START_NR + i);
+			spielRunde.removeSpieler(dummy);
+			meldungen.removeSpieler(dummy);
+		}
 		return spielRunde;
 	}
 
@@ -136,12 +136,9 @@ public class SuperMeleePaarungen {
 	MeleeSpielRunde generiereNeuSpielrundeMitFesteTeamGroese(int rndNr, int teamSize, SpielerMeldungen meldungen) throws AlgorithmenException {
 
 		MeleeSpielRunde spielrunde = null;
-		// Team nextTeam;
-
-		int maxRetry = 100;
 		int retryCnt = 1;
 
-		while (retryCnt < maxRetry) {
+		while (retryCnt < MAX_RETRY) {
 
 			spielrunde = new MeleeSpielRunde(rndNr);
 			// von alle meldungen die teams löschen
@@ -152,12 +149,11 @@ public class SuperMeleePaarungen {
 				while (meldungen.spielerOhneTeam().size() > 0) {
 					findNextTeamInSpielrunde(teamSize, meldungen, spielrunde);
 				}
-				retryCnt = maxRetry;
+				retryCnt = MAX_RETRY;
 			} catch (AlgorithmenException e) {
-				// retry ?
 				retryCnt++;
-				if (retryCnt == maxRetry) {
-					System.out.println("retry " + retryCnt + "/" + maxRetry);
+				if (retryCnt == MAX_RETRY) {
+					logger.warn("Maximale Retry-Anzahl ({}) erreicht, Spielrunde konnte nicht generiert werden", MAX_RETRY);
 					throw e;
 				}
 				spielrunde.deleteAllTeams();

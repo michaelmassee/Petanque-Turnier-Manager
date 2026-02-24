@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.algorithmen;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /*
  * PaarungenTest.java Erstellung : 31.08.2017 / Michael Massee
  */
@@ -36,12 +37,91 @@ public class SuperMeleePaarungenTest {
 
 	@BeforeEach
 	public void setup() throws AlgorithmenException {
-		// this.paarungen = new TripletteDoublPaarungen();
 		paarungen = spy(SuperMeleePaarungen.class);
 
 		meldungen = newTestMeldungen(16);
 		teams = newTestTeams(meldungen);
 	}
+
+	// --- neueSpielrunde / null-Checks ---
+
+	@Test
+	public void testNeueSpielrunde_meldungenNull_wirftNPE() {
+		assertThatThrownBy(() -> paarungen.neueSpielrunde(1, null))
+				.isInstanceOf(NullPointerException.class);
+	}
+
+	@Test
+	public void testNeueSpielrundeTripletteMode_meldungenNull_wirftNPE() {
+		assertThatThrownBy(() -> paarungen.neueSpielrundeTripletteMode(1, null, false))
+				.isInstanceOf(NullPointerException.class);
+	}
+
+	@Test
+	public void testNeueSpielrundeDoubletteMode_meldungenNull_wirftNPE() {
+		assertThatThrownBy(() -> paarungen.neueSpielrundeDoubletteMode(1, null, false))
+				.isInstanceOf(NullPointerException.class);
+	}
+
+	// --- ungültige Spielerzahl (7) → null ---
+
+	@Test
+	public void testNeueSpielrundeTripletteMode_7Spieler_gibtNull() throws AlgorithmenException {
+		SpielerMeldungen m = newTestMeldungen(7);
+		MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(1, m, false);
+		assertThat(runde).isNull();
+	}
+
+	@Test
+	public void testNeueSpielrundeDoubletteMode_7Spieler_gibtNull() throws AlgorithmenException {
+		SpielerMeldungen m = newTestMeldungen(7);
+		MeleeSpielRunde runde = paarungen.neueSpielrundeDoubletteMode(1, m, false);
+		assertThat(runde).isNull();
+	}
+
+	// --- nurDoublette=true ---
+
+	@Test
+	public void testNeueSpielrundeTripletteMode_nurDoublette_8Spieler() throws AlgorithmenException {
+		SpielerMeldungen m = newTestMeldungen(8);
+		MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(1, m, true);
+		assertThat(runde).isNotNull();
+		assertThat(runde.teams()).hasSize(4);
+		for (Team team : runde.teams()) {
+			assertThat(team.size()).isEqualTo(2);
+		}
+	}
+
+	@Test
+	public void testNeueSpielrundeTripletteMode_nurDoublette_nichtMoeglich_wirftException() {
+		SpielerMeldungen m = newTestMeldungen(9);
+		assertThatThrownBy(() -> paarungen.neueSpielrundeTripletteMode(1, m, true))
+				.isInstanceOf(AlgorithmenException.class)
+				.hasMessageContaining("Doublette");
+	}
+
+	// --- nurTriplette=true ---
+
+	@Test
+	public void testNeueSpielrundeDoubletteMode_nurTriplette_6Spieler() throws AlgorithmenException {
+		SpielerMeldungen m = newTestMeldungen(6);
+		MeleeSpielRunde runde = paarungen.neueSpielrundeDoubletteMode(1, m, true);
+		assertThat(runde).isNotNull();
+		assertThat(runde.teams()).hasSize(2);
+		for (Team team : runde.teams()) {
+			assertThat(team.size()).isEqualTo(3);
+		}
+	}
+
+	@Test
+	public void testNeueSpielrundeDoubletteMode_nurTriplette_nichtMoeglich_wirftException() {
+		SpielerMeldungen m = newTestMeldungen(8);
+		assertThatThrownBy(() -> paarungen.neueSpielrundeDoubletteMode(1, m, true))
+				.isInstanceOf(AlgorithmenException.class)
+				.hasMessageContaining("Triplette");
+	}
+
+	// --- Doublette ohne feste Teamgröße ---
 
 	@Test
 	public void testNurDoubletteOhneFesteTeamGroese() throws Exception {
@@ -161,6 +241,8 @@ public class SuperMeleePaarungenTest {
 				.isEqualTo(expAnzTriplett);
 	}
 
+	// --- kannTauschenMitSpielerOhneTeam ---
+
 	@Test
 	public void testKannTauschenMitSpielerOhneTeam() throws Exception {
 
@@ -196,25 +278,55 @@ public class SuperMeleePaarungenTest {
 	}
 
 	@Test
+	public void testKannTauschenMitSpielerOhneTeam_keinTauschMoeglich() throws Exception {
+		// spieler99 ohne Team, aber ALLE Mitglieder der möglichen Tauschteams haben bereits mit ihm gespielt
+		Spieler spieler99 = Spieler.from(99);
+		Spieler spieler1 = Spieler.from(1);
+		Spieler spieler2 = Spieler.from(2);
+
+		Team tauschTeam = Team.from(1);
+		tauschTeam.addSpielerWennNichtVorhanden(spieler1);
+		tauschTeam.addSpielerWennNichtVorhanden(spieler2);
+
+		// beide haben bereits mit spieler99 gespielt
+		spieler1.addWarImTeamMitWennNichtVorhanden(spieler99);
+		spieler2.addWarImTeamMitWennNichtVorhanden(spieler99);
+
+		Team newTeamInRunde = Team.from(5); // leer
+
+		Spieler result = paarungen.kannTauschenMitSpielerOhneTeam(spieler99, newTeamInRunde, List.of(tauschTeam));
+		assertThat(result).isNull();
+	}
+
+	@Test
+	public void testKannTauschenMitSpielerOhneTeam_leereTeamliste() throws Exception {
+		Spieler spieler99 = Spieler.from(99);
+		Team newTeamInRunde = Team.from(5);
+
+		Spieler result = paarungen.kannTauschenMitSpielerOhneTeam(spieler99, newTeamInRunde, List.of());
+		assertThat(result).isNull();
+	}
+
+	@Test
+	public void testKannTauschenMitSpielerOhneTeam_spielerNochImTeam_wirftException() throws Exception {
+		Spieler spieler1 = Spieler.from(1);
+		Team team = Team.from(1);
+		team.addSpielerWennNichtVorhanden(spieler1); // spieler1 ist jetzt in einem Team
+
+		Team newTeam = Team.from(2);
+		assertThatThrownBy(() -> paarungen.kannTauschenMitSpielerOhneTeam(spieler1, newTeam, List.of()))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	// --- findNextTeamInSpielrunde ---
+
+	@Test
 	public void testFindNextTeamInSpielrunde_Einfach_next_Freie_Spieler() throws Exception {
 		MeleeSpielRunde spielrunde = new MeleeSpielRunde(1);
 		spielrunde.addTeamsWennNichtVorhanden(teams);
 		Team resultTeam = paarungen.findNextTeamInSpielrunde(3, meldungen, spielrunde);
 		assertNotNull(resultTeam);
 		assertEquals(3, resultTeam.size());
-	}
-
-	@Test
-	public void testSpielerNr() throws Exception {
-		for (int teamNr = 1; teamNr < 5; teamNr++) {
-			for (int i = 1; i < 4; i++) {
-				System.out.print(spielerNr(teamNr, i, 3) + ",");
-			}
-		}
-	}
-
-	private int spielerNr(int teamNr, int idx, int teamSize) {
-		return ((teamNr - 1) * teamSize) + idx;
 	}
 
 	@Test
@@ -294,6 +406,23 @@ public class SuperMeleePaarungenTest {
 		assertNotNull(teams2.get(3).findSpielerByNr(5));
 	}
 
+	// --- spielerNr-Hilfsfunktion ---
+
+	@Test
+	public void testSpielerNrBerechnung() {
+		assertThat(spielerNr(1, 1, 3)).isEqualTo(1);
+		assertThat(spielerNr(1, 3, 3)).isEqualTo(3);
+		assertThat(spielerNr(2, 1, 3)).isEqualTo(4);
+		assertThat(spielerNr(3, 1, 3)).isEqualTo(7);
+		assertThat(spielerNr(4, 3, 3)).isEqualTo(12);
+	}
+
+	private int spielerNr(int teamNr, int idx, int teamSize) {
+		return ((teamNr - 1) * teamSize) + idx;
+	}
+
+	// --- generiereNeuSpielrundeMitFesteTeamGroese ---
+
 	@Test
 	@Disabled
 	public void testNeueSpielrundeTripletteMode_Fail_in_runde_vier() throws Exception {
@@ -312,7 +441,6 @@ public class SuperMeleePaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 5, 3, 11 });
 		@SuppressWarnings("unused")
 		MeleeSpielRunde ersteRunde = buildTestRunde(1, testMeldungen, spielerNrTeamListe);
-		// System.out.println(ersteRunde);
 
 		spielerNrTeamListe = new ArrayList<>();
 		spielerNrTeamListe.add(new Integer[] { 10, 2, 6 });
@@ -321,7 +449,6 @@ public class SuperMeleePaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 7, 8, 3 });
 		@SuppressWarnings("unused")
 		MeleeSpielRunde zweiteRunde = buildTestRunde(2, testMeldungen, spielerNrTeamListe);
-		// System.out.println(zweiteRunde);
 
 		spielerNrTeamListe = new ArrayList<>();
 		spielerNrTeamListe.add(new Integer[] { 4, 10, 7 });
@@ -330,10 +457,8 @@ public class SuperMeleePaarungenTest {
 		spielerNrTeamListe.add(new Integer[] { 3, 2, 1 });
 		@SuppressWarnings("unused")
 		MeleeSpielRunde dritteRunde = buildTestRunde(3, testMeldungen, spielerNrTeamListe);
-		// System.out.println(dritteRunde);
 
 		MeleeSpielRunde vierteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(4, 3, testMeldungen);
-		// System.out.println(vierteRunde);
 		assertNotNull(vierteRunde);
 		assertEquals(4, vierteRunde.teams().size());
 	}
@@ -365,10 +490,6 @@ public class SuperMeleePaarungenTest {
 	@Test
 	public void testNeueSpielrundeTripletteMode_12Spieler() throws Exception {
 
-		// 12 spieler = 4 runden
-		// 18 spieler = 6 runden
-		// 24 spieler = 8 runden
-
 		SpielerMeldungen meldungen = newTestMeldungen(12);
 
 		// TODO 3 runden sind nicht immer möglich
@@ -386,31 +507,61 @@ public class SuperMeleePaarungenTest {
 		int anzTriplette = 6;
 
 		MeleeSpielRunde ersteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(1, 3, meldungen);
-		// System.out.println(ersteRunde);
 		assertNotNull(ersteRunde);
 		assertEquals(anzTriplette, ersteRunde.teams().size());
 
 		MeleeSpielRunde zweiteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(2, 3, meldungen);
-		// System.out.println(zweiteRunde);
 		assertNotNull(zweiteRunde);
 		assertEquals(anzTriplette, zweiteRunde.teams().size());
 
 		MeleeSpielRunde dritteRunde = paarungen.generiereNeuSpielrundeMitFesteTeamGroese(3, 3, meldungen);
-		// System.out.println(dritteRunde);
 		assertNotNull(dritteRunde);
 		assertEquals(anzTriplette, dritteRunde.teams().size());
+	}
 
-		// SpielRunde vierteRunde = paarungen.neueSpielrunde(4, 3, meldungenOhneMitSpieler);
-		// System.out.println(vierteRunde);
-		// assertNotNull(vierteRunde);
-		// assertEquals(4, vierteRunde.teams().size());
-		//
-		// SpielRunde fuenfteRunde = paarungen.neueSpielrunde(5, 3, meldungenOhneMitSpieler);
-		// System.out.println(fuenfteRunde);
-		// assertNotNull(fuenfteRunde);
-		// assertEquals(4, fuenfteRunde.teams().size());
+	@Test
+	public void testNeueSpielrundeTripletteModeDoubletteTriplette() throws Exception {
+		MeleeSpielRunde neueSpielrundeDoubletteTriplette;
+
+		meldungen = newTestMeldungen(12);
+		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+		assertNotNull(neueSpielrundeDoubletteTriplette);
+		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
+		pruefeTeamMischungSpielrunde(12, 6, 0, neueSpielrundeDoubletteTriplette);
+
+		meldungen = newTestMeldungen(13);
+		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+		assertNotNull(neueSpielrundeDoubletteTriplette);
+		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
+		pruefeTeamMischungSpielrunde(13, 5, 1, neueSpielrundeDoubletteTriplette);
+
+		meldungen = newTestMeldungen(14);
+		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+		assertNotNull(neueSpielrundeDoubletteTriplette);
+		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
+		pruefeTeamMischungSpielrunde(14, 4, 2, neueSpielrundeDoubletteTriplette);
+
+		meldungen = newTestMeldungen(15);
+		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+		assertNotNull(neueSpielrundeDoubletteTriplette);
+		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
+		pruefeTeamMischungSpielrunde(15, 3, 3, neueSpielrundeDoubletteTriplette);
+
+		meldungen = newTestMeldungen(16);
+		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+		assertNotNull(neueSpielrundeDoubletteTriplette);
+		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(8);
+		pruefeTeamMischungSpielrunde(16, 8, 0, neueSpielrundeDoubletteTriplette);
+
+		meldungen = newTestMeldungen(17);
+		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+		assertNotNull(neueSpielrundeDoubletteTriplette);
+		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(8);
+		pruefeTeamMischungSpielrunde(17, 7, 1, neueSpielrundeDoubletteTriplette);
 
 	}
+
+	// --- Hilfsmethoden ---
 
 	private SpielerMeldungen newTestMeldungen(int anzSpieler) {
 		SpielerMeldungen meldungen = new SpielerMeldungen();
@@ -448,14 +599,6 @@ public class SuperMeleePaarungenTest {
 	private List<PaarungenExpectedAnzahl> testDaten() {
 		List<PaarungenExpectedAnzahl> paarungenExpectedAnzahl = new ArrayList<>();
 
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(4, 2, 0));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(5, 1, 1));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(6, 0, 2));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(8, 4, 0));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(9, 3, 1));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(10, 2, 2));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(11, 1, 3));
-		// paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(12, 0, 4));
 		paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(13, 5, 1));
 		paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(14, 4, 2));
 		paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(15, 3, 3));
@@ -506,48 +649,6 @@ public class SuperMeleePaarungenTest {
 		paarungenExpectedAnzahl.add(new PaarungenExpectedAnzahl(60, 0, 20));
 
 		return paarungenExpectedAnzahl;
-	}
-
-	@Test
-	public void testNeueSpielrundeTripletteModeDoubletteTriplette() throws Exception {
-		MeleeSpielRunde neueSpielrundeDoubletteTriplette;
-
-		meldungen = newTestMeldungen(12);
-		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
-		assertNotNull(neueSpielrundeDoubletteTriplette);
-		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
-		pruefeTeamMischungSpielrunde(12, 6, 0, neueSpielrundeDoubletteTriplette);
-
-		meldungen = newTestMeldungen(13);
-		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
-		assertNotNull(neueSpielrundeDoubletteTriplette);
-		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
-		pruefeTeamMischungSpielrunde(13, 5, 1, neueSpielrundeDoubletteTriplette);
-
-		meldungen = newTestMeldungen(14);
-		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
-		assertNotNull(neueSpielrundeDoubletteTriplette);
-		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
-		pruefeTeamMischungSpielrunde(14, 4, 2, neueSpielrundeDoubletteTriplette);
-
-		meldungen = newTestMeldungen(15);
-		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
-		assertNotNull(neueSpielrundeDoubletteTriplette);
-		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(6);
-		pruefeTeamMischungSpielrunde(15, 3, 3, neueSpielrundeDoubletteTriplette);
-
-		meldungen = newTestMeldungen(16);
-		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
-		assertNotNull(neueSpielrundeDoubletteTriplette);
-		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(8);
-		pruefeTeamMischungSpielrunde(16, 8, 0, neueSpielrundeDoubletteTriplette);
-
-		meldungen = newTestMeldungen(17);
-		neueSpielrundeDoubletteTriplette = paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
-		assertNotNull(neueSpielrundeDoubletteTriplette);
-		assertThat(neueSpielrundeDoubletteTriplette.teams().size()).isEqualTo(8);
-		pruefeTeamMischungSpielrunde(17, 7, 1, neueSpielrundeDoubletteTriplette);
-
 	}
 
 }

@@ -90,16 +90,7 @@ public class MeleeSpielRunde extends NrComparable {
 	}
 
 	public MeleeSpielRunde sortiereTeamsNachGroese() {
-		teams.sort(new Comparator<Team>() {
-			@Override
-			public int compare(Team o1, Team o2) {
-				if (o1.size() < o2.size())
-					return -1;
-				if (o1.size() > o2.size())
-					return 1;
-				return 0;
-			}
-		});
+		teams.sort(Comparator.comparingInt(Team::size));
 		return this;
 	}
 
