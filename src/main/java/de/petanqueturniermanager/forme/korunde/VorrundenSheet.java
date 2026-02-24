@@ -1,8 +1,5 @@
 package de.petanqueturniermanager.forme.korunde;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -20,8 +17,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 
 public class VorrundenSheet extends SheetRunner implements ISheet {
-
-	private static final Logger logger = LogManager.getLogger(KoGruppeABSheet.class);
 
 	public static final String SHEETNAME = "Ergebnisse aus Vorrunden";
 	private static final String SHEET_COLOR = "98e2d7";
@@ -43,11 +38,6 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 	@Override
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		return null;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

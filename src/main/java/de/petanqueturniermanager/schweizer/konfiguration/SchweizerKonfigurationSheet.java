@@ -33,7 +33,7 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	 * @param workingSpreadsheet
 	 */
 	SchweizerKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.LIGA);
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER);
 		propertiesSpalte = new SchweizerPropertiesSpalte(this);
 	}
 

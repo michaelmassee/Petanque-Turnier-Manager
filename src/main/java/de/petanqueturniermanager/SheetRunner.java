@@ -28,7 +28,7 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.io.BackUp;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public abstract class SheetRunner extends Thread implements Runnable {
+public abstract class SheetRunner extends Thread {
 
 	private static final Logger logger = LogManager.getLogger(SheetRunner.class);
 
@@ -65,14 +65,16 @@ public abstract class SheetRunner extends Thread implements Runnable {
 	 */
 
 	public static final void testDoCancelTask() throws GenerateException {
-		if (runner != null && runner.isInterrupted()) {
+		SheetRunner currentRunner = runner; // einmaliger Snapshot – verhindert Race Condition
+		if (currentRunner != null && currentRunner.isInterrupted()) {
 			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
 		}
 	}
 
 	public static final void cancelRunner() {
-		if (runner != null) {
-			runner.interrupt();
+		SheetRunner currentRunner = runner; // einmaliger Snapshot – verhindert Race Condition
+		if (currentRunner != null) {
+			currentRunner.interrupt();
 		}
 	}
 
@@ -106,10 +108,14 @@ public abstract class SheetRunner extends Thread implements Runnable {
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
-			new NewReleaseChecker().updateNewReleaseInfo(getxContext());
-			autoSave();
-			if (!isFehler && backupDocumentAfterRun) {
-				backUpDocument("2"); // after run
+			try {
+				new NewReleaseChecker().updateNewReleaseInfo(getxContext());
+				autoSave();
+				if (!isFehler && backupDocumentAfterRun) {
+					backUpDocument("2"); // after run
+				}
+			} catch (Exception e) {
+				getLogger().warn("Fehler bei Post-Run-Operationen: " + e.getMessage(), e);
 			}
 
 		} else {
@@ -184,7 +190,9 @@ public abstract class SheetRunner extends Thread implements Runnable {
 		konfigurationSheet.update();
 	}
 
-	public abstract Logger getLogger();
+	public Logger getLogger() {
+		return LogManager.getLogger(this.getClass());
+	}
 
 	protected abstract void doRun() throws GenerateException;
 
