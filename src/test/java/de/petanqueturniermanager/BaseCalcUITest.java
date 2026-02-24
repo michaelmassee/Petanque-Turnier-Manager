@@ -146,6 +146,7 @@ public abstract class BaseCalcUITest {
 		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		// use force weil calc is clossed in afterTest
+		ProcessBox.setHeadlessMode(Boolean.parseBoolean(System.getProperty("uitest.headless", "false")));
 		ProcessBox.forceinit(starter.getxComponentContext());
 	}
 

@@ -37,7 +37,12 @@ public class ProcessBox {
 	private static final int MIN_WIDTH = 600;
 	private static final String TITLE = "Pétanque Turnier Manager";
 	private static ProcessBox processBox;
+	private static boolean headlessMode = false;
 	private static final SimpleDateFormat SIMPLEDATEFORMAT = new SimpleDateFormat("HH:mm:ss");
+
+	public static void setHeadlessMode(boolean headless) {
+		headlessMode = headless;
+	}
 
 	private final JFrame frame;
 	private JTextArea logOut;
@@ -60,6 +65,11 @@ public class ProcessBox {
 	private boolean isFehler = false;
 
 	private ProcessBox(XComponentContext xContext) {
+		if (headlessMode) {
+			frame = null;
+			drawInWorkIcon = null;
+			return;
+		}
 		frame = new JFrame();
 		dialogTools = DialogTools.from(checkNotNull(xContext), frame);
 		drawInWorkIcon = Executors.newScheduledThreadPool(1);
@@ -304,6 +314,7 @@ public class ProcessBox {
 	}
 
 	public ProcessBox clear() {
+		if (logOut == null) return this;
 		isFehler = false;
 		logOut.setText(null);
 		return this;
@@ -317,7 +328,9 @@ public class ProcessBox {
 
 	public synchronized ProcessBox info(String logMsg) {
 		logger.debug("ProcessBox info ->" + logMsg);
-		checkNotNull(logOut);
+		if (headlessMode || logOut == null) {
+			return this;
+		}
 		checkNotNull(logMsg);
 
 		logOut.append(SIMPLEDATEFORMAT.format(new Date()));
@@ -333,33 +346,39 @@ public class ProcessBox {
 	}
 
 	public ProcessBox title(String title) {
+		if (frame == null) return this;
 		frame.setTitle(title);
 		return this;
 	}
 
 	public ProcessBox moveInsideTopWindow() {
+		if (dialogTools == null) return this;
 		dialogTools.moveInsideTopWindow();
 		return this;
 	}
 
 	public ProcessBox hide() {
+		if (frame == null) return this;
 		frame.setVisible(false);
 		return this;
 	}
 
 	public ProcessBox visible() {
+		if (frame == null) return this;
 		frame.setVisible(true);
 		moveInsideTopWindow();
 		return this;
 	}
 
 	public ProcessBox toFront() {
+		if (frame == null) return this;
 		frame.toFront();
 		return this;
 	}
 
 	public ProcessBox run() {
 		logger.debug("ProcessBox run");
+		if (headlessMode) return this;
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(true);
@@ -371,6 +390,7 @@ public class ProcessBox {
 	}
 
 	public ProcessBox ready() {
+		if (headlessMode) return this;
 		drawInWorkIconScheduled.cancel(true);
 		toFront();
 		if (cancelBtn != null) {
