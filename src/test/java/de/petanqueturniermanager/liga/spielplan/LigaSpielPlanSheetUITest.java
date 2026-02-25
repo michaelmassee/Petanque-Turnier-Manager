@@ -120,7 +120,7 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 
 		assertThat(namesData).as("Genau eine Datenzeile erwartet").hasSize(1);
 		assertThat(namesData.get(0).get(0).getStringVal()).as("Heim-Team (Nr. 1 = Alpha)").isEqualTo("Alpha");
-		assertThat(namesData.get(0).get(1).getStringVal()).as("Gast-Team (Nr. 4 = Delta)").isEqualTo("Delta");
+		assertThat(namesData.get(0).get(1).getStringVal()).as("Gast-Team (Nr. 4 = Gamma)").isEqualTo("Gamma");
 	}
 
 	/**
