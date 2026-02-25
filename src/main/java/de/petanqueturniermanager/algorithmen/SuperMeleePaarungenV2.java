@@ -78,21 +78,6 @@ public class SuperMeleePaarungenV2 {
     /** SetzPos der Dummy-Spieler; verhindert via {@code gleicheSetzPos}, dass zwei Dummies ins selbe Team gelost werden. */
     private static final int DUMMY_SPIELER_SETZPOS = 999;
 
-    /**
-     * Maximale Anzahl besuchter Backtracking-Knoten pro Versuch als Sicherheitslimit.
-     * Bei typischen Turniergrößen (bis ~60 Spieler) wird dieses Limit nie erreicht,
-     * da MCV-Heuristik und Forward-Checking den Suchraum stark beschneiden.
-     */
-    private static final int MAX_BACKTRACK_NODES = 100_000;
-
-    /**
-     * Maximale Anzahl Neustart-Versuche mit anderer Zufallsreihenfolge.
-     * Wird nur benötigt, wenn das Node-Limit erreicht wurde (pathologische Fälle).
-     * Bei vollständiger Suche (Node-Limit nicht erreicht) wird sofort eine Exception
-     * geworfen, ohne weitere Versuche.
-     */
-    private static final int MAX_SHUFFLE_RETRIES = 10;
-
     // =========================================================================
     // Öffentliche API — kompatibel zu SuperMeleePaarungen (V1)
     // =========================================================================
@@ -225,15 +210,14 @@ public class SuperMeleePaarungenV2 {
      * via vollständigem Backtracking-Algorithmus mit Adjazenz-Matrix, MCV-Heuristik
      * und Forward-Checking.<br>
      * <br>
-     * Ablauf je Versuch:
+     * Ablauf:
      * <ol>
      *   <li>Spieler zufällig mischen (unterschiedliche Lösungen in verschiedenen Runden).</li>
      *   <li>Adjazenz-Matrix aufbauen und dabei gleichzeitig MCV-Grade berechnen
-     *       (einziger O(n²)-Durchlauf pro Versuch).</li>
+     *       (einziger O(n²)-Durchlauf).</li>
      *   <li>MCV-Sortierung: stärker eingeschränkte Spieler zuerst platzieren.</li>
      *   <li>Backtracking mit Forward-Checking: findet garantiert eine Lösung, falls eine existiert.</li>
-     *   <li>Vollständige Suche ohne Lösung → sofortige Exception (kein weiterer Shuffle-Versuch).</li>
-     *   <li>Node-Limit überschritten → neuer Versuch mit anderem Shuffle (max. {@value #MAX_SHUFFLE_RETRIES}×).</li>
+     *   <li>Vollständige Suche ohne Lösung → sofortige Exception.</li>
      * </ol>
      *
      * @param rndNr     Rundennummer
@@ -251,63 +235,46 @@ public class SuperMeleePaarungenV2 {
         int n = spieler.size();
         int numTeams = n / teamSize;
 
-        for (int versuch = 0; versuch < MAX_SHUFFLE_RETRIES; versuch++) {
+        // Schritt 1: Zufällig mischen — für unterschiedliche Lösungen je Runde
+        Collections.shuffle(spieler);
 
-            // Schritt 1: Zufällig mischen — für unterschiedliche Lösungen je Runde
-            Collections.shuffle(spieler);
-
-            // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf
-            boolean[][] matrix = new boolean[n][n];
-            int[] degrees = new int[n];
-            for (int i = 0; i < n; i++) {
-                for (int j = i + 1; j < n; j++) {
-                    if (spieler.get(i).warImTeamMit(spieler.get(j))) {
-                        matrix[i][j] = matrix[j][i] = true;
-                        degrees[i]++;
-                        degrees[j]++;
-                    }
+        // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf
+        boolean[][] matrix = new boolean[n][n];
+        int[] degrees = new int[n];
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (spieler.get(i).warImTeamMit(spieler.get(j))) {
+                    matrix[i][j] = matrix[j][i] = true;
+                    degrees[i]++;
+                    degrees[j]++;
                 }
             }
-
-            // Schritt 3: MCV-Sortierung — Index-Array nach Constraint-Grad absteigend sortieren
-            // (Shuffle hat Gleichstände bereits zufällig gebrochen)
-            Integer[] order = new Integer[n];
-            for (int i = 0; i < n; i++) {
-                order[i] = i;
-            }
-            Arrays.sort(order, (a, b) -> Integer.compare(degrees[b], degrees[a]));
-
-            // Schritt 4: Backtracking mit index-basierten Teams
-            List<List<Integer>> teams = new ArrayList<>(numTeams);
-            for (int i = 0; i < numTeams; i++) {
-                teams.add(new ArrayList<>(teamSize));
-            }
-            int[] nodeCount = { 0 };
-
-            if (backtrack(order, 0, teams, teamSize, matrix, nodeCount)) {
-                logger.debug("Spielrunde {} in {} Backtracking-Knoten gefunden (Versuch {}/{})",
-                        rndNr, nodeCount[0], versuch + 1, MAX_SHUFFLE_RETRIES);
-                return buildSpielRunde(rndNr, teams, spieler, meldungen);
-            }
-
-            if (nodeCount[0] < MAX_BACKTRACK_NODES) {
-                // Vollständige Suche: keine Lösung existiert — sofortiger Abbruch
-                logger.warn("Spielrunde {}: Alle möglichen Spielerkombinationen ausgeschöpft "
-                        + "(Backtracking-Knoten: {}, {} Spieler).", rndNr, nodeCount[0], n);
-                throw new AlgorithmenException(
-                        "Keine gültige Spielrunde für Runde " + rndNr + " möglich — "
-                        + "alle Spielerkombinationen sind ausgeschöpft. "
-                        + "Möglicherweise müssen Wiederholungen in den Regeln zugelassen werden.");
-            }
-
-            // Node-Limit erreicht, aber kein Vollständigkeitsbeweis → neuer Versuch
-            logger.debug("Spielrunde {}: Backtracking-Node-Limit ({}) in Versuch {}/{} erreicht — neuer Shuffle.",
-                    rndNr, MAX_BACKTRACK_NODES, versuch + 1, MAX_SHUFFLE_RETRIES);
         }
 
+        // Schritt 3: MCV-Sortierung — Index-Array nach Constraint-Grad absteigend sortieren
+        // (Shuffle hat Gleichstände bereits zufällig gebrochen)
+        Integer[] order = new Integer[n];
+        for (int i = 0; i < n; i++) {
+            order[i] = i;
+        }
+        Arrays.sort(order, (a, b) -> Integer.compare(degrees[b], degrees[a]));
+
+        // Schritt 4: Vollständiges Backtracking
+        List<List<Integer>> teams = new ArrayList<>(numTeams);
+        for (int i = 0; i < numTeams; i++) {
+            teams.add(new ArrayList<>(teamSize));
+        }
+
+        if (backtrack(order, 0, teams, teamSize, matrix)) {
+            return buildSpielRunde(rndNr, teams, spieler, meldungen);
+        }
+
+        logger.warn("Spielrunde {}: Alle möglichen Spielerkombinationen ausgeschöpft ({} Spieler).",
+                rndNr, n);
         throw new AlgorithmenException(
-                "Spielrunde " + rndNr + " konnte nach " + MAX_SHUFFLE_RETRIES + " Versuchen nicht generiert werden "
-                + "(Backtracking-Knotenlimit " + MAX_BACKTRACK_NODES + " je Versuch überschritten).");
+                "Keine gültige Spielrunde für Runde " + rndNr + " möglich — "
+                + "alle Spielerkombinationen sind ausgeschöpft. "
+                + "Möglicherweise müssen Wiederholungen in den Regeln zugelassen werden.");
     }
 
     // =========================================================================
@@ -331,21 +298,15 @@ public class SuperMeleePaarungenV2 {
      *       nicht zugewiesenen Spieler mindestens einen validen Team-Slot haben.</li>
      * </ul>
      *
-     * @param order     MCV-sortierte Original-Indizes (stärker eingeschränkt → früher)
-     * @param idx       aktuelle Position in {@code order}
-     * @param teams     partielle Team-Zuweisung als Index-Listen (in-place, rückgängig gemacht)
-     * @param teamSize  Zielgröße jedes Teams
-     * @param matrix    vorberechnete Adjazenz-Matrix; {@code matrix[i][j]==true} bedeutet Konflikt
-     * @param nodeCount einelementiges Array als rekursiv geteilter Zähler
+     * @param order    MCV-sortierte Original-Indizes (stärker eingeschränkt → früher)
+     * @param idx      aktuelle Position in {@code order}
+     * @param teams    partielle Team-Zuweisung als Index-Listen (in-place, rückgängig gemacht)
+     * @param teamSize Zielgröße jedes Teams
+     * @param matrix   vorberechnete Adjazenz-Matrix; {@code matrix[i][j]==true} bedeutet Konflikt
      * @return {@code true} wenn eine vollständige gültige Zuweisung gefunden wurde
      */
     private boolean backtrack(Integer[] order, int idx, List<List<Integer>> teams,
-            int teamSize, boolean[][] matrix, int[] nodeCount) {
-        nodeCount[0]++;
-        if (nodeCount[0] > MAX_BACKTRACK_NODES) {
-            return false; // Sicherheitslimit — keine Aussage über Lösbarkeit
-        }
-
+            int teamSize, boolean[][] matrix) {
         if (idx == order.length) {
             return true; // Alle Spieler erfolgreich zugewiesen
         }
@@ -369,7 +330,7 @@ public class SuperMeleePaarungenV2 {
             if (kannTeamBeitreten(currentOrigIdx, team, matrix)) {
                 team.add(currentOrigIdx);
                 if (vorwaertsCheck(order, idx + 1, teams, teamSize, matrix)
-                        && backtrack(order, idx + 1, teams, teamSize, matrix, nodeCount)) {
+                        && backtrack(order, idx + 1, teams, teamSize, matrix)) {
                     return true;
                 }
                 team.remove(team.size() - 1); // Backtrack: Zuweisung rückgängig machen

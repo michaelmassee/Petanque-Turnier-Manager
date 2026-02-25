@@ -7,8 +7,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -161,6 +163,8 @@ public class SuperMeleePaarungenV2Test {
             assertThat(runde).as("Runde %d", rnd).isNotNull();
             assertThat(runde.teams()).as("Runde %d: Team-Anzahl", rnd).hasSize(4);
             pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
             pruefeKeineWiederholtenTeamkombinationen(runde, paarHistorie);
         }
     }
@@ -180,6 +184,8 @@ public class SuperMeleePaarungenV2Test {
             assertThat(runde).as("Runde %d", rnd).isNotNull();
             assertThat(runde.teams()).as("Runde %d: Team-Anzahl", rnd).hasSize(6);
             pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
             pruefeKeineWiederholtenTeamkombinationen(runde, paarHistorie);
         }
     }
@@ -201,7 +207,37 @@ public class SuperMeleePaarungenV2Test {
             final int rndNr = rnd;
             runde.teams().forEach(t -> assertThat(t.size()).as("Runde %d: Teamgröße", rndNr).isEqualTo(2));
             pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
             pruefeKeineWiederholtenTeamkombinationen(runde, paarHistorie);
+        }
+    }
+
+    /**
+     * 3 Runden mit 12 Spielern im Doublette-Modus über {@code neueSpielrundeDoubletteMode}.<br>
+     * Bei 12 Spielern (gerade, durch 6 teilbar) werden intern 6 Dummy-Spieler ergänzt, sodass
+     * 6 Dreier-Teams entstehen; nach Entfernung je eines Dummys pro Team bleiben 6 Doubletten.<br>
+     * Prüft zusätzlich, dass {@code meldungen.size()} nach jeder Runde unverändert 12 ist
+     * (Dummies vollständig entfernt).
+     */
+    @Test
+    public void testMehrereRunden_DoubletteMode_12Spieler() throws AlgorithmenException {
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+        Set<String> paarHistorie = new HashSet<>();
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeDoubletteMode(rnd, meldungen, false);
+            assertThat(runde).as("Runde %d", rnd).isNotNull();
+            assertThat(runde.teams()).as("Runde %d: 6 Doubletten erwartet", rnd).hasSize(6);
+            final int rndNr = rnd;
+            runde.teams().forEach(t -> assertThat(t.size())
+                    .as("Runde %d: nur Doubletten erwartet", rndNr).isEqualTo(2));
+            pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
+            pruefeKeineWiederholtenTeamkombinationen(runde, paarHistorie);
+            assertThat(meldungen.size())
+                    .as("Runde %d: Dummy-Spieler müssen nach der Runde entfernt sein", rnd)
+                    .isEqualTo(12);
         }
     }
 
@@ -220,8 +256,142 @@ public class SuperMeleePaarungenV2Test {
             assertThat(runde).as("Runde %d", rnd).isNotNull();
             assertThat(runde.teams()).as("Runde %d: 10 Teams", rnd).hasSize(10);
             pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
             pruefeKeineWiederholtenTeamkombinationen(runde, paarHistorie);
         }
+    }
+
+    /**
+     * Vollständige Doublette-Round-Robin mit 8 Spielern.<br>
+     * <br>
+     * Bei 8 Spielern (gerade, durch 4 teilbar) erzeugt {@code neueSpielrundeDoubletteMode}
+     * pro Runde exakt 4 Doubletten. Intern werden 4 Dummy-Spieler ergänzt, sodass 4
+     * Dreier-Teams entstehen; nach Entfernung der Dummies bleiben 4 Doubletten übrig.<br>
+     * <br>
+     * C(8,2) = 28 Paare, 7 Runden × 4 Paare = 28 → nach 7 Runden hat jeder Spieler
+     * genau einmal mit jedem anderen zusammengespielt.<br>
+     * Da jeder Spieler pro Runde exakt einen neuen Partner kennenlernt (kein reines
+     * Real-Team), ist keine vorzeitige Partner-Erschöpfung möglich — der Backtracking-
+     * Algorithmus löst jeden Schritt zuverlässig.
+     */
+    @Test
+    public void testVollstaendigeRoundRobin_Doublette_8Spieler() throws AlgorithmenException {
+        int anzSpieler = 8;
+        int erwarteteRunden = 7; // C(8,2)=28 Paare / 4 Paare pro Runde
+        SpielerMeldungen meldungen = newTestMeldungen(anzSpieler);
+        Map<String, Integer> paarZaehler = new HashMap<>();
+
+        for (int rnd = 1; rnd <= erwarteteRunden; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeDoubletteMode(rnd, meldungen, false);
+            assertThat(runde).as("Runde %d", rnd).isNotNull();
+            assertThat(runde.teams()).as("Runde %d: 4 Teams erwartet", rnd).hasSize(4);
+            final int rndNr = rnd;
+            runde.teams().forEach(t -> assertThat(t.size())
+                    .as("Runde %d: nur Doubletten erwartet", rndNr).isEqualTo(2));
+            pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
+            zaehlePaare(runde, paarZaehler);
+        }
+
+        // Jedes der C(8,2)=28 Paare muss genau einmal gespielt haben
+        int erwarteteGesamtPaare = anzSpieler * (anzSpieler - 1) / 2; // = 28
+        assertThat(paarZaehler)
+                .as("Anzahl eindeutiger Paare nach %d Runden", erwarteteRunden)
+                .hasSize(erwarteteGesamtPaare);
+        paarZaehler.forEach((paar, count) ->
+                assertThat(count)
+                        .as("Paar %s muss genau einmal gespielt haben", paar)
+                        .isEqualTo(1));
+    }
+
+    /**
+     * Mehrere Runden Triplette-Modus mit Doublette-Auffüllung für 11 Spieler.<br>
+     * <br>
+     * Bei 11 Spielern (ungerade, nicht durch 6 teilbar) erzeugt
+     * {@code neueSpielrundeTripletteMode} pro Runde exakt 3 Tripletten + 1 Doublette
+     * (= 10 Paare/Runde). Intern wird 1 Dummy-Spieler ergänzt, sodass 4 Dreier-Teams
+     * entstehen; nach Entfernung des Dummys wird das betroffene Team zur Doublette.<br>
+     * <br>
+     * 4 Runden × 10 Paare = 40 Paare — kein Paar darf doppelt vorkommen.<br>
+     * Da die maximale Partnerzahl nach 4 Runden ≤ 8 von 10 möglichen beträgt
+     * (Grad ≤ 4 + k mit k ≤ 4 Triplette-Runden), ist keine vorzeitige
+     * Partner-Erschöpfung möglich.
+     */
+    @Test
+    public void testMehrereRunden_Triplette_MitDoublette_11Spieler() throws AlgorithmenException {
+        int anzSpieler = 11;
+        int testeRunden = 4; // Paare/Runde = 3×C(3,2) + 1×C(2,2) = 10
+        SpielerMeldungen meldungen = newTestMeldungen(anzSpieler);
+        Map<String, Integer> paarZaehler = new HashMap<>();
+
+        for (int rnd = 1; rnd <= testeRunden; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            assertThat(runde).as("Runde %d", rnd).isNotNull();
+            assertThat(runde.teams()).as("Runde %d: 4 Teams erwartet", rnd).hasSize(4);
+            long anzTripletten = runde.teams().stream().filter(t -> t.size() == 3).count();
+            long anzDoubletten = runde.teams().stream().filter(t -> t.size() == 2).count();
+            assertThat(anzTripletten).as("Runde %d: 3 Tripletten erwartet", rnd).isEqualTo(3L);
+            assertThat(anzDoubletten).as("Runde %d: 1 Doublette erwartet", rnd).isEqualTo(1L);
+            pruefeKeineDoppeltenSpieler(runde);
+            pruefeMinTeamGroese(runde, 2);
+            pruefeAlleSpielerInTeam(runde, meldungen);
+            zaehlePaare(runde, paarZaehler);
+        }
+
+        // 4 Runden × 10 Paare = 40 eindeutige Paare
+        int erwarteteGesamtPaare = testeRunden * 10; // = 40
+        assertThat(paarZaehler)
+                .as("Anzahl eindeutiger Paare nach %d Runden", testeRunden)
+                .hasSize(erwarteteGesamtPaare);
+        paarZaehler.forEach((paar, count) ->
+                assertThat(count)
+                        .as("Paar %s muss genau einmal gespielt haben", paar)
+                        .isEqualTo(1));
+    }
+
+    /**
+     * Stellt sicher, dass Dummy-Spieler nach jeder Runde vollständig aus den Meldungen
+     * entfernt werden — unabhängig davon, ob Doublette- oder Triplette-Modus verwendet wird.<br>
+     * <br>
+     * Bei 9 Spielern (DoubletteMode) werden intern 3 Dummies ergänzt (Nrn. 10000–10002).<br>
+     * Bei 11 Spielern (TripletteMode) wird intern 1 Dummy ergänzt (Nr. 10000).<br>
+     * Nach jedem {@code neueSpielrunde*}-Aufruf muss {@code meldungen.size()} unverändert sein.
+     */
+    @Test
+    public void testDummySpielerNichtInMeldungenNachRunde() throws AlgorithmenException {
+        // DoubletteMode mit 9 Spielern: intern 3 Dummies (10000, 10001, 10002)
+        SpielerMeldungen meldungen9 = newTestMeldungen(9);
+        assertThat(meldungen9.size()).isEqualTo(9);
+
+        MeleeSpielRunde runde9a = paarungen.neueSpielrundeDoubletteMode(1, meldungen9, false);
+        assertThat(runde9a).isNotNull();
+        assertThat(meldungen9.size())
+                .as("Nach DoubletteMode Runde 1: Dummies müssen entfernt sein")
+                .isEqualTo(9);
+
+        MeleeSpielRunde runde9b = paarungen.neueSpielrundeDoubletteMode(2, meldungen9, false);
+        assertThat(runde9b).isNotNull();
+        assertThat(meldungen9.size())
+                .as("Nach DoubletteMode Runde 2: Dummies müssen entfernt sein")
+                .isEqualTo(9);
+
+        // TripletteMode mit 11 Spielern: intern 1 Dummy (10000)
+        SpielerMeldungen meldungen11 = newTestMeldungen(11);
+        assertThat(meldungen11.size()).isEqualTo(11);
+
+        MeleeSpielRunde runde11a = paarungen.neueSpielrundeTripletteMode(1, meldungen11, false);
+        assertThat(runde11a).isNotNull();
+        assertThat(meldungen11.size())
+                .as("Nach TripletteMode Runde 1: Dummy muss entfernt sein")
+                .isEqualTo(11);
+
+        MeleeSpielRunde runde11b = paarungen.neueSpielrundeTripletteMode(2, meldungen11, false);
+        assertThat(runde11b).isNotNull();
+        assertThat(meldungen11.size())
+                .as("Nach TripletteMode Runde 2: Dummy muss entfernt sein")
+                .isEqualTo(11);
     }
 
     /**
@@ -286,6 +456,8 @@ public class SuperMeleePaarungenV2Test {
         MeleeSpielRunde runde1 = paarungen.neueSpielrunde(1, meldungen);
         assertThat(runde1).isNotNull();
         pruefeKeineDoppeltenSpieler(runde1);
+        pruefeMinTeamGroese(runde1, 2);
+        pruefeAlleSpielerInTeam(runde1, meldungen);
 
         // 3 neue Spieler dazukommen
         meldungen.addSpielerWennNichtVorhanden(Spieler.from(13));
@@ -297,6 +469,8 @@ public class SuperMeleePaarungenV2Test {
         MeleeSpielRunde runde2 = paarungen.neueSpielrunde(2, meldungen);
         assertThat(runde2).isNotNull();
         pruefeKeineDoppeltenSpieler(runde2);
+        pruefeMinTeamGroese(runde2, 2);
+        pruefeAlleSpielerInTeam(runde2, meldungen);
 
         // 3 Spieler gehen wieder — manuell aus der Liste entfernen (simuliert Abmeldung)
         meldungen.removeSpieler(meldungen.findSpielerByNr(13));
@@ -308,6 +482,8 @@ public class SuperMeleePaarungenV2Test {
         MeleeSpielRunde runde3 = paarungen.neueSpielrunde(3, meldungen);
         assertThat(runde3).isNotNull();
         pruefeKeineDoppeltenSpieler(runde3);
+        pruefeMinTeamGroese(runde3, 2);
+        pruefeAlleSpielerInTeam(runde3, meldungen);
     }
 
     // =========================================================================
@@ -385,6 +561,58 @@ public class SuperMeleePaarungenV2Test {
                             .as("Spielerpaar %s in Runde %d wurde bereits in einer früheren Runde gespielt",
                                     paar, spielRunde.getNr())
                             .isTrue();
+                }
+            }
+        }
+    }
+
+    /** Prüft, dass jedes Team der Spielrunde mindestens {@code minGroese} Spieler hat. */
+    private void pruefeMinTeamGroese(MeleeSpielRunde spielRunde, int minGroese) {
+        for (Team team : spielRunde.teams()) {
+            assertThat(team.size())
+                    .as("Team in Spielrunde %d muss mindestens %d Spieler haben",
+                            spielRunde.getNr(), minGroese)
+                    .isGreaterThanOrEqualTo(minGroese);
+        }
+    }
+
+    /**
+     * Prüft, dass jeder Spieler aus {@code meldungen} in der Spielrunde genau einem Team
+     * zugeordnet ist — kein Spieler darf fehlen, und kein Spieler darf in mehreren Teams stehen.
+     * Durch Verwendung einer Liste (statt Set) erkennt {@code containsExactlyInAnyOrderElementsOf}
+     * auch doppelte Einträge als Fehler.
+     */
+    private void pruefeAlleSpielerInTeam(MeleeSpielRunde spielRunde, SpielerMeldungen meldungen) {
+        List<Integer> inRunde = new ArrayList<>();
+        for (Team team : spielRunde.teams()) {
+            for (Spieler spieler : team.spieler()) {
+                inRunde.add(spieler.getNr());
+            }
+        }
+        List<Integer> erwartet = new ArrayList<>();
+        for (Spieler spieler : meldungen.spieler()) {
+            erwartet.add(spieler.getNr());
+        }
+        assertThat(inRunde)
+                .as("Spielrunde %d: jeder Spieler muss genau einem Team zugeordnet sein",
+                        spielRunde.getNr())
+                .containsExactlyInAnyOrderElementsOf(erwartet);
+    }
+
+    /**
+     * Zählt alle Spielerpaare der Spielrunde in {@code paarZaehler}.<br>
+     * Der Schlüssel ist "min-max" (Spielernummer), der Wert die Häufigkeit.
+     * Wird über mehrere Runden akkumuliert, um am Ende "genau einmal" zu prüfen.
+     */
+    private void zaehlePaare(MeleeSpielRunde spielRunde, Map<String, Integer> paarZaehler) {
+        for (Team team : spielRunde.teams()) {
+            List<Spieler> spielerImTeam = team.spieler();
+            for (int i = 0; i < spielerImTeam.size(); i++) {
+                for (int j = i + 1; j < spielerImTeam.size(); j++) {
+                    int a = spielerImTeam.get(i).getNr();
+                    int b = spielerImTeam.get(j).getNr();
+                    String paar = Math.min(a, b) + "-" + Math.max(a, b);
+                    paarZaehler.merge(paar, 1, Integer::sum);
                 }
             }
         }
