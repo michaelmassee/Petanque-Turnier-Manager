@@ -7,9 +7,11 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -104,6 +106,10 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 						LigaSpielPlanSheet.TEAM_B_NR_SPALTE,
 						LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE))
 				.setDataInRange(paarung);
+
+		// Neuberechnung erzwingen, da VLOOKUP mit blattübergreifenden Referenzen
+		// nach setDataArray nicht automatisch neu berechnet wird
+		Lo.qi(XCalculatable.class, doc).calculateAll();
 
 		// Teamnamen-Formeln auslesen (NAME_A_SPALTE=6, NAME_B_SPALTE=7)
 		RangeData namesData = RangeHelper.from(spielPlan.getXSpreadSheet(),
