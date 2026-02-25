@@ -2,3 +2,7 @@ theme: jekyll-theme-architect
 show_downloads: false
 title: Pétanque Turnier-Manager
 description: Turnierleitungssoftware für LibreOffice Calc
+exclude:
+  - CLAUDE.md
+  - BUILD_ISSUES.md
+  - .gitignore
