@@ -70,9 +70,11 @@ public class SheetHelper {
 
 	// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 	private static final String[] FORMULA_GERMAN_SEARCH_LIST = new String[] { "ISTNV", "WENNNV", "WENN",
-			"ISOKALENDERWOCHE", "ISTZAHL", "ANZAHL", "ANZAHL2", "ZÄHLENWENN" };
+			"ISOKALENDERWOCHE", "ISTZAHL", "ANZAHL", "ANZAHL2", "ZÄHLENWENN",
+			"PTM.ALG.DIREKTVERGLEICH" };
 	private static final String[] FORMULA_ENGLISH_REPLACEMENT_LIST = new String[] { "ISNA", "IFNA", "IF", "ISOWEEKNUM",
-			"ISNUMBER", "COUNT", "COUNTA", "COUNTIF" };
+			"ISNUMBER", "COUNT", "COUNTA", "COUNTIF",
+			"PTM.ALG.DIRECTCOMPARISON" };
 
 	private final WorkingSpreadsheet currentSpreadsheet;
 
