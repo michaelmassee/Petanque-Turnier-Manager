@@ -5,4 +5,5 @@ description: Turnierleitungssoftware für LibreOffice Calc
 exclude:
   - CLAUDE.md
   - BUILD_ISSUES.md
+  - SchweizerTurnierSystem.md
   - .gitignore
