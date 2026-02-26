@@ -441,6 +441,155 @@ public class SuperMeleePaarungenV2Test {
 
 
     // =========================================================================
+    // SetzPos-Constraint
+    // =========================================================================
+
+    /**
+     * Einfacher SetzPos-Test: 9 Spieler in 3 Gruppen à 3 (SetzPos 1/2/3).<br>
+     * Kein Team darf zwei Spieler mit gleicher SetzPos enthalten.
+     * Über eine Runde wird sichergestellt, dass der Constraint eingehalten wird.
+     */
+    @Test
+    public void testSetzPosConstraint_eineRunde_keineGleicheSetzPosImTeam() throws AlgorithmenException {
+        // je 3 Spieler mit SetzPos 1, 2, 3 — müssen auf verschiedene Teams verteilt werden
+        SpielerMeldungen meldungen = new SpielerMeldungen();
+        for (int setzPos = 1; setzPos <= 3; setzPos++) {
+            for (int j = 0; j < 3; j++) {
+                meldungen.addSpielerWennNichtVorhanden(
+                        Spieler.from((setzPos - 1) * 3 + j + 1).setSetzPos(setzPos));
+            }
+        }
+
+        MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(1, 3, meldungen);
+        assertThat(runde).isNotNull();
+        assertThat(runde.teams()).hasSize(3);
+        pruefeSetzPosConstraint(runde);
+        pruefeKeineDoppeltenSpieler(runde);
+        pruefeAlleSpielerInTeam(runde, meldungen);
+    }
+
+    /**
+     * SetzPos-Test über mehrere Runden: 12 Spieler, davon 3 SetzPos-Paare.<br>
+     * Spieler 1/2 (SetzPos 1), 3/4 (SetzPos 2), 5/6 (SetzPos 3) dürfen nie im selben
+     * Team sein. Die restlichen 6 Spieler haben keine SetzPos-Einschränkung.
+     * Der Constraint muss über alle Runden hinweg eingehalten werden.
+     */
+    @Test
+    public void testSetzPosConstraint_mehrereRunden_keineGleicheSetzPosImTeam() throws AlgorithmenException {
+        SpielerMeldungen meldungen = new SpielerMeldungen();
+        meldungen.addSpielerWennNichtVorhanden(Spieler.from(1).setSetzPos(1));
+        meldungen.addSpielerWennNichtVorhanden(Spieler.from(2).setSetzPos(1));
+        meldungen.addSpielerWennNichtVorhanden(Spieler.from(3).setSetzPos(2));
+        meldungen.addSpielerWennNichtVorhanden(Spieler.from(4).setSetzPos(2));
+        meldungen.addSpielerWennNichtVorhanden(Spieler.from(5).setSetzPos(3));
+        meldungen.addSpielerWennNichtVorhanden(Spieler.from(6).setSetzPos(3));
+        for (int i = 7; i <= 12; i++) {
+            meldungen.addSpielerWennNichtVorhanden(Spieler.from(i));
+        }
+
+        Set<String> paarHistorie = new HashSet<>();
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(rnd, 3, meldungen);
+            assertThat(runde).as("Runde %d", rnd).isNotNull();
+            assertThat(runde.teams()).as("Runde %d: 4 Teams", rnd).hasSize(4);
+            pruefeSetzPosConstraint(runde);
+            pruefeKeineDoppeltenSpieler(runde);
+            pruefeAlleSpielerInTeam(runde, meldungen);
+            pruefeKeineWiederholtenTeamkombinationen(runde, paarHistorie);
+        }
+    }
+
+    /**
+     * SetzPos macht jede Paarung unmöglich: 4 Spieler alle mit SetzPos 1
+     * können keine 2er-Teams bilden — kein Spieler darf mit einem anderen zusammen.<br>
+     * V2 erkennt dies vollständig und wirft eine {@link AlgorithmenException}.
+     */
+    @Test
+    public void testSetzPosConstraint_alleGleicheSetzPos_wirftException() {
+        SpielerMeldungen meldungen = new SpielerMeldungen();
+        for (int i = 1; i <= 4; i++) {
+            meldungen.addSpielerWennNichtVorhanden(Spieler.from(i).setSetzPos(1));
+        }
+        assertThatThrownBy(() -> paarungen.generiereRundeMitFesteTeamGroese(1, 2, meldungen))
+                .isInstanceOf(AlgorithmenException.class)
+                .hasMessageContaining("ausgeschöpft");
+    }
+
+    // =========================================================================
+    // Minimale Spielerzahl (Grenzfälle)
+    // =========================================================================
+
+    /**
+     * Grenzfall: genau 2 Spieler → 1 Doublette (kleinstmögliche Eingabe für teamSize=2).
+     */
+    @Test
+    public void testGeneriereRunde_2Spieler_1Doublette() throws AlgorithmenException {
+        SpielerMeldungen meldungen = newTestMeldungen(2);
+        MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(1, 2, meldungen);
+        assertThat(runde).isNotNull();
+        assertThat(runde.teams()).hasSize(1);
+        assertThat(runde.teams().get(0).size()).isEqualTo(2);
+        pruefeKeineDoppeltenSpieler(runde);
+        pruefeAlleSpielerInTeam(runde, meldungen);
+    }
+
+    /**
+     * Grenzfall: genau 3 Spieler → 1 Triplette (kleinstmögliche Eingabe für teamSize=3).
+     */
+    @Test
+    public void testGeneriereRunde_3Spieler_1Triplette() throws AlgorithmenException {
+        SpielerMeldungen meldungen = newTestMeldungen(3);
+        MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(1, 3, meldungen);
+        assertThat(runde).isNotNull();
+        assertThat(runde.teams()).hasSize(1);
+        assertThat(runde.teams().get(0).size()).isEqualTo(3);
+        pruefeKeineDoppeltenSpieler(runde);
+        pruefeAlleSpielerInTeam(runde, meldungen);
+    }
+
+    // =========================================================================
+    // Vollständiges Triplette-Round-Robin
+    // =========================================================================
+
+    /**
+     * Vollständiges Triplette-Round-Robin mit 9 Spielern.<br>
+     * <br>
+     * 9 Spieler in 3 Dreier-Teams: pro Runde werden 3 × C(3,2) = 9 Paare abgedeckt.<br>
+     * C(9,2) = 36 mögliche Paare — 36 / 9 = 4 Runden für ein vollständiges Round-Robin.<br>
+     * Nach 4 Runden hat jeder Spieler genau einmal mit jedem anderen zusammengespielt.<br>
+     * Prüft, dass V2 eine vollständige Lösung ohne Paarwiederholung findet.
+     */
+    @Test
+    public void testVollstaendigesRoundRobin_Triplette_9Spieler() throws AlgorithmenException {
+        int anzSpieler = 9;
+        int erwarteteRunden = 4; // C(9,2)=36 Paare / 9 Paare pro Runde
+        SpielerMeldungen meldungen = newTestMeldungen(anzSpieler);
+        Map<String, Integer> paarZaehler = new HashMap<>();
+
+        for (int rnd = 1; rnd <= erwarteteRunden; rnd++) {
+            MeleeSpielRunde runde = paarungen.generiereRundeMitFesteTeamGroese(rnd, 3, meldungen);
+            assertThat(runde).as("Runde %d", rnd).isNotNull();
+            assertThat(runde.teams()).as("Runde %d: 3 Teams erwartet", rnd).hasSize(3);
+            final int rndNr = rnd;
+            runde.teams().forEach(t -> assertThat(t.size())
+                    .as("Runde %d: nur Tripletten erwartet", rndNr).isEqualTo(3));
+            pruefeKeineDoppeltenSpieler(runde);
+            pruefeAlleSpielerInTeam(runde, meldungen);
+            zaehlePaare(runde, paarZaehler);
+        }
+
+        // Jedes der C(9,2)=36 Paare muss genau einmal gespielt haben
+        int erwarteteGesamtPaare = anzSpieler * (anzSpieler - 1) / 2; // = 36
+        assertThat(paarZaehler)
+                .as("Anzahl eindeutiger Paare nach %d Runden", erwarteteRunden)
+                .hasSize(erwarteteGesamtPaare);
+        paarZaehler.forEach((paar, count) ->
+                assertThat(count)
+                        .as("Paar %s muss genau einmal gespielt haben", paar)
+                        .isEqualTo(1));
+    }
+
+    // =========================================================================
     // Wechselnde Teilnehmerzahl
     // =========================================================================
 
@@ -613,6 +762,29 @@ public class SuperMeleePaarungenV2Test {
                     int b = spielerImTeam.get(j).getNr();
                     String paar = Math.min(a, b) + "-" + Math.max(a, b);
                     paarZaehler.merge(paar, 1, Integer::sum);
+                }
+            }
+        }
+    }
+
+    /**
+     * Prüft, dass kein Team zwei Spieler mit gleicher SetzPos > 0 enthält.
+     */
+    private void pruefeSetzPosConstraint(MeleeSpielRunde spielRunde) {
+        for (Team team : spielRunde.teams()) {
+            List<Spieler> spielerImTeam = team.spieler();
+            for (int i = 0; i < spielerImTeam.size(); i++) {
+                for (int j = i + 1; j < spielerImTeam.size(); j++) {
+                    Spieler a = spielerImTeam.get(i);
+                    Spieler b = spielerImTeam.get(j);
+                    if (a.getSetzPos() > 0 && b.getSetzPos() > 0) {
+                        assertThat(a.getSetzPos())
+                                .as("Spieler %d (SetzPos %d) und Spieler %d (SetzPos %d) "
+                                        + "dürfen nicht im selben Team sein (Runde %d)",
+                                        a.getNr(), a.getSetzPos(), b.getNr(), b.getSetzPos(),
+                                        spielRunde.getNr())
+                                .isNotEqualTo(b.getSetzPos());
+                    }
                 }
             }
         }

@@ -28,6 +28,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
  * @author Michael Massee
  *
  */
+@Deprecated(since = "2024-06", forRemoval = true)
 public class SuperMeleePaarungen {
 
 	private static final Logger logger = LogManager.getLogger(SuperMeleePaarungen.class);

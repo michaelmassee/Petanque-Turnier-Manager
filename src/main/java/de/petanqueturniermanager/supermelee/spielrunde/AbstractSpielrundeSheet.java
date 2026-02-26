@@ -30,7 +30,7 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.SuperMeleePaarungen;
+import de.petanqueturniermanager.algorithmen.SuperMeleePaarungenV2;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -583,7 +583,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 			doubletteRunde = true;
 		}
 
-		SuperMeleePaarungen paarungen = new SuperMeleePaarungen();
+		SuperMeleePaarungenV2 paarungen = new SuperMeleePaarungenV2();
 		try {
 			MeleeSpielRunde meleeSpielRunde;
 			if (superMeleeMode == SuperMeleeMode.Triplette) {
@@ -712,9 +712,6 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		}
 
 		// gerade / ungrade hintergrund farbe
-		// CellBackColor
-
-		// formatiereGeradeUngradeSpielpaarungen
 		// ----------------------------------------
 
 		RangePosition datenRangeSpielpaarungen = RangePosition.from(

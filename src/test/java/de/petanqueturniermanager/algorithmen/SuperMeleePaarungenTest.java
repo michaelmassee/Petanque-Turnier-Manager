@@ -29,6 +29,7 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Team;
 
+@Deprecated(since = "2024-06", forRemoval = true)
 public class SuperMeleePaarungenTest {
 
 	SuperMeleePaarungen paarungen;
