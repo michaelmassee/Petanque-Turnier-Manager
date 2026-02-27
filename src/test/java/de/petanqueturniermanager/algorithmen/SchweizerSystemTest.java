@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -17,7 +17,6 @@ import de.petanqueturniermanager.model.TeamPaarung;
 public class SchweizerSystemTest {
 
 	SchweizerSystem schweizerSystem;
-	TeamMeldungen meldungenMock;
 
 	@Test
 	public void testErsteRundeOhneSetzPosUngerade() throws Exception {
@@ -28,8 +27,8 @@ public class SchweizerSystemTest {
 			meldungen.addTeamWennNichtVorhanden(Team.from(i));
 		}
 
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde();
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde(meldungen.teams());
 
 		assertThat(ersteRunde.size()).isEqualTo(3);
 		assertThat(ersteRunde.get(0).getB()).isNotNull(); // kein freilos
@@ -61,8 +60,8 @@ public class SchweizerSystemTest {
 			meldungen.addTeamWennNichtVorhanden(Team.from(i));
 		}
 
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde();
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde(meldungen.teams());
 
 		assertThat(ersteRunde.size()).isEqualTo(3);
 		assertThat(ersteRunde.get(0).getB()).isNotNull(); // kein freilos
@@ -95,8 +94,8 @@ public class SchweizerSystemTest {
 			meldungen.addTeamWennNichtVorhanden(Team.from(i).setSetzPos(1));
 		}
 
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde();
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde(meldungen.teams());
 
 		assertThat(ersteRunde.size()).isEqualTo(3);
 		assertThat(ersteRunde.get(0).getB()).isNotNull(); // kein freilos
@@ -106,8 +105,7 @@ public class SchweizerSystemTest {
 
 	@Test
 	public void testFindeGegner() throws Exception {
-		meldungenMock = Mockito.mock(TeamMeldungen.class);
-		schweizerSystem = new SchweizerSystem(meldungenMock);
+		schweizerSystem = new SchweizerSystem();
 
 		List<Team> restTeams = new ArrayList<>();
 
@@ -123,15 +121,14 @@ public class SchweizerSystemTest {
 	@Test
 	public void testWeitereRundeGeradeAnzahl() throws Exception {
 
-		TeamMeldungen meldungen = new TeamMeldungen();
-
 		// erste runde fest vorgeben
-		schweizerSystem = new SchweizerSystem(newTestmeldungen());
+		TeamMeldungen testmeldungen = newTestmeldungen();
+		schweizerSystem = new SchweizerSystem();
 
 		// ---------------------------------------------------------------------------------------
 		// Runde 2
 		// ---------------------------------------------------------------------------------------
-		List<TeamPaarung> resultRunde2 = schweizerSystem.weitereRunde();
+		List<TeamPaarung> resultRunde2 = schweizerSystem.weitereRunde(testmeldungen.teams(), List.of());
 		assertThat(resultRunde2.size()).isEqualTo(4);
 
 		// flatten list for validate
@@ -159,7 +156,7 @@ public class SchweizerSystemTest {
 		// ---------------------------------------------------------------------------------------
 		// Runde 3
 		// ---------------------------------------------------------------------------------------
-		meldungen = new TeamMeldungen();
+		TeamMeldungen meldungen = new TeamMeldungen();
 		// neue rangliste
 		meldungen.addTeamWennNichtVorhanden(teamListresult.get(4)); // team 5
 		meldungen.addTeamWennNichtVorhanden(teamListresult.get(5)); // team 6
@@ -172,8 +169,8 @@ public class SchweizerSystemTest {
 
 		meldungen.addTeamWennNichtVorhanden(teamListresult.get(3)); // team 4
 		meldungen.addTeamWennNichtVorhanden(teamListresult.get(2)); // team 3
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> resultRunde3 = schweizerSystem.weitereRunde();
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> resultRunde3 = schweizerSystem.weitereRunde(meldungen.teams(), List.of());
 		assertThat(resultRunde3.size()).isEqualTo(4);
 
 		// flatten list for validate
@@ -210,8 +207,8 @@ public class SchweizerSystemTest {
 
 		meldungen.addTeamWennNichtVorhanden(teamListresult.get(2)); // team 3
 		meldungen.addTeamWennNichtVorhanden(teamListresult.get(1)); // team 2
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> resultRunde4 = schweizerSystem.weitereRunde();
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> resultRunde4 = schweizerSystem.weitereRunde(meldungen.teams(), List.of());
 		assertThat(resultRunde4.size()).isEqualTo(4);
 
 		// flatten list for validate
@@ -259,8 +256,7 @@ public class SchweizerSystemTest {
 
 	@Test
 	public void testFindGegnerAusTeamPaarungen() throws Exception {
-		meldungenMock = Mockito.mock(TeamMeldungen.class);
-		schweizerSystem = new SchweizerSystem(meldungenMock);
+		schweizerSystem = new SchweizerSystem();
 
 		List<TeamPaarung> paarungen = new ArrayList<>();
 
@@ -284,7 +280,7 @@ public class SchweizerSystemTest {
 
 		TeamMeldungen testmeldungen = newTestmeldungen();
 
-		schweizerSystem = new SchweizerSystem(testmeldungen);
+		schweizerSystem = new SchweizerSystem();
 
 		// neue Team Paarungen 2 Runde fest vorgeben zum testen
 		List<TeamPaarung> paarungen = new ArrayList<>();
@@ -293,10 +289,10 @@ public class SchweizerSystemTest {
 		paarungen.add(new TeamPaarung(testmeldungen.getTeam(6), testmeldungen.getTeam(4)).addGegner().setHatGegner());
 		paarungen.add(new TeamPaarung(testmeldungen.getTeam(5), testmeldungen.getTeam(8)).addGegner().setHatGegner());
 
-		// letzt paarung wäre 3:7 haben aber bereits gegeneinander gespielt !
+		// letzte paarung wäre 3:7 haben aber bereits gegeneinander gespielt!
 		// geht nicht, also suchen paarung zum tauschen für 3 und 7
 		TeamPaarung invalidTeamP = new TeamPaarung(testmeldungen.getTeam(3), testmeldungen.getTeam(7));
-		TeamPaarung kannTauschenMit = schweizerSystem.kannTauschenMit(invalidTeamP, paarungen);
+		TeamPaarung kannTauschenMit = schweizerSystem.kannTauschenMit(invalidTeamP, paarungen, testmeldungen.teams());
 		assertThat(kannTauschenMit).isNotNull();
 		assertThat(kannTauschenMit.getA()).isNotNull().isEqualTo(Team.from(5));
 		assertThat(kannTauschenMit.getB()).isNotNull().isEqualTo(Team.from(8));
@@ -313,8 +309,8 @@ public class SchweizerSystemTest {
 			meldungen.addTeamWennNichtVorhanden(Team.from(i).setSetzPos(1));
 		}
 
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde();
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> ersteRunde = schweizerSystem.ersteRunde(meldungen.teams());
 
 		assertThat(ersteRunde.size()).isEqualTo(4);
 		assertThat(ersteRunde.get(0).getA().getSetzPos()).isEqualTo(0);
@@ -327,10 +323,11 @@ public class SchweizerSystemTest {
 	public void testWeitereRundeUngGeradeAnzahl() throws Exception {
 		// erste runde fest vorgeben
 		// runde 1
-		schweizerSystem = new SchweizerSystem(new9Testmeldungen());
+		TeamMeldungen testmeldungen9 = new9Testmeldungen();
+		schweizerSystem = new SchweizerSystem();
 
 		// Runde 2
-		List<TeamPaarung> weitereRunde = schweizerSystem.weitereRunde();
+		List<TeamPaarung> weitereRunde = schweizerSystem.weitereRunde(testmeldungen9.teams(), List.of());
 
 		assertThat(weitereRunde.size()).isEqualTo(5); // 9 + freilos
 
@@ -374,8 +371,8 @@ public class SchweizerSystemTest {
 
 		meldungen.addTeamWennNichtVorhanden(flattenTeampaarungen1.get(7)); // team 8, hatte bereits freilos
 
-		schweizerSystem = new SchweizerSystem(meldungen);
-		List<TeamPaarung> resultRunde3 = schweizerSystem.weitereRunde(); // Runde 3
+		schweizerSystem = new SchweizerSystem();
+		List<TeamPaarung> resultRunde3 = schweizerSystem.weitereRunde(meldungen.teams(), List.of()); // Runde 3
 		assertThat(resultRunde3.size()).isEqualTo(5);
 
 		assertThat(resultRunde3.get(0).getA()).isEqualByComparingTo(Team.from(2));
@@ -442,8 +439,7 @@ public class SchweizerSystemTest {
 
 	@Test
 	public void testTauschenTeamsInPaarung() throws Exception {
-		meldungenMock = Mockito.mock(TeamMeldungen.class);
-		schweizerSystem = new SchweizerSystem(meldungenMock);
+		schweizerSystem = new SchweizerSystem();
 
 		TeamPaarung paarA = new TeamPaarung(Team.from(2), Team.from(3));
 		TeamPaarung paarB = new TeamPaarung(Team.from(7), Team.from(8));
@@ -457,10 +453,77 @@ public class SchweizerSystemTest {
 		assertThat(paarB.getB()).isEqualTo(Team.from(3));
 	}
 
+	/**
+	 * Rechenbeispiel aus SchweizerTurnierSystem.md:
+	 * 6 Teams, 3 Runden. Erwartet: A(1.), E(2.), C(3.) usw.
+	 *
+	 * Turnierverlauf:
+	 * R1: A-B, C-D, E-F (alle Heimteams gewinnen)
+	 * R2: A-C, E-B, D-F (alle Heimteams gewinnen)
+	 * R3: A-E, C-F, B-D (alle Heimteams gewinnen)
+	 */
+	@Test
+	public void testSortiereNachAuswertungskriterien() throws Exception {
+		schweizerSystem = new SchweizerSystem();
+
+		// Teamname -> teamNr: A=1, B=2, C=3, D=4, E=5, F=6
+		// Siege: A=3, B=1, C=2, D=1, E=2, F=0
+		// Gegner: A:[B,C,E], B:[A,E,D], C:[D,A,F], D:[C,F,B], E:[F,B,A], F:[E,D,C]
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 3, 0, List.of(2, 3, 5)), // A
+				new SchweizerTeamErgebnis(2, 1, 0, List.of(1, 5, 4)), // B
+				new SchweizerTeamErgebnis(3, 2, 0, List.of(4, 1, 6)), // C
+				new SchweizerTeamErgebnis(4, 1, 0, List.of(3, 6, 2)), // D
+				new SchweizerTeamErgebnis(5, 2, 0, List.of(6, 2, 1)), // E
+				new SchweizerTeamErgebnis(6, 0, 0, List.of(5, 4, 3))  // F
+		);
+
+		// BHZ prüfen: A=1+2+2=5, B=3+2+1=6, C=1+3+0=4, D=2+0+1=3, E=0+1+3=4, F=2+1+2=5
+		Map<Integer, Integer> bhz = schweizerSystem.berechneBuchholz(ergebnisse);
+		assertThat(bhz.get(1)).isEqualTo(5); // A
+		assertThat(bhz.get(2)).isEqualTo(6); // B
+		assertThat(bhz.get(3)).isEqualTo(4); // C
+		assertThat(bhz.get(4)).isEqualTo(3); // D
+		assertThat(bhz.get(5)).isEqualTo(4); // E
+		assertThat(bhz.get(6)).isEqualTo(5); // F
+
+		// FBHZ prüfen: C=BHZ(D)+BHZ(A)+BHZ(F)=3+5+5=13, E=BHZ(F)+BHZ(B)+BHZ(A)=5+6+5=16
+		Map<Integer, Integer> fbhz = schweizerSystem.berechneFeinbuchholz(ergebnisse, bhz);
+		assertThat(fbhz.get(3)).isEqualTo(13); // C
+		assertThat(fbhz.get(5)).isEqualTo(16); // E
+
+		// Sortierung prüfen: 1.A(3 Siege), 2.E(2S,4BHZ,16FBHZ), 3.C(2S,4BHZ,13FBHZ),
+		// 4.B(1S,6BHZ), 5.D(1S,3BHZ), 6.F(0 Siege)
+		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
+		assertThat(sortiert).hasSize(6);
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // A - 1. Platz
+		assertThat(sortiert.get(1).teamNr()).isEqualTo(5); // E - 2. Platz (FBHZ 16 > 13)
+		assertThat(sortiert.get(2).teamNr()).isEqualTo(3); // C - 3. Platz
+		assertThat(sortiert.get(3).teamNr()).isEqualTo(2); // B - 4. Platz (1 Sieg, BHZ 6)
+		assertThat(sortiert.get(4).teamNr()).isEqualTo(4); // D - 5. Platz (1 Sieg, BHZ 3)
+		assertThat(sortiert.get(5).teamNr()).isEqualTo(6); // F - 6. Platz
+	}
+
+	@Test
+	public void testSortiereNachAuswertungskriterienKugeldifferenz() throws Exception {
+		schweizerSystem = new SchweizerSystem();
+
+		// Zwei Teams mit gleichen Siegen, BHZ, FBHZ -> Kugeldifferenz entscheidet
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 5, List.of(3, 4)),   // Team 1: +5 Kugeldiff
+				new SchweizerTeamErgebnis(2, 2, 3, List.of(3, 4)),   // Team 2: +3 Kugeldiff
+				new SchweizerTeamErgebnis(3, 1, 0, List.of(1, 2)),   // Team 3
+				new SchweizerTeamErgebnis(4, 1, 0, List.of(1, 2))    // Team 4
+		);
+
+		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höhere Kugeldifferenz gewinnt
+		assertThat(sortiert.get(1).teamNr()).isEqualTo(2);
+	}
+
 	@Test
 	public void testTauschenTeamsInPaarungHatGegner() throws Exception {
-		meldungenMock = Mockito.mock(TeamMeldungen.class);
-		schweizerSystem = new SchweizerSystem(meldungenMock);
+		schweizerSystem = new SchweizerSystem();
 
 		Team teamAA = Team.from(2);
 		Team teamBB = Team.from(8);

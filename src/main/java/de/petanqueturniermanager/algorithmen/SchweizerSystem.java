@@ -3,11 +3,12 @@
  */
 package de.petanqueturniermanager.algorithmen;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -17,55 +18,116 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
 import de.petanqueturniermanager.model.Team;
-import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 
 /**
- * @author Michael Massee
+ * Implementiert die Logik für ein Turnier nach Schweizer System.
+ * <p>
+ * Das Schweizer System ist ein Turniermodus, der es ermöglicht, mit einer
+ * großen Anzahl von Teilnehmern in relativ wenigen Runden einen Sieger zu
+ * ermitteln. Alle Teams spielen in jeder Runde mit.
+ * <p>
+ * Ab der zweiten Runde spielt man idealerweise immer gegen Gegner, die in etwa
+ * gleich erfolgreich sind (z. B. spielen Sieger gegen Sieger).
  *
+ * @see <a href="SchweizerTurnierSystem.md">SchweizerTurnierSystem.md</a>
  */
 public class SchweizerSystem {
 
-	private final List<Team> teamListe;
-	private final boolean freiSpiel;
-	private final int anzMeldungen;
+	/**
+	 * Sortiert eine Liste von Teamergebnissen nach den Auswertungskriterien des Schweizer Systems:
+	 * <ol>
+	 *   <li>Anzahl der Siege (absteigend)</li>
+	 *   <li>Buchholz / BHZ = Summe der Siege aller Gegner (absteigend)</li>
+	 *   <li>Feinbuchholz / FBHZ = Summe der BHZ-Werte aller Gegner (absteigend)</li>
+	 *   <li>Kugeldifferenz = erzielte minus kassierte Punkte (absteigend)</li>
+	 * </ol>
+	 * Hinweis: Direktvergleich (Kriterium 5) und Los (Kriterium 6) werden hier nicht berechnet
+	 * und müssen bei Bedarf nachgelagert behandelt werden.
+	 *
+	 * @param ergebnisse die Teamergebnisse mit Siegen, Kugeldifferenz und Gegnerliste
+	 * @return neue Liste, sortiert nach Auswertungskriterien (beste Team zuerst)
+	 */
+	public List<SchweizerTeamErgebnis> sortiereNachAuswertungskriterien(List<SchweizerTeamErgebnis> ergebnisse) {
+		// BHZ (Buchholz) für jedes Team berechnen: Summe der Siege aller Gegner
+		Map<Integer, Integer> bhzMap = berechneBuchholz(ergebnisse);
 
-	public SchweizerSystem(TeamMeldungen meldungen) {
-		checkNotNull(meldungen);
-		teamListe = meldungen.teams();
-		anzMeldungen = meldungen.teams().size();
-		freiSpiel = IsEvenOrOdd.IsOdd(anzMeldungen);
-	}
+		// FBHZ (Feinbuchholz) berechnen: Summe der BHZ-Werte aller Gegner
+		Map<Integer, Integer> fbhzMap = berechneFeinbuchholz(ergebnisse, bhzMap);
 
-	public int letzteMeldungNr() {
-		return (freiSpiel) ? anzMeldungen + 1 : anzMeldungen;
-	}
+		Comparator<SchweizerTeamErgebnis> comparator = Comparator
+				.comparingInt(SchweizerTeamErgebnis::siege).reversed()
+				.thenComparing(Comparator.comparingInt(
+						(SchweizerTeamErgebnis e) -> bhzMap.getOrDefault(e.teamNr(), 0)).reversed())
+				.thenComparing(Comparator.comparingInt(
+						(SchweizerTeamErgebnis e) -> fbhzMap.getOrDefault(e.teamNr(), 0)).reversed())
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::kugeldifferenz).reversed());
 
-	public int anzPaarungen() {
-		return letzteMeldungNr() / 2;
+		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
 	}
 
 	/**
-	 * Die erste Runde wird frei ausgelost, wobei ein Setzen der vermeintlich stärksten Teams sinnvoll ist<br>
-	 * (mit dem Ziel, diese nicht in der ersten Runde aufeinandertreffen zu lassen, und, bei ungerader Teilnehmerzahl,<br>
-	 * diese nicht mit einem Freilos* beginnen zu lassen).
+	 * Berechnet den Buchholz-Wert für jedes Team.
+	 * BHZ = Summe der Siege aller Gegner am Turnierend.
 	 *
-	 * @param setzPos ein Map mit TeamNr,Setzpos teams mit der gleiche Nummer werden nicht gegeneinander ausgelost
+	 * @param ergebnisse alle Teamergebnisse
+	 * @return Map von teamNr → BHZ-Wert
 	 */
-	public List<TeamPaarung> ersteRunde() {
+	@VisibleForTesting
+	Map<Integer, Integer> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse) {
+		Map<Integer, Integer> siegeMap = ergebnisse.stream()
+				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::siege));
 
-		int anzTeamPaarungen = anzPaarungen();
+		return ergebnisse.stream().collect(Collectors.toMap(
+				SchweizerTeamErgebnis::teamNr,
+				e -> e.gegnerNrn().stream()
+						.mapToInt(gegnerNr -> siegeMap.getOrDefault(gegnerNr, 0))
+						.sum()));
+	}
+
+	/**
+	 * Berechnet den Feinbuchholz-Wert für jedes Team.
+	 * FBHZ = Summe der BHZ-Werte aller Gegner.
+	 *
+	 * @param ergebnisse alle Teamergebnisse
+	 * @param bhzMap     vorberechnete BHZ-Werte
+	 * @return Map von teamNr → FBHZ-Wert
+	 */
+	@VisibleForTesting
+	Map<Integer, Integer> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,
+			Map<Integer, Integer> bhzMap) {
+		return ergebnisse.stream().collect(Collectors.toMap(
+				SchweizerTeamErgebnis::teamNr,
+				e -> e.gegnerNrn().stream()
+						.mapToInt(gegnerNr -> bhzMap.getOrDefault(gegnerNr, 0))
+						.sum()));
+	}
+
+	/**
+	 * Die erste Runde wird frei ausgelost, wobei ein Setzen der vermeintlich stärksten Teams sinnvoll ist
+	 * (mit dem Ziel, diese nicht in der ersten Runde aufeinandertreffen zu lassen, und, bei ungerader Teilnehmerzahl,
+	 * diese nicht mit einem Freilos beginnen zu lassen).
+	 *
+	 * @param teams die Liste der teilnehmenden Teams; Teams mit gleicher SetzPos werden nicht gegeneinander ausgelost
+	 * @return eine Liste der Paarungen für die erste Runde
+	 */
+	public List<TeamPaarung> ersteRunde(List<Team> teams) {
+		boolean freiSpiel = IsEvenOrOdd.IsOdd(teams.size());
+		int letzteMeldungNr = freiSpiel ? teams.size() + 1 : teams.size();
+		int anzTeamPaarungen = letzteMeldungNr / 2;
 
 		// first shuffle
-		Collections.shuffle(teamListe);
+		List<Team> shuffled = new ArrayList<>(teams);
+		Collections.shuffle(shuffled);
 
 		// now sort nach Setzpos
-		List<Team> sortedTeamList = teamListe.stream()
+		List<Team> sortedTeamList = shuffled.stream()
 				.sorted((m1, m2) -> Integer.compare(m1.getSetzPos(), m2.getSetzPos())).toList();
+
 		// split into 2 List Team A/Team B
 		List<List<Team>> partition = ListUtils.partition(sortedTeamList, anzTeamPaarungen);
 
-		// merge A+B list togehter in one list TeamPaarung
+		// merge A+B list together in one list TeamPaarung
 		List<Team> listATeams = partition.get(0);
 		List<Team> listBTeams = partition.get(1);
 		int listBSize = listBTeams.size();
@@ -82,60 +144,61 @@ public class SchweizerSystem {
 			}
 			return Integer.compare(tp1.getA().getNr(), tp2.getA().getNr());
 		}).toList();
-
 	}
 
 	/**
-	 * die meldungen mussen in rangliste reihenfolge vorliegen<br>
-	 * 
-	 * nach der ersten Runde wird das Feld geteilt in Sieger und Verlierer.<br>
-	 * In der zweiten Runde und in den folgenden Runden spielen stets Teams gegeneinander,<br>
+	 * Die teams müssen in Ranglisten-Reihenfolge vorliegen.
+	 * <p>
+	 * Nach der ersten Runde wird das Feld geteilt in Sieger und Verlierer.
+	 * In der zweiten Runde und in den folgenden Runden spielen stets Teams gegeneinander,
 	 * die gleich viele Siege, Niederlagen oder Siege/Niederlagen haben.
 	 *
-	 * @return
+	 * @param teams   die Teams in aktueller Ranglisten-Reihenfolge, inklusive ihrer bisherigen Ergebnisse
+	 * @param history die bisherigen Paarungen aller vorherigen Runden (für zukünftige Erweiterungen)
+	 * @return eine Liste der Paarungen für die nächste Runde
 	 */
-
-	public List<TeamPaarung> weitereRunde() {
+	public List<TeamPaarung> weitereRunde(List<Team> teams, List<TeamPaarung> history) {
+		boolean freiSpiel = IsEvenOrOdd.IsOdd(teams.size());
 		List<TeamPaarung> teamPaarungList = new ArrayList<>();
 
-		// sicher gehen das hatgegner flag auf false
-		teamListe.stream().forEach(team -> team.setHatGegner(false));
+		// sicher gehen dass hatgegner flag auf false
+		teams.forEach(team -> team.setHatGegner(false));
 
 		// zuerst freilos vergeben
 		if (freiSpiel) {
-			Team freilosTeam = IntStream.range(0, teamListe.size())
-					.mapToObj(i -> teamListe.get(teamListe.size() - i - 1))
-					.filter(team -> team.isHatteFreilos() == false).findFirst().orElse(teamListe.get(0));
+			Team freilosTeam = IntStream.range(0, teams.size())
+					.mapToObj(i -> teams.get(teams.size() - i - 1))
+					.filter(team -> !team.isHatteFreilos()).findFirst().orElse(teams.get(0));
 			freilosTeam.setHatteFreilos(true);
 			freilosTeam.setHatGegner(true);
 			teamPaarungList.add(new TeamPaarung(freilosTeam));
 		}
 
-		for (Team team : teamListe) {
+		for (Team team : teams) {
 			if (!team.isHatGegner()) {
-				List<Team> restTeams = teamListe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).toList();
+				List<Team> restTeams = teams.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).toList();
 				if (!restTeams.isEmpty()) {
 					Team gegner = findeGegner(team, restTeams);
 					if (gegner != null) {
 						// gegner gefunden
 						teamPaarungList.add(new TeamPaarung(team, gegner).addGegner().setHatGegner());
 					} else {
-						// ohne gegner ? versuchen ob wir tauschen können mit vorhanden team paarung aus der Liste
-						// Invalid Paarung haben bereits gegen einander gespielt
+						// ohne gegner? versuchen ob wir tauschen können mit vorhandener TeamPaarung aus der Liste
+						// Invalid Paarung: haben bereits gegeneinander gespielt
 						TeamPaarung invalid = new TeamPaarung(team, restTeams.get(0));
 
-						TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList);
+						TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList, teams);
 						if (kannTauschenMit != null) {
 							// wenn erfolgreich dann invalid == valid!
 							tauschenTeamsInPaarung(invalid, kannTauschenMit);
-							// gegner wieder herstellen von den invalid teams weil die in den vorrunden bereits gegen einander gespielt haben
+							// gegner wieder herstellen von den invalid teams weil die in den vorrunden bereits gegeneinander gespielt haben
 							restTeams.get(0).addGegner(team);
 						}
 						// invalid oder wenn Tausch stattgefunden hat, valid Paarung hinzufügen
 						teamPaarungList.add(invalid.addGegner().setHatGegner());
 					}
 				} else {
-					// keine rest mehr vorhanden ?
+					// keine restteams mehr vorhanden?
 					teamPaarungList.add(new TeamPaarung(team).setHatGegner());
 				}
 			}
@@ -159,7 +222,7 @@ public class SchweizerSystem {
 
 		boolean didChange = false;
 
-		// tausche B, A1:B2 <-> A2:B2
+		// tausche B: A1:B2 <-> A2:B1
 		if (!paarA.getA().hatAlsGegner(paarB.getB()) && !paarB.getA().hatAlsGegner(paarA.getB())) {
 			paarA.removeGegner();
 			paarB.removeGegner();
@@ -168,7 +231,7 @@ public class SchweizerSystem {
 			paarB.setB(A_Bteam);
 			didChange = true;
 		}
-		// tausche A+B, A1:A2 <-> B1:B2
+		// tausche A+B: A1:A2 <-> B1:B2
 		if (!didChange && !paarA.getA().hatAlsGegner(paarB.getA()) && !paarB.getB().hatAlsGegner(paarA.getB())) {
 			paarA.removeGegner();
 			paarB.removeGegner();
@@ -189,14 +252,15 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * suche rückwärts in der liste nach ein gegnerteam-paarung zum tauschen
+	 * Suche rückwärts in der Teamliste nach einer Gegner-Paarung zum Tauschen.
 	 *
-	 * @param team team ohne gegner
-	 * @param paarungen bereits zugerodnete gegner
-	 * @return
+	 * @param invalidTeamPaarung Paarung, die noch keinen gültigen Gegner hat
+	 * @param paarungen          bereits zugeordnete Paarungen
+	 * @param teamListe          alle Teams in Reihenfolge (für rückwärtige Suche)
+	 * @return eine Paarung, mit der getauscht werden kann, oder null
 	 */
 	@VisibleForTesting
-	TeamPaarung kannTauschenMit(TeamPaarung invalidTeamPaarung, List<TeamPaarung> paarungen) {
+	TeamPaarung kannTauschenMit(TeamPaarung invalidTeamPaarung, List<TeamPaarung> paarungen, List<Team> teamListe) {
 
 		Team teamAInvalid = invalidTeamPaarung.getA();
 		Team teamBInvalid = invalidTeamPaarung.getB();
@@ -205,14 +269,14 @@ public class SchweizerSystem {
 		}
 
 		// team suchen zum tauschen
-		List<Team> reverseTeamliste = Lists.reverse(teamListe); // orginal wird nicht verändert
+		List<Team> reverseTeamliste = Lists.reverse(teamListe); // original wird nicht verändert
 
 		Team tauschTeam = reverseTeamliste.stream().filter(teamRev -> {
 			return teamRev.isHatGegner() && !teamRev.equals(teamAInvalid) && !teamRev.equals(teamBInvalid);
 		}).filter(teamRev2 -> {
-			// is a oder b Team
+			// ist a- oder b-Team?
 			boolean isA = isATeam(teamRev2, paarungen);
-			// gegner vom potentielle tausch suchen
+			// Gegner vom potenziellen Tauschteam suchen
 			Team gegnerVonteamRev2 = findGegnerAusTeamPaarungen(teamRev2, paarungen);
 
 			if (gegnerVonteamRev2 == null) {
@@ -234,35 +298,47 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * finde paarung mit team1, and return true wenn A
+	 * Findet die Paarung mit team und gibt zurück, ob es das A-Team ist.
 	 *
-	 * @param team1
-	 * @param paarungen
-	 * @return true wenn a false wenn b, wenn not in list found = true
+	 * @param team      das gesuchte Team
+	 * @param paarungen die Liste der Paarungen
+	 * @return true wenn A, false wenn B; wenn nicht in Liste gefunden: true
 	 */
-
-	public boolean isATeam(Team team, List<TeamPaarung> paarungen) {
-		return paarungen.stream().filter(teamPaarung -> {
-			return teamPaarung.isInPaarung(team);
-		}).findFirst().map(teamPaarung2 -> teamPaarung2.getA().equals(team)).orElse(true);
+	@VisibleForTesting
+	boolean isATeam(Team team, List<TeamPaarung> paarungen) {
+		return paarungen.stream()
+				.filter(teamPaarung -> teamPaarung.isInPaarung(team))
+				.findFirst()
+				.map(teamPaarung2 -> teamPaarung2.getA().equals(team))
+				.orElse(true);
 	}
 
 	/**
-	 * finde paarung mit team1, und return gegner
+	 * Findet die Paarung mit team1 und gibt den Gegner zurück.
 	 *
-	 * @param team1
-	 * @param paarungen
-	 * @return der gegner von team1
+	 * @param team1     das Team, dessen Gegner gesucht wird
+	 * @param paarungen die Liste der Paarungen
+	 * @return der Gegner von team1, oder null wenn kein Gegner oder nicht gefunden
 	 */
-
-	public Team findGegnerAusTeamPaarungen(Team team1, List<TeamPaarung> paarungen) {
-		return paarungen.stream().filter(teamPaarung -> {
-			return teamPaarung.isInPaarung(team1);
-		}).findFirst().map(teamPaarung2 -> teamPaarung2.getGegner(team1)).orElse(null);
+	@VisibleForTesting
+	Team findGegnerAusTeamPaarungen(Team team1, List<TeamPaarung> paarungen) {
+		return paarungen.stream()
+				.filter(teamPaarung -> teamPaarung.isInPaarung(team1))
+				.findFirst()
+				.map(teamPaarung2 -> teamPaarung2.getGegner(team1))
+				.orElse(null);
 	}
 
+	/**
+	 * Flacht eine Liste von Paarungen zu einer sortierten Teamliste ab.
+	 * Freilos (null) wird ans Ende sortiert.
+	 *
+	 * @param paarungen die Paarungsliste
+	 * @return flache, sortierte Teamliste (enthält null für Freilos)
+	 */
 	public List<Team> flattenTeampaarungen(List<TeamPaarung> paarungen) {
-		return paarungen.stream().flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
+		return paarungen.stream()
+				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
 				.sorted((team1, team2) -> {
 					if (team1 == null || team2 == null) {
 						return 1;
@@ -272,9 +348,12 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * @param team
-	 * @param restMeldungen
-	 * @return
+	 * Findet einen geeigneten Gegner für ein Team aus der Restliste.
+	 * Ein Gegner ist geeignet, wenn die Teams noch nicht gegeneinander gespielt haben.
+	 *
+	 * @param team      das Team, das einen Gegner sucht
+	 * @param restTeams mögliche Gegner
+	 * @return ein geeignetes Gegnerteam, oder null wenn keines gefunden
 	 */
 	@VisibleForTesting
 	Team findeGegner(Team team, List<Team> restTeams) {

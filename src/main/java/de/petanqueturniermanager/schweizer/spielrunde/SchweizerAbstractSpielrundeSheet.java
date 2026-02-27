@@ -301,14 +301,14 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 		// neue Spielrunde speichern, sheet vorhanden
 		getKonfigurationSheet().setAktiveSpielRunde(getSpielRundeNr());
 
-		SchweizerSystem schweizerSystem = new SchweizerSystem(meldungen);
+		SchweizerSystem schweizerSystem = new SchweizerSystem();
 
-		List<TeamPaarung> paarungen = null;
+		List<TeamPaarung> paarungen;
 
 		if (neueSpielrundeNr.getNr() == 1) {
-			paarungen = schweizerSystem.ersteRunde();
+			paarungen = schweizerSystem.ersteRunde(meldungen.teams());
 		} else {
-			// TODO
+			paarungen = schweizerSystem.weitereRunde(meldungen.teams(), List.of());
 		}
 
 		teamPaarungenEinfuegen(paarungen);
