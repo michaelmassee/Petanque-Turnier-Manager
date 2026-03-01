@@ -33,9 +33,7 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 			return;
 		}
 
-		// clean up first
-		getSheetHelper().removeAllSheetsExclude();
-
+		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
 		try {
 			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false);
@@ -45,8 +43,10 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		}
 
 		if (param.isEmpty()) {
-			return; // Benutzer hat abgebrochen
+			return; // Benutzer hat abgebrochen – kein Eingriff ins Dokument
 		}
+
+		getSheetHelper().removeAllSheetsExclude();
 
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {

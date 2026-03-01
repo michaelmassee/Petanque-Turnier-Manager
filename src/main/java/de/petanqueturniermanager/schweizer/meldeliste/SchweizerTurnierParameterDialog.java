@@ -22,6 +22,7 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XComponent;
 import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -74,58 +75,50 @@ public class SchweizerTurnierParameterDialog {
 		XComponentContext context = workingSpreadsheet.getxContext();
 		XMultiComponentFactory xMCF = context.getServiceManager();
 
-		// 1. Dialog-Modell und Dialog-Control anlegen
+		// 1. Dialog-Modell anlegen und Eigenschaften setzen (VOR setModel)
 		Object dialogModel = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlDialogModel", context);
-		Object dialog = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlDialog", context);
-		XControl xControl = Lo.qi(XControl.class, dialog);
-
-		// 2. setModel() aufrufen bevor Eigenschaften oder Controls gesetzt werden
-		//    (verhindert UnknownPropertyException beim Peer-Sync)
-		xControl.setModel(Lo.qi(XControlModel.class, dialogModel));
-
-		// 3. Dialog-Eigenschaften setzen (ohne PositionX/PositionY – Top-Level-Fenster)
 		XPropertySet dlgProps = Lo.qi(XPropertySet.class, dialogModel);
-		dlgProps.setPropertyValue("Width", 160);
-		dlgProps.setPropertyValue("Height", 120);
+		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
+		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
+		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(120));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
-		// 4. Child-Controls zum Dialog-Modell hinzufügen
+		// 2. Dialog-Control anlegen und Modell setzen
+		Object dialog = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlDialog", context);
+		XControl xControl = Lo.qi(XControl.class, dialog);
+		xControl.setModel(Lo.qi(XControlModel.class, dialogModel));
+
+		// 3. Child-Controls via XMultiServiceFactory des Dialog-Modells anlegen
+		XMultiServiceFactory xMSF = Lo.qi(XMultiServiceFactory.class, dialogModel);
 		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
+		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
-		addLabel(xMCF, context, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
+		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
 
-		addRadioButton(xMCF, context, cont, "radioTete",
+		addRadioButton(xMSF, cont, "radioTete",
 				Formation.TETE.getBezeichnung(), 8, 21, 140, 10,
 				defaultFormation == Formation.TETE);
-		addRadioButton(xMCF, context, cont, "radioDoublette",
+		addRadioButton(xMSF, cont, "radioDoublette",
 				Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10,
 				defaultFormation == Formation.DOUBLETTE);
-		addRadioButton(xMCF, context, cont, "radioTriplette",
+		addRadioButton(xMSF, cont, "radioTriplette",
 				Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10,
 				defaultFormation == Formation.TRIPLETTE);
 
-		addFixedLine(xMCF, context, cont, "sep1", 5, 59, 150, 2);
+		addFixedLine(xMSF, cont, "sep1", 5, 59, 150, 2);
 
-		addCheckBox(xMCF, context, cont, "cbTeamname", "Teamname anzeigen",
+		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen",
 				8, 65, 140, 10, defaultTeamnameAnzeigen);
 
-		addFixedLine(xMCF, context, cont, "sep2", 5, 81, 150, 2);
+		addFixedLine(xMSF, cont, "sep2", 5, 81, 150, 2);
 
-		addButton(xMCF, context, cont, "btnOk", "OK", 22, 90, 50, 14);
-		addButton(xMCF, context, cont, "btnCancel", "Abbrechen", 88, 90, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 90, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 90, 60, 14);
 
-		// 5. Peer erzeugen (instantiiert alle Child-Controls aus dem Modell)
-		Object toolkit = xMCF.createInstanceWithContext("com.sun.star.awt.Toolkit", context);
-		XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
-		XWindow xWindow = Lo.qi(XWindow.class, xControl);
-		xWindow.setVisible(false);
-		xControl.createPeer(xToolkit, null);
-
-		// 6. Button-Listener
+		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
-		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
-
 		okPressed = false;
 		attachButtonListener(xcc, "btnOk", new XActionListener() {
 			@Override
@@ -149,7 +142,14 @@ public class SchweizerTurnierParameterDialog {
 			}
 		});
 
-		// 7. Dialog anzeigen (blockiert bis endExecute oder Fenster-Schliessen)
+		// 5. Peer erzeugen (instantiiert alle Child-Controls aus dem Modell)
+		Object toolkit = xMCF.createInstanceWithContext("com.sun.star.awt.Toolkit", context);
+		XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
+		XWindow xWindow = Lo.qi(XWindow.class, xControl);
+		xWindow.setVisible(false);
+		xControl.createPeer(xToolkit, null);
+
+		// 6. Dialog anzeigen (blockiert bis endExecute oder Fenster-Schliessen)
 		xDialog.execute();
 
 		Optional<TurnierParameter> result = Optional.empty();
@@ -211,66 +211,66 @@ public class SchweizerTurnierParameterDialog {
 	// Hilfsmethoden – Controls zum Dialog-Modell hinzufügen
 	// ---------------------------------------------------------------
 
-	private void addLabel(XMultiComponentFactory xMCF, XComponentContext context, XNameContainer cont,
+	private void addLabel(XMultiServiceFactory xMSF, XNameContainer cont,
 			String name, String text, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		Object model = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlFixedTextModel", context);
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
 		props.setPropertyValue("Label", text);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		cont.insertByName(name, model);
 	}
 
-	private void addRadioButton(XMultiComponentFactory xMCF, XComponentContext context, XNameContainer cont,
+	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
 			String name, String label, int x, int y, int w, int h, boolean selected)
 			throws com.sun.star.uno.Exception {
-		Object model = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlRadioButtonModel", context);
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
 		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("State", (short) (selected ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 
-	private void addCheckBox(XMultiComponentFactory xMCF, XComponentContext context, XNameContainer cont,
+	private void addCheckBox(XMultiServiceFactory xMSF, XNameContainer cont,
 			String name, String label, int x, int y, int w, int h, boolean checked)
 			throws com.sun.star.uno.Exception {
-		Object model = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlCheckBoxModel", context);
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
 		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("State", (short) (checked ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 
-	private void addButton(XMultiComponentFactory xMCF, XComponentContext context, XNameContainer cont,
+	private void addButton(XMultiServiceFactory xMSF, XNameContainer cont,
 			String name, String label, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		Object model = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlButtonModel", context);
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlButtonModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
 		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		cont.insertByName(name, model);
 	}
 
-	private void addFixedLine(XMultiComponentFactory xMCF, XComponentContext context, XNameContainer cont,
+	private void addFixedLine(XMultiServiceFactory xMSF, XNameContainer cont,
 			String name, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
-		Object model = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlFixedLineModel", context);
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedLineModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("PositionX", x);
-		props.setPropertyValue("PositionY", y);
-		props.setPropertyValue("Width", w);
-		props.setPropertyValue("Height", h);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		cont.insertByName(name, model);
 	}
 
