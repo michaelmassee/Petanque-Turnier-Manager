@@ -20,7 +20,7 @@ public class SchweizerSpielrundeSheetTestDaten extends SchweizerAbstractSpielrun
 
 	protected SchweizerSpielrundeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
-		schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet, 32); // 32 Teams
+		schweizerMeldeListeSheetTestDaten = new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet);
 		schweizerSpielrundeSheetNaechste = new SchweizerSpielrundeSheetNaechste(workingSpreadsheet);
 	}
 

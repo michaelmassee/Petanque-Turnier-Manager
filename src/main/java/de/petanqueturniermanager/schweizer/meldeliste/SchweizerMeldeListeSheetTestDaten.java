@@ -2,13 +2,13 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -20,21 +20,23 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
 /**
- * Erstellung 05.03.2024 / Michael Massee
+ * Erzeugt eine Schweizer Meldeliste mit Testdaten (ohne Dialog).
+ * Formation: Doublette, kein Teamname, kein Vereinsname.
  */
-
 public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeListeSheet {
 
 	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetTestDaten.class);
-	private SchweizerMeldeListeSheetNew meldeListe;
-	private final TestnamenLoader testnamenLoader;
-	private final int anzTeams;
 
-	public SchweizerMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
+	private static final int ANZ_TEAMS = 16;
+	private static final Formation TEST_FORMATION = Formation.DOUBLETTE;
+
+	private final SchweizerMeldeListeSheetNew meldeListe;
+	private final TestnamenLoader testnamenLoader;
+
+	public SchweizerMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
 		meldeListe = new SchweizerMeldeListeSheetNew(workingSpreadsheet);
 		testnamenLoader = new TestnamenLoader();
-		this.anzTeams = anzTeams;
 	}
 
 	@Override
@@ -46,45 +48,32 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 
 		getSheetHelper().removeAllSheetsExclude();
 		setAktiveSpielRunde(SpielRundeNr.from(1));
-		testNamenEinfuegen();
 
+		// Meldeliste mit Standardparametern anlegen (kein Dialog)
+		meldeListe.createMeldelisteWithParams(TEST_FORMATION, false, false);
+
+		testNamenEinfuegen();
 	}
 
 	private void testNamenEinfuegen() throws GenerateException {
 		XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
 		getSheetHelper().setActiveSheet(meldelisteSheet);
 
-		List<String> testNamen = testnamenLoader.listeMitTestNamen(anzTeams * 3);
+		int anzSpielerProTeam = TEST_FORMATION.getAnzSpieler();
+		List<String> testNamen = testnamenLoader.listeMitTestNamen(ANZ_TEAMS * anzSpielerProTeam);
 
-		Position posSpielerName1 = Position.from(meldeListe.getSpielerNameErsteSpalte(),
-				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		Position posSpielerName2 = Position.from(meldeListe.getSpielerNameErsteSpalte() + 1,
-				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		Position posSpielerName3 = Position.from(meldeListe.getSpielerNameErsteSpalte() + 2,
-				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
-		StringCellValue spielrNamen1 = StringCellValue.from(meldelisteSheet, posSpielerName1);
-		StringCellValue spielrNamen2 = StringCellValue.from(meldelisteSheet, posSpielerName2);
-		StringCellValue spielrNamen3 = StringCellValue.from(meldelisteSheet, posSpielerName3);
+		int ersteSpielerSpalte = meldeListe.getSpielerNameErsteSpalte();
 
-		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr += 3) {
+		int nameIdx = 0;
+		for (int team = 0; team < ANZ_TEAMS && nameIdx < testNamen.size(); team++) {
 			SheetRunner.testDoCancelTask();
-			posSpielerName1.zeilePlusEins();
-			posSpielerName2.zeilePlusEins();
-			posSpielerName3.zeilePlusEins();
-			String textFromCell = getSheetHelper().getTextFromCell(meldelisteSheet, posSpielerName1);
-
-			if (StringUtils.isNotEmpty(textFromCell)) {
-				throw new GenerateException(
-						"Fehler beim füllen von Testdaten in Meldesheet. Es dürfen keine Daten vorhanden sein");
+			int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + team;
+			for (int s = 0; s < anzSpielerProTeam && nameIdx < testNamen.size(); s++) {
+				int spalte = ersteSpielerSpalte + s;
+				getSheetHelper().setStringValueInCell(
+						StringCellValue.from(meldelisteSheet, Position.from(spalte, zeile),
+								testNamen.get(nameIdx++)));
 			}
-
-			getSheetHelper()
-					.setStringValueInCell(spielrNamen1.setPos(posSpielerName1).setValue(testNamen.get(spielerCntr)));
-			getSheetHelper().setStringValueInCell(
-					spielrNamen2.setPos(posSpielerName2).setValue(testNamen.get(spielerCntr + 1)));
-			getSheetHelper().setStringValueInCell(
-					spielrNamen3.setPos(posSpielerName3).setValue(testNamen.get(spielerCntr + 2)));
-
 		}
 
 		meldeListe.upDateSheet();

@@ -51,6 +51,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -375,6 +376,9 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 			break;
 		case "liga_export":
 			new LigaMeldeListeSheetExport(workingSpreadsheet).testTurnierVorhanden().start();
+			break;
+		case "schweizer_testdaten_meldeliste":
+			new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet).start();
 			break;
 		default:
 			didHandle = false;

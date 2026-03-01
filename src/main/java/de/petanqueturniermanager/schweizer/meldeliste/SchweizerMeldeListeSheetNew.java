@@ -47,12 +47,20 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		}
 
 		getSheetHelper().removeAllSheetsExclude();
+		createMeldelisteWithParams(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen);
+	}
 
+	/**
+	 * Erstellt die Meldeliste mit den angegebenen Parametern ohne Dialog.
+	 * Wird auch von TestDaten-Klassen aufgerufen.
+	 */
+	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen)
+			throws GenerateException {
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
-			getKonfigurationSheet().setMeldeListeFormation(param.get().formation);
-			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(param.get().teamnameAnzeigen);
-			getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(param.get().vereinsnameAnzeigen);
+			getKonfigurationSheet().setMeldeListeFormation(formation);
+			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
+			getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
 			upDateSheet();
 		}
 	}

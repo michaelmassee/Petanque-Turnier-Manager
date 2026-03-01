@@ -119,6 +119,25 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="A9" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="B1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Schweizer, generate Teamlist with 16 Teams</value>
+									<value xml:lang="de">Schweizer, generiere Meldeliste mit 16 Teams</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>service:de.petanqueturniermanager.MenuJobExecute?schweizer_testdaten_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 				</node>
