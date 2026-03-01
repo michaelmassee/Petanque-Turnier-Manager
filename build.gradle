@@ -234,6 +234,19 @@ task debugLibreOffice(type: Exec) {
     }
 }
 
+// Task zum Starten von LibreOffice
+task runLibreoffice(type: Exec) {
+    group = 'LibreOffice'
+    description = 'Startet LibreOffice Calc nach Neuinstallation der Extension'
+    dependsOn reinstallExtension
+    
+    commandLine 'libreoffice', '--calc'
+    
+    doFirst {
+        println "Starte LibreOffice Calc..."
+    }
+}
+
 // Tests benötigen die aktuelle OXT installiert – reinstallExtension baut und installiert sie
 test {
     dependsOn reinstallExtension
@@ -242,6 +255,20 @@ test {
     // Im Gradle-Build immer headless; manuelle IDE-Starts verwenden headless=false (Standard)
     systemProperty 'uitest.headless', 'true'
     useJUnitPlatform()
+}
+
+// Task: Bauen, installieren und Calc im Hintergrund starten (Gradle blockiert nicht)
+task startCalc {
+    group = 'LibreOffice'
+    description = 'Baut OXT, installiert Extension und startet LibreOffice Calc (non-blocking)'
+    dependsOn reinstallExtension
+
+    doLast {
+        println "Starte LibreOffice Calc..."
+        new ProcessBuilder('libreoffice', '--calc')
+            .inheritIO()
+            .start()
+    }
 }
 
 // Build-Task
