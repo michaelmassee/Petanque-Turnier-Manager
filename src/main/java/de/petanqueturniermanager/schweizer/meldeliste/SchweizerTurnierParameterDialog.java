@@ -46,10 +46,12 @@ public class SchweizerTurnierParameterDialog {
 	public static class TurnierParameter {
 		public final Formation formation;
 		public final boolean teamnameAnzeigen;
+		public final boolean vereinsnameAnzeigen;
 
-		public TurnierParameter(Formation formation, boolean teamnameAnzeigen) {
+		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
+			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
 		}
 	}
 
@@ -63,11 +65,13 @@ public class SchweizerTurnierParameterDialog {
 	/**
 	 * Zeigt den Dialog an und gibt das Ergebnis zurück.
 	 *
-	 * @param defaultFormation        vorausgewählte Formation
-	 * @param defaultTeamnameAnzeigen vorausgewählter Teamname-Status
+	 * @param defaultFormation          vorausgewählte Formation
+	 * @param defaultTeamnameAnzeigen   vorausgewählter Teamname-Status
+	 * @param defaultVereinsnameAnzeigen vorausgewählter Vereinsname-Status
 	 * @return Optional mit TurnierParameter bei OK, leer bei Abbrechen
 	 */
-	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen)
+	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
+			boolean defaultVereinsnameAnzeigen)
 			throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
@@ -81,7 +85,7 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(120));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(135));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -112,10 +116,13 @@ public class SchweizerTurnierParameterDialog {
 		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen",
 				8, 65, 140, 10, defaultTeamnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 81, 150, 2);
+		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen",
+				8, 79, 140, 10, defaultVereinsnameAnzeigen);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 90, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 90, 60, 14);
+		addFixedLine(xMSF, cont, "sep2", 5, 95, 150, 2);
+
+		addButton(xMSF, cont, "btnOk", "OK", 22, 105, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 105, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -156,7 +163,8 @@ public class SchweizerTurnierParameterDialog {
 		if (okPressed) {
 			Formation formation = readFormation(xcc);
 			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
-			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen));
+			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();

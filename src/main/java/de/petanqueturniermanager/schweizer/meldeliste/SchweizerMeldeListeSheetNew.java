@@ -36,7 +36,7 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
 		try {
-			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false);
+			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false);
 		} catch (Exception e) {
 			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
 			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
@@ -52,6 +52,7 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			getKonfigurationSheet().setMeldeListeFormation(param.get().formation);
 			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(param.get().teamnameAnzeigen);
+			getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(param.get().vereinsnameAnzeigen);
 			upDateSheet();
 		}
 	}

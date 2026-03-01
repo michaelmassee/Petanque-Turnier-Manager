@@ -192,4 +192,9 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
 	}
 
+	@Override
+	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
+		setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+	}
+
 }

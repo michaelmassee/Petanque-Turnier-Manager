@@ -54,6 +54,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	protected static final String HEADER_VORNAME = "Vorname";
 	protected static final String HEADER_NACHNAME = "Nachname";
 	protected static final String HEADER_VEREINSNAME = "Verein";
+	protected static final String HEADER_SETZPOSITION = "SP";
 
 	protected AbstractSchweizerMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, "Schweizer-Meldeliste");
@@ -110,10 +111,15 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 		return getVornameSpalte(spielerIdx) + 2;
 	}
 
-	/** Letzte Datenspalte (0-basiert). */
+	/** Letzte Spieler-Datenspalte (0-basiert, ohne Setzposition). */
 	protected int getLetzteDataSpalte() throws GenerateException {
 		Formation f = getKonfigurationSheet().getMeldeListeFormation();
 		return getErsterSpielerOffset() + f.getAnzSpieler() * getSpaltenProSpieler() - 1;
+	}
+
+	/** Setzposition-Spalte (SP) – direkt nach der letzten Spieler-Spalte. */
+	public int getSetzPositionSpalte() throws GenerateException {
+		return getLetzteDataSpalte() + 1;
 	}
 
 	// ---------------------------------------------------------------
@@ -167,6 +173,20 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 					.setEndPosMergeZeilePlus(1);
 			getSheetHelper().setStringValueInCell(teamnameHeader);
 		}
+
+		// Setzposition-Spalte (SP) – merged über beide Header-Zeilen
+		ColumnProperties colPropSP = ColumnProperties.from().setWidth(NR_SPALTE_WIDTH)
+				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+				.margin(MeldeListeKonstanten.CELL_MARGIN);
+		StringCellValue spHeader = StringCellValue
+				.from(getXSpreadSheet(), Position.from(getSetzPositionSpalte(), ERSTE_HEADER_ZEILE), HEADER_SETZPOSITION)
+				.addColumnProperties(colPropSP)
+				.setCellBackColor(headerColor)
+				.setBorder(BorderFactory.from().allThin().toBorder())
+				.setVertJustify(CellVertJustify2.CENTER)
+				.setComment("Setzposition: Teams mit gleicher SP werden in Runde 1 nicht gegeneinander ausgelost.")
+				.setEndPosMergeZeilePlus(1);
+		getSheetHelper().setStringValueInCell(spHeader);
 
 		// Spieler-Blöcke
 		for (int s = 0; s < anzSpieler; s++) {
@@ -245,6 +265,12 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 			getSheetHelper().setPropertiesInRange(getXSpreadSheet(), spielerRange,
 					CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true));
 		}
+
+		// Setzposition-Spalte
+		RangePosition spRange = RangePosition.from(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE,
+				getSetzPositionSpalte(), letzteDatenZeile);
+		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), spRange,
+				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 	}
 
 	protected void formatZeilenfarben() throws GenerateException {
@@ -252,7 +278,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 		Integer ungeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
 
 		int letzteDatenZeile = getLetzteDatenZeileUseMin();
-		int letzteSpalte = getLetzteDataSpalte();
+		int letzteSpalte = getSetzPositionSpalte();
 
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteDatenZeile; zeile++) {
 			RangePosition zeileRange = RangePosition.from(getTeamNrSpalte(), zeile, letzteSpalte, zeile);

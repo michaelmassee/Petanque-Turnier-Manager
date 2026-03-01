@@ -151,4 +151,9 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		propertiesSpalte.setMeldeListeTeamnameAnzeigen(anzeigen);
 	}
 
+	@Override
+	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+	}
+
 }
