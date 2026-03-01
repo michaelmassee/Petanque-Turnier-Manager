@@ -4,12 +4,19 @@
 
 package de.petanqueturniermanager.schweizer.meldeliste;
 
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.uno.Exception;
+
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 
 public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeSheet {
@@ -29,6 +36,24 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		// clean up first
 		getSheetHelper().removeAllSheetsExclude();
 
+		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
+		try {
+			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false);
+		} catch (Exception e) {
+			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
+			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
+		}
+
+		if (param.isEmpty()) {
+			return; // Benutzer hat abgebrochen
+		}
+
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
+				.setDocVersionWhenNew().create().isDidCreate()) {
+			getKonfigurationSheet().setMeldeListeFormation(param.get().formation);
+			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(param.get().teamnameAnzeigen);
+			upDateSheet();
+		}
 	}
 
 	@Override

@@ -17,11 +17,11 @@ Ab der zweiten Runde spielt man idealerweise immer gegen Gegner, die in etwa gle
 | 1 | **Anzahl der Siege** | Hauptkriterium |
 | 2 | **Buchholz (BHZ)** | Summe der Siege aller Gegner |
 | 3 | **Feinbuchholz (FBHZ)** | Summe der BHZ-Werte aller Gegner |
-| 4 | **Kugeldifferenz** | Erzielte minus kassierte Punkte (über alle Spiele) |
+| 4 | **Punktedifferenz** | Erzielte minus kassierte Punkte (über alle Spiele) |
 | 5 | **Direktvergleich** | Ergebnis aus dem direkten Aufeinandertreffen |
 | 6 | **Los** | Letztes Mittel bei vollständigem Gleichstand |
 
-> **Hinweis:** Manchmal tauscht die Turnierleitung die Kriterien 2 und 4, sodass die Kugeldifferenz vor der Gegnerstärke zählt. Bei professionellen Turnieren wird der Buchholz-Wertung aber meist der Vorzug gegeben, da es schwerer ist, gegen einen starken Gegner knapp zu gewinnen, als einen schwachen Gegner hoch (z. B. 13:0) zu schlagen.
+> **Hinweis:** Manchmal tauscht die Turnierleitung die Kriterien 2 und 4, sodass die Punktedifferenz vor der Gegnerstärke zählt. Bei professionellen Turnieren wird der Buchholz-Wertung aber meist der Vorzug gegeben, da es schwerer ist, gegen einen starken Gegner knapp zu gewinnen, als einen schwachen Gegner hoch (z. B. 13:0) zu schlagen.
 
 ---
 
@@ -161,3 +161,7 @@ Team E hatte die stärkeren Gegner der Gegner (FBHZ = 16 > 13) und zieht an Team
 | **1.** | **Team A** | 3 | 5 | 14 |
 | **2.** | **Team E** | 2 | 4 | **16** |
 | **3.** | **Team C** | 2 | 4 | **13** |
+
+
+
+Die Kugeldifferenz (im Pétanque oft auch einfach Punktedifferenz genannt) funktioniert im Grunde exakt wie das Torverhältnis beim Fußball. Es ist die Gesamtsumme deiner selbst erzielten Punkte abzüglich der kassierten Gegenpunkte über alle Spiele eines Turniers hinweg.Ein kurzes RechenbeispielNehmen wir an, ein Team absolviert drei Runden:SpielErgebnisErzielte Punkte (+)Kassierte Punkte (-)Differenz pro SpielSpiel 1Sieg (13:8)138+5Spiel 2Niederlage (10:13)1013-3Spiel 3Sieg (13:5)135+8Gesamt3626+10Die finale Kugeldifferenz für dieses Team beträgt am Ende also +10. Du kannst dafür entweder alle Pluspunkte und alle Minuspunkte zusammenzählen und voneinander abziehen (36 - 26 = 10) oder einfach die Differenzen der Einzelspiele addieren (5 - 3 + 8 = 10). Das Ergebnis ist dasselbe.

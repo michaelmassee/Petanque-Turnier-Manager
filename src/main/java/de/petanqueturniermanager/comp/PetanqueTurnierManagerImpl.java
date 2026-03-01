@@ -42,7 +42,6 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
-import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -135,10 +134,6 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 
 				if (!didHandle) {
 					didHandle = handleLiga(action, currentSpreadsheet);
-				}
-
-				if (!didHandle) {
-					didHandle = handleSchweizer(action, currentSpreadsheet);
 				}
 
 				if (!didHandle) {
@@ -387,20 +382,5 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		return didHandle;
 	}
 
-	private boolean handleSchweizer(String action, WorkingSpreadsheet workingSpreadsheet) {
-		boolean didHandle = true;
-		if (!action.toLowerCase().startsWith("schweizer")) {
-			return false;
-		}
-		switch (action) {
-		// ------------------------------
-		case "schweizer_neue_meldeliste":
-			new SchweizerMeldeListeSheetNew(workingSpreadsheet).start();
-			break;
-		default:
-			didHandle = false;
-		}
-		return didHandle;
-	}
 
 }

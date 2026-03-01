@@ -61,7 +61,7 @@ public class SchweizerSystem {
 						(SchweizerTeamErgebnis e) -> bhzMap.getOrDefault(e.teamNr(), 0)).reversed())
 				.thenComparing(Comparator.comparingInt(
 						(SchweizerTeamErgebnis e) -> fbhzMap.getOrDefault(e.teamNr(), 0)).reversed())
-				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::kugeldifferenz).reversed());
+				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed());
 
 		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
 	}

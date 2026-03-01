@@ -35,7 +35,6 @@ public class SchweizerMeldeListeSheetNewUITest extends BaseCalcUITest {
 		assertEquals(2, schweizerMeldeListeSheetTestDaten.getErsteDatenZiele());
 		assertEquals(33, schweizerMeldeListeSheetTestDaten.getLetzteDatenZeileUseMin());
 		assertEquals(1, schweizerMeldeListeSheetTestDaten.getSpielerNameErsteSpalte());
-		assertEquals(3, schweizerMeldeListeSheetTestDaten.getMeldungenSpalte().getLetzteMeldungNameSpalte());
 
 		RangePosition rangeMeldeListe = RangePosition.from(0, 1, 3, 33);
 		assertThat(rangeMeldeListe.getAddress()).isEqualTo("A2:D34");

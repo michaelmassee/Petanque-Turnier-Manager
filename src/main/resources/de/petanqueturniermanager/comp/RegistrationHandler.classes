@@ -7,5 +7,5 @@ de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl
-#de.petanqueturniermanager.comp.ProtocolHandler
+de.petanqueturniermanager.comp.ProtocolHandler
 #de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory
