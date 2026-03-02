@@ -10,8 +10,7 @@ import com.sun.star.lib.uno.helper.WeakBase;
  */
 
 public abstract class AbstractAddInImpl extends WeakBase
-		implements com.sun.star.lang.XLocalizable,
-				   com.sun.star.lang.XServiceInfo,
+		implements com.sun.star.lang.XServiceInfo,
 				   com.sun.star.sheet.XAddIn,
 				   com.sun.star.sheet.XCompatibilityNames {
 	private com.sun.star.lang.Locale locale = new com.sun.star.lang.Locale();
