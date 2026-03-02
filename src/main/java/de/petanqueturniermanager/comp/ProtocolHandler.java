@@ -33,8 +33,6 @@ import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
-import de.petanqueturniermanager.forme.korunde.CadrageSheet;
-import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -132,6 +130,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					notifyAllListeners();
 				}
 			});
+			SheetRunner.addStateChangeListener(ProtocolHandler::notifyAllListeners);
 		}
 	}
 
@@ -220,14 +219,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case "supermelee_spieltagrangliste_validate":
 				new SpieltagRangliste_Validator(ws).testTurnierVorhanden().start();
-				break;
-			// ------------------------------
-			// Forme (kein Menüeintrag, tote Cases)
-			case "cadrage":
-				new CadrageSheet(ws).start();
-				break;
-			case "koRundeAB":
-				new KoGruppeABSheet(ws).start();
 				break;
 			// ------------------------------
 			// Liga
@@ -393,6 +384,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Zustandsprüfung und Listener-Benachrichtigung (statisch, cross-instance)
 
 	private static boolean isEnabled(String command) {
+		if (SheetRunner.isRunning()) {
+			return "abbruch".equals(command);
+		}
 		XComponentContext ctx = SHARED_CONTEXT;
 		if (ctx == null) {
 			return false;
@@ -411,17 +405,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 "spieltag_rangliste", "spieltag_rangliste_sort",
 				 "supermelee_endrangliste", "supermelee_endrangliste_sort",
 				 "supermelee_teampaarungen",
-				 "supermelee_validate", "supermelee_spieltagrangliste_validate",
-				 "meldeliste_testdaten", "spielrunden_testdaten",
-				 "SpieltagRanglisteSheet_TestDaten"        -> ts == TurnierSystem.SUPERMELEE;
+				 "supermelee_validate", "supermelee_spieltagrangliste_validate" -> ts == TurnierSystem.SUPERMELEE;
+			// SuperMelee-Testdaten: auch wenn kein Turnier vorhanden
+			case "meldeliste_testdaten", "spielrunden_testdaten",
+				 "SpieltagRanglisteSheet_TestDaten"        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
 			// Liga
 			case "liga_neue_meldeliste"                   -> ts == TurnierSystem.KEIN;
 			case "liga_update_meldeliste", "liga_spielplan",
 				 "liga_rangliste", "liga_rangliste_sortieren",
-				 "liga_direktvergleich", "liga_export",
-				 "liga_testdaten_meldeliste",
+				 "liga_direktvergleich", "liga_export"    -> ts == TurnierSystem.LIGA;
+			// Liga-Testdaten: auch wenn kein Turnier vorhanden
+			case "liga_testdaten_meldeliste",
 				 "liga_spielplan_testdaten",
-				 "liga_spielplan_testdaten_mit_freispiel"  -> ts == TurnierSystem.LIGA;
+				 "liga_spielplan_testdaten_mit_freispiel" -> ts == TurnierSystem.KEIN || ts == TurnierSystem.LIGA;
 			// Jeder gegen Jeden
 			case "jgj_neue_meldeliste"                    -> ts == TurnierSystem.KEIN;
 			case "jgj_update_meldeliste", "jgj_spielplan",
@@ -430,14 +426,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Schweizer
 			case "schweizer_start"                        -> ts == TurnierSystem.KEIN;
 			case "schweizer_neue_meldeliste",
-				 "schweizer_update_meldeliste",
-				 "schweizer_testdaten_meldeliste"          -> ts == TurnierSystem.SCHWEIZER;
-			// Konfiguration, Download, Stop: immer aktiv
+				 "schweizer_update_meldeliste"            -> ts == TurnierSystem.SCHWEIZER;
+			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
+			case "schweizer_testdaten_meldeliste"         -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
+			// Konfiguration: nur wenn Turnier vorhanden
 			case "konfiguration_turnier",
 				 "konfiguration_kopffusszeilen",
 				 "konfiguration_farben",
-				 "konfiguration_update_erstellt_mit_version",
-				 "downloadExtension", "abbruch"           -> true;
+				 "konfiguration_update_erstellt_mit_version" -> ts != TurnierSystem.KEIN;
+			// Download, Stop: immer aktiv
+			case "downloadExtension", "abbruch"           -> true;
 			default -> false;
 			};
 		} catch (Exception e) {

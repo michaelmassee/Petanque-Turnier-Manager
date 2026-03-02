@@ -7,6 +7,9 @@ package de.petanqueturniermanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
@@ -38,6 +41,8 @@ public abstract class SheetRunner extends Thread {
 	private final TurnierSystem turnierSystem;
 	private static AtomicBoolean isRunning = new AtomicBoolean(); // nur 1 Sheetrunner gleichzeitig
 	private static volatile SheetRunner runner = null;
+	private static final List<Runnable> STATE_LISTENERS =
+			Collections.synchronizedList(new ArrayList<>());
 	private String logPrefix = null;
 
 	protected String getLogPrefix() {
@@ -78,11 +83,26 @@ public abstract class SheetRunner extends Thread {
 		}
 	}
 
+	public static void addStateChangeListener(Runnable listener) {
+		STATE_LISTENERS.add(listener);
+	}
+
+	private static void notifyStateListeners() {
+		for (Runnable r : new ArrayList<>(STATE_LISTENERS)) {
+			try {
+				r.run();
+			} catch (Exception e) {
+				logger.warn("StateListener-Fehler: {}", e.getMessage());
+			}
+		}
+	}
+
 	@Override
 	public final void run() {
 		if (!SheetRunner.isRunning.getAndSet(true)) {
 			logger.debug("Start SheetRunner");
 			SheetRunner.runner = this;
+			notifyStateListeners(); // Menü deaktivieren
 			boolean isFehler = false;
 
 			try {
@@ -101,6 +121,7 @@ public abstract class SheetRunner extends Thread {
 			} finally {
 				SheetRunner.isRunning.set(false); // Immer an erste stelle diesen flag zurück
 				SheetRunner.runner = null;
+				notifyStateListeners(); // Menü reaktivieren
 				if (isFehler) {
 					processBox().visible().fehler("!! FEHLER !!").ready();
 				} else {
