@@ -144,6 +144,10 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 				if (!didHandle) {
 					didHandle = handleKonfiguration(action, currentSpreadsheet);
 				}
+
+				if (!didHandle) {
+					didHandle = handleSchweizer(action, currentSpreadsheet);
+				}
 			}
 
 			if (!didHandle) {
@@ -377,6 +381,19 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		case "liga_export":
 			new LigaMeldeListeSheetExport(workingSpreadsheet).testTurnierVorhanden().start();
 			break;
+		default:
+			didHandle = false;
+		}
+		return didHandle;
+	}
+
+	private boolean handleSchweizer(String action, WorkingSpreadsheet workingSpreadsheet) throws GenerateException {
+		boolean didHandle = true;
+		if (!action.toLowerCase().startsWith("schweizer")) {
+			return false;
+		}
+
+		switch (action) {
 		case "schweizer_testdaten_meldeliste":
 			new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet).start();
 			break;
@@ -385,6 +402,5 @@ public final class PetanqueTurnierManagerImpl extends WeakBase implements XJobEx
 		}
 		return didHandle;
 	}
-
 
 }

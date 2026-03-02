@@ -87,7 +87,7 @@ public abstract class SheetRunner extends Thread {
 
 			try {
 				processBox().run();
-				if (turnierSystem != TurnierSystem.KEIN) {
+				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()) {
 					updateKonfigurationSheet();
 				}
 				doRun();
@@ -183,6 +183,18 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	protected abstract IKonfigurationSheet getKonfigurationSheet();
+
+	/**
+	 * Steuert, ob {@link #updateKonfigurationSheet()} VOR {@code doRun()} aufgerufen wird.
+	 * <p>
+	 * Standardmäßig {@code true} – bestehende Turniersysteme ändern ihr Verhalten nicht.
+	 * Subklassen, die in {@code doRun()} einen Bestätigungsdialog zeigen, können {@code false}
+	 * zurückgeben und {@link #getKonfigurationSheet()}{@code .update()} selbst nach der
+	 * Bestätigung aufrufen.
+	 */
+	protected boolean isUpdateKonfigurationSheetBeforeDoRun() {
+		return true;
+	}
 
 	private void updateKonfigurationSheet() throws GenerateException {
 		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();

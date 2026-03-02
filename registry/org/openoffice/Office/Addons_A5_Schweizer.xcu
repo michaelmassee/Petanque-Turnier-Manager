@@ -58,7 +58,20 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							
+
+							<node oor:name="A5A2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Update Entrylist</value>
+									<value xml:lang="de">Meldeliste Aktualisieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_update_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

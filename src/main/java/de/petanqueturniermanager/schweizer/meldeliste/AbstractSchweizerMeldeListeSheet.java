@@ -4,6 +4,11 @@
  */
 package de.petanqueturniermanager.schweizer.meldeliste;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -314,6 +319,69 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 
 	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {
 		getKonfigurationSheet().setAktiveSpielRunde(spielRundeNr);
+	}
+
+	/**
+	 * Letzte Zeile mit einem nicht-leeren Vorname (Spieler 1) ab ERSTE_DATEN_ZEILE.
+	 * Gibt ERSTE_DATEN_ZEILE - 1 zurück wenn keine Daten vorhanden.
+	 */
+	protected int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
+		int vornameSpalte = getVornameSpalte(0);
+		int letzte = ERSTE_DATEN_ZEILE - 1;
+		int maxZeile = ERSTE_DATEN_ZEILE + 500;
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
+			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname != null && !vorname.isEmpty()) {
+				letzte = zeile;
+			}
+		}
+		return letzte;
+	}
+
+	/**
+	 * Prüft auf doppelte Team-Nummern nach der aufsteigenden Sortierung.
+	 * Wirft GenerateException mit allen betroffenen Zeilen und Nummern.
+	 * Muss NACH der aufsteigenden Sortierung nach Team-Nr aufgerufen werden.
+	 */
+	protected void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		if (letzteZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		int vornameSpalte = getVornameSpalte(0);
+		Map<Integer, List<Integer>> alleNrn = new LinkedHashMap<>();
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			alleNrn.computeIfAbsent(nr, k -> new ArrayList<>()).add(zeile);
+		}
+		Map<Integer, List<Integer>> duplikate = new LinkedHashMap<>();
+		for (Map.Entry<Integer, List<Integer>> entry : alleNrn.entrySet()) {
+			if (entry.getValue().size() > 1) {
+				duplikate.put(entry.getKey(), entry.getValue());
+			}
+		}
+		if (duplikate.isEmpty()) {
+			return;
+		}
+		StringBuilder sb = new StringBuilder("Meldeliste wurde nicht aktualisiert.\nDoppelte Startnummern:");
+		for (Map.Entry<Integer, List<Integer>> entry : duplikate.entrySet()) {
+			sb.append("\nNr. ").append(entry.getKey()).append(": Zeilen ");
+			List<Integer> zeilen = entry.getValue();
+			for (int i = 0; i < zeilen.size(); i++) {
+				if (i > 0) {
+					sb.append(", ");
+				}
+				sb.append(zeilen.get(i) + 1); // 0-basiert → 1-basiert für Benutzer
+			}
+		}
+		throw new GenerateException(sb.toString());
 	}
 
 }

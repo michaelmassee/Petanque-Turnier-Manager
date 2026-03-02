@@ -35,6 +35,7 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -48,6 +49,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * <ul>
  *   <li>{@code schweizer_start} – aktiv wenn kein Turnier vorhanden (KEIN)</li>
  *   <li>{@code schweizer_neue_meldeliste} – aktiv wenn Schweizer-Turnier aktiv</li>
+ *   <li>{@code schweizer_update_meldeliste} – aktiv wenn Schweizer-Turnier aktiv</li>
  * </ul>
  */
 public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDispatch, XServiceInfo {
@@ -137,6 +139,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					new SchweizerMeldeListeSheetNew(ws).start();
 				}
 				break;
+			case "schweizer_update_meldeliste":
+				new SchweizerMeldeListeSheetUpdate(ws).start();
+				break;
 			default:
 				logger.warn("Unbekannter Befehl: {}", command);
 			}
@@ -176,6 +181,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			return switch (command) {
 			case "schweizer_start" -> ts == TurnierSystem.KEIN;
 			case "schweizer_neue_meldeliste" -> ts == TurnierSystem.SCHWEIZER;
+			case "schweizer_update_meldeliste" -> ts == TurnierSystem.SCHWEIZER;
 			default -> false;
 			};
 		} catch (Exception e) {

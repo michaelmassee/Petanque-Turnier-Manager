@@ -4,5 +4,8 @@
         "git commit": true
     },
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "window.zoomLevel": 1.4,
+    "editor.fontSize": 12,
+    "debug.console.fontSize": 12
 }

@@ -204,9 +204,16 @@ task uninstallExtension(type: Exec) {
     description = 'Deinstalliert die Extension aus LibreOffice'
     commandLine 'unopkg', 'remove', extensionId
     ignoreExitValue = true
-    
+    errorOutput = new ByteArrayOutputStream()
+    standardOutput = new ByteArrayOutputStream()
+
     doFirst {
         println "Deinstalliere Extension: ${extensionId}"
+    }
+    doLast {
+        if (executionResult.get().exitValue != 0) {
+            println "Hinweis: Extension war nicht installiert, überspringe Deinstallation."
+        }
     }
 }
 

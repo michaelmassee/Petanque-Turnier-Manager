@@ -27,6 +27,11 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 	}
 
 	@Override
+	protected boolean isUpdateKonfigurationSheetBeforeDoRun() {
+		return false;
+	}
+
+	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), SchweizerSheet.TURNIERSYSTEM)
 				.prefix(getLogPrefix()).validate()) {
@@ -43,8 +48,11 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		}
 
 		if (param.isEmpty()) {
-			return; // Benutzer hat abgebrochen – kein Eingriff ins Dokument
+			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
+
+		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
+		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
 		createMeldelisteWithParams(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen);
