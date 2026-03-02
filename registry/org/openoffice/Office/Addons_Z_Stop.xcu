@@ -31,7 +31,7 @@
 							<value xml:lang="de">~Verarbeitung abbrechen</value>
 						</prop>
 						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.MenuJobExecute?abbruch</value>
+							<value>ptm:abbruch</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>

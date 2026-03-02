@@ -44,7 +44,7 @@
 									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 100 Meldungen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?meldeliste_testdaten</value>
+									<value>ptm:meldeliste_testdaten</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -57,7 +57,7 @@
 									<value xml:lang="de">Supermêlée, generiere 1 Spieltag mit 4 Spielrunden</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?spielrunden_testdaten</value>
+									<value>ptm:spielrunden_testdaten</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -70,7 +70,7 @@
 									<value xml:lang="de">Supermêlée, generiere 5 komplette Spieltage</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?SpieltagRanglisteSheet_TestDaten</value>
+									<value>ptm:SpieltagRanglisteSheet_TestDaten</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -89,7 +89,7 @@
 									<value xml:lang="de">Liga, generiere Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_testdaten_meldeliste</value>
+									<value>ptm:liga_testdaten_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -101,7 +101,7 @@
 									<value xml:lang="de">Liga, Spielplan</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_spielplan_testdaten</value>
+									<value>ptm:liga_spielplan_testdaten</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -113,7 +113,7 @@
 									<value xml:lang="de">Liga, Spielplan mit Freispiel</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?liga_spielplan_testdaten_mit_freispiel</value>
+									<value>ptm:liga_spielplan_testdaten_mit_freispiel</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -132,7 +132,7 @@
 									<value xml:lang="de">Schweizer, generiere Meldeliste mit 16 Teams</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?schweizer_testdaten_meldeliste</value>
+									<value>ptm:schweizer_testdaten_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

@@ -40,7 +40,7 @@
 									<value xml:lang="de">Neue Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?neue_meldeliste</value>
+									<value>ptm:neue_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -53,7 +53,7 @@
 									<value xml:lang="de">Meldeliste aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?update_meldeliste</value>
+									<value>ptm:update_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -66,7 +66,7 @@
 									<value xml:lang="de">Anmeldungen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?anmeldungen</value>
+									<value>ptm:anmeldungen</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -79,7 +79,7 @@
 									<value xml:lang="de">Teilnehmer</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?teilnehmer</value>
+									<value>ptm:teilnehmer</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -98,7 +98,7 @@
 									<value xml:lang="de">Aktuelle Spielrunde</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?aktuelle_spielrunde</value>
+									<value>ptm:aktuelle_spielrunde</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -111,7 +111,7 @@
 									<value xml:lang="de">Nächste Spielrunde</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?naechste_spielrunde</value>
+									<value>ptm:naechste_spielrunde</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -124,7 +124,7 @@
 									<value xml:lang="de">Spielrundenplan</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?super_spielrundeplan</value>
+									<value>ptm:super_spielrundeplan</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -144,7 +144,7 @@
 									<value xml:lang="de">Spieltag Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?spieltag_rangliste</value>
+									<value>ptm:spieltag_rangliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -157,7 +157,7 @@
 									<value xml:lang="de">Spieltag-Rangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?spieltag_rangliste_sort</value>
+									<value>ptm:spieltag_rangliste_sort</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -171,7 +171,7 @@
 									<value xml:lang="de">Nächster Spieltag</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?naechste_spieltag</value>
+									<value>ptm:naechste_spieltag</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -190,7 +190,7 @@
 									<value xml:lang="de">Endrangliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_endrangliste</value>
+									<value>ptm:supermelee_endrangliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -203,7 +203,7 @@
 									<value xml:lang="de">Endrangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_endrangliste_sort</value>
+									<value>ptm:supermelee_endrangliste_sort</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -222,7 +222,7 @@
 									<value xml:lang="de">Team-Paarungen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_teampaarungen</value>
+									<value>ptm:supermelee_teampaarungen</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -235,7 +235,7 @@
 									<value xml:lang="de">Spieltag prüfen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_validate</value>
+									<value>ptm:supermelee_validate</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -248,7 +248,7 @@
 									<value xml:lang="de">Rangliste prüfen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?supermelee_spieltagrangliste_validate</value>
+									<value>ptm:supermelee_spieltagrangliste_validate</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

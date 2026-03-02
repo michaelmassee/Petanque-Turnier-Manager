@@ -3,9 +3,8 @@
 # Modern .components file should be used instead
 
 de.petanqueturniermanager.addins.GlobalImpl
-de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl
+de.petanqueturniermanager.comp.ProtocolHandler
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl
-de.petanqueturniermanager.comp.ProtocolHandler
 #de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory

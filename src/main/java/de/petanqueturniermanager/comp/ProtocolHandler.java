@@ -28,15 +28,57 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
+import de.petanqueturniermanager.forme.korunde.CadrageSheet;
+import de.petanqueturniermanager.forme.korunde.KoGruppeABSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
+import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
+import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
+import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetExport;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteDirektvergleichSheet;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
+import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_SortOnly;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
 
 /**
  * UNO ProtocolHandler für das benutzerdefinierte Protokoll "ptm:".
@@ -45,12 +87,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Menüpunkte dynamisch zu aktivieren/deaktivieren basierend auf dem
  * aktuellen Turniersystem im Dokument.
  * <p>
- * Zustandsregeln für Schweizer Menüpunkte:
- * <ul>
- *   <li>{@code schweizer_start} – aktiv wenn kein Turnier vorhanden (KEIN)</li>
- *   <li>{@code schweizer_neue_meldeliste} – aktiv wenn Schweizer-Turnier aktiv</li>
- *   <li>{@code schweizer_update_meldeliste} – aktiv wenn Schweizer-Turnier aktiv</li>
- * </ul>
+ * Zentraler Einstiegspunkt für alle Menüaktionen aller Turniersysteme.
  */
 public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDispatch, XServiceInfo {
 
@@ -125,8 +162,127 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
 		try {
+			ProcessBox.from().visible().clearWennNotRunning().info("Start " + command);
 			WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext);
 			switch (command) {
+			// ------------------------------
+			// SuperMelee
+			case "neue_meldeliste":
+				new MeldeListeSheet_New(ws).start();
+				break;
+			case "update_meldeliste":
+				new MeldeListeSheet_Update(ws).testTurnierVorhanden().start();
+				break;
+			case "anmeldungen":
+				new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "teilnehmer":
+				new TielnehmerSheet(ws).testTurnierVorhanden().start();
+				break;
+			case "naechste_spieltag":
+				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "meldeliste_testdaten":
+				new MeldeListeSheet_TestDaten(ws).start();
+				break;
+			case "supermelee_teampaarungen":
+				new SupermeleeTeamPaarungenSheet(ws).testTurnierVorhanden().start();
+				break;
+			case "aktuelle_spielrunde":
+				new SpielrundeSheet_Update(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case "naechste_spielrunde":
+				new SpielrundeSheet_Naechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case "super_spielrundeplan":
+				new SpielrundePlan(ws).testTurnierVorhanden().start();
+				break;
+			case "spielrunden_testdaten":
+				new SpielrundeSheet_TestDaten(ws).start();
+				break;
+			case "spieltag_rangliste":
+				new SpieltagRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "spieltag_rangliste_sort":
+				new SpieltagRanglisteSheet_SortOnly(ws).testTurnierVorhanden().start();
+				break;
+			case "SpieltagRanglisteSheet_TestDaten":
+				new SpieltagRanglisteSheet_TestDaten(ws).start();
+				break;
+			case "supermelee_endrangliste":
+				new EndranglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "supermelee_endrangliste_sort":
+				new EndranglisteSheet_Sort(ws).testTurnierVorhanden().start();
+				break;
+			case "supermelee_validate":
+				new SpielrundeSheet_Validator(ws).testTurnierVorhanden().start();
+				break;
+			case "supermelee_spieltagrangliste_validate":
+				new SpieltagRangliste_Validator(ws).testTurnierVorhanden().start();
+				break;
+			// ------------------------------
+			// Forme (kein Menüeintrag, tote Cases)
+			case "cadrage":
+				new CadrageSheet(ws).start();
+				break;
+			case "koRundeAB":
+				new KoGruppeABSheet(ws).start();
+				break;
+			// ------------------------------
+			// Liga
+			case "liga_neue_meldeliste":
+				new LigaMeldeListeSheetNew(ws).start();
+				break;
+			case "liga_update_meldeliste":
+				new LigaMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "liga_testdaten_meldeliste":
+				new LigaMeldeListeSheetTestDaten(ws, true).start();
+				break;
+			case "liga_spielplan":
+				new LigaSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case "liga_rangliste":
+				new LigaRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "liga_rangliste_sortieren":
+				new LigaRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				break;
+			case "liga_direktvergleich":
+				new LigaRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
+				break;
+			case "liga_spielplan_testdaten":
+				new LigaSpielPlanSheetTestDaten(ws, false).start();
+				break;
+			case "liga_spielplan_testdaten_mit_freispiel":
+				new LigaSpielPlanSheetTestDaten(ws, true).start();
+				break;
+			case "liga_export":
+				new LigaMeldeListeSheetExport(ws).testTurnierVorhanden().start();
+				break;
+			// ------------------------------
+			// Jeder gegen Jeden
+			case "jgj_neue_meldeliste":
+				new JGJMeldeListeSheet_New(ws).start();
+				break;
+			case "jgj_update_meldeliste":
+				new JGJMeldeListeSheet_Update(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "jgj_spielplan":
+				new JGJSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case "jgj_rangliste":
+				new JGJRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case "jgj_rangliste_sortieren":
+				new JGJRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				break;
+			case "jgj_direktvergleich":
+				new JGJRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
+				break;
+			// ------------------------------
+			// Schweizer System
 			case "schweizer_start":
 				new SchweizerMeldeListeSheetNew(ws).start();
 				break;
@@ -142,11 +298,77 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case "schweizer_update_meldeliste":
 				new SchweizerMeldeListeSheetUpdate(ws).start();
 				break;
+			case "schweizer_testdaten_meldeliste":
+				new SchweizerMeldeListeSheetTestDaten(ws).start();
+				break;
+			// ------------------------------
+			// Konfiguration
+			case "konfiguration_turnier":
+				handleKonfiguration(command, ws);
+				break;
+			case "konfiguration_kopffusszeilen":
+				handleKonfiguration(command, ws);
+				break;
+			case "konfiguration_farben":
+				handleKonfiguration(command, ws);
+				break;
+			case "konfiguration_update_erstellt_mit_version":
+				handleKonfiguration(command, ws);
+				break;
+			// ------------------------------
+			// Download / Stop
+			case "downloadExtension":
+				new DownloadExtension(ws).start();
+				break;
+			case "abbruch":
+				SheetRunner.cancelRunner();
+				break;
 			default:
+				ProcessBox.from().fehler("ungueltige Aktion " + command);
 				logger.warn("Unbekannter Befehl: {}", command);
 			}
 		} catch (Exception e) {
+			ProcessBox.from().fehler(e.getMessage());
 			logger.error("Fehler beim Ausführen von '{}': {}", command, e.getMessage(), e);
+		}
+	}
+
+	private void handleKonfiguration(String command, WorkingSpreadsheet ws) {
+		TurnierSystem ts;
+		try {
+			ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return;
+		}
+		if (ts == TurnierSystem.KEIN) {
+			try {
+				MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Konfiguration")
+						.message("Kein Turnier vorhanden").show();
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+			}
+			return;
+		}
+		try {
+			switch (command) {
+			case "konfiguration_turnier":
+				new TurnierDialog(ws).createDialog();
+				break;
+			case "konfiguration_kopffusszeilen":
+				new KopfFusszeilenDialog(ws).createDialog();
+				break;
+			case "konfiguration_farben":
+				new FarbenDialog(ws).createDialog();
+				break;
+			case "konfiguration_update_erstellt_mit_version":
+				DocumentHelper.setDocErstelltMitVersion(ws);
+				break;
+			default:
+				break;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 	}
 
@@ -179,9 +401,43 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			TurnierSystem ts = new DocumentPropertiesHelper(new WorkingSpreadsheet(ctx))
 					.getTurnierSystemAusDocument();
 			return switch (command) {
-			case "schweizer_start" -> ts == TurnierSystem.KEIN;
-			case "schweizer_neue_meldeliste" -> ts == TurnierSystem.SCHWEIZER;
-			case "schweizer_update_meldeliste" -> ts == TurnierSystem.SCHWEIZER;
+			// SuperMelee: neues Turnier nur wenn keins aktiv
+			case "neue_meldeliste"                        -> ts == TurnierSystem.KEIN;
+			// SuperMelee-Aktionen: nur wenn SuperMelee aktiv
+			case "update_meldeliste",
+				 "anmeldungen", "teilnehmer",
+				 "naechste_spieltag", "aktuelle_spielrunde",
+				 "naechste_spielrunde", "super_spielrundeplan",
+				 "spieltag_rangliste", "spieltag_rangliste_sort",
+				 "supermelee_endrangliste", "supermelee_endrangliste_sort",
+				 "supermelee_teampaarungen",
+				 "supermelee_validate", "supermelee_spieltagrangliste_validate",
+				 "meldeliste_testdaten", "spielrunden_testdaten",
+				 "SpieltagRanglisteSheet_TestDaten"        -> ts == TurnierSystem.SUPERMELEE;
+			// Liga
+			case "liga_neue_meldeliste"                   -> ts == TurnierSystem.KEIN;
+			case "liga_update_meldeliste", "liga_spielplan",
+				 "liga_rangliste", "liga_rangliste_sortieren",
+				 "liga_direktvergleich", "liga_export",
+				 "liga_testdaten_meldeliste",
+				 "liga_spielplan_testdaten",
+				 "liga_spielplan_testdaten_mit_freispiel"  -> ts == TurnierSystem.LIGA;
+			// Jeder gegen Jeden
+			case "jgj_neue_meldeliste"                    -> ts == TurnierSystem.KEIN;
+			case "jgj_update_meldeliste", "jgj_spielplan",
+				 "jgj_rangliste", "jgj_rangliste_sortieren",
+				 "jgj_direktvergleich"                    -> ts == TurnierSystem.JGJ;
+			// Schweizer
+			case "schweizer_start"                        -> ts == TurnierSystem.KEIN;
+			case "schweizer_neue_meldeliste",
+				 "schweizer_update_meldeliste",
+				 "schweizer_testdaten_meldeliste"          -> ts == TurnierSystem.SCHWEIZER;
+			// Konfiguration, Download, Stop: immer aktiv
+			case "konfiguration_turnier",
+				 "konfiguration_kopffusszeilen",
+				 "konfiguration_farben",
+				 "konfiguration_update_erstellt_mit_version",
+				 "downloadExtension", "abbruch"           -> true;
 			default -> false;
 			};
 		} catch (Exception e) {

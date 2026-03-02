@@ -39,7 +39,7 @@
 									<value xml:lang="de">Neue Meldeliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_neue_meldeliste</value>
+									<value>ptm:jgj_neue_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -51,7 +51,7 @@
 									<value xml:lang="de">Meldeliste aktualisieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_update_meldeliste</value>
+									<value>ptm:jgj_update_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -70,7 +70,7 @@
 									<value xml:lang="de">Spielplan</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_spielplan</value>
+									<value>ptm:jgj_spielplan</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -83,7 +83,7 @@
 									<value xml:lang="de">Rangliste</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_rangliste</value>
+									<value>ptm:jgj_rangliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -95,7 +95,7 @@
 									<value xml:lang="de">Rangliste sortieren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_rangliste_sortieren</value>
+									<value>ptm:jgj_rangliste_sortieren</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -108,7 +108,7 @@
 									<value xml:lang="de">Direktvergleich</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?jgj_direktvergleich</value>
+									<value>ptm:jgj_direktvergleich</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
