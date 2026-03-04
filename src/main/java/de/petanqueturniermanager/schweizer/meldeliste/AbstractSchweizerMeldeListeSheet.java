@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -60,6 +61,10 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	protected static final String HEADER_NACHNAME = "Nachname";
 	protected static final String HEADER_VEREINSNAME = "Verein";
 	protected static final String HEADER_SETZPOSITION = "SP";
+	protected static final String HEADER_AKTIV = "Aktiv";
+	protected static final int AKTIV_SPALTE_WIDTH = 700;
+	public static final int AKTIV_WERT_NIMMT_TEIL = 1;
+	public static final int AKTIV_WERT_AUSGESTIEGEN = 2;
 
 	protected AbstractSchweizerMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, "Schweizer-Meldeliste");
@@ -127,6 +132,11 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 		return getLetzteDataSpalte() + 1;
 	}
 
+	/** Aktiv/Inaktiv-Spalte – direkt nach der Setzposition-Spalte. */
+	public int getAktivSpalte() throws GenerateException {
+		return getSetzPositionSpalte() + 1;
+	}
+
 	// ---------------------------------------------------------------
 	// Sheet-Aufbau
 	// ---------------------------------------------------------------
@@ -192,6 +202,20 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				.setComment("Setzposition: Teams mit gleicher SP werden in Runde 1 nicht gegeneinander ausgelost.")
 				.setEndPosMergeZeilePlus(1);
 		getSheetHelper().setStringValueInCell(spHeader);
+
+		// Aktiv-Spalte: merged über beide Header-Zeilen
+		ColumnProperties colPropAktiv = ColumnProperties.from().setWidth(AKTIV_SPALTE_WIDTH)
+				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
+				.margin(MeldeListeKonstanten.CELL_MARGIN);
+		StringCellValue aktivHeader = StringCellValue
+				.from(getXSpreadSheet(), Position.from(getAktivSpalte(), ERSTE_HEADER_ZEILE), HEADER_AKTIV)
+				.addColumnProperties(colPropAktiv)
+				.setCellBackColor(headerColor)
+				.setBorder(BorderFactory.from().allThin().toBorder())
+				.setVertJustify(CellVertJustify2.CENTER)
+				.setComment("1 = Nimmt teil, 2 = Ausgestiegen, leer = Nimmt nicht teil")
+				.setEndPosMergeZeilePlus(1);
+		getSheetHelper().setStringValueInCell(aktivHeader);
 
 		// Spieler-Blöcke
 		for (int s = 0; s < anzSpieler; s++) {
@@ -276,6 +300,12 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				getSetzPositionSpalte(), letzteDatenZeile);
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), spRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+
+		// Aktiv-Spalte
+		RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
+				getAktivSpalte(), letzteDatenZeile);
+		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), aktivRange,
+				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 	}
 
 	protected void formatZeilenfarben() throws GenerateException {
@@ -283,7 +313,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 		Integer ungeradeColor = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGerade();
 
 		int letzteDatenZeile = getLetzteDatenZeileUseMin();
-		int letzteSpalte = getSetzPositionSpalte();
+		int letzteSpalte = getAktivSpalte();
 
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteDatenZeile; zeile++) {
 			RangePosition zeileRange = RangePosition.from(getTeamNrSpalte(), zeile, letzteSpalte, zeile);
@@ -311,10 +341,79 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 
 	/**
 	 * Liest alle aktiven Team-Meldungen aus dem Sheet.
-	 * TODO: Implementierung der Sheet-Lesefunktion für Teams
+	 * <p>
+	 * Fallback: Wenn kein Team einen Aktiv-Wert hat, nehmen alle teil.
 	 */
 	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
-		return new TeamMeldungen();
+		XSpreadsheet xSheet = getXSpreadSheet();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+
+		record TeamZeile(int nr, int setzPos, int aktivWert) {}
+		List<TeamZeile> alleTeams = new ArrayList<>();
+		boolean hatAktivEintrag = false;
+
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			int setzPos = getSheetHelper().getIntFromCell(xSheet, Position.from(getSetzPositionSpalte(), zeile));
+			int aktivWert = getSheetHelper().getIntFromCell(xSheet, Position.from(getAktivSpalte(), zeile));
+			if (aktivWert > 0) {
+				hatAktivEintrag = true;
+			}
+			alleTeams.add(new TeamZeile(nr, setzPos, aktivWert));
+		}
+
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (TeamZeile tz : alleTeams) {
+			if (!hatAktivEintrag || tz.aktivWert() == AKTIV_WERT_NIMMT_TEIL) {
+				meldungen.addTeamWennNichtVorhanden(Team.from(tz.nr()).setSetzPos(tz.setzPos()));
+			}
+		}
+		return meldungen;
+	}
+
+	/**
+	 * Sucht die Teamnummer anhand des Teamnamens (Reverse-Lookup).
+	 * Gibt -1 zurück wenn nicht gefunden oder Teamname-Spalte deaktiviert.
+	 */
+	public int getTeamNrByTeamname(String teamname) throws GenerateException {
+		if (teamname == null || teamname.isEmpty() || !getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) {
+			return -1;
+		}
+		XSpreadsheet xSheet = getXSpreadSheet();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String name = getSheetHelper().getTextFromCell(xSheet, Position.from(1, zeile));
+			if (teamname.equals(name)) {
+				return getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * Liest den Teamnamen für die angegebene Teamnummer aus der Meldeliste.
+	 * Gibt null zurück wenn die Teamname-Spalte deaktiviert ist oder die Nr nicht gefunden wird.
+	 */
+	public String getTeamNameByNr(int teamNr) throws GenerateException {
+		if (!getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) {
+			return null;
+		}
+		XSpreadsheet xSheet = getXSpreadSheet();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr == teamNr) {
+				return getSheetHelper().getTextFromCell(xSheet, Position.from(1, zeile));
+			}
+		}
+		return null;
 	}
 
 	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {

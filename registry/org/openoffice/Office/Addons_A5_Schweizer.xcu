@@ -72,6 +72,26 @@
 								</prop>
 							</node>
 
+							<node oor:name="A5A3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Aktuelle Spielrunde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_aktuelle_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="A5A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Nächste Spielrunde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_naechste_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

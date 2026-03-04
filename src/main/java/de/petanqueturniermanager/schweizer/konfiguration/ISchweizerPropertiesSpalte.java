@@ -51,4 +51,8 @@ public interface ISchweizerPropertiesSpalte {
 
 	void setMeldeListeVereinsnameAnzeigen(boolean anzeigen);
 
+	SpielplanTeamAnzeige getSpielplanTeamAnzeige();
+
+	void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige);
+
 }

@@ -43,6 +43,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	private static final String KONFIG_PROP_MELDELISTE_FORMATION = "Meldeliste Formation";
 	private static final String KONFIG_PROP_MELDELISTE_TEAMNAME = "Meldeliste Teamname";
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
+	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
 
 	static {
 
@@ -88,6 +89,12 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
 				.setDefaultVal("N").setDescription("Vereinsname-Spalte pro Spieler anzeigen.\r\nJ=Ja\r\nN=Nein"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
+				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
+				.setDescription("Anzeige in Spielplan/Rangliste.\r\nNR=Teamnummer\r\nNAME=Teamname"))
+				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname").inSideBar());
 
 	}
 
@@ -195,6 +202,21 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
 		setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+	}
+
+	@Override
+	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+		String val = readStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE);
+		try {
+			return SpielplanTeamAnzeige.valueOf(val);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			return SpielplanTeamAnzeige.NR;
+		}
+	}
+
+	@Override
+	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
 	}
 
 }

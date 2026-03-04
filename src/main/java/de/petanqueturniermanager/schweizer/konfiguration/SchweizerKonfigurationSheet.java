@@ -156,4 +156,14 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
 	}
 
+	@Override
+	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+		return propertiesSpalte.getSpielplanTeamAnzeige();
+	}
+
+	@Override
+	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+		propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
+	}
+
 }

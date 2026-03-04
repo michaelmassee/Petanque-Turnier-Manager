@@ -58,6 +58,8 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -143,6 +145,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
 	public static final String CMD_SCHWEIZER_NEUE_MELDELISTE = "schweizer_neue_meldeliste";
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
+	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
+	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
@@ -341,6 +345,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE:
 				new SchweizerMeldeListeSheetUpdate(ws).start();
 				break;
+			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
+				new SchweizerSpielrundeSheetUpdate(ws).start();
+				break;
+			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
+				new SchweizerSpielrundeSheetNaechste(ws).start();
+				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE:
 				new SchweizerMeldeListeSheetTestDaten(ws).start();
 				break;
@@ -478,7 +488,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE,
-				 CMD_SCHWEIZER_UPDATE_MELDELISTE            -> ts == TurnierSystem.SCHWEIZER;
+				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
+				 CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE,
+				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER;
 			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE         -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			// Konfiguration: nur wenn Turnier vorhanden

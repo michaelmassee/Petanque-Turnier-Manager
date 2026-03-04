@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetNew.class);
@@ -41,7 +42,8 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
 		try {
-			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false);
+			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false,
+				SpielplanTeamAnzeige.NR);
 		} catch (Exception e) {
 			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
 			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
@@ -55,7 +57,8 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
-		createMeldelisteWithParams(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen);
+		createMeldelisteWithParams(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen,
+				param.get().spielplanTeamAnzeige);
 	}
 
 	/**
@@ -64,11 +67,17 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 	 */
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen)
 			throws GenerateException {
+		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, SpielplanTeamAnzeige.NR);
+	}
+
+	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
+			SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			getKonfigurationSheet().setMeldeListeFormation(formation);
 			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
 			getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
+			getKonfigurationSheet().setSpielplanTeamAnzeige(spielplanTeamAnzeige);
 			upDateSheet();
 		}
 	}

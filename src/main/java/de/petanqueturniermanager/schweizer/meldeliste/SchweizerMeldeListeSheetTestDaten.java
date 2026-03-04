@@ -14,6 +14,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
@@ -93,6 +94,10 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 							Position.from(getVereinsnameSpalte(s), zeile), "Verein " + ((team % 5) + 1)));
 				}
 			}
+
+			// Aktiv-Spalte: alle Teams nehmen teil
+			getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(meldelisteSheet, Position.from(getAktivSpalte(), zeile), AKTIV_WERT_NIMMT_TEIL));
 		}
 
 		meldeListe.upDateSheet();

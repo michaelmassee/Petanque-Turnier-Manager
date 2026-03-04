@@ -140,7 +140,9 @@ public abstract class BaseCalcUITest {
 			return;
 		}
 
-		OfficeDocumentHelper.setVisible(doc, true);
+		if (!Boolean.parseBoolean(System.getProperty("uitest.headless", "false"))) {
+			OfficeDocumentHelper.setVisible(doc, true);
+		}
 		wkingSpreadsheet = new WorkingSpreadsheet(starter.getxComponentContext(), doc);
 		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
 		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);

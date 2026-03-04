@@ -3,7 +3,10 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +20,7 @@ import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.SchweizerSystem;
+import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -35,8 +39,12 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.AbstractSchweizerMeldeListeSheet;
@@ -137,40 +145,135 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	}
 
 	/**
-	 * @param aktiveMeldungen liste der Aktive Meldungen
-	 * @param spielTagNr
-	 * @param abSpielrunde
-	 * @param bisSpielrunde
-	 * @throws GenerateException
+	 * Liest alle gespielten Runden ein und befüllt:
+	 * <ul>
+	 *   <li>Team-Gegner-Beziehungen (für Auslosung der nächsten Runde)</li>
+	 *   <li>Freilos-Flags</li>
+	 * </ul>
+	 *
+	 * @param aktiveMeldungen aktive Teams
+	 * @param abSpielrunde    erste einzulesende Runde (inkl.)
+	 * @param bisSpielrunde   letzte einzulesende Runde (inkl.)
+	 * @return Auswertungsdaten je Team (Siege, Punktedifferenz, Gegnerliste)
 	 */
+	protected List<SchweizerTeamErgebnis> gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
+			int bisSpielrunde) throws GenerateException {
 
-	protected void gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde)
-			throws GenerateException {
-		int spielrunde = 1;
-
-		if (bisSpielrunde < abSpielrunde || bisSpielrunde < 1) {
-			return;
+		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punktediff
+		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
+		for (Team team : aktiveMeldungen.teams()) {
+			statsMap.put(team.getNr(), new int[2]);
+			gegnerMap.put(team.getNr(), new ArrayList<>());
 		}
 
-		if (abSpielrunde > 1) {
-			spielrunde = abSpielrunde;
+		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
+			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
+			processBoxinfo("Gespielte Runden einlesen. Von Runde " + spielrunde + " bis " + bisSpielrunde);
+
+			for (; spielrunde <= bisSpielrunde; spielrunde++) {
+				SheetRunner.testDoCancelTask();
+				XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(SpielRundeNr.from(spielrunde)));
+				if (sheet == null) {
+					continue;
+				}
+				leseRundeEin(sheet, aktiveMeldungen, statsMap, gegnerMap);
+			}
 		}
 
-		processBoxinfo(
-				"Meldungen von gespielten Runden einlesen. Von Runde:" + spielrunde + " Bis Runde:" + bisSpielrunde);
+		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
+		for (Team team : aktiveMeldungen.teams()) {
+			int[] stats = statsMap.getOrDefault(team.getNr(), new int[2]);
+			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
+			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], gegnerNrn));
+		}
+		return ergebnisse;
+	}
 
-		for (; spielrunde <= bisSpielrunde; spielrunde++) {
-			SheetRunner.testDoCancelTask();
+	private void leseRundeEin(XSpreadsheet sheet, TeamMeldungen aktiveMeldungen, Map<Integer, int[]> statsMap,
+			Map<Integer, List<Integer>> gegnerMap) throws GenerateException {
+		RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE,
+				ERSTE_DATEN_ZEILE + 999);
+		RangeData rowsData = RangeHelper
+				.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange).getDataFromRange();
 
-			XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(SpielRundeNr.from(spielrunde)));
+		for (RowData row : rowsData) {
+			if (row.size() < 2) {
+				break;
+			}
+			int nrA = resolveTeamNr(row.get(0)); // TEAM_A_SPALTE (relativ: 0)
+			if (nrA <= 0) {
+				break; // Ende der Daten
+			}
+			Team teamA = aktiveMeldungen.getTeam(nrA);
+			if (teamA == null) {
+				continue; // Team inaktiv, überspringen
+			}
 
-			if (sheet == null) {
+			int nrB = resolveTeamNr(row.get(1)); // TEAM_B_SPALTE (relativ: 1)
+			if (nrB <= 0) {
+				// Freilos für Team A
+				teamA.setHatteFreilos(true);
+				statsMap.computeIfAbsent(nrA, k -> new int[2])[0]++;
+				continue;
+			}
+			Team teamB = aktiveMeldungen.getTeam(nrB);
+			if (teamB == null) {
 				continue;
 			}
 
-			// TODO
+			teamA.addGegner(teamB); // registriert gegenseitig
 
+			gegnerMap.computeIfAbsent(nrA, k -> new ArrayList<>()).add(nrB);
+			gegnerMap.computeIfAbsent(nrB, k -> new ArrayList<>()).add(nrA);
+
+			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0; // ERG_TEAM_A_SPALTE (relativ: 2)
+			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0; // ERG_TEAM_B_SPALTE (relativ: 3)
+
+			if (ergA > ergB) {
+				statsMap.computeIfAbsent(nrA, k -> new int[2])[0]++;
+				statsMap.computeIfAbsent(nrA, k -> new int[2])[1] += ergA - ergB;
+				statsMap.computeIfAbsent(nrB, k -> new int[2])[1] -= ergA - ergB;
+			} else if (ergB > ergA) {
+				statsMap.computeIfAbsent(nrB, k -> new int[2])[0]++;
+				statsMap.computeIfAbsent(nrB, k -> new int[2])[1] += ergB - ergA;
+				statsMap.computeIfAbsent(nrA, k -> new int[2])[1] -= ergB - ergA;
+			}
 		}
+	}
+
+	/**
+	 * Löst eine Team-Nr aus einer Zelle auf.
+	 * Versucht zunächst den Integer-Wert, dann Name-Lookup über die Meldeliste.
+	 */
+	private int resolveTeamNr(CellData cell) throws GenerateException {
+		int nr = cell.getIntVal(0);
+		if (nr > 0) {
+			return nr;
+		}
+		String name = cell.getStringVal();
+		if (name != null && !name.isEmpty()) {
+			return getMeldeListe().getTeamNrByTeamname(name);
+		}
+		return 0;
+	}
+
+	/**
+	 * Sortiert die aktiven Teams nach Ranglisten-Kriterien (Schweizer System)
+	 * und gibt eine neue TeamMeldungen-Liste in dieser Reihenfolge zurück.
+	 */
+	protected TeamMeldungen sortierteTeamMeldungen(TeamMeldungen aktiveMeldungen,
+			List<SchweizerTeamErgebnis> ergebnisse) {
+		SchweizerSystem sortierer = new SchweizerSystem();
+		List<SchweizerTeamErgebnis> sortiert = sortierer.sortiereNachAuswertungskriterien(ergebnisse);
+
+		TeamMeldungen sortierteMeldungen = new TeamMeldungen();
+		for (SchweizerTeamErgebnis erg : sortiert) {
+			Team team = aktiveMeldungen.getTeam(erg.teamNr());
+			if (team != null) {
+				sortierteMeldungen.addTeamWennNichtVorhanden(team);
+			}
+		}
+		return sortierteMeldungen;
 	}
 
 	/**
@@ -261,18 +364,21 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	public Position letztePositionRechtsUnten() throws GenerateException {
 		Position spielerNrPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 
-		if (getSheetHelper().getIntFromCell(this, spielerNrPos) == -1) {
-			return null; // Keine Daten
-		}
-
 		RangePosition erstSpielrNrRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_A_SPALTE,
 				ERSTE_DATEN_ZEILE + 999);
 
-		// alle Daten einlesen
+		// alle Daten einlesen (String oder Integer je nach Spielplan-Anzeige-Modus)
 		RangeData nrDaten = RangeHelper.from(this, erstSpielrNrRange).getDataFromRange();
-		// erste pos ohne int value
-		int index = IntStream.range(0, nrDaten.size())
-				.filter(nrDatenIdx -> nrDaten.get(nrDatenIdx).get(0).getIntVal(-1) == -1).findFirst().orElse(-1);
+
+		// erste leere Zelle (leer = weder Int-Wert noch String-Inhalt)
+		int index = IntStream.range(0, nrDaten.size()).filter(nrDatenIdx -> {
+			String val = nrDaten.get(nrDatenIdx).get(0).getStringVal();
+			return val == null || val.isEmpty();
+		}).findFirst().orElse(-1);
+
+		if (index == 0) {
+			return null; // Keine Daten
+		}
 		if (index > 0) {
 			spielerNrPos.zeilePlus(index - 1);
 		}
@@ -328,19 +434,28 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	 */
 
 	private void teamPaarungenEinfuegen(List<TeamPaarung> paarungen) throws GenerateException {
+		if (paarungen == null) {
+			return;
+		}
 
-		if (paarungen != null) {
-			RangeData rangeData = new RangeData();
+		boolean useTeamname = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
+		RangeData rangeData = new RangeData();
 
-			for (int i = 0; i < paarungen.size(); i++) {
-				SheetRunner.testDoCancelTask();
-				TeamPaarung teamPaarung = paarungen.get(i);
+		for (TeamPaarung teamPaarung : paarungen) {
+			SheetRunner.testDoCancelTask();
+			if (useTeamname) {
+				String nameA = getMeldeListe().getTeamNameByNr(teamPaarung.getA().getNr());
+				String nameB = getMeldeListe().getTeamNameByNr(teamPaarung.getB().getNr());
+				RowData row = rangeData.addNewRow();
+				row.add(new CellData(nameA != null ? nameA : String.valueOf(teamPaarung.getA().getNr())));
+				row.add(new CellData(nameB != null ? nameB : String.valueOf(teamPaarung.getB().getNr())));
+			} else {
 				rangeData.addNewRow(teamPaarung.getA().getNr(), teamPaarung.getB().getNr());
 			}
-
-			Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
-			RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 		}
+
+		Position startPos = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
+		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData);
 	}
 
 	/**
