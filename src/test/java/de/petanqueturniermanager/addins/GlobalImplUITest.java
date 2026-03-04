@@ -183,10 +183,8 @@ public class GlobalImplUITest extends BaseCalcUITest {
 
 	@Test
 	public void testPropertyUpdate() throws GenerateException {
-		// Test: Zwei Formeln lesen verschiedene Properties mit unterschiedlichen Werten.
-		// Hinweis: Property-Update nach Formel-Einfügen kann nicht getestet werden,
-		// weil Test (socket bridge) und Plugin (soffice) in getrennten JVMs laufen
-		// und DocumentPropertiesHelper einen statischen Cache pro Dokument hat.
+		// Testet Property-Round-Trip (setIntProperty / getIntProperty) sowie
+		// dass die INTPROPERTY-Formel korrekt in die Zelle eingetragen wird.
 		String propName = SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG;
 		String propName2 = SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE;
 
@@ -194,6 +192,12 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		docPropHelper.setIntProperty(propName2, 7);
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, TurnierSystem.SUPERMELEE.getId());
 
+		// Property-Round-Trip: set/get direkt über docPropHelper (unabhängig von GlobalImpl)
+		assertThat(docPropHelper.getIntProperty(propName, -1)).as("Spieltag").isEqualTo(1);
+		assertThat(docPropHelper.getIntProperty(propName2, -1)).as("Spielrunde").isEqualTo(7);
+		assertThat(docPropHelper.getTurnierSystemAusDocument()).as("TurnierSystem").isEqualTo(TurnierSystem.SUPERMELEE);
+
+		// Formeln strukturell korrekt in Zellen eingetragen
 		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
 		Position testPos1 = Position.from(0, 10); // A11
 		Position testPos2 = Position.from(0, 11); // A12
@@ -201,7 +205,6 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		sheetHlp.setFormulaInCell(sheet, testPos1, "=PTM.ALG.INTPROPERTY(\"" + propName + "\")");
 		sheetHlp.setFormulaInCell(sheet, testPos2, "=PTM.ALG.INTPROPERTY(\"" + propName2 + "\")");
 
-		// Formeln korrekt aufgelöst
 		assertThat(sheetHlp.getFormulaFromCell(sheet, testPos1))
 			.containsIgnoringCase("INTPROPERTY").contains(propName);
 		assertThat(sheetHlp.getFormulaFromCell(sheet, testPos2))
