@@ -262,8 +262,8 @@ test {
     // Im Gradle-Build immer headless; manuelle IDE-Starts verwenden headless=false (Standard)
     systemProperty 'uitest.headless', 'true'
     useJUnitPlatform()
-    // Hängende UITests nach 3 Minuten abbrechen (soffice-Verbindung kann blockieren)
-    timeout = Duration.ofMinutes(3)
+    // Hängende UITests nach 3 Minuten pro Test abbrechen (soffice-Verbindung kann blockieren)
+    systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
 }
 
 // Task: Bauen, installieren und Calc im Hintergrund starten (Gradle blockiert nicht)
