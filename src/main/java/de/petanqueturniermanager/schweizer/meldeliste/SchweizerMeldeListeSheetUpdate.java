@@ -87,14 +87,14 @@ public class SchweizerMeldeListeSheetUpdate extends AbstractSchweizerMeldeListeS
 		int letztNr = Math.max(0,
 				getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE)));
 
-		// Fehlende Nummern vergeben
+		// Fehlende Nummern vergeben (nr <= 0 bedeutet: leer oder kein Wert vergeben)
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
 			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
 			if (vorname == null || vorname.isEmpty()) {
 				continue;
 			}
 			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
-			if (nr == -1) {
+			if (nr <= 0) {
 				letztNr++;
 				getSheetHelper().setNumberValueInCell(
 						NumberCellValue.from(xSheet, Position.from(getTeamNrSpalte(), zeile)).setValue(letztNr));

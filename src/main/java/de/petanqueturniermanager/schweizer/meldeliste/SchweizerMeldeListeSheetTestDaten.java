@@ -60,6 +60,9 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 		meldeListe.createMeldelisteWithParams(TEST_FORMATION, true, true);
 
 		testNamenEinfuegen();
+
+		// Teamnummern vergeben und Meldeliste aktualisieren
+		new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet()).doRun();
 	}
 
 	private void testNamenEinfuegen() throws GenerateException {

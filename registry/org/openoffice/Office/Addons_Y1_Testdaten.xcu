@@ -138,7 +138,20 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+						<node oor:name="B2" oor:op="replace">
+							<prop oor:name="Title">
+								<value xml:lang="en">Schweizer, Tournament (3 Rounds + Ranking)</value>
+								<value xml:lang="de">Schweizer, Turnier (3 Spielrunden + Rangliste)</value>
+							</prop>
+							<prop oor:name="URL">
+								<value>ptm:schweizer_testdaten_turnier</value>
+							</prop>
+							<prop oor:name="Target" oor:type="xs:string">
+								<value>_self</value>
+							</prop>
 						</node>
+					</node>
 					</node>
 				</node>
 			</node>

@@ -8,13 +8,7 @@ Petanque-Turnier-Manager is a **LibreOffice Calc Extension** (.oxt) for managing
 
 ## Build Commands
 
-The project uses Gradle with a helper script (`build-oxt.sh`) that temporarily disables a global `~/.gradle/init.gradle` to prevent Artifactory conflicts.
-
-```bash
-# Build OXT only (build-oxt.sh hardcodes buildOXT, does not pass arguments)
-./build-oxt.sh
-```
-
+The project uses Gradle
 Direct Gradle commands (when no conflicting global init.gradle exists):
 
 ```bash
@@ -87,3 +81,22 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 See `BUILD_ISSUES.md` for details on:
 1. Global init.gradle blocking Maven access (use `build-oxt.sh`)
 2. IDL-to-Java interface generation not automated in Gradle
+
+## Business Logic & Rules
+- **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.
+  **Crucial:** Always read this document before making changes to classes in the `de.petanqueturniermanager.algorithmen` or `de.petanqueturniermanager.schweizer` packages!
+
+### UNO API Strict Rules
+- **NEVER use standard Java casts** for UNO interfaces (e.g., `(XSpreadsheetDocument) doc` is forbidden).
+- **ALWAYS use `UnoRuntime.queryInterface()`**: `XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, obj);`
+- **Helper Usage:** Whenever possible, use the abstractions in `de.petanqueturniermanager.helper.Lo` instead of writing raw UNO boilerplate.
+
+## Code Style & Language
+- **Language:** All new class names, methods, variable names, JavaDoc, and inline comments MUST be in German to match the existing codebase.
+- **UI Strings:** Any text visible to the user (e.g., in `MessageBox` or XCU files) must be in German.
+- **Java Features:** The project uses Java 25. Feel free to use modern features like `var`, records, switch expressions, and text blocks where appropriate.
+
+## Error Handling & Logging
+- **Do not swallow exceptions:** Never write empty `catch` blocks.
+- **User Feedback:** If an error occurs during a user action (e.g., in a menu command), catch the exception and display it to the user using the `de.petanqueturniermanager.helper.MessageBox` class.
+- **Stacktraces:** Always log the stacktrace to the logger

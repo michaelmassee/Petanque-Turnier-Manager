@@ -58,7 +58,9 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
@@ -147,7 +149,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_UPDATE_MELDELISTE = "schweizer_update_meldeliste";
 	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
 	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
+	public static final String CMD_SCHWEIZER_RANGLISTE = "schweizer_rangliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
+	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -351,8 +355,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetNaechste(ws).start();
 				break;
+			case CMD_SCHWEIZER_RANGLISTE:
+				new SchweizerRanglisteSheet(ws).testTurnierVorhanden().start();
+				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE:
 				new SchweizerMeldeListeSheetTestDaten(ws).start();
+				break;
+			case CMD_SCHWEIZER_TESTDATEN_TURNIER:
+				new SchweizerTurnierTestDaten(ws).start();
 				break;
 			// ------------------------------
 			// Konfiguration
@@ -490,9 +500,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_NEUE_MELDELISTE,
 				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
 				 CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE,
-				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER;
+				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
+				 CMD_SCHWEIZER_RANGLISTE                    -> ts == TurnierSystem.SCHWEIZER;
 			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
-			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE         -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
+			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
+			 CMD_SCHWEIZER_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			// Konfiguration: nur wenn Turnier vorhanden
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
