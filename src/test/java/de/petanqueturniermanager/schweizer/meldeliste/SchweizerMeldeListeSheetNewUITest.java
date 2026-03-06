@@ -31,13 +31,13 @@ public class SchweizerMeldeListeSheetNewUITest extends BaseCalcUITest {
 	public void testSchweizerMeldeListeSheetNewMitTestDaten() throws IOException, GenerateException {
 		schweizerMeldeListeSheetTestDaten.run();
 
-		// 32 min + 2 header zeilen
-		assertEquals(2, schweizerMeldeListeSheetTestDaten.getErsteDatenZiele());
-		assertEquals(33, schweizerMeldeListeSheetTestDaten.getLetzteDatenZeileUseMin());
+		// 32 min + 3 header zeilen (Turniersystem + Block-Titel + Spalten-Namen)
+		assertEquals(3, schweizerMeldeListeSheetTestDaten.getErsteDatenZiele());
+		assertEquals(34, schweizerMeldeListeSheetTestDaten.getLetzteDatenZeileUseMin());
 		assertEquals(2, schweizerMeldeListeSheetTestDaten.getSpielerNameErsteSpalte());
 
-		RangePosition rangeMeldeListe = RangePosition.from(0, 1, 3, 33);
-		assertThat(rangeMeldeListe.getAddress()).isEqualTo("A2:D34");
+		RangePosition rangeMeldeListe = RangePosition.from(0, 1, 3, 34);
+		assertThat(rangeMeldeListe.getAddress()).isEqualTo("A2:D35");
 		//		writeToJson("schweizer-meldeliste-ref.json", rangeMeldeListe,
 		//				schweizerMeldeListeSheetTestDaten.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument());
 

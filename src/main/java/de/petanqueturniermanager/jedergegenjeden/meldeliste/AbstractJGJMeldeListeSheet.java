@@ -13,6 +13,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
 import de.petanqueturniermanager.model.Team;
@@ -65,6 +66,11 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten();
 
+		// TurnierSystem
+		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
+
+		// Headerzeilen fixieren
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
 	}
 
 	void formatDaten() throws GenerateException {

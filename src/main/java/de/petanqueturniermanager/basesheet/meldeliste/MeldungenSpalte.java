@@ -125,7 +125,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange,
 				CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()));
 		// -------------------------------------
 
 		// Namen

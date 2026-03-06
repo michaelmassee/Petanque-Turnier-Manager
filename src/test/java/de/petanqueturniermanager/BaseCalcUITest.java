@@ -2,6 +2,8 @@ package de.petanqueturniermanager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.swing.JOptionPane;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -191,6 +193,11 @@ public abstract class BaseCalcUITest {
 	protected void waitEnter() throws IOException {
 		System.out.println("Press Enter .....");
 		System.in.read();
+	}
+
+	protected void warten(String titel) {
+		JOptionPane.showMessageDialog(null, "LibreOffice inspizieren, dann OK klicken.", titel,
+				JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	protected void validateWithJson(RangeData rangeData, InputStream jsonFile) {

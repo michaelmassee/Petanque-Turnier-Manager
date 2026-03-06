@@ -63,15 +63,15 @@ Wenn Teams nicht nur gleich viele Siege, sondern auch gleich viele Buchholz-Punk
 
 ## Kugeldifferenz
 
-Beim Pétanque gibt es als viertes Kriterium die Kugeldifferenz (erzielte Punkte minus kassierte Punkte, aufsummiert über alle Spiele). Ein 13:8-Sieg ergibt eine Differenz von +5.
+Beim Pétanque gibt es als viertes Kriterium die Punktedifferenz (erzielte Punkte minus kassierte Punkte, aufsummiert über alle Spiele). Ein 13:8-Sieg ergibt eine Differenz von +5.
 
 ---
 
 ## Direktvergleich
 
-Sind nach Siegen, BHZ, FBHZ und Kugeldifferenz noch immer Teams punktgleich, entscheidet der direkte Vergleich. Dabei werden alle gemeinsamen Spiele der betroffenen Teams herangezogen:
+Sind nach Siegen, BHZ, FBHZ und Punktedifferenz noch immer Teams punktgleich, entscheidet der direkte Vergleich. Dabei werden alle gemeinsamen Spiele der betroffenen Teams herangezogen:
 1. Wer hat im direkten Vergleich mehr Spiele gewonnen?
-2. Bei Gleichstand: Wer hat die bessere Kugeldifferenz im direkten Vergleich?
+2. Bei Gleichstand: Wer hat die bessere Punktedifferenz im direkten Vergleich?
 
 ---
 

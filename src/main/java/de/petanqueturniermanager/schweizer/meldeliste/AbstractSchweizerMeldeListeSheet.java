@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -24,6 +25,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -49,6 +51,11 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implements MeldeListeKonstanten, ISheet {
 
 	protected static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 32;
+
+	/** Dritte Header-Zeile (Spalten-Namen: Vorname, Nachname, Verein). */
+	protected static final int DRITTE_HEADER_ZEILE = 2;
+	/** Erste Daten-Zeile (überschreibt MeldeListeKonstanten.ERSTE_DATEN_ZEILE=2): 3 Header-Zeilen. */
+	protected static final int ERSTE_DATEN_ZEILE = 3;
 
 	protected static final int NR_SPALTE_WIDTH = 800;
 	protected static final int NAME_SPALTE_WIDTH = 3000;
@@ -149,10 +156,21 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 		insertHeaderInSheet(getKonfigurationSheet().getMeldeListeHeaderFarbe());
 		formatDatenSpalten();
 		formatZeilenfarben();
+
+		// Headerzeilen fixieren
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).doFreeze();
 	}
 
 	protected void insertHeaderInSheet(int headerColor) throws GenerateException {
 		processBoxinfo("Meldeliste Header");
+
+		// Turniersystem oben links (Zeile 0 = ERSTE_HEADER_ZEILE)
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(getXSpreadSheet(), Position.from(0, ERSTE_HEADER_ZEILE),
+						"Turniersystem: " + getTurnierSystem().getBezeichnung())
+				.setEndPosMergeSpaltePlus(1).setCharWeight(FontWeight.BOLD)
+				.setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP)
+				.setShrinkToFit(true).setCharColor("00599d"));
 
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
@@ -167,23 +185,23 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				.setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 
-		// Team-Nr Spalte: merged über beide Header-Zeilen
+		// Team-Nr Spalte: merged über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile)
 		StringCellValue nrHeader = StringCellValue
-				.from(getXSpreadSheet(), Position.from(getTeamNrSpalte(), ERSTE_HEADER_ZEILE), HEADER_NR)
+				.from(getXSpreadSheet(), Position.from(getTeamNrSpalte(), ZWEITE_HEADER_ZEILE), HEADER_NR)
 				.addColumnProperties(colPropNr)
 				.setCellBackColor(headerColor)
-				.setBorder(BorderFactory.from().allThin().toBorder())
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
 				.setEndPosMergeZeilePlus(1);
 		getSheetHelper().setStringValueInCell(nrHeader);
 
-		// Teamname-Spalte (optional): merged über beide Header-Zeilen
+		// Teamname-Spalte (optional): merged über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile)
 		if (teamnameAktiv) {
 			StringCellValue teamnameHeader = StringCellValue
-					.from(getXSpreadSheet(), Position.from(1, ERSTE_HEADER_ZEILE), HEADER_TEAMNAME)
+					.from(getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE), HEADER_TEAMNAME)
 					.addColumnProperties(colPropName.setWidth(TEAMNAME_SPALTE_WIDTH))
 					.setCellBackColor(headerColor)
-					.setBorder(BorderFactory.from().allThin().toBorder())
+					.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 					.setVertJustify(CellVertJustify2.CENTER)
 					.setEndPosMergeZeilePlus(1);
 			getSheetHelper().setStringValueInCell(teamnameHeader);
@@ -194,10 +212,10 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		StringCellValue spHeader = StringCellValue
-				.from(getXSpreadSheet(), Position.from(getSetzPositionSpalte(), ERSTE_HEADER_ZEILE), HEADER_SETZPOSITION)
+				.from(getXSpreadSheet(), Position.from(getSetzPositionSpalte(), ZWEITE_HEADER_ZEILE), HEADER_SETZPOSITION)
 				.addColumnProperties(colPropSP)
 				.setCellBackColor(headerColor)
-				.setBorder(BorderFactory.from().allThin().toBorder())
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
 				.setComment("Setzposition: Teams mit gleicher SP werden in Runde 1 nicht gegeneinander ausgelost.")
 				.setEndPosMergeZeilePlus(1);
@@ -208,13 +226,14 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		StringCellValue aktivHeader = StringCellValue
-				.from(getXSpreadSheet(), Position.from(getAktivSpalte(), ERSTE_HEADER_ZEILE), HEADER_AKTIV)
+				.from(getXSpreadSheet(), Position.from(getAktivSpalte(), ZWEITE_HEADER_ZEILE), HEADER_AKTIV)
 				.addColumnProperties(colPropAktiv)
 				.setCellBackColor(headerColor)
-				.setBorder(BorderFactory.from().allThin().toBorder())
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
 				.setComment("1 = Nimmt teil, 2 = Ausgestiegen, leer = Nimmt nicht teil")
-				.setEndPosMergeZeilePlus(1);
+				.setEndPosMergeZeilePlus(1)
+				.setRotate90();
 		getSheetHelper().setStringValueInCell(aktivHeader);
 
 		// Spieler-Blöcke
@@ -222,29 +241,29 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 			int vornameSpalte = getVornameSpalte(s);
 			String spielerTitel = "Spieler " + (s + 1);
 
-			// Zeile 1 (ERSTE_HEADER_ZEILE): Block-Titel "Spieler n" über alle Spieler-Spalten
+			// Zeile 1 (ZWEITE_HEADER_ZEILE): Block-Titel "Spieler n" über alle Spieler-Spalten
 			StringCellValue spielerHeader = StringCellValue
-					.from(getXSpreadSheet(), Position.from(vornameSpalte, ERSTE_HEADER_ZEILE), spielerTitel)
+					.from(getXSpreadSheet(), Position.from(vornameSpalte, ZWEITE_HEADER_ZEILE), spielerTitel)
 					.addColumnProperties(colPropName)
 					.setCellBackColor(headerColor)
-					.setBorder(BorderFactory.from().allThin().toBorder())
+					.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 					.setVertJustify(CellVertJustify2.CENTER)
 					.setHoriJustify(CellHoriJustify.CENTER)
 					.setEndPosMergeSpalte(vornameSpalte + spaltenProSpieler - 1);
 			getSheetHelper().setStringValueInCell(spielerHeader);
 
-			// Zeile 2 (ZWEITE_HEADER_ZEILE): Vorname
+			// Zeile 2 (DRITTE_HEADER_ZEILE): Vorname
 			StringCellValue vornameHeader = StringCellValue
-					.from(getXSpreadSheet(), Position.from(vornameSpalte, ZWEITE_HEADER_ZEILE), HEADER_VORNAME)
+					.from(getXSpreadSheet(), Position.from(vornameSpalte, DRITTE_HEADER_ZEILE), HEADER_VORNAME)
 					.addColumnProperties(colPropName)
 					.setCellBackColor(headerColor)
-					.setBorder(BorderFactory.from().allThin().toBorder())
+					.setBorder(BorderFactory.from().allThin().doubleLn().forLeft().toBorder())
 					.setVertJustify(CellVertJustify2.CENTER);
 			getSheetHelper().setStringValueInCell(vornameHeader);
 
 			// Zeile 2: Nachname
 			StringCellValue nachnameHeader = StringCellValue
-					.from(getXSpreadSheet(), Position.from(getNachnameSpalte(s), ZWEITE_HEADER_ZEILE), HEADER_NACHNAME)
+					.from(getXSpreadSheet(), Position.from(getNachnameSpalte(s), DRITTE_HEADER_ZEILE), HEADER_NACHNAME)
 					.addColumnProperties(colPropName)
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().toBorder())
@@ -254,7 +273,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 			// Zeile 2: Vereinsname (optional)
 			if (vereinsnameAktiv) {
 				StringCellValue vereinsHeader = StringCellValue
-						.from(getXSpreadSheet(), Position.from(getVereinsnameSpalte(s), ZWEITE_HEADER_ZEILE),
+						.from(getXSpreadSheet(), Position.from(getVereinsnameSpalte(s), DRITTE_HEADER_ZEILE),
 								HEADER_VEREINSNAME)
 						.addColumnProperties(colPropName.setWidth(VEREINSNAME_SPALTE_WIDTH))
 						.setCellBackColor(headerColor)
@@ -274,13 +293,13 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 		RangePosition nrRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getTeamNrSpalte(), letzteDatenZeile);
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), nrRange,
-				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()));
 
 		// Teamname-Spalte (optional)
 		if (getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) {
 			RangePosition teamnameRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, 1, letzteDatenZeile);
 			getSheetHelper().setPropertiesInRange(getXSpreadSheet(), teamnameRange,
-					CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true));
+					CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()).setShrinkToFit(true));
 		}
 
 		// Spieler-Spalten (Vorname + Nachname [+ Vereinsname])
@@ -292,20 +311,20 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 			RangePosition spielerRange = RangePosition.from(ersteSpielSpalte, ERSTE_DATEN_ZEILE,
 					letzteSpielSpalte, letzteDatenZeile);
 			getSheetHelper().setPropertiesInRange(getXSpreadSheet(), spielerRange,
-					CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true));
+					CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()).setShrinkToFit(true));
 		}
 
 		// Setzposition-Spalte
 		RangePosition spRange = RangePosition.from(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE,
 				getSetzPositionSpalte(), letzteDatenZeile);
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), spRange,
-				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
 		// Aktiv-Spalte
 		RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteDatenZeile);
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), aktivRange,
-				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
+				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 	}
 
 	protected void formatZeilenfarben() throws GenerateException {

@@ -6,7 +6,6 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,8 +14,6 @@ import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
-import com.sun.star.table.TableBorder2;
-
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
@@ -26,8 +23,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -49,9 +44,6 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		implements IMeldeliste<SpielerMeldungen, Spieler> {
 	private static final String SPIELTAG_HEADER_STR = "Spieltag";
-
-	public static final int SPALTE_FORMATION = 0; // siehe enum #Formation Spalte 0
-	public static final int ZEILE_FORMATION = 0; // Zeile 0
 
 	public static final int MIN_ANZAHL_SPIELER_ZEILEN = 100; // Tablle immer mit min anzahl von zeilen formatieren
 
@@ -91,12 +83,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		meldeListeHelper = new MeldeListeHelper<>(this);
 	}
 
-	/**
-	 * anzahl header zählen
-	 *
-	 * @return
-	 * @throws GenerateException
-	 */
+	/** Anzahl der Spieltage anhand der Header-Einträge zählen. */
 	public int countAnzSpieltageInMeldeliste() throws GenerateException {
 		int anzSpieltage = 0;
 		int ersteSpieltagspalteSpalte = meldeListeHelper.ersteSpieltagSpalte();
@@ -145,8 +132,8 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// ------
 		// Setzposition
-		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
-		StringCellValue bezCelVal = StringCellValue
+		var columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
+		var bezCelVal = StringCellValue
 				.from(getXSpreadSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")
 				.setCellBackColor(headerBackColor).setBorder(BorderFactory.from().allThin().toBorder())
@@ -171,24 +158,18 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// headerlines
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
-		getTurnierSheet().setActiv();
 	}
 
-	/**
-	 * Aktive Spielrunde und Spieltag
-	 * 
-	 * @throws GenerateException
-	 */
-
+	/** Aktive Spielrunde und Spieltag in den Info-Block schreiben. */
 	private void insertInfoBlock() throws GenerateException {
 		processBoxinfo("Info Block");
-		XSpreadsheet sheet = getXSpreadSheet();
+		var sheet = getXSpreadSheet();
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
-		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+		var border = BorderFactory.from().allThin().toBorder();
 
-		Position posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
+		var posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 
-		StringCellValue labelVal = StringCellValue.from(sheet, posInfo, SPIELTAG_HEADER_STR)
+		var labelVal = StringCellValue.from(sheet, posInfo, SPIELTAG_HEADER_STR)
 				.setComment("Aktive Spieltag").setBorder(border).setCellBackColor(headerBackColor);
 		getSheetHelper().setStringValueInCell(labelVal);
 		labelVal.zeilePlus(1).setValue("Spielrunde").setComment("Aktive Spielrunde");
@@ -199,16 +180,16 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	protected void setProperties() throws GenerateException {
-		XSpreadsheet sheet = getXSpreadSheet();
-		TableBorder2 border = BorderFactory.from().allThin().toBorder();
-		Position posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
-		Position posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
-		StringCellValue spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, SuperMeleeSheet.PTM_SPIELTAG)
+		var sheet = getXSpreadSheet();
+		var border = BorderFactory.from().allThin().toBorder();
+		var posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
+		var posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
+		var spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, SuperMeleeSheet.PTM_SPIELTAG)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielTagFormula);
 
-		Position posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
-		StringCellValue spielRundeFormula = StringCellValue
+		var posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
+		var spielRundeFormula = StringCellValue
 				.from(sheet, posSpielrundeFormula, SuperMeleeSheet.PTM_SPIELRUNDE).setBorder(border);
 		getSheetHelper().setFormulaInCell(spielRundeFormula);
 
@@ -219,12 +200,12 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		processBoxinfo("Formatiere Spieltagspalte");
 
-		XSpreadsheet sheet = getXSpreadSheet();
+		var sheet = getXSpreadSheet();
 		int hederBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
-		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
+		var columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
 				.setVertJustify(CellVertJustify2.CENTER).setWidth(2000).margin(CELL_MARGIN);
 
-		StringCellValue bezCelSpieltagVal = StringCellValue
+		var bezCelSpieltagVal = StringCellValue
 				.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ZWEITE_HEADER_ZEILE, spielTagHeader(spieltag))
 				.setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setCellBackColor(hederBackColor)
 				.addColumnProperties(columnProp).setBorder(BorderFactory.from().allThin().toBorder());
@@ -232,12 +213,6 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// Spieltag header
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
 		getSheetHelper().setStringValueInCell(bezCelSpieltagVal);
-
-		// // Aktiv / Inaktiv spieltag
-		// TODO wieder einbauen
-		// // =WENN(WENNNV(SVERWEIS("Spieltag";$Konfiguration.$A$2:$B$101;2;0);0)=2;"Aktiv";"")
-		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)=" + spieltag.getNr() + ";\"Aktiv\";\"\"";
 
 		String formulaStr = "IF(" + SuperMeleeSheet.PTM_SPIELTAG + "=" + spieltag.getNr() + ";\"Aktiv\";\"\")";
 		StringCellValue aktivFormula = StringCellValue
@@ -254,7 +229,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// Spieler NR bis letzte Spieltag
 		// ----------------------------------------------
-		RangePosition datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(),
+		var datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, letzteSpielTagSpalte(),
 				letzteDatenZeile);
 
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), datenRange,
@@ -264,10 +239,8 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
-		MeldungenHintergrundFarbeGeradeStyle meldungenHintergrundFarbeGeradeStyle = getKonfigurationSheet()
-				.getMeldeListeHintergrundFarbeGeradeStyle();
-		MeldungenHintergrundFarbeUnGeradeStyle meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet()
-				.getMeldeListeHintergrundFarbeUnGeradeStyle();
+		var meldungenHintergrundFarbeGeradeStyle = getKonfigurationSheet().getMeldeListeHintergrundFarbeGeradeStyle();
+		var meldungenHintergrundFarbeUnGeradeStyle = getKonfigurationSheet().getMeldeListeHintergrundFarbeUnGeradeStyle();
 
 		// Meldung Nummer: gerade + ungerade + prufe auf doppelte nummer
 		meldeListeHelper.insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(letzteDatenZeile, this,
@@ -281,7 +254,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// -----------------------------------------------
 		// setzposition spalte
 		// -----------------------------------------------
-		RangePosition setzpositionRangePos = RangePosition.from(meldeListeHelper.setzPositionSpalte(),
+		var setzpositionRangePos = RangePosition.from(meldeListeHelper.setzPositionSpalte(),
 				ERSTE_DATEN_ZEILE, meldeListeHelper.setzPositionSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, setzpositionRangePos).clear().
 		// ------------------------------
@@ -299,7 +272,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// test if Text mit FORMULA
 		// reihenfolge beachten
 		// ------------------------------
-		RangePosition spieltageRangePos = RangePosition.from(meldeListeHelper.ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
+		var spieltageRangePos = RangePosition.from(meldeListeHelper.ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
 				letzteSpielTagSpalte(), letzteDatenZeile);
 		ConditionalFormatHelper.from(this, spieltageRangePos).clear().
 		// ------------------------------
@@ -312,11 +285,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 	}
 
-	/**
-	 * @param spieltag = 1 bis x
-	 * @return
-	 * @throws GenerateException
-	 */
+	/** Liefert den Header-Text für den gegebenen Spieltag, z.B. "Spieltag 1". */
 	public String spielTagHeader(SpielTagNr spieltag) {
 		return SPIELTAG_HEADER_STR + " " + spieltag.getNr();
 	}
@@ -327,12 +296,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		return meldeListeHelper.ersteSpieltagSpalte() + (anzSpieltage - 1);
 	}
 
-	/**
-	 *
-	 * @return spalte zum getSpielTag()
-	 * @throws GenerateException
-	 */
-
+	/** Liefert die Spalte des aktuellen Spieltags. */
 	public int aktuelleSpieltagSpalte() {
 		return meldeListeHelper.spieltagSpalte(getSpielTag());
 	}
@@ -354,8 +318,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	private void updateSpieltageSummenSpalten() throws GenerateException {
 		processBoxinfo("Aktualisiere Summen Spalten");
 
-		SupermeleeTeamPaarungenSheet supermeleeTeamPaarungenSheet = new SupermeleeTeamPaarungenSheet(
-				getWorkingSpreadsheet());
+		var supermeleeTeamPaarungenSheet = new SupermeleeTeamPaarungenSheet(getWorkingSpreadsheet());
 
 		int headerBackColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 
@@ -365,23 +328,23 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 			letzteDatenZeile = MIN_ANZAHL_SPIELER_ZEILEN;
 		}
 
-		XSpreadsheet sheet = getXSpreadSheet();
+		var sheet = getXSpreadSheet();
 
 		int anzSpieltage = countAnzSpieltageInMeldeliste();
 
-		RangePosition cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0,
+		var cleanUpRange = RangePosition.from(ersteSummeSpalte() - 1, 0,
 				ersteSummeSpalte() + anzSpieltage + 10, MeldungenSpalte.MAX_ANZ_MELDUNGEN);
 		RangeHelper.from(this, cleanUpRange).clearRange();
 
-		Position posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
+		var posBezeichnug = Position.from(ersteSummeSpalte(), SUMMEN_ERSTE_ZEILE - 1);
 
-		TableBorder2 border = BorderFactory.from().allThin().toBorder();
+		var border = BorderFactory.from().allThin().toBorder();
 
-		ColumnProperties columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000)
+		var columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.RIGHT).setWidth(3000)
 				.margin(CELL_MARGIN);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), posBezeichnug.getSpalte(), columnProp);
 
-		StringCellValue bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").setComment(null)
+		var bezCelVal = StringCellValue.from(sheet, posBezeichnug, "").setComment(null)
 				.removeCellBackColor();
 		getSheetHelper().setStringValueInCell(bezCelVal);
 
@@ -423,7 +386,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 		// Modus Header
 		// Summen wenn Supermêlée Modus
-		StringCellValue modusHeaderVal = StringCellValue.from(getXSpreadSheet()).spalte(ersteSummeSpalte())
+		var modusHeaderVal = StringCellValue.from(getXSpreadSheet()).spalte(ersteSummeSpalte())
 				.zeile(TRIPL_MODE_HEADER).setHoriJustify(CellHoriJustify.CENTER).setValue("Supermêlée Triplette.")
 				.setComment("Triplette Teams, aufüllen mit Doublette.  Siehe Konfiguration, 'Supermêlée Modus'")
 				.setEndPosMergeSpaltePlus(getSpielTag().getNr());
@@ -469,17 +432,17 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN));
 		// ------------------------------------------------------------------------------------
 
-		StringCellValue formula = StringCellValue.from(getXSpreadSheet()).setBorder(border);
-		ColumnProperties spalteWertProp = ColumnProperties.from().setWidth(1200).centerJustify().margin(CELL_MARGIN);
+		var formula = StringCellValue.from(getXSpreadSheet()).setBorder(border);
+		var spalteWertProp = ColumnProperties.from().setWidth(1200).centerJustify().margin(CELL_MARGIN);
 
 		for (int spieltagCntr = 1; spieltagCntr <= anzSpieltage; spieltagCntr++) {
 
-			SpielTagNr spielTagNr = new SpielTagNr(spieltagCntr);
+			var spielTagNr = SpielTagNr.from(spieltagCntr);
 
-			Position posSpieltagWerte = Position.from(ersteSummeSpalte() + spieltagCntr, SUMMEN_ERSTE_ZEILE - 1);
+			var posSpieltagWerte = Position.from(ersteSummeSpalte() + spieltagCntr, SUMMEN_ERSTE_ZEILE - 1);
 
 			// Tag Header
-			StringCellValue tagHeader = StringCellValue.from(getXSpreadSheet()).setPos(posSpieltagWerte)
+			var tagHeader = StringCellValue.from(getXSpreadSheet()).setPos(posSpieltagWerte)
 					.setBorder(border).setValue("Tag " + spieltagCntr).setColumnProperties(spalteWertProp)
 					.setCellBackColor(headerBackColor);
 			getSheetHelper().setStringValueInCell(tagHeader);
@@ -579,34 +542,6 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 					.setValue(doublettModeFormulaAnzSpielbahnen));
 		}
 
-		// Welchen Supermêlée Modus ist Aktiv ?
-		// Triplette
-		// =WENN(WENNNV(SVERWEIS("Supermêlée Modus";$Konfiguration.$B$3:$C$101;2;0);0)="T";"Aktiv";"")
-		// Zelle rechts neben Block
-		// {
-		// Position aktivAnzeigePos = Position.from(ersteSummeSpalte() + anzSpieltage + 1, TRIPL_MODE_ANZ_DOUBLETTE);
-		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)" + "<>\"D\"" // Alle Werte ungleich D = Triplette Mode
-		// + ";\"Aktiv\";\"\"";
-		// StringCellValue aktivFormula = StringCellValue.from(getXSpreadSheet()).setPos(aktivAnzeigePos).setValue(formulaStr).setRotateAngle(27000)
-		// .setVertJustify(CellVertJustify2.CENTER).setEndPosMergeZeile(TRIPL_MODE_SUMMEN_SPIELBAHNEN).setCharColor(ColorHelper.CHAR_COLOR_GREEN)
-		// .setCharWeight(FontWeight.BOLD);
-		// getSheetHelper().setFormulaInCell(aktivFormula);
-		// }
-		//
-		// // Doublette
-		// // Zelle rechts neben Block
-		// {
-		// Position aktivAnzeigePos = Position.from(ersteSummeSpalte() + anzSpieltage + 1, DOUBL_MODE_ANZ_DOUBLETTE);
-		// String formulaStr = "IF(IFNA(VLOOKUP(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_SUPERMELEE_MODE + "\";$" + IKonfigurationKonstanten.SHEETNAME + "."
-		// + getKonfigurationSheet().suchMatrixProperty() + ";2;0);0)" + "=\"D\"" // Alle Werte D = Doublette
-		// + ";\"Aktiv\";\"\"";
-		// StringCellValue aktivFormula = StringCellValue.from(getXSpreadSheet()).setPos(aktivAnzeigePos).setValue(formulaStr).setRotateAngle(27000)
-		// .setVertJustify(CellVertJustify2.CENTER).setEndPosMergeZeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN).setCharColor(ColorHelper.CHAR_COLOR_GREEN)
-		// .setCharWeight(FontWeight.BOLD);
-		// getSheetHelper().setFormulaInCell(aktivFormula);
-		// }
-
 	}
 
 	// ---------------------------------------------
@@ -619,15 +554,6 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	// ---------------------------------------------
-	public int getAnzahlInAktiveSpieler(SpielTagNr spieltag) throws GenerateException {
-		return getSheetHelper().getIntFromCell(getXSpreadSheet(), getAnzahlInAktiveSpielerPosition(spieltag));
-	}
-
-	public Position getAnzahlInAktiveSpielerPosition(SpielTagNr spieltag) throws GenerateException {
-		return Position.from(ersteSummeSpalte() + spieltag.getNr(), SUMMEN_INAKTIVE_ZEILE);
-	}
-
-	// ---------------------------------------------
 	public int getAusgestiegenSpieler(SpielTagNr spieltag) throws GenerateException {
 		return getSheetHelper().getIntFromCell(getXSpreadSheet(), getAusgestiegenSpielerPosition(spieltag));
 	}
@@ -635,23 +561,10 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	public Position getAusgestiegenSpielerPosition(SpielTagNr spieltag) throws GenerateException {
 		return Position.from(ersteSummeSpalte() + spieltag.getNr(), SUMMEN_AUSGESTIEGENE_ZEILE);
 	}
-	// ---------------------------------------------
-
-	public Boolean isKannNurDoubletteInTripletteMode(SpielTagNr spieltag) throws GenerateException {
-		return StringUtils.isNotBlank(getSheetHelper().getTextFromCell(getXSpreadSheet(),
-				getKannNurDoubletteInTripletteModePosition(spieltag)));
-	}
-
-	public Position getKannNurDoubletteInTripletteModePosition(SpielTagNr spieltag) throws GenerateException {
-		return Position.from(ersteSummeSpalte() + spieltag.getNr(), TRIPL_MODE_SUMMEN_KANN_DOUBLETTE_ZEILE);
-	}
-
 	/**
-	 *
-	 * @param spieltag 1 = erste spieltag
-	 * @param status = 1,2
-	 * @return "==ZÄHLENWENNS(B3:B201;"<>";D3:D201;"")"
-	 * @throws GenerateException
+	 * @param spieltag Spieltag (1 = erster Spieltag)
+	 * @param status Statuswert (z.B. "1" oder "2")
+	 * @return COUNTIFS-Formel als String
 	 */
 	private String formulaCountSpieler(SpielTagNr spieltag, String status, int letzteZeile) {
 
@@ -707,22 +620,20 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	/**
-	 * der Spieltag fuer diesen Sheet
-	 * 
-	 * @param spielTag
+	 * Setzt den Spieltag für diesen Sheet.
+	 *
+	 * @param spielTag der zu setzende Spieltag
 	 */
-
 	public final void setSpielTag(SpielTagNr spielTag) {
 		checkNotNull(spielTag, "spielTag == null");
 		this.spielTag = spielTag;
 	}
 
 	/**
-	 * Der Spieltag fuer dieses Turnier, muss nicht gleich Sheetspieltag sein<br>
-	 * wird in der konfiguration gespeichert
-	 * 
-	 * @param spielTagNr
-	 * @throws GenerateException
+	 * Setzt den aktiven Spieltag in der Konfiguration (muss nicht gleich dem Sheetspieltag sein).
+	 *
+	 * @param spielTagNr der aktive Spieltag
+	 * @throws GenerateException bei Fehler beim Schreiben in die Konfiguration
 	 */
 	public void setAktiveSpieltag(SpielTagNr spielTagNr) throws GenerateException {
 		getKonfigurationSheet().setAktiveSpieltag(spielTagNr);
@@ -731,17 +642,17 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	@Override
 	public SpielerMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
 		return meldeListeHelperGetMeldungen(getSpielTag(),
-				Arrays.asList(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
+				List.of(SpielrundeGespielt.JA, SpielrundeGespielt.AUSGESETZT));
 	}
 
 	@Override
 	public SpielerMeldungen getAktiveMeldungen() throws GenerateException {
-		return meldeListeHelperGetMeldungen(getSpielTag(), Arrays.asList(SpielrundeGespielt.JA));
+		return meldeListeHelperGetMeldungen(getSpielTag(), List.of(SpielrundeGespielt.JA));
 	}
 
 	@Override
 	public SpielerMeldungen getInAktiveMeldungen() throws GenerateException {
-		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), Arrays.asList(SpielrundeGespielt.NEIN));
+		return meldeListeHelperGetMeldungen(SpielTagNr.from(1), List.of(SpielrundeGespielt.NEIN));
 	}
 
 	@Override
@@ -758,8 +669,10 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 	}
 
 	/**
-	 * @param SpielRundeNr
-	 * @throws GenerateException
+	 * Setzt die aktive Spielrunde in der Konfiguration.
+	 *
+	 * @param spielRundeNr die aktive Spielrunde
+	 * @throws GenerateException bei Fehler beim Schreiben in die Konfiguration
 	 */
 	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {
 		getKonfigurationSheet().setAktiveSpielRunde(spielRundeNr);
@@ -778,10 +691,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		return meldungenSpalte;
 	}
 
-	/**
-	 * @param from
-	 * @return
-	 */
+	/** Liefert die Spalte für den gegebenen Spieltag. */
 	public int spieltagSpalte(SpielTagNr spieltagNr) {
 		return meldeListeHelper.spieltagSpalte(spieltagNr);
 	}

@@ -55,14 +55,18 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 	}
 
 	public void generate() throws GenerateException {
+		generate(ANZ_RUNDEN, true);
+	}
+
+	public void generate(int anzRunden, boolean mitRangliste) throws GenerateException {
 		// 1. Meldeliste erstellen
 		meldelisteTestDaten.doRun();
 		naechsteSpielrunde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
 
 		// 2. Spielrunden erstellen und mit Zufallsergebnissen füllen
-		for (int runde = 1; runde <= ANZ_RUNDEN; runde++) {
+		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
-			processBoxinfo("Erstelle Spielrunde " + runde + " von " + ANZ_RUNDEN + " ...");
+			processBoxinfo("Erstelle Spielrunde " + runde + " von " + anzRunden + " ...");
 			naechsteSpielrunde.doRun();
 
 			XSpreadsheet sheet = getSheetHelper().findByName(runde + ". " + SHEET_NAMEN);
@@ -71,9 +75,11 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 			}
 		}
 
-		// 3. Rangliste erstellen
-		SheetRunner.testDoCancelTask();
-		ranglisteSheet.doRun();
+		// 3. Rangliste erstellen (optional)
+		if (mitRangliste) {
+			SheetRunner.testDoCancelTask();
+			ranglisteSheet.doRun();
+		}
 	}
 
 	private void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {
@@ -95,9 +101,8 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 			int zeile = ERSTE_DATEN_ZEILE + i;
 			int winner = ThreadLocalRandom.current().nextInt(2); // 0 oder 1
 			int loserPts = ThreadLocalRandom.current().nextInt(0, 13); // 0–12
-			int winnerPts = ThreadLocalRandom.current().nextInt(loserPts + 1, 14); // loser+1–13
-			int ergA = (winner == 0) ? winnerPts : loserPts;
-			int ergB = (winner == 0) ? loserPts : winnerPts;
+			int ergA = (winner == 0) ? 13 : loserPts;
+			int ergB = (winner == 0) ? loserPts : 13;
 
 			getSheetHelper().setNumberValueInCell(
 					NumberCellValue.from(sheet, Position.from(ERG_TEAM_A_SPALTE, zeile)).setValue(ergA));

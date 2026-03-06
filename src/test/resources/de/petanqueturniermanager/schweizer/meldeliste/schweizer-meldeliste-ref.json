@@ -1,16 +1,16 @@
 [
   [
     {
-      "data": ""
+      "data": "Nr"
+    },
+    {
+      "data": "Teamname"
+    },
+    {
+      "data": "Spieler 1"
     },
     {
       "data": ""
-    },
-    {
-      "data": "Vorname"
-    },
-    {
-      "data": "Nachname"
     }
   ],
   [
@@ -21,15 +21,15 @@
       "data": "Team 1"
     },
     {
-      "data": "Dold, Otbert"
+      "data": "Vorname"
     },
     {
-      "data": "Asmus, Rigobert"
+      "data": "Nachname"
     }
   ],
   [
     {
-      "data": ""
+      "data": 1.0
     },
     {
       "data": "Team 2"
@@ -43,7 +43,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 2.0
     },
     {
       "data": "Team 3"
@@ -57,7 +57,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 3.0
     },
     {
       "data": "Team 4"
@@ -71,7 +71,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 4.0
     },
     {
       "data": "Team 5"
@@ -85,7 +85,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 5.0
     },
     {
       "data": "Team 6"
@@ -99,7 +99,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 6.0
     },
     {
       "data": "Team 7"
@@ -113,7 +113,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 7.0
     },
     {
       "data": "Team 8"
@@ -127,7 +127,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 8.0
     },
     {
       "data": "Team 9"
@@ -141,7 +141,7 @@
   ],
   [
     {
-      "data": ""
+      "data": 9.0
     },
     {
       "data": "Team 10"
@@ -151,6 +151,20 @@
     },
     {
       "data": "Bäder, Rita"
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
     }
   ],
   [
