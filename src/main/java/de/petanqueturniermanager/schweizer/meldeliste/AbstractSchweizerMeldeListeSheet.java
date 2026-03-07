@@ -260,7 +260,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 					.from(getXSpreadSheet(), Position.from(vornameSpalte, DRITTE_HEADER_ZEILE), HEADER_VORNAME)
 					.addColumnProperties(colPropName)
 					.setCellBackColor(headerColor)
-					.setBorder(BorderFactory.from().allThin().doubleLn().forLeft().toBorder())
+					.setBorder(BorderFactory.from().allThin().boldLn().forLeft().toBorder())
 					.setVertJustify(CellVertJustify2.CENTER);
 			getSheetHelper().setStringValueInCell(vornameHeader);
 

@@ -126,17 +126,56 @@ public class SuperMeleePaarungenV2Test {
 
     @Test
     public void testMischungDoubletteUndTriplette() throws AlgorithmenException {
-        pruefeTeamMischung(4, 2, 0);
-        pruefeTeamMischung(5, 1, 1);
-        pruefeTeamMischung(6, 0, 2);
-        pruefeTeamMischung(8, 4, 0);
-        pruefeTeamMischung(9, 3, 1);
-        pruefeTeamMischung(11, 1, 3);
-        pruefeTeamMischung(16, 2, 4);
-        pruefeTeamMischung(17, 1, 5);
-        pruefeTeamMischung(18, 0, 6);
-        pruefeTeamMischung(24, 0, 8);
-        pruefeTeamMischung(31, 5, 7);
+        // Modus 2: Triplette-Hauptmodus (neueSpielrunde = TripletteMode)
+        // Rest 4: 1 Doublette-Partie + Rest Triplette
+        pruefeTeamMischung(4, 2, 0);    // 4%6=4: nur 1 Doublette-Partie → 2D
+        pruefeTeamMischung(16, 2, 4);   // 16%6=4: 1 Doublette-Partie + 2 Triplette-Partien → 2D+4T
+        // Rest 5: 1 gemischte Partie + Rest Triplette
+        pruefeTeamMischung(5, 1, 1);    // 5%6=5: nur 1 gemischte Partie → 1D+1T
+        pruefeTeamMischung(11, 1, 3);   // 11%6=5: 1 gemischte + 1 Triplette-Partie → 1D+3T
+        pruefeTeamMischung(17, 1, 5);   // 17%6=5: 1 gemischte + 2 Triplette-Partien → 1D+5T
+        // Rest 0: alle Triplette
+        pruefeTeamMischung(6, 0, 2);    // 6%6=0: 1 Triplette-Partie → 2T
+        pruefeTeamMischung(18, 0, 6);   // 18%6=0: 3 Triplette-Partien → 6T
+        pruefeTeamMischung(24, 0, 8);   // 24%6=0: 4 Triplette-Partien → 8T
+        // Rest 2: 2 Doublette-Partien + Rest Triplette
+        pruefeTeamMischung(8, 4, 0);    // 8%6=2: 2 Doublette-Partien → 4D
+        // Rest 3: 1 Doublette-Partie + 1 gemischte Partie + Rest Triplette
+        pruefeTeamMischung(9, 3, 1);    // 9%6=3: 1 Doublette-Partie + 1 gemischte → 3D+1T
+        // Rest 1 (Minimum: 13 Spieler = 2 Doublette-Partien + 1 gemischte Partie)
+        pruefeTeamMischung(13, 5, 1);   // 13%6=1: 2 Doublette-Partien + 1 gemischte → 5D+1T (Grenzfall)
+        pruefeTeamMischung(31, 5, 7);   // 31%6=1: 2 Doublette-Partien + 1 gemischte + 5 Triplette-Partien → 5D+7T (großes Turnier)
+    }
+
+    /**
+     * Prüft die Teamstruktur im Doublette-Hauptmodus für alle dokumentierten Restwerte.<br>
+     * <br>
+     * Modus 1 laut SupermeleeTurnierSystem.md — Doublette als Hauptformat,
+     * Triplette zum Auffüllen:
+     * <ul>
+     *   <li>Rest 0 (N%4=0): Alle Doubletten (z.B. 4→2D, 8→4D, 12→6D)</li>
+     *   <li>Rest 1 (N%4=1): 1 gemischte Partie (Tri+Doubl=5 Spieler), Rest Doubletten (z.B. 5→1D+1T, 9→3D+1T)</li>
+     *   <li>Rest 2 (N%4=2): 1 Triplette-Partie (3+3=6 Spieler), Rest Doubletten (z.B. 6→2T, 10→2D+2T)</li>
+     *   <li>Rest 3 (N%4=3): 1 Triplette-Partie + 1 gemischte Partie (11 Spieler min), Rest Doubletten (z.B. 11→1D+3T)</li>
+     * </ul>
+     */
+    @Test
+    public void testMischungDoubletteModus() throws AlgorithmenException {
+        // Rest 0: alle Doubletten
+        pruefeTeamMischungDoubletteMode(4, 2, 0);    // 4%4=0: 1 Doublette-Partie → 2D
+        pruefeTeamMischungDoubletteMode(8, 4, 0);    // 8%4=0: 2 Doublette-Partien → 4D
+        pruefeTeamMischungDoubletteMode(12, 6, 0);   // 12%4=0: 3 Doublette-Partien → 6D
+        // Rest 1: 1 gemischte Partie (Tri+Doubl), Rest Doubletten
+        pruefeTeamMischungDoubletteMode(5, 1, 1);    // 5%4=1: 1 gemischte → 1D+1T
+        pruefeTeamMischungDoubletteMode(9, 3, 1);    // 9%4=1: 1 Doublette-Partie + 1 gemischte → 3D+1T
+        pruefeTeamMischungDoubletteMode(13, 5, 1);   // 13%4=1: 2 Doublette-Partien + 1 gemischte → 5D+1T
+        // Rest 2: 1 Triplette-Partie, Rest Doubletten
+        pruefeTeamMischungDoubletteMode(6, 0, 2);    // 6%4=2: 1 Triplette-Partie → 2T
+        pruefeTeamMischungDoubletteMode(10, 2, 2);   // 10%4=2: 1 Doublette-Partie + 1 Triplette-Partie → 2D+2T
+        pruefeTeamMischungDoubletteMode(14, 4, 2);   // 14%4=2: 2 Doublette-Partien + 1 Triplette-Partie → 4D+2T
+        // Rest 3: 1 Triplette-Partie + 1 gemischte Partie, Rest Doubletten (Minimum 11 Spieler)
+        pruefeTeamMischungDoubletteMode(11, 1, 3);   // 11%4=3: 1 Triplette-Partie + 1 gemischte → 1D+3T
+        pruefeTeamMischungDoubletteMode(15, 3, 3);   // 15%4=3: 1 Doublette-Partie + 1 Triplette + 1 gemischte → 3D+3T
     }
 
     // =========================================================================
@@ -636,6 +675,86 @@ public class SuperMeleePaarungenV2Test {
     }
 
     // =========================================================================
+    // Gegner-Tracking
+    // =========================================================================
+
+    /**
+     * Prüft, dass nach einer Spielrunde alle Spieler aus Team A alle Spieler aus
+     * Team B als Gegner gespeichert haben (und umgekehrt).<br>
+     * Außerdem dürfen Mitspieler im gleichen Team NICHT als Gegner eingetragen sein
+     * (gilt für Runde 1, in der noch keine Vorgeschichte existiert).
+     */
+    @Test
+    public void testGegnerWerdenNachRundeEingetragen() throws AlgorithmenException {
+        // 6 Spieler, Triplette: 2 Teams à 3 spielen gegeneinander
+        // neueSpielrunde durchläuft finalizeRunde → optimiereGegnerPaarung
+        SpielerMeldungen meldungen = newTestMeldungen(6);
+        MeleeSpielRunde runde = paarungen.neueSpielrunde(1, meldungen);
+        assertThat(runde.teams()).hasSize(2);
+
+        Team teamA = runde.teams().get(0);
+        Team teamB = runde.teams().get(1);
+
+        // Alle Spieler aus Team A müssen alle Spieler aus Team B als Gegner haben
+        for (Spieler sA : teamA.spieler()) {
+            for (Spieler sB : teamB.spieler()) {
+                assertThat(sA.warGegnerVon(sB))
+                        .as("Spieler %d muss Spieler %d als Gegner haben", sA.getNr(), sB.getNr())
+                        .isTrue();
+                assertThat(sB.warGegnerVon(sA))
+                        .as("Spieler %d muss Spieler %d als Gegner haben (rückwärts)", sB.getNr(), sA.getNr())
+                        .isTrue();
+            }
+        }
+
+        // Mitspieler im gleichen Team dürfen in Runde 1 NICHT als Gegner eingetragen sein
+        for (Team team : List.of(teamA, teamB)) {
+            List<Spieler> spielerImTeam = team.spieler();
+            for (int i = 0; i < spielerImTeam.size(); i++) {
+                for (int j = i + 1; j < spielerImTeam.size(); j++) {
+                    assertThat(spielerImTeam.get(i).warGegnerVon(spielerImTeam.get(j)))
+                            .as("Mitspieler %d und %d dürfen keine Gegner sein",
+                                    spielerImTeam.get(i).getNr(), spielerImTeam.get(j).getNr())
+                            .isFalse();
+                }
+            }
+        }
+    }
+
+    /**
+     * Mehrere Runden mit 12 Spielern: Gegner werden korrekt über Runden aufgebaut.<br>
+     * <br>
+     * Pro Runde müssen alle Spieler der paarweise antretenden Teams (teams[2i] vs teams[2i+1])
+     * als Gegner eingetragen sein. In späteren Runden können ehemalige Gegner als Mitspieler
+     * zusammenkommen — dieser Fall wird hier nicht geprüft.
+     */
+    @Test
+    public void testGegnerMinimierungUeberMehrereRunden() throws AlgorithmenException {
+        // neueSpielrunde durchläuft finalizeRunde → optimiereGegnerPaarung → Gegner werden gesetzt
+        SpielerMeldungen meldungen = newTestMeldungen(12);
+
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrunde(rnd, meldungen);
+            assertThat(runde).as("Runde %d", rnd).isNotNull();
+
+            List<Team> teams = runde.teams();
+            // Gegner zwischen paarweise antretenden Teams prüfen: teams[2i] vs teams[2i+1]
+            for (int i = 0; i < teams.size() - 1; i += 2) {
+                Team teamA = teams.get(i);
+                Team teamB = teams.get(i + 1);
+                for (Spieler sA : teamA.spieler()) {
+                    for (Spieler sB : teamB.spieler()) {
+                        assertThat(sA.warGegnerVon(sB))
+                                .as("Runde %d: Spieler %d muss Spieler %d als Gegner kennen",
+                                        rnd, sA.getNr(), sB.getNr())
+                                .isTrue();
+                    }
+                }
+            }
+        }
+    }
+
+    // =========================================================================
     // Hilfsmethoden
     // =========================================================================
 
@@ -645,6 +764,30 @@ public class SuperMeleePaarungenV2Test {
             meldungen.addSpielerWennNichtVorhanden(Spieler.from(i));
         }
         return meldungen;
+    }
+
+    /**
+     * Analogon zu {@link #pruefeTeamMischung} für den Doublette-Hauptmodus.
+     * Ruft {@code neueSpielrundeDoubletteMode} statt {@code neueSpielrunde} auf.
+     */
+    private void pruefeTeamMischungDoubletteMode(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett)
+            throws AlgorithmenException {
+        SpielerMeldungen m = newTestMeldungen(expAnzSpieler);
+        MeleeSpielRunde runde = paarungen.neueSpielrundeDoubletteMode(1, m, false);
+        int expTeams = expAnzDoubl + expAnzTriplett;
+
+        pruefeKeineDoppeltenSpieler(runde);
+        assertThat(runde.teams()).as("%d Spieler DoubletteMode: Team-Anzahl", expAnzSpieler).hasSize(expTeams);
+        assertThat(m.size()).isEqualTo(expAnzSpieler);
+
+        long anzTriplette = runde.teams().stream().filter(t -> t.size() == 3).count();
+        long anzDoublette = runde.teams().stream().filter(t -> t.size() == 2).count();
+        assertThat(anzDoublette)
+                .as("%d Spieler DoubletteMode: Anzahl Doubletten", expAnzSpieler)
+                .isEqualTo(expAnzDoubl);
+        assertThat(anzTriplette)
+                .as("%d Spieler DoubletteMode: Anzahl Tripletten", expAnzSpieler)
+                .isEqualTo(expAnzTriplett);
     }
 
     private void pruefeTeamMischung(int expAnzSpieler, int expAnzDoubl, int expAnzTriplett)

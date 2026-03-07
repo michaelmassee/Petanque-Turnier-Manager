@@ -94,6 +94,11 @@ public class MeleeSpielRunde extends NrComparable {
 		return this;
 	}
 
+	public void setzeTeamReihenfolge(List<Team> neueReihenfolge) {
+		teams.clear();
+		teams.addAll(neueReihenfolge);
+	}
+
 	@Override
 	public String toString() {
 

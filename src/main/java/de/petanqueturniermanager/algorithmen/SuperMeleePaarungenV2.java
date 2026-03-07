@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -153,13 +154,70 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Sortiert die Teams nach Größe und validiert die Spieler-Team-Zuordnung.
+     * Sortiert die Teams nach Größe, validiert die Spieler-Team-Zuordnung und
+     * optimiert die Gegner-Paarung (2. Rang: Gegner-Wiederholungen minimieren).
      * Wird von allen öffentlichen Methoden nach der Generierung aufgerufen.
      */
     private MeleeSpielRunde finalizeRunde(MeleeSpielRunde spielRunde) throws AlgorithmenException {
         spielRunde.sortiereTeamsNachGroese();
         spielRunde.validateSpielerTeam(null);
+        optimiereGegnerPaarung(spielRunde);
         return spielRunde;
+    }
+
+    /**
+     * Ordnet die Teams so um, dass Gegner-Wiederholungen minimiert werden (2. Rang).<br>
+     * <br>
+     * Greedy-Algorithmus: Nimm jeweils das erste ungepaarte Team, wähle als Gegner das
+     * ungepaarte Team mit dem geringsten Gegner-Score. Nach der Umsortierung werden die
+     * Gegner paarweise in die Spieler-Objekte eingetragen ({@link Spieler#addGegner}).
+     *
+     * @param spielRunde die zu optimierende Spielrunde (Teams bereits nach Größe sortiert)
+     */
+    private void optimiereGegnerPaarung(MeleeSpielRunde spielRunde) {
+        List<Team> unpaired = new ArrayList<>(spielRunde.teams());
+        List<Team> ergebnis = new ArrayList<>(unpaired.size());
+
+        while (!unpaired.isEmpty()) {
+            Team team1 = unpaired.remove(0);
+            Team besteGegner = unpaired.stream()
+                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
+                    .orElse(null);
+            ergebnis.add(team1);
+            if (besteGegner != null) {
+                unpaired.remove(besteGegner);
+                ergebnis.add(besteGegner);
+            }
+        }
+
+        spielRunde.setzeTeamReihenfolge(ergebnis);
+
+        // Gegner paarweise eintragen: ergebnis[2i] vs ergebnis[2i+1]
+        for (int i = 0; i < ergebnis.size() - 1; i += 2) {
+            Team teamA = ergebnis.get(i);
+            Team teamB = ergebnis.get(i + 1);
+            for (Spieler sA : teamA.spieler()) {
+                for (Spieler sB : teamB.spieler()) {
+                    sA.addGegner(sB);
+                }
+            }
+        }
+    }
+
+    /**
+     * Berechnet den Gegner-Score zweier Teams: Anzahl der Spielerpaare (sA, sB),
+     * bei denen {@code sA.warGegnerVon(sB)} gilt — je höher, desto mehr Wiederholungen.
+     */
+    private int berechneGegnerScore(Team team1, Team team2) {
+        int score = 0;
+        for (Spieler s1 : team1.spieler()) {
+            for (Spieler s2 : team2.spieler()) {
+                if (s1.warGegnerVon(s2)) {
+                    score++;
+                }
+            }
+        }
+        return score;
     }
 
     // =========================================================================
