@@ -10,12 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -25,6 +27,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
@@ -190,7 +193,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				.from(getXSpreadSheet(), Position.from(getTeamNrSpalte(), ZWEITE_HEADER_ZEILE), HEADER_NR)
 				.addColumnProperties(colPropNr)
 				.setCellBackColor(headerColor)
-				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
 				.setEndPosMergeZeilePlus(1);
 		getSheetHelper().setStringValueInCell(nrHeader);
@@ -294,6 +297,15 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 				getTeamNrSpalte(), letzteDatenZeile);
 		getSheetHelper().setPropertiesInRange(getXSpreadSheet(), nrRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()));
+
+		// Bedingte Formatierung Team-Nr: Text = Fehler, Doppelt = Fehler, Ungültige Zahl = Fehler
+		String kondDoppeltNr = "COUNTIF(" + Position.from(getTeamNrSpalte(), 0).getSpalteAddressWith$() + ";"
+				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		ConditionalFormatHelper.from(this, nrRange).clear()
+				.formulaIsText().styleIsFehler().applyAndDoReset()
+				.formula1(kondDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+				.formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN)
+				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
 
 		// Teamname-Spalte (optional)
 		if (getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()) {

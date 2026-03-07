@@ -150,8 +150,8 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		doSort(meldungenSpalte.getErsteMeldungNameSpalte(), true); // nach namen sortieren
 		updateSpieltageSummenSpalten();
 		insertInfoBlock();
-		meldungenSpalte.formatSpielrNrUndNamenspalten();
 		formatDaten();
+		meldungenSpalte.formatSpielrNrUndNamenspalten();
 
 		// TurnierSystem
 		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());

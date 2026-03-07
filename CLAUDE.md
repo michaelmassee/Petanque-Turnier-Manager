@@ -85,6 +85,7 @@ See `BUILD_ISSUES.md` for details on:
 ## Business Logic & Rules
 - **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.
   **Crucial:** Always read this document before making changes to classes in the `de.petanqueturniermanager.algorithmen` or `de.petanqueturniermanager.schweizer` packages!
+- **Supermelee System:** The complete ruleset for the tournament system in Petanque is documented in `SupermeleeTurnierSystem.md`.
 
 ### UNO API Strict Rules
 - **NEVER use standard Java casts** for UNO interfaces (e.g., `(XSpreadsheetDocument) doc` is forbidden).
