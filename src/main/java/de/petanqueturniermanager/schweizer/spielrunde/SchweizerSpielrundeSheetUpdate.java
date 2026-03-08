@@ -42,7 +42,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 				? sortierteTeamMeldungen(aktiveMeldungen, ergebnisse)
 				: aktiveMeldungen;
 
-		neueSpielrunde(meldungenFuerAuslosung, aktuelleSpielrunde);
+		neueSpielrunde(meldungenFuerAuslosung, aktuelleSpielrunde, ergebnisse);
 	}
 
 	@Override

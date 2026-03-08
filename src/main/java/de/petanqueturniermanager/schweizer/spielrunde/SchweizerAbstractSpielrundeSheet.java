@@ -386,12 +386,13 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 		return spielerNrPos.spalte(ERG_TEAM_B_SPALTE);
 	}
 
-	protected boolean neueSpielrunde(TeamMeldungen meldungen, SpielRundeNr neueSpielrundeNr) throws GenerateException {
-		return neueSpielrunde(meldungen, neueSpielrundeNr, isForceOk());
+	protected boolean neueSpielrunde(TeamMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
+			List<SchweizerTeamErgebnis> ergebnisse) throws GenerateException {
+		return neueSpielrunde(meldungen, neueSpielrundeNr, ergebnisse, isForceOk());
 	}
 
-	protected boolean neueSpielrunde(TeamMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force)
-			throws GenerateException {
+	protected boolean neueSpielrunde(TeamMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
+			List<SchweizerTeamErgebnis> ergebnisse, boolean force) throws GenerateException {
 		checkNotNull(meldungen);
 
 		processBoxinfo("Neue Spielrunde " + neueSpielrundeNr.getNr());
@@ -414,11 +415,11 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 		if (neueSpielrundeNr.getNr() == 1) {
 			paarungen = schweizerSystem.ersteRunde(meldungen.teams());
 		} else {
-			paarungen = schweizerSystem.weitereRunde(meldungen.teams(), List.of());
+			paarungen = schweizerSystem.weitereRunde(meldungen.teams(), ergebnisse);
 		}
 
 		teamPaarungenEinfuegen(paarungen);
-		datenErsteSpalte(); // BahnNr 
+		datenErsteSpalte(); // BahnNr
 		datenformatieren();
 		header();
 

@@ -78,7 +78,7 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 				? sortierteTeamMeldungen(aktiveMeldungen, ergebnisse)
 				: aktiveMeldungen;
 
-		return neueSpielrunde(meldungenFuerAuslosung, SpielRundeNr.from(neueSpielrunde));
+		return neueSpielrunde(meldungenFuerAuslosung, SpielRundeNr.from(neueSpielrunde), ergebnisse);
 	}
 
 	/**

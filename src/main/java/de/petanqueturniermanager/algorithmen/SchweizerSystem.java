@@ -149,15 +149,16 @@ public class SchweizerSystem {
 	/**
 	 * Die teams müssen in Ranglisten-Reihenfolge vorliegen.
 	 * <p>
-	 * Nach der ersten Runde wird das Feld geteilt in Sieger und Verlierer.
-	 * In der zweiten Runde und in den folgenden Runden spielen stets Teams gegeneinander,
-	 * die gleich viele Siege, Niederlagen oder Siege/Niederlagen haben.
+	 * Ab Runde 2 werden Teams in <b>Sieggruppen</b> (Score Groups) eingeteilt: Teams mit gleich vielen
+	 * Siegen spielen gegeneinander. Ist eine Gruppe ungerade, wird das schwächste Team der Gruppe in
+	 * die nächsttiefere Gruppe „gefloatet" (Carry-Over). So werden Paarungen wie 4 Siege vs. 2 Siege
+	 * verhindert. Gibt es keine Ergebnis-Information (ergebnisse leer), wird global gepaart.
 	 *
-	 * @param teams   die Teams in aktueller Ranglisten-Reihenfolge, inklusive ihrer bisherigen Ergebnisse
-	 * @param history die bisherigen Paarungen aller vorherigen Runden (für zukünftige Erweiterungen)
+	 * @param teams      die Teams in aktueller Ranglisten-Reihenfolge, inklusive ihrer bisherigen Ergebnisse
+	 * @param ergebnisse bisherige Spielergebnisse für die Sieggruppen-Bildung; leer = globale Paarung
 	 * @return eine Liste der Paarungen für die nächste Runde
 	 */
-	public List<TeamPaarung> weitereRunde(List<Team> teams, List<TeamPaarung> history) {
+	public List<TeamPaarung> weitereRunde(List<Team> teams, List<SchweizerTeamErgebnis> ergebnisse) {
 		boolean freiSpiel = IsEvenOrOdd.IsOdd(teams.size());
 		List<TeamPaarung> teamPaarungList = new ArrayList<>();
 
@@ -174,44 +175,96 @@ public class SchweizerSystem {
 			teamPaarungList.add(new TeamPaarung(freilosTeam));
 		}
 
-		for (Team team : teams) {
-			if (!team.isHatGegner()) {
-				List<Team> restTeams = teams.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).toList();
-				if (!restTeams.isEmpty()) {
-					Team gegner = findeGegner(team, restTeams);
-					if (gegner != null) {
-						// gegner gefunden
-						teamPaarungList.add(new TeamPaarung(team, gegner).addGegner().setHatGegner());
-					} else {
-						// ohne gegner? versuchen ob wir tauschen können mit vorhandener TeamPaarung aus der Liste
-						// Invalid Paarung: haben bereits gegeneinander gespielt
-						TeamPaarung invalid = new TeamPaarung(team, restTeams.get(0));
+		// Sieggruppen bauen und innerhalb paaren
+		Map<Integer, Integer> siegeProTeam = ergebnisse.stream()
+				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::siege));
 
-						TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList, teams);
-						if (kannTauschenMit != null) {
-							// wenn erfolgreich dann invalid == valid!
-							tauschenTeamsInPaarung(invalid, kannTauschenMit);
-							// gegner wieder herstellen von den invalid teams weil die in den vorrunden bereits gegeneinander gespielt haben
-							restTeams.get(0).addGegner(team);
-						}
-						// invalid oder wenn Tausch stattgefunden hat, valid Paarung hinzufügen
-						teamPaarungList.add(invalid.addGegner().setHatGegner());
-					}
-				} else {
-					// keine restteams mehr vorhanden?
-					teamPaarungList.add(new TeamPaarung(team).setHatGegner());
-				}
-			}
-		}
+		List<Team> aktivTeams = teams.stream().filter(t -> !t.isHatGegner()).toList();
+		List<List<Team>> gruppen = baueSiegeGruppen(aktivTeams, siegeProTeam);
+		paareGruppen(gruppen, teamPaarungList, teams);
+
 		return teamPaarungList.stream().sorted((tp1, tp2) -> {
 			// Freilos an letzter Stelle
-			if (tp1.getB() == null) {
+			if (tp1.isFreilos()) {
 				return 1;
-			} else if (tp2.getB() == null) {
+			} else if (tp2.isFreilos()) {
 				return -1;
 			}
 			return 0;
 		}).toList();
+	}
+
+	/**
+	 * Gruppiert die sortierten Teams nach Siegzahl.
+	 * Ungerade Gruppen werden durch Float des letzten Teams in die nächste Gruppe ausgeglichen.
+	 * <p>
+	 * Gibt es keine Sieginformation (leere siegeProTeam-Map), landen alle Teams in einer Gruppe
+	 * und der Algorithmus verhält sich wie die klassische globale Paarung.
+	 *
+	 * @param sortierteTeams Teams in Ranglistenreihenfolge (Siegzahl absteigend)
+	 * @param siegeProTeam   Map teamNr → Siegzahl
+	 * @return Liste von Sieggruppen; jede Gruppe hat gerade Größe (nach Float-Ausgleich)
+	 */
+	@VisibleForTesting
+	List<List<Team>> baueSiegeGruppen(List<Team> sortierteTeams, Map<Integer, Integer> siegeProTeam) {
+		List<List<Team>> gruppen = new ArrayList<>();
+		List<Team> aktuelleGruppe = null;
+		int letztesSiege = Integer.MIN_VALUE;
+
+		for (Team team : sortierteTeams) {
+			int siege = siegeProTeam.getOrDefault(team.getNr(), 0);
+			if (aktuelleGruppe == null || siege != letztesSiege) {
+				aktuelleGruppe = new ArrayList<>();
+				gruppen.add(aktuelleGruppe);
+				letztesSiege = siege;
+			}
+			aktuelleGruppe.add(team);
+		}
+
+		// Ungerade Gruppen: schwächstes Team in nächsttiefere Gruppe floaten (Carry-Over)
+		for (int i = 0; i < gruppen.size() - 1; i++) {
+			List<Team> gruppe = gruppen.get(i);
+			if (gruppe.size() % 2 != 0) {
+				Team floatTeam = gruppe.removeLast();
+				gruppen.get(i + 1).addFirst(floatTeam); // Float-Team wird zuerst gepaart
+			}
+		}
+		gruppen.removeIf(List::isEmpty);
+		return gruppen;
+	}
+
+	/**
+	 * Paart Teams innerhalb jeder Sieggruppe.
+	 * Greedy: erstes unpaartes Team bekommt den ersten erlaubten Gegner aus seiner Gruppe.
+	 * Falls kein direkter Gegner frei: Tausch-Versuch mit bereits gepaartem Team.
+	 *
+	 * @param gruppen        Sieggruppen (jede gerade Größe)
+	 * @param teamPaarungList Ergebnisliste (wird befüllt)
+	 * @param alleTeams      alle Teams (für Tauschsuche über Gruppengrenzen)
+	 */
+	private void paareGruppen(List<List<Team>> gruppen, List<TeamPaarung> teamPaarungList, List<Team> alleTeams) {
+		for (List<Team> gruppe : gruppen) {
+			for (Team team : gruppe) {
+				if (!team.isHatGegner()) {
+					List<Team> restTeams = gruppe.stream().filter(t -> !t.isHatGegner() && !team.equals(t)).toList();
+					if (!restTeams.isEmpty()) {
+						Team gegner = findeGegner(team, restTeams);
+						if (gegner != null) {
+							teamPaarungList.add(new TeamPaarung(team, gegner).addGegner().setHatGegner());
+						} else {
+							// alle in der Gruppe bereits Gegner – Tausch versuchen
+							TeamPaarung invalid = new TeamPaarung(team, restTeams.getFirst());
+							TeamPaarung kannTauschenMit = kannTauschenMit(invalid, teamPaarungList, alleTeams);
+							if (kannTauschenMit != null) {
+								tauschenTeamsInPaarung(invalid, kannTauschenMit);
+								restTeams.getFirst().addGegner(team);
+							}
+							teamPaarungList.add(invalid.addGegner().setHatGegner());
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@VisibleForTesting
@@ -331,20 +384,16 @@ public class SchweizerSystem {
 
 	/**
 	 * Flacht eine Liste von Paarungen zu einer sortierten Teamliste ab.
-	 * Freilos (null) wird ans Ende sortiert.
+	 * Freilos-Paarungen (kein Team B) werden dabei übersprungen.
 	 *
 	 * @param paarungen die Paarungsliste
-	 * @return flache, sortierte Teamliste (enthält null für Freilos)
+	 * @return flache, sortierte Teamliste (ohne Freilos-Einträge)
 	 */
 	public List<Team> flattenTeampaarungen(List<TeamPaarung> paarungen) {
 		return paarungen.stream()
-				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
-				.sorted((team1, team2) -> {
-					if (team1 == null || team2 == null) {
-						return 1;
-					}
-					return Integer.compare(team1.getNr(), team2.getNr());
-				}).toList();
+				.flatMap(tp -> Stream.concat(Stream.of(tp.getA()), tp.getOptionalB().stream()))
+				.sorted(Comparator.comparingInt(Team::getNr))
+				.toList();
 	}
 
 	/**
