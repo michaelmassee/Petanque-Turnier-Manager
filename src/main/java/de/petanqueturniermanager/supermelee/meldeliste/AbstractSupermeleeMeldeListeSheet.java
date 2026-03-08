@@ -136,7 +136,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		var bezCelVal = StringCellValue
 				.from(getXSpreadSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")
-				.setCellBackColor(headerBackColor).setBorder(BorderFactory.from().allThin().toBorder())
+				.setCellBackColor(headerBackColor).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
 				.addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
 		getSheetHelper().setStringValueInCell(bezCelVal);
 		// ------
@@ -208,7 +208,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		var bezCelSpieltagVal = StringCellValue
 				.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ZWEITE_HEADER_ZEILE, spielTagHeader(spieltag))
 				.setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setCellBackColor(hederBackColor)
-				.addColumnProperties(columnProp).setBorder(BorderFactory.from().allThin().toBorder());
+				.addColumnProperties(columnProp).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder());
 
 		// Spieltag header
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));

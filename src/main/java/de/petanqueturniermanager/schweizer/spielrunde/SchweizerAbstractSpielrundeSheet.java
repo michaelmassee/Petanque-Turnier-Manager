@@ -443,6 +443,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 
 		for (TeamPaarung teamPaarung : paarungen) {
 			SheetRunner.testDoCancelTask();
+			if (!teamPaarung.hasB()) {
+				// Freilos – keine Begegnung eintragen
+				continue;
+			}
 			if (useTeamname) {
 				String nameA = getMeldeListe().getTeamNameByNr(teamPaarung.getA().getNr());
 				String nameB = getMeldeListe().getTeamNameByNr(teamPaarung.getB().getNr());

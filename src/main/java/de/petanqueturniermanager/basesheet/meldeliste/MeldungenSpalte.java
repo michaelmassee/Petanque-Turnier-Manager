@@ -159,7 +159,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
 				.spalte(ersteMeldungNameSpalte).setValue(HEADER_SPIELER_NAME)
-				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
 			// weil spalte sich geändert hat

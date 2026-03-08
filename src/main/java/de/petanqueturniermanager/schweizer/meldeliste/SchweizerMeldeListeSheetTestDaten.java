@@ -80,7 +80,7 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 		int nameIdx = 0;
 		for (int team = 0; team < anzTeams && nameIdx < testNamen.size(); team++) {
 			SheetRunner.testDoCancelTask();
-			int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE + team;
+			int zeile = ERSTE_DATEN_ZEILE + team;
 
 			if (teamnameAktiv) {
 				getSheetHelper().setStringValueInCell(StringCellValue.from(meldelisteSheet,
