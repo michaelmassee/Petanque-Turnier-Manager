@@ -67,19 +67,23 @@ public class SuperMeleePaarungenV2Test {
     }
 
     // =========================================================================
-    // Ungültige Spielerzahl → null
+    // Ungültige Spielerzahl → AlgorithmenException
     // =========================================================================
 
     @Test
-    public void testNeueSpielrundeTripletteMode_7Spieler_gibtNull() throws AlgorithmenException {
+    public void testNeueSpielrundeTripletteMode_7Spieler_wirftException() {
         SpielerMeldungen m = newTestMeldungen(7);
-        assertThat(paarungen.neueSpielrundeTripletteMode(1, m, false)).isNull();
+        assertThatThrownBy(() -> paarungen.neueSpielrundeTripletteMode(1, m, false))
+                .isInstanceOf(AlgorithmenException.class)
+                .hasMessageContaining("7");
     }
 
     @Test
-    public void testNeueSpielrundeDoubletteMode_7Spieler_gibtNull() throws AlgorithmenException {
+    public void testNeueSpielrundeDoubletteMode_7Spieler_wirftException() {
         SpielerMeldungen m = newTestMeldungen(7);
-        assertThat(paarungen.neueSpielrundeDoubletteMode(1, m, false)).isNull();
+        assertThatThrownBy(() -> paarungen.neueSpielrundeDoubletteMode(1, m, false))
+                .isInstanceOf(AlgorithmenException.class)
+                .hasMessageContaining("7");
     }
 
     // =========================================================================
@@ -945,5 +949,52 @@ public class SuperMeleePaarungenV2Test {
             spielRunde.addTeamWennNichtVorhanden(team);
         }
         return spielRunde;
+    }
+
+    // =========================================================================
+    // Performance-Benchmark
+    // =========================================================================
+
+    /**
+     * Misst die Laufzeit des Backtracking-Algorithmus über mehrere Runden mit
+     * realistischen Turniergrössen (18, 24, 30 Spieler).<br>
+     * <br>
+     * Ziel: Sicherstellen, dass jede Runde unter 3 Sekunden bleibt — auch in späten
+     * Runden mit dichter Paarungshistorie. Gibt je Runde die verstrichene Zeit aus,
+     * damit das {@code MAX_BACKTRACK_KNOTEN}-Limit bei Bedarf angepasst werden kann.<br>
+     * <br>
+     * <b>Interpretation:</b> Wenn das Limit von 10.000.000 Knoten in deutlich unter
+     * 1 Sekunde erreicht wird, sollte es erhöht werden. Wenn es nie annähernd erreicht
+     * wird (weil Lösungen viel früher gefunden werden), ist es bereits großzügig genug.
+     */
+    @Test
+    public void benchmark_LaufzeitProRunde() throws AlgorithmenException {
+        int[] spielerZahlen = {18, 24, 30};
+        int rundenProGruppe = 5;
+        long maxErlaubteMillis = 3_000;
+
+        for (int anzSpieler : spielerZahlen) {
+            SpielerMeldungen meldungen = newTestMeldungen(anzSpieler);
+            long maxRundeMillis = 0;
+
+            for (int rnd = 1; rnd <= rundenProGruppe; rnd++) {
+                long start = System.currentTimeMillis();
+                MeleeSpielRunde runde = paarungen.neueSpielrunde(rnd, meldungen);
+                long dauer = System.currentTimeMillis() - start;
+                maxRundeMillis = Math.max(maxRundeMillis, dauer);
+
+                assertThat(runde).as("%d Spieler, Runde %d", anzSpieler, rnd).isNotNull();
+                pruefeKeineDoppeltenSpieler(runde);
+                pruefeAlleSpielerInTeam(runde, meldungen);
+
+                System.out.printf("  %2d Spieler, Runde %d: %d ms%n", anzSpieler, rnd, dauer);
+            }
+
+            assertThat(maxRundeMillis)
+                    .as("%d Spieler: keine Runde darf länger als %d ms dauern", anzSpieler, maxErlaubteMillis)
+                    .isLessThanOrEqualTo(maxErlaubteMillis);
+
+            System.out.printf("→ %d Spieler: max. Rundenlaufzeit = %d ms%n%n", anzSpieler, maxRundeMillis);
+        }
     }
 }

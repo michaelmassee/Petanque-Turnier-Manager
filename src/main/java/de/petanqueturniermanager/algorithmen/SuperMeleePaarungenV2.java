@@ -105,8 +105,8 @@ public class SuperMeleePaarungenV2 {
      * @param rndNr        Rundennummer
      * @param meldungen    Liste aller gemeldeten Spieler
      * @param nurTriplette {@code true}: nur reine Triplette-Runde erzwingen
-     * @return fertig ausgeloste Spielrunde, oder {@code null} bei ungültiger Spieleranzahl
-     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist
+     * @return fertig ausgeloste Spielrunde
+     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist oder die Spieleranzahl ungültig ist
      */
     public MeleeSpielRunde neueSpielrundeDoubletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurTriplette)
             throws AlgorithmenException {
@@ -114,7 +114,8 @@ public class SuperMeleePaarungenV2 {
         SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Doublette);
 
         if (!teamRechner.valideAnzahlSpieler()) {
-            return null;
+            throw new AlgorithmenException(
+                    "Ungültige Spieleranzahl für Doublette-Modus: " + meldungen.spieler().size());
         }
         if (nurTriplette && !teamRechner.isNurTripletteMoeglich()) {
             throw new AlgorithmenException("Keine Triplette Spielrunde möglich");
@@ -134,8 +135,8 @@ public class SuperMeleePaarungenV2 {
      * @param rndNr        Rundennummer
      * @param meldungen    Liste aller gemeldeten Spieler
      * @param nurDoublette {@code true}: nur reine Doublette-Runde erzwingen
-     * @return fertig ausgeloste Spielrunde, oder {@code null} bei ungültiger Spieleranzahl
-     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist
+     * @return fertig ausgeloste Spielrunde
+     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist oder die Spieleranzahl ungültig ist
      */
     public MeleeSpielRunde neueSpielrundeTripletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurDoublette)
             throws AlgorithmenException {
@@ -143,7 +144,8 @@ public class SuperMeleePaarungenV2 {
         SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Triplette);
 
         if (!teamRechner.valideAnzahlSpieler()) {
-            return null;
+            throw new AlgorithmenException(
+                    "Ungültige Spieleranzahl für Triplette-Modus: " + meldungen.spieler().size());
         }
         if (nurDoublette && !teamRechner.isNurDoubletteMoeglich()) {
             throw new AlgorithmenException("Keine Doublette Spielrunde möglich");
@@ -176,7 +178,7 @@ public class SuperMeleePaarungenV2 {
      *
      * @param spielRunde die zu optimierende Spielrunde (Teams bereits nach Größe sortiert)
      */
-    private void optimiereGegnerPaarung(MeleeSpielRunde spielRunde) {
+    private void optimiereGegnerPaarung(MeleeSpielRunde spielRunde) throws AlgorithmenException {
         List<Team> unpaired = new ArrayList<>(spielRunde.teams());
         List<Team> ergebnis = new ArrayList<>(unpaired.size());
 
@@ -193,6 +195,12 @@ public class SuperMeleePaarungenV2 {
         }
 
         spielRunde.setzeTeamReihenfolge(ergebnis);
+
+        if (ergebnis.size() % 2 != 0) {
+            throw new AlgorithmenException(
+                    "Ungerade Teamanzahl (" + ergebnis.size() + ") in optimiereGegnerPaarung – " +
+                    "SuperMeleeTeamRechner muss immer eine gerade Anzahl Teams liefern.");
+        }
 
         // Gegner paarweise eintragen: ergebnis[2i] vs ergebnis[2i+1]
         for (int i = 0; i < ergebnis.size() - 1; i += 2) {
