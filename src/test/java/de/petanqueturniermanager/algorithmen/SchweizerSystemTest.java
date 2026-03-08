@@ -501,19 +501,19 @@ public class SchweizerSystemTest {
 	}
 
 	@Test
-	public void testSortiereNachAuswertungskriterienKugeldifferenz() throws Exception {
+	public void testSortiereNachAuswertungskriterienPunktedifferenz() throws Exception {
 		schweizerSystem = new SchweizerSystem();
 
-		// Zwei Teams mit gleichen Siegen, BHZ, FBHZ -> Kugeldifferenz entscheidet
+		// Zwei Teams mit gleichen Siegen, BHZ, FBHZ -> Punktedifferenz entscheidet
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
-				new SchweizerTeamErgebnis(1, 2, 5, List.of(3, 4)),   // Team 1: +5 Kugeldiff
-				new SchweizerTeamErgebnis(2, 2, 3, List.of(3, 4)),   // Team 2: +3 Kugeldiff
+				new SchweizerTeamErgebnis(1, 2, 5, List.of(3, 4)),   // Team 1: +5 Punktediff
+				new SchweizerTeamErgebnis(2, 2, 3, List.of(3, 4)),   // Team 2: +3 Punktediff
 				new SchweizerTeamErgebnis(3, 1, 0, List.of(1, 2)),   // Team 3
 				new SchweizerTeamErgebnis(4, 1, 0, List.of(1, 2))    // Team 4
 		);
 
 		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
-		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höhere Kugeldifferenz gewinnt
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höhere Punktedifferenz gewinnt
 		assertThat(sortiert.get(1).teamNr()).isEqualTo(2);
 	}
 

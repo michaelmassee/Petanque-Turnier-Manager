@@ -40,12 +40,12 @@ public class SchweizerSystem {
 	 *   <li>Anzahl der Siege (absteigend)</li>
 	 *   <li>Buchholz / BHZ = Summe der Siege aller Gegner (absteigend)</li>
 	 *   <li>Feinbuchholz / FBHZ = Summe der BHZ-Werte aller Gegner (absteigend)</li>
-	 *   <li>Kugeldifferenz = erzielte minus kassierte Punkte (absteigend)</li>
+	 *   <li>Punktedifferenz = erzielte minus kassierte Punkte (absteigend)</li>
 	 * </ol>
 	 * Hinweis: Direktvergleich (Kriterium 5) und Los (Kriterium 6) werden hier nicht berechnet
 	 * und müssen bei Bedarf nachgelagert behandelt werden.
 	 *
-	 * @param ergebnisse die Teamergebnisse mit Siegen, Kugeldifferenz und Gegnerliste
+	 * @param ergebnisse die Teamergebnisse mit Siegen, Punktedifferenz und Gegnerliste
 	 * @return neue Liste, sortiert nach Auswertungskriterien (beste Team zuerst)
 	 */
 	public List<SchweizerTeamErgebnis> sortiereNachAuswertungskriterien(List<SchweizerTeamErgebnis> ergebnisse) {
@@ -147,16 +147,32 @@ public class SchweizerSystem {
 	}
 
 	/**
-	 * Die teams müssen in Ranglisten-Reihenfolge vorliegen.
+	 * Ermittelt die Paarungen für die nächste Runde nach den Regeln des Schweizer Systems.
 	 * <p>
-	 * Ab Runde 2 werden Teams in <b>Sieggruppen</b> (Score Groups) eingeteilt: Teams mit gleich vielen
-	 * Siegen spielen gegeneinander. Ist eine Gruppe ungerade, wird das schwächste Team der Gruppe in
-	 * die nächsttiefere Gruppe „gefloatet" (Carry-Over). So werden Paarungen wie 4 Siege vs. 2 Siege
-	 * verhindert. Gibt es keine Ergebnis-Information (ergebnisse leer), wird global gepaart.
+	 * <b>Paarungs-Regel: nur Siege entscheiden über die Gruppenzugehörigkeit.</b>
+	 * Buchholz (BHZ) und Feinbuchholz (FBHZ) sind <em>ausschließlich</em> Ranglisten-Kriterien
+	 * (Tie-Breaks) und beeinflussen das Pairing <em>nicht direkt</em>.
+	 * <p>
+	 * <b>Ablauf:</b>
+	 * <ol>
+	 *   <li>Teams werden anhand ihrer Siegzahl in <b>Sieggruppen</b> eingeteilt
+	 *       (z.B. „3 Siege", „2 Siege", …).</li>
+	 *   <li>Innerhalb jeder Gruppe werden Teams nach ihrer Ranglistenposition sortiert,
+	 *       die durch {@code sortiereNachAuswertungskriterien()} (Siege→BHZ→FBHZ→Punktediff)
+	 *       bestimmt wird. BHZ wirkt also <em>indirekt</em>: es legt fest, wer in der Gruppe
+	 *       oben steht und damit gegen wen gepaart wird – aber nicht, in welche Gruppe ein Team fällt.</li>
+	 *   <li>Ist eine Gruppe ungerade, wird das rangniedrigste Team in die nächsttiefere
+	 *       Gruppe „gefloatet" (Carry-Over).</li>
+	 * </ol>
+	 * <p>
+	 * Gibt es keine Ergebnis-Information ({@code ergebnisse} leer), landen alle Teams in einer
+	 * Gruppe – identisches Verhalten wie die klassische globale Paarung.
 	 *
-	 * @param teams      die Teams in aktueller Ranglisten-Reihenfolge, inklusive ihrer bisherigen Ergebnisse
-	 * @param ergebnisse bisherige Spielergebnisse für die Sieggruppen-Bildung; leer = globale Paarung
-	 * @return eine Liste der Paarungen für die nächste Runde
+	 * @param teams      die Teams in aktueller Ranglisten-Reihenfolge (Siege absteigend,
+	 *                   Tie-Breaks via {@code sortiereNachAuswertungskriterien()})
+	 * @param ergebnisse bisherige Spielergebnisse (nur Siegzahl wird für Gruppen verwendet);
+	 *                   leer = globale Paarung ohne Gruppenbildung
+	 * @return eine Liste der Paarungen für die nächste Runde (Freilos am Ende)
 	 */
 	public List<TeamPaarung> weitereRunde(List<Team> teams, List<SchweizerTeamErgebnis> ergebnisse) {
 		boolean freiSpiel = IsEvenOrOdd.IsOdd(teams.size());

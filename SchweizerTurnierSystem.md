@@ -35,6 +35,20 @@ Die erste Runde wird zufällig ausgelost. Dabei können vermeintlich stärkere T
 
 Ab der zweiten Runde werden die Teams nach ihrem bisherigen Abschneiden gepaart: Sieger spielen gegen Sieger, Verlierer gegen Verlierer. Der Algorithmus stellt dabei sicher, dass zwei Teams nie zweimal gegeneinander spielen. Ist kein passender Gegner verfügbar, wird getauscht.
 
+#### Gruppenbildung: Nur Siege zählen
+
+Die Paarungsgruppen (Score Groups) werden **ausschließlich anhand der Anzahl der Siege** gebildet. Alle Teams mit gleich vielen Siegen bilden eine Gruppe.
+
+> **Wichtig:** Buchholz (BHZ) und Feinbuchholz (FBHZ) sind **reine Ranglisten-Kriterien (Tie-Breaks)** und haben **keinen direkten Einfluss auf die Gruppenbildung**. Sie bestimmen nicht, in welche Gruppe ein Team fällt.
+
+#### Indirekter Einfluss von Buchholz auf die Paarung
+
+BHZ und FBHZ wirken **indirekt** auf die Paarung: Vor der Gruppenbildung werden die Teams innerhalb ihrer Siege-Gruppe nach den Auswertungskriterien sortiert (Siege → BHZ → FBHZ → Punktedifferenz). Diese Sortierung legt fest, welches Team in der Gruppe oben steht – und damit gegen wen gepaart wird. BHZ bestimmt also den **Paarungspartner innerhalb der Gruppe**, nicht die Gruppenzugehörigkeit selbst.
+
+#### Carry-Over bei ungerader Gruppengröße
+
+Hat eine Gruppe eine ungerade Anzahl von Teams, wird das schwächste Team dieser Gruppe (das letzte in der sortierten Reihenfolge) in die nächste Gruppe mit weniger Siegen "herabgesetzt" (Float/Carry-Over). So kann es gegen ein Team mit weniger Siegen spielen – dies ist besser als ein Freilos zu vergeben, solange noch Teams ohne Gegner existieren.
+
 ### Freilos (bei ungerader Teamzahl)
 
 Gibt es eine ungerade Anzahl von Teams, erhält in jeder Runde genau ein Team ein **Freilos** (ein Sieg ohne Spiel). Das Freilos wird dem in der aktuellen Rangliste am schlechtesten platzierten Team zugeteilt, das noch kein Freilos erhalten hat. Teams mit Setzposition sollen möglichst kein Freilos in der ersten Runde erhalten.
@@ -61,7 +75,7 @@ Wenn Teams nicht nur gleich viele Siege, sondern auch gleich viele Buchholz-Punk
 
 ---
 
-## Kugeldifferenz
+## Punktedifferenz
 
 Beim Pétanque gibt es als viertes Kriterium die Punktedifferenz (erzielte Punkte minus kassierte Punkte, aufsummiert über alle Spiele). Ein 13:8-Sieg ergibt eine Differenz von +5.
 
@@ -164,4 +178,4 @@ Team E hatte die stärkeren Gegner der Gegner (FBHZ = 16 > 13) und zieht an Team
 
 
 
-Die Kugeldifferenz (im Pétanque oft auch einfach Punktedifferenz genannt) funktioniert im Grunde exakt wie das Torverhältnis beim Fußball. Es ist die Gesamtsumme deiner selbst erzielten Punkte abzüglich der kassierten Gegenpunkte über alle Spiele eines Turniers hinweg.Ein kurzes RechenbeispielNehmen wir an, ein Team absolviert drei Runden:SpielErgebnisErzielte Punkte (+)Kassierte Punkte (-)Differenz pro SpielSpiel 1Sieg (13:8)138+5Spiel 2Niederlage (10:13)1013-3Spiel 3Sieg (13:5)135+8Gesamt3626+10Die finale Kugeldifferenz für dieses Team beträgt am Ende also +10. Du kannst dafür entweder alle Pluspunkte und alle Minuspunkte zusammenzählen und voneinander abziehen (36 - 26 = 10) oder einfach die Differenzen der Einzelspiele addieren (5 - 3 + 8 = 10). Das Ergebnis ist dasselbe.
+Die Punktedifferenz funktioniert im Grunde exakt wie das Torverhältnis beim Fußball. Es ist die Gesamtsumme deiner selbst erzielten Punkte abzüglich der kassierten Gegenpunkte über alle Spiele eines Turniers hinweg.Ein kurzes RechenbeispielNehmen wir an, ein Team absolviert drei Runden:SpielErgebnisErzielte Punkte (+)Kassierte Punkte (-)Differenz pro SpielSpiel 1Sieg (13:8)138+5Spiel 2Niederlage (10:13)1013-3Spiel 3Sieg (13:5)135+8Gesamt3626+10Die finale Punktedifferenz für dieses Team beträgt am Ende also +10. Du kannst dafür entweder alle Pluspunkte und alle Minuspunkte zusammenzählen und voneinander abziehen (36 - 26 = 10) oder einfach die Differenzen der Einzelspiele addieren (5 - 3 + 8 = 10). Das Ergebnis ist dasselbe.
