@@ -769,6 +769,13 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 		String formula = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
 		ConditionalFormatHelper.from(this, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA)
 				.styleIsFehler().applyAndDoReset();
+		// gleiche Werte in beiden Ergebnisspalten → Fehler (z.B. 7:7)
+		// INDIRECT(ADDRESS(ROW();colNum)) ist zeilenrelativ – kein fixer basisZeile-Offset nötig
+		String cellA = "INDIRECT(ADDRESS(ROW();" + (ERSTE_SPALTE_ERGEBNISSE + 1) + "))";
+		String cellB = "INDIRECT(ADDRESS(ROW();" + (ERSTE_SPALTE_ERGEBNISSE + 2) + "))";
+		String gleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));" + cellA + "=" + cellB + ")";
+		ConditionalFormatHelper.from(this, ergbenissRange).formula1(gleicheWerte).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsEvenRow()
 				.style(getKonfigurationSheet().getSpielRundeHintergrundFarbeGeradeStyle()).applyAndDoReset();
 		ConditionalFormatHelper.from(this, ergbenissRange).formulaIsOddRow()

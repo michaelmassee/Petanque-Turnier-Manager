@@ -43,7 +43,7 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		Optional<SchweizerTurnierParameterDialog.TurnierParameter> param;
 		try {
 			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false,
-				SpielplanTeamAnzeige.NR);
+				SpielplanTeamAnzeige.NR, getKonfigurationSheet().getRankingModus());
 		} catch (Exception e) {
 			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
 			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
@@ -57,6 +57,7 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
+		getKonfigurationSheet().setRankingModus(param.get().rankingModus);
 		createMeldelisteWithParams(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen,
 				param.get().spielplanTeamAnzeige);
 	}

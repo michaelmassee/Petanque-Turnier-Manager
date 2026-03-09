@@ -32,6 +32,7 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
@@ -167,11 +168,13 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	protected void insertHeaderInSheet(int headerColor) throws GenerateException {
 		processBoxinfo("Meldeliste Header");
 
-		// Turniersystem oben links (Zeile 0 = ERSTE_HEADER_ZEILE)
+		// Turniersystem oben links (Zeile 0 = ERSTE_HEADER_ZEILE) – inkl. Ranking-Modus
+		SchweizerRankingModus rankingModus = getKonfigurationSheet().getRankingModus();
+		String rankingInfo = rankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? "Ohne Buchholz" : "Mit Buchholz";
 		getSheetHelper().setStringValueInCell(StringCellValue
 				.from(getXSpreadSheet(), Position.from(0, ERSTE_HEADER_ZEILE),
-						"Turniersystem: " + getTurnierSystem().getBezeichnung())
-				.setEndPosMergeSpaltePlus(1).setCharWeight(FontWeight.BOLD)
+						"Turniersystem: " + getTurnierSystem().getBezeichnung() + "   |   Wertung: " + rankingInfo)
+				.setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD)
 				.setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP)
 				.setShrinkToFit(true).setCharColor("00599d"));
 

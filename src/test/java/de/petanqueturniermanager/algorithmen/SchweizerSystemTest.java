@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 
 public class SchweizerSystemTest {
 
@@ -466,12 +467,12 @@ public class SchweizerSystemTest {
 		// Siege: A=3, B=1, C=2, D=1, E=2, F=0
 		// Gegner: A:[B,C,E], B:[A,E,D], C:[D,A,F], D:[C,F,B], E:[F,B,A], F:[E,D,C]
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
-				new SchweizerTeamErgebnis(1, 3, 0, List.of(2, 3, 5)), // A
-				new SchweizerTeamErgebnis(2, 1, 0, List.of(1, 5, 4)), // B
-				new SchweizerTeamErgebnis(3, 2, 0, List.of(4, 1, 6)), // C
-				new SchweizerTeamErgebnis(4, 1, 0, List.of(3, 6, 2)), // D
-				new SchweizerTeamErgebnis(5, 2, 0, List.of(6, 2, 1)), // E
-				new SchweizerTeamErgebnis(6, 0, 0, List.of(5, 4, 3))  // F
+				new SchweizerTeamErgebnis(1, 3, 0, 0, List.of(2, 3, 5)), // A
+				new SchweizerTeamErgebnis(2, 1, 0, 0, List.of(1, 5, 4)), // B
+				new SchweizerTeamErgebnis(3, 2, 0, 0, List.of(4, 1, 6)), // C
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(3, 6, 2)), // D
+				new SchweizerTeamErgebnis(5, 2, 0, 0, List.of(6, 2, 1)), // E
+				new SchweizerTeamErgebnis(6, 0, 0, 0, List.of(5, 4, 3))  // F
 		);
 
 		// BHZ prüfen: A=1+2+2=5, B=3+2+1=6, C=1+3+0=4, D=2+0+1=3, E=0+1+3=4, F=2+1+2=5
@@ -506,10 +507,10 @@ public class SchweizerSystemTest {
 
 		// Zwei Teams mit gleichen Siegen, BHZ, FBHZ -> Punktedifferenz entscheidet
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
-				new SchweizerTeamErgebnis(1, 2, 5, List.of(3, 4)),   // Team 1: +5 Punktediff
-				new SchweizerTeamErgebnis(2, 2, 3, List.of(3, 4)),   // Team 2: +3 Punktediff
-				new SchweizerTeamErgebnis(3, 1, 0, List.of(1, 2)),   // Team 3
-				new SchweizerTeamErgebnis(4, 1, 0, List.of(1, 2))    // Team 4
+				new SchweizerTeamErgebnis(1, 2, 5, 0, List.of(3, 4)),   // Team 1: +5 Punktediff
+				new SchweizerTeamErgebnis(2, 2, 3, 0, List.of(3, 4)),   // Team 2: +3 Punktediff
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(1, 2)),   // Team 3
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(1, 2))    // Team 4
 		);
 
 		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
@@ -539,6 +540,34 @@ public class SchweizerSystemTest {
 	}
 
 	/**
+	 * Ohne Buchholz: Siege → Punktediff → Punkte+ (kein BHZ/FBHZ).
+	 * Zwei Teams gleiche Siege, gleiche Punktediff → Punkte+ entscheidet (kein BHZ-Einfluss).
+	 */
+	@Test
+	public void testSortiereOhneBuchholz_PunktediffEntscheidet() {
+		schweizerSystem = new SchweizerSystem();
+
+		// Team 1: 2 Siege, Diff=5, Punkte+=30 | Team 2: 2 Siege, Diff=5, Punkte+=25
+		// Team 3: 2 Siege, Diff=3, Punkte+=20 | Team 4: 1 Sieg
+		// Ohne BHZ → Team 1 vor Team 2 wegen Punkte+, Team 2 vor Team 3 wegen Diff
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 5, 30, List.of(3, 4)),
+				new SchweizerTeamErgebnis(2, 2, 5, 25, List.of(3, 4)),
+				new SchweizerTeamErgebnis(3, 2, 3, 20, List.of(1, 2)),
+				new SchweizerTeamErgebnis(4, 1, 0, 10, List.of(1, 2))
+		);
+
+		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse,
+				SchweizerRankingModus.OHNE_BUCHHOLZ);
+
+		assertThat(sortiert).hasSize(4);
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // 2 Siege, Diff=5, Punkte+=30
+		assertThat(sortiert.get(1).teamNr()).isEqualTo(2); // 2 Siege, Diff=5, Punkte+=25
+		assertThat(sortiert.get(2).teamNr()).isEqualTo(3); // 2 Siege, Diff=3
+		assertThat(sortiert.get(3).teamNr()).isEqualTo(4); // 1 Sieg
+	}
+
+	/**
 	 * Score Group Pairing: Teams mit gleichen Siegen werden innerhalb ihrer Gruppe gepaart.
 	 * 8 Teams, 4 haben je 2 Siege, 4 haben je 1 Sieg → 2 Gruppen à 4 Teams.
 	 * Erwartet: Paarungen nur innerhalb der Gruppen (keine 2-Siege vs. 1-Sieg Paarung).
@@ -552,14 +581,14 @@ public class SchweizerSystemTest {
 		}
 
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
-				new SchweizerTeamErgebnis(1, 2, 10, List.of(5, 6)),
-				new SchweizerTeamErgebnis(2, 2, 8, List.of(7, 8)),
-				new SchweizerTeamErgebnis(3, 2, 6, List.of(5, 7)),
-				new SchweizerTeamErgebnis(4, 2, 4, List.of(6, 8)),
-				new SchweizerTeamErgebnis(5, 1, -4, List.of(1, 3)),
-				new SchweizerTeamErgebnis(6, 1, -6, List.of(4, 1)),
-				new SchweizerTeamErgebnis(7, 1, -8, List.of(2, 3)),
-				new SchweizerTeamErgebnis(8, 1, -10, List.of(4, 2)));
+				new SchweizerTeamErgebnis(1, 2, 10, 0, List.of(5, 6)),
+				new SchweizerTeamErgebnis(2, 2, 8, 0, List.of(7, 8)),
+				new SchweizerTeamErgebnis(3, 2, 6, 0, List.of(5, 7)),
+				new SchweizerTeamErgebnis(4, 2, 4, 0, List.of(6, 8)),
+				new SchweizerTeamErgebnis(5, 1, -4, 0, List.of(1, 3)),
+				new SchweizerTeamErgebnis(6, 1, -6, 0, List.of(4, 1)),
+				new SchweizerTeamErgebnis(7, 1, -8, 0, List.of(2, 3)),
+				new SchweizerTeamErgebnis(8, 1, -10, 0, List.of(4, 2)));
 
 		// Teams bereits mit Gegner-Geschichte
 		Team t1 = meldungen.getTeam(1);

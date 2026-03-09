@@ -55,4 +55,8 @@ public interface ISchweizerPropertiesSpalte {
 
 	void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige);
 
+	SchweizerRankingModus getRankingModus();
+
+	void setRankingModus(SchweizerRankingModus modus);
+
 }

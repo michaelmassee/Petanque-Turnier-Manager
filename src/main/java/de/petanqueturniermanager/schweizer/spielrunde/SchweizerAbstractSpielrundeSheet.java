@@ -1,7 +1,11 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.CHAR_HEIGHT;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.CHAR_WEIGHT;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.HORI_JUSTIFY;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.VERT_JUSTIFY;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +17,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -25,6 +31,7 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
@@ -37,6 +44,8 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -46,6 +55,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.AbstractSchweizerMeldeListeSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
@@ -72,6 +82,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	public static final int TEAM_B_SPALTE = TEAM_A_SPALTE + 1;
 	public static final int ERG_TEAM_A_SPALTE = TEAM_B_SPALTE + 1;
 	public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
+	public static final int FEHLER_SPALTE = ERG_TEAM_B_SPALTE + 1;
 
 	private final AbstractSchweizerMeldeListeSheet meldeListe;
 	private final SpielrundeHelper spielrundeHelper;
@@ -159,10 +170,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	protected List<SchweizerTeamErgebnis> gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
 			int bisSpielrunde) throws GenerateException {
 
-		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punktediff
+		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punktediff, [2]=punkte+
 		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
 		for (Team team : aktiveMeldungen.teams()) {
-			statsMap.put(team.getNr(), new int[2]);
+			statsMap.put(team.getNr(), new int[3]);
 			gegnerMap.put(team.getNr(), new ArrayList<>());
 		}
 
@@ -182,9 +193,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 
 		List<SchweizerTeamErgebnis> ergebnisse = new ArrayList<>();
 		for (Team team : aktiveMeldungen.teams()) {
-			int[] stats = statsMap.getOrDefault(team.getNr(), new int[2]);
+			int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
 			List<Integer> gegnerNrn = gegnerMap.getOrDefault(team.getNr(), new ArrayList<>());
-			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], gegnerNrn));
+			ergebnisse.add(new SchweizerTeamErgebnis(team.getNr(), stats[0], stats[1], stats[2], gegnerNrn));
 		}
 		return ergebnisse;
 	}
@@ -213,7 +224,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 			if (nrB <= 0) {
 				// Freilos für Team A
 				teamA.setHatteFreilos(true);
-				statsMap.computeIfAbsent(nrA, k -> new int[2])[0]++;
+				statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
 				continue;
 			}
 			Team teamB = aktiveMeldungen.getTeam(nrB);
@@ -229,14 +240,18 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 			int ergA = (row.size() > 2) ? row.get(2).getIntVal(0) : 0; // ERG_TEAM_A_SPALTE (relativ: 2)
 			int ergB = (row.size() > 3) ? row.get(3).getIntVal(0) : 0; // ERG_TEAM_B_SPALTE (relativ: 3)
 
+			// Punkte+ für beide Teams
+			statsMap.computeIfAbsent(nrA, k -> new int[3])[2] += ergA;
+			statsMap.computeIfAbsent(nrB, k -> new int[3])[2] += ergB;
+
 			if (ergA > ergB) {
-				statsMap.computeIfAbsent(nrA, k -> new int[2])[0]++;
-				statsMap.computeIfAbsent(nrA, k -> new int[2])[1] += ergA - ergB;
-				statsMap.computeIfAbsent(nrB, k -> new int[2])[1] -= ergA - ergB;
+				statsMap.computeIfAbsent(nrA, k -> new int[3])[0]++;
+				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] += ergA - ergB;
+				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] -= ergA - ergB;
 			} else if (ergB > ergA) {
-				statsMap.computeIfAbsent(nrB, k -> new int[2])[0]++;
-				statsMap.computeIfAbsent(nrB, k -> new int[2])[1] += ergB - ergA;
-				statsMap.computeIfAbsent(nrA, k -> new int[2])[1] -= ergB - ergA;
+				statsMap.computeIfAbsent(nrB, k -> new int[3])[0]++;
+				statsMap.computeIfAbsent(nrB, k -> new int[3])[1] += ergB - ergA;
+				statsMap.computeIfAbsent(nrA, k -> new int[3])[1] -= ergB - ergA;
 			}
 		}
 	}
@@ -262,9 +277,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	 * und gibt eine neue TeamMeldungen-Liste in dieser Reihenfolge zurück.
 	 */
 	protected TeamMeldungen sortierteTeamMeldungen(TeamMeldungen aktiveMeldungen,
-			List<SchweizerTeamErgebnis> ergebnisse) {
+			List<SchweizerTeamErgebnis> ergebnisse) throws GenerateException {
+		SchweizerRankingModus modus = getKonfigurationSheet().getRankingModus();
 		SchweizerSystem sortierer = new SchweizerSystem();
-		List<SchweizerTeamErgebnis> sortiert = sortierer.sortiereNachAuswertungskriterien(ergebnisse);
+		List<SchweizerTeamErgebnis> sortiert = sortierer.sortiereNachAuswertungskriterien(ergebnisse, modus);
 
 		TeamMeldungen sortierteMeldungen = new TeamMeldungen();
 		for (SchweizerTeamErgebnis erg : sortiert) {
@@ -304,7 +320,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 		StringCellValue headerValue = StringCellValue.from(getXSpreadSheet(), headerStart)
 				.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor)
-				.setCharHeight(NR_CHARHEIGHT).setEndPosMergeSpaltePlus(4)
+				.setCharHeight(NR_CHARHEIGHT).setEndPosMergeSpaltePlus(3)
 				.setValue("Spielrunde " + getSpielRundeNr().getNr());
 		getSheetHelper().setStringValueInCell(headerValue);
 
@@ -334,23 +350,154 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	private void datenformatieren() throws GenerateException {
 		processBoxinfo("Daten Formatieren");
 
-		// gitter
+		XSpreadsheet sheet = getXSpreadSheet();
 		Position datenStart = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
 		Position datenEnd = letztePositionRechtsUnten();
 
 		// komplett mit normal gitter
 		RangePosition datenRangeInclErg = RangePosition.from(datenStart, datenEnd);
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
-		getSheetHelper().setPropertyInRange(getXSpreadSheet(), datenRangeInclErg, TABLE_BORDER2, border);
+		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, TABLE_BORDER2, border);
 
 		SpielrundeHintergrundFarbeGeradeStyle geradeColor = getKonfigurationSheet()
 				.getSpielRundeHintergrundFarbeGeradeStyle();
 		SpielrundeHintergrundFarbeUnGeradeStyle unGeradeColor = getKonfigurationSheet()
 				.getSpielRundeHintergrundFarbeUnGeradeStyle();
 
+		// Zebra-Farbe: Team-A- und Team-B-Spalten
 		RangePosition datenRangeSpielpaarungen = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
 		spielrundeHelper.formatiereGeradeUngradeSpielpaarungen(this, datenRangeSpielpaarungen, geradeColor,
 				unGeradeColor);
+
+		// Alle Spalten (A, B, Erg) zentrieren
+		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, HORI_JUSTIFY, CellHoriJustify.CENTER);
+		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, VERT_JUSTIFY, CellVertJustify2.CENTER);
+
+		// Teamnummer-Modus: große Schrift für A/B-Spalten
+		if (getKonfigurationSheet().getSpielplanTeamAnzeige() != SpielplanTeamAnzeige.NAME) {
+			RangePosition nrSpalten = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
+			getSheetHelper().setPropertyInRange(sheet, nrSpalten, CHAR_HEIGHT, 32);
+			getSheetHelper().setPropertyInRange(sheet, nrSpalten, CHAR_WEIGHT, FontWeight.BOLD);
+		}
+
+		// Ergebnis-Spalten: Zebra + Validierung 0–13 (wie Supermelee)
+		datenEnd = letztePositionRechtsUnten(); // neu einlesen
+		RangePosition ergebnisRange = RangePosition.from(
+				Position.from(ERG_TEAM_A_SPALTE, ERSTE_DATEN_ZEILE), Position.from(datenEnd));
+
+		getSheetHelper().setPropertyInRange(sheet, ergebnisRange, CHAR_HEIGHT, 32);
+		getSheetHelper().setPropertyInRange(sheet, ergebnisRange, CHAR_WEIGHT, FontWeight.BOLD);
+
+		ConditionalFormatHelper.from(this, ergebnisRange).clear()
+				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN)
+				.styleIsFehler().applyAndDoReset();
+		String istText = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
+		ConditionalFormatHelper.from(this, ergebnisRange)
+				.formula1(istText).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
+		// gleiche Werte in beiden Ergebnisspalten → Fehler (z.B. 7:7)
+		// INDIRECT(ADDRESS(ROW();colNum)) ist zeilenrelativ – kein fixer basisZeile-Offset nötig
+		String cellA = "INDIRECT(ADDRESS(ROW();" + (ERG_TEAM_A_SPALTE + 1) + "))";
+		String cellB = "INDIRECT(ADDRESS(ROW();" + (ERG_TEAM_B_SPALTE + 1) + "))";
+		String gleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));" + cellA + "=" + cellB + ")";
+		ConditionalFormatHelper.from(this, ergebnisRange).formula1(gleicheWerte).operator(ConditionOperator.FORMULA)
+				.styleIsFehler().applyAndDoReset();
+		ConditionalFormatHelper.from(this, ergebnisRange)
+				.formulaIsEvenRow().style(geradeColor).applyAndDoReset();
+		ConditionalFormatHelper.from(this, ergebnisRange)
+				.formulaIsOddRow().style(unGeradeColor).applyAndDoReset();
+	}
+
+	/**
+	 * Setzt den Druckbereich über die gesamte Tabelle
+	 * (von BAHN_NR_SPALTE/ERSTE_HEADER_ZEILE bis ERG_TEAM_B_SPALTE/letzte Datenzeile, ohne Fehler-Spalte).
+	 */
+	private void druckBereichSetzen() throws GenerateException {
+		processBoxinfo("Druckbereich setzen");
+		Position letztePos = letztePositionRechtsUnten();
+		if (letztePos == null) {
+			return;
+		}
+		RangePosition druckBereich = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
+				Position.from(ERG_TEAM_B_SPALTE, letztePos.getZeile()));
+		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(druckBereich);
+	}
+
+	/**
+	 * Setzt Trennlinien:
+	 * <ul>
+	 *   <li>Doppelte Linie rechts von BAHN_NR_SPALTE (erste Spalte)</li>
+	 *   <li>Dicke Linie links von TEAM_B_SPALTE (Trennlinie A/B)</li>
+	 * </ul>
+	 * Muss nach allen anderen Formatierungen aufgerufen werden.
+	 */
+	private void trennlinienSetzen() throws GenerateException {
+		XSpreadsheet sheet = getXSpreadSheet();
+		Position letztePos = letztePositionRechtsUnten();
+		if (letztePos == null) {
+			return;
+		}
+		int letzteZeile = letztePos.getZeile();
+
+		// Doppelte Linie rechts von BAHN_NR_SPALTE
+		RangePosition bahnNrRange = RangePosition.from(BAHN_NR_SPALTE, ERSTE_HEADER_ZEILE,
+				BAHN_NR_SPALTE, letzteZeile);
+		getSheetHelper().setPropertyInRange(sheet, bahnNrRange, TABLE_BORDER2,
+				BorderFactory.from().allThin().doubleLn().forRight().toBorder());
+
+		// Dicke Trennlinie rechts von TEAM_B_SPALTE (zwischen B und Ergebnis)
+		RangePosition teamBRange = RangePosition.from(TEAM_B_SPALTE, ERSTE_HEADER_ZEILE,
+				TEAM_B_SPALTE, letzteZeile);
+		getSheetHelper().setPropertyInRange(sheet, teamBRange, TABLE_BORDER2,
+				BorderFactory.from().allThin().boldLn().forRight().toBorder());
+
+		// Dicke untere Linie für die gesamte zweite Header-Zeile (ohne Fehler-Spalte)
+		// Nur BottomLine setzen (IsBottomLineValid=true), andere Borders bleiben erhalten
+		RangePosition headerUntenRange = RangePosition.from(BAHN_NR_SPALTE, ZWEITE_HEADER_ZEILE,
+				ERG_TEAM_B_SPALTE, ZWEITE_HEADER_ZEILE);
+		getSheetHelper().setPropertyInRange(sheet, headerUntenRange, TABLE_BORDER2,
+				BorderFactory.from().boldLn().forBottom().toBorder());
+	}
+
+	/**
+	 * Fügt rechts neben den Ergebnisspalten eine Fehler-Spalte ein.
+	 * <p>
+	 * Pro Datenzeile wird eine Formel eingetragen, die „FEHLER" anzeigt, wenn:
+	 * <ul>
+	 *   <li>ein Ergebnis außerhalb 0–13 liegt</li>
+	 *   <li>beide Ergebnisse gleich sind (Unentschieden nicht erlaubt)</li>
+	 *   <li>genau eine der beiden Zellen leer ist</li>
+	 * </ul>
+	 */
+	private void fehlerSpalteFormatieren() throws GenerateException {
+		XSpreadsheet sheet = getXSpreadSheet();
+		Position letztePos = letztePositionRechtsUnten();
+		if (letztePos == null) {
+			return;
+		}
+		int letzteZeile = letztePos.getZeile();
+
+		getSheetHelper().setColumnWidth(sheet, Position.from(FEHLER_SPALTE, ERSTE_HEADER_ZEILE), 1800);
+
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String ergA = Position.from(ERG_TEAM_A_SPALTE, zeile).getAddress();
+			String ergB = Position.from(ERG_TEAM_B_SPALTE, zeile).getAddress();
+
+			// @formatter:off
+			String formel = "IF(OR(" +
+					"AND(ISBLANK(" + ergA + ");ISBLANK(" + ergB + "));" +
+					"AND(" + ergA + "<14;" + ergB + "<14;" + ergA + ">-1;" + ergB + ">-1;" + ergA + "<>" + ergB + ")" +
+					");\"\";\"FEHLER\")";
+			// @formatter:on
+
+			StringCellValue cv = StringCellValue
+					.from(sheet, Position.from(FEHLER_SPALTE, zeile), formel)
+					.setCharColor(ColorHelper.CHAR_COLOR_RED)
+					.setCharWeight(FontWeight.BOLD)
+					.setCharHeight(14)
+					.setHoriJustify(CellHoriJustify.CENTER);
+			getSheetHelper().setFormulaInCell(cv);
+		}
 	}
 
 	/**
@@ -421,7 +568,10 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 		teamPaarungenEinfuegen(paarungen);
 		datenErsteSpalte(); // BahnNr
 		datenformatieren();
+		fehlerSpalteFormatieren();
 		header();
+		trennlinienSetzen();
+		druckBereichSetzen();
 
 		return true;
 	}

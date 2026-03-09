@@ -19,6 +19,7 @@ import com.google.common.collect.Lists;
 
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 
 /**
  * Implementiert die Logik für ein Turnier nach Schweizer System.
@@ -64,6 +65,28 @@ public class SchweizerSystem {
 				.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed());
 
 		return ergebnisse.stream().sorted(comparator).collect(Collectors.toList());
+	}
+
+	/**
+	 * Sortiert nach Auswertungskriterien mit wählbarem Modus.
+	 * <p>
+	 * Bei {@code OHNE_BUCHHOLZ}: Siege → Punktedifferenz → Punkte+<br>
+	 * Bei {@code MIT_BUCHHOLZ}: delegiert an {@link #sortiereNachAuswertungskriterien(List)}.
+	 *
+	 * @param ergebnisse die Teamergebnisse
+	 * @param modus      gewünschter Ranking-Modus
+	 * @return sortierte Liste
+	 */
+	public List<SchweizerTeamErgebnis> sortiereNachAuswertungskriterien(List<SchweizerTeamErgebnis> ergebnisse,
+			SchweizerRankingModus modus) {
+		if (modus == SchweizerRankingModus.OHNE_BUCHHOLZ) {
+			return ergebnisse.stream()
+					.sorted(Comparator.comparingInt(SchweizerTeamErgebnis::siege).reversed()
+							.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::punktedifferenz).reversed())
+							.thenComparing(Comparator.comparingInt(SchweizerTeamErgebnis::erzieltePunkte).reversed()))
+					.collect(Collectors.toList());
+		}
+		return sortiereNachAuswertungskriterien(ergebnisse);
 	}
 
 	/**

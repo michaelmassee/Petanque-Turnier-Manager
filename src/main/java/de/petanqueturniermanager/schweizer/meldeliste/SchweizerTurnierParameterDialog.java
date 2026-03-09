@@ -29,6 +29,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
@@ -49,13 +50,15 @@ public class SchweizerTurnierParameterDialog {
 		public final boolean teamnameAnzeigen;
 		public final boolean vereinsnameAnzeigen;
 		public final SpielplanTeamAnzeige spielplanTeamAnzeige;
+		public final SchweizerRankingModus rankingModus;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-				SpielplanTeamAnzeige spielplanTeamAnzeige) {
+				SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
 			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
 			this.spielplanTeamAnzeige = spielplanTeamAnzeige;
+			this.rankingModus = rankingModus;
 		}
 	}
 
@@ -76,8 +79,8 @@ public class SchweizerTurnierParameterDialog {
 	 * @return Optional mit TurnierParameter bei OK, leer bei Abbrechen
 	 */
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
-			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige)
-			throws com.sun.star.uno.Exception {
+			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige,
+			SchweizerRankingModus defaultRankingModus) throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
 
@@ -90,7 +93,7 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(167));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(200));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -136,8 +139,17 @@ public class SchweizerTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep3", 5, 137, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 141, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 141, 60, 14);
+		addFixedLine(xMSF, cont, "sep4", 5, 139, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 143, 140, 10);
+		addRadioButton(xMSF, cont, "radioMitBuchholz",
+				"Mit Buchholz (Standard)", 8, 155, 140, 10,
+				defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
+		addRadioButton(xMSF, cont, "radioOhneBuchholz",
+				"Ohne Buchholz", 8, 167, 140, 10,
+				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
+
+		addButton(xMSF, cont, "btnOk", "OK", 22, 181, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 181, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -181,7 +193,10 @@ public class SchweizerTurnierParameterDialog {
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			SpielplanTeamAnzeige spielplanAnzeige = isRadioSelected(xcc, "radioSpielplanName")
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
-			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige));
+			SchweizerRankingModus rankingModus = isRadioSelected(xcc, "radioOhneBuchholz")
+					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
+			result = Optional.of(
+					new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige, rankingModus));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();

@@ -23,6 +23,18 @@ Ab der zweiten Runde spielt man idealerweise immer gegen Gegner, die in etwa gle
 
 > **Hinweis:** Manchmal tauscht die Turnierleitung die Kriterien 2 und 4, sodass die Punktedifferenz vor der Gegnerstärke zählt. Bei professionellen Turnieren wird der Buchholz-Wertung aber meist der Vorzug gegeben, da es schwerer ist, gegen einen starken Gegner knapp zu gewinnen, als einen schwachen Gegner hoch (z. B. 13:0) zu schlagen.
 
+### Variante: Ohne Buchholz (`OHNE_BUCHHOLZ`)
+
+Bei kleineren oder informellen Pétanque-Turnieren wird die Buchholz-Wertung häufig weggelassen. In diesem Modus gilt:
+
+| Rang | Kriterium | Beschreibung |
+|------|-----------|--------------|
+| 1 | **Anzahl der Siege** | Hauptkriterium |
+| 2 | **Punktedifferenz** | Erzielte minus kassierte Punkte |
+| 3 | **Punkte+** | Summe aller erzielten Punkte |
+
+In der Konfiguration (Sidebar oder Startdialog) kann zwischen den Modi **Mit Buchholz (Standard)** und **Ohne Buchholz** gewählt werden. Bei „Ohne Buchholz" werden die BHZ- und FBHZ-Spalten in der Rangliste ausgeblendet.
+
 ---
 
 ## Die Paarungsregeln

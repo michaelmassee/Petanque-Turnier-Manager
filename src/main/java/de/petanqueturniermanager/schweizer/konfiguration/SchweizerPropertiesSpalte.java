@@ -44,6 +44,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	private static final String KONFIG_PROP_MELDELISTE_TEAMNAME = "Meldeliste Teamname";
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
+	private static final String KONFIG_PROP_RANKING_MODUS = "Schweizer Ranking Modus";
 
 	static {
 
@@ -95,6 +96,14 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.setDescription("Anzeige in Spielplan/Rangliste.\r\nNR=Teamnummer\r\nNAME=Teamname"))
 				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
 				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANKING_MODUS)
+				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
+				.setDescription("Ranking-Modus für Rangliste und Paarungsreihenfolge.\r\n"
+						+ "MIT_BUCHHOLZ=Siege → BHZ → FBHZ → Diff → Punkte+\r\n"
+						+ "OHNE_BUCHHOLZ=Siege → Diff → Punkte+"))
+				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), "Mit Buchholz (Standard)")
+				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(), "Ohne Buchholz").inSideBar());
 
 	}
 
@@ -217,6 +226,21 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
 		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
+	}
+
+	@Override
+	public SchweizerRankingModus getRankingModus() {
+		String val = readStringProperty(KONFIG_PROP_RANKING_MODUS);
+		try {
+			return SchweizerRankingModus.valueOf(val);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			return SchweizerRankingModus.MIT_BUCHHOLZ;
+		}
+	}
+
+	@Override
+	public void setRankingModus(SchweizerRankingModus modus) {
+		setStringProperty(KONFIG_PROP_RANKING_MODUS, modus.name());
 	}
 
 }

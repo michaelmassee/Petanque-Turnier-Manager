@@ -133,6 +133,9 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		// ------
 		// Setzposition
 		var columnProp = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(800);
+
+
+
 		var bezCelVal = StringCellValue
 				.from(getXSpreadSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
 				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")

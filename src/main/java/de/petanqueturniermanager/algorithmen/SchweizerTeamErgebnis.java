@@ -10,7 +10,9 @@ import java.util.List;
  * @param teamNr          Nummer des Teams
  * @param siege           Anzahl gewonnener Spiele (Hauptkriterium)
  * @param punktedifferenz  Erzielte minus kassierte Punkte (über alle Spiele)
+ * @param erzieltePunkte  Erzielte Punkte (Punkte+, für Ranking ohne Buchholz)
  * @param gegnerNrn       Team-Nummern aller bisherigen Gegner (für BHZ/FBHZ-Berechnung)
  */
-public record SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, List<Integer> gegnerNrn) {
+public record SchweizerTeamErgebnis(int teamNr, int siege, int punktedifferenz, int erzieltePunkte,
+		List<Integer> gegnerNrn) {
 }

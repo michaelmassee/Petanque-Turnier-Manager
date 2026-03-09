@@ -166,4 +166,14 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
 	}
 
+	@Override
+	public SchweizerRankingModus getRankingModus() {
+		return propertiesSpalte.getRankingModus();
+	}
+
+	@Override
+	public void setRankingModus(SchweizerRankingModus modus) {
+		propertiesSpalte.setRankingModus(modus);
+	}
+
 }
