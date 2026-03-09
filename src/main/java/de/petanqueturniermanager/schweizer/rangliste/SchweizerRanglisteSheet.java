@@ -20,6 +20,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.rangliste.IRangliste;
+import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -28,12 +31,14 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
@@ -52,7 +57,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *   <li>Punktedifferenz (absteigend)</li>
  * </ol>
  */
-public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
+public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, IRangliste {
 
 	private static final Logger LOGGER = LogManager.getLogger(SchweizerRanglisteSheet.class);
 
@@ -85,7 +90,7 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 		}
 
 		SchweizerTeamErgebnis toErgebnis() {
-			return new SchweizerTeamErgebnis(teamNr, siege, punkteDiff(), gegnerNrn);
+			return new SchweizerTeamErgebnis(teamNr, siege, punkteDiff(), punktePlus, gegnerNrn);
 		}
 	}
 
@@ -131,12 +136,14 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 		}
 
 		int bisSpielrunde = getKonfigurationSheet().getAktiveSpielRunde().getNr();
+		SchweizerRankingModus modus = getKonfigurationSheet().getRankingModus();
 		List<TeamRanglisteData> ranglisteData = leseAlleSpielergebnisse(aktiveMeldungen, bisSpielrunde, meldeliste);
 
 		List<SchweizerTeamErgebnis> ergebnisse = ranglisteData.stream()
 				.map(TeamRanglisteData::toErgebnis)
 				.collect(Collectors.toList());
-		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem().sortiereNachAuswertungskriterien(ergebnisse);
+		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem().sortiereNachAuswertungskriterien(ergebnisse,
+				modus);
 
 		// BHZ (Buchholz) = Summe der Siege aller Gegner
 		Map<Integer, Integer> siegeMap = ergebnisse.stream()
@@ -157,8 +164,23 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 		Map<Integer, TeamRanglisteData> dataByNr = ranglisteData.stream()
 				.collect(Collectors.toMap(TeamRanglisteData::teamNr, d -> d));
 
-		insertHeader(sheet);
+		insertHeader(sheet, modus);
 		insertDaten(sheet, sortiert, dataByNr, bhzMap, fbhzMap, meldeliste);
+
+		if (!sortiert.isEmpty()) {
+			new RangListeSpalte(PLATZ_SPALTE, this).upDateRanglisteSpalte();
+		}
+
+		// Zebra-Formatierung für Datenbereich
+		if (!sortiert.isEmpty()) {
+			int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+			RangePosition datenRange = RangePosition.from(PLATZ_SPALTE, ERSTE_DATEN_ZEILE,
+					PUNKTE_DIFF_SPALTE, letzteZeile);
+			RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
+					.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
+					.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
+					.apply();
+		}
 
 		getSheetHelper().setActiveSheet(sheet);
 	}
@@ -253,14 +275,15 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 		return 0;
 	}
 
-	private void insertHeader(XSpreadsheet sheet) throws GenerateException {
+	private void insertHeader(XSpreadsheet sheet, SchweizerRankingModus modus) throws GenerateException {
 		Integer headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
+		boolean ohneBuchholz = modus == SchweizerRankingModus.OHNE_BUCHHOLZ;
 
 		String[] headers = { "Pl.", "Nr", "Name", "Siege", "BHZ", "FBHZ", "Punkte+", "Punkte-", "Diff" };
 		int[] cols = { PLATZ_SPALTE, TEAM_NR_SPALTE, TEAM_NAME_SPALTE, SIEGE_SPALTE,
 				BHZ_SPALTE, FBHZ_SPALTE, PUNKTE_PLUS_SPALTE, PUNKTE_MINUS_SPALTE, PUNKTE_DIFF_SPALTE };
 		int[] widths = { COL_WIDTH_NR, COL_WIDTH_NR, COL_WIDTH_NAME,
-				COL_WIDTH_DATA, COL_WIDTH_DATA, COL_WIDTH_DATA,
+				COL_WIDTH_DATA, ohneBuchholz ? 0 : COL_WIDTH_DATA, ohneBuchholz ? 0 : COL_WIDTH_DATA,
 				COL_WIDTH_DATA, COL_WIDTH_DATA, COL_WIDTH_DATA };
 
 		for (int i = 0; i < cols.length; i++) {
@@ -281,7 +304,6 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 			Map<Integer, Integer> bhzMap, Map<Integer, Integer> fbhzMap,
 			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
 
-		int platz = 1;
 		int zeile = ERSTE_DATEN_ZEILE;
 		for (SchweizerTeamErgebnis erg : sortiert) {
 			TeamRanglisteData data = dataByNr.get(erg.teamNr());
@@ -292,7 +314,6 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 			String name = meldeliste.getTeamNameByNr(erg.teamNr());
 			if (name == null) name = "";
 
-			schreibeZahl(sheet, zeile, PLATZ_SPALTE,        platz);
 			schreibeZahl(sheet, zeile, TEAM_NR_SPALTE,      erg.teamNr());
 			schreibeText(sheet, zeile, TEAM_NAME_SPALTE,    name);
 			schreibeZahl(sheet, zeile, SIEGE_SPALTE,        erg.siege());
@@ -302,10 +323,77 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet {
 			schreibeZahl(sheet, zeile, PUNKTE_MINUS_SPALTE, data.punkteMinus());
 			schreibeZahl(sheet, zeile, PUNKTE_DIFF_SPALTE,  data.punkteDiff());
 
-			platz++;
 			zeile++;
 		}
 	}
+
+	// ── IRangliste ──────────────────────────────────────────────────────────────
+
+	@Override
+	public int getErsteDatenZiele() throws GenerateException {
+		return ERSTE_DATEN_ZEILE;
+	}
+
+	@Override
+	public int getErsteSpalte() throws GenerateException {
+		return TEAM_NR_SPALTE;
+	}
+
+	@Override
+	public int getLetzteSpalte() throws GenerateException {
+		return PUNKTE_DIFF_SPALTE;
+	}
+
+	@Override
+	public int getErsteSummeSpalte() throws GenerateException {
+		return SIEGE_SPALTE;
+	}
+
+	@Override
+	public int getManuellSortSpalte() throws GenerateException {
+		return -1;
+	}
+
+	@Override
+	public int validateSpalte() throws GenerateException {
+		return -1;
+	}
+
+	@Override
+	public void calculateAll() {
+		// nicht benötigt
+	}
+
+	@Override
+	public List<Position> getRanglisteSpalten() throws GenerateException {
+		SchweizerRankingModus modus = getKonfigurationSheet().getRankingModus();
+		List<Position> spalten = new ArrayList<>();
+		spalten.add(Position.from(SIEGE_SPALTE, ERSTE_DATEN_ZEILE));
+		if (modus != SchweizerRankingModus.OHNE_BUCHHOLZ) {
+			spalten.add(Position.from(BHZ_SPALTE, ERSTE_DATEN_ZEILE));
+			spalten.add(Position.from(FBHZ_SPALTE, ERSTE_DATEN_ZEILE));
+		}
+		spalten.add(Position.from(PUNKTE_DIFF_SPALTE, ERSTE_DATEN_ZEILE));
+		return spalten;
+	}
+
+	@Override
+	public int sucheLetzteZeileMitSpielerNummer() throws GenerateException {
+		var searchProp = new java.util.HashMap<String, Object>();
+		searchProp.put(RangeSearchHelper.SEARCH_BACKWARDS, true);
+		Position result = RangeSearchHelper
+				.from(this, RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NR_SPALTE,
+						ERSTE_DATEN_ZEILE + 999))
+				.searchNachRegExprInSpalte("^\\d", searchProp);
+		return result != null ? result.getZeile() : ERSTE_DATEN_ZEILE;
+	}
+
+	@Override
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return sucheLetzteZeileMitSpielerNummer();
+	}
+
+	// ── Hilfsmethoden ────────────────────────────────────────────────────────────
 
 	private void schreibeZahl(XSpreadsheet sheet, int zeile, int spalte, int wert) throws GenerateException {
 		getSheetHelper().setNumberValueInCell(
