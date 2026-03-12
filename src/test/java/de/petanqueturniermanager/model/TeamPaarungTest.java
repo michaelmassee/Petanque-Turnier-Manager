@@ -26,6 +26,8 @@ public class TeamPaarungTest {
 		TeamPaarung paarung = new TeamPaarung(teamA, Optional.empty());
 		assertThat(paarung.getA()).isEqualTo(teamA);
 		assertThat(paarung.getB()).isNull();
+		assertThat(paarung.isFreilos()).isTrue();
+		assertThat(paarung.hasB()).isFalse();
 	}
 
 	@Test

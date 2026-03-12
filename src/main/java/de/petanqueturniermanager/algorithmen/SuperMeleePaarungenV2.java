@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -77,6 +78,8 @@ public class SuperMeleePaarungenV2 {
     private static final int DUMMY_SPIELER_START_NR = 10000;
     /** SetzPos der Dummy-Spieler; verhindert via {@code gleicheSetzPos}, dass zwei Dummies ins selbe Team gelost werden. */
     private static final int DUMMY_SPIELER_SETZPOS = 999;
+    /** Maximale Anzahl Backtracking-Knoten als Sicherheitsnetz gegen Endlossuche. */
+    private static final int MAX_BACKTRACK_KNOTEN = 10_000_000;
 
     // =========================================================================
     // Öffentliche API — kompatibel zu SuperMeleePaarungen (V1)
@@ -102,8 +105,8 @@ public class SuperMeleePaarungenV2 {
      * @param rndNr        Rundennummer
      * @param meldungen    Liste aller gemeldeten Spieler
      * @param nurTriplette {@code true}: nur reine Triplette-Runde erzwingen
-     * @return fertig ausgeloste Spielrunde, oder {@code null} bei ungültiger Spieleranzahl
-     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist
+     * @return fertig ausgeloste Spielrunde
+     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist oder die Spieleranzahl ungültig ist
      */
     public MeleeSpielRunde neueSpielrundeDoubletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurTriplette)
             throws AlgorithmenException {
@@ -111,7 +114,8 @@ public class SuperMeleePaarungenV2 {
         SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Doublette);
 
         if (!teamRechner.valideAnzahlSpieler()) {
-            return null;
+            throw new AlgorithmenException(
+                    "Ungültige Spieleranzahl für Doublette-Modus: " + meldungen.spieler().size());
         }
         if (nurTriplette && !teamRechner.isNurTripletteMoeglich()) {
             throw new AlgorithmenException("Keine Triplette Spielrunde möglich");
@@ -131,8 +135,8 @@ public class SuperMeleePaarungenV2 {
      * @param rndNr        Rundennummer
      * @param meldungen    Liste aller gemeldeten Spieler
      * @param nurDoublette {@code true}: nur reine Doublette-Runde erzwingen
-     * @return fertig ausgeloste Spielrunde, oder {@code null} bei ungültiger Spieleranzahl
-     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist
+     * @return fertig ausgeloste Spielrunde
+     * @throws AlgorithmenException wenn keine gültige Paarung möglich ist oder die Spieleranzahl ungültig ist
      */
     public MeleeSpielRunde neueSpielrundeTripletteMode(int rndNr, SpielerMeldungen meldungen, boolean nurDoublette)
             throws AlgorithmenException {
@@ -140,7 +144,8 @@ public class SuperMeleePaarungenV2 {
         SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Triplette);
 
         if (!teamRechner.valideAnzahlSpieler()) {
-            return null;
+            throw new AlgorithmenException(
+                    "Ungültige Spieleranzahl für Triplette-Modus: " + meldungen.spieler().size());
         }
         if (nurDoublette && !teamRechner.isNurDoubletteMoeglich()) {
             throw new AlgorithmenException("Keine Doublette Spielrunde möglich");
@@ -153,13 +158,76 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Sortiert die Teams nach Größe und validiert die Spieler-Team-Zuordnung.
+     * Sortiert die Teams nach Größe, validiert die Spieler-Team-Zuordnung und
+     * optimiert die Gegner-Paarung (2. Rang: Gegner-Wiederholungen minimieren).
      * Wird von allen öffentlichen Methoden nach der Generierung aufgerufen.
      */
     private MeleeSpielRunde finalizeRunde(MeleeSpielRunde spielRunde) throws AlgorithmenException {
         spielRunde.sortiereTeamsNachGroese();
         spielRunde.validateSpielerTeam(null);
+        optimiereGegnerPaarung(spielRunde);
         return spielRunde;
+    }
+
+    /**
+     * Ordnet die Teams so um, dass Gegner-Wiederholungen minimiert werden (2. Rang).<br>
+     * <br>
+     * Greedy-Algorithmus: Nimm jeweils das erste ungepaarte Team, wähle als Gegner das
+     * ungepaarte Team mit dem geringsten Gegner-Score. Nach der Umsortierung werden die
+     * Gegner paarweise in die Spieler-Objekte eingetragen ({@link Spieler#addGegner}).
+     *
+     * @param spielRunde die zu optimierende Spielrunde (Teams bereits nach Größe sortiert)
+     */
+    private void optimiereGegnerPaarung(MeleeSpielRunde spielRunde) throws AlgorithmenException {
+        List<Team> unpaired = new ArrayList<>(spielRunde.teams());
+        List<Team> ergebnis = new ArrayList<>(unpaired.size());
+
+        while (!unpaired.isEmpty()) {
+            Team team1 = unpaired.remove(0);
+            Team besteGegner = unpaired.stream()
+                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
+                    .orElse(null);
+            ergebnis.add(team1);
+            if (besteGegner != null) {
+                unpaired.remove(besteGegner);
+                ergebnis.add(besteGegner);
+            }
+        }
+
+        spielRunde.setzeTeamReihenfolge(ergebnis);
+
+        if (ergebnis.size() % 2 != 0) {
+            throw new AlgorithmenException(
+                    "Ungerade Teamanzahl (" + ergebnis.size() + ") in optimiereGegnerPaarung – " +
+                    "SuperMeleeTeamRechner muss immer eine gerade Anzahl Teams liefern.");
+        }
+
+        // Gegner paarweise eintragen: ergebnis[2i] vs ergebnis[2i+1]
+        for (int i = 0; i < ergebnis.size() - 1; i += 2) {
+            Team teamA = ergebnis.get(i);
+            Team teamB = ergebnis.get(i + 1);
+            for (Spieler sA : teamA.spieler()) {
+                for (Spieler sB : teamB.spieler()) {
+                    sA.addGegner(sB);
+                }
+            }
+        }
+    }
+
+    /**
+     * Berechnet den Gegner-Score zweier Teams: Anzahl der Spielerpaare (sA, sB),
+     * bei denen {@code sA.warGegnerVon(sB)} gilt — je höher, desto mehr Wiederholungen.
+     */
+    private int berechneGegnerScore(Team team1, Team team2) {
+        int score = 0;
+        for (Spieler s1 : team1.spieler()) {
+            for (Spieler s2 : team2.spieler()) {
+                if (s1.warGegnerVon(s2)) {
+                    score++;
+                }
+            }
+        }
+        return score;
     }
 
     // =========================================================================
@@ -265,8 +333,18 @@ public class SuperMeleePaarungenV2 {
             teams.add(new ArrayList<>(teamSize));
         }
 
-        if (backtrack(order, 0, teams, teamSize, matrix)) {
+        int[] knotenZaehler = {0};
+        if (backtrack(order, 0, teams, teamSize, matrix, knotenZaehler)) {
             return buildSpielRunde(rndNr, teams, spieler, meldungen);
+        }
+
+        if (knotenZaehler[0] >= MAX_BACKTRACK_KNOTEN) {
+            logger.warn("Spielrunde {}: Knotenlimit ({}) erreicht nach {} Knoten ({} Spieler).",
+                    rndNr, MAX_BACKTRACK_KNOTEN, knotenZaehler[0], n);
+            throw new AlgorithmenException(
+                    "Keine gültige Spielrunde für Runde " + rndNr + " möglich — "
+                    + "Knotenlimit (" + MAX_BACKTRACK_KNOTEN + ") erreicht. "
+                    + "Möglicherweise müssen Wiederholungen in den Regeln zugelassen werden.");
         }
 
         logger.warn("Spielrunde {}: Alle möglichen Spielerkombinationen ausgeschöpft ({} Spieler).",
@@ -298,17 +376,22 @@ public class SuperMeleePaarungenV2 {
      *       nicht zugewiesenen Spieler mindestens einen validen Team-Slot haben.</li>
      * </ul>
      *
-     * @param order    MCV-sortierte Original-Indizes (stärker eingeschränkt → früher)
-     * @param idx      aktuelle Position in {@code order}
-     * @param teams    partielle Team-Zuweisung als Index-Listen (in-place, rückgängig gemacht)
-     * @param teamSize Zielgröße jedes Teams
-     * @param matrix   vorberechnete Adjazenz-Matrix; {@code matrix[i][j]==true} bedeutet Konflikt
+     * @param order         MCV-sortierte Original-Indizes (stärker eingeschränkt → früher)
+     * @param idx           aktuelle Position in {@code order}
+     * @param teams         partielle Team-Zuweisung als Index-Listen (in-place, rückgängig gemacht)
+     * @param teamSize      Zielgröße jedes Teams
+     * @param matrix        vorberechnete Adjazenz-Matrix; {@code matrix[i][j]==true} bedeutet Konflikt
+     * @param knotenZaehler einelementiges Array zum Mitzählen der Backtracking-Knoten (Safety-Limit)
      * @return {@code true} wenn eine vollständige gültige Zuweisung gefunden wurde
      */
     private boolean backtrack(Integer[] order, int idx, List<List<Integer>> teams,
-            int teamSize, boolean[][] matrix) {
+            int teamSize, boolean[][] matrix, int[] knotenZaehler) {
         if (idx == order.length) {
             return true; // Alle Spieler erfolgreich zugewiesen
+        }
+
+        if (++knotenZaehler[0] >= MAX_BACKTRACK_KNOTEN) {
+            return false; // Sicherheitsnetz: Knotenlimit erreicht
         }
 
         int currentOrigIdx = order[idx];
@@ -329,8 +412,9 @@ public class SuperMeleePaarungenV2 {
 
             if (kannTeamBeitreten(currentOrigIdx, team, matrix)) {
                 team.add(currentOrigIdx);
-                if (vorwaertsCheck(order, idx + 1, teams, teamSize, matrix)
-                        && backtrack(order, idx + 1, teams, teamSize, matrix)) {
+                boolean teamVoll = (team.size() >= teamSize);
+                if (vorwaertsCheckInkrementell(currentOrigIdx, order, idx + 1, teams, teamSize, matrix, teamVoll)
+                        && backtrack(order, idx + 1, teams, teamSize, matrix, knotenZaehler)) {
                     return true;
                 }
                 team.remove(team.size() - 1); // Backtrack: Zuweisung rückgängig machen
@@ -364,22 +448,35 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Forward-Checking: Prüft, ob jeder noch nicht zugewiesene Spieler mindestens
-     * einen gültigen Team-Slot hat (hinreichende Bedingung für Fortsetzbarkeit).<br>
-     * Erkennt Sackgassen frühzeitig und reduziert damit die Backtracking-Tiefe erheblich,
-     * insbesondere bei dichter Spielhistorie in späten Runden.
+     * Inkrementelles Forward-Checking: Prüft nur die Spieler, die von der soeben
+     * erfolgten Zuweisung von {@code zugewiesenerIdx} betroffen sein können.<br>
+     * <br>
+     * Ein zukünftiger Spieler {@code x} kann nur dann einen Slot verloren haben, wenn
+     * {@code matrix[zugewiesenerIdx][x] == true} (direkter Konflikt) oder das Team durch
+     * die Zuweisung voll geworden ist (kein Slot im gerade befüllten Team mehr frei).<br>
+     * <br>
+     * Im Normalfall (Team noch nicht voll) werden nur Spieler mit direktem Konflikt geprüft
+     * — typischerweise deutlich weniger als alle verbleibenden Spieler.<br>
+     * Wenn das Team voll wurde, muss jeder verbleibende Spieler neu geprüft werden, da
+     * dieser Slot nun für alle gesperrt ist (Fallback auf vollständigen Check).
      *
-     * @param order    MCV-sortierte Indizes
-     * @param startIdx Index des ersten noch nicht zugewiesenen Spielers
-     * @param teams    aktuelle partielle Team-Zuweisung
-     * @param teamSize Zielgröße jedes Teams
-     * @param matrix   vorberechnete Adjazenz-Matrix
-     * @return {@code false} wenn mindestens ein Spieler keinen gültigen Slot hat
+     * @param zugewiesenerIdx  Original-Index des soeben zugewiesenen Spielers
+     * @param order            MCV-sortierte Indizes
+     * @param startIdx         Index des ersten noch nicht zugewiesenen Spielers
+     * @param teams            aktuelle partielle Team-Zuweisung
+     * @param teamSize         Zielgröße jedes Teams
+     * @param matrix           vorberechnete Adjazenz-Matrix
+     * @param teamWurdeVoll    {@code true} wenn das Team durch die Zuweisung seine Zielgröße erreicht hat
+     * @return {@code false} wenn mindestens ein betroffener Spieler keinen gültigen Slot mehr hat
      */
-    private boolean vorwaertsCheck(Integer[] order, int startIdx, List<List<Integer>> teams,
-            int teamSize, boolean[][] matrix) {
+    private boolean vorwaertsCheckInkrementell(int zugewiesenerIdx, Integer[] order, int startIdx,
+            List<List<Integer>> teams, int teamSize, boolean[][] matrix, boolean teamWurdeVoll) {
         for (int i = startIdx; i < order.length; i++) {
             int futureSpielerIdx = order[i];
+            // Nur prüfen wenn: direkter Konflikt ODER Team wurde voll (Slot für alle verloren)
+            if (!teamWurdeVoll && !matrix[zugewiesenerIdx][futureSpielerIdx]) {
+                continue;
+            }
             boolean kannPlatziert = false;
             for (List<Integer> team : teams) {
                 if (team.size() < teamSize && kannTeamBeitreten(futureSpielerIdx, team, matrix)) {

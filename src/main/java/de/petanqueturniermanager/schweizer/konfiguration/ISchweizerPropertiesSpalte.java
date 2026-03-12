@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
@@ -37,5 +38,25 @@ public interface ISchweizerPropertiesSpalte {
 	SpielrundeSpielbahn getSpielrundeSpielbahn();
 
 	void setSpielrundeSpielbahn(SpielrundeSpielbahn option);
+
+	Formation getMeldeListeFormation();
+
+	boolean isMeldeListeTeamnameAnzeigen();
+
+	boolean isMeldeListeVereinsnameAnzeigen();
+
+	void setMeldeListeFormation(Formation formation);
+
+	void setMeldeListeTeamnameAnzeigen(boolean anzeigen);
+
+	void setMeldeListeVereinsnameAnzeigen(boolean anzeigen);
+
+	SpielplanTeamAnzeige getSpielplanTeamAnzeige();
+
+	void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige);
+
+	SchweizerRankingModus getRankingModus();
+
+	void setRankingModus(SchweizerRankingModus modus);
 
 }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
@@ -39,6 +40,12 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER = "Spielrunde Header";
 	private static final String KONFIG_PROP_SPIELRUNDE_SPIELBAHN = "Spielrunde Spielbahn";
 
+	private static final String KONFIG_PROP_MELDELISTE_FORMATION = "Meldeliste Formation";
+	private static final String KONFIG_PROP_MELDELISTE_TEAMNAME = "Meldeliste Teamname";
+	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
+	private static final String KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE = "Spielplan Team Anzeige";
+	private static final String KONFIG_PROP_RANKING_MODUS = "Schweizer Ranking Modus";
+
 	static {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -68,6 +75,35 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
 				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
+				.setDefaultVal(Formation.TRIPLETTE.name())
+				.setDescription("Formation der Meldeliste.\r\nTETE=1 Spieler\r\nDOUBLETTE=2 Spieler\r\nTRIPLETTE=3 Spieler"))
+				.addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
+				.addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
+				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
+				.setDefaultVal("J").setDescription("Teamname-Spalte in Meldeliste anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
+				.setDefaultVal("N").setDescription("Vereinsname-Spalte pro Spieler anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
+				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
+				.setDescription("Anzeige in Spielplan/Rangliste.\r\nNR=Teamnummer\r\nNAME=Teamname"))
+				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANKING_MODUS)
+				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
+				.setDescription("Ranking-Modus für Rangliste und Paarungsreihenfolge.\r\n"
+						+ "MIT_BUCHHOLZ=Siege → BHZ → FBHZ → Diff → Punkte+\r\n"
+						+ "OHNE_BUCHHOLZ=Siege → Diff → Punkte+"))
+				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), "Mit Buchholz (Standard)")
+				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(), "Ohne Buchholz").inSideBar());
 
 	}
 
@@ -143,6 +179,68 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public Integer getSpielRundeHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER);
+	}
+
+	@Override
+	public Formation getMeldeListeFormation() {
+		String val = readStringProperty(KONFIG_PROP_MELDELISTE_FORMATION);
+		Formation formation = Formation.valueOf(val);
+		return formation != null ? formation : Formation.TRIPLETTE;
+	}
+
+	@Override
+	public boolean isMeldeListeTeamnameAnzeigen() {
+		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME));
+	}
+
+	@Override
+	public boolean isMeldeListeVereinsnameAnzeigen() {
+		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME));
+	}
+
+	@Override
+	public void setMeldeListeFormation(Formation formation) {
+		setStringProperty(KONFIG_PROP_MELDELISTE_FORMATION, formation.name());
+	}
+
+	@Override
+	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
+		setStringProperty(KONFIG_PROP_MELDELISTE_TEAMNAME, anzeigen ? "J" : "N");
+	}
+
+	@Override
+	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
+		setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+	}
+
+	@Override
+	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+		String val = readStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE);
+		try {
+			return SpielplanTeamAnzeige.valueOf(val);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			return SpielplanTeamAnzeige.NR;
+		}
+	}
+
+	@Override
+	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+		setStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, anzeige.name());
+	}
+
+	@Override
+	public SchweizerRankingModus getRankingModus() {
+		String val = readStringProperty(KONFIG_PROP_RANKING_MODUS);
+		try {
+			return SchweizerRankingModus.valueOf(val);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			return SchweizerRankingModus.MIT_BUCHHOLZ;
+		}
+	}
+
+	@Override
+	public void setRankingModus(SchweizerRankingModus modus) {
+		setStringProperty(KONFIG_PROP_RANKING_MODUS, modus.name());
 	}
 
 }

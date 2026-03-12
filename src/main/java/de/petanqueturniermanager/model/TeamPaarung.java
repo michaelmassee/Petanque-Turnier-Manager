@@ -215,6 +215,11 @@ public class TeamPaarung implements Cloneable {
 		return b.isPresent();
 	}
 
+	/** @return true wenn diese Paarung ein Freilos ist (kein Team B vorhanden) */
+	public boolean isFreilos() {
+		return !b.isPresent();
+	}
+
 	/**
 	 * flag entfernen
 	 */

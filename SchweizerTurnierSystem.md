@@ -17,11 +17,23 @@ Ab der zweiten Runde spielt man idealerweise immer gegen Gegner, die in etwa gle
 | 1 | **Anzahl der Siege** | Hauptkriterium |
 | 2 | **Buchholz (BHZ)** | Summe der Siege aller Gegner |
 | 3 | **Feinbuchholz (FBHZ)** | Summe der BHZ-Werte aller Gegner |
-| 4 | **Kugeldifferenz** | Erzielte minus kassierte Punkte (über alle Spiele) |
+| 4 | **Punktedifferenz** | Erzielte minus kassierte Punkte (über alle Spiele) |
 | 5 | **Direktvergleich** | Ergebnis aus dem direkten Aufeinandertreffen |
 | 6 | **Los** | Letztes Mittel bei vollständigem Gleichstand |
 
-> **Hinweis:** Manchmal tauscht die Turnierleitung die Kriterien 2 und 4, sodass die Kugeldifferenz vor der Gegnerstärke zählt. Bei professionellen Turnieren wird der Buchholz-Wertung aber meist der Vorzug gegeben, da es schwerer ist, gegen einen starken Gegner knapp zu gewinnen, als einen schwachen Gegner hoch (z. B. 13:0) zu schlagen.
+> **Hinweis:** Manchmal tauscht die Turnierleitung die Kriterien 2 und 4, sodass die Punktedifferenz vor der Gegnerstärke zählt. Bei professionellen Turnieren wird der Buchholz-Wertung aber meist der Vorzug gegeben, da es schwerer ist, gegen einen starken Gegner knapp zu gewinnen, als einen schwachen Gegner hoch (z. B. 13:0) zu schlagen.
+
+### Variante: Ohne Buchholz (`OHNE_BUCHHOLZ`)
+
+Bei kleineren oder informellen Pétanque-Turnieren wird die Buchholz-Wertung häufig weggelassen. In diesem Modus gilt:
+
+| Rang | Kriterium | Beschreibung |
+|------|-----------|--------------|
+| 1 | **Anzahl der Siege** | Hauptkriterium |
+| 2 | **Punktedifferenz** | Erzielte minus kassierte Punkte |
+| 3 | **Punkte+** | Summe aller erzielten Punkte |
+
+In der Konfiguration (Sidebar oder Startdialog) kann zwischen den Modi **Mit Buchholz (Standard)** und **Ohne Buchholz** gewählt werden. Bei „Ohne Buchholz" werden die BHZ- und FBHZ-Spalten in der Rangliste ausgeblendet.
 
 ---
 
@@ -34,6 +46,20 @@ Die erste Runde wird zufällig ausgelost. Dabei können vermeintlich stärkere T
 ### Ab Runde 2 – Paarung nach Spielstärke
 
 Ab der zweiten Runde werden die Teams nach ihrem bisherigen Abschneiden gepaart: Sieger spielen gegen Sieger, Verlierer gegen Verlierer. Der Algorithmus stellt dabei sicher, dass zwei Teams nie zweimal gegeneinander spielen. Ist kein passender Gegner verfügbar, wird getauscht.
+
+#### Gruppenbildung: Nur Siege zählen
+
+Die Paarungsgruppen (Score Groups) werden **ausschließlich anhand der Anzahl der Siege** gebildet. Alle Teams mit gleich vielen Siegen bilden eine Gruppe.
+
+> **Wichtig:** Buchholz (BHZ) und Feinbuchholz (FBHZ) sind **reine Ranglisten-Kriterien (Tie-Breaks)** und haben **keinen direkten Einfluss auf die Gruppenbildung**. Sie bestimmen nicht, in welche Gruppe ein Team fällt.
+
+#### Indirekter Einfluss von Buchholz auf die Paarung
+
+BHZ und FBHZ wirken **indirekt** auf die Paarung: Vor der Gruppenbildung werden die Teams innerhalb ihrer Siege-Gruppe nach den Auswertungskriterien sortiert (Siege → BHZ → FBHZ → Punktedifferenz). Diese Sortierung legt fest, welches Team in der Gruppe oben steht – und damit gegen wen gepaart wird. BHZ bestimmt also den **Paarungspartner innerhalb der Gruppe**, nicht die Gruppenzugehörigkeit selbst.
+
+#### Carry-Over bei ungerader Gruppengröße
+
+Hat eine Gruppe eine ungerade Anzahl von Teams, wird das schwächste Team dieser Gruppe (das letzte in der sortierten Reihenfolge) in die nächste Gruppe mit weniger Siegen "herabgesetzt" (Float/Carry-Over). So kann es gegen ein Team mit weniger Siegen spielen – dies ist besser als ein Freilos zu vergeben, solange noch Teams ohne Gegner existieren.
 
 ### Freilos (bei ungerader Teamzahl)
 
@@ -61,17 +87,17 @@ Wenn Teams nicht nur gleich viele Siege, sondern auch gleich viele Buchholz-Punk
 
 ---
 
-## Kugeldifferenz
+## Punktedifferenz
 
-Beim Pétanque gibt es als viertes Kriterium die Kugeldifferenz (erzielte Punkte minus kassierte Punkte, aufsummiert über alle Spiele). Ein 13:8-Sieg ergibt eine Differenz von +5.
+Beim Pétanque gibt es als viertes Kriterium die Punktedifferenz (erzielte Punkte minus kassierte Punkte, aufsummiert über alle Spiele). Ein 13:8-Sieg ergibt eine Differenz von +5.
 
 ---
 
 ## Direktvergleich
 
-Sind nach Siegen, BHZ, FBHZ und Kugeldifferenz noch immer Teams punktgleich, entscheidet der direkte Vergleich. Dabei werden alle gemeinsamen Spiele der betroffenen Teams herangezogen:
+Sind nach Siegen, BHZ, FBHZ und Punktedifferenz noch immer Teams punktgleich, entscheidet der direkte Vergleich. Dabei werden alle gemeinsamen Spiele der betroffenen Teams herangezogen:
 1. Wer hat im direkten Vergleich mehr Spiele gewonnen?
-2. Bei Gleichstand: Wer hat die bessere Kugeldifferenz im direkten Vergleich?
+2. Bei Gleichstand: Wer hat die bessere Punktedifferenz im direkten Vergleich?
 
 ---
 
@@ -161,3 +187,7 @@ Team E hatte die stärkeren Gegner der Gegner (FBHZ = 16 > 13) und zieht an Team
 | **1.** | **Team A** | 3 | 5 | 14 |
 | **2.** | **Team E** | 2 | 4 | **16** |
 | **3.** | **Team C** | 2 | 4 | **13** |
+
+
+
+Die Punktedifferenz funktioniert im Grunde exakt wie das Torverhältnis beim Fußball. Es ist die Gesamtsumme deiner selbst erzielten Punkte abzüglich der kassierten Gegenpunkte über alle Spiele eines Turniers hinweg.Ein kurzes RechenbeispielNehmen wir an, ein Team absolviert drei Runden:SpielErgebnisErzielte Punkte (+)Kassierte Punkte (-)Differenz pro SpielSpiel 1Sieg (13:8)138+5Spiel 2Niederlage (10:13)1013-3Spiel 3Sieg (13:5)135+8Gesamt3626+10Die finale Punktedifferenz für dieses Team beträgt am Ende also +10. Du kannst dafür entweder alle Pluspunkte und alle Minuspunkte zusammenzählen und voneinander abziehen (36 - 26 = 10) oder einfach die Differenzen der Einzelspiele addieren (5 - 3 + 8 = 10). Das Ergebnis ist dasselbe.

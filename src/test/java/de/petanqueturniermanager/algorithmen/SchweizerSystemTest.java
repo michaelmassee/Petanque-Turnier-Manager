@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 
 public class SchweizerSystemTest {
 
@@ -33,21 +34,17 @@ public class SchweizerSystemTest {
 		assertThat(ersteRunde.size()).isEqualTo(3);
 		assertThat(ersteRunde.get(0).getB()).isNotNull(); // kein freilos
 		assertThat(ersteRunde.get(1).getB()).isNotNull(); // kein freilos
-		assertThat(ersteRunde.get(2).getB()).isNull(); // freilos
+		assertThat(ersteRunde.get(2).isFreilos()).isTrue(); // freilos
 
-		// flatten list for validate
-		List<Team> teamList = ersteRunde.stream()
-				.flatMap(teamPaarung -> Stream.of(teamPaarung.getA(), teamPaarung.getB()))
-				.sorted((t1, t2) -> Integer.compare((t1 != null) ? t1.getNr() : 9999, (t2 != null) ? t2.getNr() : 9999))
-				.collect(Collectors.toList());
+		// flatten list for validate (Freilos wird nicht mit aufgenommen)
+		List<Team> teamList = new SchweizerSystem().flattenTeampaarungen(ersteRunde);
 
-		assertThat(teamList.size()).isEqualTo(6); // mit null (freilos)
+		assertThat(teamList.size()).isEqualTo(5); // ohne Freilos
 
 		List<Team> expected = new ArrayList<>();
 		for (int i = 1; i < 6; i++) {
 			expected.add(Team.from(i));
 		}
-		expected.add(null);
 		assertThat(teamList).containsExactlyElementsOf(expected);
 	}
 
@@ -315,7 +312,7 @@ public class SchweizerSystemTest {
 		assertThat(ersteRunde.size()).isEqualTo(4);
 		assertThat(ersteRunde.get(0).getA().getSetzPos()).isEqualTo(0);
 		assertThat(ersteRunde.get(0).getB().getSetzPos()).isEqualTo(1);
-		assertThat(ersteRunde.get(3).getB()).isNull(); // freilos
+		assertThat(ersteRunde.get(3).isFreilos()).isTrue(); // freilos
 
 	}
 
@@ -344,11 +341,11 @@ public class SchweizerSystemTest {
 		assertThat(weitereRunde.get(3).getB()).isEqualByComparingTo(Team.from(9));
 
 		assertThat(weitereRunde.get(4).getA()).isEqualByComparingTo(Team.from(8));
-		assertThat(weitereRunde.get(4).getB()).isNull();
+		assertThat(weitereRunde.get(4).isFreilos()).isTrue();
 
-		// flatten list for validate
+		// flatten list for validate (Freilos wird nicht aufgenommen)
 		List<Team> flattenTeampaarungen1 = schweizerSystem.flattenTeampaarungen(weitereRunde);
-		assertThat(flattenTeampaarungen1.size()).isEqualTo(10); // 9 + freilos
+		assertThat(flattenTeampaarungen1.size()).isEqualTo(9); // ohne Freilos
 
 		// ---------------------------------------------------------------------------------------
 		// Runde 3
@@ -389,7 +386,7 @@ public class SchweizerSystemTest {
 
 		// team 5 mit freilos
 		assertThat(resultRunde3.get(4).getA()).isEqualByComparingTo(Team.from(5));
-		assertThat(resultRunde3.get(4).getB()).isNull();
+		assertThat(resultRunde3.get(4).isFreilos()).isTrue();
 	}
 
 	// eine runde mit 9 Teams + gegner
@@ -470,12 +467,12 @@ public class SchweizerSystemTest {
 		// Siege: A=3, B=1, C=2, D=1, E=2, F=0
 		// Gegner: A:[B,C,E], B:[A,E,D], C:[D,A,F], D:[C,F,B], E:[F,B,A], F:[E,D,C]
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
-				new SchweizerTeamErgebnis(1, 3, 0, List.of(2, 3, 5)), // A
-				new SchweizerTeamErgebnis(2, 1, 0, List.of(1, 5, 4)), // B
-				new SchweizerTeamErgebnis(3, 2, 0, List.of(4, 1, 6)), // C
-				new SchweizerTeamErgebnis(4, 1, 0, List.of(3, 6, 2)), // D
-				new SchweizerTeamErgebnis(5, 2, 0, List.of(6, 2, 1)), // E
-				new SchweizerTeamErgebnis(6, 0, 0, List.of(5, 4, 3))  // F
+				new SchweizerTeamErgebnis(1, 3, 0, 0, List.of(2, 3, 5)), // A
+				new SchweizerTeamErgebnis(2, 1, 0, 0, List.of(1, 5, 4)), // B
+				new SchweizerTeamErgebnis(3, 2, 0, 0, List.of(4, 1, 6)), // C
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(3, 6, 2)), // D
+				new SchweizerTeamErgebnis(5, 2, 0, 0, List.of(6, 2, 1)), // E
+				new SchweizerTeamErgebnis(6, 0, 0, 0, List.of(5, 4, 3))  // F
 		);
 
 		// BHZ prüfen: A=1+2+2=5, B=3+2+1=6, C=1+3+0=4, D=2+0+1=3, E=0+1+3=4, F=2+1+2=5
@@ -505,19 +502,19 @@ public class SchweizerSystemTest {
 	}
 
 	@Test
-	public void testSortiereNachAuswertungskriterienKugeldifferenz() throws Exception {
+	public void testSortiereNachAuswertungskriterienPunktedifferenz() throws Exception {
 		schweizerSystem = new SchweizerSystem();
 
-		// Zwei Teams mit gleichen Siegen, BHZ, FBHZ -> Kugeldifferenz entscheidet
+		// Zwei Teams mit gleichen Siegen, BHZ, FBHZ -> Punktedifferenz entscheidet
 		List<SchweizerTeamErgebnis> ergebnisse = List.of(
-				new SchweizerTeamErgebnis(1, 2, 5, List.of(3, 4)),   // Team 1: +5 Kugeldiff
-				new SchweizerTeamErgebnis(2, 2, 3, List.of(3, 4)),   // Team 2: +3 Kugeldiff
-				new SchweizerTeamErgebnis(3, 1, 0, List.of(1, 2)),   // Team 3
-				new SchweizerTeamErgebnis(4, 1, 0, List.of(1, 2))    // Team 4
+				new SchweizerTeamErgebnis(1, 2, 5, 0, List.of(3, 4)),   // Team 1: +5 Punktediff
+				new SchweizerTeamErgebnis(2, 2, 3, 0, List.of(3, 4)),   // Team 2: +3 Punktediff
+				new SchweizerTeamErgebnis(3, 1, 0, 0, List.of(1, 2)),   // Team 3
+				new SchweizerTeamErgebnis(4, 1, 0, 0, List.of(1, 2))    // Team 4
 		);
 
 		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse);
-		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höhere Kugeldifferenz gewinnt
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // höhere Punktedifferenz gewinnt
 		assertThat(sortiert.get(1).teamNr()).isEqualTo(2);
 	}
 
@@ -540,6 +537,120 @@ public class SchweizerSystemTest {
 		assertThat(paarA.getB()).isEqualTo(Team.from(7));
 		assertThat(paarB.getA()).isEqualTo(Team.from(3));
 		assertThat(paarB.getB()).isEqualTo(Team.from(8));
+	}
+
+	/**
+	 * Ohne Buchholz: Siege → Punktediff → Punkte+ (kein BHZ/FBHZ).
+	 * Zwei Teams gleiche Siege, gleiche Punktediff → Punkte+ entscheidet (kein BHZ-Einfluss).
+	 */
+	@Test
+	public void testSortiereOhneBuchholz_PunktediffEntscheidet() {
+		schweizerSystem = new SchweizerSystem();
+
+		// Team 1: 2 Siege, Diff=5, Punkte+=30 | Team 2: 2 Siege, Diff=5, Punkte+=25
+		// Team 3: 2 Siege, Diff=3, Punkte+=20 | Team 4: 1 Sieg
+		// Ohne BHZ → Team 1 vor Team 2 wegen Punkte+, Team 2 vor Team 3 wegen Diff
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 5, 30, List.of(3, 4)),
+				new SchweizerTeamErgebnis(2, 2, 5, 25, List.of(3, 4)),
+				new SchweizerTeamErgebnis(3, 2, 3, 20, List.of(1, 2)),
+				new SchweizerTeamErgebnis(4, 1, 0, 10, List.of(1, 2))
+		);
+
+		List<SchweizerTeamErgebnis> sortiert = schweizerSystem.sortiereNachAuswertungskriterien(ergebnisse,
+				SchweizerRankingModus.OHNE_BUCHHOLZ);
+
+		assertThat(sortiert).hasSize(4);
+		assertThat(sortiert.get(0).teamNr()).isEqualTo(1); // 2 Siege, Diff=5, Punkte+=30
+		assertThat(sortiert.get(1).teamNr()).isEqualTo(2); // 2 Siege, Diff=5, Punkte+=25
+		assertThat(sortiert.get(2).teamNr()).isEqualTo(3); // 2 Siege, Diff=3
+		assertThat(sortiert.get(3).teamNr()).isEqualTo(4); // 1 Sieg
+	}
+
+	/**
+	 * Score Group Pairing: Teams mit gleichen Siegen werden innerhalb ihrer Gruppe gepaart.
+	 * 8 Teams, 4 haben je 2 Siege, 4 haben je 1 Sieg → 2 Gruppen à 4 Teams.
+	 * Erwartet: Paarungen nur innerhalb der Gruppen (keine 2-Siege vs. 1-Sieg Paarung).
+	 */
+	@Test
+	public void testWeitereRundeSiegeGruppen_PaarungNurInnerhalb() {
+		// Teams 1-4 haben je 2 Siege, Teams 5-8 haben je 1 Sieg
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int i = 1; i <= 8; i++) {
+			meldungen.addTeamWennNichtVorhanden(Team.from(i));
+		}
+
+		List<SchweizerTeamErgebnis> ergebnisse = List.of(
+				new SchweizerTeamErgebnis(1, 2, 10, 0, List.of(5, 6)),
+				new SchweizerTeamErgebnis(2, 2, 8, 0, List.of(7, 8)),
+				new SchweizerTeamErgebnis(3, 2, 6, 0, List.of(5, 7)),
+				new SchweizerTeamErgebnis(4, 2, 4, 0, List.of(6, 8)),
+				new SchweizerTeamErgebnis(5, 1, -4, 0, List.of(1, 3)),
+				new SchweizerTeamErgebnis(6, 1, -6, 0, List.of(4, 1)),
+				new SchweizerTeamErgebnis(7, 1, -8, 0, List.of(2, 3)),
+				new SchweizerTeamErgebnis(8, 1, -10, 0, List.of(4, 2)));
+
+		// Teams bereits mit Gegner-Geschichte
+		Team t1 = meldungen.getTeam(1);
+		Team t5 = meldungen.getTeam(5);
+		Team t6 = meldungen.getTeam(6);
+		t1.addGegner(t5);
+		t1.addGegner(t6);
+		meldungen.getTeam(2).addGegner(meldungen.getTeam(7));
+		meldungen.getTeam(2).addGegner(meldungen.getTeam(8));
+		meldungen.getTeam(3).addGegner(meldungen.getTeam(5));
+		meldungen.getTeam(3).addGegner(meldungen.getTeam(7));
+		meldungen.getTeam(4).addGegner(meldungen.getTeam(6));
+		meldungen.getTeam(4).addGegner(meldungen.getTeam(8));
+
+		schweizerSystem = new SchweizerSystem();
+		// Teams müssen in Ranglistenreihenfolge übergeben werden (Siege absteigend)
+		List<Team> sortiertTeams = List.of(
+				meldungen.getTeam(1), meldungen.getTeam(2), meldungen.getTeam(3), meldungen.getTeam(4),
+				meldungen.getTeam(5), meldungen.getTeam(6), meldungen.getTeam(7), meldungen.getTeam(8));
+
+		List<TeamPaarung> paarungen = schweizerSystem.weitereRunde(sortiertTeams, ergebnisse);
+
+		assertThat(paarungen).hasSize(4);
+
+		// Alle Paarungen müssen innerhalb der Sieggruppe sein:
+		// Gruppe A (2 Siege): Teams 1-4, Gruppe B (1 Sieg): Teams 5-8
+		for (TeamPaarung paarung : paarungen) {
+			assertThat(paarung.isFreilos()).isFalse();
+			int siegeA = ergebnisse.stream().filter(e -> e.teamNr() == paarung.getA().getNr())
+					.mapToInt(SchweizerTeamErgebnis::siege).findFirst().orElse(-1);
+			int siegeB = ergebnisse.stream().filter(e -> e.teamNr() == paarung.getB().getNr())
+					.mapToInt(SchweizerTeamErgebnis::siege).findFirst().orElse(-1);
+			assertThat(siegeA).as("Paarung A (%d) und B (%d) müssen gleiche Siegzahl haben",
+					paarung.getA().getNr(), paarung.getB().getNr()).isEqualTo(siegeB);
+		}
+	}
+
+	/**
+	 * Score Group Pairing: Ungerade Gruppe → Float-Team wird in nächste Gruppe verschoben.
+	 * 6 Teams: 3 mit 2 Siegen (ungerade Gruppe) + 3 mit 1 Sieg.
+	 * Erwartet: 1 Paarung mit Float (2 Siege vs. 1 Sieg), 2 reine Gruppen-Paarungen.
+	 */
+	@Test
+	public void testBaueSiegeGruppen_FloatBeiUngeraderGruppe() {
+		schweizerSystem = new SchweizerSystem();
+
+		List<Team> teams = new ArrayList<>();
+		for (int i = 1; i <= 6; i++) {
+			teams.add(Team.from(i));
+		}
+
+		// Teams 1-3 haben 2 Siege (ungerade Gruppe), Teams 4-6 haben 1 Sieg
+		Map<Integer, Integer> siegeMap = Map.of(1, 2, 2, 2, 3, 2, 4, 1, 5, 1, 6, 1);
+
+		List<List<Team>> gruppen = schweizerSystem.baueSiegeGruppen(teams, siegeMap);
+
+		// Nach Float: Gruppe 1 (2 Siege) hat 2 Teams, Gruppe 2 (1 Sieg + Float) hat 4 Teams
+		assertThat(gruppen).hasSize(2);
+		assertThat(gruppen.get(0)).hasSize(2); // Teams 1+2 (T3 floated)
+		assertThat(gruppen.get(1)).hasSize(4); // T3 (Float) + Teams 4,5,6
+		// Float-Team (T3) muss an erster Stelle der zweiten Gruppe stehen
+		assertThat(gruppen.get(1).getFirst()).isEqualByComparingTo(Team.from(3));
 	}
 
 }

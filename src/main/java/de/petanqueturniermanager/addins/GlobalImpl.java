@@ -31,7 +31,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		"com.sun.star.sheet.AddIn"  // Standard AddIn Service
 	};
 
-	private static AtomicBoolean isDirty;
+	private static AtomicBoolean isDirty = new AtomicBoolean(false);
 
 	// DisplayNames aus GlobalAddIn.xcu - diese werden für Formeln in Calc verwendet
 	// =PTM.ALG.INTPROPERTY("propertyname")

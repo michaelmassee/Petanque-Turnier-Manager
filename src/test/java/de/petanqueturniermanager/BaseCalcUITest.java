@@ -2,6 +2,8 @@ package de.petanqueturniermanager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.swing.JOptionPane;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -92,12 +94,7 @@ public abstract class BaseCalcUITest {
 		// OXT-Datei suchen
 		File projectDir = new File(System.getProperty("user.dir"));
 		File distDir = new File(projectDir, "build/distributions");
-		File[] oxtFiles = distDir.listFiles((dir, name) -> name.startsWith("PetanqueTurnierManager") && name.endsWith(".oxt"));
-		if (oxtFiles == null || oxtFiles.length == 0) {
-			throw new RuntimeException("OXT nicht gefunden in: " + distDir.getAbsolutePath()
-					+ " – bitte zuerst './gradlew buildOXT' ausführen");
-		}
-		File oxtFile = oxtFiles[0];
+		File oxtFile = resolveOxtFile(projectDir, distDir);
 
 		// Alte Version entfernen (Fehler werden ignoriert, z.B. wenn noch nicht installiert)
 		runUnokg(true, "remove", "de.petanqueturniermanager");
@@ -109,6 +106,34 @@ public abstract class BaseCalcUITest {
 			throw new RuntimeException("unopkg add fehlgeschlagen mit Exit-Code: " + exitCode);
 		}
 		logger.info("Extension erfolgreich installiert");
+	}
+
+	private static File resolveOxtFile(File projectDir, File distDir) {
+		File descriptionXml = new File(projectDir, "description.xml");
+		if (!descriptionXml.exists()) {
+			throw new RuntimeException("description.xml nicht gefunden: " + descriptionXml.getAbsolutePath());
+		}
+		try {
+			javax.xml.parsers.DocumentBuilderFactory factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+			factory.setNamespaceAware(false);
+			org.w3c.dom.NodeList versionNodes = factory.newDocumentBuilder().parse(descriptionXml)
+					.getElementsByTagName("version");
+			if (versionNodes.getLength() == 0) {
+				throw new RuntimeException("Kein <version>-Element in description.xml gefunden");
+			}
+			String version = versionNodes.item(0).getAttributes().getNamedItem("value").getNodeValue();
+			File oxtFile = new File(distDir, "PetanqueTurnierManager-" + version + ".oxt");
+			if (!oxtFile.exists()) {
+				throw new RuntimeException("OXT nicht gefunden (description.xml version=" + version + "): "
+						+ oxtFile.getAbsolutePath() + " – bitte './gradlew buildOXT' ausführen");
+			}
+			logger.info("OXT-Version aus description.xml: " + version);
+			return oxtFile;
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new RuntimeException("description.xml konnte nicht gelesen werden: " + e.getMessage(), e);
+		}
 	}
 
 	private static int runUnokg(boolean ignoreError, String... args) {
@@ -140,7 +165,9 @@ public abstract class BaseCalcUITest {
 			return;
 		}
 
-		OfficeDocumentHelper.setVisible(doc, true);
+		if (!Boolean.parseBoolean(System.getProperty("uitest.headless", "false"))) {
+			OfficeDocumentHelper.setVisible(doc, true);
+		}
 		wkingSpreadsheet = new WorkingSpreadsheet(starter.getxComponentContext(), doc);
 		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
 		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
@@ -166,6 +193,11 @@ public abstract class BaseCalcUITest {
 	protected void waitEnter() throws IOException {
 		System.out.println("Press Enter .....");
 		System.in.read();
+	}
+
+	protected void warten(String titel) {
+		JOptionPane.showMessageDialog(null, "LibreOffice inspizieren, dann OK klicken.", titel,
+				JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	protected void validateWithJson(RangeData rangeData, InputStream jsonFile) {

@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -23,7 +24,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  */
 public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
-		implements ISchweizerPropertiesSpalte, IKonfigurationSheet {
+		implements ISchweizerPropertiesSpalte {
 
 	private static final Logger logger = LogManager.getLogger(SchweizerKonfigurationSheet.class);
 
@@ -123,6 +124,56 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	public void setSpielrundeSpielbahn(SpielrundeSpielbahn option) {
 		propertiesSpalte.setSpielrundeSpielbahn(option);
+	}
+
+	@Override
+	public Formation getMeldeListeFormation() {
+		return propertiesSpalte.getMeldeListeFormation();
+	}
+
+	@Override
+	public boolean isMeldeListeTeamnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeTeamnameAnzeigen();
+	}
+
+	@Override
+	public boolean isMeldeListeVereinsnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeVereinsnameAnzeigen();
+	}
+
+	@Override
+	public void setMeldeListeFormation(Formation formation) {
+		propertiesSpalte.setMeldeListeFormation(formation);
+	}
+
+	@Override
+	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeTeamnameAnzeigen(anzeigen);
+	}
+
+	@Override
+	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+	}
+
+	@Override
+	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+		return propertiesSpalte.getSpielplanTeamAnzeige();
+	}
+
+	@Override
+	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+		propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
+	}
+
+	@Override
+	public SchweizerRankingModus getRankingModus() {
+		return propertiesSpalte.getRankingModus();
+	}
+
+	@Override
+	public void setRankingModus(SchweizerRankingModus modus) {
+		propertiesSpalte.setRankingModus(modus);
 	}
 
 }

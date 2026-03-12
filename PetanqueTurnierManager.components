@@ -8,11 +8,10 @@
         </implementation>
     </component>
     
-    <!-- Menu Job Executor -->
+    <!-- Protocol Handler (ptm: dispatch, Enable/Disable support) -->
     <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
-        <implementation name="de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl">
-            <service name="de.petanqueturniermanager.MenuJobExecute"/>
-            <service name="com.sun.star.task.JobExecutor"/>
+        <implementation name="de.petanqueturniermanager.comp.ProtocolHandler">
+            <service name="de.petanqueturniermanager.ProtocolHandler"/>
         </implementation>
     </component>
 </components>

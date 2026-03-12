@@ -11,6 +11,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XDesktop;
 import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XFramesSupplier;
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
@@ -82,7 +83,36 @@ public class DocumentHelper {
 	 */
 	public static XSpreadsheetDocument getCurrentSpreadsheetDocument(XComponentContext xContext) {
 		checkNotNull(xContext, "xContext = null");
-		return Lo.qi(XSpreadsheetDocument.class, getCurrentComponent(xContext));
+
+		// Normalfall: aktive Komponente (funktioniert mit UI-Fokus)
+		XSpreadsheetDocument doc = Lo.qi(XSpreadsheetDocument.class, getCurrentComponent(xContext));
+		if (doc != null) {
+			return doc;
+		}
+
+		// Fallback für Headless-Modus: alle offenen Frames durchsuchen
+		try {
+			XDesktop desktop = getCurrentDesktop(xContext);
+			XFramesSupplier framesSupplier = Lo.qi(XFramesSupplier.class, desktop);
+			if (framesSupplier == null) return null;
+
+			com.sun.star.frame.XFrames frames = framesSupplier.getFrames();
+			if (frames == null) return null;
+
+			for (int i = 0; i < frames.getCount(); i++) {
+				Object frameObj = frames.getByIndex(i);
+				XFrame frame = Lo.qi(XFrame.class, frameObj);
+				if (frame == null) continue;
+				XController controller = frame.getController();
+				if (controller == null) continue;
+				XModel model = controller.getModel();
+				XSpreadsheetDocument spreadsheet = Lo.qi(XSpreadsheetDocument.class, model);
+				if (spreadsheet != null) return spreadsheet;
+			}
+		} catch (Exception e) {
+			logger.error("Fehler beim Durchsuchen der Frames", e);
+		}
+		return null;
 	}
 
 	/**

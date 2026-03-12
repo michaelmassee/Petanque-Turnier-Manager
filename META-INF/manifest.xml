@@ -25,11 +25,14 @@
     <manifest:file-entry 
         manifest:media-type="application/vnd.sun.star.configuration-data" 
         manifest:full-path="registry/org/openoffice/Office/Addons_A4_JederGJeden.xcu"/>
-<!-- <manifest:file-entry 
-        manifest:media-type="application/vnd.sun.star.configuration-data" 
-        manifest:full-path="registry/org/openoffice/Office/Addons_A5_Schweizer.xcu"/> -->
-    <manifest:file-entry 
-        manifest:media-type="application/vnd.sun.star.configuration-data" 
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_A5_Schweizer.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/ProtocolHandler.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_X1_Konfiguration.xcu"/>
     <manifest:file-entry 
         manifest:media-type="application/vnd.sun.star.configuration-data" 

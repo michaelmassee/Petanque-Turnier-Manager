@@ -125,7 +125,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		getSheetHelper().setPropertiesInRange(getXSpreadsheet(), spielrNrdatenRange,
 				CellProperties.from().centerJustify().setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
-						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()));
 		// -------------------------------------
 
 		// Namen
@@ -148,7 +148,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 				.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader),
 						HEADER_SPIELER_NR)
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties)
-				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor)
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()).setCellBackColor(headerColor)
 				.setVertJustify(CellVertJustify2.CENTER);
 
 		if (anzZeilenInHeader > 1) {
@@ -159,7 +159,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
 				.spalte(ersteMeldungNameSpalte).setValue(HEADER_SPIELER_NAME)
-				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor);
+				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
 			// weil spalte sich geändert hat

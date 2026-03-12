@@ -32,7 +32,7 @@
 									<value xml:lang="de">Turnier</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_turnier</value>
+									<value>ptm:konfiguration_turnier</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -46,7 +46,7 @@
 									<value xml:lang="de">Kopf/Fußzeilen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_kopffusszeilen</value>
+									<value>ptm:konfiguration_kopffusszeilen</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -60,7 +60,7 @@
 									<value xml:lang="de">Farben</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_farben</value>
+									<value>ptm:konfiguration_farben</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -73,7 +73,7 @@
 									<value xml:lang="de">Update Dokument Plugin-Version</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>service:de.petanqueturniermanager.MenuJobExecute?konfiguration_update_erstellt_mit_version</value>
+									<value>ptm:konfiguration_update_erstellt_mit_version</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

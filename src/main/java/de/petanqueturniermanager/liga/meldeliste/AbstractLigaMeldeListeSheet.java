@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGer
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
@@ -105,6 +106,9 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 
 		// TurnierSystem
 		meldeListeHelper.insertTurnierSystemInHeader(getTurnierSystem());
+
+		// Headerzeilen fixieren
+		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
 	}
 
 	void formatDaten() throws GenerateException {

@@ -52,6 +52,11 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 		return gleicheSetzPos(spieler) || warImTeamMit.contains(spieler.getNr());
 	}
 
+	public boolean warGegnerVon(Spieler spieler) {
+		checkNotNull(spieler, "spieler == null");
+		return gegner.contains(spieler.getNr());
+	}
+
 	public Spieler deleteTeam() throws AlgorithmenException {
 		wkRefteam = null;
 		setIstInTeam(false);

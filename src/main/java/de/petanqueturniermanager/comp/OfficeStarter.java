@@ -1,6 +1,12 @@
 package de.petanqueturniermanager.comp;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
@@ -35,6 +41,7 @@ public class OfficeStarter {
 	private boolean usingPipes = false;
 	private XComponentContext xComponentContext = null;
 
+	private Process sofficeProcess = null; // OS-Prozess des gestarteten soffice, für forceful termination
 	private XComponent bridgeComponent = null; // this is only set if office is opened via a socket
 	private XMultiComponentFactory mcFactory;
 	private XDesktop xDesktop;
@@ -138,8 +145,8 @@ public class OfficeStarter {
 
 			ProcessBuilder pb = new ProcessBuilder(cmd);
 			pb.inheritIO();
-			Process p = pb.start();
-			if (p != null) {
+			sofficeProcess = pb.start();
+			if (sofficeProcess != null) {
 				logger.info("Office process created");
 			}
 			// Wait longer for office to start in test environments
@@ -156,8 +163,22 @@ public class OfficeStarter {
 			XConnector connector = Lo.qi(XConnector.class,
 					localFactory.createInstanceWithContext("com.sun.star.connection.Connector", localContext));
 
-			com.sun.star.connection.XConnection connection = connector
-					.connect("socket,host=localhost,port=" + SOCKET_PORT);
+			// connector.connect() blockiert unbegrenzt wenn soffice nicht lauscht –
+			// daher mit Timeout von 30 Sekunden absichern
+			final XConnector connectorFinal = connector;
+			ExecutorService connectExec = Executors.newSingleThreadExecutor();
+			Future<com.sun.star.connection.XConnection> connectFuture = connectExec
+					.submit(() -> connectorFinal.connect("socket,host=localhost,port=" + SOCKET_PORT));
+			com.sun.star.connection.XConnection connection;
+			try {
+				connection = connectFuture.get(30, TimeUnit.SECONDS);
+			} catch (TimeoutException | ExecutionException e) {
+				connectFuture.cancel(true);
+				connectExec.shutdownNow();
+				throw new RuntimeException("Timeout/Fehler beim Verbinden mit LibreOffice auf Port " + SOCKET_PORT, e);
+			} finally {
+				connectExec.shutdown();
+			}
 
 			// create a bridge to Office via the socket
 			XBridgeFactory bridgeFactory = Lo.qi(XBridgeFactory.class,
@@ -188,6 +209,7 @@ public class OfficeStarter {
 		logger.info("Closing Office");
 		if (xDesktop == null) {
 			logger.error("No office connection found");
+			killSofficeProcess();
 			return;
 		}
 
@@ -205,6 +227,31 @@ public class OfficeStarter {
 			}
 		} catch (InterruptedException e) {
 		}
+
+		// Falls UNO-Terminate nicht geklappt hat oder Prozess noch läuft: forcibly killen
+		// und warten bis Port 8100 frei ist (Voraussetzung für nächsten startup())
+		killSofficeProcess();
+	}
+
+	private void killSofficeProcess() {
+		if (sofficeProcess == null) {
+			return;
+		}
+		if (sofficeProcess.isAlive()) {
+			logger.info("soffice-Prozess läuft noch, wird beendet");
+			sofficeProcess.destroy();
+			try {
+				boolean exited = sofficeProcess.waitFor(5, TimeUnit.SECONDS);
+				if (!exited) {
+					logger.warn("soffice reagiert nicht auf destroy(), forcible kill");
+					sofficeProcess.destroyForcibly();
+					sofficeProcess.waitFor(3, TimeUnit.SECONDS);
+				}
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
+		sofficeProcess = null;
 	}
 
 	private boolean tryToTerminate(int numTries) {

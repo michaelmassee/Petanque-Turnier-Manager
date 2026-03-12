@@ -4,13 +4,27 @@
       "data": "Nr"
     },
     {
-      "data": "Name"
+      "data": "Teamname"
     },
     {
-      "data": "Name"
+      "data": "Spieler 1"
     },
     {
-      "data": "Name"
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": "Team 1"
+    },
+    {
+      "data": "Vorname"
+    },
+    {
+      "data": "Nachname"
     }
   ],
   [
@@ -18,13 +32,13 @@
       "data": 1.0
     },
     {
-      "data": "Bieder, Maria"
+      "data": "Team 2"
     },
     {
-      "data": "Erl, Siska"
+      "data": "Burmeister, Selma"
     },
     {
-      "data": "Witschel, Danny"
+      "data": "Radde, Engelbert"
     }
   ],
   [
@@ -32,13 +46,13 @@
       "data": 2.0
     },
     {
-      "data": "Burmeister, Selma"
+      "data": "Team 3"
     },
     {
-      "data": "Radde, Engelbert"
+      "data": "Tafel, Rosa"
     },
     {
-      "data": "Thielmann, Kreszenzia"
+      "data": "Stabel, Sophie"
     }
   ],
   [
@@ -46,13 +60,13 @@
       "data": 3.0
     },
     {
-      "data": "Dold, Otbert"
+      "data": "Team 4"
     },
     {
-      "data": "Asmus, Rigobert"
+      "data": "Molz, Kornelia"
     },
     {
-      "data": "Petter, Roseliese"
+      "data": "Kamps, Felix"
     }
   ],
   [
@@ -60,13 +74,13 @@
       "data": 4.0
     },
     {
-      "data": "Döll, Muthild"
+      "data": "Team 5"
     },
     {
-      "data": "Gerhard, Niko"
+      "data": "Husmann, Isedore"
     },
     {
-      "data": "Rentschler, Theodeline"
+      "data": "Bohnet, Collin"
     }
   ],
   [
@@ -74,13 +88,13 @@
       "data": 5.0
     },
     {
-      "data": "Eisenhardt, Annkatrin"
+      "data": "Team 6"
     },
     {
-      "data": "Siegrist, Helfrid"
+      "data": "Karch, Erhardt"
     },
     {
-      "data": "Knöpfle, Collin"
+      "data": "Stocker, Benjamin"
     }
   ],
   [
@@ -88,13 +102,13 @@
       "data": 6.0
     },
     {
-      "data": "Grau, Franka"
+      "data": "Team 7"
     },
     {
-      "data": "Ney, Hartwig"
+      "data": "Staub, Irmintraud"
     },
     {
-      "data": "Elsen, Angelika"
+      "data": "Meiners, Borwin"
     }
   ],
   [
@@ -102,13 +116,13 @@
       "data": 7.0
     },
     {
-      "data": "Husmann, Isedore"
+      "data": "Team 8"
     },
     {
-      "data": "Bohnet, Collin"
+      "data": "Krischer, Max"
     },
     {
-      "data": "Murphy, Ehrentraut"
+      "data": "Görgens, Gerlach"
     }
   ],
   [
@@ -116,13 +130,13 @@
       "data": 8.0
     },
     {
-      "data": "Molz, Kornelia"
+      "data": "Team 9"
     },
     {
-      "data": "Kamps, Felix"
+      "data": "Herget, Diethmar"
     },
     {
-      "data": "Goetze, Eustachius"
+      "data": "Romero, Imke"
     }
   ],
   [
@@ -130,27 +144,27 @@
       "data": 9.0
     },
     {
-      "data": "Nuber, Joana"
+      "data": "Team 10"
     },
     {
-      "data": "Reuß, Birk"
+      "data": "Steinbrink, Diethelm"
     },
     {
-      "data": "Jakobs, Anett"
+      "data": "Bäder, Rita"
     }
   ],
   [
     {
-      "data": 10.0
+      "data": ""
     },
     {
-      "data": "Tafel, Rosa"
+      "data": ""
     },
     {
-      "data": "Stabel, Sophie"
+      "data": ""
     },
     {
-      "data": "Gentsch, Rotraut"
+      "data": ""
     }
   ],
   [

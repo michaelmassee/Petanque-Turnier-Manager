@@ -23,7 +23,7 @@
 							<value xml:lang="de">~Download neueste Version</value>
 						</prop>
 						<prop oor:name="URL">
-							<value>service:de.petanqueturniermanager.MenuJobExecute?downloadExtension</value>
+							<value>ptm:downloadExtension</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>

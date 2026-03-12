@@ -31,7 +31,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.PetanqueTurnierManagerImpl;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
@@ -53,7 +52,7 @@ public class NewReleaseChecker {
 	private static final Logger logger = LogManager.getLogger(NewReleaseChecker.class);
 
 	// http://api.github.com/repos/michaelmassee/Petanque-Turnier-Manager/releases/latest
-	public static final URI RELEASE_FILE = new File(PetanqueTurnierManagerImpl.BASE_INTERNAL_DIR, "release.info")
+	public static final URI RELEASE_FILE = new File(System.getProperty("user.home"), "/.petanqueturniermanager/release.info")
 			.toURI();
 
 	private static AtomicBoolean isUpdateThreadRunning = new AtomicBoolean(); // is volatile
