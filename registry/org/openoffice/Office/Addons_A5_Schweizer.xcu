@@ -103,6 +103,17 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
+							<node oor:name="A5A6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Sort Ranking</value>
+									<value xml:lang="de">Rangliste Sortieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_rangliste_sortieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

@@ -86,8 +86,6 @@ public class RangListeSorter {
 		// formula zusammenbauen
 		// --------------------------------------------------------------------------
 
-		StringCellValue platzPlatzEins = StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele),
-				"x");
 		List<Position> ranglisteSpalten = getIRangliste().getRanglisteSpalten();
 
 		StringBuffer formulaBuff = new StringBuffer();
@@ -136,13 +134,20 @@ public class RangListeSorter {
 		// + ")"
 		// + ";\"X4\";\"\")"
 
-		// erste Zelle wert
-		FillAutoPosition fillAutoPosition = FillAutoPosition.from(platzPlatzEins.getPos()).zeile(letzteDatenZeile);
+		// Erste Daten-Zeile immer leer: Die Formel vergleicht mit der Zeile darüber.
+		// Ohne Guard würde Zeile 1 mit dem Header verglichen (z.B. gemergter Wert = 0).
+		String formel = "IF(ROW()=" + (ersteDatenZiele + 1) + ";\"\";(" + formulaBuff + "))";
+
+		FillAutoPosition fillAutoPosition = FillAutoPosition.from(Position.from(validateSpalte(), ersteDatenZiele))
+				.zeile(letzteDatenZeile);
 		getSheetHelper().setFormulaInCell(
-				platzPlatzEins.setValue(formulaBuff.toString()).zeile(ersteDatenZiele).setFillAuto(fillAutoPosition));
+				StringCellValue.from(sheet, Position.from(validateSpalte(), ersteDatenZiele))
+						.setValue(formel)
+						.setFillAuto(fillAutoPosition));
 
 		// Alle Nummer Bold
-		getSheetHelper().setPropertiesInRange(sheet, RangePosition.from(platzPlatzEins.getPos(), fillAutoPosition),
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(validateSpalte(), ersteDatenZiele, validateSpalte(), letzteDatenZeile),
 				CellProperties.from().setCharWeight(FontWeight.BOLD).setCharColor(ColorHelper.CHAR_COLOR_RED));
 		// --------------------------------------------------------------------------
 		// Header am ende, wegen Bug ? Auto Fill und ausgeblendete Spalte

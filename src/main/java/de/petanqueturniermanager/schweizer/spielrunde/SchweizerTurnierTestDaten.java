@@ -32,7 +32,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 	private static final int ANZ_RUNDEN = 3;
 
 	private final SchweizerMeldeListeSheetTestDaten meldelisteTestDaten;
-	private final SchweizerSpielrundeSheetNaechste naechsteSpielrunde;
+	public final SchweizerSpielrundeSheetNaechste naechsteSpielrunde;
 	private final SchweizerRanglisteSheet ranglisteSheet;
 
 	public SchweizerTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {

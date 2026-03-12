@@ -59,6 +59,7 @@ import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNe
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetSortOnly;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
@@ -150,6 +151,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE = "schweizer_aktuelle_spielrunde";
 	public static final String CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE = "schweizer_naechste_spielrunde";
 	public static final String CMD_SCHWEIZER_RANGLISTE = "schweizer_rangliste";
+	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
 	// Konfiguration
@@ -358,6 +360,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_RANGLISTE:
 				new SchweizerRanglisteSheet(ws).testTurnierVorhanden().start();
 				break;
+			case CMD_SCHWEIZER_RANGLISTE_SORTIEREN:
+				new SchweizerRanglisteSheetSortOnly(ws).testTurnierVorhanden().start();
+				break;
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE:
 				new SchweizerMeldeListeSheetTestDaten(ws).start();
 				break;
@@ -501,7 +506,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
 				 CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
-				 CMD_SCHWEIZER_RANGLISTE                    -> ts == TurnierSystem.SCHWEIZER;
+				 CMD_SCHWEIZER_RANGLISTE,
+				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN          -> ts == TurnierSystem.SCHWEIZER;
 			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 			 CMD_SCHWEIZER_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;

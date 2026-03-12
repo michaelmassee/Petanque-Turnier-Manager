@@ -67,9 +67,9 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 		XSpreadsheet rangliste = sheetHlp.findByName(SchweizerRanglisteSheet.SHEETNAME);
 		assertThat(rangliste).as("Rangliste-Sheet").isNotNull();
 
-		// Rangliste hat genau ANZ_TEAMS Zeilen
+		// Rangliste hat genau ANZ_TEAMS Zeilen (Range ab TEAM_NR_SPALTE=0, damit Konstanten als Index stimmen)
 		RangePosition ranglisteRange = RangePosition.from(
-				SchweizerRanglisteSheet.PLATZ_SPALTE,
+				SchweizerRanglisteSheet.TEAM_NR_SPALTE,
 				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
 				SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE,
 				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1);
@@ -78,11 +78,18 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 				.getDataFromRange();
 		assertThat(ranglisteData).as("Rangliste muss " + ANZ_TEAMS + " Einträge haben").hasSize(ANZ_TEAMS);
 
-		// Platzierungen 1–16 lückenlos
-		assertThat(ranglisteData)
-				.as("Platzierungen 1–" + ANZ_TEAMS + " lückenlos")
-				.extracting(row -> row.get(SchweizerRanglisteSheet.PLATZ_SPALTE).getIntVal(0))
-				.containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+		// Platzierungen: beginnen bei 1, sind monoton nicht-fallend, max = ANZ_TEAMS
+		// (Bei Gleichstand teilen sich Teams einen Platz → keine lückenlose Folge garantiert)
+		var plaetze = ranglisteData.stream()
+				.map(row -> row.get(SchweizerRanglisteSheet.PLATZ_SPALTE).getIntVal(0))
+				.toList();
+		assertThat(plaetze.get(0)).as("Erster Platz muss 1 sein").isEqualTo(1);
+		assertThat(plaetze.get(plaetze.size() - 1)).as("Letzter Platz muss <= " + ANZ_TEAMS + " sein")
+				.isLessThanOrEqualTo(ANZ_TEAMS);
+		for (int i = 0; i < plaetze.size() - 1; i++) {
+			assertThat(plaetze.get(i)).as("Platz[%d]=%d muss <= Platz[%d]=%d sein", i, plaetze.get(i), i + 1,
+					plaetze.get(i + 1)).isLessThanOrEqualTo(plaetze.get(i + 1));
+		}
 
 		// Siege: jedes Team hat 0–ANZ_RUNDEN Siege
 		assertThat(ranglisteData)
