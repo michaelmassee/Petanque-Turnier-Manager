@@ -15,16 +15,19 @@ import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.SchweizerSystem;
+import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
+import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -38,6 +41,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
@@ -46,8 +50,9 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
 /**
  * Erstellt die Rangliste für das Schweizer Turniersystem.
  * <p>
- * Liest alle vorhandenen Spielrunden-Sheets ein und berechnet pro Team:
- * Siege, BHZ (Buchholz), FBHZ (Feinbuchholz), Punkte+, Punkte-, Differenz.
+ * Liest alle vorhandenen Spielrunden-Sheets ein und berechnet die Sortierreihenfolge.
+ * Die Zellwerte (Siege, BHZ, FBHZ, Punkte+, Punkte-, Differenz) werden als Sheet-Formeln
+ * eingetragen, sodass sie sich bei Änderungen an den Spielrunden-Sheets automatisch aktualisieren.
  * <p>
  * Sortierkriterien (Schweizer System):
  * <ol>
@@ -57,7 +62,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *   <li>Punktedifferenz (absteigend)</li>
  * </ol>
  */
-public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, IRangliste {
+public class SchweizerRanglisteSheet extends SchweizerSheet implements IRangliste {
 
 	private static final Logger LOGGER = LogManager.getLogger(SchweizerRanglisteSheet.class);
 
@@ -65,23 +70,25 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, I
 	public static final String SHEET_COLOR = "d637e8";
 
 	public static final int HEADER_ZEILE          = 0;
-	public static final int ERSTE_DATEN_ZEILE     = 1;
+	public static final int ZWEITE_HEADER_ZEILE   = 1;
+	public static final int ERSTE_DATEN_ZEILE     = 2;
 
-	public static final int PLATZ_SPALTE          = 0;  // A
-	public static final int TEAM_NR_SPALTE        = 1;  // B
-	public static final int TEAM_NAME_SPALTE      = 2;  // C
+	public static final int TEAM_NR_SPALTE        = 0;  // A
+	public static final int TEAM_NAME_SPALTE      = 1;  // B
+	public static final int PLATZ_SPALTE          = 2;  // C
 	public static final int SIEGE_SPALTE          = 3;  // D
 	public static final int BHZ_SPALTE            = 4;  // E
 	public static final int FBHZ_SPALTE           = 5;  // F
 	public static final int PUNKTE_PLUS_SPALTE    = 6;  // G
 	public static final int PUNKTE_MINUS_SPALTE   = 7;  // H
 	public static final int PUNKTE_DIFF_SPALTE    = 8;  // I
+	public static final int VALIDATE_SPALTE       = PUNKTE_DIFF_SPALTE + 1;  // J (versteckt)
 
 	private static final int COL_WIDTH_NR   = 800;
 	private static final int COL_WIDTH_NAME = 7000;
 	private static final int COL_WIDTH_DATA = 1400;
 
-	/** Hält die erweiterten Auswertungsdaten für die Ranglisten-Anzeige. */
+	/** Hält die erweiterten Auswertungsdaten für die Ranglisten-Sortierung. */
 	private record TeamRanglisteData(int teamNr, int siege, int punktePlus, int punkteMinus,
 			List<Integer> gegnerNrn) {
 
@@ -94,8 +101,15 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, I
 		}
 	}
 
+	private final RangListeSorter rangListeSorter;
+
 	public SchweizerRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
+		rangListeSorter = new RangListeSorter(this);
+	}
+
+	protected RangListeSorter getRangListeSorter() {
+		return rangListeSorter;
 	}
 
 	@Override
@@ -145,42 +159,38 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, I
 		List<SchweizerTeamErgebnis> sortiert = new SchweizerSystem().sortiereNachAuswertungskriterien(ergebnisse,
 				modus);
 
-		// BHZ (Buchholz) = Summe der Siege aller Gegner
-		Map<Integer, Integer> siegeMap = ergebnisse.stream()
-				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::siege));
-		Map<Integer, Integer> bhzMap = new HashMap<>();
-		for (SchweizerTeamErgebnis e : sortiert) {
-			int bhz = e.gegnerNrn().stream().mapToInt(gnr -> siegeMap.getOrDefault(gnr, 0)).sum();
-			bhzMap.put(e.teamNr(), bhz);
-		}
-
-		// FBHZ (Feinbuchholz) = Summe der BHZ-Werte aller Gegner
-		Map<Integer, Integer> fbhzMap = new HashMap<>();
-		for (SchweizerTeamErgebnis e : sortiert) {
-			int fbhz = e.gegnerNrn().stream().mapToInt(gnr -> bhzMap.getOrDefault(gnr, 0)).sum();
-			fbhzMap.put(e.teamNr(), fbhz);
-		}
-
-		Map<Integer, TeamRanglisteData> dataByNr = ranglisteData.stream()
-				.collect(Collectors.toMap(TeamRanglisteData::teamNr, d -> d));
-
 		insertHeader(sheet, modus);
-		insertDaten(sheet, sortiert, dataByNr, bhzMap, fbhzMap, meldeliste);
+		insertDaten(sheet, sortiert, meldeliste);
 
 		if (!sortiert.isEmpty()) {
+			insertFormeln(sheet, sortiert.size(), bisSpielrunde, modus);
 			new RangListeSpalte(PLATZ_SPALTE, this).upDateRanglisteSpalte();
+			getRangListeSorter().insertSortValidateSpalte(true);
+			// Pl.-Spalte: dicke Linie rechts (boldTop kommt von RangListeSpalte, hier ergänzt)
+			int letzteZeilePlatz = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+			getSheetHelper().setPropertiesInRange(sheet,
+					RangePosition.from(PLATZ_SPALTE, ERSTE_DATEN_ZEILE, PLATZ_SPALTE, letzteZeilePlatz),
+					CellProperties.from()
+							.setBorder(BorderFactory.from().allThin().boldLn().forTop().forRight().toBorder())
+							.setCharWeight(com.sun.star.awt.FontWeight.BOLD));
 		}
 
 		// Zebra-Formatierung für Datenbereich
 		if (!sortiert.isEmpty()) {
 			int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
-			RangePosition datenRange = RangePosition.from(PLATZ_SPALTE, ERSTE_DATEN_ZEILE,
+			RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
 					PUNKTE_DIFF_SPALTE, letzteZeile);
 			RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
 					.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
 					.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
+					.validateSpalte(validateSpalte())
 					.apply();
 		}
+
+		// Druckbereich: Header + Daten, ohne Validator-Spalte
+		int letzteZeile = sortiert.isEmpty() ? ZWEITE_HEADER_ZEILE
+				: ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+		setzeDruckbereich(sheet, letzteZeile);
 
 		getSheetHelper().setActiveSheet(sheet);
 	}
@@ -279,51 +289,281 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, I
 		Integer headerColor = getKonfigurationSheet().getMeldeListeHeaderFarbe();
 		boolean ohneBuchholz = modus == SchweizerRankingModus.OHNE_BUCHHOLZ;
 
-		String[] headers = { "Pl.", "Nr", "Name", "Siege", "BHZ", "FBHZ", "Punkte+", "Punkte-", "Diff" };
-		int[] cols = { PLATZ_SPALTE, TEAM_NR_SPALTE, TEAM_NAME_SPALTE, SIEGE_SPALTE,
-				BHZ_SPALTE, FBHZ_SPALTE, PUNKTE_PLUS_SPALTE, PUNKTE_MINUS_SPALTE, PUNKTE_DIFF_SPALTE };
-		int[] widths = { COL_WIDTH_NR, COL_WIDTH_NR, COL_WIDTH_NAME,
-				COL_WIDTH_DATA, ohneBuchholz ? 0 : COL_WIDTH_DATA, ohneBuchholz ? 0 : COL_WIDTH_DATA,
-				COL_WIDTH_DATA, COL_WIDTH_DATA, COL_WIDTH_DATA };
+		// ── Spaltenbreiten setzen ──────────────────────────────────────────────────
+		int[][] spaltenBreiten = {
+				{ PLATZ_SPALTE,        COL_WIDTH_NR   },
+				{ TEAM_NR_SPALTE,      COL_WIDTH_NR   },
+				{ TEAM_NAME_SPALTE,    COL_WIDTH_NAME  },
+				{ SIEGE_SPALTE,        COL_WIDTH_DATA  },
+				{ BHZ_SPALTE,          ohneBuchholz ? 0 : COL_WIDTH_DATA },
+				{ FBHZ_SPALTE,         ohneBuchholz ? 0 : COL_WIDTH_DATA },
+				{ PUNKTE_PLUS_SPALTE,  COL_WIDTH_DATA  },
+				{ PUNKTE_MINUS_SPALTE, COL_WIDTH_DATA  },
+				{ PUNKTE_DIFF_SPALTE,  COL_WIDTH_DATA  },
+		};
+		for (int[] sw : spaltenBreiten) {
+			getSheetHelper().setColumnProperties(sheet, sw[0],
+					ColumnProperties.from().setWidth(sw[1])
+							.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER));
+		}
 
-		for (int i = 0; i < cols.length; i++) {
-			ColumnProperties colProp = ColumnProperties.from().setWidth(widths[i])
-					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER);
-			StringCellValue cv = StringCellValue
-					.from(sheet, Position.from(cols[i], HEADER_ZEILE), headers[i])
-					.addColumnProperties(colProp)
+		// ── Zeile 0: Einzel-Spalten, vertikal über beide Header-Zeilen zusammengeführt ──
+		var einzelSpalten = new int[][] {
+				{ PLATZ_SPALTE,      1 }, // 1 = boldRight
+				{ TEAM_NR_SPALTE,    2 }, // 2 = doubleRight
+				{ TEAM_NAME_SPALTE,  0 },
+				{ SIEGE_SPALTE,      0 },
+				{ BHZ_SPALTE,        0 },
+				{ FBHZ_SPALTE,       0 },
+		};
+		String nameSpalteHeader = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen() ? "Teamname" : "Team";
+		String[] einzelTexte = { "Platz", "Nr", nameSpalteHeader, "Siege", "BHZ", "FBHZ" };
+		for (int i = 0; i < einzelSpalten.length; i++) {
+			int col = einzelSpalten[i][0];
+			int borderTyp = einzelSpalten[i][1];
+			var border = borderTyp == 1
+					? BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder()
+					: borderTyp == 2
+					? BorderFactory.from().allThin().boldLn().forBottom().doubleLn().forRight().toBorder()
+					: BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+			var cv = StringCellValue
+					.from(sheet, Position.from(col, HEADER_ZEILE), einzelTexte[i])
 					.setCellBackColor(headerColor)
-					.setBorder(BorderFactory.from().allThin().toBorder())
-					.setHoriJustify(CellHoriJustify.CENTER);
+					.setBorder(border)
+					.setHoriJustify(CellHoriJustify.CENTER)
+					.setEndPosMergeZeilePlus(1);  // vertikal Row 0 + Row 1
+			if (col == PLATZ_SPALTE) {
+				cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD)
+						.setVertJustify(CellVertJustify2.CENTER);
+			}
 			getSheetHelper().setStringValueInCell(cv);
+		}
+
+		// ── Zeile 0: "Punkte" horizontal über 3 Spalten zusammengeführt ──────────
+		getSheetHelper().setStringValueInCell(StringCellValue
+				.from(sheet, Position.from(PUNKTE_PLUS_SPALTE, HEADER_ZEILE), "Punkte")
+				.setCellBackColor(headerColor)
+				.setBorder(BorderFactory.from().allThin().toBorder())
+				.setHoriJustify(CellHoriJustify.CENTER)
+				.setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE));  // horizontal G–I
+
+		// ── Zeile 1: Sub-Header für die Punkte-Spalten ───────────────────────────
+		String[] subTexte = { "+", "-", "Δ" };
+		int[] subCols    = { PUNKTE_PLUS_SPALTE, PUNKTE_MINUS_SPALTE, PUNKTE_DIFF_SPALTE };
+		for (int i = 0; i < subCols.length; i++) {
+			getSheetHelper().setStringValueInCell(StringCellValue
+					.from(sheet, Position.from(subCols[i], ZWEITE_HEADER_ZEILE), subTexte[i])
+					.setCellBackColor(headerColor)
+					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
+					.setHoriJustify(CellHoriJustify.CENTER));
 		}
 	}
 
+	/**
+	 * Schreibt TeamNr in sortierter Reihenfolge.
+	 * Namens-Spalte als Formel mit Verweis auf die Meldeliste:
+	 * <ul>
+	 *   <li>NR-Modus: alle Spielernamen des Teams (Vorname Nachname, getrennt durch " / ")</li>
+	 *   <li>NAME-Modus: Teamname aus der Teamname-Spalte der Meldeliste</li>
+	 * </ul>
+	 * Änderungen in der Meldeliste werden dadurch automatisch übernommen.
+	 */
 	private void insertDaten(XSpreadsheet sheet, List<SchweizerTeamErgebnis> sortiert,
-			Map<Integer, TeamRanglisteData> dataByNr,
-			Map<Integer, Integer> bhzMap, Map<Integer, Integer> fbhzMap,
 			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
 
 		int zeile = ERSTE_DATEN_ZEILE;
 		for (SchweizerTeamErgebnis erg : sortiert) {
-			TeamRanglisteData data = dataByNr.get(erg.teamNr());
-			if (data == null) continue;
-
-			int bhz  = bhzMap.getOrDefault(erg.teamNr(), 0);
-			int fbhz = fbhzMap.getOrDefault(erg.teamNr(), 0);
-			String name = meldeliste.getTeamNameByNr(erg.teamNr());
-			if (name == null) name = "";
-
-			schreibeZahl(sheet, zeile, TEAM_NR_SPALTE,      erg.teamNr());
-			schreibeText(sheet, zeile, TEAM_NAME_SPALTE,    name);
-			schreibeZahl(sheet, zeile, SIEGE_SPALTE,        erg.siege());
-			schreibeZahl(sheet, zeile, BHZ_SPALTE,          bhz);
-			schreibeZahl(sheet, zeile, FBHZ_SPALTE,         fbhz);
-			schreibeZahl(sheet, zeile, PUNKTE_PLUS_SPALTE,  data.punktePlus());
-			schreibeZahl(sheet, zeile, PUNKTE_MINUS_SPALTE, data.punkteMinus());
-			schreibeZahl(sheet, zeile, PUNKTE_DIFF_SPALTE,  data.punkteDiff());
-
+			schreibeZahl(sheet, zeile, TEAM_NR_SPALTE, erg.teamNr());
 			zeile++;
+		}
+
+		if (!sortiert.isEmpty()) {
+			int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
+			String formel = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen()
+					? erstelleTeamnameFormel(meldeliste)
+					: erstelleSpielerNamenFormel(meldeliste);
+			schreibeFormel(sheet, TEAM_NAME_SPALTE, formel, letzteZeile);
+			getSheetHelper().setPropertiesInRange(sheet,
+					RangePosition.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE, TEAM_NAME_SPALTE, letzteZeile),
+					CellProperties.from().setHoriJustify(CellHoriJustify.LEFT));
+		}
+	}
+
+	/**
+	 * Erstellt eine INDEX/MATCH-Formel, die den Teamnamen aus der Meldeliste anhand der TeamNr
+	 * in der aktuellen Zeile nachschlägt (NAME-Modus).
+	 */
+	private String erstelleTeamnameFormel(SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
+		String mlSheetName = MeldeListeKonstanten.SHEETNAME;
+		int mlErsteZeile   = meldeliste.getErsteDatenZiele() + 1; // 0-basiert → 1-basiert
+
+		String mlNrCol   = spaltenBuchstabe(0);
+		String mlNameCol = spaltenBuchstabe(meldeliste.getTeamnameSpalte());
+
+		String mlNrRange   = mlBereich(mlSheetName, mlNrCol,   mlErsteZeile);
+		String mlNameRange = mlBereich(mlSheetName, mlNameCol, mlErsteZeile);
+		String teamNrRef   = teamNrIndirect();
+
+		return "IFERROR(INDEX(" + mlNameRange + ";MATCH(" + teamNrRef + ";" + mlNrRange + ";0));\"\")";
+	}
+
+	/**
+	 * Erstellt eine Formel, die alle Spielernamen des Teams als
+	 * "Vorname Nachname / Vorname Nachname / ..." aus der Meldeliste liest (NR-Modus).
+	 */
+	private String erstelleSpielerNamenFormel(SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
+		String mlSheetName = MeldeListeKonstanten.SHEETNAME;
+		int mlErsteZeile   = meldeliste.getErsteDatenZiele() + 1; // 0-basiert → 1-basiert
+		int anzSpieler     = getKonfigurationSheet().getMeldeListeFormation().getAnzSpieler();
+
+		String mlNrRange = mlBereich(mlSheetName, spaltenBuchstabe(0), mlErsteZeile);
+		String matchExpr = "MATCH(" + teamNrIndirect() + ";" + mlNrRange + ";0)";
+
+		StringBuilder sb = new StringBuilder();
+		for (int s = 0; s < anzSpieler; s++) {
+			String vCol = spaltenBuchstabe(meldeliste.getVornameSpalte(s));
+			String nCol = spaltenBuchstabe(meldeliste.getNachnameSpalte(s));
+			String vRange = mlBereich(mlSheetName, vCol, mlErsteZeile);
+			String nRange = mlBereich(mlSheetName, nCol, mlErsteZeile);
+
+			// "Vorname Nachname" für Spieler s, leer wenn nicht gefunden
+			String spieler = "TRIM(IFERROR(INDEX(" + vRange + ";" + matchExpr + ");\"\")"
+					+ "&\" \"&IFERROR(INDEX(" + nRange + ";" + matchExpr + ");\"\")" + ")";
+
+			if (s > 0) {
+				sb.append("&IF(LEN(").append(spieler).append(")>0;\"/\"&").append(spieler).append(";\"\")");
+			} else {
+				sb.append(spieler);
+			}
+		}
+
+		return "IFERROR(TRIM(" + sb + ");\"\")";
+	}
+
+	/** Hilfsmethode: absoluter Meldelisten-Bereichs-String für eine Spalte. */
+	private static String mlBereich(String sheetName, String spalte, int ersteZeile) {
+		return "$'" + sheetName + "'.$" + spalte + "$" + ersteZeile
+				+ ":$" + spalte + "$" + (ersteZeile + 999);
+	}
+
+	/** Hilfsmethode: INDIRECT-Ausdruck für TeamNr in der aktuellen Ranglisten-Zeile. */
+	private static String teamNrIndirect() {
+		return "INDIRECT(ADDRESS(ROW();" + (TEAM_NR_SPALTE + 1) + ";4))";
+	}
+
+	/**
+	 * Schreibt Siege, BHZ, FBHZ, Punkte+, Punkte- und Differenz als Sheet-Formeln,
+	 * die direkt auf die Spielrunden-Sheets verweisen.
+	 * Damit aktualisieren sich die Werte automatisch bei Ergebnisänderungen.
+	 */
+	/** Wandelt 0-basierten Spaltenindex in Spaltenbuchstabe(n) um (z.B. 0→"A", 25→"Z", 26→"AA"). */
+	private static String spaltenBuchstabe(int spalteIndex) {
+		StringBuilder sb = new StringBuilder();
+		int n = spalteIndex;
+		do {
+			sb.insert(0, (char) ('A' + (n % 26)));
+			n = n / 26 - 1;
+		} while (n >= 0);
+		return sb.toString();
+	}
+
+	private void insertFormeln(XSpreadsheet sheet, int anzTeams, int bisSpielrunde, SchweizerRankingModus modus)
+			throws GenerateException {
+
+		int letzteZeile = ERSTE_DATEN_ZEILE + anzTeams - 1;
+
+		// 1-indizierte Zeilennummern für Adressformeln
+		int dzSr = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + 1; // Spielrunde: erste Datenzeile (1-indiziert)
+		int dzRl = ERSTE_DATEN_ZEILE + 1;                                   // Rangliste:  erste Datenzeile (1-indiziert)
+
+		// Spaltenbuchstaben aus Konstanten ableiten (Spielrunde)
+		String colTa = spaltenBuchstabe(SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE);
+		String colTb = spaltenBuchstabe(SchweizerAbstractSpielrundeSheet.TEAM_B_SPALTE);
+		String colEa = spaltenBuchstabe(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE);
+		String colEb = spaltenBuchstabe(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE);
+
+		// Spaltenbuchstaben aus Konstanten ableiten (Rangliste)
+		String colNr   = spaltenBuchstabe(TEAM_NR_SPALTE);
+		String colSieg = spaltenBuchstabe(SIEGE_SPALTE);
+		String colBhz  = spaltenBuchstabe(BHZ_SPALTE);
+
+		// Referenz auf TeamNr in der aktuellen Zeile (1-indizierte Spalte)
+		String teamNrRef = "INDIRECT(ADDRESS(ROW();" + (TEAM_NR_SPALTE + 1) + ";4))";
+
+		// Rangliste-Ranges (absolut, für BHZ/FBHZ-Lookup)
+		String rlNr   = "$" + colNr   + "$" + dzRl + ":$" + colNr   + "$" + (dzRl + 999);
+		String rlSieg = "$" + colSieg + "$" + dzRl + ":$" + colSieg + "$" + (dzRl + 999);
+		String rlBHZ  = "$" + colBhz  + "$" + dzRl + ":$" + colBhz  + "$" + (dzRl + 999);
+
+		StringBuilder siegeF = new StringBuilder();
+		StringBuilder ppF    = new StringBuilder(); // Punkte+
+		StringBuilder pmF    = new StringBuilder(); // Punkte-
+		StringBuilder bhzF   = new StringBuilder();
+		StringBuilder fbhzF  = new StringBuilder();
+
+		for (int r = 1; r <= bisSpielrunde; r++) {
+			String shRef = "$'" + r + ". " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN + "'.";
+			String tA = shRef + "$" + colTa + "$" + dzSr + ":$" + colTa + "$" + (dzSr + 999);
+			String tB = shRef + "$" + colTb + "$" + dzSr + ":$" + colTb + "$" + (dzSr + 999);
+			String eA = shRef + "$" + colEa + "$" + dzSr + ":$" + colEa + "$" + (dzSr + 999);
+			String eB = shRef + "$" + colEb + "$" + dzSr + ":$" + colEb + "$" + (dzSr + 999);
+
+			String sep = r > 1 ? "+" : "";
+
+			// SIEGE: Gewinner-Paarungen (ergA > ergB oder ergB > ergA) + Freilos (tB=0)
+			siegeF.append(sep)
+					.append("IFERROR(SUMPRODUCT((").append(tA).append("=").append(teamNrRef).append(")*(")
+					.append(eA).append(">").append(eB).append("));0)")
+					.append("+IFERROR(SUMPRODUCT((").append(tB).append("=").append(teamNrRef).append(")*(")
+					.append(eB).append(">").append(eA).append("));0)")
+					.append("+IFERROR(SUMPRODUCT((").append(tA).append("=").append(teamNrRef).append(")*(")
+					.append(tB).append("=0));0)");
+
+			// PUNKTE+: eigene Ergebnisse summieren
+			ppF.append(sep)
+					.append("IFERROR(SUMPRODUCT((").append(tA).append("=").append(teamNrRef).append(")*")
+					.append(eA).append(");0)")
+					.append("+IFERROR(SUMPRODUCT((").append(tB).append("=").append(teamNrRef).append(")*")
+					.append(eB).append(");0)");
+
+			// PUNKTE-: Gegner-Ergebnisse summieren
+			pmF.append(sep)
+					.append("IFERROR(SUMPRODUCT((").append(tA).append("=").append(teamNrRef).append(")*")
+					.append(eB).append(");0)")
+					.append("+IFERROR(SUMPRODUCT((").append(tB).append("=").append(teamNrRef).append(")*")
+					.append(eA).append(");0)");
+
+			// BHZ: Summe der Siege aller Gegner (via INDEX/MATCH auf Rangliste-SIEGE-Spalte)
+			bhzF.append(sep)
+					.append("IFERROR(SUMPRODUCT((").append(tA).append("=").append(teamNrRef)
+					.append(")*IFERROR(INDEX(").append(rlSieg).append(";MATCH(").append(tB).append(";")
+					.append(rlNr).append(";0));0));0)")
+					.append("+IFERROR(SUMPRODUCT((").append(tB).append("=").append(teamNrRef)
+					.append(")*IFERROR(INDEX(").append(rlSieg).append(";MATCH(").append(tA).append(";")
+					.append(rlNr).append(";0));0));0)");
+
+			// FBHZ: Summe der BHZ aller Gegner (via INDEX/MATCH auf Rangliste-BHZ-Spalte)
+			fbhzF.append(sep)
+					.append("IFERROR(SUMPRODUCT((").append(tA).append("=").append(teamNrRef)
+					.append(")*IFERROR(INDEX(").append(rlBHZ).append(";MATCH(").append(tB).append(";")
+					.append(rlNr).append(";0));0));0)")
+					.append("+IFERROR(SUMPRODUCT((").append(tB).append("=").append(teamNrRef)
+					.append(")*IFERROR(INDEX(").append(rlBHZ).append(";MATCH(").append(tA).append(";")
+					.append(rlNr).append(";0));0));0)");
+		}
+
+		// PUNKTE_DIFF = Punkte+ - Punkte- (relative Referenz auf aktuelle Zeile)
+		String diffF = "INDIRECT(ADDRESS(ROW();" + (PUNKTE_PLUS_SPALTE + 1) + ";4))"
+				+ "-INDIRECT(ADDRESS(ROW();" + (PUNKTE_MINUS_SPALTE + 1) + ";4))";
+
+		schreibeFormel(sheet, SIEGE_SPALTE,        siegeF.toString(), letzteZeile);
+		schreibeFormel(sheet, PUNKTE_PLUS_SPALTE,  ppF.toString(),    letzteZeile);
+		schreibeFormel(sheet, PUNKTE_MINUS_SPALTE, pmF.toString(),    letzteZeile);
+		schreibeFormel(sheet, PUNKTE_DIFF_SPALTE,  diffF,             letzteZeile);
+
+		if (modus != SchweizerRankingModus.OHNE_BUCHHOLZ) {
+			schreibeFormel(sheet, BHZ_SPALTE,  bhzF.toString(),  letzteZeile);
+			schreibeFormel(sheet, FBHZ_SPALTE, fbhzF.toString(), letzteZeile);
 		}
 	}
 
@@ -356,7 +596,7 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, I
 
 	@Override
 	public int validateSpalte() throws GenerateException {
-		return -1;
+		return VALIDATE_SPALTE;
 	}
 
 	@Override
@@ -395,14 +635,41 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements ISheet, I
 
 	// ── Hilfsmethoden ────────────────────────────────────────────────────────────
 
+	private void schreibeFormel(XSpreadsheet sheet, int spalte, String formel, int bisZeile)
+			throws GenerateException {
+		getSheetHelper().setFormulaInCell(StringCellValue
+				.from(sheet, Position.from(spalte, ERSTE_DATEN_ZEILE))
+				.setValue(formel)
+				.setFillAutoDown(bisZeile));
+		// fillAutoDown überträgt keine Formatierung – Border explizit auf gesamten Bereich setzen
+		getSheetHelper().setPropertiesInRange(sheet,
+				RangePosition.from(spalte, ERSTE_DATEN_ZEILE, spalte, bisZeile),
+				CellProperties.from().setAllThinBorder());
+	}
+
 	private void schreibeZahl(XSpreadsheet sheet, int zeile, int spalte, int wert) throws GenerateException {
-		getSheetHelper().setNumberValueInCell(
-				NumberCellValue.from(sheet, Position.from(spalte, zeile)).setValue(wert));
+		var cv = NumberCellValue.from(sheet, Position.from(spalte, zeile)).setValue(wert);
+		if (spalte == TEAM_NR_SPALTE) {
+			cv.setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR)
+					.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder());
+		} else {
+			cv.setAllThinBorder();
+		}
+		getSheetHelper().setNumberValueInCell(cv);
 	}
 
 	private void schreibeText(XSpreadsheet sheet, int zeile, int spalte, String text) throws GenerateException {
 		getSheetHelper().setStringValueInCell(StringCellValue
 				.from(sheet, Position.from(spalte, zeile), text)
+				.setAllThinBorder()
 				.setHoriJustify(CellHoriJustify.LEFT));
+	}
+
+	/** Setzt den Druckbereich: Spalten A–I (ohne Validator-Spalte J), Zeilen 1 bis letzteZeile. */
+	private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {
+		var linksOben  = Position.from(TEAM_NR_SPALTE, HEADER_ZEILE);
+		var rechtsUnten = Position.from(PUNKTE_DIFF_SPALTE, letzteZeile);
+		PrintArea.from(sheet, getWorkingSpreadsheet())
+				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}
 }

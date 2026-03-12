@@ -95,7 +95,7 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	}
 
 	/** Spalte für den Teamnamen, oder -1 wenn deaktiviert. */
-	protected int getTeamnameSpalte() throws GenerateException {
+	public int getTeamnameSpalte() throws GenerateException {
 		return getKonfigurationSheet().isMeldeListeTeamnameAnzeigen() ? 1 : -1;
 	}
 
@@ -115,12 +115,12 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	}
 
 	/** Vorname-Spalte für Spieler spielerIdx (0-basiert). */
-	protected int getVornameSpalte(int spielerIdx) throws GenerateException {
+	public int getVornameSpalte(int spielerIdx) throws GenerateException {
 		return getErsterSpielerOffset() + spielerIdx * getSpaltenProSpieler();
 	}
 
 	/** Nachname-Spalte für Spieler spielerIdx. */
-	protected int getNachnameSpalte(int spielerIdx) throws GenerateException {
+	public int getNachnameSpalte(int spielerIdx) throws GenerateException {
 		return getVornameSpalte(spielerIdx) + 1;
 	}
 
@@ -155,14 +155,16 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	public void upDateSheet() throws GenerateException {
 		processBoxinfo("Aktualisiere Schweizer Meldeliste");
 
-		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
+		// Starke Referenz halten – WeakRef in TurnierSheet/SheetFreeze darf nicht vom GC eingesammelt werden
+		XSpreadsheet sheet = getXSpreadSheet();
+		TurnierSheet.from(sheet, getWorkingSpreadsheet()).setActiv();
 
 		insertHeaderInSheet(getKonfigurationSheet().getMeldeListeHeaderFarbe());
 		formatDatenSpalten();
 		formatZeilenfarben();
 
 		// Headerzeilen fixieren
-		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).doFreeze();
+		SheetFreeze.from(sheet, getWorkingSpreadsheet()).anzZeilen(3).doFreeze();
 	}
 
 	protected void insertHeaderInSheet(int headerColor) throws GenerateException {
