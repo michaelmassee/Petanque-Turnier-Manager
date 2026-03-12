@@ -143,11 +143,6 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 	}
 
 	@Override
-	public Logger getLogger() {
-		return logger;
-	}
-
-	@Override
 	protected void doRun() throws GenerateException {
 		// set visible
 		TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();

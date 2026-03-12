@@ -3,9 +3,6 @@
  */
 package de.petanqueturniermanager.liga.konfiguration;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
@@ -22,8 +19,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 		implements ILigaPropertiesSpalte, IKonfigurationSheet {
 
-	private static final Logger logger = LogManager.getLogger(LigaKonfigurationSheet.class);
-
 	private final LigaPropertiesSpalte propertiesSpalte;
 
 	/**
@@ -37,11 +32,6 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		return this;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

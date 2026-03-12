@@ -2,9 +2,6 @@ package de.petanqueturniermanager.schweizer.meldeliste;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -25,8 +22,6 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * Formation: Triplette, Teamname und Vereinsname aktiv.
  */
 public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeListeSheet {
-
-	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetTestDaten.class);
 
 	private static final int ANZ_TEAMS_DEFAULT = 16;
 	private static final Formation TEST_FORMATION = Formation.TRIPLETTE;
@@ -106,9 +101,5 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 		meldeListe.upDateSheet();
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -64,8 +62,6 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  */
 public class SchweizerRanglisteSheet extends SchweizerSheet implements IRangliste {
 
-	private static final Logger LOGGER = LogManager.getLogger(SchweizerRanglisteSheet.class);
-
 	public static final String SHEETNAME = "Rangliste";
 	public static final String SHEET_COLOR = "d637e8";
 
@@ -110,11 +106,6 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements IRanglist
 
 	protected RangListeSorter getRangListeSorter() {
 		return rangListeSorter;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return LOGGER;
 	}
 
 	@Override
@@ -564,6 +555,10 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements IRanglist
 		if (modus != SchweizerRankingModus.OHNE_BUCHHOLZ) {
 			schreibeFormel(sheet, BHZ_SPALTE,  bhzF.toString(),  letzteZeile);
 			schreibeFormel(sheet, FBHZ_SPALTE, fbhzF.toString(), letzteZeile);
+		} else {
+			// OHNE_BUCHHOLZ: Spalten explizit mit 0 befüllen, damit Zellen nicht leer bleiben
+			schreibeFormel(sheet, BHZ_SPALTE,  "0", letzteZeile);
+			schreibeFormel(sheet, FBHZ_SPALTE, "0", letzteZeile);
 		}
 	}
 

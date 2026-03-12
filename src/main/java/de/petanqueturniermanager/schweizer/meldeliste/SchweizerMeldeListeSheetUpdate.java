@@ -112,9 +112,5 @@ public class SchweizerMeldeListeSheetUpdate extends AbstractSchweizerMeldeListeS
 		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

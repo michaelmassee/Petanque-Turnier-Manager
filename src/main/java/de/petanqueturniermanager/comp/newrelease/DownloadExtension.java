@@ -50,11 +50,6 @@ public class DownloadExtension extends SheetRunner {
 	}
 
 	@Override
-	public Logger getLogger() {
-		return logger;
-	}
-
-	@Override
 	protected void doRun() throws GenerateException {
 
 		NewReleaseChecker newReleaseChecker = new NewReleaseChecker();

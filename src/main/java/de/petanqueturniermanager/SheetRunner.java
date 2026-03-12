@@ -219,8 +219,9 @@ public abstract class SheetRunner extends Thread {
 
 	private void updateKonfigurationSheet() throws GenerateException {
 		IKonfigurationSheet konfigurationSheet = getKonfigurationSheet();
-		checkNotNull(konfigurationSheet, "IKonfigurationSheet == null");
-		konfigurationSheet.update();
+		if (konfigurationSheet != null) {
+			konfigurationSheet.update();
+		}
 	}
 
 	public Logger getLogger() {

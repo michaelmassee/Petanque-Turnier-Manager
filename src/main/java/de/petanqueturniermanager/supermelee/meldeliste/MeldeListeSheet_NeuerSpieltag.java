@@ -4,9 +4,6 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -16,7 +13,6 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeSheet {
-	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_NeuerSpieltag.class);
 
 	public MeldeListeSheet_NeuerSpieltag(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -40,9 +36,5 @@ public class MeldeListeSheet_NeuerSpieltag extends AbstractSupermeleeMeldeListeS
 		getxCalculatable().calculateAll();
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

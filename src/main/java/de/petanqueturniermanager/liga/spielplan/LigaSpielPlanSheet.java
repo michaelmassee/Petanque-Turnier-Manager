@@ -6,9 +6,6 @@ package de.petanqueturniermanager.liga.spielplan;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -53,7 +50,6 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
  */
 public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 
-	private static final Logger LOGGER = LogManager.getLogger(LigaSpielPlanSheet.class);
 	private static final String SHEET_COLOR = "b0f442";
 	public static final String SHEET_NAMEN = "Spielplan";
 
@@ -106,11 +102,6 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	@Override
 	public TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	public Logger getLogger() {
-		return LOGGER;
 	}
 
 	@Override

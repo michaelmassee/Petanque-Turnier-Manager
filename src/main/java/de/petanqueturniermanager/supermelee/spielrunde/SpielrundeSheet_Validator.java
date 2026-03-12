@@ -36,11 +36,6 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 	}
 
 	@Override
-	public Logger getLogger() {
-		return logger;
-	}
-
-	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spielTagNr = getKonfigurationSheet().getAktiveSpieltag();
 		validateSpieltag(spielTagNr);

@@ -1,8 +1,5 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -13,7 +10,6 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
  */
 
 public class JGJMeldeListeSheet_New extends AbstractJGJMeldeListeSheet {
-	private static final Logger logger = LogManager.getLogger(JGJMeldeListeSheet_New.class);
 
 	public JGJMeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -28,9 +24,5 @@ public class JGJMeldeListeSheet_New extends AbstractJGJMeldeListeSheet {
 		}
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

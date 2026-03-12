@@ -7,9 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -36,13 +33,6 @@ public class SpieltagRangliste_Validator extends AbstractSpieltagRangliste {
 	public SpieltagRangliste_Validator(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "SpieltagRangliste_Validator");
 		spielrundeSheetValidator = new SpielrundeSheet_Validator(workingSpreadsheet);
-	}
-
-	private static final Logger logger = LogManager.getLogger(SpieltagRangliste_Validator.class);
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

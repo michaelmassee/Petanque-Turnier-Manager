@@ -2,9 +2,6 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -28,7 +25,6 @@ import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
  */
 public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet {
 
-	private static final Logger LOGGER = LogManager.getLogger(SchweizerTurnierTestDaten.class);
 	private static final int ANZ_RUNDEN = 3;
 
 	private final SchweizerMeldeListeSheetTestDaten meldelisteTestDaten;
@@ -111,8 +107,4 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 		}
 	}
 
-	@Override
-	public Logger getLogger() {
-		return LOGGER;
-	}
 }

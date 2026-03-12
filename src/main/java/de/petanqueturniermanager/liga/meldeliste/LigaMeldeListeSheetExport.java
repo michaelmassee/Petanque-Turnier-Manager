@@ -62,11 +62,6 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 		cleanUpLigaHtml(htmlExportFile, fileNamePdfSpielplan, fileNamePdfRangliste);
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
-
 	private void cleanUpLigaHtml(URI htmlExportFileUri, String fileNamePdfSpielplan, String fileNamePdfRangliste) {
 
 		processBox().info("Clean und reformat html");

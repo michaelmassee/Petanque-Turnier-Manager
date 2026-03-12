@@ -3,9 +3,6 @@
  */
 package de.petanqueturniermanager.forme.korunde;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -30,8 +27,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *
  */
 public class CadrageSheet extends SheetRunner implements ISheet {
-
-	private static final Logger logger = LogManager.getLogger(CadrageSheet.class);
 
 	private static final String SHEETNAME = "Cadrage";
 	private static final String SHEET_COLOR = "c12439";
@@ -61,11 +56,6 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	@Override
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

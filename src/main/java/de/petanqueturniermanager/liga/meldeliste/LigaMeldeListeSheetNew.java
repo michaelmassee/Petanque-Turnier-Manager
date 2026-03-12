@@ -4,16 +4,12 @@
 
 package de.petanqueturniermanager.liga.meldeliste;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 
 public class LigaMeldeListeSheetNew extends AbstractLigaMeldeListeSheet {
-	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetNew.class);
 
 	public LigaMeldeListeSheetNew(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -27,9 +23,5 @@ public class LigaMeldeListeSheetNew extends AbstractLigaMeldeListeSheet {
 		}
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

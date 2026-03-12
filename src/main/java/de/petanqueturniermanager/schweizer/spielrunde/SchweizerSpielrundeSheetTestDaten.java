@@ -1,8 +1,5 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -13,7 +10,6 @@ import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTe
  */
 
 public class SchweizerSpielrundeSheetTestDaten extends SchweizerAbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(SchweizerSpielrundeSheetTestDaten.class);
 
 	private final SchweizerMeldeListeSheetTestDaten schweizerMeldeListeSheetTestDaten;
 	private final SchweizerSpielrundeSheetNaechste schweizerSpielrundeSheetNaechste;
@@ -46,9 +42,5 @@ public class SchweizerSpielrundeSheetTestDaten extends SchweizerAbstractSpielrun
 
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

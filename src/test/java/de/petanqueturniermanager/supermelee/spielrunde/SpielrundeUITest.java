@@ -215,7 +215,7 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		RangeData splrNrRange = rngHlpr.getDataFromRange();
 
 		// finde die nachbar Zelle spielrnr zum tauschen mit nrSpieler2
-		Optional<Optional<CellData>> nrzumTauschen = IntStream.range(0, 5).filter(i -> { // in welche spalte ? 
+		Optional<Optional<CellData>> nrzumTauschen = IntStream.range(0, 6).filter(i -> { // in welche spalte ?
 			return splrNrRange.stream().filter(r -> r.get(i).getIntVal(-1) == nrSpieler1).findFirst().isPresent();
 		}).mapToObj(i -> {
 			return splrNrRange.stream().filter(r -> r.get(i).getIntVal(-1) == nrSpieler1).findFirst().map(r -> {

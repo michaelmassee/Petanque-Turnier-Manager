@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
@@ -46,8 +45,6 @@ import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 
 public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements ISpielTagRangliste {
-
-	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet.class);
 
 	public static final String KOPFDATEN_SUMME = "Summe";
 	public static final String KOPFDATEN_SUMME_SPIELE = "Spiele";
@@ -428,10 +425,6 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 		}
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 	// Delegates
 	// --------------------------
 

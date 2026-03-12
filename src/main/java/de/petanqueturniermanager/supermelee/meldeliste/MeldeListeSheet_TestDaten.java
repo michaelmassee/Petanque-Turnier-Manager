@@ -8,9 +8,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -35,7 +32,6 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 
 	public static final int ANZ_TESTNAMEN = 100;
 	private static final int MIN_ANZ_SPIELER = 10;
-	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_TestDaten.class);
 
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 	private final TestnamenLoader testnamenLoader;
@@ -44,11 +40,6 @@ public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet
 		super(workingSpreadsheet);
 		meldeListe = new MeldeListeSheet_New(workingSpreadsheet);
 		testnamenLoader = new TestnamenLoader();
-	}
-
-	@Override
-	public Logger getLogger() {
-		return MeldeListeSheet_TestDaten.logger;
 	}
 
 	@Override

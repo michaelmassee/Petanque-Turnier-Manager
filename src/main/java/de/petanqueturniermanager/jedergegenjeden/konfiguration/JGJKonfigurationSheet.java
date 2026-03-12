@@ -1,8 +1,5 @@
 package de.petanqueturniermanager.jedergegenjeden.konfiguration;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
@@ -17,8 +14,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 
 public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJGJProperiesSpalte, IKonfigurationSheet {
-
-	private static final Logger logger = LogManager.getLogger(JGJKonfigurationSheet.class);
 
 	private final JGJPropertiesSpalte propertiesSpalte;
 
@@ -76,11 +71,6 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

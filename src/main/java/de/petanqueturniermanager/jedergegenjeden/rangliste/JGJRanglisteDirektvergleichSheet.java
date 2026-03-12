@@ -7,9 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -47,7 +44,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  */
 public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet {
 
-	private static final Logger logger = LogManager.getLogger(JGJRanglisteDirektvergleichSheet.class);
 	private static final String SHEETNAME = "Direktvergleich";
 	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
@@ -81,11 +77,6 @@ public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheetHelper().findByName(SHEETNAME);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

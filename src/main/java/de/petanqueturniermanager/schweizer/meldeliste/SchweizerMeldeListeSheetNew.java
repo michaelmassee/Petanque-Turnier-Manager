@@ -83,9 +83,5 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 		}
 	}
 
-	@Override
-	public Logger getLogger() {
-		return logger;
-	}
 
 }

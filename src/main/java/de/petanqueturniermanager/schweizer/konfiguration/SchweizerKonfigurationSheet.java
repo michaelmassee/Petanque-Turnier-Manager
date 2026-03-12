@@ -3,9 +3,6 @@
  */
 package de.petanqueturniermanager.schweizer.konfiguration;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -26,8 +23,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		implements ISchweizerPropertiesSpalte {
 
-	private static final Logger logger = LogManager.getLogger(SchweizerKonfigurationSheet.class);
-
 	private final SchweizerPropertiesSpalte propertiesSpalte;
 
 	/**
@@ -41,11 +36,6 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	@Override
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		return this;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

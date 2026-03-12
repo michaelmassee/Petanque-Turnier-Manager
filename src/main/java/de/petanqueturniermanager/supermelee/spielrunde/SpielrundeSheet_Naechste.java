@@ -3,9 +3,6 @@
  **/
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -15,15 +12,9 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 public class SpielrundeSheet_Naechste extends AbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Naechste.class);
 
 	public SpielrundeSheet_Naechste(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

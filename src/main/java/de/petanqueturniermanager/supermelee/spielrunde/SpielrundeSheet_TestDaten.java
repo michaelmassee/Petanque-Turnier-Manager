@@ -5,9 +5,6 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -28,7 +25,6 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
 
 public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_TestDaten.class);
 
 	private final SpielrundeSheet_Naechste naechsteSpielrundeSheet;
 	private final MeldeListeSheet_TestDaten meldeListeTestDatenGenerator;
@@ -44,11 +40,6 @@ public class SpielrundeSheet_TestDaten extends AbstractSpielrundeSheet {
 		anmeldungenSheet = new AnmeldungenSheet(workingSpreadsheet);
 		tielnehmerSheet = new TielnehmerSheet(workingSpreadsheet);
 
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

@@ -8,9 +8,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
@@ -38,8 +35,6 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
-	private static final Logger logger = LogManager.getLogger(AnmeldungenSheet.class);
-
 	public static final String SHEETNAME = "Anmeldungen";
 	private static final String SHEET_COLOR = "98e2d7";
 
@@ -54,11 +49,6 @@ public class AnmeldungenSheet extends SuperMeleeSheet implements ISheet {
 	public AnmeldungenSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, "Anmeldungen");
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

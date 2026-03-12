@@ -2,9 +2,6 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
@@ -24,7 +21,6 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  */
 
 public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrundeSheet {
-	private static final Logger LOGGER = LogManager.getLogger(SchweizerSpielrundeSheetNaechste.class);
 
 	public SchweizerSpielrundeSheetNaechste(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
@@ -34,11 +30,6 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	public void doRun() throws GenerateException {
 		processBoxinfo("Nächste Spielrunde " + getSpielRundeNr().getNr());
 		naechsteSpielrundeEinfuegen();
-	}
-
-	@Override
-	public Logger getLogger() {
-		return LOGGER;
 	}
 
 	public boolean naechsteSpielrundeEinfuegen() throws GenerateException {

@@ -6,9 +6,6 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -38,8 +35,6 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
 
 public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 
-	private static final Logger logger = LogManager.getLogger(TielnehmerSheet.class);
-
 	public static final String SHEETNAME = "Teilnehmer";
 
 	public static final int ERSTE_DATEN_ZEILE = 0;
@@ -66,11 +61,6 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 	@Override
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

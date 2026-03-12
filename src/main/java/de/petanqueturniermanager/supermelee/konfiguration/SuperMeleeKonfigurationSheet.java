@@ -4,9 +4,6 @@
 
 package de.petanqueturniermanager.supermelee.konfiguration;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -22,8 +19,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
 
-	private static final Logger logger = LogManager.getLogger(SuperMeleeKonfigurationSheet.class);
-
 	public static final int MAX_SPIELTAG = 10;
 
 	private final SuperMeleePropertiesSpalte propertiesSpalte;
@@ -32,11 +27,6 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	public SuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
 		propertiesSpalte = new SuperMeleePropertiesSpalte(this);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

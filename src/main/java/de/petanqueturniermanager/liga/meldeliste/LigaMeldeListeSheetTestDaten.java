@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
@@ -29,8 +26,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class LigaMeldeListeSheetTestDaten extends LigaSheet implements ISheet {
 
-	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetTestDaten.class);
-
 	private final LigaMeldeListeSheetNew meldeListe;
 	private final boolean geradeAnzahlMannschaften;
 
@@ -38,11 +33,6 @@ public class LigaMeldeListeSheetTestDaten extends LigaSheet implements ISheet {
 		super(workingSpreadsheet);
 		meldeListe = new LigaMeldeListeSheetNew(workingSpreadsheet);
 		this.geradeAnzahlMannschaften = geradeAnzahlMannschaften;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return LigaMeldeListeSheetTestDaten.logger;
 	}
 
 	@Override

@@ -259,6 +259,12 @@ public class SuperMeleePaarungenV2 {
             MeleeSpielRunde spielRunde = generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
             for (Spieler dummy : dummies) {
                 spielRunde.removeSpieler(dummy);
+                // Dummy-Einträge aus warImTeamMit der echten Spieler entfernen:
+                // Dummies sind künstliche Platzhalter — ihre Teamzuordnung soll keine
+                // Paarungsconstraints für echte Spieler in späteren Runden erzeugen.
+                for (Spieler spieler : meldungen.spieler()) {
+                    spieler.deleteWarImTeam(dummy);
+                }
             }
             return spielRunde;
         } finally {

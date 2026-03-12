@@ -19,9 +19,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
@@ -67,7 +64,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste {
-	private static final Logger logger = LogManager.getLogger(EndranglisteSheet.class);
 
 	public static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0, B=1
@@ -488,11 +484,6 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 			}
 		}
 		return spielerErgebnisse;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

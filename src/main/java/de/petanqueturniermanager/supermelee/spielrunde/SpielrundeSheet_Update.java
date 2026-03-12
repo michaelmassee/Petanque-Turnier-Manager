@@ -5,9 +5,6 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -18,15 +15,9 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
-	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Update.class);
 
 	public SpielrundeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

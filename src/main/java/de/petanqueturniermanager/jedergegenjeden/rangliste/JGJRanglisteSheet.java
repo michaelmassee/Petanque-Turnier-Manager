@@ -6,9 +6,6 @@ package de.petanqueturniermanager.jedergegenjeden.rangliste;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -55,7 +52,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 
 	private static final int MARGIN = 120;
-	private static final Logger logger = LogManager.getLogger(JGJRanglisteSheet.class);
 	public static final String SHEETNAME = "Rangliste";
 	private static final String SHEET_COLOR = "d637e8";
 	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
@@ -94,11 +90,6 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return getSheetHelper().findByName(SHEETNAME);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

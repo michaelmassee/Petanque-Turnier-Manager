@@ -254,14 +254,24 @@ task runLibreoffice(type: Exec) {
     }
 }
 
-// Tests benötigen die aktuelle OXT installiert – reinstallExtension baut und installiert sie
+// UITests benötigen die aktuelle OXT installiert.
+// Standard: nur Unit-Tests (kein Reinstall nötig).
+// Mit -PuitTests=true werden auch UITests ausgeführt und die Extension reinstalliert.
+def mitUiTests = project.hasProperty('uitTests') && project.uitTests == 'true'
+
 test {
-    dependsOn reinstallExtension
+    if (mitUiTests) {
+        dependsOn reinstallExtension
+    }
     // UITests starten LibreOffice auf Port 8100 – nur ein Worker gleichzeitig erlaubt
     maxParallelForks = 1
     // Im Gradle-Build immer headless; manuelle IDE-Starts verwenden headless=false (Standard)
     systemProperty 'uitest.headless', 'true'
     useJUnitPlatform()
+    if (!mitUiTests) {
+        // UITests ausschließen wenn kein -PuitTests=true gesetzt
+        exclude '**/*UITest*'
+    }
     // Hängende UITests nach 3 Minuten pro Test abbrechen (soffice-Verbindung kann blockieren)
     systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
 }

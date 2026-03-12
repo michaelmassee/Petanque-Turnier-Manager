@@ -4,9 +4,6 @@
 
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -26,8 +23,6 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator
  *
  */
 public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
-	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheet_TestDaten.class);
-
 	private final SpielrundeSheet_TestDaten spielrundeSheetTestDaten;
 	private final MeldeListeSheet_NeuerSpieltag meldeListeSheetNeuerSpieltag;
 
@@ -35,11 +30,6 @@ public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
 		super(workingSpreadsheet);
 		spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(workingSpreadsheet);
 		meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet);
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

@@ -438,6 +438,47 @@ public class SuperMeleePaarungenV2Test {
     }
 
     /**
+     * Stellt sicher, dass Dummy-Spieler nach einer Runde KEINE Einträge in der
+     * {@code warImTeamMit}-Historie echter Spieler hinterlassen.<br>
+     * <br>
+     * Dummies sind künstliche Platzhalter ohne Turnierbedeutung. Würden sie in der
+     * Historie bleiben, hätte jeder echte Spieler nach {@code anzDummies} Runden alle
+     * Dummy-Nrn in seiner Liste und der Algorithmus könnte keine gültige Zuweisung mehr
+     * finden — obwohl mathematisch noch Lösungen existieren.<br>
+     * <br>
+     * Testszenario: 9 Spieler im Doublette-Modus (3 Dummies, Nrn. 10000–10002).
+     * Nach der Runde muss {@code warImTeamMit(dummyNr)} für jeden echten Spieler
+     * {@code false} liefern.
+     */
+    @Test
+    public void testDummies_keineWarImTeamMitEintraege_nachRunde() throws AlgorithmenException {
+        // 9 Spieler: Doublette-Modus ergänzt intern 3 Dummies (Nrn. 10000–10002)
+        SpielerMeldungen meldungen = newTestMeldungen(9);
+
+        paarungen.neueSpielrundeDoubletteMode(1, meldungen, false);
+
+        // Kein echter Spieler darf eine Dummy-Nr in seiner warImTeamMit-Liste haben
+        int dummyStartNr = 10000;
+        int maxDummies = 10; // obere Schranke: mehr als je in einer Runde benötigt werden
+        for (Spieler spieler : meldungen.spieler()) {
+            for (int dummyNr = dummyStartNr; dummyNr < dummyStartNr + maxDummies; dummyNr++) {
+                assertThat(spieler.warImTeamMit(Spieler.from(dummyNr)))
+                        .as("Spieler %d darf nicht 'warImTeamMit' Dummy-Nr %d haben",
+                                spieler.getNr(), dummyNr)
+                        .isFalse();
+            }
+        }
+
+        // Zusatzkontrolle: anzahlMitSpieler() darf nur echte Partner enthalten
+        // Doubletten-Spieler haben genau 1 Mitspieler, Tripletten-Spieler genau 2
+        for (Spieler spieler : meldungen.spieler()) {
+            assertThat(spieler.anzahlMitSpieler())
+                    .as("Spieler %d: nur echte Mitspieler erwartet (max. 2)", spieler.getNr())
+                    .isLessThanOrEqualTo(2);
+        }
+    }
+
+    /**
      * Reproduziert das Szenario des früher {@code @Disabled} V1-Tests (korrigierter Aufbau).<br>
      * <br>
      * V2 beweist mit nur ~59 Backtracking-Knoten, dass nach diesen drei konkreten Runden

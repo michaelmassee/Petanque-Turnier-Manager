@@ -3,9 +3,6 @@
  */
 package de.petanqueturniermanager.forme.korunde;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -26,8 +23,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *
  */
 public class KoGruppeABSheet extends SheetRunner implements ISheet {
-
-	private static final Logger logger = LogManager.getLogger(KoGruppeABSheet.class);
 
 	public static final String SHEETNAME = "KO Runde";
 	private static final String SHEET_COLOR = "98e2d7";
@@ -55,11 +50,6 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	@Override
 	public final TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	public Logger getLogger() {
-		return logger;
 	}
 
 	@Override

@@ -3,9 +3,6 @@ package de.petanqueturniermanager.jedergegenjeden.spielplan;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -41,7 +38,6 @@ import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
-import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
@@ -49,7 +45,6 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 
 public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 
-	private static final Logger LOGGER = LogManager.getLogger(SpielrundePlan.class);
 	private static final String SHEET_COLOR = "b0f442";
 	public static final String SHEET_NAMEN = "Spielplan";
 
@@ -95,11 +90,6 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	@Override
 	public TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	public Logger getLogger() {
-		return LOGGER;
 	}
 
 	@Override

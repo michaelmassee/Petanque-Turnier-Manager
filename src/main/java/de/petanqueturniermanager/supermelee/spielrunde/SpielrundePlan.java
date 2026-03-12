@@ -3,9 +3,6 @@
  */
 package de.petanqueturniermanager.supermelee.spielrunde;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -40,7 +37,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
  *
  */
 public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
-	private static final Logger LOGGER = LogManager.getLogger(SpielrundePlan.class);
 	private static final String SHEET_COLOR = "b0f442";
 
 	public static final int HEADER_ZEILE = 0; // Spieltag
@@ -83,11 +79,6 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 
 	public String getSpielrundeSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
 		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + AbstractSpielrundeSheet.PREFIX_SHEET_NAMEN;
-	}
-
-	@Override
-	public Logger getLogger() {
-		return LOGGER;
 	}
 
 	@Override
