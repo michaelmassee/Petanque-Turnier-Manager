@@ -31,9 +31,10 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
-public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
+public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 	public static final String SHEETNAME = "Teilnehmer";
 
@@ -45,12 +46,19 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 
 	private static final String SHEET_COLOR = "6542f4";
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 	private SpielTagNr spielTagNr = null;
 
 	public TielnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Teilnehmer");
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Teilnehmer");
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
+	}
+
+	@Override
+	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override
@@ -93,7 +101,7 @@ public class TielnehmerSheet extends SuperMeleeSheet implements ISheet {
 		NumberCellValue spierNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
 
-		ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH);
+		ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(SuperMeleeKonfigurationSheet.SUPER_MELEE_MELDUNG_NAME_WIDTH);
 
 		StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NAME_SPALTE, ERSTE_DATEN_ZEILE))
 				.setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true);

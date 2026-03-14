@@ -31,8 +31,10 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -42,12 +44,13 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 /**
  * @author Michael Massee
  */
-public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements ISheet {
+public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEETNAME = "Direktvergleich";
 	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
 
+	private final LigaKonfigurationSheet konfigurationSheet;
 	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private LigaSpielPlan ligaSpielPlan;
@@ -61,12 +64,18 @@ public class LigaRanglisteDirektvergleichSheet extends LigaSheet implements IShe
 	 * @param workingSpreadsheet
 	 */
 	public LigaRanglisteDirektvergleichSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Liga-RanglisteSheet");
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
+		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga-RanglisteSheet");
+		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(1).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 
+	}
+
+	@Override
+	protected LigaKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting

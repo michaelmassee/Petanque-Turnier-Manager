@@ -15,12 +15,14 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJGJProperiesSpalte, IKonfigurationSheet {
 
+	public static final int MELDUNG_NAME_WIDTH = 8000;
+
 	private final JGJPropertiesSpalte propertiesSpalte;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
-	JGJKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+	public JGJKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ);
 		propertiesSpalte = new JGJPropertiesSpalte(this);
 	}

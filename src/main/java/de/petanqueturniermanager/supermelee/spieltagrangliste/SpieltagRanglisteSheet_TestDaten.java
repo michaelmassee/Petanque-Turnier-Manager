@@ -10,7 +10,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
@@ -22,14 +22,21 @@ import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator
  * @author michael
  *
  */
-public class SpieltagRanglisteSheet_TestDaten extends SuperMeleeSheet {
+public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final SpielrundeSheet_TestDaten spielrundeSheetTestDaten;
 	private final MeldeListeSheet_NeuerSpieltag meldeListeSheetNeuerSpieltag;
 
 	public SpieltagRanglisteSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		spielrundeSheetTestDaten = new SpielrundeSheet_TestDaten(workingSpreadsheet);
 		meldeListeSheetNeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(workingSpreadsheet);
+	}
+
+	@Override
+	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override

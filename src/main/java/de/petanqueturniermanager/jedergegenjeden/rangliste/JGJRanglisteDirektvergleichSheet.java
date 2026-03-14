@@ -31,8 +31,10 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.model.IMeldung;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -42,12 +44,13 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 /**
  * @author Michael Massee
  */
-public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet {
+public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEETNAME = "Direktvergleich";
 	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
 
+	private final JGJKonfigurationSheet konfigurationSheet;
 	private final JGJMeldeListeSheet_Update meldeListe;
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private LigaSpielPlan spielPlan;
@@ -61,12 +64,18 @@ public class JGJRanglisteDirektvergleichSheet extends JGJSheet implements ISheet
 	 * @param workingSpreadsheet
 	 */
 	public JGJRanglisteDirektvergleichSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "JGJ-RanglisteSheet");
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
+		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-RanglisteSheet");
+		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(1).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 
+	}
+
+	@Override
+	protected JGJKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting

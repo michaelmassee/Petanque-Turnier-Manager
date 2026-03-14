@@ -22,13 +22,17 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeliste<TeamMeldungen, Team> {
+abstract class AbstractLigaMeldeListeSheet extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
+
+	private final LigaKonfigurationSheet konfigurationSheet;
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 7; // +1 (6 meldungen) Tabelle immer mit min anzahl von zeilen formatieren
 
@@ -43,11 +47,17 @@ abstract class AbstractLigaMeldeListeSheet extends LigaSheet implements IMeldeli
 	}
 
 	protected AbstractLigaMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
-		super(workingSpreadsheet, prefix);
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
+		super(workingSpreadsheet, TurnierSystem.LIGA, prefix);
+		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
 				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
+	}
+
+	@Override
+	protected LigaKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	/**

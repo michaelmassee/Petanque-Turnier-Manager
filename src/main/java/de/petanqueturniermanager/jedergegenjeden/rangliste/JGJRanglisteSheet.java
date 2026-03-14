@@ -40,8 +40,10 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -49,7 +51,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 /**
  * @author Michael Massee
  */
-public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
+public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste {
 
 	private static final int MARGIN = 120;
 	public static final String SHEETNAME = "Rangliste";
@@ -64,6 +66,7 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 	private static final int ANZ_RUNDEN_SPALTEN = 4;
 	private static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
+	private final JGJKonfigurationSheet konfigurationSheet;
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final JGJMeldeListeSheet_Update meldeListe;
 	private final RangListeSorter rangListeSorter;
@@ -74,12 +77,18 @@ public class JGJRanglisteSheet extends JGJSheet implements ISheet, IRangliste {
 	 * @throws GenerateException
 	 */
 	public JGJRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "JGJ-RanglisteSheet");
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
+		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-RanglisteSheet");
+		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(2).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 		rangListeSorter = new RangListeSorter(this);
+	}
+
+	@Override
+	protected JGJKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting

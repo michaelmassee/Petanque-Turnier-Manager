@@ -20,6 +20,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {
 
 	public static final int MAX_SPIELTAG = 10;
+	public static final int SUPER_MELEE_MELDUNG_NAME_WIDTH = 4000;
 
 	private final SuperMeleePropertiesSpalte propertiesSpalte;
 

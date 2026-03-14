@@ -19,12 +19,14 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 		implements ILigaPropertiesSpalte, IKonfigurationSheet {
 
+	public static final int LIGA_MELDUNG_NAME_WIDTH = 8000;
+
 	private final LigaPropertiesSpalte propertiesSpalte;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
-	LigaKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+	public LigaKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA);
 		propertiesSpalte = new LigaPropertiesSpalte(this);
 	}

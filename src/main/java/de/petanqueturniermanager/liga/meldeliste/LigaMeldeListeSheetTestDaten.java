@@ -20,19 +20,27 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public class LigaMeldeListeSheetTestDaten extends LigaSheet implements ISheet {
+public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
 
+	private final LigaKonfigurationSheet konfigurationSheet;
 	private final LigaMeldeListeSheetNew meldeListe;
 	private final boolean geradeAnzahlMannschaften;
 
 	public LigaMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, boolean geradeAnzahlMannschaften) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.LIGA);
+		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
 		meldeListe = new LigaMeldeListeSheetNew(workingSpreadsheet);
 		this.geradeAnzahlMannschaften = geradeAnzahlMannschaften;
+	}
+
+	@Override
+	protected LigaKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override

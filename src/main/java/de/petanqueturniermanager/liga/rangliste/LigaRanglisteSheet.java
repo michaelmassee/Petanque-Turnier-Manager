@@ -40,8 +40,10 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -49,7 +51,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 /**
  * @author Michael Massee
  */
-public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste {
+public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRangliste {
 
 	private static final int MARGIN = 120;
 	public static final String SHEETNAME = "Rangliste";
@@ -63,6 +65,7 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	private static final int ANZ_SUMMEN_SPALTEN = 9; // Punkte +/- Spiele +/-/Diff SpielPunkte +/-/Diff + anz runden
 	private static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
+	private final LigaKonfigurationSheet konfigurationSheet;
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final RangListeSorter rangListeSorter;
@@ -73,12 +76,18 @@ public class LigaRanglisteSheet extends LigaSheet implements ISheet, IRangliste 
 	 * @throws GenerateException
 	 */
 	public LigaRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Liga-RanglisteSheet");
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LIGA_MELDUNG_NAME_WIDTH)
+		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga-RanglisteSheet");
+		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
 				.formation(Formation.TETE).anzZeilenInHeader(2).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 		rangListeSorter = new RangListeSorter(this);
+	}
+
+	@Override
+	protected LigaKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting

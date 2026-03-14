@@ -15,19 +15,22 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGerad
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldeliste<TeamMeldungen, Team> {
+abstract class AbstractJGJMeldeListeSheet extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 5; // Tabelle immer mit min anzahl von zeilen formatieren
 
+	private final JGJKonfigurationSheet konfigurationSheet;
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 
@@ -39,11 +42,17 @@ abstract class AbstractJGJMeldeListeSheet extends JGJSheet implements IMeldelist
 	}
 
 	protected AbstractJGJMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
-		super(workingSpreadsheet, prefix);
-		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(MELDUNG_NAME_WIDTH)
+		super(workingSpreadsheet, TurnierSystem.JGJ, prefix);
+		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
+		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
 				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TETE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
+	}
+
+	@Override
+	protected JGJKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	public void upDateSheet() throws GenerateException {

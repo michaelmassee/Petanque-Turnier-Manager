@@ -39,11 +39,21 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import com.google.common.annotations.VisibleForTesting;
 
-public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.addins.GlobalImpl;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
+
+public abstract class AbstractSupermeleeMeldeListeSheet extends SheetRunner
 		implements IMeldeliste<SpielerMeldungen, Spieler> {
 	private static final String SPIELTAG_HEADER_STR = "Spieltag";
+
+	public static final String PTM_SPIELTAG = GlobalImpl
+			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
+	public static final String PTM_SPIELRUNDE = GlobalImpl
+			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
 
 	public static final int MIN_ANZAHL_SPIELER_ZEILEN = 100; // Tablle immer mit min anzahl von zeilen formatieren
 
@@ -71,16 +81,28 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 
 	public static final int ERSTE_ZEILE_INFO = 0; // Zeile 1
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> meldungenSpalte;
 	private final MeldeListeHelper<SpielerMeldungen, Spieler> meldeListeHelper;
 	private SpielTagNr spielTag = null; // der Spieltag fuer diesen Sheet
 
 	protected AbstractSupermeleeMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Meldeliste");
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Meldeliste");
+		konfigurationSheet = newSuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldungenSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
 				.minAnzZeilen(MIN_ANZAHL_SPIELER_ZEILEN).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(this)
 				.formation(Formation.MELEE).build();
 		meldeListeHelper = new MeldeListeHelper<>(this);
+	}
+
+	@VisibleForTesting
+	protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new SuperMeleeKonfigurationSheet(workingSpreadsheet);
+	}
+
+	@Override
+	public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	/** Anzahl der Spieltage anhand der Header-Einträge zählen. */
@@ -187,13 +209,13 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		var border = BorderFactory.from().allThin().toBorder();
 		var posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 		var posSpieltagFormula = Position.from(posInfo).spaltePlus(1);
-		var spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, SuperMeleeSheet.PTM_SPIELTAG)
+		var spielTagFormula = StringCellValue.from(sheet, posSpieltagFormula, PTM_SPIELTAG)
 				.setBorder(border);
 		getSheetHelper().setFormulaInCell(spielTagFormula);
 
 		var posSpielrundeFormula = Position.from(posSpieltagFormula).zeilePlusEins();
 		var spielRundeFormula = StringCellValue
-				.from(sheet, posSpielrundeFormula, SuperMeleeSheet.PTM_SPIELRUNDE).setBorder(border);
+				.from(sheet, posSpielrundeFormula, PTM_SPIELRUNDE).setBorder(border);
 		getSheetHelper().setFormulaInCell(spielRundeFormula);
 
 	}
@@ -217,7 +239,7 @@ public abstract class AbstractSupermeleeMeldeListeSheet extends SuperMeleeSheet
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
 		getSheetHelper().setStringValueInCell(bezCelSpieltagVal);
 
-		String formulaStr = "IF(" + SuperMeleeSheet.PTM_SPIELTAG + "=" + spieltag.getNr() + ";\"Aktiv\";\"\")";
+		String formulaStr = "IF(" + PTM_SPIELTAG + "=" + spieltag.getNr() + ";\"Aktiv\";\"\")";
 		StringCellValue aktivFormula = StringCellValue
 				.from(sheet, meldeListeHelper.spieltagSpalte(spieltag), ERSTE_HEADER_ZEILE, formulaStr)
 				.setCharColor(ColorHelper.CHAR_COLOR_GREEN);

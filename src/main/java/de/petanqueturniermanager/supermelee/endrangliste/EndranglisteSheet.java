@@ -58,12 +58,13 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
-public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste {
+public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	public static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0, B=1
@@ -75,6 +76,7 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	public static final String SHEETNAME = "Endrangliste";
 	public static final String SHEET_COLOR = "d637e8";
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
 	private final MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte;
 	private final EndRanglisteFormatter endRanglisteFormatter;
@@ -82,15 +84,21 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, SHEETNAME);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, SHEETNAME);
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
 		spielerSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
 				.anzZeilenInHeader(2).sheet(this).formation(Formation.MELEE)
-				.spalteMeldungNameWidth(SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
+				.spalteMeldungNameWidth(SuperMeleeKonfigurationSheet.SUPER_MELEE_MELDUNG_NAME_WIDTH).build();
 		endRanglisteFormatter = new EndRanglisteFormatter(this, getAnzSpaltenInSpieltag(), spielerSpalte,
 				ERSTE_SPIELTAG_SPALTE, getKonfigurationSheet());
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSorter = new RangListeSorter(this);
+	}
+
+	@Override
+	public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override
@@ -565,7 +573,6 @@ public class EndranglisteSheet extends SuperMeleeSheet implements IEndRangliste 
 	 * get Ranglistenspalten to sort
 	 */
 
-	@Override
 	protected List<Position> getRanglisteSpalten(int ersteSpalteEndsumme, int ersteDatenZeile)
 			throws GenerateException {
 

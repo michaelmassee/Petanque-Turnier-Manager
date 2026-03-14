@@ -31,8 +31,9 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJSheet;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -43,7 +44,7 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
+public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEET_COLOR = "b0f442";
 	public static final String SHEET_NAMEN = "Spielplan";
@@ -67,14 +68,21 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 	public static final int SPIELE_A_SPALTE = TEAM_A_NR_SPALTE - 2;
 	public static final int SPIELE_B_SPALTE = SPIELE_A_SPALTE + 1;
 
+	private final JGJKonfigurationSheet konfigurationSheet;
 	private final JGJMeldeListeSheet_Update meldeListe;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
 	public JGJSpielPlanSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.JGJ);
+		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
+	}
+
+	@Override
+	protected JGJKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting
@@ -166,7 +174,7 @@ public class JGJSpielPlanSheet extends JGJSheet implements ISheet {
 				stValHeader.setValue("Ergebnis").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
-		ColumnProperties colProp = ColumnProperties.from().setWidth(MELDUNG_NAME_WIDTH);
+		ColumnProperties colProp = ColumnProperties.from().setWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH);
 		stValHeader.setEndPosMerge(null).zeilePlusEins().setColumnProperties(colProp);
 		// name
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("Mannschaft A").spalte(NAME_A_SPALTE));

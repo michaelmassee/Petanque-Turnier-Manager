@@ -26,20 +26,27 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
-public class MeldeListeSheet_TestDaten extends SuperMeleeSheet implements ISheet {
+public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 
 	public static final int ANZ_TESTNAMEN = 100;
 	private static final int MIN_ANZ_SPIELER = 10;
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 	private final TestnamenLoader testnamenLoader;
 
 	public MeldeListeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeListe = new MeldeListeSheet_New(workingSpreadsheet);
 		testnamenLoader = new TestnamenLoader();
+	}
+
+	@Override
+	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override

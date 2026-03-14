@@ -26,8 +26,10 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 /**
@@ -36,7 +38,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
  * @author Michael Massee
  *
  */
-public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
+public class SpielrundePlan extends SheetRunner implements ISheet {
 	private static final String SHEET_COLOR = "b0f442";
 
 	public static final int HEADER_ZEILE = 0; // Spieltag
@@ -51,6 +53,7 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 
 	public static final String PREFIX_SHEET_NAMEN = "SpielrundePlan";
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final AbstractSupermeleeMeldeListeSheet meldeliste;
 
@@ -58,9 +61,15 @@ public class SpielrundePlan extends SuperMeleeSheet implements ISheet {
 	 * @param workingSpreadsheet
 	 */
 	public SpielrundePlan(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Spielrundeplan");
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrundeplan");
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
+	}
+
+	@Override
+	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override

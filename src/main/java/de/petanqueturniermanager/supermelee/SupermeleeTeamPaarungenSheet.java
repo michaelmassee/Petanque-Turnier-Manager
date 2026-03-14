@@ -23,13 +23,15 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Erstellung : 26.03.2018 / Michael Massee
  **/
-public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISheet {
+public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
 
 	public static final String SHEETNAME = "Supermêlée Teams";
@@ -49,8 +51,11 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 
 	private static final String SHEET_COLOR = "f4ca46";
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
+
 	public SupermeleeTeamPaarungenSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		try {
 			if (NewSheet.from(this, SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
 					.useIfExist().create().isDidCreate()) {
@@ -60,6 +65,11 @@ public class SupermeleeTeamPaarungenSheet extends SuperMeleeSheet implements ISh
 			logger.fatal(e);
 		}
 
+	}
+
+	@Override
+	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override

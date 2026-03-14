@@ -66,11 +66,12 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements ISheet {
+public abstract class AbstractSpielrundeSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(AbstractSpielrundeSheet.class);
 
@@ -93,6 +94,7 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 
 	public static final int LETZTE_SPALTE = ERSTE_SPIELERNR_SPALTE + 5;
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final AbstractSupermeleeMeldeListeSheet meldeListe;
 	private final SpielrundeHelper spielrundeHelper;
 
@@ -101,11 +103,22 @@ public abstract class AbstractSpielrundeSheet extends SuperMeleeSheet implements
 	private boolean forceOk = false; // wird fuer Test verwendet
 
 	protected AbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Spielrunde");
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrunde");
+		konfigurationSheet = newSuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 		spielrundeHelper = new SpielrundeHelper(this,
-				getKonfigurationSheet().getSpielRundeHintergrundFarbeGeradeStyle(),
-				getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGeradeStyle());
+				konfigurationSheet.getSpielRundeHintergrundFarbeGeradeStyle(),
+				konfigurationSheet.getSpielRundeHintergrundFarbeUnGeradeStyle());
+	}
+
+	@VisibleForTesting
+	protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new SuperMeleeKonfigurationSheet(workingSpreadsheet);
+	}
+
+	@Override
+	public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting

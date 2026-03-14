@@ -35,8 +35,10 @@ import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
-import de.petanqueturniermanager.liga.konfiguration.LigaSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.SpielErgebnis;
@@ -48,7 +50,7 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
  * @author Michael Massee
  *
  */
-public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
+public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEET_COLOR = "b0f442";
 	public static final String SHEET_NAMEN = "Spielplan";
@@ -79,14 +81,21 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 	public static final int TEAM_A_NR_SPALTE = 14; // Zeile 0
 	public static final int TEAM_B_NR_SPALTE = TEAM_A_NR_SPALTE + 1; // Zeile 0
 
+	private final LigaKonfigurationSheet konfigurationSheet;
 	private final LigaMeldeListeSheetUpdate meldeListe;
 
 	/**
 	 * @param workingSpreadsheet
 	 */
 	public LigaSpielPlanSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.LIGA);
+		konfigurationSheet = new LigaKonfigurationSheet(workingSpreadsheet);
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
+	}
+
+	@Override
+	protected LigaKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@VisibleForTesting
@@ -304,7 +313,7 @@ public class LigaSpielPlanSheet extends LigaSheet implements ISheet {
 				stValHeader.setValue("SpPunkte").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
-		ColumnProperties colProp = ColumnProperties.from().setWidth(LIGA_MELDUNG_NAME_WIDTH);
+		ColumnProperties colProp = ColumnProperties.from().setWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH);
 		stValHeader.setEndPosMerge(null).zeilePlusEins().setColumnProperties(colProp);
 		// name
 		getSheetHelper().setStringValueInCell(stValHeader.setValue("Heim").spalte(NAME_A_SPALTE));
