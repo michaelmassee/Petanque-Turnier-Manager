@@ -7,11 +7,6 @@ package de.petanqueturniermanager;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -39,10 +34,9 @@ public abstract class SheetRunner extends Thread {
 	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SheetHelper sheetHelper;
 	private final TurnierSystem turnierSystem;
-	private static AtomicBoolean isRunning = new AtomicBoolean(); // nur 1 Sheetrunner gleichzeitig
-	private static volatile SheetRunner runner = null;
-	private static final List<Runnable> STATE_LISTENERS =
-			Collections.synchronizedList(new ArrayList<>());
+	// package-private: damit SheetRunnerTest den Koordinator austauschen kann
+	static SheetRunnerKoordinator koordinator = new SheetRunnerKoordinator();
+
 	private String logPrefix = null;
 
 	protected String getLogPrefix() {
@@ -70,39 +64,23 @@ public abstract class SheetRunner extends Thread {
 	 */
 
 	public static final void testDoCancelTask() throws GenerateException {
-		SheetRunner currentRunner = runner; // einmaliger Snapshot – verhindert Race Condition
-		if (currentRunner != null && currentRunner.isInterrupted()) {
-			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
-		}
+		koordinator.abbrechenPruefen();
 	}
 
 	public static final void cancelRunner() {
-		SheetRunner currentRunner = runner; // einmaliger Snapshot – verhindert Race Condition
-		if (currentRunner != null) {
-			currentRunner.interrupt();
-		}
+		koordinator.abbrechen();
 	}
 
 	public static void addStateChangeListener(Runnable listener) {
-		STATE_LISTENERS.add(listener);
-	}
-
-	private static void notifyStateListeners() {
-		for (Runnable r : new ArrayList<>(STATE_LISTENERS)) {
-			try {
-				r.run();
-			} catch (Exception e) {
-				logger.warn("StateListener-Fehler: {}", e.getMessage());
-			}
-		}
+		koordinator.addZustandsListener(listener);
 	}
 
 	@Override
 	public final void run() {
-		if (!SheetRunner.isRunning.getAndSet(true)) {
+		if (!koordinator.getAndSetLaeuft(true)) {
 			logger.debug("Start SheetRunner");
-			SheetRunner.runner = this;
-			notifyStateListeners(); // Menü deaktivieren
+			koordinator.setRunner(this);
+			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
 
 			try {
@@ -119,9 +97,9 @@ public abstract class SheetRunner extends Thread {
 						.fehler("Siehe Log für weitere Infos");
 				getLogger().error(e.getMessage(), e);
 			} finally {
-				SheetRunner.isRunning.set(false); // Immer an erste stelle diesen flag zurück
-				SheetRunner.runner = null;
-				notifyStateListeners(); // Menü reaktivieren
+				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
+				koordinator.setRunner(null);
+				koordinator.benachrichtigeListener(); // Menü reaktivieren
 				if (isFehler) {
 					processBox().visible().fehler("!! FEHLER !!").ready();
 				} else {
@@ -244,7 +222,7 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	public static boolean isRunning() {
-		return isRunning.get();
+		return koordinator.isRunning();
 	}
 
 	// for mocking

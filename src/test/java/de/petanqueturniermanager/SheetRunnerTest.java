@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -31,17 +30,10 @@ public class SheetRunnerTest {
 	private XCalculatable xCalculatableMock;
 	private TestSheetRunner testRunner;
 
-	@AfterEach
-	public void tearDown() {
-		// Statisches isRunning-Flag zurücksetzen, falls ein Test fehlgeschlagen ist
-		// ohne den finally-Block von run() zu durchlaufen
-		if (SheetRunner.isRunning()) {
-			SheetRunner.cancelRunner();
-		}
-	}
-
 	@BeforeEach
 	public void setUp() {
+		// Frischer Koordinator pro Test → kein globaler Zustand zwischen Tests
+		SheetRunner.koordinator = new SheetRunnerKoordinator();
 		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
 		// RETURNS_SELF: alle fluent-API-Aufrufe (info, fehler, visible, ready, ...) geben das Mock zurück
 		processBoxMock = Mockito.mock(ProcessBox.class, Mockito.RETURNS_SELF);
