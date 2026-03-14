@@ -32,9 +32,11 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Basisklasse für die Schweizer Team-Meldeliste.
@@ -52,7 +54,9 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  *
  * @author Michael Massee
  */
-public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet implements MeldeListeKonstanten, ISheet {
+public abstract class AbstractSchweizerMeldeListeSheet extends SheetRunner implements MeldeListeKonstanten, ISheet {
+
+	private final SchweizerKonfigurationSheet konfigurationSheet;
 
 	protected static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = 32;
 
@@ -82,7 +86,13 @@ public abstract class AbstractSchweizerMeldeListeSheet extends SchweizerSheet im
 	}
 
 	protected AbstractSchweizerMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet, String prefix) {
-		super(workingSpreadsheet, prefix);
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, prefix);
+		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
+	}
+
+	@Override
+	public SchweizerKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	// ---------------------------------------------------------------

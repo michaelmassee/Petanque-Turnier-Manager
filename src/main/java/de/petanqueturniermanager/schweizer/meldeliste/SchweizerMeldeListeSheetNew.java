@@ -17,8 +17,8 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeSheet {
 	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetNew.class);
@@ -34,7 +34,7 @@ public class SchweizerMeldeListeSheetNew extends AbstractSchweizerMeldeListeShee
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), SchweizerSheet.TURNIERSYSTEM)
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SCHWEIZER)
 				.prefix(getLogPrefix()).validate()) {
 			return;
 		}

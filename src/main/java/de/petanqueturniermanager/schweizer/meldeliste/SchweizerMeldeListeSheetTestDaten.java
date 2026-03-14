@@ -14,8 +14,8 @@ import de.petanqueturniermanager.helper.TestnamenLoader;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Erzeugt eine Schweizer Meldeliste mit Testdaten (ohne Dialog).
@@ -43,7 +43,7 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 
 	@Override
 	public void doRun() throws GenerateException {
-		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), SchweizerSheet.TURNIERSYSTEM)
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SCHWEIZER)
 				.prefix(getLogPrefix()).validate()) {
 			return;
 		}

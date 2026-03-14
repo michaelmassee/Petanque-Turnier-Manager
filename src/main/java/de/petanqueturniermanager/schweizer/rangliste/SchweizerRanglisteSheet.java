@@ -40,9 +40,10 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
 /**
@@ -60,7 +61,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  *   <li>Punktedifferenz (absteigend)</li>
  * </ol>
  */
-public class SchweizerRanglisteSheet extends SchweizerSheet implements IRangliste {
+public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	public static final String SHEETNAME = "Rangliste";
 	public static final String SHEET_COLOR = "d637e8";
@@ -97,11 +98,18 @@ public class SchweizerRanglisteSheet extends SchweizerSheet implements IRanglist
 		}
 	}
 
+	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final RangListeSorter rangListeSorter;
 
 	public SchweizerRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER);
+		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
 		rangListeSorter = new RangListeSorter(this);
+	}
+
+	@Override
+	public SchweizerKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	protected RangListeSorter getRangListeSorter() {

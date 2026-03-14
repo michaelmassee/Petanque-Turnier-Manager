@@ -55,9 +55,10 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.AbstractSchweizerMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 
@@ -65,7 +66,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * Erstellung 27.03.2024 / Michael Massee
  */
 
-public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet implements ISheet {
+public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner implements ISheet {
 
 	private static final Logger LOGGER = LogManager.getLogger(SchweizerAbstractSpielrundeSheet.class);
 
@@ -84,6 +85,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	public static final int ERG_TEAM_B_SPALTE = ERG_TEAM_A_SPALTE + 1;
 	public static final int FEHLER_SPALTE = ERG_TEAM_B_SPALTE + 1;
 
+	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final AbstractSchweizerMeldeListeSheet meldeListe;
 	private final SpielrundeHelper spielrundeHelper;
 	private SpielRundeNr spielRundeNrInSheet = null;
@@ -92,11 +94,17 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SchweizerSheet im
 	//	private SpielRundeNr sheetSpielRundeNr = null; // muss nicht der Aktive sein
 
 	protected SchweizerAbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, SHEET_NAMEN);
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, SHEET_NAMEN);
+		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 		spielrundeHelper = new SpielrundeHelper(this, NR_CHARHEIGHT, NR_CHARHEIGHT, true,
-				getKonfigurationSheet().getSpielRundeHintergrundFarbeGeradeStyle(),
-				getKonfigurationSheet().getSpielRundeHintergrundFarbeUnGeradeStyle());
+				konfigurationSheet.getSpielRundeHintergrundFarbeGeradeStyle(),
+				konfigurationSheet.getSpielRundeHintergrundFarbeUnGeradeStyle());
+	}
+
+	@Override
+	public SchweizerKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	protected final boolean canStart(TeamMeldungen meldungen) throws GenerateException {

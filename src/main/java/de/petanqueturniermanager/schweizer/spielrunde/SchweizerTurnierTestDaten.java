@@ -15,8 +15,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
 /**
@@ -41,7 +41,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator
-				.from(getWorkingSpreadsheet(), getSheetHelper(), SchweizerSheet.TURNIERSYSTEM)
+				.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SCHWEIZER)
 				.prefix(getLogPrefix()).validate()) {
 			return;
 		}
