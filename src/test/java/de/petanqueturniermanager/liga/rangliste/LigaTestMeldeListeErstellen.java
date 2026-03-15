@@ -32,7 +32,7 @@ public class LigaTestMeldeListeErstellen {
 
 	public int run() throws GenerateException {
 		meldeListeSheetNew = new LigaMeldeListeSheetNew(wkingSpreadsheet);
-		meldeListeSheetNew.run();
+		meldeListeSheetNew.createMeldelisteWithParams(""); // kein Dialog
 		int anzMeldungen = testMeldungenEinfuegen();
 		LigaMeldeListeSheetUpdate meldeListeSheetUpdate = new LigaMeldeListeSheetUpdate(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();

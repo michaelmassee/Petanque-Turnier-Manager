@@ -5,6 +5,10 @@
 package de.petanqueturniermanager.supermelee.meldeliste;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
@@ -23,8 +27,11 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<SpielerMeldungen, Spieler> {
+
+	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_New.class);
 
 	private final SupermeleeListeDelegate delegate;
 
@@ -138,6 +145,22 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 		delegate.upDateSheet();
 	}
 
+	/**
+	 * Erstellt die Meldeliste mit dem angegebenen Modus ohne Dialog.
+	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
+	 */
+	public void createMeldelisteWithParams(SuperMeleeMode mode) throws GenerateException {
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
+				.setDocVersionWhenNew().create().isDidCreate()) {
+			getKonfigurationSheet().setSuperMeleeMode(mode);
+			SpielTagNr spielTag1 = new SpielTagNr(1);
+			setSpielTag(spielTag1);
+			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
+			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
+			upDateSheet();
+		}
+	}
+
 	public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		delegate.doSort(spalteNr, isAscending);
 	}
@@ -200,8 +223,23 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 
 	@Override
 	protected void doRun() throws GenerateException {
+		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
+		Optional<SupermeleeStartDialog.StartParameter> param;
+		try {
+			param = SupermeleeStartDialog.from(getWorkingSpreadsheet()).show();
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("{} Fehler beim Anzeigen des Start-Dialogs: {}", e.getMessage(), e);
+			throw new GenerateException("Fehler beim Anzeigen des Start-Dialogs: " + e.getMessage());
+		}
+
+		if (param.isEmpty()) {
+			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		}
+
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
 				.setDocVersionWhenNew().create().isDidCreate()) {
+			getKonfigurationSheet().setSuperMeleeMode(
+					param.get().triplette() ? SuperMeleeMode.Triplette : SuperMeleeMode.Doublette);
 			SpielTagNr spielTag1 = new SpielTagNr(1);
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);

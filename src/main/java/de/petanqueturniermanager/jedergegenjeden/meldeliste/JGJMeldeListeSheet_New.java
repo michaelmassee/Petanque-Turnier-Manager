@@ -1,6 +1,10 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.List;
+import java.util.Optional;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -22,6 +26,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 
 public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
+
+	private static final Logger logger = LogManager.getLogger(JGJMeldeListeSheet_New.class);
 
 	private final JGJMeldeListeDelegate delegate;
 
@@ -129,10 +135,36 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		delegate.upDateSheet();
 	}
 
-	@Override
-	protected void doRun() throws GenerateException {
+	/**
+	 * Erstellt die Meldeliste mit dem angegebenen Gruppenname ohne Dialog.
+	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
+	 */
+	public void createMeldelisteWithParams(String gruppenname) throws GenerateException {
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
+			getKonfigurationSheet().setGruppenname(gruppenname);
+			delegate.upDateSheet();
+		}
+	}
+
+	@Override
+	protected void doRun() throws GenerateException {
+		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
+		Optional<JGJStartDialog.StartParameter> param;
+		try {
+			param = JGJStartDialog.from(getWorkingSpreadsheet()).show();
+		} catch (com.sun.star.uno.Exception e) {
+			logger.error("{} Fehler beim Anzeigen des Start-Dialogs: {}", e.getMessage(), e);
+			throw new GenerateException("Fehler beim Anzeigen des Start-Dialogs: " + e.getMessage());
+		}
+
+		if (param.isEmpty()) {
+			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
+		}
+
+		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
+				.setDocVersionWhenNew().create().isDidCreate()) {
+			getKonfigurationSheet().setGruppenname(param.get().gruppenname());
 			delegate.upDateSheet();
 		}
 	}

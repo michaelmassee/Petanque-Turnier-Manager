@@ -34,7 +34,7 @@ public class JGJTestMeldeListeErstellen {
 
 	public int run() throws GenerateException {
 		meldeListeSheetNew = new JGJMeldeListeSheet_New(wkingSpreadsheet);
-		meldeListeSheetNew.run(); // do not start a Thread ! 
+		meldeListeSheetNew.createMeldelisteWithParams(""); // kein Dialog
 		int anzMeldungen = testMeldungenEinfuegen();
 		JGJMeldeListeSheet_Update meldeListeSheetUpdate = new JGJMeldeListeSheet_Update(wkingSpreadsheet);
 		meldeListeSheetUpdate.run();// do not start a Thread !

@@ -59,6 +59,8 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	SuperMeleeMode getSuperMeleeMode();
 
+	void setSuperMeleeMode(SuperMeleeMode mode);
+
 	boolean getSpielrundePlan();
 
 	boolean getSetzPositionenAktiv();

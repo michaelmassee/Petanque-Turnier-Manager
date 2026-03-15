@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 /**
  * Erstellung 16.07.2022 / Michael Massee
@@ -44,12 +45,7 @@ public class TestSuperMeleeMeldeListeErstellen {
 	}
 
 	public int run() throws GenerateException {
-
-		// Setze Spieltag und Spielrunde für den Test
-		meldeListeSheetNew.setSpielTag(SpielTagNr.from(1));
-		meldeListeSheetNew.setAktiveSpieltag(SpielTagNr.from(1));
-		
-		meldeListeSheetNew.run(); // do not start a Thread ! 
+		meldeListeSheetNew.createMeldelisteWithParams(SuperMeleeMode.Triplette); // kein Dialog
 		int anzMeldungen = testMeldungenEinfuegen();
 		meldeListeSheetUpdate.run();// do not start a Thread !
 
@@ -57,7 +53,7 @@ public class TestSuperMeleeMeldeListeErstellen {
 	}
 
 	public int initMitAlleDieSpielen(int anzMeldungen) throws GenerateException {
-		meldeListeSheetNew.run(); // do not start a Thread ! 
+		meldeListeSheetNew.createMeldelisteWithParams(SuperMeleeMode.Triplette); // kein Dialog
 		int anzdidInsertMeldungen = testMeldungenEinfuegenAllepielen(anzMeldungen, 0);
 		meldeListeSheetUpdate.run();// do not start a Thread !
 		return anzdidInsertMeldungen;

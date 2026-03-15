@@ -106,6 +106,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public void setSuperMeleeMode(SuperMeleeMode mode) {
+		propertiesSpalte.setSuperMeleeMode(mode);
+	}
+
+	@Override
 	public boolean getSpielrundePlan() {
 		return propertiesSpalte.getSpielrundePlan();
 	}

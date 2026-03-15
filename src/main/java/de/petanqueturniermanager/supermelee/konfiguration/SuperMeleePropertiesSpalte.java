@@ -219,6 +219,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		return SuperMeleeMode.Triplette;
 	}
 
+	@Override
+	public void setSuperMeleeMode(SuperMeleeMode mode) {
+		setStringProperty(KONFIG_PROP_SUPERMELEE_MODE, mode.getKey());
+	}
+
 	/**
 	 * die anzahl der Spieltage die bei der neu auslosung eingelesen werden
 	 *
