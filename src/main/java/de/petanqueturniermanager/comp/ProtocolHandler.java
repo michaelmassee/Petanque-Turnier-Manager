@@ -533,12 +533,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
-			// Neue Version: nur aktiv wenn neue Version verfügbar
-			case CMD_NEUE_VERSION_MENUE,
-				 CMD_RELEASE_INFOS_ANZEIGEN,
-				 CMD_DIREKT_AKTUALISIEREN                   -> new NewReleaseChecker().checkForNewRelease(ctx);
-			// Download, Stop: immer aktiv
-			case CMD_DOWNLOAD_EXTENSION, CMD_ABBRUCH           -> true;
+			// Release-Infos, Download, Direkt-Aktualisieren, Stop: immer aktiv
+			case CMD_RELEASE_INFOS_ANZEIGEN,
+				 CMD_DOWNLOAD_EXTENSION,
+				 CMD_DIREKT_AKTUALISIEREN,
+				 CMD_ABBRUCH                                -> true;
 			default -> false;
 			};
 		} catch (Exception e) {
@@ -602,9 +601,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			event.FeatureURL = url;
 			event.IsEnabled = enabled;
 			event.Requery = false;
-			if (CMD_NEUE_VERSION_MENUE.equals(url.Path) && enabled) {
-				event.State = new NewReleaseChecker().getMenuTitelKurz();
-			}
 			listener.statusChanged(event);
 		} catch (Exception e) {
 			logger.warn("Fehler beim Benachrichtigen des Status-Listeners: {}", e.getMessage());

@@ -37,10 +37,13 @@
     <manifest:file-entry 
         manifest:media-type="application/vnd.sun.star.configuration-data" 
         manifest:full-path="registry/org/openoffice/Office/Addons_X2_Download.xcu"/>
-    <manifest:file-entry 
-        manifest:media-type="application/vnd.sun.star.configuration-data" 
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Y1_Testdaten.xcu"/>
-    <manifest:file-entry 
-        manifest:media-type="application/vnd.sun.star.configuration-data" 
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_Y2_Info.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Z_Stop.xcu"/>
 </manifest:manifest>

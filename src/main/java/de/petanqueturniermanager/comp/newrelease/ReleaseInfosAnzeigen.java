@@ -43,8 +43,10 @@ public class ReleaseInfosAnzeigen extends SheetRunner {
 			processBox().fehler("Keine Release-Informationen verfügbar.");
 			return;
 		}
-		processBoxinfo("Release: " + rel.getName());
+		String name = rel.getName() != null ? rel.getName() : rel.getTagName();
+		processBoxinfo("Release: " + (name != null ? name : "?"));
 		processBoxinfo("Release-Infos:");
-		processBoxinfo(rel.getBody());
+		String body = rel.getBody();
+		processBoxinfo(body != null && !body.isBlank() ? body : "(keine Beschreibung verfügbar)");
 	}
 }

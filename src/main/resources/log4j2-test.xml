@@ -5,15 +5,14 @@
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
 		</Console>
-		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{dd-MM-yyyy}.log.gz">
+		<RollingFile name="infofile" fileName="${sys:user.home}/.petanqueturniermanager/info.log" ignoreExceptions="false" filePattern="${sys:user.home}/.petanqueturniermanager/info-%d{yyyy-MM-dd}.log.gz">
 			<PatternLayout>
 				<Pattern>%d{dd.MM.yyyy HH:mm:ss,SSS} %p %c{1.} %m%n</Pattern>
 			</PatternLayout>
 
 			<Policies>
-				<!--  OnStartupTriggeringPolicy: Triggers a rollover on every restart, but only if the file size is greater than zero.  -->
-				<!--	<OnStartupTriggeringPolicy/>	-->
-				<SizeBasedTriggeringPolicy size="500 MB"/>
+				<!-- Täglich um Mitternacht rotieren -->
+				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
 			</Policies>
 
 			<!-- https://stackoverflow.com/questions/33237731/how-to-delete-old-logs-with-log4j2 -->
@@ -21,10 +20,7 @@
 			<DefaultRolloverStrategy>
 				<Delete basePath="${sys:user.home}/.petanqueturniermanager/" maxDepth="1">
 					<IfFileName glob="*.{gz,log}"/>
-					<IfAny>
-						<IfAccumulatedFileSize exceeds="500 MB"/>
-						<IfAccumulatedFileCount exceeds="20"/>
-					</IfAny>
+					<IfAccumulatedFileCount exceeds="10"/>
 				</Delete>
 			</DefaultRolloverStrategy>
 		</RollingFile>

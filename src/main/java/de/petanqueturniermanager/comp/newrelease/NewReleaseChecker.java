@@ -163,16 +163,18 @@ public class NewReleaseChecker {
 		try {
 			// https://www.baeldung.com/java-download-file
 			// https://github.com/G00fY2/version-compare
-			if (!isUpdateThreadRunning.get()) {
-				String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
-				String latestVersionFromCacheFile = latestVersionFromCacheFile();
-				logger.log(Level.DEBUG, "Instalierte Release = {}", versionNummer);
-				logger.log(Level.DEBUG, "Letzte GitHub Release = {}", latestVersionFromCacheFile);
-				if (latestVersionFromCacheFile != null) {
-					newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromCacheFile);
-					if (newVersionAvailable) {
-						logger.log(Level.DEBUG, "Neue Version = {}", newVersionAvailable);
-					}
+			// Immer aus lokalem Cache lesen – auch während der Update-Thread läuft.
+			// So ist der Menüeintrag sofort beim Start sichtbar, falls die Cache-Datei
+			// aus einer vorherigen Session bereits eine neuere Version enthält.
+			// Nach Abschluss des Hintergrund-Threads wird via Callback erneut geprüft.
+			String versionNummer = ExtensionsHelper.from(context).getVersionNummer();
+			String latestVersionFromCacheFile = latestVersionFromCacheFile();
+			logger.log(Level.DEBUG, "Instalierte Release = {}", versionNummer);
+			logger.log(Level.DEBUG, "Letzte GitHub Release = {}", latestVersionFromCacheFile);
+			if (latestVersionFromCacheFile != null) {
+				newVersionAvailable = new Version(versionNummer).isLowerThan(latestVersionFromCacheFile);
+				if (newVersionAvailable) {
+					logger.log(Level.DEBUG, "Neue Version = {}", newVersionAvailable);
 				}
 			}
 		} catch (Exception e) {
