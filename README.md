@@ -37,12 +37,16 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
 
 * **Supermêlée / Mêlée:**
   Ideal für lockere Turniere. Spieler werden in jeder Runde (oder für das gesamte Turnier) neuen Teams und Gegnern zugelost.
+* **Liga:**
+  Für die Organisation einer Vereins- oder Regionalliga mit festen Teams. Der Spielplan wird vorab generiert und legt fest, wer wann gegeneinander spielt. Die Rangliste wird nach Siegen, Kugeldifferenz und direktem Vergleich berechnet. Unterstützt HTML-Export der Ergebnisse und des Spielplans.
 * **Schweizer System (Formule Suisse):**
   Das fairste System für Turniere mit vielen Teilnehmern und begrenzter Zeit. Inklusive automatischer Berechnung von Siegen, Kugeldifferenz und (Fein-)Buchholz-Punkten zur exakten Ranglistenermittlung.
-* **Poule-System:**
-  Klassischer Modus mit Gruppenphase (Poules) und anschließender Aufteilung in K.-o.-Bäume (A-, B-, C-, D-Turnier).
 * **Jeder gegen Jeden (Round Robin):**
   Das klassische Ligasystem, bei dem jedes Team im Laufe des Turniers gegen jedes andere Team antritt.
+
+(in Arbeit)
+* **Poule-System:**
+  Klassischer Modus mit Gruppenphase (Poules) und anschließender Aufteilung in K.-o.-Bäume (A-, B-, C-, D-Turnier).
 * **Direktausscheidung (K.-o.-System):**
   Für klassische Finalrunden oder reine K.-o.-Turniere, bei denen der Verlierer ausscheidet.
 
