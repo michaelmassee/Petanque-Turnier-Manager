@@ -19,6 +19,9 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmintproperty", 1, 0),
         new MethodTypeInfo("ptmturniersystem", 2, 0),
         new MethodTypeInfo("ptmdirektvergleich", 3, 0),
+        new MethodTypeInfo("ptmaktuellerunde", 4, 0),
+        new MethodTypeInfo("ptmaktuellerspieltag", 5, 0),
+        new MethodTypeInfo("ptmoperationaktiv", 6, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -28,4 +31,10 @@ public interface XGlobal extends XInterface {
     String ptmturniersystem();
 
     int ptmdirektvergleich(int teamA, int teamB, int[][] begegnungen, int[][] siege, int[][] spielpunkte);
+
+    int ptmaktuellerunde();
+
+    int ptmaktuellerspieltag();
+
+    int ptmoperationaktiv();
 }

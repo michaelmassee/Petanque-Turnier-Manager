@@ -12,6 +12,7 @@ import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.Direktvergleich;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
@@ -148,6 +149,29 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public int ptmdirektvergleich(int teamA, int teamB, int[][] begegnungen, int[][] siege, int[][] spielpunkte) {
 		Direktvergleich dvrgl = new Direktvergleich(teamA, teamB, begegnungen, siege, spielpunkte);
 		return dvrgl.calc().getCode();
+	}
+
+	@Override
+	public int ptmaktuellerunde() {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+		if (hlpr != null) {
+			return hlpr.getIntProperty("Spielrunde", 0);
+		}
+		return 0;
+	}
+
+	@Override
+	public int ptmaktuellerspieltag() {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+		if (hlpr != null) {
+			return hlpr.getIntProperty("Spieltag", 0);
+		}
+		return 0;
+	}
+
+	@Override
+	public int ptmoperationaktiv() {
+		return SheetRunner.isRunning() ? 1 : 0;
 	}
 
 	@Override

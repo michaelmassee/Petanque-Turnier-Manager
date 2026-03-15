@@ -145,6 +145,48 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<node oor:name="ptmaktuellerunde" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.AKTUELLE_RUNDE</value>
+						<value xml:lang="de">PTM.ALG.AKTUELLE_RUNDE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, current round number.</value>
+						<value xml:lang="de">Petanque Turniermanager, aktuelle Rundennummer.</value>
+					</prop>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+				</node>
+
+				<node oor:name="ptmaktuellerspieltag" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.AKTUELLE_SPIELTAG</value>
+						<value xml:lang="de">PTM.ALG.AKTUELLE_SPIELTAG</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, current matchday number.</value>
+						<value xml:lang="de">Petanque Turniermanager, aktueller Spieltag.</value>
+					</prop>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+				</node>
+
+				<node oor:name="ptmoperationaktiv" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.OPERATION_AKTIV</value>
+						<value xml:lang="de">PTM.ALG.OPERATION_AKTIV</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, returns 1 if an operation is currently running, otherwise 0.</value>
+						<value xml:lang="de">Petanque Turniermanager, gibt 1 zurück wenn gerade eine Operation läuft, sonst 0.</value>
+					</prop>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+				</node>
+
 			</node>
 		</node>
 	</node>

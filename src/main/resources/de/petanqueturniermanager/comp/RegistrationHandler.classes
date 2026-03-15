@@ -4,6 +4,7 @@
 
 de.petanqueturniermanager.addins.GlobalImpl
 de.petanqueturniermanager.comp.ProtocolHandler
+de.petanqueturniermanager.comp.PtmPublicService
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl
