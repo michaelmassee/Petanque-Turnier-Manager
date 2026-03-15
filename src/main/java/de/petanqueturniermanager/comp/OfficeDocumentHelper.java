@@ -136,7 +136,8 @@ public class OfficeDocumentHelper {
 			XCloseable closeable = Lo.qi(XCloseable.class, doc);
 			close(closeable);
 		} catch (com.sun.star.lang.DisposedException e) {
-			logger.error("Document close failed since Office link disposed", e);
+			// Erwartet beim Test-Teardown: Bridge ist bereits getrennt, kein echter Fehler
+			logger.warn("Dokument schließen übersprungen – Office-Bridge bereits getrennt");
 		}
 	}
 

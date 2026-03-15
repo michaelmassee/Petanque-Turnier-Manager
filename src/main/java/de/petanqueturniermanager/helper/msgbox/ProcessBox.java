@@ -399,6 +399,13 @@ public class ProcessBox {
 		return this;
 	}
 
+	/** Zeigt die ProcessBox im Vordergrund – sicher aufrufbar auch wenn noch nicht initialisiert. */
+	public static void zeigeImVordergrund() {
+		if (processBox != null) {
+			SwingUtilities.invokeLater(() -> processBox.visible().toFront());
+		}
+	}
+
 	public ProcessBox hide() {
 		if (frame == null) return this;
 		frame.setVisible(false);

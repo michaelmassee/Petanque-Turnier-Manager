@@ -169,6 +169,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_NEUE_VERSION_MENUE    = "neueVersionMenue";
 	public static final String CMD_RELEASE_INFOS_ANZEIGEN = "releaseInfosAnzeigen";
 	public static final String CMD_DIREKT_AKTUALISIEREN  = "direktAktualisieren";
+	// Info
+	public static final String CMD_LOGFILE_ANZEIGEN      = "logfileAnzeigen";
+	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
+	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
 
 	private final XComponentContext xContext;
 
@@ -402,6 +406,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_DIREKT_AKTUALISIEREN:
 				new DirectUpdate(ws).start();
 				break;
+			case CMD_LOGFILE_ANZEIGEN:
+				Log4J.openLogFile();
+				break;
+			case CMD_PLUGIN_KONFIGURATION:
+				new GlobalPropertiesDialog(ws.getxContext()).zeigen();
+				break;
+			case CMD_PROCESSBOX_ANZEIGEN:
+				ProcessBox.zeigeImVordergrund();
+				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
 				break;
@@ -537,6 +550,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_RELEASE_INFOS_ANZEIGEN,
 				 CMD_DOWNLOAD_EXTENSION,
 				 CMD_DIREKT_AKTUALISIEREN,
+				 CMD_LOGFILE_ANZEIGEN,
+				 CMD_PLUGIN_KONFIGURATION,
+				 CMD_PROCESSBOX_ANZEIGEN,
 				 CMD_ABBRUCH                                -> true;
 			default -> false;
 			};

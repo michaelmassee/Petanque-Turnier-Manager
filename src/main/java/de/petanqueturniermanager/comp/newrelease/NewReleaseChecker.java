@@ -18,6 +18,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
+
+import de.petanqueturniermanager.comp.GlobalProperties;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -68,6 +70,14 @@ public class NewReleaseChecker {
 	 */
 	public static boolean isUpdateAbgeschlossen() {
 		return didUpdateCacheFile.get();
+	}
+
+	/**
+	 * Löst alle registrierten Callbacks manuell aus – z.B. wenn sich
+	 * GlobalProperties geändert haben und die UI sofort aktualisiert werden soll.
+	 */
+	public static void callbacksAusloesen() {
+		cacheUpdateCallbacks.forEach(Runnable::run);
 	}
 
 	// !! Wird einmal aufgerufen
@@ -159,6 +169,10 @@ public class NewReleaseChecker {
 	}
 
 	public boolean checkForNewRelease(XComponentContext context) {
+		if (GlobalProperties.get().isNewVersionCheckImmerTrue()) {
+			logger.log(Level.DEBUG, "NewVersionCheck: GlobalProperties.newversioncheck=true → liefere immer true");
+			return true;
+		}
 		boolean newVersionAvailable = false;
 		try {
 			// https://www.baeldung.com/java-download-file

@@ -61,6 +61,49 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<node oor:name="Y6D" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<node oor:name="Y6E" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Logfile anzeigen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:logfileAnzeigen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<node oor:name="Y6F" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<node oor:name="Y6G" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Plugin Konfiguration</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:pluginKonfiguration</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<node oor:name="Y6H" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Protokoll-Fenster anzeigen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:processboxAnzeigen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 
