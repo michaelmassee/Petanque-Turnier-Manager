@@ -86,20 +86,20 @@
 
 							<node oor:name="A5A6" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Aktuelle Spielrunde</value>
+									<value xml:lang="de">Neue Spielrunde</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:schweizer_aktuelle_spielrunde</value>
+									<value>ptm:schweizer_naechste_spielrunde</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
 							<node oor:name="A5A7" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Nächste Spielrunde</value>
+									<value xml:lang="de">Spielrunde neu auslosen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:schweizer_naechste_spielrunde</value>
+									<value>ptm:schweizer_aktuelle_spielrunde</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>

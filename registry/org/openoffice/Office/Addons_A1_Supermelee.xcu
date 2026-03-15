@@ -94,11 +94,11 @@
 
 							<node oor:name="A1ABA" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Current Play-Round</value>
-									<value xml:lang="de">Aktuelle Spielrunde</value>
+									<value xml:lang="en">New Play-Round</value>
+									<value xml:lang="de">Neue Spielrunde</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:aktuelle_spielrunde</value>
+									<value>ptm:naechste_spielrunde</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
@@ -107,11 +107,11 @@
 
 							<node oor:name="A1ABB" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Next Play-Round</value>
-									<value xml:lang="de">Nächste Spielrunde</value>
+									<value xml:lang="en">Re-draw Play-Round</value>
+									<value xml:lang="de">Spielrunde neu auslosen</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:naechste_spielrunde</value>
+									<value>ptm:aktuelle_spielrunde</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

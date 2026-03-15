@@ -469,20 +469,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			return false;
 		}
 		try {
-			TurnierSystem ts = new DocumentPropertiesHelper(new WorkingSpreadsheet(ctx))
-					.getTurnierSystemAusDocument();
+			WorkingSpreadsheet ws = new WorkingSpreadsheet(ctx);
+			TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
 			return switch (command) {
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
 			// SuperMelee-Aktionen: nur wenn SuperMelee aktiv
 			case CMD_UPDATE_MELDELISTE,
 				 CMD_ANMELDUNGEN, CMD_TEILNEHMER,
-				 CMD_NAECHSTE_SPIELTAG, CMD_AKTUELLE_SPIELRUNDE,
+				 CMD_NAECHSTE_SPIELTAG,
 				 CMD_NAECHSTE_SPIELRUNDE, CMD_SUPER_SPIELRUNDEPLAN,
 				 CMD_SPIELTAG_RANGLISTE, CMD_SPIELTAG_RANGLISTE_SORT,
 				 CMD_SUPERMELEE_ENDRANGLISTE, CMD_SUPERMELEE_ENDRANGLISTE_SORT,
 				 CMD_SUPERMELEE_TEAMPAARUNGEN,
 				 CMD_SUPERMELEE_VALIDATE, CMD_SUPERMELEE_SPIELTAGRANGLISTE_VALIDATE -> ts == TurnierSystem.SUPERMELEE;
+			// "Spielrunde neu auslosen": nur wenn SuperMelee aktiv UND mind. 1 Spielrunde vorhanden
+			case CMD_AKTUELLE_SPIELRUNDE                    -> ts == TurnierSystem.SUPERMELEE && hatSupermeleeSpielrunde(ws);
 			// SuperMelee-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_MELDELISTE_TESTDATEN, CMD_SPIELRUNDEN_TESTDATEN,
 				 CMD_SPIELTAGRANGLISTE_TESTDATEN        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SUPERMELEE;
@@ -504,10 +506,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE,
 				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
-				 CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN          -> ts == TurnierSystem.SCHWEIZER;
+			// "Spielrunde neu auslosen": nur wenn Schweizer aktiv UND mind. 1 Spielrunde vorhanden
+			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
 			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 			 CMD_SCHWEIZER_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
@@ -520,6 +523,43 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_DOWNLOAD_EXTENSION, CMD_ABBRUCH           -> true;
 			default -> false;
 			};
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Prüft ob mindestens eine SuperMêlée-Spielrunde vorhanden ist.
+	 * Spielrunden-Sheets heißen "{spieltag}.{runde}. Spielrunde", z.B. "1.1. Spielrunde".
+	 */
+	private static boolean hatSupermeleeSpielrunde(WorkingSpreadsheet ws) {
+		try {
+			var doc = ws.getWorkingSpreadsheetDocument();
+			if (doc == null) {
+				return false;
+			}
+			for (var name : doc.getSheets().getElementNames()) {
+				if (name.matches("\\d+\\.\\d+\\. Spielrunde")) {
+					return true;
+				}
+			}
+			return false;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Prüft ob mindestens eine Schweizer-Spielrunde vorhanden ist.
+	 * Spielrunden-Sheets heißen "{runde}. Spielrunde", z.B. "1. Spielrunde".
+	 */
+	private static boolean hatSchweizerSpielrunde(WorkingSpreadsheet ws) {
+		try {
+			var doc = ws.getWorkingSpreadsheetDocument();
+			if (doc == null) {
+				return false;
+			}
+			return doc.getSheets().hasByName("1. Spielrunde");
 		} catch (Exception e) {
 			return false;
 		}
