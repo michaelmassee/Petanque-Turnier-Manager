@@ -9,21 +9,126 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public class SchweizerMeldeListeSheetUpdate extends AbstractSchweizerMeldeListeSheet {
+public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements ISheet, MeldeListeKonstanten {
+
 	private static final Logger logger = LogManager.getLogger(SchweizerMeldeListeSheetUpdate.class);
 
+	protected static final int ERSTE_DATEN_ZEILE = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+	protected static final int MIN_ANZAHL_MELDUNGEN_ZEILEN = SchweizerListeDelegate.MIN_ANZAHL_MELDUNGEN_ZEILEN;
+
+	public static final int AKTIV_WERT_NIMMT_TEIL = SchweizerListeDelegate.AKTIV_WERT_NIMMT_TEIL;
+	public static final int AKTIV_WERT_AUSGESTIEGEN = SchweizerListeDelegate.AKTIV_WERT_AUSGESTIEGEN;
+
+	private final SchweizerListeDelegate delegate;
+
 	public SchweizerMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Meldeliste");
+		delegate = new SchweizerListeDelegate(this);
 	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return getSheetHelper().findByName(SHEETNAME);
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	protected SchweizerKonfigurationSheet getKonfigurationSheet() {
+		return delegate.getKonfigurationSheet();
+	}
+
+	// ---------------------------------------------------------------
+	// Forwarding-Methoden → Delegate
+	// ---------------------------------------------------------------
+
+	public void upDateSheet() throws GenerateException {
+		delegate.upDateSheet();
+	}
+
+	public int getTeamNrSpalte() {
+		return delegate.getTeamNrSpalte();
+	}
+
+	public int getTeamnameSpalte() throws GenerateException {
+		return delegate.getTeamnameSpalte();
+	}
+
+	public int getSpielerNameErsteSpalte() throws GenerateException {
+		return delegate.getSpielerNameErsteSpalte();
+	}
+
+	public int getVornameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getVornameSpalte(spielerIdx);
+	}
+
+	public int getNachnameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getNachnameSpalte(spielerIdx);
+	}
+
+	public int getVereinsnameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getVereinsnameSpalte(spielerIdx);
+	}
+
+	public int getSetzPositionSpalte() throws GenerateException {
+		return delegate.getSetzPositionSpalte();
+	}
+
+	public int getAktivSpalte() throws GenerateException {
+		return delegate.getAktivSpalte();
+	}
+
+	public int getErsteDatenZiele() {
+		return delegate.getErsteDatenZiele();
+	}
+
+	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
+		return delegate.getAktiveMeldungen();
+	}
+
+	public int getTeamNrByTeamname(String teamname) throws GenerateException {
+		return delegate.getTeamNrByTeamname(teamname);
+	}
+
+	public String getTeamNameByNr(int teamNr) throws GenerateException {
+		return delegate.getTeamNameByNr(teamNr);
+	}
+
+	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {
+		delegate.setAktiveSpielRunde(spielRundeNr);
+	}
+
+	protected int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
+		return delegate.letzteZeileMitDaten(xSheet);
+	}
+
+	protected void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
+		delegate.pruefeAufDoppelteTeamNr(xSheet);
+	}
+
+	// ---------------------------------------------------------------
+	// Eigene Methoden
+	// ---------------------------------------------------------------
 
 	@Override
 	protected void doRun() throws GenerateException {
@@ -111,6 +216,5 @@ public class SchweizerMeldeListeSheetUpdate extends AbstractSchweizerMeldeListeS
 				getSetzPositionSpalte(), letzteZeile);
 		SortHelper.from(this, range).spalteToSort(getTeamNrSpalte()).aufSteigendSortieren(true).doSort();
 	}
-
 
 }

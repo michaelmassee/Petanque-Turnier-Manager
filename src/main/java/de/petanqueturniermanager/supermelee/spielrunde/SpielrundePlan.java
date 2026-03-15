@@ -28,9 +28,8 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * eine liste von SpielerNr + Team A/B + Bahnnummer
@@ -55,7 +54,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
-	private final AbstractSupermeleeMeldeListeSheet meldeliste;
+	private final MeldeListeSheet_Update meldeliste;
 
 	/**
 	 * @param workingSpreadsheet
@@ -87,7 +86,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	}
 
 	public String getSpielrundeSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
-		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + AbstractSpielrundeSheet.PREFIX_SHEET_NAMEN;
+		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + SpielrundeSheetKonstanten.PREFIX_SHEET_NAMEN;
 	}
 
 	@Override
@@ -97,7 +96,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 
 	public void generate() throws GenerateException {
 
-		AbstractSupermeleeMeldeListeSheet meldeListe = new MeldeListeSheet_Update(getWorkingSpreadsheet());
+		MeldeListeSheet_Update meldeListe = new MeldeListeSheet_Update(getWorkingSpreadsheet());
 		meldeListe.setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		SpielerMeldungen meldungen = meldeListe.getAktiveMeldungen();
 
@@ -155,11 +154,11 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 
 			strVal.spalte(spielerNrSpalte).spaltePlus(SPIELER_TEAM_OFFS_SPALTE).zeile(spierNrVal.getPos().getZeile());
 			getSheetHelper().setFormulaInCell(strVal.setValue(sVerweisSpielrundeSpalte(spierNrVal.getPos(),
-					AbstractSpielrundeSheet.SPALTE_VERTIKALE_ERGEBNISSE_AB, 4)));
+					SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_AB, 4)));
 
 			getSheetHelper().setFormulaInCell(strVal.spalte(spielerNrSpalte).spaltePlus(SPIELER_BAHN_NR_OFFS_SPALTE)
 					.setValue(sVerweisSpielrundeSpalte(spierNrVal.getPos(),
-							AbstractSpielrundeSheet.SPALTE_VERTIKALE_ERGEBNISSE_BA_NR, 5)));
+							SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_BA_NR, 5)));
 
 			spierNrVal.zeilePlusEins();
 
@@ -210,8 +209,8 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 				+ "'.";
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (spielerNr.getSpalte() + 1) + ";4))";
 
-		int ersteSpalteVertikaleErgebnisse = AbstractSpielrundeSheet.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
-		int spielrundeSheetErsteDatenzeile = AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+		int ersteSpalteVertikaleErgebnisse = SpielrundeSheetKonstanten.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
+		int spielrundeSheetErsteDatenzeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
 		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
 		Position letztePos = Position.from(letzteSpalte, 1000 + spielrundeSheetErsteDatenzeile);
 		String suchMatrixTeam = erstePos.getAddressWith$() + ":" + letztePos.getAddressWith$();

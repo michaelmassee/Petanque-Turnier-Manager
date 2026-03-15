@@ -11,8 +11,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -28,14 +26,12 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class AbstractSupermeleeMeldeListeSheetTest {
-	static final Logger logger = LogManager.getLogger(AbstractSupermeleeMeldeListeSheetTest.class);
 
-	private AbstractSupermeleeMeldeListeSheet meldeSheet;
+	private MeldeListeSheet_Update meldeSheet;
 	private WorkingSpreadsheet workingSpreadsheetMock;
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
-	//	SupermeleeTeamPaarungenSheet supermeleeTeamPaarungenMock;
 
 	@BeforeEach
 	public void setup() {
@@ -44,7 +40,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
 		konfigurationSheetMock = Mockito.mock(SuperMeleeKonfigurationSheet.class);
 
-		meldeSheet = new AbstractSupermeleeMeldeListeSheet(workingSpreadsheetMock) {
+		meldeSheet = new MeldeListeSheet_Update(workingSpreadsheetMock) {
 
 			@Override
 			protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(
@@ -58,11 +54,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			}
 
 			@Override
-			protected void doRun() throws GenerateException {
-				// nichts!
-			}
-
-			@Override
 			public XSpreadsheet getXSpreadSheet() {
 				return xSpreadsheetMock;
 			}
@@ -70,11 +61,6 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			@Override
 			public SheetHelper getSheetHelper() {
 				return sheetHelperMock;
-			}
-
-			@Override
-			public Logger getLogger() {
-				return logger;
 			}
 
 			@Override
@@ -101,6 +87,5 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 					.thenReturn(header);
 			headerPos.spaltePlusEins();
 		});
-
 	}
 }

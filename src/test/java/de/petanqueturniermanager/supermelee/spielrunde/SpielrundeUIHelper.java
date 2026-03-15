@@ -35,7 +35,7 @@ public class SpielrundeUIHelper {
 
 		assertThat(jsonFileName).isNotNull();
 		XSpreadsheet spielrunde = sheetHlp
-				.findByName("1." + spielRndNr + ". " + AbstractSpielrundeSheet.PREFIX_SHEET_NAMEN);
+				.findByName("1." + spielRndNr + ". " + SpielrundeSheetKonstanten.PREFIX_SHEET_NAMEN);
 		assertThat(spielrunde).isNotNull();
 
 		RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,
@@ -53,7 +53,7 @@ public class SpielrundeUIHelper {
 		assertThat(jsonFile).isNotNull();
 
 		XSpreadsheet spielrunde = sheetHlp
-				.findByName("1." + spielRndNr + ". " + AbstractSpielrundeSheet.PREFIX_SHEET_NAMEN);
+				.findByName("1." + spielRndNr + ". " + SpielrundeSheetKonstanten.PREFIX_SHEET_NAMEN);
 		assertThat(spielrunde).isNotNull();
 
 		RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,

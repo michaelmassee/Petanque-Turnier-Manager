@@ -47,7 +47,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	private static final String SHEET_COLOR = "6542f4";
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
-	private final AbstractSupermeleeMeldeListeSheet meldeliste;
+	private final MeldeListeSheet_Update meldeliste;
 	private SpielTagNr spielTagNr = null;
 
 	public TielnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {

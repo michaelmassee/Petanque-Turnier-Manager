@@ -9,11 +9,15 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -21,11 +25,14 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Erzeugt eine Schweizer Meldeliste mit Testdaten (ohne Dialog).
  * Formation: Triplette, Teamname und Vereinsname aktiv.
  */
-public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeListeSheet {
+public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
 	private static final int ANZ_TEAMS_DEFAULT = 16;
 	private static final Formation TEST_FORMATION = Formation.TRIPLETTE;
 
+	protected static final int ERSTE_DATEN_ZEILE = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
+
+	private final SchweizerListeDelegate delegate;
 	private final int anzTeams;
 	private final SchweizerMeldeListeSheetNew meldeListe;
 	private final TestnamenLoader testnamenLoader;
@@ -35,11 +42,79 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 	}
 
 	public SchweizerMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Meldeliste");
+		delegate = new SchweizerListeDelegate(this);
 		this.anzTeams = anzTeams;
 		meldeListe = new SchweizerMeldeListeSheetNew(workingSpreadsheet);
 		testnamenLoader = new TestnamenLoader();
 	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return getSheetHelper().findByName(SHEETNAME);
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	protected SchweizerKonfigurationSheet getKonfigurationSheet() {
+		return delegate.getKonfigurationSheet();
+	}
+
+	// ---------------------------------------------------------------
+	// Forwarding-Methoden → Delegate
+	// ---------------------------------------------------------------
+
+	public int getTeamNrSpalte() {
+		return delegate.getTeamNrSpalte();
+	}
+
+	public int getTeamnameSpalte() throws GenerateException {
+		return delegate.getTeamnameSpalte();
+	}
+
+	public int getVornameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getVornameSpalte(spielerIdx);
+	}
+
+	public int getNachnameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getNachnameSpalte(spielerIdx);
+	}
+
+	public int getVereinsnameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getVereinsnameSpalte(spielerIdx);
+	}
+
+	public int getAktivSpalte() throws GenerateException {
+		return delegate.getAktivSpalte();
+	}
+
+	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
+		return delegate.getAktiveMeldungen();
+	}
+
+	public int getSpielerNameErsteSpalte() throws GenerateException {
+		return delegate.getSpielerNameErsteSpalte();
+	}
+
+	public int getErsteDatenZiele() {
+		return delegate.getErsteDatenZiele();
+	}
+
+	public int getLetzteDatenZeileUseMin() {
+		return delegate.getLetzteDatenZeileUseMin();
+	}
+
+	public void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {
+		delegate.setAktiveSpielRunde(spielRundeNr);
+	}
+
+	// ---------------------------------------------------------------
+	// Eigene Methoden
+	// ---------------------------------------------------------------
 
 	@Override
 	public void doRun() throws GenerateException {
@@ -95,11 +170,11 @@ public class SchweizerMeldeListeSheetTestDaten extends AbstractSchweizerMeldeLis
 
 			// Aktiv-Spalte: alle Teams nehmen teil
 			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(meldelisteSheet, Position.from(getAktivSpalte(), zeile), AKTIV_WERT_NIMMT_TEIL));
+					NumberCellValue.from(meldelisteSheet, Position.from(getAktivSpalte(), zeile),
+							SchweizerListeDelegate.AKTIV_WERT_NIMMT_TEIL));
 		}
 
 		meldeListe.upDateSheet();
 	}
-
 
 }

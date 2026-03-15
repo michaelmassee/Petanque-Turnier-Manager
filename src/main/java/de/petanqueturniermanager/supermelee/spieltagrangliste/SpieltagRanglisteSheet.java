@@ -17,8 +17,10 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheets;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -33,18 +35,29 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.model.Spieler;
+import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.spielrunde.AbstractSpielrundeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 
-public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements ISpielTagRangliste {
+public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpielTagRangliste {
+
+	public static final int RANGLISTE_SPALTE = SpieltagRanglisteDelegate.RANGLISTE_SPALTE;
+	public static final int ERSTE_SPIELRUNDE_SPALTE = SpieltagRanglisteDelegate.ERSTE_SPIELRUNDE_SPALTE;
+	public static final int ERSTE_DATEN_ZEILE = SpieltagRanglisteDelegate.ERSTE_DATEN_ZEILE;
+	public static final int SPIELER_NR_SPALTE = SpieltagRanglisteDelegate.SPIELER_NR_SPALTE;
+	public static final String SHEETNAME_SUFFIX = SpieltagRanglisteDelegate.SHEETNAME_SUFFIX;
 
 	public static final String KOPFDATEN_SUMME = "Summe";
 	public static final String KOPFDATEN_SUMME_SPIELE = "Spiele";
@@ -54,19 +67,59 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	public static final int ERSTE_SORTSPALTE_OFFSET = 2; // zur letzte spalte = PUNKTE_DIV_OFFS
 
+	private final SpieltagRanglisteDelegate delegate;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final RangListeSpalte rangListeSpalte;
 	private final SpieltagRanglisteFormatter ranglisteFormatter;
 	private final RangListeSorter rangListeSorter;
 
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Spieltag Rangliste");
-
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spieltag Rangliste");
+		delegate = new SpieltagRanglisteDelegate(this);
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		ranglisteFormatter = new SpieltagRanglisteFormatter(this, ANZAHL_SPALTEN_IN_SPIELRUNDE, getSpielerSpalte(),
 				ERSTE_SPIELRUNDE_SPALTE, getKonfigurationSheet());
 		rangListeSorter = new RangListeSorter(this);
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return delegate.getSheet(delegate.getSpieltagNr());
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	protected SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return delegate.getKonfigurationSheet();
+	}
+
+	public SpielTagNr getSpieltagNr() {
+		return delegate.getSpieltagNr();
+	}
+
+	public void setSpieltagNr(SpielTagNr spieltagNr) {
+		delegate.setSpieltagNr(spieltagNr);
+	}
+
+	protected MeldungenSpalte<SpielerMeldungen, Spieler> getSpielerSpalte() {
+		return delegate.getSpielerSpalte();
+	}
+
+	public String getSheetName(SpielTagNr spielTagNr) {
+		return delegate.getSheetName(spielTagNr);
+	}
+
+	public XSpreadsheet getSheet(SpielTagNr spielTagNr) throws GenerateException {
+		return delegate.getSheet(spielTagNr);
+	}
+
+	protected List<Position> getRanglisteSpalten(int ersteSpalteEndsumme, int ersteDatenZeile) {
+		return delegate.getRanglisteSpalten(ersteSpalteEndsumme, ersteDatenZeile);
 	}
 
 	@Override
@@ -128,7 +181,7 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 	/**
 	 * Die Anzahl an Spielrunden im Rangliste-Sheet zahlen
-	 * 
+	 *
 	 * @return
 	 * @throws GenerateException
 	 */
@@ -224,12 +277,12 @@ public class SpieltagRanglisteSheet extends AbstractSpieltagRangliste implements
 
 		// VLOOKUP Matrix fuer plus Punkte
 		// $M$4:$O$1004
-		int ersteSpalteVertikaleErgebnisse = AbstractSpielrundeSheet.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
-		int spielrundeSheetErsteDatenzeile = AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+		int ersteSpalteVertikaleErgebnisse = SpielrundeSheetKonstanten.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
+		int spielrundeSheetErsteDatenzeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
 		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
-		Position letztePosPlusPunkte = Position.from(AbstractSpielrundeSheet.SPALTE_VERTIKALE_ERGEBNISSE_PLUS,
+		Position letztePosPlusPunkte = Position.from(SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_PLUS,
 				1000 + spielrundeSheetErsteDatenzeile);
-		Position letztePosMinusPunkte = Position.from(AbstractSpielrundeSheet.SPALTE_VERTIKALE_ERGEBNISSE_MINUS + 2,
+		Position letztePosMinusPunkte = Position.from(SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_MINUS + 2,
 				1000 + spielrundeSheetErsteDatenzeile);
 		String suchMatrixPlusPunkte = erstePos.getAddressWith$() + ":" + letztePosPlusPunkte.getAddressWith$();
 		String suchMatrixMinusPunkte = erstePos.getAddressWith$() + ":" + letztePosMinusPunkte.getAddressWith$();

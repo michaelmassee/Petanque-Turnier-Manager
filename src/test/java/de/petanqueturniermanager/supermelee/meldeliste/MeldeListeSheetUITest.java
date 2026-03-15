@@ -72,8 +72,8 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 		// sind im headless UI-Test nicht zuverlässig (LibreOffice cached den Stand
 		// unabhängig vom Test-JVM), daher keine Wert-Assertion.
 		RangeHelper raHlp = RangeHelper.from(xSpreadsheet, doc,
-				RangePosition.from(summeSpalte, AbstractSupermeleeMeldeListeSheet.ERSTE_ZEILE_INFO, summeSpalte + 1,
-						AbstractSupermeleeMeldeListeSheet.ERSTE_ZEILE_INFO + 1));
+				RangePosition.from(summeSpalte, MeldeListeSheet_Update.ERSTE_ZEILE_INFO, summeSpalte + 1,
+						MeldeListeSheet_Update.ERSTE_ZEILE_INFO + 1));
 		RangeData dataFromRange = raHlp.getDataFromRange();
 		assertThat(dataFromRange).hasSize(2);
 	}
@@ -81,8 +81,8 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 	private void validateDoubletteBlock(XSpreadsheet xSpreadsheet, int summeSpalte) throws GenerateException {
 		// daten einlesen
 		RangeHelper raHlp = RangeHelper.from(xSpreadsheet, doc,
-				RangePosition.from(summeSpalte, AbstractSupermeleeMeldeListeSheet.DOUBL_MODE_HEADER, summeSpalte + 1,
-						AbstractSupermeleeMeldeListeSheet.DOUBL_MODE_SUMMEN_SPIELBAHNEN));
+				RangePosition.from(summeSpalte, MeldeListeSheet_Update.DOUBL_MODE_HEADER, summeSpalte + 1,
+						MeldeListeSheet_Update.DOUBL_MODE_SUMMEN_SPIELBAHNEN));
 		RangeData dataFromRange = raHlp.getDataFromRange();
 
 		assertThat(dataFromRange.get(1).get(1).getStringVal()).isEqualTo("8");
@@ -94,8 +94,8 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 	private void validateTripletteBlock(XSpreadsheet xSpreadsheet, int summeSpalte) throws GenerateException {
 		// daten einlesen
 		RangeHelper raHlp = RangeHelper.from(xSpreadsheet, doc,
-				RangePosition.from(summeSpalte, AbstractSupermeleeMeldeListeSheet.TRIPL_MODE_HEADER, summeSpalte + 1,
-						AbstractSupermeleeMeldeListeSheet.TRIPL_MODE_SUMMEN_SPIELBAHNEN));
+				RangePosition.from(summeSpalte, MeldeListeSheet_Update.TRIPL_MODE_HEADER, summeSpalte + 1,
+						MeldeListeSheet_Update.TRIPL_MODE_SUMMEN_SPIELBAHNEN));
 		RangeData dataFromRange = raHlp.getDataFromRange();
 
 		assertThat(dataFromRange.get(1).get(1).getStringVal()).isEqualTo("2");
@@ -107,8 +107,8 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 	private void validate1SummenBlock(XSpreadsheet xSpreadsheet, int summeSpalte) throws GenerateException {
 		// daten einlesen 1 summen block
 		RangeHelper raHlp = RangeHelper.from(xSpreadsheet, doc,
-				RangePosition.from(summeSpalte, AbstractSupermeleeMeldeListeSheet.SUMMEN_ERSTE_ZEILE, summeSpalte + 1,
-						AbstractSupermeleeMeldeListeSheet.SUMMEN_GESAMT_ANZ_SPIELER));
+				RangePosition.from(summeSpalte, MeldeListeSheet_Update.SUMMEN_ERSTE_ZEILE, summeSpalte + 1,
+						MeldeListeSheet_Update.SUMMEN_GESAMT_ANZ_SPIELER));
 		RangeData dataFromRange = raHlp.getDataFromRange();
 
 		assertThat(dataFromRange.get(0).get(0).getStringVal()).isEqualTo("Aktiv");

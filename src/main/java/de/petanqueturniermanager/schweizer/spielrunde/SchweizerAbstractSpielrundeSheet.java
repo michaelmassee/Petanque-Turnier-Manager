@@ -57,7 +57,6 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.meldeliste.AbstractSchweizerMeldeListeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -86,7 +85,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	public static final int FEHLER_SPALTE = ERG_TEAM_B_SPALTE + 1;
 
 	private final SchweizerKonfigurationSheet konfigurationSheet;
-	private final AbstractSchweizerMeldeListeSheet meldeListe;
+	private final SchweizerMeldeListeSheetUpdate meldeListe;
 	private final SpielrundeHelper spielrundeHelper;
 	private SpielRundeNr spielRundeNrInSheet = null;
 	private boolean forceOk = false; // wird fuer Test verwendet
@@ -129,7 +128,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	@VisibleForTesting
-	AbstractSchweizerMeldeListeSheet initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+	SchweizerMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		return new SchweizerMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
@@ -159,7 +158,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		this.spielRundeNrInSheet = spielRundeNrInSheet;
 	}
 
-	public AbstractSchweizerMeldeListeSheet getMeldeListe() {
+	public SchweizerMeldeListeSheetUpdate getMeldeListe() {
 		return meldeListe;
 	}
 

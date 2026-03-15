@@ -28,13 +28,13 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.supermelee.meldeliste.AbstractSupermeleeMeldeListeSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 
 public class SpielrundeSheet_UpdateTest {
 
 	private SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private WorkingSpreadsheet workingSpreadsheetMock;
-	AbstractSupermeleeMeldeListeSheet meldeListeSheetMock;
+	MeldeListeSheet_Update meldeListeSheetMock;
 	SheetHelper sheetHelperMock;
 	XSpreadsheet xSpreadsheetMock;
 	SuperMeleeKonfigurationSheet konfigurationSheetMock;
@@ -42,7 +42,7 @@ public class SpielrundeSheet_UpdateTest {
 	@BeforeEach
 	public void setup() throws Exception {
 		workingSpreadsheetMock = Mockito.mock(WorkingSpreadsheet.class);
-		meldeListeSheetMock = Mockito.mock(AbstractSupermeleeMeldeListeSheet.class);
+		meldeListeSheetMock = Mockito.mock(MeldeListeSheet_Update.class);
 		sheetHelperMock = Mockito.mock(SheetHelper.class);
 		xSpreadsheetMock = Mockito.mock(XSpreadsheet.class);
 		konfigurationSheetMock = Mockito.mock(SuperMeleeKonfigurationSheet.class);
@@ -60,12 +60,7 @@ public class SpielrundeSheet_UpdateTest {
 			}
 
 			@Override
-			public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
-				return konfigurationSheetMock;
-			}
-
-			@Override
-			AbstractSupermeleeMeldeListeSheet initMeldeListeSheet(WorkingSpreadsheet xContext) {
+			protected MeldeListeSheet_Update newMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 				return meldeListeSheetMock;
 			}
 
@@ -94,50 +89,38 @@ public class SpielrundeSheet_UpdateTest {
 	@Test
 	public void testErgebnisseEinlesen() throws Exception {
 
-		// testdaten zurückliefern
-		// ----------------------------------------
 		List<int[]> spielpaarungen = new ArrayList<>();
 
 		int[] teamABLine1 = new int[] { 32, 20, 10, 4, 6, 8 };
-		int[] teamABLine2 = new int[] { 0, 28, 1, 23, 5, 0 }; // 0 = not set
-		int[] teamABLine3 = new int[] { 90, 91, 92, 31, 35, 0 }; // 0 = not set
+		int[] teamABLine2 = new int[] { 0, 28, 1, 23, 5, 0 };
+		int[] teamABLine3 = new int[] { 90, 91, 92, 31, 35, 0 };
 
 		spielpaarungen.add(teamABLine1);
 		spielpaarungen.add(teamABLine2);
 		spielpaarungen.add(teamABLine3);
 		setupReturn_from_getIntFromCell(spielpaarungen);
-		// ----------------------------------------
 
 		List<SpielerSpielrundeErgebnis> result = aktuelleSpielrundeSheet.ergebnisseEinlesen()
 				.getSpielerSpielrundeErgebnis();
 
-		// ----------------------------------------
-		// Validate
-		// ----------------------------------------
-
 		assertThat(result).isNotEmpty();
 		assertThat(result.size()).isEqualTo(15);
-		// validate line 1
 		for (int i = 0; i < 6; i++) {
 			assertThat(result.get(i).getSpielerNr()).isEqualTo(teamABLine1[i]);
 		}
 
-		// validate line 2
 		assertThat(result.get(6).getSpielerNr()).isEqualTo(teamABLine2[1]);
 		assertThat(result.get(7).getSpielerNr()).isEqualTo(teamABLine2[2]);
 		assertThat(result.get(8).getSpielerNr()).isEqualTo(teamABLine2[3]);
 		assertThat(result.get(9).getSpielerNr()).isEqualTo(teamABLine2[4]);
-		// validate line 3
 		assertThat(result.get(10).getSpielerNr()).isEqualTo(teamABLine3[0]);
 		assertThat(result.get(11).getSpielerNr()).isEqualTo(teamABLine3[1]);
 		assertThat(result.get(12).getSpielerNr()).isEqualTo(teamABLine3[2]);
 		assertThat(result.get(13).getSpielerNr()).isEqualTo(teamABLine3[3]);
 		assertThat(result.get(14).getSpielerNr()).isEqualTo(teamABLine3[4]);
 
-		// Maximal 4 zeilen, nach der erste leere zeile sollte abgebrochen werden
 		Mockito.verify(sheetHelperMock, Mockito.times(4 * 6)).getIntFromCell(any(XSpreadsheet.class),
 				any(Position.class));
-
 	}
 
 	@Test
@@ -153,12 +136,11 @@ public class SpielrundeSheet_UpdateTest {
 		} catch (GenerateException e) {
 			assertThat(e.getMessage()).isEqualTo("Spieler mit der Nr. 20 ist doppelt");
 		}
-
 	}
 
 	private void setupReturn_from_getIntFromCell(List<int[]> spielpaarungen) {
-		Position spielerNrPos = Position.from(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE,
-				AbstractSpielrundeSheet.ERSTE_DATEN_ZEILE);
+		Position spielerNrPos = Position.from(SpielrundeSheetKonstanten.ERSTE_SPIELERNR_SPALTE,
+				SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE);
 		spielpaarungen.forEach(spielpaarung -> {
 			for (int spielerSpalte = 0; spielerSpalte < 6; spielerSpalte++) {
 				if (spielpaarung[spielerSpalte] > 0) {
@@ -168,9 +150,7 @@ public class SpielrundeSheet_UpdateTest {
 				}
 				spielerNrPos.spaltePlusEins();
 			}
-			spielerNrPos.spalte(AbstractSpielrundeSheet.ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
+			spielerNrPos.spalte(SpielrundeSheetKonstanten.ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
 		});
-
 	}
-
 }

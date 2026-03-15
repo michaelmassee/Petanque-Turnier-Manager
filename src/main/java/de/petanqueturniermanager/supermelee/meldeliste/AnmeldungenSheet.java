@@ -45,7 +45,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int MAX_ANZSPIELER_IN_SPALTE = 40;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
-	private final AbstractSupermeleeMeldeListeSheet meldeliste;
+	private final MeldeListeSheet_Update meldeliste;
 	private SpielTagNr spielTag = null;
 
 	public AnmeldungenSheet(WorkingSpreadsheet workingSpreadsheet) {

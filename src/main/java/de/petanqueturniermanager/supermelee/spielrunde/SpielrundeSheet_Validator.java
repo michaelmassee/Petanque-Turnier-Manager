@@ -11,28 +11,65 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 // prüfen alle spielrunden für ein spieltag auf doppelte paarungen
-public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
+public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, SpielrundeSheetKonstanten {
 
 	private static final Logger logger = LogManager.getLogger(SpielrundeSheet_Validator.class);
 
+	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_New meldeliste;
 
+	private SpielTagNr spielTag = null;
+	private SpielRundeNr spielRundeNr = null;
+
 	public SpielrundeSheet_Validator(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrunde");
+		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_New(workingSpreadsheet);
+	}
+
+	@Override
+	public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return getSheetHelper().findByName(getSheetName(spielTag, spielRundeNr));
+	}
+
+	@Override
+	public TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	public void setSpielTag(SpielTagNr spielTag) {
+		this.spielTag = spielTag;
+	}
+
+	public void setSpielRundeNr(SpielRundeNr spielRundeNr) {
+		this.spielRundeNr = spielRundeNr;
+	}
+
+	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
+		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
 	}
 
 	@Override
@@ -66,13 +103,8 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 		processBoxinfo("Fertig, kein fehler gefunden");
 	}
 
-	/**
-	 * prüfen ob spieler berits zusammen gespielt haben
-	 *
-	 * @throws GenerateException
-	 */
-
-	private void validateDoppelteTeams(SpielerMeldungen alleMeldungen, List<Spielrunde> spielrunden) throws GenerateException {
+	private void validateDoppelteTeams(SpielerMeldungen alleMeldungen, List<Spielrunde> spielrunden)
+			throws GenerateException {
 		int fehlerCntr = 0;
 		int spielrundeCntr = 0;
 		for (Spielrunde spielrunde : spielrunden) {
@@ -81,15 +113,18 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 			for (Team team : spielrunde.teamlist) {
 				teamCntr++;
 				for (Spieler spielerToValidate : team.spieler()) {
-					Spieler spielerAusMeldung = alleMeldungen.findSpielerByNr(spielerToValidate.getNr()); // Achtung: gleiche nummer, aber nicht gleiche object !
+					Spieler spielerAusMeldung = alleMeldungen.findSpielerByNr(spielerToValidate.getNr());
 					if (spielerAusMeldung == null) {
 						throw new GenerateException("Spieler darf nicht null sein");
 					}
 
 					int warbereitsimTeamMitNr = validateWarImTeam(spielerAusMeldung, spielerToValidate, team);
 					if (warbereitsimTeamMitNr > 0) {
-						ProcessBox.from().fehler("Doppelte Auslosung gefunden in Spieltag: " + meldeliste.getSpielTag().getNr() + ", Spielrunde: " + spielrundeCntr + ", TeamNr: "
-								+ teamCntr + ", Spieler: " + spielerToValidate.getNr() + " hat bereits zusammen gespielt mit " + warbereitsimTeamMitNr);
+						ProcessBox.from().fehler(
+								"Doppelte Auslosung gefunden in Spieltag: " + meldeliste.getSpielTag().getNr()
+										+ ", Spielrunde: " + spielrundeCntr + ", TeamNr: " + teamCntr + ", Spieler: "
+										+ spielerToValidate.getNr() + " hat bereits zusammen gespielt mit "
+										+ warbereitsimTeamMitNr);
 						fehlerCntr++;
 					}
 					for (Spieler spielerausTeam : team.spieler()) {
@@ -104,12 +139,11 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 		if (fehlerCntr > 0) {
 			throw new GenerateException(fehlerCntr + " Doppelte Auslosung(en) gefunden !!!");
 		}
-
 	}
 
 	private int validateWarImTeam(Spieler spielerAusMeldung, Spieler spielerToValidate, Team team) {
 		for (Spieler spielerausTeam : team.spieler()) {
-			if (!spielerToValidate.equals(spielerausTeam)) { // nicht sich selbst == gleiche nummer
+			if (!spielerToValidate.equals(spielerausTeam)) {
 				if (spielerAusMeldung.warImTeamMit(spielerausTeam)) {
 					return spielerausTeam.getNr();
 				}
@@ -130,26 +164,24 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 
 		getSheetHelper().setActiveSheet(spieltag);
 
-		// spieler einlesen
 		Position posSpielrNr = Position.from(ERSTE_SPIELERNR_SPALTE, ERSTE_DATEN_ZEILE);
 
 		try {
 			int teamCntr = 1;
 			HashSet<Integer> spielrNrSet = new HashSet<>();
 			for (int zeileCntr = 0; zeileCntr < 999; zeileCntr++) {
-				Integer paarungCntr = getSheetHelper().getIntFromCell(spieltag, Position.from(posSpielrNr).spaltePlus(-1));
+				Integer paarungCntr = getSheetHelper().getIntFromCell(spieltag,
+						Position.from(posSpielrNr).spaltePlus(-1));
 
 				if (paarungCntr < 1) {
 					break;
 				}
-				// Team A = 3 spalten
 				Team teamA = Team.from(teamCntr++);
 				for (int spalteOffsetTeamA = 0; spalteOffsetTeamA < 3; spalteOffsetTeamA++) {
 					nextSpielerInTeam(spieltag, posSpielrNr, spielrNrSet, teamA);
 				}
 				teamList.add(teamA);
 
-				// Team B = 3 spalten
 				Team teamB = Team.from(teamCntr++);
 				for (int spalteOffsetTeamB = 0; spalteOffsetTeamB < 3; spalteOffsetTeamB++) {
 					nextSpielerInTeam(spieltag, posSpielrNr, spielrNrSet, teamB);
@@ -157,7 +189,7 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 
 				teamList.add(teamB);
 
-				posSpielrNr.spalte(ERSTE_SPIELERNR_SPALTE).zeilePlusEins(); // nächste zeile
+				posSpielrNr.spalte(ERSTE_SPIELERNR_SPALTE).zeilePlusEins();
 			}
 		} catch (AlgorithmenException e) {
 			logger.error(e.getMessage(), e);
@@ -166,7 +198,8 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 		return teamList;
 	}
 
-	private void nextSpielerInTeam(XSpreadsheet spieltag, Position posSpielrNr, HashSet<Integer> spielrNrSet, Team team) throws GenerateException, AlgorithmenException {
+	private void nextSpielerInTeam(XSpreadsheet spieltag, Position posSpielrNr, HashSet<Integer> spielrNrSet,
+			Team team) throws GenerateException, AlgorithmenException {
 
 		Integer spielerNrAusSheet = getSheetHelper().getIntFromCell(spieltag, posSpielrNr);
 		if (spielerNrAusSheet > 0) {
@@ -177,7 +210,6 @@ public class SpielrundeSheet_Validator extends AbstractSpielrundeSheet {
 			team.addSpielerWennNichtVorhanden(Spieler.from(spielerNrAusSheet));
 		}
 		posSpielrNr.spaltePlusEins();
-
 	}
 }
 
@@ -192,5 +224,4 @@ class Spielrunde {
 		this.spielRundeNr = checkNotNull(spielRundeNr, "spielRundeNr==null");
 		this.teamlist = checkNotNull(teamlist, "teamlist==null");
 	}
-
 }

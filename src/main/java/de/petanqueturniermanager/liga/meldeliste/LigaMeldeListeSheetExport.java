@@ -7,18 +7,28 @@ package de.petanqueturniermanager.liga.meldeliste;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.sheet.XSpreadsheet;
+
+import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.io.HtmlExport;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -26,12 +36,110 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *
  */
 
-public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
+public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetExport.class);
 
+	private final LigaMeldeListeDelegate delegate;
+
 	public LigaMeldeListeSheetExport(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, "Liga Export");
+		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga Export");
+		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA);
+	}
+
+	@Override
+	protected LigaKonfigurationSheet getKonfigurationSheet() {
+		return delegate.getKonfigurationSheet();
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return getSheetHelper().findByName(SHEETNAME);
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	public MeldungenSpalte<TeamMeldungen, Team> getMeldungenSpalte() {
+		return delegate.getMeldungenSpalte();
+	}
+
+	@Override
+	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
+		return delegate.formulaSverweisSpielernamen(spielrNrAdresse);
+	}
+
+	@Override
+	public TeamMeldungen getAktiveUndAusgesetztMeldungen() throws GenerateException {
+		return getAlleMeldungen();
+	}
+
+	@Override
+	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
+		return getAlleMeldungen();
+	}
+
+	@Override
+	public TeamMeldungen getInAktiveMeldungen() throws GenerateException {
+		return new TeamMeldungen();
+	}
+
+	@Override
+	public TeamMeldungen getAlleMeldungen() throws GenerateException {
+		return delegate.getAlleMeldungen();
+	}
+
+	@Override
+	public int letzteSpielTagSpalte() throws GenerateException {
+		return delegate.letzteSpielTagSpalte();
+	}
+
+	@Override
+	public int getSpielerNameErsteSpalte() {
+		return delegate.getSpielerNameErsteSpalte();
+	}
+
+	@Override
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
+		return delegate.getLetzteDatenZeileUseMin();
+	}
+
+	@Override
+	public int getSpielerZeileNr(int spielerNr) throws GenerateException {
+		return delegate.getSpielerZeileNr(spielerNr);
+	}
+
+	@Override
+	public int naechsteFreieDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return delegate.naechsteFreieDatenZeileInSpielerNrSpalte();
+	}
+
+	@Override
+	public int getLetzteMitDatenZeileInSpielerNrSpalte() throws GenerateException {
+		return delegate.getLetzteMitDatenZeileInSpielerNrSpalte();
+	}
+
+	@Override
+	public int getErsteDatenZiele() {
+		return delegate.getErsteDatenZiele();
+	}
+
+	@Override
+	public List<String> getSpielerNamenList() throws GenerateException {
+		return delegate.getSpielerNamenList();
+	}
+
+	@Override
+	public List<Integer> getSpielerNrList() throws GenerateException {
+		return delegate.getSpielerNrList();
+	}
+
+	@Override
+	public int letzteZeileMitSpielerName() throws GenerateException {
+		return delegate.letzteZeileMitSpielerName();
 	}
 
 	@Override
@@ -41,7 +149,7 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 			throw new GenerateException("Kein oder falsches Turniersystem. " + getTurnierSystem());
 		}
 
-		upDateSheet();
+		delegate.upDateSheet();
 		processBox().info("Exportiere nach PDF");
 
 		LigaSpielPlanSheet ligaSpielPlanSheet = new LigaSpielPlanSheet(getWorkingSpreadsheet());
@@ -71,26 +179,26 @@ public class LigaMeldeListeSheetExport extends AbstractLigaMeldeListeSheet {
 
 		try {
 
-			String baseDownloadUrl = StringUtils.strip(getKonfigurationSheet().getBaseDownloadUrl());
+			String baseDownloadUrl = StringUtils.strip(delegate.getKonfigurationSheet().getBaseDownloadUrl());
 			if (StringUtils.isNotEmpty(baseDownloadUrl)) {
 				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
 			}
 
-			String ligaLogoUr = StringUtils.strip(getKonfigurationSheet().getLigaLogoUr());
+			String ligaLogoUr = StringUtils.strip(delegate.getKonfigurationSheet().getLigaLogoUr());
 			if (StringUtils.isEmpty(ligaLogoUr)) {
 				processBox().info("Warnung: Liga-Logo fehlt in der Turnierkonfiguration");
 			} else {
 				processBox().info("Liga-Logo: " + ligaLogoUr);
 			}
 
-			String pdfImgUr = StringUtils.strip(getKonfigurationSheet().getPdfImageUr());
+			String pdfImgUr = StringUtils.strip(delegate.getKonfigurationSheet().getPdfImageUr());
 			if (StringUtils.isEmpty(pdfImgUr)) {
 				processBox().info("Warnung: PDF-Image fehlt in der Turnierkonfiguration");
 			} else {
 				processBox().info("PDF-Image: " + pdfImgUr);
 			}
 
-			String gruppenname = StringUtils.strip(getKonfigurationSheet().getGruppenname());
+			String gruppenname = StringUtils.strip(delegate.getKonfigurationSheet().getGruppenname());
 			if (StringUtils.isEmpty(gruppenname)) {
 				processBox().info("Warnung: Gruppenname fehlt in der Turnierkonfiguration");
 			} else {

@@ -34,7 +34,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 	private static final int MIN_ANZ_SPIELER = 10;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
-	private final AbstractSupermeleeMeldeListeSheet meldeListe;
+	private final MeldeListeSheet_New meldeListe;
 	private final TestnamenLoader testnamenLoader;
 
 	public MeldeListeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {

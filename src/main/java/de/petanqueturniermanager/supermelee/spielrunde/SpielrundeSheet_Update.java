@@ -5,24 +5,136 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
+public class SpielrundeSheet_Update extends SheetRunner
+		implements ISheet, ISpielrundeSheet, SpielrundeSheetKonstanten {
+
+	private final SpielrundeDelegate delegate;
+
+	private SpielTagNr spielTag = null;
+	private SpielRundeNr spielRundeNr = null;
+	private boolean forceOk = false;
 
 	public SpielrundeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrunde");
+		delegate = new SpielrundeDelegate(this, newSuperMeleeKonfigurationSheet(workingSpreadsheet),
+				newMeldeListeSheet(workingSpreadsheet));
+	}
+
+	@VisibleForTesting
+	protected SuperMeleeKonfigurationSheet newSuperMeleeKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new SuperMeleeKonfigurationSheet(workingSpreadsheet);
+	}
+
+	@VisibleForTesting
+	protected MeldeListeSheet_Update newMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new MeldeListeSheet_Update(workingSpreadsheet);
+	}
+
+	@Override
+	public SuperMeleeKonfigurationSheet getKonfigurationSheet() {
+		return delegate.getKonfigurationSheet();
+	}
+
+	@Override
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
+	}
+
+	@Override
+	public final TurnierSheet getTurnierSheet() throws GenerateException {
+		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
+	}
+
+	@Override
+	public SpielTagNr getSpielTag() {
+		checkNotNull(spielTag);
+		return spielTag;
+	}
+
+	public void setSpielTag(SpielTagNr spielTag) {
+		checkNotNull(spielTag);
+		this.spielTag = spielTag;
+	}
+
+	@Override
+	public SpielRundeNr getSpielRundeNr() {
+		checkNotNull(spielRundeNr);
+		return spielRundeNr;
+	}
+
+	@Override
+	public void setSpielRundeNr(SpielRundeNr spielRundeNr) {
+		checkNotNull(spielRundeNr);
+		this.spielRundeNr = spielRundeNr;
+	}
+
+	@Override
+	public boolean isForceOk() {
+		return forceOk;
+	}
+
+	public void setForceOk(boolean forceOk) {
+		this.forceOk = forceOk;
+	}
+
+	@Override
+	public Integer getMaxAnzGespielteSpieltage() throws GenerateException {
+		return delegate.getMaxAnzGespielteSpieltage();
+	}
+
+	public MeldeListeSheet_Update getMeldeListe() {
+		return delegate.getMeldeListe();
+	}
+
+	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
+		return delegate.getSheetName(spieltag, spielrunde);
+	}
+
+	public Position letztePositionRechtsUnten() throws GenerateException {
+		return delegate.letztePositionRechtsUnten();
+	}
+
+	protected boolean canStart(SpielerMeldungen meldungen) throws GenerateException {
+		return delegate.canStart(meldungen);
+	}
+
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr)
+			throws GenerateException {
+		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr);
+	}
+
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force)
+			throws GenerateException {
+		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, force);
+	}
+
+	void gespieltenRundenEinlesen(SpielerMeldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde)
+			throws GenerateException {
+		delegate.gespieltenRundenEinlesen(aktiveMeldungen, abSpielrunde, bisSpielrunde);
+	}
+
+	protected void clearSheet() throws GenerateException {
+		delegate.clearSheet();
 	}
 
 	@Override
 	protected void doRun() throws GenerateException {
-
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		setSpielRundeNr(aktuelleSpielrunde);
@@ -36,18 +148,16 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(),
 				aktuelleSpielrunde.getNr() - 1);
 		if (neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde)) {
-			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag()); // validieren
-			// sicher gehen das aktive spielrunde sheet ist activ
+			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag());
 			getSheetHelper().setActiveSheet(getXSpreadSheet());
 		}
 	}
 
 	public SpielerSpielrundeErgebnisList ergebnisseEinlesen() throws GenerateException {
-
 		SpielerSpielrundeErgebnisList spielerSpielrundeErgebnisse = new SpielerSpielrundeErgebnisList();
-		XSpreadsheet sheet = getXSpreadSheet();
+		XSpreadsheet xsheet = getXSpreadSheet();
 
-		if (sheet == null) {
+		if (xsheet == null) {
 			return spielerSpielrundeErgebnisse;
 		}
 
@@ -58,9 +168,8 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		while (spielerZeilevorhanden && tCntr++ < 999) {
 			spielerZeilevorhanden = false;
 
-			// Team A
 			for (int spalteCntr = 1; spalteCntr <= 3; spalteCntr++) {
-				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
+				int spielerNr = getSheetHelper().getIntFromCell(xsheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
 					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr,
@@ -69,9 +178,8 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 				spielerNrPos.spaltePlusEins();
 			}
 
-			// Team B
 			for (int spalteCntr = 1; spalteCntr <= 3; spalteCntr++) {
-				int spielerNr = getSheetHelper().getIntFromCell(sheet, spielerNrPos);
+				int spielerNr = getSheetHelper().getIntFromCell(xsheet, spielerNrPos);
 				if (spielerNr > 0) {
 					spielerZeilevorhanden = true;
 					spielerSpielrundeErgebnisse.add(SpielerSpielrundeErgebnis.from(getSpielRundeNr(), spielerNr,
@@ -84,13 +192,6 @@ public class SpielrundeSheet_Update extends AbstractSpielrundeSheet {
 		return spielerSpielrundeErgebnisse;
 	}
 
-	/**
-	 * anzahl spierunden sheets zaehlen mit lücken
-	 * 
-	 * @param spieltag
-	 * @return
-	 * @throws GenerateException
-	 */
 	public int countNumberOfSpielRundenSheets(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
 		int anz = 0;
