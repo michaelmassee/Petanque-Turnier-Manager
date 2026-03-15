@@ -26,7 +26,7 @@ Das wohl größte Alleinstellungsmerkmal dieses Turnier-Managers ist seine Basis
 
 * **Eigene Auswertungen:** Nutze SVERWEIS, Pivot-Tabellen oder eigene Formeln, um teaminterne Statistiken, Punkteschnitte oder individuelle Sonderwertungen aus den Turnierdaten zu ziehen.
 * **Optische Anpassung:** Baue dir eigene Dashboards, füge Vereinslogos ein, ändere das Layout für den Ausdruck oder gestalte Präsentations-Ansichten für einen Beamer (z. B. für die Live-Anzeige der aktuellen Rangliste).
-* **Eigene Makros:** Wenn du fortgeschrittene Funktionen brauchst, kannst du jederzeit eigene LibreOffice-Makros (Basic, Python etc.) schreiben, die mit den generierten Tabellen interagieren.
+* **Eigene Makros & öffentliche API:** Wenn du fortgeschrittene Funktionen brauchst, kannst du jederzeit eigene LibreOffice-Makros (Basic, Python etc.) schreiben, die mit den generierten Tabellen interagieren. Das Plugin stellt dafür eine **öffentliche API** bereit: Alle Menüaktionen sind per `ptm:`-Protokoll aus Makros aufrufbar, und der `PtmPublicService` liefert Turnierdaten (System, aktuelle Runde, Spieltag, Betriebszustand) direkt als Rückgabewert. Eigene Calc-Formeln (`PTM.ALG.*`) ermöglichen zusätzlich den Datenzugriff direkt in Zellen. → [Makros & Formeln – vollständige API-Dokumentation](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki/Makros-und-Formeln)
 
 Die Erweiterung erledigt die komplexe Logik (Auslosung, Ranglistenberechnung nach Buchholz etc.) – was du am Ende aus den Daten machst, bleibt komplett dir überlassen!
 
