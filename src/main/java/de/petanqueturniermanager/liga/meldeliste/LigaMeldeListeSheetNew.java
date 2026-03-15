@@ -17,6 +17,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -148,7 +149,17 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 	}
 
 	@Override
+	protected boolean isUpdateKonfigurationSheetBeforeDoRun() {
+		return false;
+	}
+
+	@Override
 	protected void doRun() throws GenerateException {
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.LIGA)
+				.prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<LigaStartDialog.StartParameter> param;
 		try {
@@ -162,11 +173,11 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
 
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
-				.setDocVersionWhenNew().create().isDidCreate()) {
-			getKonfigurationSheet().setGruppenname(param.get().gruppenname());
-			delegate.upDateSheet();
-		}
+		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
+		getKonfigurationSheet().update();
+
+		getSheetHelper().removeAllSheetsExclude();
+		createMeldelisteWithParams(param.get().gruppenname());
 	}
 
 }

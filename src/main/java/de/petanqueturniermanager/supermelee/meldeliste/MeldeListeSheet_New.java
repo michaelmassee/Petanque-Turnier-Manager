@@ -18,6 +18,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -222,7 +223,17 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 	}
 
 	@Override
+	protected boolean isUpdateKonfigurationSheetBeforeDoRun() {
+		return false;
+	}
+
+	@Override
 	protected void doRun() throws GenerateException {
+		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.SUPERMELEE)
+				.prefix(getLogPrefix()).validate()) {
+			return;
+		}
+
 		// Dialog zuerst – bei Abbruch keine Änderungen am Dokument
 		Optional<SupermeleeStartDialog.StartParameter> param;
 		try {
@@ -236,15 +247,10 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 			return; // Benutzer hat abgebrochen – keine Dokument-Änderungen
 		}
 
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
-				.setDocVersionWhenNew().create().isDidCreate()) {
-			getKonfigurationSheet().setSuperMeleeMode(
-					param.get().triplette() ? SuperMeleeMode.Triplette : SuperMeleeMode.Doublette);
-			SpielTagNr spielTag1 = new SpielTagNr(1);
-			setSpielTag(spielTag1);
-			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
-			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
-			upDateSheet();
-		}
+		// Erst nach Bestätigung: TurnierSystem + Page Styles setzen
+		getKonfigurationSheet().update();
+
+		getSheetHelper().removeAllSheetsExclude();
+		createMeldelisteWithParams(param.get().triplette() ? SuperMeleeMode.Triplette : SuperMeleeMode.Doublette);
 	}
 }
