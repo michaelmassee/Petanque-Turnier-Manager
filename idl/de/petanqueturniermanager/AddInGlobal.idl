@@ -18,6 +18,13 @@ module de { module petanqueturniermanager { module addin {
     string ptmturniersystem ();
     // 2D sequence which can be assigned to a cell range in the spreadsheet.
     long ptmdirektvergleich ([in] long teamA,[in] long teamB, [in]sequence< sequence< long > > begegnungen, [in]sequence< sequence< long > > siege ,[in] sequence< sequence< long > > spielpunkte );
+    // Supermêlée Team-Berechnung (PTM.SUPERMELEE.*)
+    long ptmsmtriplanzdoublette ([in] long anzSpieler);
+    long ptmsmtriplanztriplette ([in] long anzSpieler);
+    long ptmsmnurdoublette      ([in] long anzSpieler);
+    long ptmsmdouplanzdoublette ([in] long anzSpieler);
+    long ptgsmdouplanztriplette ([in] long anzSpieler);
+    long ptgsmnurtriplette      ([in] long anzSpieler);
   };
 
 }; }; };

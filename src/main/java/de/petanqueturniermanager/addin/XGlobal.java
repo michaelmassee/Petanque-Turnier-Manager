@@ -22,6 +22,12 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmaktuellerunde", 4, 0),
         new MethodTypeInfo("ptmaktuellerspieltag", 5, 0),
         new MethodTypeInfo("ptmoperationaktiv", 6, 0),
+        new MethodTypeInfo("ptmsmtriplanzdoublette",  7, 0),
+        new MethodTypeInfo("ptmsmtriplanztriplette",  8, 0),
+        new MethodTypeInfo("ptmsmnurdoublette",       9, 0),
+        new MethodTypeInfo("ptmsmdouplanzdoublette", 10, 0),
+        new MethodTypeInfo("ptgsmdouplanztriplette", 11, 0),
+        new MethodTypeInfo("ptgsmnurtriplette",      12, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -37,4 +43,16 @@ public interface XGlobal extends XInterface {
     int ptmaktuellerspieltag();
 
     int ptmoperationaktiv();
+
+    int ptmsmtriplanzdoublette(int anzSpieler);
+
+    int ptmsmtriplanztriplette(int anzSpieler);
+
+    int ptmsmnurdoublette(int anzSpieler);
+
+    int ptmsmdouplanzdoublette(int anzSpieler);
+
+    int ptgsmdouplanztriplette(int anzSpieler);
+
+    int ptgsmnurtriplette(int anzSpieler);
 }

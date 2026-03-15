@@ -39,7 +39,6 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 
@@ -51,6 +50,13 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
 	static final String PTM_SPIELRUNDE = GlobalImpl
 			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE);
+
+	static final String PTM_SM_TRIPL_ANZ_DOUBLETTE = GlobalImpl.PTM_SUPERMELEE_TRIPL_ANZ_DOUBLETTE;
+	static final String PTM_SM_TRIPL_ANZ_TRIPLETTE  = GlobalImpl.PTM_SUPERMELEE_TRIPL_ANZ_TRIPLETTE;
+	static final String PTM_SM_TRIPL_NUR_DOUBLETTE  = GlobalImpl.PTM_SUPERMELEE_TRIPL_NUR_DOUBLETTE;
+	static final String PTM_SM_DOUBL_ANZ_DOUBLETTE  = GlobalImpl.PTM_SUPERMELEE_DOUBL_ANZ_DOUBLETTE;
+	static final String PTM_SM_DOUBL_ANZ_TRIPLETTE  = GlobalImpl.PTM_SUPERMELEE_DOUBL_ANZ_TRIPLETTE;
+	static final String PTM_SM_DOUBL_NUR_TRIPLETTE  = GlobalImpl.PTM_SUPERMELEE_DOUBL_NUR_TRIPLETTE;
 
 	static final int MIN_ANZAHL_SPIELER_ZEILEN = 100;
 	static final int SUMMEN_SPALTE_OFFSET = 2;
@@ -289,10 +295,12 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		return meldungenSpalte.getErsteMeldungNameSpalte();
 	}
 
+	private String formulaPtmSupermelee(String formelName, String anzSpielerAddr) {
+		return "=" + formelName + "(" + anzSpielerAddr + ")";
+	}
+
 	private void updateSpieltageSummenSpalten() throws GenerateException {
 		sheet.processBoxinfo("Aktualisiere Summen Spalten");
-
-		var supermeleeTeamPaarungenSheet = new SupermeleeTeamPaarungenSheet(sheet.getWorkingSpreadsheet());
 
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 
@@ -415,48 +423,37 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 			// Triplette mode
 			String anzSpielerAddr = sheet.getSheetHelper()
 					.getAddressFromColumnRow(getAnzahlAktiveSpielerPosition(spielTagNr));
-			String formulaSverweisAnzDoublette = supermeleeTeamPaarungenSheet
-					.formulaSverweisAnzDoublette(anzSpielerAddr);
+
 			sheet.getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(TRIPL_MODE_ANZ_DOUBLETTE))
-					.setValue(formulaSverweisAnzDoublette));
+					.setValue(formulaPtmSupermelee(PTM_SM_TRIPL_ANZ_DOUBLETTE, anzSpielerAddr)));
 			String anzDoublZelle = posSpieltagWerte.getAddress();
 
-			String formulaSverweisAnzTriplette = supermeleeTeamPaarungenSheet
-					.formulaSverweisAnzTriplette(anzSpielerAddr);
 			sheet.getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(TRIPL_MODE_ANZ_TRIPLETTE))
-					.setValue(formulaSverweisAnzTriplette));
+					.setValue(formulaPtmSupermelee(PTM_SM_TRIPL_ANZ_TRIPLETTE, anzSpielerAddr)));
 			String anzTriplZelle = posSpieltagWerte.getAddress();
 
-			String formulaSverweisNurDoublette = supermeleeTeamPaarungenSheet
-					.formulaSverweisNurDoublette(anzSpielerAddr);
 			sheet.getSheetHelper()
 					.setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(TRIPL_MODE_SUMMEN_KANN_DOUBLETTE_ZEILE))
-							.setValue(formulaSverweisNurDoublette));
+							.setValue(formulaPtmSupermelee(PTM_SM_TRIPL_NUR_DOUBLETTE, anzSpielerAddr)));
 
 			String formulaAnzSpielbahnen = "=(" + anzDoublZelle + " + " + anzTriplZelle + ")/2";
 			sheet.getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(TRIPL_MODE_SUMMEN_SPIELBAHNEN))
 					.setValue(formulaAnzSpielbahnen));
 
 			// Doublette mode
-			String doublettModeformulaSverweisAnzDoublette = supermeleeTeamPaarungenSheet
-					.formulaSverweisDoubletteModeAnzDoublette(anzSpielerAddr);
 			sheet.getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_ANZ_DOUBLETTE))
-					.setValue(doublettModeformulaSverweisAnzDoublette));
+					.setValue(formulaPtmSupermelee(PTM_SM_DOUBL_ANZ_DOUBLETTE, anzSpielerAddr)));
 			String doublettteModeAnzDoublZelle = sheet.getSheetHelper()
 					.getAddressFromColumnRow(posSpieltagWerte);
 
-			String doublettModeformulaSverweisAnzTriplette = supermeleeTeamPaarungenSheet
-					.formulaSverweisAnzDoubletteModeAnzTriplette(anzSpielerAddr);
 			sheet.getSheetHelper().setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_ANZ_TRIPLETTE))
-					.setValue(doublettModeformulaSverweisAnzTriplette));
+					.setValue(formulaPtmSupermelee(PTM_SM_DOUBL_ANZ_TRIPLETTE, anzSpielerAddr)));
 			String doublettteModeAnzTriplZelle = sheet.getSheetHelper()
 					.getAddressFromColumnRow(posSpieltagWerte);
 
-			String doublettModeformulaSverweisNurTriplette = supermeleeTeamPaarungenSheet
-					.formulaSverweisDoubletteModeNurTriplette(anzSpielerAddr);
 			sheet.getSheetHelper()
 					.setFormulaInCell(formula.setPos(posSpieltagWerte.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE))
-							.setValue(doublettModeformulaSverweisNurTriplette));
+							.setValue(formulaPtmSupermelee(PTM_SM_DOUBL_NUR_TRIPLETTE, anzSpielerAddr)));
 
 			String doublettModeFormulaAnzSpielbahnen = "=(" + doublettteModeAnzDoublZelle + " + "
 					+ doublettteModeAnzTriplZelle + ")/2";

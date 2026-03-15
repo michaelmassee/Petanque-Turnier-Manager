@@ -17,6 +17,8 @@ import de.petanqueturniermanager.algorithmen.Direktvergleich;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.addin.XGlobal;
 
@@ -41,6 +43,13 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_STRING_PROPERTY = "PTM.ALG.STRINGPROPERTY";
 	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIREKTVERGLEICH";
 	public static final String PTM_TURNIERSYSTEM = "PTM.ALG.TURNIERSYSTEM";
+
+	public static final String PTM_SUPERMELEE_TRIPL_ANZ_DOUBLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE";
+	public static final String PTM_SUPERMELEE_TRIPL_ANZ_TRIPLETTE = "PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE";
+	public static final String PTM_SUPERMELEE_TRIPL_NUR_DOUBLETTE = "PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE";
+	public static final String PTM_SUPERMELEE_DOUBL_ANZ_DOUBLETTE = "PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE";
+	public static final String PTM_SUPERMELEE_DOUBL_ANZ_TRIPLETTE = "PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE";
+	public static final String PTM_SUPERMELEE_DOUBL_NUR_TRIPLETTE = "PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE";
 
 	public static final String FORMAT_PTM_INT_PROPERTY(String propName) {
 		return PTM_INT_PROPERTY + "(\"" + propName + "\")";
@@ -182,6 +191,54 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	String[] getServiceNames() {
 		return serviceNames;
+	}
+
+	// ------------------- PTM.SUPERMELEE.* Formeln -----------------
+
+	private int berechneSupermeleeTriplette(int anzSpieler,
+			java.util.function.Function<SuperMeleeTeamRechner, Integer> fn) {
+		if (anzSpieler < 4) return 0;
+		var rechner = new SuperMeleeTeamRechner(anzSpieler, SuperMeleeMode.Triplette);
+		if (!rechner.valideAnzahlSpieler()) return 0;
+		return fn.apply(rechner);
+	}
+
+	private int berechneSupermeleeDoublette(int anzSpieler,
+			java.util.function.Function<SuperMeleeTeamRechner, Integer> fn) {
+		if (anzSpieler < 4) return 0;
+		var rechner = new SuperMeleeTeamRechner(anzSpieler, SuperMeleeMode.Doublette);
+		if (!rechner.valideAnzahlSpieler()) return 0;
+		return fn.apply(rechner);
+	}
+
+	@Override
+	public int ptmsmtriplanzdoublette(int anzSpieler) {
+		return berechneSupermeleeTriplette(anzSpieler, SuperMeleeTeamRechner::getAnzDoublette);
+	}
+
+	@Override
+	public int ptmsmtriplanztriplette(int anzSpieler) {
+		return berechneSupermeleeTriplette(anzSpieler, SuperMeleeTeamRechner::getAnzTriplette);
+	}
+
+	@Override
+	public int ptmsmnurdoublette(int anzSpieler) {
+		return berechneSupermeleeTriplette(anzSpieler, r -> r.isNurDoubletteMoeglich() ? 1 : 0);
+	}
+
+	@Override
+	public int ptmsmdouplanzdoublette(int anzSpieler) {
+		return berechneSupermeleeDoublette(anzSpieler, SuperMeleeTeamRechner::getAnzDoublette);
+	}
+
+	@Override
+	public int ptgsmdouplanztriplette(int anzSpieler) {
+		return berechneSupermeleeDoublette(anzSpieler, SuperMeleeTeamRechner::getAnzTriplette);
+	}
+
+	@Override
+	public int ptgsmnurtriplette(int anzSpieler) {
+		return berechneSupermeleeDoublette(anzSpieler, r -> r.isNurTripletteMoeglich() ? 1 : 0);
 	}
 
 }

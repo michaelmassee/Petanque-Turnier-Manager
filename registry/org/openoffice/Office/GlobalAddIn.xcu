@@ -187,6 +187,109 @@
 					</prop>
 				</node>
 
+
+				<node oor:name="ptmsmtriplanzdoublette" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
+						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Supermêlée Triplette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzSpieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl aktiver Spieler</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmsmtriplanztriplette" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
+						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Supermêlée Triplette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzSpieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl aktiver Spieler</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmsmnurdoublette" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
+						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Supermêlée Triplette-Modus: 1 wenn ausschließlich Doublette-Teams möglich sind, sonst 0.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzSpieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl aktiver Spieler</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmsmdouplanzdoublette" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
+						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Supermêlée Doublette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzSpieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl aktiver Spieler</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptgsmdouplanztriplette" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
+						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Supermêlée Doublette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzSpieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl aktiver Spieler</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptgsmnurtriplette" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
+						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Supermêlée Doublette-Modus: 1 wenn ausschließlich Triplette-Teams möglich sind, sonst 0.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzSpieler" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzSpieler</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Anzahl aktiver Spieler</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 			</node>
 		</node>
 	</node>
