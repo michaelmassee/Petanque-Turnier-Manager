@@ -33,7 +33,7 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<node oor:name="A5A0" oor:op="replace">
+							<node oor:name="A5A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Start</value>
 									<value xml:lang="de">Start</value>
@@ -46,7 +46,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A5A1" oor:op="replace">
+							<node oor:name="A5A2" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">new Entrylist</value>
 									<value xml:lang="de">Neue Meldeliste</value>
@@ -59,7 +59,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A5A2" oor:op="replace">
+							<node oor:name="A5A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Update Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
@@ -72,7 +72,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A5A3" oor:op="replace">
+							<node oor:name="A5A4" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A5A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Aktuelle Spielrunde</value>
 								</prop>
@@ -82,7 +88,7 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A5A4" oor:op="replace">
+							<node oor:name="A5A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Nächste Spielrunde</value>
 								</prop>
@@ -92,7 +98,13 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A5A5" oor:op="replace">
+							<node oor:name="A5A7" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A5A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -103,7 +115,7 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A5A6" oor:op="replace">
+							<node oor:name="A5A9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste Sortieren</value>

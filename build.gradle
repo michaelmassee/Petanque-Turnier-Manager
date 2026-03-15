@@ -76,37 +76,37 @@ application {
     mainClass = 'de.petanqueturniermanager.SheetRunner'
 }
 
-task cleanCache (type: Delete) {
-  delete "dist/.ooo-debug/user/uno_packages/cache"
+tasks.register('cleanCache', Delete) {
+    delete "dist/.ooo-debug/user/uno_packages/cache"
 }
 
-task copyRuntimeLibs(type: Sync) {
+tasks.register('copyRuntimeLibs', Sync) {
     group = 'LibreOffice'
     description = 'Kopiert Runtime-Dependencies für die OXT'
     from configurations.runtimeClasspath
-    into "$buildDir/runtime-libs"
+    into layout.buildDirectory.dir('runtime-libs')
 }
 
 // Task zum Erstellen des JAR mit UNO Registration
-task buildPluginJar(type: Jar) {
+tasks.register('buildPluginJar', Jar) {
     group = 'LibreOffice'
     description = 'Erstellt das JAR mit UNO Registration und Class-Path zu libs'
-    dependsOn classes, copyRuntimeLibs
+    dependsOn classes, 'copyRuntimeLibs'
     archiveFileName.set("${project.name}.jar")
-    
+
     from sourceSets.main.output
-    
+
     // UNO components-Datei ins JAR META-INF (LibreOffice Standard-Location)
     from('.') {
         include 'PetanqueTurnierManager.components'
         into 'META-INF'
     }
-    
+
     manifest {
         attributes(
             'RegistrationClassName': 'de.petanqueturniermanager.comp.RegistrationHandler',
-            'Class-Path': configurations.runtimeClasspath.collect { 
-                "libs/${it.name}" 
+            'Class-Path': configurations.runtimeClasspath.collect {
+                "libs/${it.name}"
             }.join(' ')
         )
     }
@@ -114,14 +114,14 @@ task buildPluginJar(type: Jar) {
 
 // Task zum Erstellen der OXT-Datei (LibreOffice Extension)
 // IDL zu RDB kompilieren (UNO Type Registry für AddIn-Funktionen)
-task compileIdl(type: Exec) {
+tasks.register('compileIdl', Exec) {
     group = 'LibreOffice'
     description = 'Kompiliert IDL-Dateien zu einer RDB Type-Registry'
     def unoidlWrite = "${libreOfficePath}/sdk/bin/unoidl-write"
     def typesRdb = "${libreOfficePath}/program/types.rdb"
     def offapiRdb = "${libreOfficePath}/program/types/offapi.rdb"
     def idlFile = file('idl/de/petanqueturniermanager/AddInGlobal.idl')
-    def outputRdb = file("$buildDir/rdb/AddInGlobal.rdb")
+    def outputRdb = layout.buildDirectory.file('rdb/AddInGlobal.rdb').get().asFile
 
     inputs.file idlFile
     outputs.file outputRdb
@@ -132,65 +132,66 @@ task compileIdl(type: Exec) {
     commandLine unoidlWrite, typesRdb, offapiRdb, idlFile, outputRdb
 }
 
-task buildOXT(type: Zip) {
+tasks.register('buildOXT', Zip) {
     group = 'LibreOffice'
     description = 'Erstellt die OXT-Datei (LibreOffice Extension)'
-    dependsOn buildPluginJar, copyRuntimeLibs, compileIdl
+    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'compileIdl'
     archiveFileName.set("${project.name}-${version}.oxt")
-    destinationDirectory.set(file("$buildDir/distributions"))
-    
+    destinationDirectory.set(layout.buildDirectory.dir('distributions'))
+
     // JAR-Datei hinzufügen
-    from(buildPluginJar.archiveFile) {
+    from(tasks.named('buildPluginJar', Jar).flatMap { it.archiveFile }) {
         into ''
     }
-    
+
     // META-INF manifest
     from('META-INF') {
         into 'META-INF'
     }
-    
+
     // Description and configuration files
     from('.') {
         include 'description.xml'
     }
-    
+
     from('description') {
         include '*.txt'
         into 'description'
     }
-    
+
     // Registry configuration (XCU files)
     from('registry') {
         into 'registry'
     }
-    
+
     // Images
     from('images') {
         into 'images'
     }
-    
+
     // Runtime dependencies (libs)
-    from("$buildDir/runtime-libs") {
+    from(layout.buildDirectory.dir('runtime-libs')) {
         into 'libs'
     }
-    
+
     // IDL files
     from('idl') {
         into 'idl'
     }
 
     // RDB Type Registry (kompiliert aus IDL)
-    from("$buildDir/rdb") {
+    from(layout.buildDirectory.dir('rdb')) {
         include '*.rdb'
     }
 }
 
 // Task zum Installieren der Extension in LibreOffice
-task installExtension(type: Exec) {
+tasks.register('installExtension', Exec) {
     group = 'LibreOffice'
     description = 'Installiert die erstellte Extension in LibreOffice'
-    dependsOn buildOXT
-    def oxtFile = "${buildDir}/distributions/${project.name}-${version}.oxt"
+    dependsOn 'buildOXT'
+    mustRunAfter 'uninstallExtension'
+    def oxtFile = layout.buildDirectory.file("distributions/${project.name}-${version}.oxt").get().asFile
     commandLine "${libreOfficePath}/program/unopkg", 'add', '-f', oxtFile
 
     doFirst {
@@ -199,7 +200,7 @@ task installExtension(type: Exec) {
 }
 
 // Task zum Deinstallieren der Extension
-task uninstallExtension(type: Exec) {
+tasks.register('uninstallExtension', Exec) {
     group = 'LibreOffice'
     description = 'Deinstalliert die Extension aus LibreOffice'
     commandLine "${libreOfficePath}/program/unopkg", 'remove', extensionId
@@ -218,21 +219,20 @@ task uninstallExtension(type: Exec) {
 }
 
 // Task zum Neuinstallieren
-task reinstallExtension {
+tasks.register('reinstallExtension') {
     group = 'LibreOffice'
     description = 'De-/Neuinstallation der Extension'
-    dependsOn uninstallExtension, installExtension
-    installExtension.mustRunAfter uninstallExtension
+    dependsOn 'uninstallExtension', 'installExtension'
 }
 
 // Debug-Task: Startet LibreOffice mit Debug-Port
-task debugLibreOffice(type: Exec) {
+tasks.register('debugLibreOffice', Exec) {
     group = 'LibreOffice'
     description = 'Startet LibreOffice im Debug-Modus mit JDWP'
-    dependsOn reinstallExtension
-    
+    dependsOn 'reinstallExtension'
+
     environment 'JAVA_TOOL_OPTIONS', '-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005'
-    
+
     commandLine "${libreOfficePath}/program/soffice", '--calc'
 
     doFirst {
@@ -242,13 +242,13 @@ task debugLibreOffice(type: Exec) {
 }
 
 // Task zum Starten von LibreOffice
-task runLibreoffice(type: Exec) {
+tasks.register('runLibreoffice', Exec) {
     group = 'LibreOffice'
     description = 'Startet LibreOffice Calc nach Neuinstallation der Extension'
-    dependsOn reinstallExtension
+    dependsOn 'reinstallExtension'
 
     commandLine "${libreOfficePath}/program/soffice", '--calc'
-    
+
     doFirst {
         println "Starte LibreOffice Calc..."
     }
@@ -261,7 +261,7 @@ def mitUiTests = project.hasProperty('uitTests') && project.uitTests == 'true'
 
 test {
     if (mitUiTests) {
-        dependsOn reinstallExtension
+        dependsOn 'reinstallExtension'
     }
     // UITests starten LibreOffice auf Port 8100 – nur ein Worker gleichzeitig erlaubt
     maxParallelForks = 1
@@ -277,10 +277,11 @@ test {
 }
 
 // Task: Bauen, installieren und Calc im Hintergrund starten (Gradle blockiert nicht)
-task startCalc {
+tasks.named('buildOXT').configure { mustRunAfter('clean') }
+tasks.register('startCalc') {
     group = 'LibreOffice'
-    description = 'Baut OXT, installiert Extension und startet LibreOffice Calc (non-blocking)'
-    dependsOn reinstallExtension
+    description = 'Baut OXT frisch (clean), installiert Extension und startet LibreOffice Calc (non-blocking)'
+    dependsOn 'clean', 'reinstallExtension'
 
     doLast {
         println "Starte LibreOffice Calc..."
@@ -291,12 +292,12 @@ task startCalc {
 }
 
 // Build-Task
-task buildPlugin {
+tasks.register('buildPlugin') {
     group = 'LibreOffice'
     description = 'High-level Task: Baut die OXT und zeigt Ausgabepfad'
-    dependsOn buildOXT
+    dependsOn 'buildOXT'
 
     doLast {
-        println "Plugin erfolgreich gebaut: ${buildDir}/distributions/${project.name}-${version}.oxt"
+        println "Plugin erfolgreich gebaut: ${layout.buildDirectory.get().asFile}/distributions/${project.name}-${version}.oxt"
     }
 }

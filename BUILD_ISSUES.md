@@ -1,16 +1,5 @@
 # Build-Probleme und Lösungen
 
-## Problem 1: Globales init.gradle blockiert Maven-Zugriff
-
-**Symptom:** Build schlägt fehl mit `UnknownHostException: sro-artifactory.intern.gipmbh.de`
-
-**Ursache:** Die globale `~/.gradle/init.gradle` leitet alle Repository-Zugriffe auf einen nicht erreichbaren internen Artifactory-Server um.
-
-**Lösung:** Verwende das `build-oxt.sh` Script, das automatisch das globale init.gradle während des Builds deaktiviert:
-
-```bash
-./build-oxt.sh buildOXT
-```
 
 ## Problem 2: IDL-Interfaces fehlen (XGlobal etc.)
 
@@ -30,34 +19,18 @@ Modernisiere das Projekt wie das Referenzprojekt ohne IDL:
 - Implementiere UNO-Services direkt in Java
 - Nutze moderne .components-Registrierung (bereits vorhanden)
 
-## Build-Workflow
-
-### Schnell-Build (mit Helper-Script):
-```bash
-./build-oxt.sh buildOXT
-```
 
 ### Manueller Build (falls Script nicht funktioniert):
 ```bash
 # Global init.gradle temporär deaktivieren
 mv ~/.gradle/init.gradle ~/.gradle/init.gradle.backup
 
-# Bauen
-./gradlew buildOXT
 
 # Init.gradle wiederherstellen 
 mv ~/.gradle/init.gradle.backup ~/.gradle/init.gradle
 ```
 
-### Installieren:
-```bash
-./build-oxt.sh installExtension
-```
 
-### Debug-Modus:
-```bash
-./build-oxt.sh debugLibreOffice
-```
 
 ## Änderungen gegenüber Original
 

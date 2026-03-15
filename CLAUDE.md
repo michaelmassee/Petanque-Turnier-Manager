@@ -66,6 +66,16 @@ Each tournament system typically has sheet classes for: Meldeliste (entry list),
 
 Menu items are defined in XCU files under `registry/org/openoffice/Office/` (one per tournament system + config/download/stop).
 
+**Separator-Nodes in XCU-Menüs:** Separatoren müssen **strikt sequenziell nummeriert** werden – niemals alphanumerische Suffixe (z.B. `A5A2S`) verwenden. Ein Separator belegt einfach den nächsten freien Slot in der Sequenz und enthält nur die URL-Property:
+```xml
+<node oor:name="A5A4" oor:op="replace">
+    <prop oor:name="URL" oor:type="xs:string">
+        <value>private:separator</value>
+    </prop>
+</node>
+```
+Falsch: `A5A2S`, `A5A4S` — diese werden von LibreOffice nicht als Separatoren angezeigt.
+
 ### IDL / Add-in Interfaces
 
 IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/` package contains the generated Java interface from IDL. IDL compilation is not automated in Gradle (see BUILD_ISSUES.md) — interfaces must be generated manually or the project should be migrated to a modern IDL-free approach.
@@ -79,8 +89,7 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 ## Known Build Issues
 
 See `BUILD_ISSUES.md` for details on:
-1. Global init.gradle blocking Maven access (use `build-oxt.sh`)
-2. IDL-to-Java interface generation not automated in Gradle
+1. IDL-to-Java interface generation not automated in Gradle
 
 ## Business Logic & Rules
 - **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.
