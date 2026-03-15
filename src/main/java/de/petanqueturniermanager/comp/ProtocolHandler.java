@@ -166,7 +166,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_DOWNLOAD_EXTENSION = "downloadExtension";
 	public static final String CMD_ABBRUCH = "abbruch";
 	// Neue Version
-	public static final String CMD_NEUE_VERSION_MENUE    = "neueVersionMenue";
 	public static final String CMD_RELEASE_INFOS_ANZEIGEN = "releaseInfosAnzeigen";
 	public static final String CMD_DIREKT_AKTUALISIEREN  = "direktAktualisieren";
 	// Info
