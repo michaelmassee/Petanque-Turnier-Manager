@@ -20,6 +20,8 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
 
+import java.awt.Font;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,6 +29,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
+import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 
 public class ProcessBox {
 	private static final Logger logger = LogManager.getLogger(ProcessBox.class);
@@ -52,6 +55,7 @@ public class ProcessBox {
 
 	private JLabel statusLabel;
 	private JLabel infoLabel;
+	private JLabel neueVersionLabel;
 
 	private ImageIcon imageIconReady;
 	private ImageIcon imageIconError;
@@ -63,15 +67,17 @@ public class ProcessBox {
 	private ScheduledFuture<?> drawInWorkIconScheduled;
 
 	private boolean isFehler = false;
+	private final XComponentContext xContext;
 
 	private ProcessBox(XComponentContext xContext) {
+		this.xContext = checkNotNull(xContext);
 		if (headlessMode) {
 			frame = null;
 			drawInWorkIcon = null;
 			return;
 		}
 		frame = new JFrame();
-		dialogTools = DialogTools.from(checkNotNull(xContext), frame);
+		dialogTools = DialogTools.from(xContext, frame);
 		drawInWorkIcon = Executors.newScheduledThreadPool(1);
 		inworkIcons = new ArrayList<>();
 		logOut = null;
@@ -79,6 +85,7 @@ public class ProcessBox {
 		cancelBtn = null;
 		prefix = null;
 		statusLabel = null;
+		neueVersionLabel = null;
 		imageIconReady = null;
 		imageIconError = null;
 		initBox();
@@ -147,13 +154,49 @@ public class ProcessBox {
 
 		// log
 		initLog(0);
-		// 2 Info felder Spieltag, Spielrunde
-		initSpieltagUndSpielrundInfo(1);
+		// Neue-Version-Hinweiszeile (nur sichtbar wenn neue Version verfügbar)
+		initNeueVersionZeile(1);
+		// Footer: Status, Info, Log, Stop
+		initSpieltagUndSpielrundInfo(2);
 
 		frame.setPreferredSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
 		frame.setSize(MIN_WIDTH, MIN_HEIGHT);
 		frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
 		title(TITLE);
+
+		// Callback registrieren: Neue-Version-Label einblenden sobald Cache-Thread fertig
+		NewReleaseChecker.addCacheUpdateCallback(this::aktualisiereNeueVersionLabel);
+	}
+
+	private void initNeueVersionZeile(int zeile) {
+		neueVersionLabel = new JLabel();
+		neueVersionLabel.setForeground(new Color(0xcc4400));
+		neueVersionLabel.setFont(neueVersionLabel.getFont().deriveFont(Font.BOLD, 13f));
+		neueVersionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		neueVersionLabel.setVisible(false);
+
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.gridy = zeile;
+		gbc.gridx = 0;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.weightx = 1.0;
+		gbc.insets = new Insets(2, 5, 2, 5);
+		frame.add(neueVersionLabel, gbc);
+	}
+
+	private void aktualisiereNeueVersionLabel() {
+		if (neueVersionLabel == null) {
+			return;
+		}
+		NewReleaseChecker checker = new NewReleaseChecker();
+		boolean neueVersion = checker.checkForNewRelease(xContext);
+		SwingUtilities.invokeLater(() -> {
+			if (neueVersion) {
+				neueVersionLabel.setText(checker.getMenuTitelKurz() + " verfügbar");
+			}
+			neueVersionLabel.setVisible(neueVersion);
+			frame.revalidate();
+		});
 	}
 
 	private void setIcons() {
@@ -228,9 +271,8 @@ public class ProcessBox {
 
 		infoLabel = new JLabel("..");
 		infoLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-
 		panel.add(infoLabel, gridBagConstraintsPanel);
-		gridBagConstraintsPanel.gridx++; // spalte
+		gridBagConstraintsPanel.gridx++;
 
 		// ----------------------------------------------------------
 		{

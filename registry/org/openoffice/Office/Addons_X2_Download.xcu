@@ -17,18 +17,58 @@
 				</prop>
 				<node oor:name="Submenu">
 					<!-- name= bestimmt reihenfolge im menu -->
-					<node oor:name="X2" oor:op="replace">
+
+					<!-- Alter Download-Menüpunkt entfernen -->
+					<node oor:name="X2" oor:op="remove"/>
+
+					<!-- Neue Version verfügbar (Untermenü, nur sichtbar wenn neue Version vorhanden) -->
+					<node oor:name="X3" oor:op="replace">
 						<prop oor:name="Title">
-							<value xml:lang="en">~Download latest Version</value>
-							<value xml:lang="de">~Download neueste Version</value>
+							<value xml:lang="de">Neue Version verfügbar</value>
 						</prop>
 						<prop oor:name="URL">
-							<value>ptm:downloadExtension</value>
+							<value>ptm:neueVersionMenue</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
 						</prop>
+						<node oor:name="Submenu">
+							<node oor:name="X3X1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Release-Infos anzeigen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:releaseInfosAnzeigen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<node oor:name="X3X2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Download hierher</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:downloadExtension</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<node oor:name="X3X3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Direkt aktualisieren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:direktAktualisieren</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+						</node>
 					</node>
+
 				</node>
 			</node>
 		</node>

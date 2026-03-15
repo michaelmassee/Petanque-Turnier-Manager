@@ -16,7 +16,6 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -108,7 +107,6 @@ public abstract class SheetRunner extends Thread {
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
 			try {
-				new NewReleaseChecker().updateNewReleaseInfo(getxContext());
 				autoSave();
 				if (!isFehler && backupDocumentAfterRun) {
 					backUpDocument("2"); // after run

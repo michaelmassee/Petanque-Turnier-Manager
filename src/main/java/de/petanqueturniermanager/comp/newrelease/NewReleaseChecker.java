@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
@@ -31,11 +32,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import io.github.g00fy2.versioncompare.Version;
 
 /**
@@ -57,58 +53,26 @@ public class NewReleaseChecker {
 
 	private static AtomicBoolean isUpdateThreadRunning = new AtomicBoolean(); // is volatile
 	private static AtomicBoolean didUpdateCacheFile = new AtomicBoolean(); // is volatile
-	private static AtomicBoolean didAlreadyRun = new AtomicBoolean(); // is volatile
-	private static AtomicBoolean didInform = new AtomicBoolean(); // is volatile
+	private static final CopyOnWriteArrayList<Runnable> cacheUpdateCallbacks = new CopyOnWriteArrayList<>();
+
+	/**
+	 * Registriert einen Callback, der aufgerufen wird, sobald der Cache-Update-Thread fertig ist.
+	 * Mehrere Callbacks möglich (z.B. ProtocolHandler und ProcessBox).
+	 */
+	public static void addCacheUpdateCallback(Runnable callback) {
+		cacheUpdateCallbacks.add(callback);
+	}
+
+	/**
+	 * Gibt an, ob der Cache-Update-Thread bereits abgeschlossen ist.
+	 */
+	public static boolean isUpdateAbgeschlossen() {
+		return didUpdateCacheFile.get();
+	}
 
 	// !! Wird einmal aufgerufen
 	public void runUpdateCache() {
 		runUpdateCacheFileOnceThread(); // update release info
-	}
-
-	/**
-	 * Check for new Release und write Info in Process Box
-	 * 
-	 * @param xContext
-	 */
-	public void updateNewReleaseInfo(XComponentContext xContext) {
-		if (didUpdateCacheFile.get() && !didInform.getAndSet(true)) {
-			boolean newRelease = checkForNewRelease(xContext);
-			if (newRelease) {
-				String latestVersionFromCacheFile = latestVersionFromCacheFile();
-				String newVer = "Neue Version von PTM (" + latestVersionFromCacheFile + ") verfügbar.";
-				ProcessBox.from().infoText(newVer);
-
-				GHRelease rel = readLatestReleaseFromCacheFile();
-				ProcessBox.from().info(newVer).info("Release Notes:").info(rel.getBody());
-			}
-		}
-	}
-
-	@Deprecated
-	private void doDownload(XComponentContext xContext) {
-		if (didUpdateCacheFile.get() && !didAlreadyRun.getAndSet(true)) {
-			boolean isnewRelease = checkForNewRelease(xContext);
-			if (isnewRelease) {
-				logger.debug("open MessageBox");
-
-				GHRelease gHRelease = readLatestReleaseFromCacheFile();
-				String releaseNotes = "";
-				if (gHRelease != null) {
-					releaseNotes = gHRelease.getBody();
-				}
-
-				MessageBoxResult answer = MessageBox.from(xContext, MessageBoxTypeEnum.QUESTION_YES_NO)
-						.caption("Neue Version")
-						.message("Eine neue Version (" + latestVersionFromCacheFile()
-								+ ") von Pétanque-Turnier-Manager ist verfügbar.\r\n\r\n'" + releaseNotes
-								+ "'\r\n\r\nDownload ?")
-						.show();
-
-				if (MessageBoxResult.YES == answer) {
-					new DownloadExtension(new WorkingSpreadsheet(xContext)).start();
-				}
-			}
-		}
 	}
 
 	/**
@@ -125,6 +89,7 @@ public class NewReleaseChecker {
 					} finally {
 						didUpdateCacheFile.set(true);
 						isUpdateThreadRunning.set(false);
+						cacheUpdateCallbacks.forEach(Runnable::run);
 					}
 				}
 			}.start();
@@ -181,7 +146,7 @@ public class NewReleaseChecker {
 		return ret;
 	}
 
-	private String latestVersionFromCacheFile() {
+	String latestVersionFromCacheFile() {
 		String latestVersionFromCacheFile = null;
 
 		GHRelease readLatestRelease = readLatestReleaseFromCacheFile();
@@ -193,7 +158,7 @@ public class NewReleaseChecker {
 		return latestVersionFromCacheFile;
 	}
 
-	private boolean checkForNewRelease(XComponentContext context) {
+	public boolean checkForNewRelease(XComponentContext context) {
 		boolean newVersionAvailable = false;
 		try {
 			// https://www.baeldung.com/java-download-file
@@ -215,6 +180,14 @@ public class NewReleaseChecker {
 			logger.error(e.getMessage(), e);
 		}
 		return newVersionAvailable;
+	}
+
+	/**
+	 * Liefert einen kurzen Menütitel für den "Neue Version"-Menüpunkt, z.B. "Neu: v5.2.0".
+	 */
+	public String getMenuTitelKurz() {
+		String ver = latestVersionFromCacheFile();
+		return ver != null ? "Neu: v" + ver : "Neue Version";
 	}
 
 	GHAsset getDownloadGHAsset() {

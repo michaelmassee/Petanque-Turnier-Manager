@@ -30,7 +30,10 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
+import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -162,6 +165,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Sonstige
 	public static final String CMD_DOWNLOAD_EXTENSION = "downloadExtension";
 	public static final String CMD_ABBRUCH = "abbruch";
+	// Neue Version
+	public static final String CMD_NEUE_VERSION_MENUE    = "neueVersionMenue";
+	public static final String CMD_RELEASE_INFOS_ANZEIGEN = "releaseInfosAnzeigen";
+	public static final String CMD_DIREKT_AKTUALISIEREN  = "direktAktualisieren";
 
 	private final XComponentContext xContext;
 
@@ -170,6 +177,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		SHARED_CONTEXT = xContext;
 		PetanqueTurnierMngrSingleton.init(xContext);
 		if (REGISTERED.compareAndSet(false, true)) {
+			NewReleaseChecker.addCacheUpdateCallback(ProtocolHandler::notifyAllListeners);
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
 				@Override
 				public void onFocus(Object source) {
@@ -384,9 +392,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				handleKonfiguration(command, ws);
 				break;
 			// ------------------------------
-			// Download / Stop
+			// Download / Stop / Neue Version
 			case CMD_DOWNLOAD_EXTENSION:
 				new DownloadExtension(ws).start();
+				break;
+			case CMD_RELEASE_INFOS_ANZEIGEN:
+				new ReleaseInfosAnzeigen(ws).start();
+				break;
+			case CMD_DIREKT_AKTUALISIEREN:
+				new DirectUpdate(ws).start();
 				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
@@ -519,6 +533,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
+			// Neue Version: nur aktiv wenn neue Version verfügbar
+			case CMD_NEUE_VERSION_MENUE,
+				 CMD_RELEASE_INFOS_ANZEIGEN,
+				 CMD_DIREKT_AKTUALISIEREN                   -> new NewReleaseChecker().checkForNewRelease(ctx);
 			// Download, Stop: immer aktiv
 			case CMD_DOWNLOAD_EXTENSION, CMD_ABBRUCH           -> true;
 			default -> false;
@@ -584,6 +602,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			event.FeatureURL = url;
 			event.IsEnabled = enabled;
 			event.Requery = false;
+			if (CMD_NEUE_VERSION_MENUE.equals(url.Path) && enabled) {
+				event.State = new NewReleaseChecker().getMenuTitelKurz();
+			}
 			listener.statusChanged(event);
 		} catch (Exception e) {
 			logger.warn("Fehler beim Benachrichtigen des Status-Listeners: {}", e.getMessage());
