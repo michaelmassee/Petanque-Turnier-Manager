@@ -17,13 +17,27 @@ import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.model.TeamRangliste;
 
 /**
- * @author Michael Massee
+ * Erzeugt Paarungen für eine K.O.-Runde nach dem „Erster gegen Letzten"-Prinzip.<br>
+ * <br>
+ * Algorithmus:
+ * <ol>
+ *   <li>Team an Rang 1 spielt gegen Team an Rang n, Rang 2 gegen Rang n-1, usw.</li>
+ *   <li>Hat ein Team seinen natürlichen Gegner bereits gespielt, wird rückwärts ein
+ *       freier Gegner gesucht ({@link #sucheGegnerFuer}).</li>
+ *   <li>Existiert kein freier Gegner mehr, wird ein bereits zugeordnetes B-Team
+ *       getauscht ({@link #kanntauschenMit}): Das bisherige B erhält einen neuen Gegner,
+ *       das freigewordene B wird dem wartenden Team zugewiesen.</li>
+ *   <li>Ist selbst das nicht möglich, wird eine Doppel-Paarung in Kauf genommen
+ *       (Flag {@link #isDoppelteGespieltePaarungenVorhanden()}).</li>
+ * </ol>
  *
+ * @author Michael Massee
  */
 public class KoRundeTeamPaarungen {
+
 	private final TeamRangliste teamRangListe;
 	private boolean doppelteGespieltePaarungenVorhanden = false;
-	private String doppelteGespieltePaarungen = "";
+	private final List<String> doppelteGespieltePaarungen = new ArrayList<>();
 
 	public KoRundeTeamPaarungen(TeamRangliste teamRangListe) {
 		checkNotNull(teamRangListe, "TeamRangliste == null");
@@ -35,85 +49,73 @@ public class KoRundeTeamPaarungen {
 	public FormeSpielrunde generatSpielRunde() {
 		FormeSpielrunde formeSpielrunde = new FormeSpielrunde(1);
 		doppelteGespieltePaarungenVorhanden = false;
+		doppelteGespieltePaarungen.clear();
 
-		// erste gegen letzte spielen usw.
-
-		// orginal liste clonen zum arbeiten
 		ArrayList<Team> teamRangListeWork = teamRangListe.getCloneTeamListe();
 		int haelfte = teamRangListeWork.size() / 2;
 
 		for (int cntr = 0; cntr < haelfte; cntr++) {
-			Team teamA = teamRangListeWork.get(0);
+			Team teamA = teamRangListeWork.getFirst();
 			Team teamB = sucheGegnerFuer(teamA, teamRangListeWork);
-			boolean hatgetauscht = false;
 
-			if (teamB == null) {
-				// kein gegner gefunden, kann tauschen mit andere B Team ?
-				TauschTeams kanntauschenMit = kanntauschenMit(teamA, teamRangListeWork, formeSpielrunde);
-
-				if (kanntauschenMit == null) {
-					// immer noch null ? dann doppelt spielen lassen
-					teamB = teamRangListeWork.get(teamRangListeWork.size() - 1);
-					doppelteGespieltePaarungenVorhanden = true;
-					doppelteGespieltePaarungen += (" " + teamA.getNr() + ":" + teamB.getNr());
-				} else {
-					// team austauschen in spielrunde
-					hatgetauscht = true;
-					Team teamBAusTeamPaarung = kanntauschenMit.getTeamPaarungTausch().getB();
-					kanntauschenMit.getTeamPaarungTausch().setB(kanntauschenMit.getTeamAusRangliste());
-					teamRangListeWork.remove(kanntauschenMit.getTeamAusRangliste());
-					formeSpielrunde.addPaarungWennNichtVorhanden(new TeamPaarung(teamA, teamBAusTeamPaarung));
-				}
-			}
-
-			if (!hatgetauscht) {
+			if (teamB != null) {
 				formeSpielrunde.addPaarungWennNichtVorhanden(new TeamPaarung(teamA, teamB));
 				teamRangListeWork.remove(teamB);
+			} else {
+				TauschTeams tausch = kanntauschenMit(teamA, teamRangListeWork, formeSpielrunde);
+				if (tausch != null) {
+					Team freigegenerB = tausch.teamPaarungTausch().getB();
+					tausch.teamPaarungTausch().setB(tausch.teamAusRangliste());
+					teamRangListeWork.remove(tausch.teamAusRangliste());
+					formeSpielrunde.addPaarungWennNichtVorhanden(new TeamPaarung(teamA, freigegenerB));
+				} else {
+					// kein valider Gegner und kein Tausch möglich → Doppel-Paarung
+					teamB = teamRangListeWork.getLast();
+					doppelteGespieltePaarungenVorhanden = true;
+					doppelteGespieltePaarungen.add(teamA.getNr() + ":" + teamB.getNr());
+					formeSpielrunde.addPaarungWennNichtVorhanden(new TeamPaarung(teamA, teamB));
+					teamRangListeWork.remove(teamB);
+				}
 			}
 			teamRangListeWork.remove(teamA);
-
 		}
 
 		return formeSpielrunde;
 	}
 
 	/**
-	 * suche für ein rangliste höhere Team ein rangliste niedrige Team. Damit die A Teams möglichst lange im Turnier bleiben.<br>
-	 * die teamRangListeWork wird rückwärts abgesucht
+	 * Sucht rückwärts in der Rangliste einen Gegner für teamA, gegen den teamA noch nicht gespielt hat.<br>
+	 * Rückwärts-Suche stellt sicher, dass schwächere Teams (hinten in der Rangliste) bevorzugt als Gegner dienen.
 	 *
-	 * @param teamA
-	 * @param teamRangListeWork
-	 * @return
+	 * @param teamA             das Team, für das ein Gegner gesucht wird
+	 * @param teamRangListeWork die noch verfügbaren Teams
+	 * @return ein geeigneter Gegner oder {@code null} wenn keiner gefunden wurde
 	 */
-
 	Team sucheGegnerFuer(final Team teamA, final List<Team> teamRangListeWork) {
-		Team gegner = null;
-		// rückwärts suchen
-		List<Team> reverseteamRangListeWork = Lists.reverse(teamRangListeWork);
-		for (Team teamAusRangliste : reverseteamRangListeWork) {
-			if (!teamA.equals(teamAusRangliste) && !teamA.hatAlsGegner(teamAusRangliste)) {
-				gegner = teamAusRangliste;
-				break;
-			}
-		}
-		return gegner;
+		return Lists.reverse(teamRangListeWork).stream()
+				.filter(t -> !teamA.equals(t) && !teamA.hatAlsGegner(t))
+				.findFirst()
+				.orElse(null);
 	}
 
+	/**
+	 * Versucht, einen Tausch zu finden: Ein bereits zugeordnetes B-Team wird mit einem
+	 * noch verfügbaren Team ausgetauscht, so dass teamA den freigwordenen B-Platz übernehmen kann.
+	 *
+	 * @param teamA            das Team ohne gültigen Gegner
+	 * @param teamRangListeWork die noch verfügbaren Teams
+	 * @param formeSpielrunde  die bisher erzeugten Paarungen (Tauschkandidaten)
+	 * @return ein {@link TauschTeams}-Objekt oder {@code null} wenn kein Tausch möglich ist
+	 */
 	TauschTeams kanntauschenMit(final Team teamA, final List<Team> teamRangListeWork, final FormeSpielrunde formeSpielrunde) {
-		// suche in der Gruppe nach ein gegner
-		List<Team> bTeams = formeSpielrunde.getBTeams();
-		List<Team> reverseteamRangListeWork = Lists.reverse(teamRangListeWork);
+		List<Team> reversedRangliste = Lists.reverse(teamRangListeWork);
 
-		// suchen
-		for (Team teamBAusSpielrunde : bTeams) {
+		for (Team teamBAusSpielrunde : formeSpielrunde.getBTeams()) {
 			if (!teamA.hatAlsGegner(teamBAusSpielrunde)) {
-				// Team A aus paarungen prüfen
-				TeamPaarung teamPaarungTausch = formeSpielrunde.findTeamPaarung(teamBAusSpielrunde);
-				// neuer B gegner für Team aus Paarungen ?
-				// rückwarts suchen !
-				for (Team teamAusRangliste : reverseteamRangListeWork) {
-					if (!teamA.equals(teamAusRangliste) && !teamPaarungTausch.getA().hatAlsGegner(teamAusRangliste)) {
-						return new TauschTeams(teamAusRangliste, teamPaarungTausch);
+				TeamPaarung paarungTausch = formeSpielrunde.findTeamPaarung(teamBAusSpielrunde);
+				for (Team teamAusRangliste : reversedRangliste) {
+					if (!teamA.equals(teamAusRangliste) && !paarungTausch.getA().hatAlsGegner(teamAusRangliste)) {
+						return new TauschTeams(teamAusRangliste, paarungTausch);
 					}
 				}
 			}
@@ -125,31 +127,16 @@ public class KoRundeTeamPaarungen {
 		return teamRangListe;
 	}
 
+	/** @return {@code true} wenn mindestens eine Doppel-Paarung (bereits gespielt) entstanden ist */
 	public boolean isDoppelteGespieltePaarungenVorhanden() {
 		return doppelteGespieltePaarungenVorhanden;
 	}
 
+	/** @return leerzeichengetrennte Liste der Doppel-Paarungen, z.B. {@code "1:4 2:5"} */
 	public String getDoppelteGespieltePaarungen() {
-		return doppelteGespieltePaarungen;
+		return String.join(" ", doppelteGespieltePaarungen);
 	}
 }
 
-class TauschTeams {
-
-	private final Team teamAusRangliste;
-	private final TeamPaarung teamPaarungTausch;
-
-	public TauschTeams(Team teamAusRangliste, TeamPaarung teamPaarungTausch) {
-		this.teamAusRangliste = teamAusRangliste;
-		this.teamPaarungTausch = teamPaarungTausch;
-	}
-
-	public Team getTeamAusRangliste() {
-		return teamAusRangliste;
-	}
-
-	public TeamPaarung getTeamPaarungTausch() {
-		return teamPaarungTausch;
-	}
-
-}
+/** Kapselt einen gefundenen Tausch: das Team aus der Rangliste und die Paarung, deren B getauscht wird. */
+record TauschTeams(Team teamAusRangliste, TeamPaarung teamPaarungTausch) {}
