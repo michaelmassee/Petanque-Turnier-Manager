@@ -46,6 +46,9 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektver
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
+import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
+import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetExport;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
@@ -155,6 +158,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
 	// Konfiguration
+	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
+	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
+	public static final String CMD_KONFIGURATION_FARBEN = "konfiguration_farben";
 	public static final String CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION = "konfiguration_update_erstellt_mit_version";
 	// Sonstige
 	public static final String CMD_DOWNLOAD_EXTENSION = "downloadExtension";
@@ -376,8 +382,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			// ------------------------------
 			// Konfiguration
+			case CMD_KONFIGURATION_TURNIER:
+				handleKonfiguration(command, ws);
+				break;
+			case CMD_KONFIGURATION_KOPFFUSSZEILEN:
+				handleKonfiguration(command, ws);
+				break;
+			case CMD_KONFIGURATION_FARBEN:
+				handleKonfiguration(command, ws);
+				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
-				DocumentHelper.setDocErstelltMitVersion(ws);
+				handleKonfiguration(command, ws);
 				break;
 			// ------------------------------
 			// Download / Stop / Neue Version
@@ -409,6 +424,45 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		} catch (Exception e) {
 			ProcessBox.from().fehler(e.getMessage());
 			logger.error("Fehler beim Ausführen von '{}': {}", command, e.getMessage(), e);
+		}
+	}
+
+	private void handleKonfiguration(String command, WorkingSpreadsheet ws) {
+		TurnierSystem ts;
+		try {
+			ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return;
+		}
+		if (ts == TurnierSystem.KEIN) {
+			try {
+				MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Konfiguration")
+						.message("Kein Turnier vorhanden").show();
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+			}
+			return;
+		}
+		try {
+			switch (command) {
+			case CMD_KONFIGURATION_TURNIER:
+				new TurnierDialog(ws).createDialog();
+				break;
+			case CMD_KONFIGURATION_KOPFFUSSZEILEN:
+				new KopfFusszeilenDialog(ws).createDialog();
+				break;
+			case CMD_KONFIGURATION_FARBEN:
+				new FarbenDialog(ws).createDialog();
+				break;
+			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
+				DocumentHelper.setDocErstelltMitVersion(ws);
+				break;
+			default:
+				break;
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
 		}
 	}
 
@@ -487,7 +541,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
 			 CMD_SCHWEIZER_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			// Konfiguration: nur wenn Turnier vorhanden
-			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
+			case CMD_KONFIGURATION_TURNIER,
+				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
+				 CMD_KONFIGURATION_FARBEN,
+				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
 			// Release-Infos, Download, Direkt-Aktualisieren, Stop: immer aktiv
 			case CMD_RELEASE_INFOS_ANZEIGEN,
 				 CMD_DOWNLOAD_EXTENSION,

@@ -8,3 +8,4 @@ de.petanqueturniermanager.comp.PtmPublicService
 
 # Deactivated components (uncomment if needed)
 #de.petanqueturniermanager.addins.DoublerImpl
+#de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory
