@@ -60,7 +60,6 @@ Each tournament system typically has sheet classes for: Meldeliste (entry list),
 - **`algorithmen/`** — Core algorithms: SchweizerSystem, SuperMeleePaarungen, Direktvergleich, CadrageRechner
 - **`addin/`** — Generated Java interface (`XGlobal`) from IDL; **`addins/`** contains the implementations (`GlobalImpl`, `AbstractAddInImpl`)
 - **`konfigdialog/`** — Configuration UI dialogs
-- **`sidebar/`** — Sidebar info panels (**DEAKTIVIERT** – buggy, muss komplett überarbeitet werden, siehe unten)
 
 ### Menu Configuration
 
@@ -90,15 +89,6 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 
 See `BUILD_ISSUES.md` for details on:
 1. IDL-to-Java interface generation not automated in Gradle
-
-## Sidebar – DEAKTIVIERT
-
-Das gesamte `sidebar/`-Package ist **deaktiviert** und darf **nicht angefasst werden**:
-
-- Die `PetanqueTurnierManagerPanelFactory` ist in `src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes` auskommentiert → LibreOffice lädt die Sidebar nicht.
-- Der Code kompiliert, wird aber zur Laufzeit nie instanziiert.
-- **Keine neuen Features in `sidebar/` implementieren.** Das Package muss von Grund auf neu geschrieben werden, bevor es wieder aktiviert werden kann.
-- Bei Änderungen am `NewReleaseChecker`-Callback-Mechanismus oder anderen globalen Komponenten: **kein** Code in `sidebar/` einbeziehen.
 
 ## Business Logic & Rules
 - **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.
