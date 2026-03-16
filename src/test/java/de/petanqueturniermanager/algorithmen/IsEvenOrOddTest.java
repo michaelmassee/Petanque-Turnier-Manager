@@ -48,6 +48,16 @@ public class IsEvenOrOddTest {
 	}
 
 	@Test
+	public void testIsEven_IntegerGrenzwerte() {
+		// Integer.MAX_VALUE = 2^31-1 (ungerade)
+		assertThat(IsEvenOrOdd.IsEven(Integer.MAX_VALUE)).isFalse();
+		assertThat(IsEvenOrOdd.IsOdd(Integer.MAX_VALUE)).isTrue();
+		// Integer.MIN_VALUE = -2^31 (gerade)
+		assertThat(IsEvenOrOdd.IsEven(Integer.MIN_VALUE)).isTrue();
+		assertThat(IsEvenOrOdd.IsOdd(Integer.MIN_VALUE)).isFalse();
+	}
+
+	@Test
 	public void testKonsistenz_IsEvenIstNichtIsOdd() {
 		for (int n = -10; n <= 10; n++) {
 			boolean isEven = IsEvenOrOdd.IsEven(n);
