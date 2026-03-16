@@ -35,6 +35,9 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmsmvalide",                       17, 0),
         new MethodTypeInfo("ptmsmanztriplwennnurtriplette",     18, 0),
         new MethodTypeInfo("ptmsmanzdoublwennnurdoublette",     19, 0),
+        new MethodTypeInfo("ptmcadrageanzteams",                20, 0),
+        new MethodTypeInfo("ptmcadragezielanz",                 21, 0),
+        new MethodTypeInfo("ptmcadrageanzfreilose",             22, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -76,4 +79,10 @@ public interface XGlobal extends XInterface {
     int ptmsmanztriplwennnurtriplette(int anzSpieler);
 
     int ptmsmanzdoublwennnurdoublette(int anzSpieler);
+
+    int ptmcadrageanzteams(int anzTeams);
+
+    int ptmcadragezielanz(int anzTeams);
+
+    int ptmcadrageanzfreilose(int anzTeams);
 }

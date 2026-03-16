@@ -17,6 +17,7 @@ import de.petanqueturniermanager.algorithmen.Direktvergleich;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -284,6 +285,29 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public int ptmsmanzdoublwennnurdoublette(int anzSpieler) {
 		if (anzSpieler < 1) return 0;
 		return new SuperMeleeTeamRechner(anzSpieler).getAnzahlDoubletteWennNurDoublette();
+	}
+
+	// ------------------- PTM.CADRAGE.* Formeln -----------------
+
+	private int berechneCadrage(int anzTeams,
+			java.util.function.Function<CadrageRechner, Integer> fn) {
+		if (anzTeams <= 2) return 0;
+		return fn.apply(new CadrageRechner(anzTeams));
+	}
+
+	@Override
+	public int ptmcadrageanzteams(int anzTeams) {
+		return berechneCadrage(anzTeams, CadrageRechner::anzTeams);
+	}
+
+	@Override
+	public int ptmcadragezielanz(int anzTeams) {
+		return berechneCadrage(anzTeams, CadrageRechner::zielAnzahlTeams);
+	}
+
+	@Override
+	public int ptmcadrageanzfreilose(int anzTeams) {
+		return berechneCadrage(anzTeams, CadrageRechner::anzFreilose);
 	}
 
 }

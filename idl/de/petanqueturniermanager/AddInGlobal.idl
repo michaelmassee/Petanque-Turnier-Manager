@@ -32,6 +32,10 @@ module de { module petanqueturniermanager { module addin {
     long ptmsmvalide                    ([in] long anzSpieler);
     long ptmsmanztriplwennnurtriplette  ([in] long anzSpieler);
     long ptmsmanzdoublwennnurdoublette  ([in] long anzSpieler);
+    // Cadrage-Berechnung (PTM.CADRAGE.*)
+    long ptmcadrageanzteams    ([in] long anzTeams);
+    long ptmcadragezielanz     ([in] long anzTeams);
+    long ptmcadrageanzfreilose ([in] long anzTeams);
   };
 
 }; }; };

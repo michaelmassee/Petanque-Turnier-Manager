@@ -409,6 +409,57 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<node oor:name="ptmcadrageanzteams" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.CADRAGE.ANZ_TEAMS</value>
+						<value xml:lang="de">PTM.CADRAGE.ANZ_TEAMS</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Cadrage: Anzahl der Teams, die eine Cadrage-Partie spielen müssen.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzTeams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmcadragezielanz" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.CADRAGE.ZIEL_ANZ</value>
+						<value xml:lang="de">PTM.CADRAGE.ZIEL_ANZ</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Cadrage: Ziel-Teamanzahl nach der Cadrage (größte Zweierpotenz ≤ anzTeams).</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzTeams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmcadrageanzfreilose" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.CADRAGE.ANZ_FREILOSE</value>
+						<value xml:lang="de">PTM.CADRAGE.ANZ_FREILOSE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzTeams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 			</node>
 		</node>
 	</node>
