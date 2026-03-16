@@ -19,32 +19,33 @@ public class CadrageRechner {
 	}
 
 	/**
-	 * die anzahl der Teams die Cadrage Spielen mussen
+	 * die anzahl der Teams die Cadrage spielen muessen.<br>
+	 * Formel: (gesanzTeams - zielAnzahlTeams) * 2<br>
+	 * Ergibt 0 wenn gesanzTeams bereits eine Zweierpotenz ist (keine Cadrage noetig).
 	 *
-	 * @return
+	 * @return Anzahl Cadrage-Teams (gerade Zahl oder 0)
 	 */
-
 	public int anzTeams() {
-		// 2,4,8,16,32
-		int zielAnzahlTeams = zielAnzahlTeams();
-		int anzTeams = (gesanzTeams - zielAnzahlTeams) * 2;
-		return (anzTeams > 0) ? anzTeams : 0;
+		return (gesanzTeams - zielAnzahlTeams()) * 2;
 	}
 
 	/**
-	 * die ziel anzahl nach der Cadrage
+	 * Anzahl Teams mit Freilos (kein Cadrage-Spiel, direkt in die Hauptrunde).<br>
+	 * Formel: zielAnzahlTeams - anzTeams/2
 	 *
-	 * @return
+	 * @return Anzahl Freilos-Teams
+	 */
+	public int anzFreilose() {
+		return zielAnzahlTeams() - anzTeams() / 2;
+	}
+
+	/**
+	 * Groesste Zweierpotenz &lt;= gesanzTeams – das ist die Zielgroesse des Feldes nach der Cadrage.<br>
+	 * Verwendet Integer.highestOneBit(), das ohne Schleife und ohne hartcodierte Obergrenze arbeitet.
+	 *
+	 * @return Ziel-Teamanzahl (Zweierpotenz)
 	 */
 	public int zielAnzahlTeams() {
-		// 2,4,8,16,32,64,128
-		int zielAnzahl = 0;
-		for (int exponent = 7; exponent > 0; exponent--) {
-			zielAnzahl = (int) Math.pow(2, exponent);
-			if (zielAnzahl <= gesanzTeams) {
-				break;
-			}
-		}
-		return zielAnzahl;
+		return Integer.highestOneBit(gesanzTeams);
 	}
 }
