@@ -25,6 +25,13 @@ module de { module petanqueturniermanager { module addin {
     long ptmsmdouplanzdoublette ([in] long anzSpieler);
     long ptgsmdouplanztriplette ([in] long anzSpieler);
     long ptgsmnurtriplette      ([in] long anzSpieler);
+    long ptmsmtriplanzpaarungen         ([in] long anzSpieler);
+    long ptmsmtriplanzbahnen            ([in] long anzSpieler);
+    long ptmsmdouplanzpaarungen         ([in] long anzSpieler);
+    long ptmsmdoupanzbahnen             ([in] long anzSpieler);
+    long ptmsmvalide                    ([in] long anzSpieler);
+    long ptmsmanztriplwennnurtriplette  ([in] long anzSpieler);
+    long ptmsmanzdoublwennnurdoublette  ([in] long anzSpieler);
   };
 
 }; }; };

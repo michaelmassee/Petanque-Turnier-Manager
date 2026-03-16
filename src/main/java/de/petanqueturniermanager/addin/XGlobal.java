@@ -27,7 +27,14 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmsmnurdoublette",       9, 0),
         new MethodTypeInfo("ptmsmdouplanzdoublette", 10, 0),
         new MethodTypeInfo("ptgsmdouplanztriplette", 11, 0),
-        new MethodTypeInfo("ptgsmnurtriplette",      12, 0),
+        new MethodTypeInfo("ptgsmnurtriplette",                 12, 0),
+        new MethodTypeInfo("ptmsmtriplanzpaarungen",            13, 0),
+        new MethodTypeInfo("ptmsmtriplanzbahnen",               14, 0),
+        new MethodTypeInfo("ptmsmdouplanzpaarungen",            15, 0),
+        new MethodTypeInfo("ptmsmdoupanzbahnen",                16, 0),
+        new MethodTypeInfo("ptmsmvalide",                       17, 0),
+        new MethodTypeInfo("ptmsmanztriplwennnurtriplette",     18, 0),
+        new MethodTypeInfo("ptmsmanzdoublwennnurdoublette",     19, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -55,4 +62,18 @@ public interface XGlobal extends XInterface {
     int ptgsmdouplanztriplette(int anzSpieler);
 
     int ptgsmnurtriplette(int anzSpieler);
+
+    int ptmsmtriplanzpaarungen(int anzSpieler);
+
+    int ptmsmtriplanzbahnen(int anzSpieler);
+
+    int ptmsmdouplanzpaarungen(int anzSpieler);
+
+    int ptmsmdoupanzbahnen(int anzSpieler);
+
+    int ptmsmvalide(int anzSpieler);
+
+    int ptmsmanztriplwennnurtriplette(int anzSpieler);
+
+    int ptmsmanzdoublwennnurdoublette(int anzSpieler);
 }

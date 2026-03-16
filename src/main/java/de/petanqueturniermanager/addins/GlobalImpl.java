@@ -50,6 +50,13 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_SUPERMELEE_DOUBL_ANZ_DOUBLETTE = "PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE";
 	public static final String PTM_SUPERMELEE_DOUBL_ANZ_TRIPLETTE = "PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE";
 	public static final String PTM_SUPERMELEE_DOUBL_NUR_TRIPLETTE = "PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE";
+	public static final String PTM_SUPERMELEE_TRIPL_ANZ_PAARUNGEN = "PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN";
+	public static final String PTM_SUPERMELEE_TRIPL_ANZ_BAHNEN = "PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN";
+	public static final String PTM_SUPERMELEE_DOUBL_ANZ_PAARUNGEN = "PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN";
+	public static final String PTM_SUPERMELEE_DOUBL_ANZ_BAHNEN = "PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN";
+	public static final String PTM_SUPERMELEE_VALIDE_ANZ_SPIELER = "PTM.SUPERMELEE.VALIDE_ANZ_SPIELER";
+	public static final String PTM_SUPERMELEE_ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE = "PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE";
+	public static final String PTM_SUPERMELEE_ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE = "PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE";
 
 	public static final String FORMAT_PTM_INT_PROPERTY(String propName) {
 		return PTM_INT_PROPERTY + "(\"" + propName + "\")";
@@ -239,6 +246,44 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	public int ptgsmnurtriplette(int anzSpieler) {
 		return berechneSupermeleeDoublette(anzSpieler, r -> r.isNurTripletteMoeglich() ? 1 : 0);
+	}
+
+	@Override
+	public int ptmsmtriplanzpaarungen(int anzSpieler) {
+		return berechneSupermeleeTriplette(anzSpieler, SuperMeleeTeamRechner::getAnzPaarungen);
+	}
+
+	@Override
+	public int ptmsmtriplanzbahnen(int anzSpieler) {
+		return berechneSupermeleeTriplette(anzSpieler, SuperMeleeTeamRechner::getAnzBahnen);
+	}
+
+	@Override
+	public int ptmsmdouplanzpaarungen(int anzSpieler) {
+		return berechneSupermeleeDoublette(anzSpieler, SuperMeleeTeamRechner::getAnzPaarungen);
+	}
+
+	@Override
+	public int ptmsmdoupanzbahnen(int anzSpieler) {
+		return berechneSupermeleeDoublette(anzSpieler, SuperMeleeTeamRechner::getAnzBahnen);
+	}
+
+	@Override
+	public int ptmsmvalide(int anzSpieler) {
+		if (anzSpieler < 1) return 0;
+		return new SuperMeleeTeamRechner(anzSpieler).valideAnzahlSpieler() ? 1 : 0;
+	}
+
+	@Override
+	public int ptmsmanztriplwennnurtriplette(int anzSpieler) {
+		if (anzSpieler < 1) return 0;
+		return new SuperMeleeTeamRechner(anzSpieler).getAnzahlTripletteWennNurTriplette();
+	}
+
+	@Override
+	public int ptmsmanzdoublwennnurdoublette(int anzSpieler) {
+		if (anzSpieler < 1) return 0;
+		return new SuperMeleeTeamRechner(anzSpieler).getAnzahlDoubletteWennNurDoublette();
 	}
 
 }

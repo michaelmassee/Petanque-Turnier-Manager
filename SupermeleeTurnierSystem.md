@@ -77,3 +77,105 @@ Da es keine festen Teams gibt, wird eine **Einzelwertung** geführt. Jeder Spiel
 
 * **Glücksfaktor:** Die Platzierung hängt stark vom Losglück ab (Wer bekommt die stärksten Mitspieler?).
 * **Kein Einspielen möglich:** Da man sich nicht an seinen Partner gewöhnen kann, sind komplexe taktische Absprachen oft schwieriger als in eingespielten Teams.
+
+---
+
+## Öffentliche Calc-Formeln (PTM.SUPERMELEE.*)
+
+Der Turnier-Manager stellt alle Berechnungslogiken des `SuperMeleeTeamRechner` direkt als Calc-Formeln bereit. Sie können in jeder Zelle eines LibreOffice Calc-Dokuments verwendet werden und erleichtern z. B. eigene Dashboards oder Makros.
+
+Alle Formeln erwarten genau einen Parameter:
+
+| Parameter | Typ | Beschreibung |
+|-----------|-----|--------------|
+| `anzSpieler` | Ganzzahl | Anzahl der aktuell aktiven Spieler |
+
+Für ungültige Eingaben (`anzSpieler < 1` oder `anzSpieler = 7`) geben die Formeln `0` zurück.
+
+---
+
+### Triplette-Modus (`TRIPL_*`)
+
+Berechnung auf Basis des **Hauptmodus Triplette** (Auffüllen mit Doublette).
+
+| Formel | Rückgabe | Beschreibung |
+|--------|----------|--------------|
+| `=PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE(anzSpieler)` | Ganzzahl | Anzahl der Triplette-Teams |
+| `=PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE(anzSpieler)` | Ganzzahl | Anzahl der Doublette-Teams |
+| `=PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN(anzSpieler)` | Ganzzahl | Gesamtanzahl der Paarungen (Spiele) |
+| `=PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN(anzSpieler)` | Ganzzahl | Anzahl der benötigten Bahnen (= Paarungen / 2) |
+| `=PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE(anzSpieler)` | 0 oder 1 | `1` wenn ausschließlich Doublette-Teams möglich sind |
+
+**Beispiel für 15 Spieler im Triplette-Modus:**
+```
+=PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE(15)  →  3
+=PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE(15)  →  3
+=PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN(15)  →  6  (= 3+3 Paarungen, also 3 Spiele)
+=PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN(15)     →  3
+=PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE(15)  →  0
+```
+
+---
+
+### Doublette-Modus (`DOUBL_*`)
+
+Berechnung auf Basis des **Hauptmodus Doublette** (Auffüllen mit Triplette).
+
+| Formel | Rückgabe | Beschreibung |
+|--------|----------|--------------|
+| `=PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE(anzSpieler)` | Ganzzahl | Anzahl der Doublette-Teams |
+| `=PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE(anzSpieler)` | Ganzzahl | Anzahl der Triplette-Teams |
+| `=PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN(anzSpieler)` | Ganzzahl | Gesamtanzahl der Paarungen (Spiele) |
+| `=PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN(anzSpieler)` | Ganzzahl | Anzahl der benötigten Bahnen (= Paarungen / 2) |
+| `=PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE(anzSpieler)` | 0 oder 1 | `1` wenn ausschließlich Triplette-Teams möglich sind |
+
+**Beispiel für 12 Spieler im Doublette-Modus:**
+```
+=PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE(12)  →  6
+=PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE(12)  →  0
+=PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN(12)  →  6
+=PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN(12)     →  3
+=PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE(12)  →  1
+```
+
+---
+
+### Modusunabhängige Formeln
+
+Diese Formeln liefern unabhängig vom gewählten Modus immer dasselbe Ergebnis, da sie nur von der Spieleranzahl abhängen.
+
+| Formel | Rückgabe | Beschreibung |
+|--------|----------|--------------|
+| `=PTM.SUPERMELEE.VALIDE_ANZ_SPIELER(anzSpieler)` | 0 oder 1 | `1` wenn die Spieleranzahl gültig ist (nicht 7), sonst `0` |
+| `=PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE(anzSpieler)` | Ganzzahl | Anzahl der Triplette-Teams wenn `anzSpieler % 6 == 0`, sonst `0` |
+| `=PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE(anzSpieler)` | Ganzzahl | Anzahl der Doublette-Teams wenn `anzSpieler % 4 == 0`, sonst `0` |
+
+**Beispiele:**
+```
+=PTM.SUPERMELEE.VALIDE_ANZ_SPIELER(7)                        →  0  (7 Spieler sind ungültig)
+=PTM.SUPERMELEE.VALIDE_ANZ_SPIELER(12)                       →  1
+=PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE(18)         →  6  (18 / 3 = 6)
+=PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE(10)         →  0  (gemischte Aufteilung nötig)
+=PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE(8)          →  4  (8 / 2 = 4)
+=PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE(9)          →  0  (gemischte Aufteilung nötig)
+```
+
+---
+
+### Übersicht aller PTM.SUPERMELEE.*-Formeln
+
+| Formel | Modus |
+|--------|-------|
+| `PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE` | Triplette |
+| `PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE` | Triplette |
+| `PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN` | Triplette |
+| `PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN` | Triplette |
+| `PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE` | Triplette |
+| `PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE` | Doublette |
+| `PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE` | Doublette |
+| `PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN` | Doublette |
+| `PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN` | Doublette |
+| `PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE` | Doublette |
+| `PTM.SUPERMELEE.VALIDE_ANZ_SPIELER` | modusunabhängig |
+| `PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE` | modusunabhängig |
+| `PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE` | modusunabhängig |

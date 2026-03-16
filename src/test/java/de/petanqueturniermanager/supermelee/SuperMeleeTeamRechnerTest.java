@@ -130,7 +130,7 @@ public class SuperMeleeTeamRechnerTest {
 	}
 
 	@Test
-	public void testCalcTeamsDoubleteAufuellenMitTriplette() throws Exception {
+	public void testCalcTeamsDoubletteAuffuellenMitTriplette() throws Exception {
 		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(4, SuperMeleeMode.Doublette);
 		assertEquals(2, teamRechner.getAnzDoublette());
 		assertEquals(0, teamRechner.getAnzTriplette());
@@ -192,6 +192,39 @@ public class SuperMeleeTeamRechnerTest {
 		assertEquals(1, teamRechner.getAnzTriplette());
 		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
 		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+	}
+
+	@Test
+	public void testCalcTeamsTripletteAuffuellenMitDoublette() throws Exception {
+		// rest 0: nur Triplette (6 Spieler → 2 Tripl, 0 Doubl)
+		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(6);
+		assertEquals(2, teamRechner.getAnzTriplette());
+		assertEquals(0, teamRechner.getAnzDoublette());
+
+		// rest 1: 13 Spieler → 1 Tripl, 5 Doubl
+		teamRechner = new SuperMeleeTeamRechner(13);
+		assertEquals(1, teamRechner.getAnzTriplette());
+		assertEquals(5, teamRechner.getAnzDoublette());
+
+		// rest 2: 14 Spieler → 2 Tripl, 4 Doubl
+		teamRechner = new SuperMeleeTeamRechner(14);
+		assertEquals(2, teamRechner.getAnzTriplette());
+		assertEquals(4, teamRechner.getAnzDoublette());
+
+		// rest 3: 15 Spieler → 3 Tripl, 3 Doubl
+		teamRechner = new SuperMeleeTeamRechner(15);
+		assertEquals(3, teamRechner.getAnzTriplette());
+		assertEquals(3, teamRechner.getAnzDoublette());
+
+		// rest 4: 10 Spieler → 2 Tripl, 2 Doubl
+		teamRechner = new SuperMeleeTeamRechner(10);
+		assertEquals(2, teamRechner.getAnzTriplette());
+		assertEquals(2, teamRechner.getAnzDoublette());
+
+		// rest 5: 11 Spieler → 3 Tripl, 1 Doubl
+		teamRechner = new SuperMeleeTeamRechner(11);
+		assertEquals(3, teamRechner.getAnzTriplette());
+		assertEquals(1, teamRechner.getAnzDoublette());
 	}
 
 	@Test
