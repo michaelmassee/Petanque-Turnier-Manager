@@ -2,7 +2,7 @@
 
 # Pétanque-Turnier-Manager
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL_1.2-blue.svg)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12)
 [![Wiki](https://img.shields.io/badge/Doku-Projekt_Wiki-green.svg)](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki)
 
 ## 🎯 Einleitung
@@ -106,4 +106,4 @@ Die vollständige Dokumentation, ausführliche Erklärungen zu den einzelnen Men
 ## 🤝 Mitwirken (Contributing)
 Da dies ein Open-Source-Projekt ist, sind Beiträge aus der Community jederzeit willkommen! Egal ob es sich um das Melden von Fehlern (Issues), das Einreichen von Code-Verbesserungen (Pull Requests) oder das Erweitern der Dokumentation handelt – wir freuen uns über jede Unterstützung.
 
-**Lizenz:** Dieses Projekt steht unter der [GPL-3.0 Lizenz](LICENSE).
+**Lizenz:** Dieses Projekt steht unter der [EUPL-1.2 Lizenz](LICENSE).

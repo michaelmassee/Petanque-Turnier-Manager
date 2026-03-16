@@ -134,6 +134,10 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 
 	public void testNamenEinfuegen() throws GenerateException {
 		meldeListe.setSpielTag(SpielTagNr.from(1));
+		// Meldeliste neu anlegen falls sie nicht existiert (z.B. nach removeAllSheetsExclude)
+		if (meldeListe.getXSpreadSheet() == null) {
+			meldeListe.createMeldelisteWithParams(konfigurationSheet.getSuperMeleeMode());
+		}
 		XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
 		getSheetHelper().setActiveSheet(meldelisteSheet);
 
