@@ -7,8 +7,18 @@ import org.apache.logging.log4j.Logger;
 
 /**
  * Erstellung 23.06.2022 / Michael Massee
+ * <p>
+ * Berechnet den Direktvergleich zweier Teams als Tiebreaker bei Punktgleichstand.<br>
+ * Verglichen werden alle Spiele, in denen teamA und teamB direkt gegeneinander angetreten sind.<br>
+ * Kriterien in absteigender Prioritaet:
+ * <ol>
+ *   <li>Summe der Siege (mehr Siege gewinnt)</li>
+ *   <li>Summe der Spielpunkte (mehr Spielpunkte gewinnt)</li>
+ *   <li>Unentschieden, falls beides gleich</li>
+ * </ol>
+ * Gibt {@link DirektvergleichResult#KEINERGEBNIS} zurueck, wenn kein Spiel zwischen den Teams gefunden wurde,
+ * und {@link DirektvergleichResult#FEHLER} bei ungueltigen Eingaben.
  */
-
 public class Direktvergleich {
 	static final Logger logger = LogManager.getLogger(Direktvergleich.class);
 
@@ -31,26 +41,19 @@ public class Direktvergleich {
 			return DirektvergleichResult.FEHLER;
 		}
 
-		int summSpPnktA = 0;
-		int summSpPnktB = 0;
-		int summSiegeA = 0;
-		int summSiegeB = 0;
+		int summSpPnktA = 0, summSpPnktB = 0, summSiegeA = 0, summSiegeB = 0;
 
 		for (int idx = 0; idx < paarungen.length; idx++) {
-			if (idx < siege.length && idx < spielpunkte.length) {
-				if (paarungen[idx][0] == teamA && paarungen[idx][1] == teamB) {
-					summSpPnktA += spielpunkte[idx][0];
-					summSpPnktB += spielpunkte[idx][1];
-					summSiegeA += siege[idx][0];
-					summSiegeB += siege[idx][1];
-				} else if (paarungen[idx][1] == teamA && paarungen[idx][0] == teamB) {
-					summSpPnktA += spielpunkte[idx][1];
-					summSpPnktB += spielpunkte[idx][0];
-					summSiegeA += siege[idx][1];
-					summSiegeB += siege[idx][0];
-				}
-			} else {
-				break;
+			if (paarungen[idx][0] == teamA && paarungen[idx][1] == teamB) {
+				summSiegeA += siege[idx][0];
+				summSiegeB += siege[idx][1];
+				summSpPnktA += spielpunkte[idx][0];
+				summSpPnktB += spielpunkte[idx][1];
+			} else if (paarungen[idx][1] == teamA && paarungen[idx][0] == teamB) {
+				summSiegeA += siege[idx][1];
+				summSiegeB += siege[idx][0];
+				summSpPnktA += spielpunkte[idx][1];
+				summSpPnktB += spielpunkte[idx][0];
 			}
 		}
 
@@ -58,69 +61,38 @@ public class Direktvergleich {
 			return DirektvergleichResult.KEINERGEBNIS;
 		}
 
-		if (summSiegeA > summSiegeB) {
-			return DirektvergleichResult.GEWONNEN;
+		if (summSiegeA != summSiegeB) {
+			return summSiegeA > summSiegeB ? DirektvergleichResult.GEWONNEN : DirektvergleichResult.VERLOREN;
 		}
 
-		if (summSiegeA < summSiegeB) {
-			return DirektvergleichResult.VERLOREN;
+		if (summSpPnktA != summSpPnktB) {
+			return summSpPnktA > summSpPnktB ? DirektvergleichResult.GEWONNEN : DirektvergleichResult.VERLOREN;
 		}
 
-		if (summSiegeA == summSiegeB) {
-			if (summSpPnktA > summSpPnktB) {
-				return DirektvergleichResult.GEWONNEN;
-			}
-
-			if (summSpPnktA < summSpPnktB) {
-				return DirektvergleichResult.VERLOREN;
-			}
-
-			if (summSpPnktA == summSpPnktB) {
-				return DirektvergleichResult.GLEICH;
-			}
-		}
-		return DirektvergleichResult.KEINERGEBNIS;
-
+		return DirektvergleichResult.GLEICH;
 	}
 
 	private boolean validate() {
 		if (teamA < 1) {
-			logger.error("teamA not valid:" + teamA);
+			logger.error("teamA nicht gueltig: {}", teamA);
 			return false;
 		}
-
 		if (teamB < 1) {
-			logger.error("teamB not valid:" + teamB);
+			logger.error("teamB nicht gueltig: {}", teamB);
 			return false;
 		}
-
 		if (paarungen.length == 0) {
-			logger.error("paarungen.length=0");
+			logger.error("paarungen ist leer");
 			return false;
 		}
-
-		if (siege.length == 0) {
-			logger.error("siege.length=0");
-			return false;
-		}
-
-		if (spielpunkte.length == 0) {
-			logger.error("spielpunkte.length=0");
-			return false;
-		}
-
-		if (spielpunkte.length != paarungen.length) {
-			logger.error("spielpunkte.length != paarungen.length");
-			return false;
-		}
-
 		if (siege.length != paarungen.length) {
-			logger.error("siege.length != paarungen.length");
+			logger.error("siege.length ({}) != paarungen.length ({})", siege.length, paarungen.length);
 			return false;
 		}
-
+		if (spielpunkte.length != paarungen.length) {
+			logger.error("spielpunkte.length ({}) != paarungen.length ({})", spielpunkte.length, paarungen.length);
+			return false;
+		}
 		return true;
-
 	}
-
 }

@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 
 public class DirektvergleichTest {
 
+	// ---------------------------------------------------------------
+	// Siege als erstes Kriterium
+	// ---------------------------------------------------------------
+
 	@Test
 	public void testCalc_teamAGewinntDurchMehrSiege() {
 		int teamA = 1, teamB = 2;
@@ -27,6 +31,10 @@ public class DirektvergleichTest {
 		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
 				.isEqualTo(DirektvergleichResult.VERLOREN);
 	}
+
+	// ---------------------------------------------------------------
+	// Spielpunkte als zweites Kriterium (Siege gleich)
+	// ---------------------------------------------------------------
 
 	@Test
 	public void testCalc_gleichstandSiege_teamAGewinntDurchSpielPunkte() {
@@ -61,10 +69,13 @@ public class DirektvergleichTest {
 				.isEqualTo(DirektvergleichResult.GLEICH);
 	}
 
+	// ---------------------------------------------------------------
+	// Sonderfaelle
+	// ---------------------------------------------------------------
+
 	@Test
 	public void testCalc_keinePaarungZwischenTeams_keinErgebnis() {
 		int teamA = 1, teamB = 2;
-		// Paarungen enthalten nur andere Teams
 		int[][] paarungen = { { 3, 4 }, { 5, 6 } };
 		int[][] siege = { { 1, 1 }, { 1, 1 } };
 		int[][] spielpunkte = { { 10, 10 }, { 10, 10 } };
@@ -74,29 +85,9 @@ public class DirektvergleichTest {
 	}
 
 	@Test
-	public void testCalc_mehrereSpiele_ergebnisseWerdenSummiert() {
-		int teamA = 1, teamB = 2;
-		// Zwei Spiele zwischen Team 1 und Team 2
-		int[][] paarungen = { { 1, 2 }, { 1, 2 } };
-		int[][] siege = { { 2, 1 }, { 1, 0 } }; // teamA gesamt: 3, teamB: 1 -> GEWONNEN
-		int[][] spielpunkte = { { 13, 5 }, { 7, 3 } };
-
-		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
-				.isEqualTo(DirektvergleichResult.GEWONNEN);
-	}
-
-	@Test
-	public void testCalc_paarungenInUmgekehrterReihenfolge() {
-		int teamA = 1, teamB = 2;
-		// Paarung ist B vs A (umgekehrte Reihenfolge im Array)
-		int[][] paarungen = { { 2, 1 } };
-		// In Paarung {2,1}: Index 0 = teamB, Index 1 = teamA
-		// siege[0][1]=3 geht an teamA, siege[0][0]=1 geht an teamB
-		int[][] siege = { { 1, 3 } };
-		int[][] spielpunkte = { { 5, 10 } };
-
-		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
-				.isEqualTo(DirektvergleichResult.GEWONNEN);
+	public void testCalc_leereArrays_fehler() {
+		assertThat(new Direktvergleich(1, 2, new int[0][0], new int[0][0], new int[0][0]).calc())
+				.isEqualTo(DirektvergleichResult.FEHLER);
 	}
 
 	@Test
@@ -113,50 +104,83 @@ public class DirektvergleichTest {
 				.isEqualTo(DirektvergleichResult.FEHLER);
 	}
 
-	// Bestehende Tests aus frueherer Version
+	@Test
+	public void testCalc_arrayLaengenUngleich_fehler() {
+		int[][] paarungen = { { 1, 2 }, { 1, 2 } };
+		int[][] siege = { { 1, 1 } }; // zu kurz
+		int[][] spielpunkte = { { 10, 10 }, { 10, 10 } };
+
+		assertThat(new Direktvergleich(1, 2, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.FEHLER);
+
+		int[][] siege2 = { { 1, 1 }, { 1, 1 } };
+		int[][] spielpunkte2 = { { 10, 10 } }; // zu kurz
+
+		assertThat(new Direktvergleich(1, 2, paarungen, siege2, spielpunkte2).calc())
+				.isEqualTo(DirektvergleichResult.FEHLER);
+	}
+
+	// ---------------------------------------------------------------
+	// Paarungsreihenfolge und mehrere Spiele
+	// ---------------------------------------------------------------
 
 	@Test
-	public void testCalcWinSpielPnkt() throws Exception {
-		int teamA = 3;
-		int teamB = 4;
+	public void testCalc_paarungenInUmgekehrterReihenfolge() {
+		int teamA = 1, teamB = 2;
+		// Paarung {2,1}: Index 0 = teamB, Index 1 = teamA
+		int[][] paarungen = { { 2, 1 } };
+		int[][] siege = { { 1, 3 } }; // teamA bekommt siege[0][1]=3
+		int[][] spielpunkte = { { 5, 10 } };
 
-		int[][] teamPaarungen = { { 1, 8 }, { 6, 8 }, { 3, 4 }, { 3, 8 }, { 4, 3 } };
-		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 } };
-		int[][] spielpunkte = { { 1, 4 }, { 1, 4 }, { 40, 53 }, { 1, 4 }, { 20, 65 } };
-
-		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, siege, spielpunkte);
-		DirektvergleichResult resultCalc = vrgl.calc();
-
-		assertThat(resultCalc).isEqualTo(DirektvergleichResult.GEWONNEN);
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
 	}
 
 	@Test
-	public void testCalcLooseSpielPnkt() throws Exception {
-		int teamA = 4;
-		int teamB = 3;
+	public void testCalc_mehrereSpiele_ergebnisseWerdenSummiert() {
+		int teamA = 1, teamB = 2;
+		int[][] paarungen = { { 1, 2 }, { 1, 2 } };
+		int[][] siege = { { 2, 1 }, { 1, 0 } }; // teamA: 3, teamB: 1
+		int[][] spielpunkte = { { 13, 5 }, { 7, 3 } };
 
-		int[][] teamPaarungen = { { 1, 8 }, { 6, 8 }, { 3, 4 }, { 3, 8 }, { 4, 3 } };
-		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 } };
-		int[][] spielpunkte = { { 1, 4 }, { 1, 4 }, { 40, 53 }, { 1, 4 }, { 20, 65 } };
-
-		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, siege, spielpunkte);
-		DirektvergleichResult resultCalc = vrgl.calc();
-
-		assertThat(resultCalc).isEqualTo(DirektvergleichResult.VERLOREN);
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
 	}
 
 	@Test
-	public void testCalcWinSiege() throws Exception {
-		int teamA = 4;
-		int teamB = 3;
+	public void testCalc_mehrereSpieleMitFremdenPaarungen_nurEigeneZaehlen() {
+		int teamA = 3, teamB = 4;
+		// Gemischt: Spiele mit anderen Teams werden ignoriert
+		int[][] paarungen = { { 1, 8 }, { 6, 8 }, { 3, 4 }, { 3, 8 }, { 4, 3 } };
+		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 } };
+		int[][] spielpunkte = { { 1, 4 }, { 1, 4 }, { 40, 53 }, { 1, 4 }, { 20, 65 } };
 
-		int[][] teamPaarungen = { { 1, 8 }, { 6, 8 }, { 3, 4 }, { 3, 8 }, { 4, 3 } };
+		// {3,4}: siege A=1, B=4; SpPkt A=40, B=53
+		// {4,3}: siege A=4(→B bekommt), B=1(→A bekommt) → summSiegeA += 4, summSiegeB += 1; SpPkt A=65, B=20
+		// gesamt: siegeA=1+4=5, siegeB=4+1=5 → gleich; SpPktA=40+65=105, SpPktB=53+20=73 → A gewinnt
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
+	}
+
+	@Test
+	public void testCalc_mehrereSpieleMitFremdenPaarungen_verloren() {
+		int teamA = 4, teamB = 3;
+		int[][] paarungen = { { 1, 8 }, { 6, 8 }, { 3, 4 }, { 3, 8 }, { 4, 3 } };
+		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 } };
+		int[][] spielpunkte = { { 1, 4 }, { 1, 4 }, { 40, 53 }, { 1, 4 }, { 20, 65 } };
+
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.VERLOREN);
+	}
+
+	@Test
+	public void testCalc_mehrereSpiele_siegeEntscheiden() {
+		int teamA = 4, teamB = 3;
+		int[][] paarungen = { { 1, 8 }, { 6, 8 }, { 3, 4 }, { 3, 8 }, { 4, 3 } };
 		int[][] siege = { { 1, 4 }, { 1, 4 }, { 1, 4 }, { 1, 4 }, { 3, 2 } };
 		int[][] spielpunkte = { { 1, 1 }, { 1, 1 }, { 1, 1 }, { 1, 4 }, { 1, 1 } };
 
-		Direktvergleich vrgl = new Direktvergleich(teamA, teamB, teamPaarungen, siege, spielpunkte);
-		DirektvergleichResult resultCalc = vrgl.calc();
-
-		assertThat(resultCalc).isEqualTo(DirektvergleichResult.GEWONNEN);
+		assertThat(new Direktvergleich(teamA, teamB, paarungen, siege, spielpunkte).calc())
+				.isEqualTo(DirektvergleichResult.GEWONNEN);
 	}
 }

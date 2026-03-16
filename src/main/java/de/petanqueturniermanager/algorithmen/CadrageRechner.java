@@ -6,8 +6,16 @@ package de.petanqueturniermanager.algorithmen;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
- * @author Michael Massee
+ * Berechnet die Cadrage-Parameter fuer ein K.o.-Turnier.<br>
+ * <br>
+ * Ein K.o.-Turnierbaum erfordert eine Zweierpotenz als Teilnehmerzahl (2, 4, 8, 16, 32, …).
+ * Ist die Gesamtzahl der Teams keine Zweierpotenz, wird eine Vorrunde (Cadrage) gespielt,
+ * um das Feld auf die naechste kleinere Zweierpotenz zu reduzieren.<br>
+ * <br>
+ * Beispiel: 10 Teams → Zielfeld 8 → 4 Teams spielen Cadrage (2 Spiele),
+ * 6 Teams erhalten ein Freilos und starten direkt in der Hauptrunde.
  *
+ * @author Michael Massee
  */
 public class CadrageRechner {
 
