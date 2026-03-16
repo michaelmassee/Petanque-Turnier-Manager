@@ -128,7 +128,7 @@ public class LabelPlusNumericField extends BaseField<LabelPlusNumericField> impl
 
 	@Override
 	public void textChanged(TextEvent arg0) {
-		// TODO Auto-generated method stub
+		// Standard-Implementierung: nichts tun
 	}
 
 	/**

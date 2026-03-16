@@ -159,8 +159,7 @@ public class LabelPlusTextPlusTextareaBox extends BaseField<LabelPlusTextPlusTex
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
-
+		// Standard-Implementierung: nichts tun (Unterklassen können überschreiben)
 	}
 
 }

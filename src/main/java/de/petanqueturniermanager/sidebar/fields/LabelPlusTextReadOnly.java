@@ -111,7 +111,7 @@ public class LabelPlusTextReadOnly extends BaseField<LabelPlusTextReadOnly> impl
 
 	@Override
 	public void textChanged(TextEvent arg0) {
-		// TODO Auto-generated method stub
+		// Standard-Implementierung: nichts tun (Feld ist ReadOnly)
 	}
 
 }

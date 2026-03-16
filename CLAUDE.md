@@ -91,14 +91,22 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 See `BUILD_ISSUES.md` for details on:
 1. IDL-to-Java interface generation not automated in Gradle
 
-## Sidebar – DEAKTIVIERT
+## Sidebar – DEAKTIVIERT (buggy, funktioniert nicht)
 
-Das gesamte `sidebar/`-Package ist **deaktiviert** und darf **nicht angefasst werden**:
+Das `sidebar/`-Package wurde neu geschrieben (2026-03), funktioniert aber in LibreOffice **noch nicht korrekt** und ist deshalb deaktiviert:
 
-- Die `PetanqueTurnierManagerPanelFactory` ist in `src/main/resources/de/petanqueturniermanager/comp/RegistrationHandler.classes` auskommentiert → LibreOffice lädt die Sidebar nicht.
-- Der Code kompiliert, wird aber zur Laufzeit nie instanziiert.
-- **Keine neuen Features in `sidebar/` implementieren.** Das Package muss von Grund auf neu geschrieben werden, bevor es wieder aktiviert werden kann.
-- Bei Änderungen am `NewReleaseChecker`-Callback-Mechanismus oder anderen globalen Komponenten: **kein** Code in `sidebar/` einbeziehen.
+- `PetanqueTurnierManager.components` → Factory-Eintrag auskommentiert → LibreOffice lädt die Sidebar nicht
+- `registry/org/openoffice/Office/UI/UIElementFactoryManager.xcu` und `Sidebar.xcu` sind vorhanden, werden aber von LibreOffice 25.8 nicht korrekt verarbeitet → Panel-Inhalt wird nicht angezeigt
+- `SidebarUITest` ist mit `@Disabled` markiert
+
+**Bekannte Symptome:** Deck-Icon erscheint, Panel-Überschrift erscheint, aber kein Inhalt im Panel.
+
+**Offene Ursache:** Die Factory-Registrierung via `UIElementFactoryManager.xcu` scheint in LO 25.8 nicht zu greifen. `createUIElement()` wird nicht aufgerufen.
+
+**Regeln:**
+- **Keine neuen Features in `sidebar/`** bis das grundlegende Problem gelöst ist.
+- Bei Änderungen an globalen Komponenten (`NewReleaseChecker`, Events, etc.): **kein** Code in `sidebar/` einbeziehen.
+- Sidebar erst wieder aktivieren (Factory in `.components` einkommentieren) wenn `createUIElement()` nachweislich aufgerufen wird.
 
 ## Business Logic & Rules
 - **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.

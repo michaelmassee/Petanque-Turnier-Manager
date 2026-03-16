@@ -12,7 +12,6 @@ import de.petanqueturniermanager.sidebar.BaseSidebarPanel;
 
 /**
  * @author Michael Massee
- *
  */
 public class InfoSidebarPanel extends BaseSidebarPanel {
 
@@ -22,7 +21,7 @@ public class InfoSidebarPanel extends BaseSidebarPanel {
 	}
 
 	@Override
-	protected BaseSidebarContent newContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
+	protected BaseSidebarContent neuesPanel(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
 			XSidebar xSidebar) {
 		return new InfoSidebarContent(workingSpreadsheet, parentWindow, xSidebar);
 	}

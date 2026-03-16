@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
-import de.petanqueturniermanager.sidebar.config.headerfooter.HeaderFooterSidebarContent;
+import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 
 /**
  * @author Michael Massee
@@ -25,7 +25,7 @@ public class KopfFusszeilenDialog extends BasePropertiesDialog {
 
 	@Override
 	protected Predicate<ConfigProperty<?>> getKonfigFieldFilter() {
-		return HeaderFooterSidebarContent.HEADERFOOTER_FILTER;
+		return konfigprop -> konfigprop instanceof HeaderFooterConfigProperty;
 	}
 
 	@Override

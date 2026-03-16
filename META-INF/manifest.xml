@@ -46,4 +46,12 @@
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Z_Stop.xcu"/>
+    <!-- Sidebar deaktiviert – XCU-Einträge auskommentiert damit kein Deck/Panel in LO erscheint
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/UI/Sidebar.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/UI/UIElementFactoryManager.xcu"/>
+    -->
 </manifest:manifest>

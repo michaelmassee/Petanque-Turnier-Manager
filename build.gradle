@@ -164,9 +164,16 @@ tasks.register('buildOXT', Zip) {
         into 'registry'
     }
 
-    // Images
+    // Images (OXT-Root)
     from('images') {
         into 'images'
+    }
+
+    // Logo für Sidebar-Deck-Icon: %origin% in Sidebar.xcu ist relativ zur XCU-Datei,
+    // daher muss das Bild auch unter registry/org/openoffice/Office/UI/images/ liegen.
+    from('images') {
+        include 'petanqueturniermanager-logo-32px.png'
+        into 'registry/org/openoffice/Office/UI/images'
     }
 
     // Runtime dependencies (libs)

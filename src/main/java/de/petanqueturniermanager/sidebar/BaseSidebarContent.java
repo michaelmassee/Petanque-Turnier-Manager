@@ -1,5 +1,6 @@
 /**
  * Erstellung 21.01.2020 / Michael Massee
+ * Neu geschrieben 2026-03
  */
 package de.petanqueturniermanager.sidebar;
 
@@ -40,49 +41,54 @@ import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
+ * Saubere Basisklasse für Sidebar-Panels.
+ * <p>
+ * Vereinfachungen gegenüber der alten Implementierung:
+ * <ul>
+ * <li>Kein RequestLayoutThread (2s-Sleep) – {@code xSidebar.requestLayout()} wird direkt aufgerufen</li>
+ * <li>Kein {@code changingLayout}-volatile-Flag</li>
+ * <li>Kein {@code didOnHandleDocReady}-Flag</li>
+ * <li>{@code onNew}/{@code onLoad} aktualisieren {@code currentSpreadsheet} direkt</li>
+ * </ul>
+ *
  * @author Michael Massee
  */
 public abstract class BaseSidebarContent extends ComponentBase
 		implements XToolPanel, XSidebarPanel, IGlobalEventListener, ITurnierEventListener {
+
 	private static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
 	private WorkingSpreadsheet currentSpreadsheet;
 	private XWindow parentWindow;
 	private XSidebar xSidebar;
-
 	private XWindow window;
 	private GuiFactoryCreateParam guiFactoryCreateParam;
-	private boolean didOnHandleDocReady;
 	private Layout layout;
-	private volatile boolean changingLayout; // stop mehrere Threads
+	private boolean istBereinigt = false;
 
 	/**
-	 * WorkingSpreadsheet ist nicht immer das Aktuelle Document was wir brauchen. <br>
-	 * 1. Sidebar aus wieder an dann okay<br>
-	 * 2. nach Druckvorschau dann okay<br>
-	 * 3. Bei Neu oder Load, wenn bereits eine Tabelle offen dann dann nicht! okay<br>
-	 * <br>
-	 *
-	 * @param workingSpreadsheet
-	 * @param parentWindow
-	 * @param xSidebar
+	 * WICHTIG: Listener werden VOR {@link #felderHinzufuegen()} registriert, damit
+	 * das {@code requestLayout()} am Ende von {@code felderHinzufuegen()} korrekt
+	 * verarbeitet wird: LibreOffice → {@code getHeightForWidth} → Fenster-Resize →
+	 * {@code windowResized} → {@link #doLayout()}.
 	 */
-
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.xSidebar = checkNotNull(xSidebar);
-		didOnHandleDocReady = false;
-		changingLayout = false; // flag is used to stop the layout managers
 		this.parentWindow = checkNotNull(parentWindow);
 
-		newBaseWindow();
-		addFields();
-		this.parentWindow.addWindowListener(windowAdapter);
+		neuesBasisFenster();
+
+		// Listener VOR felderHinzufuegen registrieren, damit requestLayout() am Ende
+		// von felderHinzufuegen() korrekt auf windowResized → doLayout() führt
+		this.parentWindow.addWindowListener(fensterAdapter);
 		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
 		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
+
+		felderHinzufuegen();
 	}
 
-	private void newBaseWindow() {
+	private void neuesBasisFenster() {
 		layout = new VerticalLayout(0, 2);
 		XMultiComponentFactory xMCF = Lo.qi(XMultiComponentFactory.class,
 				currentSpreadsheet.getxContext().getServiceManager());
@@ -96,19 +102,67 @@ public abstract class BaseSidebarContent extends ComponentBase
 				windowPeer);
 	}
 
-	protected void removeAllFieldsAndNewBaseWindow() {
-		setChangingLayout(true);
-		logger.debug("removeAllFields");
+	/**
+	 * Entfernt alle Felder und erstellt das Basis-Fenster neu. Kann von Unterklassen
+	 * in {@link #felderAktualisieren(ITurnierEvent)} aufgerufen werden, wenn ein
+	 * vollständiger Neuaufbau nötig ist.
+	 */
+	protected void allesFelderEntfernenUndNeuFenster() {
+		logger.debug("allesFelderEntfernenUndNeuFenster");
 		window.dispose();
 		window = null;
 		guiFactoryCreateParam.clear();
 		guiFactoryCreateParam = null;
-		newBaseWindow();
-		setChangingLayout(false);
+		neuesBasisFenster();
 	}
 
+	/**
+	 * Ruft {@code xSidebar.requestLayout()} direkt auf (kein Thread, kein Sleep).
+	 */
 	protected void requestLayout() {
-		new RequestLayoutThread().RequestLayout(xSidebar);
+		if (xSidebar != null) {
+			xSidebar.requestLayout();
+		}
+	}
+
+	/**
+	 * Räumt diesen Content auf: entfernt Fenster-Listener, Turnier-Event-Listener
+	 * und disposed das Kind-Fenster. Wird von {@link BaseSidebarPanel} aufgerufen,
+	 * wenn LibreOffice das Panel disposes.
+	 */
+	void bereinigen() {
+		if (istBereinigt) {
+			return;
+		}
+		istBereinigt = true;
+		logger.debug("BaseSidebarContent.bereinigen");
+
+		try {
+			PetanqueTurnierMngrSingleton.removeGlobalEventListener(this);
+		} catch (RuntimeException e) {
+			logger.error("Fehler beim Entfernen des GlobalEventListeners", e);
+		}
+		try {
+			PetanqueTurnierMngrSingleton.removeTurnierEventListener(this);
+		} catch (RuntimeException e) {
+			logger.error("Fehler beim Entfernen des TurnierEventListeners", e);
+		}
+		if (parentWindow != null) {
+			parentWindow.removeWindowListener(fensterAdapter);
+		}
+		layout = null;
+		onDisposing(null);
+		setCurrentSpreadsheet(null);
+		setParentWindow(null);
+		if (guiFactoryCreateParam != null) {
+			guiFactoryCreateParam.clear();
+			guiFactoryCreateParam = null;
+		}
+		xSidebar = null;
+		if (window != null) {
+			window.dispose();
+			window = null;
+		}
 	}
 
 	@Override
@@ -125,106 +179,80 @@ public abstract class BaseSidebarContent extends ComponentBase
 		return 200;
 	}
 
-	// ----- Implementation of interface IGlobalEventListener -----
+	// ----- IGlobalEventListener -----
+
 	@Override
 	public void onUnfocus(Object source) {
-		// dann der fall wenn kein onLoad oder onNew
-		// passiert wenn einfach nur die sidebar aus / an geschalted wird
-		// Druck vorschau
-		if (didOnHandleDocReady) {
-			return;
-		}
-
-		// hier kein update von WorkingSpreadsheet weil im Konstruktor das richtige
-		// document vorhanden.
-		// felder sind bereits vorhanden
-		didOnHandleDocReady = true;
+		// Sidebar wurde aus-/eingeschaltet oder Druckvorschau
+		// Felder sind bereits vorhanden – nichts zu tun
 	}
 
 	@Override
 	public void onNew(Object source) {
-		refreshCurrentSpreadsheetFromSource(source);
+		aktualisiereSpreadsheetUndFelder(source);
 	}
 
 	@Override
 	public void onLoad(Object source) {
-		refreshCurrentSpreadsheetFromSource(source);
+		aktualisiereSpreadsheetUndFelder(source);
 	}
 
-	private void refreshCurrentSpreadsheetFromSource(Object source) {
-		if (didOnHandleDocReady) {
+	private void aktualisiereSpreadsheetUndFelder(Object source) {
+		if (istBereinigt) {
 			return;
 		}
-
 		XModel xModel = Lo.qi(XModel.class, source);
+		if (xModel == null) {
+			return;
+		}
 		XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
 		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
-
-		// wenn kein XSpreadsheetDocument dann null
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
-			// sicher gehen das wir das richtige document haben, ist nicht unbedingt das
-			// Aktive Doc
-			WorkingSpreadsheet workingSpreadsheetFromSource = new WorkingSpreadsheet(currentSpreadsheet.getxContext(),
-					xSpreadsheetDocument, xSpreadsheetView);
-			// WorkingSpreadsheet workingSpreadsheetFromSource = new
-			// WorkingSpreadsheet(currentSpreadsheet.getxContext(), xModel);
-			if (!currentSpreadsheet.compareSpreadsheetDocument(workingSpreadsheetFromSource)) {
-				// Tatsächlich nicht Aktuell ?
-				// bis jetzt nur in Linux ein problem
-				currentSpreadsheet = workingSpreadsheetFromSource;
-				removeAndAddFields(); // inhalt komplet neu
-			} else {
-				updateFieldContens(
-						new OnProperiesChangedEvent(getCurrentSpreadsheet().getWorkingSpreadsheetDocument()));
-			}
-			didOnHandleDocReady = true;
+			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument,
+					xSpreadsheetView);
+			felderAktualisieren(new OnProperiesChangedEvent(currentSpreadsheet.getWorkingSpreadsheetDocument()));
 		}
 	}
 
-	// ----- Implementation of UNO interface XToolPanel -----
-	// XToolPanel
+	// ----- XToolPanel -----
+
 	@Override
 	public XAccessible createAccessible(XAccessible arg0) {
 		if (window == null) {
-			throw new DisposedException("Panel is already disposed", this);
+			throw new DisposedException("Panel wurde bereits disposed", this);
 		}
 		return Lo.qi(XAccessible.class, getWindow());
 	}
 
-	// XToolPanel
 	@Override
 	public XWindow getWindow() {
 		if (window == null) {
-			throw new DisposedException("Panel is already disposed", this);
+			throw new DisposedException("Panel wurde bereits disposed", this);
 		}
 		return window;
 	}
 
-	// ----- Implementation of interface ITurnierEventListener -----
+	// ----- ITurnierEventListener -----
+
 	@Override
 	public void onPropertiesChanged(ITurnierEvent eventObj) {
-		// sind wir betroffen ?
-		if (!getCurrentSpreadsheet().getWorkingSpreadsheetDocument().equals(eventObj.getWorkingSpreadsheetDocument())) {
-			// nein ignore
+		if (istBereinigt) {
 			return;
 		}
-		// update fields
+		if (!getCurrentSpreadsheet().getWorkingSpreadsheetDocument().equals(eventObj.getWorkingSpreadsheetDocument())) {
+			return;
+		}
 		logger.debug("onPropertiesChanged");
-		updateFieldContens(eventObj);
+		felderAktualisieren(eventObj);
 	}
 
 	protected void doLayout() {
+		if (istBereinigt) {
+			return;
+		}
 		try {
-			// multi threads nicht weitermachen wenn Panel verändert wird
-			if (isChangingLayout()) {
-				return;
-			}
-
-			// Rectangle posSizeParent = parentWindow.getPosSize();
-			// Start offset immer 0,0
 			Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width,
 					getParentWindow().getPosSize().Height);
-			// only when fields are there
 			if (getLayout() != null) {
 				getLayout().layout(posSizeParent);
 			}
@@ -233,7 +261,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		}
 	}
 
-	private final AbstractWindowListener windowAdapter = new AbstractWindowListener() {
+	private final AbstractWindowListener fensterAdapter = new AbstractWindowListener() {
 		@Override
 		public void windowResized(WindowEvent e) {
 			doLayout();
@@ -241,49 +269,23 @@ public abstract class BaseSidebarContent extends ComponentBase
 
 		@Override
 		public void disposing(EventObject event) {
-			logger.debug("BaseSidebarContent disposing");
-			try {
-				PetanqueTurnierMngrSingleton.removeGlobalEventListener(BaseSidebarContent.this);
-				PetanqueTurnierMngrSingleton.removeTurnierEventListener(BaseSidebarContent.this);
-				layout = null;
-				BaseSidebarContent.this.disposing(event);
-				setCurrentSpreadsheet(null);
-				setParentWindow(null);
-				getGuiFactoryCreateParam().clear();
-				setGuiFactoryCreateParam(null);
-				xSidebar = null;
-				window.dispose();
-				window = null;
-			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-			}
+			// parentWindow wird disposed – bereinigen() übernimmt alles
+			bereinigen();
 		}
 	};
 
-	/**
-	 * @return the parentWindow
-	 */
 	protected final XWindow getParentWindow() {
 		return parentWindow;
 	}
 
-	/**
-	 * @param parentWindow the parentWindow to set
-	 */
 	protected final void setParentWindow(XWindow parentWindow) {
 		this.parentWindow = parentWindow;
 	}
 
-	/**
-	 * @return the currentSpreadsheet
-	 */
 	public final WorkingSpreadsheet getCurrentSpreadsheet() {
 		return currentSpreadsheet;
 	}
 
-	/**
-	 * @param currentSpreadsheet the currentSpreadsheet to set
-	 */
 	protected final void setCurrentSpreadsheet(WorkingSpreadsheet currentSpreadsheet) {
 		this.currentSpreadsheet = currentSpreadsheet;
 	}
@@ -301,23 +303,15 @@ public abstract class BaseSidebarContent extends ComponentBase
 		return guiFactoryCreateParam;
 	}
 
-	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
-		this.guiFactoryCreateParam = guiFactoryCreateParam;
-	}
+	/** Wird beim Bereinigen aufgerufen. Ressourcen der Unterklasse freigeben. */
+	protected abstract void onDisposing(EventObject event);
 
-	protected boolean isChangingLayout() {
-		return changingLayout;
-	}
+	/** Felder einmalig beim Aufbau des Panels hinzufügen. */
+	protected abstract void felderHinzufuegen();
 
-	protected void setChangingLayout(boolean changingLayout) {
-		this.changingLayout = changingLayout;
-	}
-
-	protected abstract void disposing(EventObject event);
-
-	protected abstract void updateFieldContens(ITurnierEvent eventObj);
-
-	protected abstract void addFields();
-
-	protected abstract void removeAndAddFields();
+	/**
+	 * Felder aktualisieren (bei Änderungen von Properties oder neuem Dokument).
+	 * Kann bei Bedarf {@link #allesFelderEntfernenUndNeuFenster()} aufrufen.
+	 */
+	protected abstract void felderAktualisieren(ITurnierEvent event);
 }

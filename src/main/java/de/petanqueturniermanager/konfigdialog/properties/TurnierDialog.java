@@ -10,8 +10,8 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
-import de.petanqueturniermanager.sidebar.config.color.ColorSidebarContent;
-import de.petanqueturniermanager.sidebar.config.headerfooter.HeaderFooterSidebarContent;
+import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
+import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 
 /**
  * @author Michael Massee
@@ -26,8 +26,9 @@ public class TurnierDialog extends BasePropertiesDialog {
 
 	@Override
 	protected Predicate<ConfigProperty<?>> getKonfigFieldFilter() {
-		// alles nicht color oder header - footer
-		return ColorSidebarContent.COLOR_FILTER.negate().and(HeaderFooterSidebarContent.HEADERFOOTER_FILTER.negate());
+		// alles außer Color und Kopf/Fußzeilen
+		return konfigprop -> konfigprop.getType() != ConfigPropertyType.COLOR
+				&& !(konfigprop instanceof HeaderFooterConfigProperty);
 	}
 
 	@Override

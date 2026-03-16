@@ -14,4 +14,12 @@
             <service name="de.petanqueturniermanager.ProtocolHandler"/>
         </implementation>
     </component>
+
+    <!-- Sidebar Panel Factory – DEAKTIVIERT (buggy, Panel-Inhalt wird nicht angezeigt)
+    <component loader="com.sun.star.loader.Java2" uri="PetanqueTurnierManager-1.0.0.jar">
+        <implementation name="de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory">
+            <service name="de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory"/>
+        </implementation>
+    </component>
+    -->
 </components>
