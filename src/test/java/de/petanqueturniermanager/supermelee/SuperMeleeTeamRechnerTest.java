@@ -1,6 +1,9 @@
 package de.petanqueturniermanager.supermelee;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 
@@ -189,6 +192,123 @@ public class SuperMeleeTeamRechnerTest {
 		assertEquals(1, teamRechner.getAnzTriplette());
 		assertEquals(false, teamRechner.isNurDoubletteMoeglich());
 		assertEquals(false, teamRechner.isNurTripletteMoeglich());
+	}
+
+	@Test
+	public void testGetAnzSpielerUndGetMode() {
+		SuperMeleeTeamRechner triplette = new SuperMeleeTeamRechner(10);
+		assertEquals(10, triplette.getAnzSpieler());
+		assertEquals(SuperMeleeMode.Triplette, triplette.getMode());
+
+		SuperMeleeTeamRechner doublette = new SuperMeleeTeamRechner(10, SuperMeleeMode.Doublette);
+		assertEquals(10, doublette.getAnzSpieler());
+		assertEquals(SuperMeleeMode.Doublette, doublette.getMode());
+	}
+
+	@Test
+	public void testValideAnzahlSpieler() {
+		assertFalse(new SuperMeleeTeamRechner(7).valideAnzahlSpieler());
+		assertTrue(new SuperMeleeTeamRechner(6).valideAnzahlSpieler());
+		assertTrue(new SuperMeleeTeamRechner(8).valideAnzahlSpieler());
+		assertTrue(new SuperMeleeTeamRechner(10).valideAnzahlSpieler());
+	}
+
+	@Test
+	public void testGetAnzPaarungenUndGetAnzBahnen() {
+		// Triplette-Modus: 12 Spieler → 4 Triplette + 0 Doublette = 4 Paarungen, 2 Bahnen
+		SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(12);
+		assertEquals(rechner.getAnzTriplette() + rechner.getAnzDoublette(), rechner.getAnzPaarungen());
+		assertEquals(rechner.getAnzPaarungen() / 2, rechner.getAnzBahnen());
+		assertEquals(4, rechner.getAnzPaarungen());
+		assertEquals(2, rechner.getAnzBahnen());
+
+		// Triplette-Modus: 10 Spieler → 2 Triplette + 2 Doublette = 4 Paarungen, 2 Bahnen
+		rechner = new SuperMeleeTeamRechner(10);
+		assertEquals(rechner.getAnzTriplette() + rechner.getAnzDoublette(), rechner.getAnzPaarungen());
+		assertEquals(rechner.getAnzPaarungen() / 2, rechner.getAnzBahnen());
+		assertEquals(4, rechner.getAnzPaarungen());
+		assertEquals(2, rechner.getAnzBahnen());
+
+		// Doublette-Modus: 12 Spieler → 6 Doublette = 6 Paarungen, 3 Bahnen
+		rechner = new SuperMeleeTeamRechner(12, SuperMeleeMode.Doublette);
+		assertEquals(rechner.getAnzTriplette() + rechner.getAnzDoublette(), rechner.getAnzPaarungen());
+		assertEquals(rechner.getAnzPaarungen() / 2, rechner.getAnzBahnen());
+		assertEquals(6, rechner.getAnzPaarungen());
+		assertEquals(3, rechner.getAnzBahnen());
+	}
+
+	@Test
+	public void testIsNurTripletteMoeglich() {
+		assertTrue(new SuperMeleeTeamRechner(6).isNurTripletteMoeglich());
+		assertTrue(new SuperMeleeTeamRechner(12).isNurTripletteMoeglich());
+		assertTrue(new SuperMeleeTeamRechner(18).isNurTripletteMoeglich());
+		assertFalse(new SuperMeleeTeamRechner(8).isNurTripletteMoeglich());
+		assertFalse(new SuperMeleeTeamRechner(10).isNurTripletteMoeglich());
+		assertFalse(new SuperMeleeTeamRechner(13).isNurTripletteMoeglich());
+	}
+
+	@Test
+	public void testIsNurDoubletteMoeglichVal() {
+		assertEquals(1, new SuperMeleeTeamRechner(8).isNurDoubletteMoeglichVal());
+		assertEquals(1, new SuperMeleeTeamRechner(12).isNurDoubletteMoeglichVal());
+		assertEquals(0, new SuperMeleeTeamRechner(10).isNurDoubletteMoeglichVal());
+		assertEquals(0, new SuperMeleeTeamRechner(9).isNurDoubletteMoeglichVal());
+	}
+
+	@Test
+	public void testGetAnzahlTripletteWennNurTriplette() {
+		assertEquals(2, new SuperMeleeTeamRechner(6).getAnzahlTripletteWennNurTriplette());
+		assertEquals(4, new SuperMeleeTeamRechner(12).getAnzahlTripletteWennNurTriplette());
+		assertEquals(6, new SuperMeleeTeamRechner(18).getAnzahlTripletteWennNurTriplette());
+		assertEquals(0, new SuperMeleeTeamRechner(10).getAnzahlTripletteWennNurTriplette());
+	}
+
+	@Test
+	public void testGetAnzahlDoubletteWennNurDoublette() {
+		assertEquals(4, new SuperMeleeTeamRechner(8).getAnzahlDoubletteWennNurDoublette());
+		assertEquals(6, new SuperMeleeTeamRechner(12).getAnzahlDoubletteWennNurDoublette());
+		assertEquals(10, new SuperMeleeTeamRechner(20).getAnzahlDoubletteWennNurDoublette());
+		assertEquals(0, new SuperMeleeTeamRechner(9).getAnzahlDoubletteWennNurDoublette());
+	}
+
+	@Test
+	public void testTeamRechnerDoubletteModeInvarianteFuerGroessereZahlen() {
+		for (int anzahlMeldungen = 14; anzahlMeldungen <= 50; anzahlMeldungen++) {
+			SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(anzahlMeldungen, SuperMeleeMode.Doublette);
+			String fehlrmldg = "Doublette-Modus: Fehler bei AnzahlSpieler " + anzahlMeldungen;
+			assertEquals(anzahlMeldungen, rechner.getAnzTriplette() * 3 + rechner.getAnzDoublette() * 2, fehlrmldg);
+		}
+	}
+
+	@Test
+	public void testTeamRechnerDoubletteModeStichproben() {
+		// 16 Spieler – nur Doublette möglich (16 % 4 == 0)
+		SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(16, SuperMeleeMode.Doublette);
+		assertEquals(8, rechner.getAnzDoublette());
+		assertEquals(0, rechner.getAnzTriplette());
+		assertTrue(rechner.isNurDoubletteMoeglich());
+
+		// 20 Spieler – nur Doublette möglich (20 % 4 == 0)
+		rechner = new SuperMeleeTeamRechner(20, SuperMeleeMode.Doublette);
+		assertEquals(10, rechner.getAnzDoublette());
+		assertEquals(0, rechner.getAnzTriplette());
+		assertTrue(rechner.isNurDoubletteMoeglich());
+
+		// 14 Spieler – gemischt (14 % 4 != 0, 14 % 6 != 0)
+		rechner = new SuperMeleeTeamRechner(14, SuperMeleeMode.Doublette);
+		assertEquals(14, rechner.getAnzTriplette() * 3 + rechner.getAnzDoublette() * 2);
+
+		// 15 Spieler – gemischt
+		rechner = new SuperMeleeTeamRechner(15, SuperMeleeMode.Doublette);
+		assertEquals(15, rechner.getAnzTriplette() * 3 + rechner.getAnzDoublette() * 2);
+	}
+
+	@Test
+	public void testUngueltigeAnzSpielerWirftException() {
+		assertThrows(IllegalArgumentException.class, () -> new SuperMeleeTeamRechner(0));
+		assertThrows(IllegalArgumentException.class, () -> new SuperMeleeTeamRechner(-1));
+		assertThrows(IllegalArgumentException.class, () -> new SuperMeleeTeamRechner(0, SuperMeleeMode.Doublette));
+		assertThrows(IllegalArgumentException.class, () -> new SuperMeleeTeamRechner(-1, SuperMeleeMode.Triplette));
 	}
 
 }
