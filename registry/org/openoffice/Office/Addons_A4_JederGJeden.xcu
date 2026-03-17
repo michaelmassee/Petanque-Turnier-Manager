@@ -35,8 +35,8 @@
 							<!-- ****************************************************************** -->
 							<node oor:name="A4A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Start</value>
-									<value xml:lang="de">Start</value>
+									<value xml:lang="en">Start (new Tournament)</value>
+									<value xml:lang="de">Start (neues Turnier)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:jgj_neue_meldeliste</value>
