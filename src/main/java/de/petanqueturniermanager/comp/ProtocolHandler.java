@@ -41,6 +41,11 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
+import de.petanqueturniermanager.ko.KoTurnierTestDaten;
+import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
@@ -157,6 +162,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
+	// K.-O.
+	public static final String CMD_KO_START = "ko_start";
+	public static final String CMD_KO_UPDATE_MELDELISTE = "ko_update_meldeliste";
+	public static final String CMD_KO_TURNIERBAUM = "ko_turnierbaum";
+	public static final String CMD_KO_TESTDATEN_NUR_MELDELISTE = "ko_testdaten_nur_meldeliste";
+	public static final String CMD_KO_TESTDATEN_8_TEAMS = "ko_testdaten_8_teams";
+	public static final String CMD_KO_TESTDATEN_16_TEAMS = "ko_testdaten_16_teams";
+	public static final String CMD_KO_TESTDATEN_CADRAGE = "ko_testdaten_cadrage";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -381,6 +394,29 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SchweizerTurnierTestDaten(ws).start();
 				break;
 			// ------------------------------
+			// K.-O.
+			case CMD_KO_START:
+				new KoMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_KO_UPDATE_MELDELISTE:
+				new KoMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_KO_TURNIERBAUM:
+				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_KO_TESTDATEN_NUR_MELDELISTE:
+				new KoMeldeListeSheetTestDaten(ws, 8).start();
+				break;
+			case CMD_KO_TESTDATEN_8_TEAMS:
+				new KoTurnierTestDaten(ws, 8).start();
+				break;
+			case CMD_KO_TESTDATEN_16_TEAMS:
+				new KoTurnierTestDaten(ws, 16).start();
+				break;
+			case CMD_KO_TESTDATEN_CADRAGE:
+				new KoTurnierTestDaten(ws, 10).start();
+				break;
+			// ------------------------------
 			// Konfiguration
 			case CMD_KONFIGURATION_TURNIER:
 				handleKonfiguration(command, ws);
@@ -530,6 +566,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_JGJ_DIREKTVERGLEICH                    -> ts == TurnierSystem.JGJ;
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
+			// K.-O.
+			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
+			case CMD_KO_UPDATE_MELDELISTE,
+				 CMD_KO_TURNIERBAUM                         -> ts == TurnierSystem.KO;
+			// K.-O.-Testdaten: auch wenn kein Turnier vorhanden
+			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
+				 CMD_KO_TESTDATEN_8_TEAMS,
+				 CMD_KO_TESTDATEN_16_TEAMS,
+				 CMD_KO_TESTDATEN_CADRAGE                   -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KO;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE,
 				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,

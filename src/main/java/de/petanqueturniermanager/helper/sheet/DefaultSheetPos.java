@@ -33,4 +33,6 @@ public class DefaultSheetPos {
 	public static final short SCHWEIZER_ENDRANGLISTE = 3;
 	public static final short SCHWEIZER_DIREKTEVERGLEICH = 4;
 
+	public static final short KO_TURNIERBAUM = 2; // K.-O. Turnierbaum
+
 }

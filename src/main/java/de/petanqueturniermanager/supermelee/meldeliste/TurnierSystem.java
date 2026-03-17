@@ -8,7 +8,7 @@ public enum TurnierSystem {
 
 	KEIN(0, "Kein"), // wenn nur der runner gebraucht wird
 	SUPERMELEE(1, "Supermêlée"), LIGA(2, "Liga"), MAASTRICHTER(3, "Maastricht"), SCHWEIZER(4, "Schweizer"),
-	JGJ(5, "Jeder gegen Jeden");
+	JGJ(5, "Jeder gegen Jeden"), KO(6, "K.-O.");
 
 	private final String bezeichnung;
 	private final int id;
