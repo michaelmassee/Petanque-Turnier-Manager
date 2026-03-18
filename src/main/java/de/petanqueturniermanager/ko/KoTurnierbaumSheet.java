@@ -405,6 +405,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 
 	private void formatiereKolumnen(XSpreadsheet xSheet, int numRunden) throws GenerateException {
+		// Bei "keine Bahn": Nr-Spalte verstecken wenn Teamname angezeigt wird (nur eine Team-Spalte sichtbar)
+		boolean nrVersteckt = !mitBahn() && teamAnzeige == KoSpielbaumTeamAnzeige.NAME;
+		int nrColWidth = nrVersteckt ? 0 : NR_COL_WIDTH;
 		int nameColWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? NAME_COL_WIDTH : 0;
 
 		for (int r = 1; r <= numRunden; r++) {
@@ -414,7 +417,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 								.setVertJustify(CellVertJustify2.CENTER));
 			}
 			getSheetHelper().setColumnProperties(xSheet, nrSpalte(r),
-					ColumnProperties.from().setWidth(NR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+					ColumnProperties.from().setWidth(nrColWidth).setHoriJustify(CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 			getSheetHelper().setColumnProperties(xSheet, nameSpalte(r),
 					ColumnProperties.from().setWidth(nameColWidth).setHoriJustify(CellHoriJustify.LEFT)
@@ -428,8 +431,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 
 		// Sieger-Spalten
+		int siegerNrWidth = nrVersteckt ? 0 : NR_COL_WIDTH;
 		getSheetHelper().setColumnProperties(xSheet, siegerNrSpalte(numRunden),
-				ColumnProperties.from().setWidth(NR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+				ColumnProperties.from().setWidth(siegerNrWidth).setHoriJustify(CellHoriJustify.CENTER)
 						.setVertJustify(CellVertJustify2.CENTER));
 		int siegerNameWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? SIEGER_NAME_COL_WIDTH : 0;
 		getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),

@@ -95,9 +95,18 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 		// Genug Namen für alle Teams und Spieler laden
 		List<String> namen = new TestnamenLoader().listeMitTestNamen(anzTeams * anzSpieler);
 
+		boolean teamnameAktiv = delegate.getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
+		int teamnameSpalte = delegate.getTeamnameSpalte();
+
 		for (int i = 0; i < anzTeams; i++) {
 			SheetRunner.testDoCancelTask();
 			int zeile = ersteDatenZeile + i;
+
+			// Teamname einfügen (falls Spalte aktiv)
+			if (teamnameAktiv && teamnameSpalte >= 0) {
+				getSheetHelper().setStringValueInCell(
+						StringCellValue.from(xSheet, Position.from(teamnameSpalte, zeile), "Team " + (i + 1)));
+			}
 
 			for (int s = 0; s < anzSpieler; s++) {
 				int nameIndex = i * anzSpieler + s;
