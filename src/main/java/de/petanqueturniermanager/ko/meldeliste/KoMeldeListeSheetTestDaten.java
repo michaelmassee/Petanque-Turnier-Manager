@@ -8,6 +8,7 @@ import java.util.List;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -87,19 +88,44 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 		XSpreadsheet xSheet = meldeListeNew.getXSpreadSheet();
 		getSheetHelper().setActiveSheet(xSheet);
 
-		List<String> teamnamen = new TestnamenLoader().listeMitTestNamen(anzTeams);
-		int teamnameSpalte = delegate.getTeamnameSpalte();
-		int aktivSpalte = delegate.getAktivSpalte();
+		Formation formation = delegate.getKonfigurationSheet().getMeldeListeFormation();
+		int anzSpieler = formation.getAnzSpieler();
 		int ersteDatenZeile = KoListeDelegate.ERSTE_DATEN_ZEILE;
 
-		for (int i = 0; i < anzTeams && i < teamnamen.size(); i++) {
+		// Genug Namen für alle Teams und Spieler laden
+		List<String> namen = new TestnamenLoader().listeMitTestNamen(anzTeams * anzSpieler);
+
+		for (int i = 0; i < anzTeams; i++) {
 			SheetRunner.testDoCancelTask();
 			int zeile = ersteDatenZeile + i;
-			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(teamnameSpalte, zeile), teamnamen.get(i)));
+
+			for (int s = 0; s < anzSpieler; s++) {
+				int nameIndex = i * anzSpieler + s;
+				if (nameIndex >= namen.size()) {
+					break;
+				}
+				// Format aus TestnamenLoader: "Nachname, Vorname"
+				String[] parts = namen.get(nameIndex).split(", ", 2);
+				String vorname = parts.length > 1 ? parts[1] : parts[0];
+				String nachname = parts.length > 1 ? parts[0] : "";
+
+				int vornameSpalte = delegate.getVornameSpalte(s);
+				int nachnameSpalte = delegate.getNachnameSpalte(s);
+
+				getSheetHelper().setStringValueInCell(
+						StringCellValue.from(xSheet, Position.from(vornameSpalte, zeile), vorname));
+				getSheetHelper().setStringValueInCell(
+						StringCellValue.from(xSheet, Position.from(nachnameSpalte, zeile), nachname));
+			}
+
+			// Aktiv-Wert setzen
 			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile),
+					NumberCellValue.from(xSheet, Position.from(delegate.getAktivSpalte(), zeile),
 							KoListeDelegate.AKTIV_WERT_NIMMT_TEIL));
+
+			// RNG-Wert setzen: Team i erhält Rang i+1 (1-basiert)
+			getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(xSheet, Position.from(delegate.getRanglisteSpalte(), zeile), i + 1));
 		}
 	}
 

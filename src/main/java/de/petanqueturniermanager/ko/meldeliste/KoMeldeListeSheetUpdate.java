@@ -70,12 +70,24 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 		return delegate.getNrSpalte();
 	}
 
-	public int getTeamnameSpalte() {
+	public int getTeamnameSpalte() throws GenerateException {
 		return delegate.getTeamnameSpalte();
 	}
 
-	public int getAktivSpalte() {
+	public int getVornameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getVornameSpalte(spielerIdx);
+	}
+
+	public int getNachnameSpalte(int spielerIdx) throws GenerateException {
+		return delegate.getNachnameSpalte(spielerIdx);
+	}
+
+	public int getAktivSpalte() throws GenerateException {
 		return delegate.getAktivSpalte();
+	}
+
+	public int getRanglisteSpalte() throws GenerateException {
+		return delegate.getRanglisteSpalte();
 	}
 
 	public int getErsteDatenZeile() {
@@ -84,6 +96,23 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 
 	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
 		return delegate.getAktiveMeldungen();
+	}
+
+	public TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
+		return delegate.getMeldungenSortiertNachRangliste();
+	}
+
+	public int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
+		return delegate.letzteZeileMitDaten(xSheet);
+	}
+
+	/**
+	 * Prüft ob alle aktiven Teams einen gültigen, eindeutigen Rang haben.
+	 *
+	 * @return null wenn OK, sonst eine Fehlermeldung.
+	 */
+	public String validiereRangSpalte() throws GenerateException {
+		return delegate.validiereRangSpalte();
 	}
 
 	// ---------------------------------------------------------------
@@ -98,24 +127,51 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 			return;
 		}
 		teamnummernVergeben(xSheet);
-		nachTeamNrSortieren(xSheet);
+		aktivDefaultSetzen(xSheet);
+		nachRangSortieren(xSheet);
 		upDateSheet();
 	}
 
 	/**
-	 * Vergibt fehlende Nummern an Zeilen mit Teamnamen aber ohne Nr.
+	 * Setzt Aktiv=1 für Zeilen mit Spielernamen aber leerem Aktiv-Wert (nur für neue Zeilen).
+	 */
+	private void aktivDefaultSetzen(XSpreadsheet xSheet) throws GenerateException {
+		int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
+		if (letzteZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		int vornameSpalte = delegate.getVornameSpalte(0);
+		int aktivSpalte = delegate.getAktivSpalte();
+
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isBlank()) {
+				continue;
+			}
+			int aktiv = getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
+			if (aktiv <= 0) {
+				getSheetHelper().setNumberValueInCell(
+						NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile))
+								.setValue(AKTIV_WERT_NIMMT_TEIL));
+			}
+		}
+	}
+
+	/**
+	 * Vergibt fehlende Nummern an Zeilen mit Spieler-Vornamen aber ohne Nr.
 	 */
 	private void teamnummernVergeben(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = letzteZeileMitTeamname(xSheet);
+		int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
 		if (letzteZeile < ERSTE_DATEN_ZEILE) {
 			return;
 		}
 
 		int nrSpalte = getNrSpalte();
-		int teamnameSpalte = getTeamnameSpalte();
+		int vornameSpalte = delegate.getVornameSpalte(0);
 
 		// Höchste vorhandene Nr lesen (absteigend sortieren, dann erste Zeile lesen)
-		RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteZeile);
+		RangePosition sortRange = RangePosition.from(nrSpalte, ERSTE_DATEN_ZEILE, delegate.getAktivSpalte(),
+				letzteZeile);
 		SortHelper.from(this, sortRange).spalteToSort(nrSpalte).abSteigendSortieren().doSort();
 
 		int letztNr = Math.max(0,
@@ -123,8 +179,8 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 
 		// Fehlende Nummern vergeben (nr <= 0 = leer/kein Wert)
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-			String teamname = getSheetHelper().getTextFromCell(xSheet, Position.from(teamnameSpalte, zeile));
-			if (teamname == null || teamname.isBlank()) {
+			String vorname = getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isBlank()) {
 				continue;
 			}
 			int nr = getSheetHelper().getIntFromCell(xSheet, Position.from(nrSpalte, zeile));
@@ -137,38 +193,17 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 	}
 
 	/**
-	 * Sortiert die Datenzeilen aufsteigend nach Team-Nr.
+	 * Sortiert die Datenzeilen aufsteigend nach Rang (RNG-Spalte).
 	 */
-	private void nachTeamNrSortieren(XSpreadsheet xSheet) throws GenerateException {
-		int letzteZeile = letzteZeileMitTeamname(xSheet);
+	private void nachRangSortieren(XSpreadsheet xSheet) throws GenerateException {
+		int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
 		if (letzteZeile < ERSTE_DATEN_ZEILE) {
 			return;
 		}
 		RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
-				getAktivSpalte(), letzteZeile);
-		SortHelper.from(this, range).spalteToSort(getNrSpalte()).aufSteigendSortieren(true).doSort();
-	}
-
-	/**
-	 * Liefert die letzte Zeile, die einen Teamnamen enthält.
-	 */
-	private int letzteZeileMitTeamname(XSpreadsheet xSheet) throws GenerateException {
-		int teamnameSpalte = getTeamnameSpalte();
-		int letzte = ERSTE_DATEN_ZEILE - 1;
-		for (int zeile = ERSTE_DATEN_ZEILE; zeile < ERSTE_DATEN_ZEILE + 9999; zeile++) {
-			String name = getSheetHelper().getTextFromCell(xSheet, Position.from(teamnameSpalte, zeile));
-			if (name != null && !name.isBlank()) {
-				letzte = zeile;
-			} else {
-				// Nach der ersten leeren Zeile ohne vorherige Nr auch abbrechen,
-				// falls dahinter nichts mehr kommt
-				Integer nr = getSheetHelper().getIntFromCell(xSheet, Position.from(getNrSpalte(), zeile));
-				if (nr == null || nr <= 0) {
-					break;
-				}
-			}
-		}
-		return letzte;
+				delegate.getAktivSpalte(), letzteZeile);
+		SortHelper.from(this, range).spalteToSort(delegate.getRanglisteSpalte())
+				.aufSteigendSortieren(true).doSort();
 	}
 
 }

@@ -98,8 +98,12 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 			// Property im Document vorhanden ?
 			String docVersion = docPropHelper.getStringProperty(BasePropertiesSpalte.KONFIG_PROP_ERSTELLT_MIT_VERSION,
 					"unbekannt");
-			boolean versionDoMatch = false;
+			if ("unbekannt".equals(docVersion)) {
+				DocumentHelper.setDocErstelltMitVersion(getWorkingSpreadsheet());
+				return;
+			}
 			String pluginVersionNummer = ExtensionsHelper.from(getxContext()).getVersionNummer();
+			boolean versionDoMatch = false;
 			if (docVersion != null) {
 				versionDoMatch = StringUtils.compare(docVersion, pluginVersionNummer) == 0;
 			}

@@ -7,6 +7,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
@@ -83,5 +84,29 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet {
 
 	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
 		propertiesSpalte.setMeldeListeTeamnameAnzeigen(anzeigen);
+	}
+
+	public boolean isMeldeListeVereinsnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeVereinsnameAnzeigen();
+	}
+
+	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+	}
+
+	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
+		return propertiesSpalte.getSpielbaumTeamAnzeige();
+	}
+
+	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
+		propertiesSpalte.setSpielbaumTeamAnzeige(anzeige);
+	}
+
+	public SpielrundeSpielbahn getSpielbaumSpielbahn() {
+		return propertiesSpalte.getSpielbaumSpielbahn();
+	}
+
+	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {
+		propertiesSpalte.setSpielbaumSpielbahn(spielbahn);
 	}
 }
