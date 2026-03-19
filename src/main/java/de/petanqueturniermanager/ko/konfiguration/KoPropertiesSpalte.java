@@ -12,6 +12,7 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 
 /**
@@ -22,8 +23,16 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	static {
-		ADDBaseProp(KONFIG_PROPERTIES);
+		ADDBaseProp(KONFIG_PROPERTIES, false);
 	}
+
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_HEADER       = "Turnierbaum Header Farbe";
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A       = "Turnierbaum Team A Farbe";
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B       = "Turnierbaum Team B Farbe";
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_SCORE        = "Turnierbaum Score Farbe";
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER       = "Turnierbaum Sieger Farbe";
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_BAHN         = "Turnierbaum Bahn Farbe";
+	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ = "Turnierbaum 3. Platz Farbe";
 
 	private static final String KONFIG_PROP_KOPF_ZEILE_LINKS = "Kopfzeile Links";
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
@@ -33,6 +42,10 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 	private static final String KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE = "Spielbaum Team Anzeige";
 	private static final String KONFIG_PROP_SPIELBAUM_SPIELBAHN = "Spielbaum Spielbahn";
+	private static final String KONFIG_PROP_SPIELBAUM_PLATZ3 = "Spielbaum Spiel um Platz 3";
+
+	private static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
+	static final String KONFIG_PROP_MIN_REST_GROESSE = "Turnierbaum Min. Rest-Größe";
 
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -71,6 +84,37 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
 				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_PLATZ3)
+				.setDefaultVal("N")
+				.setDescription("Spiel um Platz 3 und 4 im Spielbaum anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_HEADER)
+				.setDefaultVal(0x2544DD).setDescription("Turnierbaum Header-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A)
+				.setDefaultVal(0xDCEEFA).setDescription("Turnierbaum Team-A-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B)
+				.setDefaultVal(0xF0F7FF).setDescription("Turnierbaum Team-B-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SCORE)
+				.setDefaultVal(0xFFFDE7).setDescription("Turnierbaum Score-Zellen-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER)
+				.setDefaultVal(0xFFD700).setDescription("Turnierbaum Sieger-Zellen-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_BAHN)
+				.setDefaultVal(0xEEEEEE).setDescription("Turnierbaum Bahn-Spalten-Hintergrundfarbe").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ)
+				.setDefaultVal(0xCD7F32).setDescription("Turnierbaum 3.-Platz-Zellen-Hintergrundfarbe").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
+				.setDefaultVal(16).setDescription(
+						"Maximale Teamanzahl pro Gruppe.\r\nBei mehr Teams werden mehrere Gruppen A, B, C … erstellt.\r\nEmpfehlung: Zweierpotenz (4, 8, 16, 32), damit volle Gruppen kein Cadrage benötigen.")
+				.inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_REST_GROESSE)
+				.setDefaultVal(16)
+				.setDescription(
+						"Mindestanzahl Teams im Rest für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …).\r\nRest < diesem Wert wird in die letzte Gruppe gefaltet.")
+				.inSideBar());
 	}
 
 	KoPropertiesSpalte(ISheet sheet) {
@@ -148,4 +192,46 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {
 		setStringProperty(KONFIG_PROP_SPIELBAUM_SPIELBAHN, spielbahn.name());
 	}
+
+	public boolean isSpielbaumSpielUmPlatz3() {
+		return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_SPIELBAUM_PLATZ3));
+	}
+
+	public void setSpielbaumSpielUmPlatz3(boolean anzeigen) {
+		setStringProperty(KONFIG_PROP_SPIELBAUM_PLATZ3, anzeigen ? "J" : "N");
+	}
+
+	/**
+	 * Maximale Teamanzahl pro Gruppe (Default 16). Volle Gruppen benötigen kein Cadrage,
+	 * wenn dieser Wert eine Zweierpotenz ist. Die letzte Gruppe kann kleiner sein.
+	 */
+	public int getGruppenGroesse() {
+		int val = readIntProperty(KONFIG_PROP_GRUPPEN_GROESSE);
+		return val > 1 ? val : 16;
+	}
+
+	public void setGruppenGroesse(int gruppenGroesse) {
+		writeIntProperty(KONFIG_PROP_GRUPPEN_GROESSE, Math.max(2, gruppenGroesse));
+	}
+
+	/**
+	 * Mindestzahl Teams im Rest für ein eigenes Folgeturnier (Default 16, Zweierpotenz).
+	 * Rest kleiner als dieser Wert wird in die letzte volle Gruppe gefaltet.
+	 */
+	public int getMinRestGroesse() {
+		int val = readIntProperty(KONFIG_PROP_MIN_REST_GROESSE);
+		return val > 0 ? val : 16;
+	}
+
+	public void setMinRestGroesse(int minRestGroesse) {
+		writeIntProperty(KONFIG_PROP_MIN_REST_GROESSE, Math.max(1, minRestGroesse));
+	}
+
+	public int getTurnierbaumHeaderFarbe()      { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_HEADER); }
+	public int getTurnierbaumTeamAFarbe()       { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A); }
+	public int getTurnierbaumTeamBFarbe()       { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B); }
+	public int getTurnierbaumScoreFarbe()       { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_SCORE); }
+	public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
+	public int getTurnierbaumBahnFarbe()        { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
+	public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
 }

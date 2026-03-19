@@ -109,4 +109,36 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet {
 	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {
 		propertiesSpalte.setSpielbaumSpielbahn(spielbahn);
 	}
+
+	public boolean isSpielbaumSpielUmPlatz3() {
+		return propertiesSpalte.isSpielbaumSpielUmPlatz3();
+	}
+
+	public void setSpielbaumSpielUmPlatz3(boolean anzeigen) {
+		propertiesSpalte.setSpielbaumSpielUmPlatz3(anzeigen);
+	}
+
+	public int getGruppenGroesse() {
+		return propertiesSpalte.getGruppenGroesse();
+	}
+
+	public void setGruppenGroesse(int gruppenGroesse) {
+		propertiesSpalte.setGruppenGroesse(gruppenGroesse);
+	}
+
+	public int getMinRestGroesse() {
+		return propertiesSpalte.getMinRestGroesse();
+	}
+
+	public void setMinRestGroesse(int minRestGroesse) {
+		propertiesSpalte.setMinRestGroesse(minRestGroesse);
+	}
+
+	public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
+	public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }
+	public int getTurnierbaumTeamBFarbe()       { return propertiesSpalte.getTurnierbaumTeamBFarbe(); }
+	public int getTurnierbaumScoreFarbe()       { return propertiesSpalte.getTurnierbaumScoreFarbe(); }
+	public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
+	public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
+	public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
 }

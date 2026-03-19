@@ -7,6 +7,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
+import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -18,13 +19,13 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Erstellt ein vollständiges K.-O.-Testturnier ohne Dialoge:<br>
- * Konfiguration + Meldeliste (mit Testdaten) + Turnierbaum.<br>
+ * Konfiguration + Meldeliste (mit Testdaten) + Turnierbaum (mit Bahnnummern).<br>
  * <br>
  * Varianten:
  * <ul>
- *   <li>8 Teams – eine Hälfte (Viertelfinale → Halbfinale → Finale)</li>
- *   <li>16 Teams – zwei Hälften (Achtelfinale → … → Finale)</li>
- *   <li>10 Teams – Cadrage-Beispiel (nächste Zweierpotenz = 8, 2 Teams nicht berücksichtigt)</li>
+ *   <li>8 Teams – Viertelfinale → Halbfinale → Finale</li>
+ *   <li>16 Teams – Achtelfinale → … → Finale</li>
+ *   <li>10 Teams – Cadrage (Teams 7–10) → Achtelfinale → … → Finale</li>
  * </ul>
  */
 public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeListeKonstanten {
@@ -62,10 +63,18 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 			return;
 		}
 
-		// 1. Meldeliste mit Testdaten füllen
+		// 1. Konfiguration
+		var konfig = getKonfigurationSheet();
+		konfig.setSpielbaumSpielbahn(SpielrundeSpielbahn.N);
+		// Bei 16 Teams: 2 Gruppen à 8 erstellen (demonstriert Gruppen-Feature)
+		if (anzTeams == 16) {
+			konfig.setGruppenGroesse(8);
+		}
+
+		// 2. Meldeliste mit Testdaten füllen
 		meldeListeTestDaten.erstelleMeldelisteWithTestdaten();
 
-		// 2. Turnierbaum ohne Dialog erstellen
+		// 3. Turnierbaum ohne Dialog erstellen
 		turnierbaumSheet.erstelleTurnierbaumOhneDialog();
 	}
 

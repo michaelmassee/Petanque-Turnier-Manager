@@ -56,6 +56,10 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	private final DocumentPropertiesHelper docPropHelper;
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
+		ADDBaseProp(KONFIG_PROPERTIES, true);
+	}
+
+	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES, boolean mitRangliste) {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS)
 				.setDescription("Fußzeile Links").inSideBar());
@@ -72,15 +76,17 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
 				.setDescription("Meldeliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
-				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Rangliste Hintergrundfarbe für gerade Zeilen")
-				.inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
-				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-				.setDescription("Rangliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
+		if (mitRangliste) {
+			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
+					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Rangliste Hintergrundfarbe für gerade Zeilen")
+					.inSideBar());
+			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
+					.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
+					.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
+			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
+					.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
+					.setDescription("Rangliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
+		}
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN)
 				.setDefaultVal(false)

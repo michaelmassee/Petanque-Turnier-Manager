@@ -112,6 +112,9 @@ Das `sidebar/`-Package wurde neu geschrieben (2026-03), funktioniert aber in Lib
 - **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.
   **Crucial:** Always read this document before making changes to classes in the `de.petanqueturniermanager.algorithmen` or `de.petanqueturniermanager.schweizer` packages!
 - **Supermelee System:** The complete ruleset for the tournament system in Petanque is documented in `SupermeleeTurnierSystem.md`.
+- **KO System:**  The complete ruleset for the tournament system in Petanque is documented in `KORundeTurnierSystem.md`.
+- **Maastrichter System:**  The complete ruleset for the tournament system in Petanque is documented in `MaastrichterTurniersystem.md`.
+- **Kaskaden oder Erweitertes A-B-C-D System:**  The complete ruleset for the tournament system in Petanque is documented in `KaskadenTurnierSystem.md`.
 
 ### UNO API Strict Rules
 - **NEVER use standard Java casts** for UNO interfaces (e.g., `(XSpreadsheetDocument) doc` is forbidden).

@@ -7,7 +7,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
@@ -156,8 +158,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		TurnierSheet.from(xSheet, sheet.getWorkingSpreadsheet()).setActiv();
 
 		insertHeaderInSheet(konfigurationSheet.getMeldeListeHeaderFarbe());
-		formatDatenSpalten();
 		formatZeilenfarben();
+		formatDatenSpalten();
 
 		SheetFreeze.from(xSheet, sheet.getWorkingSpreadsheet()).anzZeilen(3).doFreeze();
 
@@ -234,6 +236,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 								.toBorder())
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCharWeight(FontWeight.BOLD)
+						.setComment("Startnummer (1–999, eindeutig, nur Zahlen)")
 						.setEndPosMergeZeilePlus(1));
 
 		// Teamname-Spalte (optional): über Zeile 1+2 gemergt
@@ -347,6 +350,12 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		int anzSpieler = formation.getAnzSpieler();
 		int letzteDatenZeile = ERSTE_DATEN_ZEILE + MIN_ANZAHL_MELDUNGEN_ZEILEN - 1;
 
+		// Zeilenfarben hier nochmals holen, damit sie nach den Fehler-Bedingungen angehängt
+		// werden können (Priorität: Fehler > Zeilenfarbe).
+		MeldungenHintergrundFarbeGeradeStyle farbeGerade = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
+		MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade = konfigurationSheet
+				.getMeldeListeHintergrundFarbeUnGeradeStyle();
+
 		// Nr-Spalte: doppelte Linie rechts
 		RangePosition nrRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getTeamNrSpalte(), letzteDatenZeile);
@@ -354,14 +363,17 @@ class KoListeDelegate implements MeldeListeKonstanten {
 				RangeProperties.from().setBorder(
 						BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()));
 
-		// Bedingte Formatierung Nr-Spalte: Text=rot, Duplikat=rot, außerhalb [1,999]=rot
+		// Bedingte Formatierung Nr-Spalte: Text=rot, Duplikat=rot, außerhalb [1,999]=rot,
+		// danach Zeilenfarbe (niedrigste Priorität)
 		String kondDoppeltNr = "COUNTIF(" + Position.from(getTeamNrSpalte(), 0).getSpalteAddressWith$() + ";"
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
 		ConditionalFormatHelper.from(sheet, nrRange).clear()
 				.formulaIsText().styleIsFehler().applyAndDoReset()
 				.formula1(kondDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
 				.formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN)
-				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
+				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
+				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 
 		// Teamname-Spalte (optional)
 		if (konfigurationSheet.isMeldeListeTeamnameAnzeigen()) {
@@ -404,7 +416,9 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		ConditionalFormatHelper.from(sheet, rngRange).clear()
 				.formulaIsText().styleIsFehler().applyAndDoReset()
 				.formula1(kondRngLeer).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
-				.formula1(kondDoppeltRng).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
+				.formula1(kondDoppeltRng).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
+				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 
 		// Aktiv-Spalte: nur Formatierung (kein Default-Wert – wird nur bei neuen Sheets gesetzt)
 		RangePosition aktivRange = RangePosition.from(getAktivSpalte(), ERSTE_DATEN_ZEILE,
@@ -419,7 +433,9 @@ class KoListeDelegate implements MeldeListeKonstanten {
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<>2)";
 		ConditionalFormatHelper.from(sheet, aktivRange).clear()
 				.formula1(kondAktivUngueltig).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset();
+				.styleIsFehler().applyAndDoReset()
+				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
+				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 	}
 
 	private void formatZeilenfarben() throws GenerateException {
@@ -564,6 +580,92 @@ class KoListeDelegate implements MeldeListeKonstanten {
 			}
 		}
 		return letzte;
+	}
+
+	// ---------------------------------------------------------------
+	// Feld-Bereinigung und -Prüfung
+	// ---------------------------------------------------------------
+
+	/**
+	 * Trimmt alle Textspalten (Teamname, Vorname, Nachname, Vereinsname) von Steuerzeichen
+	 * und führenden/abschließenden Leerzeichen.
+	 */
+	void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
+		Formation formation = konfigurationSheet.getMeldeListeFormation();
+		boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+		boolean vereinsnameAktiv = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
+		int letzteZeile = letzteZeileMitDaten(xSheet) + MIN_ANZAHL_MELDUNGEN_ZEILEN;
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			if (teamnameAktiv) {
+				bereinigeSpalte(xSheet, getTeamnameSpalte(), zeile);
+			}
+			for (int s = 0; s < formation.getAnzSpieler(); s++) {
+				bereinigeSpalte(xSheet, getVornameSpalte(s), zeile);
+				bereinigeSpalte(xSheet, getNachnameSpalte(s), zeile);
+				if (vereinsnameAktiv) {
+					bereinigeSpalte(xSheet, getVereinsnameSpalte(s), zeile);
+				}
+			}
+		}
+	}
+
+	private void bereinigeSpalte(XSpreadsheet xSheet, int spalte, int zeile) throws GenerateException {
+		if (spalte < 0) {
+			return;
+		}
+		String original = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(spalte, zeile));
+		if (original == null || original.isEmpty()) {
+			return;
+		}
+		String bereinigt = original.replaceAll("[\\p{Cntrl}]", "").strip();
+		if (!bereinigt.equals(original)) {
+			sheet.getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet, Position.from(spalte, zeile), bereinigt));
+		}
+	}
+
+	/**
+	 * Prüft auf doppelte Team-Nummern.
+	 * Wirft {@link GenerateException} mit Fehlermeldung wenn Duplikate gefunden werden.
+	 */
+	void pruefeAufDoppelteTeamNr(XSpreadsheet xSheet) throws GenerateException {
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		if (letzteZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		int vornameSpalte = getVornameSpalte(0);
+		Map<Integer, List<Integer>> alleNrn = new LinkedHashMap<>();
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			alleNrn.computeIfAbsent(nr, k -> new ArrayList<>()).add(zeile);
+		}
+		Map<Integer, List<Integer>> duplikate = new LinkedHashMap<>();
+		for (Map.Entry<Integer, List<Integer>> entry : alleNrn.entrySet()) {
+			if (entry.getValue().size() > 1) {
+				duplikate.put(entry.getKey(), entry.getValue());
+			}
+		}
+		if (duplikate.isEmpty()) {
+			return;
+		}
+		StringBuilder sb = new StringBuilder("Meldeliste wurde nicht aktualisiert.\nDoppelte Startnummern:");
+		for (Map.Entry<Integer, List<Integer>> entry : duplikate.entrySet()) {
+			sb.append("\nNr. ").append(entry.getKey()).append(": Zeilen ");
+			List<Integer> zeilen = entry.getValue();
+			for (int i = 0; i < zeilen.size(); i++) {
+				if (i > 0) {
+					sb.append(", ");
+				}
+				sb.append(zeilen.get(i) + 1); // 0-basiert → 1-basiert für Benutzer
+			}
+		}
+		throw new GenerateException(sb.toString());
 	}
 
 	// ---------------------------------------------------------------

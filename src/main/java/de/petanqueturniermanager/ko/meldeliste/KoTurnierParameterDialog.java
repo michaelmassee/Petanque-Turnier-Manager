@@ -13,6 +13,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XNumericField;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
@@ -42,6 +43,9 @@ import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
  * <li>Vereinsname anzeigen</li>
  * <li>Anzeige im Spielbaum: Teamnummer / Teamname</li>
  * <li>Bahnnummer im Spielbaum</li>
+ * <li>Spiel um Platz 3/4</li>
+ * <li>Turnierbaum Gruppen Größe</li>
+ * <li>Turnierbaum Min. Rest-Größe</li>
  * </ul>
  */
 public class KoTurnierParameterDialog {
@@ -53,14 +57,21 @@ public class KoTurnierParameterDialog {
 		public final boolean vereinsnameAnzeigen;
 		public final KoSpielbaumTeamAnzeige spielbaumTeamAnzeige;
 		public final SpielrundeSpielbahn spielbaumSpielbahn;
+		public final boolean spielUmPlatz3;
+		public final int gruppenGroesse;
+		public final int minRestGroesse;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
-				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn) {
+				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
+				boolean spielUmPlatz3, int gruppenGroesse, int minRestGroesse) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
 			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
 			this.spielbaumTeamAnzeige = spielbaumTeamAnzeige;
 			this.spielbaumSpielbahn = spielbaumSpielbahn;
+			this.spielUmPlatz3 = spielUmPlatz3;
+			this.gruppenGroesse = gruppenGroesse;
+			this.minRestGroesse = minRestGroesse;
 		}
 	}
 
@@ -82,7 +93,8 @@ public class KoTurnierParameterDialog {
 	 */
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
 			boolean defaultVereinsnameAnzeigen, KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige,
-			SpielrundeSpielbahn defaultSpielbahn) throws com.sun.star.uno.Exception {
+			SpielrundeSpielbahn defaultSpielbahn, boolean defaultSpielUmPlatz3,
+			int defaultGruppenGroesse, int defaultMinRestGroesse) throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
 
@@ -95,7 +107,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(240));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(320));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -144,8 +156,22 @@ public class KoTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep4", 5, 207, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 215, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 215, 60, 14);
+		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 213, 140, 10, defaultSpielUmPlatz3);
+
+		addFixedLine(xMSF, cont, "sep5", 5, 227, 150, 2);
+
+		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 233, 100, 10);
+		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 245, 60, 12, defaultGruppenGroesse, 2, 512);
+
+		addFixedLine(xMSF, cont, "sep6", 5, 261, 150, 2);
+
+		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 267, 100, 10);
+		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 279, 60, 12, defaultMinRestGroesse, 1, 512);
+
+		addFixedLine(xMSF, cont, "sep7", 5, 295, 150, 2);
+
+		addButton(xMSF, cont, "btnOk", "OK", 22, 303, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 303, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -194,8 +220,11 @@ public class KoTurnierParameterDialog {
 			if (isRadioSelected(xcc, "radioSpielbahnL")) spielbahn = SpielrundeSpielbahn.L;
 			else if (isRadioSelected(xcc, "radioSpielbahnN")) spielbahn = SpielrundeSpielbahn.N;
 			else if (isRadioSelected(xcc, "radioSpielbahnR")) spielbahn = SpielrundeSpielbahn.R;
+			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbPlatz3");
+			int gruppenGroesse = readNumericFieldValue(xcc, "tfGruppenGroesse", defaultGruppenGroesse);
+			int minRestGroesse = readNumericFieldValue(xcc, "tfMinRestGroesse", defaultMinRestGroesse);
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
-					spielbaumAnzeige, spielbahn));
+					spielbaumAnzeige, spielbahn, spielUmPlatz3, gruppenGroesse, minRestGroesse));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();
@@ -234,6 +263,15 @@ public class KoTurnierParameterDialog {
 		}
 		XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
 		return cb != null && cb.getState() == 1;
+	}
+
+	private int readNumericFieldValue(XControlContainer xcc, String name, int fallback) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return fallback;
+		}
+		XNumericField nf = Lo.qi(XNumericField.class, ctrl);
+		return (nf != null) ? (int) nf.getValue() : fallback;
 	}
 
 	private void attachButtonListener(XControlContainer xcc, String name, XActionListener listener) {
@@ -287,6 +325,23 @@ public class KoTurnierParameterDialog {
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("State", (short) (checked ? 1 : 0));
+		cont.insertByName(name, model);
+	}
+
+	private void addNumericField(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, int x, int y, int w, int h, int value, int min, int max)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlNumericFieldModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
+		props.setPropertyValue("Value", (double) value);
+		props.setPropertyValue("ValueMin", (double) min);
+		props.setPropertyValue("ValueMax", (double) max);
+		props.setPropertyValue("DecimalAccuracy", (short) 0);
+		props.setPropertyValue("Spin", Boolean.TRUE);
 		cont.insertByName(name, model);
 	}
 

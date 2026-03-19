@@ -1,133 +1,193 @@
+/**
+ * Erstellung 2026 / Michael Massee
+ */
 package de.petanqueturniermanager.comp;
-
-import java.awt.*;
-
-import javax.swing.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.PushButtonType;
+import com.sun.star.awt.XCheckBox;
+import com.sun.star.awt.XControl;
+import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XTextComponent;
+import com.sun.star.awt.XToolkit;
+import com.sun.star.awt.XWindowPeer;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XNameContainer;
+import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
-
-import com.sun.star.awt.Rectangle;
-import com.sun.star.awt.XWindow;
-import com.sun.star.frame.XFrame;
+import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
- * Modaler Swing-Dialog zur Bearbeitung der Plugin-Konfiguration (GlobalProperties).
+ * Modaler UNO-Dialog zur Bearbeitung der Plugin-Konfiguration (GlobalProperties).
  */
-public class GlobalPropertiesDialog {
+public class GlobalPropertiesDialog extends AbstractUnoDialog {
 
-	private static final Logger logger = LogManager.getLogger(GlobalPropertiesDialog.class);
+    private static final Logger logger = LogManager.getLogger(GlobalPropertiesDialog.class);
 
-	private final XComponentContext xContext;
+    // Namen der Controls
+    private static final String CTL_CB_AUTOSAVE    = "cbAutosave";
+    private static final String CTL_CB_BACKUP      = "cbBackup";
+    private static final String CTL_CB_NEW_VERSION = "cbNewVersion";
+    private static final String CTL_CMB_LOGLEVEL   = "cmbLogLevel";
 
-	public GlobalPropertiesDialog(XComponentContext xContext) {
-		this.xContext = xContext;
-	}
+    // Gespeicherte Control-Referenzen für beiOkGeklickt()
+    private XCheckBox      cbAutosave;
+    private XCheckBox      cbBackup;
+    private XCheckBox      cbNewVersion;
+    private XTextComponent cmbLogLevel;
 
-	public void zeigen() {
-		SwingUtilities.invokeLater(this::oeffnen);
-	}
+    public GlobalPropertiesDialog(XComponentContext xContext) {
+        super(xContext);
+    }
 
-	private void positionierenImLibreOfficeFenster(JDialog dialog) {
-		try {
-			XFrame frame = DocumentHelper.getCurrentFrame(xContext);
-			if (frame != null) {
-				XWindow containerWindow = frame.getContainerWindow();
-				Rectangle pos = containerWindow.getPosSize();
-				dialog.setLocation(pos.X + 50, pos.Y + 50);
-				return;
-			}
-		} catch (Exception e) {
-			logger.warn("Fensterpositionierung fehlgeschlagen: {}", e.getMessage());
-		}
-		dialog.setLocationByPlatform(true);
-	}
+    public void zeigen() throws com.sun.star.uno.Exception {
+        erstelleUndAusfuehren();
+    }
 
-	private void oeffnen() {
-		GlobalProperties gp = GlobalProperties.get();
+    @Override
+    protected String getTitel() {
+        return "Plugin Konfiguration";
+    }
 
-		JDialog dialog = new JDialog((Frame) null, "Plugin Konfiguration", true);
-		dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-		dialog.setLayout(new BorderLayout(8, 8));
-		dialog.getRootPane().setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+    @Override
+    protected int getBreite() {
+        return 200;
+    }
 
-		// ---- Felder ----
-		JPanel felderPanel = new JPanel(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.anchor = GridBagConstraints.WEST;
-		gbc.insets = new Insets(4, 4, 4, 4);
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		int zeile = 0;
+    @Override
+    protected int getHoehe() {
+        return 90;
+    }
 
-		// Autosave
-		JCheckBox autosaveBox = new JCheckBox("Autosave nach jeder Aktion", gp.isAutoSave());
-		gbc.gridx = 0; gbc.gridy = zeile++; gbc.gridwidth = 2;
-		felderPanel.add(autosaveBox, gbc);
+    @Override
+    protected void erstelleFelder(
+            XMultiComponentFactory mcf, XMultiServiceFactory xMSF,
+            XNameContainer cont, XToolkit xToolkit, XWindowPeer peer,
+            XPropertySet dlgProps, XDialog xDialog
+    ) throws com.sun.star.uno.Exception {
 
-		// Backup
-		JCheckBox backupBox = new JCheckBox("Backup vor wichtigen Generierungen", gp.isCreateBackup());
-		gbc.gridy = zeile++;
-		felderPanel.add(backupBox, gbc);
+        GlobalProperties gp = GlobalProperties.get();
 
-		// New Version Check immer true
-		JCheckBox newVersionBox = new JCheckBox("Neue-Version-Prüfung immer aktiv (Entwicklungsmodus)", gp.isNewVersionCheckImmerTrue());
-		gbc.gridy = zeile++;
-		felderPanel.add(newVersionBox, gbc);
+        // --- Checkboxen ---
+        fuegeCheckBoxEin(xMSF, cont, CTL_CB_AUTOSAVE,
+                "Autosave nach jeder Aktion", 5, 5, 188, 12,
+                gp.isAutoSave());
+        fuegeCheckBoxEin(xMSF, cont, CTL_CB_BACKUP,
+                "Backup vor wichtigen Generierungen", 5, 20, 188, 12,
+                gp.isCreateBackup());
+        fuegeCheckBoxEin(xMSF, cont, CTL_CB_NEW_VERSION,
+                "Neue-Version-Prüfung immer aktiv (Entwicklungsmodus)", 5, 35, 188, 12,
+                gp.isNewVersionCheckImmerTrue());
 
-		// Log-Level
-		gbc.gridwidth = 1;
-		gbc.gridy = zeile;
-		gbc.gridx = 0;
-		gbc.fill = GridBagConstraints.NONE;
-		felderPanel.add(new JLabel("Log-Level:"), gbc);
+        // --- Log-Level ---
+        fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 52, 60, 10);
+        fuegeComboBoxEin(xMSF, cont, CTL_CMB_LOGLEVEL, new String[]{ "", "info", "debug" },
+                70, 50, 120, 12, gp.getLogLevel().toLowerCase());
 
-		String[] logLevels = { "", "info", "debug" };
-		JComboBox<String> logLevelBox = new JComboBox<>(logLevels);
-		String aktuellerLevel = gp.getLogLevel().toLowerCase();
-		logLevelBox.setSelectedItem(aktuellerLevel.isBlank() ? "" : aktuellerLevel);
-		gbc.gridx = 1;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		felderPanel.add(logLevelBox, gbc);
+        // --- Buttons ---
+        fuegeButtonEin(xMSF, cont, "btnOk",       "OK",        50,  70, 50, 14,
+                (short) PushButtonType.OK_value);
+        fuegeButtonEin(xMSF, cont, "btnAbbrechen", "Abbrechen", 110, 70, 70, 14,
+                (short) PushButtonType.CANCEL_value);
 
-		dialog.add(felderPanel, BorderLayout.CENTER);
+        // Control-Referenzen für beiOkGeklickt() merken
+        XControlContainer xcc = Lo.qi(XControlContainer.class, xDialog);
+        cbAutosave   = leseCheckBox(xcc, CTL_CB_AUTOSAVE);
+        cbBackup     = leseCheckBox(xcc, CTL_CB_BACKUP);
+        cbNewVersion = leseCheckBox(xcc, CTL_CB_NEW_VERSION);
+        cmbLogLevel  = leseTextComponent(xcc, CTL_CMB_LOGLEVEL);
+    }
 
-		// ---- Buttons ----
-		JButton okBtn = new JButton("OK");
-		JButton abbrechenBtn = new JButton("Abbrechen");
+    @Override
+    protected void beiOkGeklickt() throws Exception {
+        GlobalProperties gp = GlobalProperties.get();
+        String gewaehlterLevel = (cmbLogLevel != null) ? cmbLogLevel.getText() : "";
+        gp.speichern(
+                cbAutosave   != null && cbAutosave.getState()   == 1,
+                cbBackup     != null && cbBackup.getState()     == 1,
+                cbNewVersion != null && cbNewVersion.getState() == 1,
+                gewaehlterLevel
+        );
+        NewReleaseChecker.callbacksAusloesen();
+        logger.info("Plugin-Konfiguration gespeichert");
+    }
 
-		okBtn.addActionListener(e -> {
-			try {
-				String gewaehlterLevel = (String) logLevelBox.getSelectedItem();
-				gp.speichern(
-						autosaveBox.isSelected(),
-						backupBox.isSelected(),
-						newVersionBox.isSelected(),
-						gewaehlterLevel
-				);
-				// UI-Komponenten sofort aktualisieren (z.B. ProcessBox-Versionslabel)
-				NewReleaseChecker.callbacksAusloesen();
-				logger.info("Plugin-Konfiguration gespeichert");
-			} catch (Exception ex) {
-				logger.error("Fehler beim Speichern der Plugin-Konfiguration: {}", ex.getMessage(), ex);
-			}
-			dialog.dispose();
-		});
+    // ---------------------------------------------------------------
+    // Hilfsmethoden
+    // ---------------------------------------------------------------
 
-		abbrechenBtn.addActionListener(e -> dialog.dispose());
+    private void fuegeCheckBoxEin(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, String label, int x, int y, int w, int h, boolean checked)
+            throws com.sun.star.uno.Exception {
+        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        XPropertySet props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label",     label);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width",     w);
+        props.setPropertyValue("Height",    h);
+        props.setPropertyValue("State",     (short) (checked ? 1 : 0));
+        cont.insertByName(name, model);
+    }
 
-		JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		btnPanel.add(abbrechenBtn);
-		btnPanel.add(okBtn);
-		dialog.add(btnPanel, BorderLayout.SOUTH);
+    private void fuegeFixedTextEin(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, String label, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
+        XPropertySet props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label",     label);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width",     w);
+        props.setPropertyValue("Height",    h);
+        cont.insertByName(name, model);
+    }
 
-		dialog.pack();
-		dialog.setMinimumSize(new Dimension(420, dialog.getHeight()));
-		positionierenImLibreOfficeFenster(dialog);
-		dialog.setVisible(true);
-	}
+    private void fuegeComboBoxEin(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, String[] items, int x, int y, int w, int h, String selected)
+            throws com.sun.star.uno.Exception {
+        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlComboBoxModel");
+        XPropertySet props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX",      x);
+        props.setPropertyValue("PositionY",      y);
+        props.setPropertyValue("Width",          w);
+        props.setPropertyValue("Height",         h);
+        props.setPropertyValue("StringItemList", items);
+        props.setPropertyValue("Text",           selected != null ? selected : "");
+        props.setPropertyValue("Dropdown",       Boolean.TRUE);
+        cont.insertByName(name, model);
+    }
+
+    private void fuegeButtonEin(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, String label, int x, int y, int w, int h, short pushButtonType)
+            throws com.sun.star.uno.Exception {
+        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlButtonModel");
+        XPropertySet props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label",          label);
+        props.setPropertyValue("PositionX",      x);
+        props.setPropertyValue("PositionY",      y);
+        props.setPropertyValue("Width",          w);
+        props.setPropertyValue("Height",         h);
+        props.setPropertyValue("PushButtonType", pushButtonType);
+        cont.insertByName(name, model);
+    }
+
+    private XCheckBox leseCheckBox(XControlContainer xcc, String name) {
+        if (xcc == null) return null;
+        XControl ctrl = xcc.getControl(name);
+        return ctrl != null ? Lo.qi(XCheckBox.class, ctrl) : null;
+    }
+
+    private XTextComponent leseTextComponent(XControlContainer xcc, String name) {
+        if (xcc == null) return null;
+        XControl ctrl = xcc.getControl(name);
+        return ctrl != null ? Lo.qi(XTextComponent.class, ctrl) : null;
+    }
 }

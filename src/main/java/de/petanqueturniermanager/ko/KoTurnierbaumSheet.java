@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.ko;
 
+import java.util.List;
 import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
@@ -14,6 +15,8 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.algorithmen.CadrageRechner;
+import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -24,7 +27,6 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -39,11 +41,13 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * Erstellt und aktualisiert den K.-O.-Turnierbaum als Spreadsheet.<br>
  * <br>
- * Spaltenstruktur pro Runde (ohne Bahn): Nr | [Name] | Pkt | Connector<br>
- * Spaltenstruktur pro Runde (mit Bahn):  Bahn | Nr | [Name] | Pkt | Connector<br>
+ * Spaltenstruktur pro Runde (ohne Bahn): Team | Pkt | Connector<br>
+ * Spaltenstruktur pro Runde (mit Bahn):  Bahn | Team | Pkt | Connector<br>
+ * <br>
+ * Die Team-Spalte enthält im NR-Modus die Teamnummer, im NAME-Modus den Teamnamen (SVERWEIS).<br>
  * <br>
  * Zeile 0: Rundentitel (merged über alle Spalten der Runde)<br>
- * Zeile 1: Spalten-Überschriften (Bahn, Nr, Name, Pkt)<br>
+ * Zeile 1: Spalten-Überschriften (Bahn, Nr/Teamname, Pkt)<br>
  * Runde 1 (ab Zeile 2): direkte Einträge nach Setzliste (aus RNG-Spalte der Meldeliste)<br>
  * Runden 2+: WENN-Formeln berechnen Gewinner aus Vorrundenscores<br>
  * Abschlusskolonne: Sieger-Anzeige
@@ -52,7 +56,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(KoTurnierbaumSheet.class);
 
-	public static final String SHEETNAME = "KO Turnierbaum";
+	public static final String SHEETNAME_PREFIX = "KO Turnierbaum";
+	/** Blattname für eine einzelne Gruppe (kein Buchstabe-Suffix). */
+	public static final String SHEETNAME = SHEETNAME_PREFIX;
 	private static final String SHEET_COLOR = "8b0000";
 
 	/** Header-Zeilen */
@@ -69,12 +75,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private static final int CONNECTOR_COL_WIDTH = 400;
 	private static final int SIEGER_NAME_COL_WIDTH = 3200;
 
-	private static final int HEADER_COLOR = 0x2544DD;
-	private static final int TEAM_A_COLOR = 0xDCEEFA;
-	private static final int TEAM_B_COLOR = 0xF0F7FF;
-	private static final int SCORE_COLOR = 0xFFFDE7;
-	private static final int SIEGER_COLOR = 0xFFD700;
-	private static final int BAHN_COLOR = 0xEEEEEE;
+	// Farben – aus Konfiguration gelesen (Standardwerte als Fallback)
+	private int headerFarbe       = 0x2544DD;
+	private int teamAFarbe        = 0xDCEEFA;
+	private int teamBFarbe        = 0xF0F7FF;
+	private int scoreFarbe        = 0xFFFDE7;
+	private int siegerFarbe       = 0xFFD700;
+	private int bahnFarbe         = 0xEEEEEE;
+	private int drittePlatzFarbe  = 0xCD7F32;
 
 	/** Unicode-Zeichen für die Konnektorspalte */
 	private static final String CHAR_TOP = "┐";
@@ -84,13 +92,25 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Konfigurations-State für die aktuelle Turnierbaum-Erstellung
 	private SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
 	private KoSpielbaumTeamAnzeige teamAnzeige = KoSpielbaumTeamAnzeige.NR;
+	private boolean spielUmPlatz3 = false;
+
+	// Aktuell in Erstellung befindlicher Gruppen-Sheet-Name (für getXSpreadSheet())
+	private String aktuellerGruppenSheetName = null;
+
+	// Cadrage-State
+	private boolean mitCadrage = false;
+	private int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
+	private int anzCadrageMatches = 0;
+	private int anzFreilose = 0;
+	private int gesanzTeamsIntern = 0;
 
 	// Spalten-Offsets (dynamisch je nach spielbahn)
-	private int nrOffset = 0;
-	private int nameOffset = 1;
-	private int scoreOffset = 2;
-	private int connectorOffset = 3;
-	private int colGroupSize = 4;
+	// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
+	// Ohne Bahn:   Team(0) | Score(1) | Connector(2)             → colGroupSize = 3
+	private int teamOffset = 0;
+	private int scoreOffset = 1;
+	private int connectorOffset = 2;
+	private int colGroupSize = 3;
 
 	private final KoMeldeListeSheetUpdate meldeliste;
 
@@ -101,7 +121,20 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		// Während einer Gruppen-Erstellung: den aktuellen Gruppen-Sheet zurückgeben
+		// (wird von NewSheet/PageStyleHelper.applytoSheet() benötigt)
+		if (aktuellerGruppenSheetName != null) {
+			XSpreadsheet sheet = getSheetHelper().findByName(aktuellerGruppenSheetName);
+			if (sheet != null) {
+				return sheet;
+			}
+		}
+		// Fallback: erste vorhandene Gruppe (Einzelgruppe ohne Buchstabe, dann A)
+		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME_PREFIX);
+		if (sheet != null) {
+			return sheet;
+		}
+		return getSheetHelper().findByName(SHEETNAME_PREFIX + " A");
 	}
 
 	@Override
@@ -144,35 +177,49 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/** Bahn-Spalte für Runde r – nur gültig wenn mitBahn(). */
 	int bahnSpalte(int runde) {
-		return (runde - 1) * colGroupSize;
+		return (runde - 1) * colGroupSize + cadrageSpaltOffset;
 	}
 
-	int nrSpalte(int runde) {
-		return (runde - 1) * colGroupSize + nrOffset;
-	}
-
-	int nameSpalte(int runde) {
-		return (runde - 1) * colGroupSize + nameOffset;
+	/** Team-Spalte für Runde r (enthält Nr oder Teamname je nach teamAnzeige). */
+	int teamSpalte(int runde) {
+		return (runde - 1) * colGroupSize + teamOffset + cadrageSpaltOffset;
 	}
 
 	int scoreSpalte(int runde) {
-		return (runde - 1) * colGroupSize + scoreOffset;
+		return (runde - 1) * colGroupSize + scoreOffset + cadrageSpaltOffset;
 	}
 
 	int connectorSpalte(int runde) {
-		return (runde - 1) * colGroupSize + connectorOffset;
+		return (runde - 1) * colGroupSize + connectorOffset + cadrageSpaltOffset;
 	}
 
-	int siegerNrSpalte(int numRunden) {
-		return numRunden * colGroupSize;
+	int siegerSpalte(int numRunden) {
+		return numRunden * colGroupSize + cadrageSpaltOffset;
 	}
 
 	int siegerNameSpalte(int numRunden) {
-		return numRunden * colGroupSize + 1;
+		return numRunden * colGroupSize + 1 + cadrageSpaltOffset;
 	}
 
 	private boolean mitBahn() {
 		return spielbahn != SpielrundeSpielbahn.X;
+	}
+
+	// Cadrage-Spalten (immer am linken Rand, kein Offset)
+	int cadrageTeamSpalte() {
+		return teamOffset;
+	}
+
+	int cadrageScoreSpalte() {
+		return scoreOffset;
+	}
+
+	int cadrageConnectorSpalte() {
+		return connectorOffset;
+	}
+
+	int cadrageBahnSpalte() {
+		return 0;
 	}
 
 	// ---------------------------------------------------------------
@@ -202,28 +249,16 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 
 	/**
-	 * Erstellt den Turnierbaum ohne Rückfrage-Dialog.<br>
+	 * Erstellt alle Gruppen-Turnierbäume ohne Rückfrage-Dialog.<br>
 	 * Wird von Testdaten-Klassen aufgerufen.
 	 */
 	public void erstelleTurnierbaumOhneDialog() throws GenerateException {
-		TeamMeldungen meldungen = meldeliste.getMeldungenSortiertNachRangliste();
-		int anzTeams = meldungen.size();
-		if (anzTeams < 2) {
+		TeamMeldungen alleMeldungen = meldeliste.getMeldungenSortiertNachRangliste();
+		if (alleMeldungen.size() < 2) {
 			return;
 		}
-		int bracketGroesse = Integer.highestOneBit(anzTeams);
-		int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
-
-		NewSheet.from(this, SHEETNAME)
-				.pos(DefaultSheetPos.KO_TURNIERBAUM)
-				.hideGrid()
-				.tabColor(SHEET_COLOR)
-				.setActiv()
-				.create();
-
-		XSpreadsheet xSheet = getXSpreadSheet();
-		TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-		erstelleTurnierbaum(xSheet, meldungen, numRunden, bracketGroesse);
+		int gruppenGroesse = getKonfigurationSheet().getGruppenGroesse();
+		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse);
 	}
 
 	@Override
@@ -246,44 +281,90 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
-		TeamMeldungen meldungen = meldeliste.getMeldungenSortiertNachRangliste();
-		int anzTeams = meldungen.size();
-
-		if (anzTeams < 2) {
+		TeamMeldungen alleMeldungen = meldeliste.getMeldungenSortiertNachRangliste();
+		if (alleMeldungen.size() < 2) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
 					.caption("K.-O. Turnierbaum")
-					.message("Mindestens 2 Teams erforderlich. Aktuell: " + anzTeams)
+					.message("Mindestens 2 Teams erforderlich. Aktuell: " + alleMeldungen.size())
 					.show();
 			return;
 		}
 
-		int bracketGroesse = Integer.highestOneBit(anzTeams);
-		if (bracketGroesse < anzTeams) {
-			MessageBoxResult antwort = MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.WARN_OK_CANCEL)
-					.caption("K.-O. Turnierbaum")
-					.message(anzTeams + " Teams gefunden. Der Turnierbaum wird für " + bracketGroesse
-							+ " Teams (nächste Zweierpotenz) erstellt.\n"
-							+ (anzTeams - bracketGroesse) + " Teams werden NICHT berücksichtigt.\n\n"
-							+ "Fortfahren?")
-					.show();
-			if (antwort != MessageBoxResult.OK) {
-				return;
+		int gruppenGroesse = getKonfigurationSheet().getGruppenGroesse();
+		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse);
+	}
+
+	// ---------------------------------------------------------------
+	// Gruppen-Logik
+	// ---------------------------------------------------------------
+
+	/**
+	 * Teilt alle Meldungen in Gruppen auf und erstellt pro Gruppe einen eigenen Turnierbaum-Sheet.
+	 * Die Aufteilung berücksichtigt Szenario 1/2 gemäß {@link GruppenAufteilungRechner}.
+	 */
+	private void erstelleAlleGruppenBaeume(TeamMeldungen alleMeldungen, int gruppenGroesse)
+			throws GenerateException {
+		int minRestGroesse = getKonfigurationSheet().getMinRestGroesse();
+		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
+				alleMeldungen.size(), gruppenGroesse, minRestGroesse);
+		int anzGruppen = gruppenGroessen.size();
+
+		alleGruppenSheetNamenLoeschen();
+
+		var alleTeams = alleMeldungen.teams();
+		int startIndex = 0;
+
+		for (int g = 0; g < anzGruppen; g++) {
+			int groesse = gruppenGroessen.get(g);
+			var gruppenMeldungen = new TeamMeldungen();
+			for (int i = startIndex; i < startIndex + groesse; i++) {
+				gruppenMeldungen.addTeamWennNichtVorhanden(alleTeams.get(i));
+			}
+			startIndex += groesse;
+
+			int bracketGroesse = Integer.highestOneBit(gruppenMeldungen.size());
+			int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
+			String sheetName = sheetNameFuerGruppe(g, anzGruppen);
+
+			// aktuellerGruppenSheetName setzen BEVOR NewSheet.create() aufgerufen wird,
+			// damit PageStyleHelper.applytoSheet() via getXSpreadSheet() das richtige Sheet trifft
+			this.aktuellerGruppenSheetName = sheetName;
+			try {
+				NewSheet.from(this, sheetName)
+						.pos((short) (DefaultSheetPos.KO_TURNIERBAUM + g))
+						.hideGrid()
+						.tabColor(SHEET_COLOR)
+						.setActiv()
+						.create();
+
+				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
+				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
+				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse);
+			} finally {
+				this.aktuellerGruppenSheetName = null;
 			}
 		}
+	}
 
-		int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
+	/**
+	 * Blattname für eine Gruppe: bei einer Gruppe ohne Buchstabe, sonst mit A, B, C …
+	 */
+	static String sheetNameFuerGruppe(int gruppenIndex, int anzGruppen) {
+		if (anzGruppen == 1) {
+			return SHEETNAME_PREFIX;
+		}
+		return SHEETNAME_PREFIX + " " + (char) ('A' + gruppenIndex);
+	}
 
-		NewSheet.from(this, SHEETNAME)
-				.pos(DefaultSheetPos.KO_TURNIERBAUM)
-				.hideGrid()
-				.tabColor(SHEET_COLOR)
-				.setActiv()
-				.create();
-
-		XSpreadsheet xSheet = getXSpreadSheet();
-		TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-
-		erstelleTurnierbaum(xSheet, meldungen, numRunden, bracketGroesse);
+	/**
+	 * Löscht alle vorhandenen Turnierbaum-Sheets (Namen beginnen mit {@link #SHEETNAME_PREFIX}).
+	 */
+	private void alleGruppenSheetNamenLoeschen() throws GenerateException {
+		for (String name : getSheetHelper().getSheets().getElementNames()) {
+			if (name.startsWith(SHEETNAME_PREFIX)) {
+				getSheetHelper().removeSheet(name);
+			}
+		}
 	}
 
 	private void erstelleTurnierbaum(XSpreadsheet xSheet, TeamMeldungen meldungen, int numRunden,
@@ -295,19 +376,43 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		KoKonfigurationSheet konfig = getKonfigurationSheet();
 		this.spielbahn = konfig.getSpielbaumSpielbahn();
 		this.teamAnzeige = konfig.getSpielbaumTeamAnzeige();
+		this.spielUmPlatz3 = konfig.isSpielbaumSpielUmPlatz3();
+		this.headerFarbe      = konfig.getTurnierbaumHeaderFarbe();
+		this.teamAFarbe       = konfig.getTurnierbaumTeamAFarbe();
+		this.teamBFarbe       = konfig.getTurnierbaumTeamBFarbe();
+		this.scoreFarbe       = konfig.getTurnierbaumScoreFarbe();
+		this.siegerFarbe      = konfig.getTurnierbaumSiegerFarbe();
+		this.bahnFarbe        = konfig.getTurnierbaumBahnFarbe();
+		this.drittePlatzFarbe = konfig.getTurnierbaumDrittePlatzFarbe();
 
+		// Spalten-Offsets je nach Bahn-Einstellung:
+		// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
+		// Ohne Bahn:   Team(0) | Score(1) | Connector(2)             → colGroupSize = 3
 		if (mitBahn()) {
-			this.nrOffset = 1;
-			this.nameOffset = 2;
-			this.scoreOffset = 3;
-			this.connectorOffset = 4;
-			this.colGroupSize = 5;
-		} else {
-			this.nrOffset = 0;
-			this.nameOffset = 1;
+			this.teamOffset = 1;
 			this.scoreOffset = 2;
 			this.connectorOffset = 3;
 			this.colGroupSize = 4;
+		} else {
+			this.teamOffset = 0;
+			this.scoreOffset = 1;
+			this.connectorOffset = 2;
+			this.colGroupSize = 3;
+		}
+
+		// Cadrage-State initialisieren
+		this.gesanzTeamsIntern = meldungen.size();
+		if (gesanzTeamsIntern > bracketGroesse) {
+			var rechner = new CadrageRechner(gesanzTeamsIntern);
+			this.mitCadrage = true;
+			this.anzCadrageMatches = rechner.anzTeams() / 2;
+			this.anzFreilose = rechner.anzFreilose();
+			this.cadrageSpaltOffset = colGroupSize;
+		} else {
+			this.mitCadrage = false;
+			this.anzCadrageMatches = 0;
+			this.anzFreilose = bracketGroesse;
+			this.cadrageSpaltOffset = 0;
 		}
 
 		int[] setzliste = berechneSetzliste(bracketGroesse);
@@ -318,26 +423,34 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Header (2 Zeilen: Titel + Spaltenbeschriftung)
 		schreibeHeader(xSheet, numRunden);
 
-		// Runde 1: direkte Einträge aus Setzliste
+		// Runde 1: direkte Einträge aus Setzliste; Cadrage-Slots via Vorrundenformel
 		int anzMatchesR1 = bracketGroesse / 2;
 		int[] bahnR1 = berechneBahnNummern(anzMatchesR1);
 		for (int m = 0; m < anzMatchesR1; m++) {
 			int seedA = setzliste[2 * m];
 			int seedB = setzliste[2 * m + 1];
-			int nrA = getTeamNrBySeedPosition(meldungen, seedA);
-			int nrB = getTeamNrBySeedPosition(meldungen, seedB);
 
 			int rowA = teamAZeile(1, m);
 			int rowB = teamBZeile(1, m);
 
 			if (mitBahn()) {
-				schreibeBahnZelle(xSheet, 1, rowA, bahnR1[m]);
-				schreibeBahnZelle(xSheet, 1, rowB, 0);
+				schreibeBahnZelle(xSheet, 1, rowA, rowB, bahnR1[m]);
 			}
-			schreibeNrZelleR1(xSheet, rowA, nrA, true);
-			schreibeNrZelleR1(xSheet, rowB, nrB, false);
-			schreibeNameFormel(xSheet, 1, rowA);
-			schreibeNameFormel(xSheet, 1, rowB);
+
+			if (mitCadrage && seedA > anzFreilose) {
+				schreibeCadrageMatch(xSheet, meldungen, seedA, rowA, rowB);
+				schreibeCadrageGewinnerFormel(xSheet, rowA, rowB, true);
+			} else {
+				schreibeTeamZelleR1(xSheet, rowA, getTeamNrBySeedPosition(meldungen, seedA), true);
+			}
+
+			if (mitCadrage && seedB > anzFreilose) {
+				schreibeCadrageMatch(xSheet, meldungen, seedB, rowA, rowB);
+				schreibeCadrageGewinnerFormel(xSheet, rowA, rowB, false);
+			} else {
+				schreibeTeamZelleR1(xSheet, rowB, getTeamNrBySeedPosition(meldungen, seedB), false);
+			}
+
 			schreibeScoreZelle(xSheet, 1, rowA, true);
 			schreibeScoreZelle(xSheet, 1, rowB, false);
 			zeichneMatchConnector(xSheet, 1, rowA, rowB);
@@ -352,13 +465,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				int rowB = teamBZeile(r, m);
 
 				if (mitBahn()) {
-					schreibeBahnZelle(xSheet, r, rowA, bahnRunde[m]);
-					schreibeBahnZelle(xSheet, r, rowB, 0);
+					schreibeBahnZelle(xSheet, r, rowA, rowB, bahnRunde[m]);
 				}
 				schreibeGewinnerFormel(xSheet, r, m, true);
 				schreibeGewinnerFormel(xSheet, r, m, false);
-				schreibeNameFormel(xSheet, r, rowA);
-				schreibeNameFormel(xSheet, r, rowB);
 				schreibeScoreZelle(xSheet, r, rowA, true);
 				schreibeScoreZelle(xSheet, r, rowB, false);
 				zeichneMatchConnector(xSheet, r, rowA, rowB);
@@ -367,6 +477,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		// Sieger-Spalte
 		schreibeSieger(xSheet, numRunden);
+
+		// Spiel um Platz 3/4 (nur wenn Option aktiv und mindestens Halbfinale vorhanden)
+		if (spielUmPlatz3 && numRunden >= 2) {
+			schreibePlatz3Match(xSheet, numRunden, bracketGroesse);
+		}
 	}
 
 	/**
@@ -405,10 +520,26 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 
 	private void formatiereKolumnen(XSpreadsheet xSheet, int numRunden) throws GenerateException {
-		// Bei "keine Bahn": Nr-Spalte verstecken wenn Teamname angezeigt wird (nur eine Team-Spalte sichtbar)
-		boolean nrVersteckt = !mitBahn() && teamAnzeige == KoSpielbaumTeamAnzeige.NAME;
-		int nrColWidth = nrVersteckt ? 0 : NR_COL_WIDTH;
-		int nameColWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? NAME_COL_WIDTH : 0;
+		int teamColWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? NAME_COL_WIDTH : NR_COL_WIDTH;
+
+		if (mitCadrage) {
+			if (mitBahn()) {
+				getSheetHelper().setColumnProperties(xSheet, cadrageBahnSpalte(),
+						ColumnProperties.from().setWidth(BAHN_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+								.setVertJustify(CellVertJustify2.CENTER));
+			}
+			getSheetHelper().setColumnProperties(xSheet, cadrageTeamSpalte(),
+					ColumnProperties.from().setWidth(teamColWidth)
+							.setHoriJustify(teamAnzeige == KoSpielbaumTeamAnzeige.NAME
+									? CellHoriJustify.LEFT : CellHoriJustify.CENTER)
+							.setVertJustify(CellVertJustify2.CENTER));
+			getSheetHelper().setColumnProperties(xSheet, cadrageScoreSpalte(),
+					ColumnProperties.from().setWidth(SCORE_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+							.setVertJustify(CellVertJustify2.CENTER));
+			getSheetHelper().setColumnProperties(xSheet, cadrageConnectorSpalte(),
+					ColumnProperties.from().setWidth(CONNECTOR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+							.setVertJustify(CellVertJustify2.CENTER));
+		}
 
 		for (int r = 1; r <= numRunden; r++) {
 			if (mitBahn()) {
@@ -416,11 +547,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						ColumnProperties.from().setWidth(BAHN_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 								.setVertJustify(CellVertJustify2.CENTER));
 			}
-			getSheetHelper().setColumnProperties(xSheet, nrSpalte(r),
-					ColumnProperties.from().setWidth(nrColWidth).setHoriJustify(CellHoriJustify.CENTER)
-							.setVertJustify(CellVertJustify2.CENTER));
-			getSheetHelper().setColumnProperties(xSheet, nameSpalte(r),
-					ColumnProperties.from().setWidth(nameColWidth).setHoriJustify(CellHoriJustify.LEFT)
+			getSheetHelper().setColumnProperties(xSheet, teamSpalte(r),
+					ColumnProperties.from().setWidth(teamColWidth)
+							.setHoriJustify(teamAnzeige == KoSpielbaumTeamAnzeige.NAME
+									? CellHoriJustify.LEFT : CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 			getSheetHelper().setColumnProperties(xSheet, scoreSpalte(r),
 					ColumnProperties.from().setWidth(SCORE_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
@@ -430,29 +560,56 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setVertJustify(CellVertJustify2.CENTER));
 		}
 
-		// Sieger-Spalten
-		int siegerNrWidth = nrVersteckt ? 0 : NR_COL_WIDTH;
-		getSheetHelper().setColumnProperties(xSheet, siegerNrSpalte(numRunden),
-				ColumnProperties.from().setWidth(siegerNrWidth).setHoriJustify(CellHoriJustify.CENTER)
-						.setVertJustify(CellVertJustify2.CENTER));
-		int siegerNameWidth = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? SIEGER_NAME_COL_WIDTH : 0;
-		getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
-				ColumnProperties.from().setWidth(siegerNameWidth).setHoriJustify(CellHoriJustify.LEFT)
-						.setVertJustify(CellVertJustify2.CENTER));
+		// Sieger-Spalten:
+		// NR-Modus:   siegerSpalte = Nr (schmal), siegerNameSpalte = Name via SVERWEIS (breit)
+		// NAME-Modus: siegerSpalte = Name (breit), siegerNameSpalte = versteckt
+		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
+			getSheetHelper().setColumnProperties(xSheet, siegerSpalte(numRunden),
+					ColumnProperties.from().setWidth(NR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+							.setVertJustify(CellVertJustify2.CENTER));
+			getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
+					ColumnProperties.from().setWidth(SIEGER_NAME_COL_WIDTH).setHoriJustify(CellHoriJustify.LEFT)
+							.setVertJustify(CellVertJustify2.CENTER));
+		} else {
+			getSheetHelper().setColumnProperties(xSheet, siegerSpalte(numRunden),
+					ColumnProperties.from().setWidth(SIEGER_NAME_COL_WIDTH).setHoriJustify(CellHoriJustify.LEFT)
+							.setVertJustify(CellVertJustify2.CENTER));
+			getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
+					ColumnProperties.from().setWidth(0));
+		}
 	}
 
 	private void schreibeHeader(XSpreadsheet xSheet, int numRunden) throws GenerateException {
+		String teamHeader = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) ? "Teamname" : "Nr";
+
+		if (mitCadrage) {
+			int titelStartSpalte = mitBahn() ? cadrageBahnSpalte() : cadrageTeamSpalte();
+			getSheetHelper().setStringValueInCell(
+					StringCellValue.from(xSheet, Position.from(titelStartSpalte, HEADER_ZEILE_TITEL), "Cadrage")
+							.setEndPosMergeSpaltePlus(colGroupSize - 1)
+							.setCharWeight(FontWeight.BOLD)
+							.setHoriJustify(CellHoriJustify.CENTER)
+							.setCellBackColor(headerFarbe)
+							.setCharColor("FFFFFF")
+							.setBorder(BorderFactory.from().allThin().toBorder()));
+			if (mitBahn()) {
+				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), "Bahn");
+			}
+			schreibeSpaltenHeader(xSheet, cadrageTeamSpalte(), teamHeader);
+			schreibeSpaltenHeader(xSheet, cadrageScoreSpalte(), "Pkt");
+		}
+
 		for (int r = 1; r <= numRunden; r++) {
 			String rundentitel = berechnRundenTitel(r, numRunden);
 
 			// Zeile 0: Rundentitel über alle Spalten der Runde (merged)
-			int titelStartSpalte = mitBahn() ? bahnSpalte(r) : nrSpalte(r);
+			int titelStartSpalte = mitBahn() ? bahnSpalte(r) : teamSpalte(r);
 			getSheetHelper().setStringValueInCell(
 					StringCellValue.from(xSheet, Position.from(titelStartSpalte, HEADER_ZEILE_TITEL), rundentitel)
 							.setEndPosMergeSpaltePlus(colGroupSize - 1)
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.CENTER)
-							.setCellBackColor(HEADER_COLOR)
+							.setCellBackColor(headerFarbe)
 							.setCharColor("FFFFFF")
 							.setBorder(BorderFactory.from().allThin().toBorder()));
 
@@ -460,20 +617,17 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			if (mitBahn()) {
 				schreibeSpaltenHeader(xSheet, bahnSpalte(r), "Bahn");
 			}
-			schreibeSpaltenHeader(xSheet, nrSpalte(r), "Nr");
-			if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-				schreibeSpaltenHeader(xSheet, nameSpalte(r), "Teamname");
-			}
+			schreibeSpaltenHeader(xSheet, teamSpalte(r), teamHeader);
 			schreibeSpaltenHeader(xSheet, scoreSpalte(r), "Pkt");
 		}
 
-		// Sieger-Header
+		// Sieger-Header (merged über siegerSpalte + siegerNameSpalte)
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(siegerNrSpalte(numRunden), HEADER_ZEILE_TITEL), "Sieger")
+				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), HEADER_ZEILE_TITEL), "Sieger")
 						.setEndPosMergeSpaltePlus(1)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
-						.setCellBackColor(SIEGER_COLOR)
+						.setCellBackColor(siegerFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder()));
 	}
 
@@ -493,7 +647,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				StringCellValue.from(xSheet, Position.from(spalte, HEADER_ZEILE_SPALTEN), label)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
-						.setCellBackColor(HEADER_COLOR)
+						.setCellBackColor(headerFarbe)
 						.setCharColor("FFFFFF")
 						.setBorder(BorderFactory.from().allThin().toBorder()));
 	}
@@ -502,61 +656,70 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Zellinhalte
 	// ---------------------------------------------------------------
 
-	private void schreibeNrZelleR1(XSpreadsheet xSheet, int zeile, int nr, boolean istTeamA)
+	/**
+	 * Schreibt die Team-Zelle für Runde 1 (direkte Einträge aus der Setzliste).<br>
+	 * NR-Modus: schreibt die Teamnummer direkt.<br>
+	 * NAME-Modus: schreibt eine SVERWEIS-Formel, die den Teamnamen aus der Meldeliste liest.
+	 */
+	private void schreibeTeamZelleR1(XSpreadsheet xSheet, int zeile, int nr, boolean istTeamA)
 			throws GenerateException {
-		if (nr > 0) {
-			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(xSheet, Position.from(nrSpalte(1), zeile))
-							.setValue(nr)
-							.setCellBackColor(istTeamA ? TEAM_A_COLOR : TEAM_B_COLOR)
+		int farbe = istTeamA ? teamAFarbe : teamBFarbe;
+		if (nr <= 0) {
+			// Freilos – immer als Text
+			getSheetHelper().setStringValueInCell(
+					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), "Freilos")
+							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.CENTER));
+			return;
+		}
+		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
+			// Teamname via SVERWEIS
+			String formel = "SVERWEIS(" + nr + ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0)";
+			getSheetHelper().setFormulaInCell(
+					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
+							.setCellBackColor(farbe)
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setHoriJustify(CellHoriJustify.LEFT));
 		} else {
-			// Freilos
-			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(nrSpalte(1), zeile), "Freilos")
-							.setCellBackColor(istTeamA ? TEAM_A_COLOR : TEAM_B_COLOR)
+			// Teamnummer direkt
+			getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(xSheet, Position.from(teamSpalte(1), zeile))
+							.setValue(nr)
+							.setCellBackColor(farbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
 							.setHoriJustify(CellHoriJustify.CENTER));
 		}
 	}
 
 	/**
-	 * Schreibt eine Bahnnummer-Zelle. bahnNr=0 → leere editierbare Zelle (Modus L oder teamB-Zeile).
-	 * Nur für Team-A-Zeile wird die eigentliche Nummer eingetragen (Modus N/R).
+	 * Schreibt eine Bahnnummer als vertikal zusammengeführte Zelle für eine Paarung (rowA..rowB).<br>
+	 * bahnNr=0 → leere editierbare Zelle (Modus L); bahnNr&gt;0 → Nummer zentriert.
 	 */
-	private void schreibeBahnZelle(XSpreadsheet xSheet, int runde, int zeile, int bahnNr)
+	private void schreibeBahnZelle(XSpreadsheet xSheet, int runde, int rowA, int rowB, int bahnNr)
+			throws GenerateException {
+		schreibeBahnZelleAnSpalte(xSheet, bahnSpalte(runde), rowA, rowB, bahnNr);
+	}
+
+	private void schreibeBahnZelleAnSpalte(XSpreadsheet xSheet, int spalte, int rowA, int rowB, int bahnNr)
 			throws GenerateException {
 		if (bahnNr > 0) {
 			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(xSheet, Position.from(bahnSpalte(runde), zeile))
+					NumberCellValue.from(xSheet, Position.from(spalte, rowA))
 							.setValue(bahnNr)
-							.setCellBackColor(BAHN_COLOR)
+							.setEndPosMergeZeile(rowB)
+							.setCellBackColor(bahnFarbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.CENTER));
+							.setHoriJustify(CellHoriJustify.CENTER)
+							.centerVertJustify());
 		} else {
 			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(bahnSpalte(runde), zeile), "")
-							.setCellBackColor(BAHN_COLOR)
+					StringCellValue.from(xSheet, Position.from(spalte, rowA), "")
+							.setEndPosMergeZeile(rowB)
+							.setCellBackColor(bahnFarbe)
 							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.CENTER));
-		}
-	}
-
-	private void schreibeNameFormel(XSpreadsheet xSheet, int runde, int zeile) throws GenerateException {
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			String nrAddr = Position.from(nrSpalte(runde), zeile).getAddressWith$();
-			// ISTZAHL prüft ob die Nr-Zelle eine Zahl enthält (nicht "Freilos", "?" oder leer)
-			String formel = "WENN(ISTZAHL(" + nrAddr + ")*(" + nrAddr + ">0);SVERWEIS(" + nrAddr
-					+ ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0);\"\")";
-			getSheetHelper().setFormulaInCell(
-					StringCellValue.from(xSheet, Position.from(nameSpalte(runde), zeile), formel)
-							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setHoriJustify(CellHoriJustify.LEFT));
-		} else {
-			// NR-Modus: Namenspalte leer (Breite = 0, gesetzt in formatiereKolumnen)
-			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(nameSpalte(runde), zeile), ""));
+							.setHoriJustify(CellHoriJustify.CENTER)
+							.centerVertJustify());
 		}
 	}
 
@@ -565,14 +728,15 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Score-Zelle ist editierbar (leer, Benutzer trägt Ergebnis ein)
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(xSheet, Position.from(scoreSpalte(runde), zeile), "")
-						.setCellBackColor(SCORE_COLOR)
+						.setCellBackColor(scoreFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));
 	}
 
 	/**
 	 * Schreibt die WENN-Gewinner-Formel für Runden 2+.<br>
-	 * Gewinner = Team mit höherer Punktzahl. Bei Gleichstand: "?".
+	 * Gewinner = Team mit höherer Punktzahl. Bei Gleichstand: "?".<br>
+	 * Im NR-Modus wird die Teamnummer propagiert, im NAME-Modus der Teamname.
 	 */
 	private void schreibeGewinnerFormel(XSpreadsheet xSheet, int runde, int match, boolean istTeamA)
 			throws GenerateException {
@@ -584,23 +748,24 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		String scoreAAddr = Position.from(scoreSpalte(feederRunde), rowFeederA).getAddressWith$();
 		String scoreBAddr = Position.from(scoreSpalte(feederRunde), rowFeederB).getAddressWith$();
-		String nrAAddr = Position.from(nrSpalte(feederRunde), rowFeederA).getAddressWith$();
-		String nrBAddr = Position.from(nrSpalte(feederRunde), rowFeederB).getAddressWith$();
+		String teamAAddr = Position.from(teamSpalte(feederRunde), rowFeederA).getAddressWith$();
+		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
 
 		// ISTZAHL: Score muss eine Zahl sein (nicht leer) damit Gewinner berechnet wird
 		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + nrAAddr + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + nrBAddr + ";\"?\"));"
+				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
 		int targetRow = istTeamA ? teamAZeile(runde, match) : teamBZeile(runde, match);
-		boolean istA = istTeamA;
+		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
 		getSheetHelper().setFormulaInCell(
-				StringCellValue.from(xSheet, Position.from(nrSpalte(runde), targetRow), formel)
-						.setCellBackColor(istA ? TEAM_A_COLOR : TEAM_B_COLOR)
+				StringCellValue.from(xSheet, Position.from(teamSpalte(runde), targetRow), formel)
+						.setCellBackColor(istTeamA ? teamAFarbe : teamBFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
-						.setHoriJustify(CellHoriJustify.CENTER));
+						.setHoriJustify(justify));
 	}
 
 	/**
@@ -626,7 +791,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Zeigt den Turniersieger nach dem Finale an.
+	 * Zeigt den Turniersieger nach dem Finale an.<br>
+	 * NR-Modus: siegerSpalte = Nr, siegerNameSpalte = Teamname via SVERWEIS.<br>
+	 * NAME-Modus: siegerSpalte = Teamname (direkt propagiert), siegerNameSpalte = leer.
 	 */
 	private void schreibeSieger(XSpreadsheet xSheet, int numRunden) throws GenerateException {
 		int finaleMatch = 0;
@@ -634,36 +801,38 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int rowFinaleB = teamBZeile(numRunden, finaleMatch);
 		int siegerZeile = (rowFinaleA + rowFinaleB) / 2;
 
-		int siegerNrSp = siegerNrSpalte(numRunden);
-		int siegerNameSp = siegerNameSpalte(numRunden);
+		int siegerSp = siegerSpalte(numRunden);
 
 		String scoreAAddr = Position.from(scoreSpalte(numRunden), rowFinaleA).getAddressWith$();
 		String scoreBAddr = Position.from(scoreSpalte(numRunden), rowFinaleB).getAddressWith$();
-		String nrAAddr = Position.from(nrSpalte(numRunden), rowFinaleA).getAddressWith$();
-		String nrBAddr = Position.from(nrSpalte(numRunden), rowFinaleB).getAddressWith$();
+		String teamAAddr = Position.from(teamSpalte(numRunden), rowFinaleA).getAddressWith$();
+		String teamBAddr = Position.from(teamSpalte(numRunden), rowFinaleB).getAddressWith$();
 
-		// Sieger-Nr
-		String siegerNrFormel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
-				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + nrAAddr + ";"
-				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + nrBAddr + ";\"?\"));"
+		String siegerFormel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
 				+ "\"\")";
 
+		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
+
 		getSheetHelper().setFormulaInCell(
-				StringCellValue.from(xSheet, Position.from(siegerNrSp, siegerZeile), siegerNrFormel)
-						.setCellBackColor(SIEGER_COLOR)
+				StringCellValue.from(xSheet, Position.from(siegerSp, siegerZeile), siegerFormel)
+						.setCellBackColor(siegerFarbe)
 						.setBorder(BorderFactory.from().allBold().toBorder())
 						.setCharWeight(FontWeight.BOLD)
-						.setHoriJustify(CellHoriJustify.CENTER));
+						.setHoriJustify(justify));
 
-		// Sieger-Name (nur im NAME-Modus)
-		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			String siegerNrAddr = Position.from(siegerNrSp, siegerZeile).getAddressWith$();
+		// Im NR-Modus: zusätzlich Teamname via SVERWEIS in der Nebenspalte
+		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
+			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String siegerNameFormel = "WENN(ISTZAHL(" + siegerNrAddr + ")*(" + siegerNrAddr
 					+ ">0);SVERWEIS(" + siegerNrAddr + ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0);\"\")";
 
 			getSheetHelper().setFormulaInCell(
-					StringCellValue.from(xSheet, Position.from(siegerNameSp, siegerZeile), siegerNameFormel)
-							.setCellBackColor(SIEGER_COLOR)
+					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),
+							siegerNameFormel)
+							.setCellBackColor(siegerFarbe)
 							.setBorder(BorderFactory.from().allBold().toBorder())
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.LEFT));
@@ -688,6 +857,261 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private KoTurnierbaumSheet sheet() {
 		return this;
+	}
+
+	// ---------------------------------------------------------------
+	// Cadrage
+	// ---------------------------------------------------------------
+
+	/**
+	 * Schreibt ein Cadrage-Match in die Cadrage-Spalte.<br>
+	 * Der Bracket-Slot {@code slotSeed} (z.B. 7 oder 8) spielt gegen das gespiegelte Seed
+	 * {@code gesanzTeamsIntern - cadrageIdx}. Beide Teams werden direkt in die Cadrage-Spalte
+	 * an denselben Zeilen wie das zugehörige Runde-1-Match eingetragen.
+	 *
+	 * @param slotSeed Bracket-Slot-Seed &gt; {@link #anzFreilose} (z.B. 7 oder 8)
+	 * @param rowA     Zeile Team A des zugehörigen Runde-1-Matches
+	 * @param rowB     Zeile Team B des zugehörigen Runde-1-Matches
+	 */
+	private void schreibeCadrageMatch(XSpreadsheet xSheet, TeamMeldungen meldungen, int slotSeed,
+			int rowA, int rowB) throws GenerateException {
+		int cadrageIdx = slotSeed - anzFreilose - 1;
+		int opponentSeed = gesanzTeamsIntern - cadrageIdx;
+
+		int nrA = getTeamNrBySeedPosition(meldungen, slotSeed);
+		int nrB = getTeamNrBySeedPosition(meldungen, opponentSeed);
+
+		if (mitBahn()) {
+			// Eine zusammengeführte Bahn-Zelle für die Cadrage-Paarung
+			schreibeBahnZelleAnSpalte(xSheet, cadrageBahnSpalte(), rowA, rowB, 0);
+		}
+
+		schreibeTeamZelleInSpalte(xSheet, cadrageTeamSpalte(), rowA, nrA, true);
+		schreibeTeamZelleInSpalte(xSheet, cadrageTeamSpalte(), rowB, nrB, false);
+
+		// Score-Zellen (editierbar)
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(cadrageScoreSpalte(), rowA), "")
+						.setCellBackColor(scoreFarbe)
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setHoriJustify(CellHoriJustify.CENTER));
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(cadrageScoreSpalte(), rowB), "")
+						.setCellBackColor(scoreFarbe)
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setHoriJustify(CellHoriJustify.CENTER));
+
+		// Konnektor
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(cadrageConnectorSpalte(), rowA), CHAR_TOP)
+						.setHoriJustify(CellHoriJustify.RIGHT));
+		for (int z = rowA + 1; z < rowB; z++) {
+			getSheetHelper().setStringValueInCell(
+					StringCellValue.from(xSheet, Position.from(cadrageConnectorSpalte(), z), CHAR_MITTE)
+							.setHoriJustify(CellHoriJustify.RIGHT));
+		}
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(cadrageConnectorSpalte(), rowB), CHAR_BOTTOM)
+						.setHoriJustify(CellHoriJustify.RIGHT));
+	}
+
+	/**
+	 * Schreibt eine Team-Zelle in eine explizit angegebene Spalte.<br>
+	 * NR-Modus: Teamnummer direkt; NAME-Modus: SVERWEIS-Formel.
+	 */
+	private void schreibeTeamZelleInSpalte(XSpreadsheet xSheet, int spalte, int zeile, int nr,
+			boolean istTeamA) throws GenerateException {
+		int farbe = istTeamA ? teamAFarbe : teamBFarbe;
+		if (nr <= 0) {
+			getSheetHelper().setStringValueInCell(
+					StringCellValue.from(xSheet, Position.from(spalte, zeile), "Freilos")
+							.setCellBackColor(farbe)
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setHoriJustify(CellHoriJustify.CENTER));
+			return;
+		}
+		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
+			String formel = "SVERWEIS(" + nr + ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0)";
+			getSheetHelper().setFormulaInCell(
+					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
+							.setCellBackColor(farbe)
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setHoriJustify(CellHoriJustify.LEFT));
+		} else {
+			getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(xSheet, Position.from(spalte, zeile))
+							.setValue(nr)
+							.setCellBackColor(farbe)
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setHoriJustify(CellHoriJustify.CENTER));
+		}
+	}
+
+	/**
+	 * Schreibt die Gewinner-Formel für einen Cadrage-Slot in die Runde-1-Teamzelle.<br>
+	 * Referenziert die Score-Zellen der Cadrage-Spalte.
+	 *
+	 * @param rowA      Zeile des Runde-1 Team-A (= Cadrage Match Team-A-Zeile)
+	 * @param rowB      Zeile des Runde-1 Team-B (= Cadrage Match Team-B-Zeile)
+	 * @param istSlotA  true wenn der Cadrage-Slot in der Team-A-Position von Runde 1 sitzt
+	 */
+	private void schreibeCadrageGewinnerFormel(XSpreadsheet xSheet, int rowA, int rowB,
+			boolean istSlotA) throws GenerateException {
+		String scoreAAddr = Position.from(cadrageScoreSpalte(), rowA).getAddressWith$();
+		String scoreBAddr = Position.from(cadrageScoreSpalte(), rowB).getAddressWith$();
+		String teamAAddr = Position.from(cadrageTeamSpalte(), rowA).getAddressWith$();
+		String teamBAddr = Position.from(cadrageTeamSpalte(), rowB).getAddressWith$();
+
+		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+				+ "\"\")";
+
+		int targetRow = istSlotA ? rowA : rowB;
+		boolean istTeamA = istSlotA;
+		int farbe = istTeamA ? teamAFarbe : teamBFarbe;
+		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
+
+		getSheetHelper().setFormulaInCell(
+				StringCellValue.from(xSheet, Position.from(teamSpalte(1), targetRow), formel)
+						.setCellBackColor(farbe)
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setHoriJustify(justify));
+	}
+
+	// ---------------------------------------------------------------
+	// Spiel um Platz 3/4
+	// ---------------------------------------------------------------
+
+	/**
+	 * Erstellt den Bereich "Spiel um Platz 3/4" unterhalb des Hauptbaums.<br>
+	 * Die beiden Verlierer des Halbfinales (Runde {@code numRunden-1}) treten gegeneinander an.
+	 */
+	private void schreibePlatz3Match(XSpreadsheet xSheet, int numRunden, int bracketGroesse)
+			throws GenerateException {
+		int halbfinaleRunde = numRunden - 1;
+
+		// Letzte verwendete Zeile im Hauptbaum
+		int anzMatchesR1 = bracketGroesse / 2;
+		int letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
+		int platz3HeaderZeile = letzteZeile + 3;
+		int platz3TeamAZeile = platz3HeaderZeile + 1;
+		int platz3TeamBZeile = platz3HeaderZeile + 2;
+
+		// Bereichs-Header "Spiel um Platz 3/4" in den Finale-Spalten
+		int headerStartSpalte = mitBahn() ? bahnSpalte(numRunden) : teamSpalte(numRunden);
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(headerStartSpalte, platz3HeaderZeile), "Spiel um Platz 3/4")
+						.setEndPosMergeSpaltePlus(colGroupSize - 1)
+						.setCharWeight(FontWeight.BOLD)
+						.setHoriJustify(CellHoriJustify.CENTER)
+						.setCellBackColor(headerFarbe)
+						.setCharColor("FFFFFF")
+						.setBorder(BorderFactory.from().allThin().toBorder()));
+
+		// "3. Platz" Kopf-Label in der Sieger-Spalte
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), platz3HeaderZeile), "3. Platz")
+						.setEndPosMergeSpaltePlus(1)
+						.setCharWeight(FontWeight.BOLD)
+						.setHoriJustify(CellHoriJustify.CENTER)
+						.setCellBackColor(drittePlatzFarbe)
+						.setBorder(BorderFactory.from().allThin().toBorder()));
+
+		// Bahn-Zelle (falls Spielbahn aktiv) – eine zusammengeführte Zelle pro Paarung
+		if (mitBahn()) {
+			schreibeBahnZelle(xSheet, numRunden, platz3TeamAZeile, platz3TeamBZeile, 0);
+		}
+
+		// Verlierer-Formeln: Verlierer Halbfinale-Match 0 → TeamA, Match 1 → TeamB
+		schreibeVerliererFormel(xSheet, numRunden, halbfinaleRunde, 0, platz3TeamAZeile, true);
+		schreibeVerliererFormel(xSheet, numRunden, halbfinaleRunde, 1, platz3TeamBZeile, false);
+
+		// Score-Zellen
+		schreibeScoreZelle(xSheet, numRunden, platz3TeamAZeile, true);
+		schreibeScoreZelle(xSheet, numRunden, platz3TeamBZeile, false);
+
+		// Connector
+		zeichneMatchConnector(xSheet, numRunden, platz3TeamAZeile, platz3TeamBZeile);
+
+		// Gewinner des Spiels um Platz 3
+		schreibeDrittePlatzSieger(xSheet, numRunden, platz3TeamAZeile, platz3TeamBZeile);
+	}
+
+	/**
+	 * Schreibt die Verlierer-Formel für den Einzug ins Spiel um Platz 3/4.<br>
+	 * Verlierer = Team mit der niedrigeren Punktzahl im Quell-Match.
+	 */
+	private void schreibeVerliererFormel(XSpreadsheet xSheet, int runde, int feederRunde, int feederMatch,
+			int targetRow, boolean istTeamA) throws GenerateException {
+		int rowFeederA = teamAZeile(feederRunde, feederMatch);
+		int rowFeederB = teamBZeile(feederRunde, feederMatch);
+
+		String scoreAAddr = Position.from(scoreSpalte(feederRunde), rowFeederA).getAddressWith$();
+		String scoreBAddr = Position.from(scoreSpalte(feederRunde), rowFeederB).getAddressWith$();
+		String teamAAddr = Position.from(teamSpalte(feederRunde), rowFeederA).getAddressWith$();
+		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
+
+		// Verlierer = Team mit niedrigerer Punktzahl (umgekehrt zur Gewinner-Formel)
+		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+				+ "\"\")";
+
+		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
+
+		getSheetHelper().setFormulaInCell(
+				StringCellValue.from(xSheet, Position.from(teamSpalte(runde), targetRow), formel)
+						.setCellBackColor(istTeamA ? teamAFarbe : teamBFarbe)
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setHoriJustify(justify));
+	}
+
+	/**
+	 * Zeigt den Gewinner des Spiels um Platz 3 an (analog zu {@link #schreibeSieger}).
+	 */
+	private void schreibeDrittePlatzSieger(XSpreadsheet xSheet, int numRunden, int teamAZeile,
+			int teamBZeile) throws GenerateException {
+		int siegerZeile = (teamAZeile + teamBZeile) / 2;
+		int siegerSp = siegerSpalte(numRunden);
+
+		String scoreAAddr = Position.from(scoreSpalte(numRunden), teamAZeile).getAddressWith$();
+		String scoreBAddr = Position.from(scoreSpalte(numRunden), teamBZeile).getAddressWith$();
+		String teamAAddr = Position.from(teamSpalte(numRunden), teamAZeile).getAddressWith$();
+		String teamBAddr = Position.from(teamSpalte(numRunden), teamBZeile).getAddressWith$();
+
+		String drittePlatzFormel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
+				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamAAddr + ";"
+				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"
+				+ "\"\")";
+
+		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
+
+		getSheetHelper().setFormulaInCell(
+				StringCellValue.from(xSheet, Position.from(siegerSp, siegerZeile), drittePlatzFormel)
+						.setCellBackColor(drittePlatzFarbe)
+						.setBorder(BorderFactory.from().allBold().toBorder())
+						.setCharWeight(FontWeight.BOLD)
+						.setHoriJustify(justify));
+
+		// Im NR-Modus: Teamname via SVERWEIS in der Nebenspalte
+		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
+			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
+			String drittePlatzNameFormel = "WENN(ISTZAHL(" + drittePlatzNrAddr + ")*(" + drittePlatzNrAddr
+					+ ">0);SVERWEIS(" + drittePlatzNrAddr + ";" + MeldeListeKonstanten.SHEETNAME
+					+ ".$A:$B;2;0);\"\")";
+
+			getSheetHelper().setFormulaInCell(
+					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),
+							drittePlatzNameFormel)
+							.setCellBackColor(drittePlatzFarbe)
+							.setBorder(BorderFactory.from().allBold().toBorder())
+							.setCharWeight(FontWeight.BOLD)
+							.setHoriJustify(CellHoriJustify.LEFT));
+		}
 	}
 
 }

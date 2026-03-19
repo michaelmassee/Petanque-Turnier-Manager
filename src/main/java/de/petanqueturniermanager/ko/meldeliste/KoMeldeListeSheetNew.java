@@ -137,7 +137,10 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 							konfig.isMeldeListeTeamnameAnzeigen(),
 							konfig.isMeldeListeVereinsnameAnzeigen(),
 							konfig.getSpielbaumTeamAnzeige(),
-							konfig.getSpielbaumSpielbahn());
+							konfig.getSpielbaumSpielbahn(),
+							konfig.isSpielbaumSpielUmPlatz3(),
+							konfig.getGruppenGroesse(),
+							konfig.getMinRestGroesse());
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error(e.getMessage(), e);
 			throw new GenerateException("Fehler beim Anzeigen des Parameter-Dialogs: " + e.getMessage());
@@ -154,6 +157,9 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 		konfig.setMeldeListeVereinsnameAnzeigen(params.vereinsnameAnzeigen);
 		konfig.setSpielbaumTeamAnzeige(params.spielbaumTeamAnzeige);
 		konfig.setSpielbaumSpielbahn(params.spielbaumSpielbahn);
+		konfig.setSpielbaumSpielUmPlatz3(params.spielUmPlatz3);
+		konfig.setGruppenGroesse(params.gruppenGroesse);
+		konfig.setMinRestGroesse(params.minRestGroesse);
 
 		// KonfigSheet mit neuen Werten neu rendern
 		getKonfigurationSheet().update();

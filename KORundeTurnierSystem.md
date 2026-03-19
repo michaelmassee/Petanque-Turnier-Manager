@@ -105,7 +105,57 @@ Zuschauerfreundlich      Frustrationspotenzial
 
 ------------------------------------------------------------------------
 
-## 8. Fazit
+## 8. Dynamische Zuteilung: K.-o.-Bäume (A, B, C...) und Cadrage-Regel
+
+Nach der Vorrunde werden die Teams nach Rang auf A-, B-, C-Turniere
+(und ggf. weitere) aufgeteilt. Jede Gruppe bekommt ihren eigenen
+K.-o.-Baum (Turnierbaum-Sheet).
+
+### Konfigurationsparameter
+
+| Parameter          | Default | Beschreibung |
+|--------------------|---------|--------------|
+| `maxGruppenGroesse` | 16     | Maximale Teamanzahl pro Gruppe (Zweierpotenz). |
+| `minRestGroesse`   | 16      | Mindestzahl für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …). |
+
+### Aufteilungslogik
+
+Sei `anzTeams` die Gesamtzahl der gemeldeten Teams:
+
+```
+volleGruppen = anzTeams / maxGruppenGroesse   (ganzzahlig)
+rest         = anzTeams % maxGruppenGroesse
+```
+
+**Fall A – rest == 0:** Perfekte Aufteilung, keine Cadrage nötig.
+
+**Szenario 1 – rest ≥ minRestGroesse:**
+Der Rest bildet ein eigenständiges Folgeturnier (z. B. Gruppe C).
+Cadrage wird dort ausgetragen.
+
+*Beispiel:* 42 Teams, max 16, minRest 16 → Gruppen: 16 | 16 | 10
+(Gruppe C mit 10 Teams: Cadrage auf 8, 4 spielen Cadrage, 6 Freilos)
+
+**Szenario 2 – 0 < rest < minRestGroesse:**
+Der Rest ist zu klein für ein eigenes Turnier und wird in die letzte
+volle Gruppe gefaltet. Cadrage wird in dieser vergrößerten Gruppe
+ausgetragen.
+
+*Beispiel:* 34 Teams, max 16, minRest 16 → Gruppen: 16 | 18
+(Gruppe B mit 18 Teams: Cadrage auf 16, 4 spielen Cadrage, 14 Freilos)
+
+**Sonderfall – keine vollen Gruppen (rest < minRestGroesse):**
+Alle Teams kommen in eine einzige Gruppe (kein Buchstabe-Suffix).
+
+### Cadrage innerhalb einer Gruppe
+
+Die Cadrage-Berechnung (→ `CadrageRechner`) arbeitet unabhängig pro
+Gruppe auf Basis der tatsächlichen Gruppengrö­ße. Sie ist von der
+Aufteilungslogik vollständig entkoppelt.
+
+------------------------------------------------------------------------
+
+## 9. Fazit
 
 Die K.-o.-Runde ist das Herzstück vieler Boule-Turniere:
 
