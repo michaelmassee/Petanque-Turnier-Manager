@@ -43,12 +43,12 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
   Das fairste System für Turniere mit vielen Teilnehmern und begrenzter Zeit. Inklusive automatischer Berechnung von Siegen, Kugeldifferenz und (Fein-)Buchholz-Punkten zur exakten Ranglistenermittlung.
 * **Jeder gegen Jeden (Round Robin):**
   Das klassische Ligasystem, bei dem jedes Team im Laufe des Turniers gegen jedes andere Team antritt.
+* **K.-o.-System (Direktausscheidung):**
+  Für klassische Finalrunden und reine K.-o.-Turniere. Ein Sieg bedeutet Weiterkommen, eine Niederlage das sofortige Ausscheiden. Die Paarungen folgen dem Überkreuz-System (1 vs. Letzter, 2 vs. Vorletzter …), sodass Top-Teams erst spät aufeinandertreffen. Bei Teilnehmerzahlen, die keine Zweierpotenz ergeben, wird automatisch eine Cadrage (Vorrunde) berechnet.
 
 (in Arbeit)
 * **Poule-System:**
   Klassischer Modus mit Gruppenphase (Poules) und anschließender Aufteilung in K.-o.-Bäume (A-, B-, C-, D-Turnier).
-* **Direktausscheidung (K.-o.-System):**
-  Für klassische Finalrunden oder reine K.-o.-Turniere, bei denen der Verlierer ausscheidet.
 
 ---
 

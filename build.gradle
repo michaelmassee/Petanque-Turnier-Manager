@@ -269,6 +269,8 @@ def mitUiTests = project.hasProperty('uitTests') && project.uitTests == 'true'
 test {
     if (mitUiTests) {
         dependsOn 'reinstallExtension'
+        // UITests nie aus dem Build-Cache laden – LibreOffice-Zustand kann sich geändert haben
+        outputs.upToDateWhen { false }
     }
     // UITests starten LibreOffice auf Port 8100 – nur ein Worker gleichzeitig erlaubt
     maxParallelForks = 1

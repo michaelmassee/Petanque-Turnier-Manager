@@ -162,3 +162,95 @@ Die K.-o.-Runde ist das Herzstück vieler Boule-Turniere:
 -   Hohe Spannung und klare Entscheidungen
 -   Belohnt Leistung und mentale Stärke
 -   Optimal in Kombination mit Vorrunden und Trostrunden
+
+------------------------------------------------------------------------
+
+## 10. Software-Dokumentation (Petanque-Turnier-Manager)
+
+### 10.1 Menüeinträge
+
+Das K.-o.-Menü erscheint in der LibreOffice-Menüleiste unter **PétTurnMngr → K.-O.**
+
+| Menüeintrag | Befehl (`ptm:`) | Verfügbar wenn |
+|---|---|---|
+| Start (neues Turnier) | `ko_start` | Kein Turnier aktiv (`KEIN`) |
+| Meldeliste Aktualisieren | `ko_update_meldeliste` | K.-O.-Turnier aktiv (`KO`) |
+| Turnierbaum erstellen | `ko_turnierbaum` | K.-O.-Turnier aktiv (`KO`) |
+
+**Testdaten-Befehle** (nur für Entwicklung/Test, kein Menüeintrag in der XCU):
+
+| Befehl | Beschreibung |
+|---|---|
+| `ko_testdaten_nur_meldeliste` | Meldeliste mit 8 Teams anlegen |
+| `ko_testdaten_8_teams` | Turnierbaum mit 8 Teams generieren |
+| `ko_testdaten_16_teams` | Turnierbaum mit 16 Teams generieren |
+| `ko_testdaten_cadrage` | Turnierbaum mit 10 Teams (Cadrage-Szenario) generieren |
+
+------------------------------------------------------------------------
+
+### 10.2 Turnier-Parameter-Dialog
+
+Beim Starten eines neuen K.-o.-Turniers (`ko_start`) öffnet sich der **KoTurnierParameterDialog** mit folgenden Einstellungen:
+
+**Formation**
+- Tête (1 Spieler)
+- Doublette (2 Spieler) *(Standard)*
+- Triplette (3 Spieler)
+
+**Meldeliste**
+- Teamname anzeigen *(Standard: Ja)*
+- Vereinsname anzeigen *(Standard: Nein)*
+
+**Spielbaum-Anzeige**
+- Teamnummer *(Standard)*
+- Teamname
+
+**Spielbahn**
+- Keine Spalte *(Standard)*
+- Leere Spalte (manuelle Eintragung)
+- Durchnummerieren 1–n
+- Zufällig vergeben
+
+**Weitere Optionen**
+- Spiel um Platz 3/4 anzeigen *(Standard: Nein)*
+- Gruppen-Größe (Standard: 16, Bereich: 2–512)
+- Min. Rest-Größe (Standard: 16, Bereich: 1–512)
+
+------------------------------------------------------------------------
+
+### 10.3 Konfigurationsblatt „KO Konfiguration"
+
+Alle Einstellungen werden im Tabellenblatt **„KO Konfiguration"** gespeichert (Blattfarbe: Burgunderrot `#C12439`).
+
+#### Meldeliste
+
+| Eigenschaft | Standard | Typ | Beschreibung |
+|---|---|---|---|
+| `Kopfzeile Links` | *(leer)* | Text | Inhalt der linken Kopfzeile |
+| `Kopfzeile Mitte` | *(leer)* | Text | Inhalt der mittleren Kopfzeile |
+| `Kopfzeile Rechts` | *(leer)* | Text | Inhalt der rechten Kopfzeile |
+| `Meldeliste Formation` | DOUBLETTE | Auswahl | Spielformation: TETE / DOUBLETTE / TRIPLETTE |
+| `Meldeliste Teamname` | J | J/N | Teamname in der Meldeliste anzeigen |
+| `Meldeliste Vereinsname` | N | J/N | Vereinsname in der Meldeliste anzeigen |
+
+#### Turnierbaum
+
+| Eigenschaft | Standard | Typ | Beschreibung |
+|---|---|---|---|
+| `Spielbaum Team Anzeige` | NR | Auswahl | Anzeige im Turnierbaum: `NR` = Teamnummer, `NAME` = Teamname |
+| `Spielbaum Spielbahn` | X | Auswahl | Spielbahn-Spalte: `X` = keine, `L` = leer, `N` = 1–n, `R` = zufällig |
+| `Spielbaum Spiel um Platz 3` | N | J/N | Kleines Finale (Platz 3/4) im Turnierbaum anzeigen |
+| `Turnierbaum Gruppen Größe` | 16 | Ganzzahl | Maximale Teamanzahl pro Gruppe (Zweierpotenz empfohlen: 4, 8, 16, 32) |
+| `Turnierbaum Min. Rest-Größe` | 16 | Ganzzahl | Mindestzahl für ein eigenständiges Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …) |
+
+#### Farben
+
+| Eigenschaft | Standard | Beschreibung |
+|---|---|---|
+| `Turnierbaum Header Farbe` | `#2544DD` | Hintergrundfarbe der Kopfzeile |
+| `Turnierbaum Team A Farbe` | `#DCEEFA` | Hintergrundfarbe Team-A-Zellen |
+| `Turnierbaum Team B Farbe` | `#F0F7FF` | Hintergrundfarbe Team-B-Zellen |
+| `Turnierbaum Score Farbe` | `#FFFDE7` | Hintergrundfarbe Ergebniszellen |
+| `Turnierbaum Sieger Farbe` | `#FFD700` | Hintergrundfarbe Siegerzellen (Gold) |
+| `Turnierbaum Bahn Farbe` | `#EEEEEE` | Hintergrundfarbe Spielbahn-Spalte |
+| `Turnierbaum 3. Platz Farbe` | `#CD7F32` | Hintergrundfarbe Spiel um Platz 3 (Bronze) |
