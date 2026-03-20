@@ -75,6 +75,7 @@ import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTe
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetSortOnly;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
@@ -169,6 +170,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
+	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER_19 = "schweizer_testdaten_turnier_19";
 	// Maastrichter
 	public static final String CMD_MAASTRICHTER_START = "maastrichter_start";
 	public static final String CMD_MAASTRICHTER_UPDATE_MELDELISTE = "maastrichter_update_meldeliste";
@@ -409,6 +411,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_TESTDATEN_TURNIER:
 				new SchweizerTurnierTestDaten(ws).start();
 				break;
+			case CMD_SCHWEIZER_TESTDATEN_TURNIER_19:
+				// 19 Teams: ungerade → 1 Freilos pro Runde, Teamname in Spielrunde, Bahn Random
+				new SchweizerTurnierTestDaten(ws, 19, SpielplanTeamAnzeige.NAME).start();
+				break;
 			// ------------------------------
 			// Maastrichter System
 			case CMD_MAASTRICHTER_START:
@@ -638,7 +644,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE          -> ts == TurnierSystem.SCHWEIZER && hatSchweizerSpielrunde(ws);
 			// Schweizer-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_SCHWEIZER_TESTDATEN_MELDELISTE,
-			 CMD_SCHWEIZER_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
+				 CMD_SCHWEIZER_TESTDATEN_TURNIER,
+				 CMD_SCHWEIZER_TESTDATEN_TURNIER_19        -> ts == TurnierSystem.KEIN || ts == TurnierSystem.SCHWEIZER;
 			// Konfiguration: nur wenn Turnier vorhanden
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,

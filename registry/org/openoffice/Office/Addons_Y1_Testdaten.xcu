@@ -152,6 +152,19 @@
 								</prop>
 							</node>
 
+							<node oor:name="B2A" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Schweizer, Tournament (19 Teams, odd + Bye, Teamname, Random Lane)</value>
+									<value xml:lang="de">Schweizer, Turnier (19 Teams, ungerade + Freilos, Teamname, Bahn zufällig)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_testdaten_turnier_19</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 							<node oor:name="B3" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>

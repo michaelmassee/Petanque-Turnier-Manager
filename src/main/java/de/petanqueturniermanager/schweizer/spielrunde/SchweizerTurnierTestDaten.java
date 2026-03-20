@@ -15,25 +15,44 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Generiert ein vollständiges Schweizer Beispielturnier:
- * Meldeliste (16 Teams, Triplette) + 3 Spielrunden mit Zufallsergebnissen + Rangliste.
+ * Meldeliste + Spielrunden mit Zufallsergebnissen + Rangliste.
+ * <p>
+ * Standard: 16 Teams, Triplette, Teamnummer-Anzeige.<br>
+ * Parametrisiert: beliebige Teamanzahl und SpielplanTeamAnzeige konfigurierbar.
  */
 public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet {
 
 	private static final int ANZ_RUNDEN = 3;
 
+	private final SpielplanTeamAnzeige spielplanTeamAnzeige;
+
 	private final SchweizerMeldeListeSheetTestDaten meldelisteTestDaten;
 	public final SchweizerSpielrundeSheetNaechste naechsteSpielrunde;
 	private final SchweizerRanglisteSheet ranglisteSheet;
 
+	/** Standard-Konstruktor: 16 Teams, Teamnummer-Anzeige */
 	public SchweizerTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
+		this(workingSpreadsheet, SchweizerMeldeListeSheetTestDaten.ANZ_TEAMS_DEFAULT, SpielplanTeamAnzeige.NR);
+	}
+
+	/**
+	 * Parametrisierter Konstruktor.
+	 *
+	 * @param anzTeams            Anzahl zu generierender Teams
+	 * @param spielplanTeamAnzeige NR = Teamnummer, NAME = Teamname in der Spielrunde
+	 */
+	public SchweizerTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet,
+			int anzTeams, SpielplanTeamAnzeige spielplanTeamAnzeige) {
 		super(workingSpreadsheet);
-		meldelisteTestDaten = new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet);
+		this.spielplanTeamAnzeige = spielplanTeamAnzeige;
+		meldelisteTestDaten = new SchweizerMeldeListeSheetTestDaten(workingSpreadsheet, anzTeams);
 		naechsteSpielrunde = new SchweizerSpielrundeSheetNaechste(workingSpreadsheet);
 		ranglisteSheet = new SchweizerRanglisteSheet(workingSpreadsheet);
 	}
@@ -58,6 +77,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 		// 1. Meldeliste erstellen
 		meldelisteTestDaten.doRun();
 		naechsteSpielrunde.getKonfigurationSheet().setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
+		naechsteSpielrunde.getKonfigurationSheet().setSpielplanTeamAnzeige(spielplanTeamAnzeige);
 
 		// 2. Spielrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzRunden; runde++) {

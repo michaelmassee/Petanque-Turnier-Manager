@@ -27,7 +27,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
-	private static final int ANZ_TEAMS_DEFAULT = 16;
+	public static final int ANZ_TEAMS_DEFAULT = 16;
 	private static final Formation TEST_FORMATION = Formation.TRIPLETTE;
 
 	protected static final int ERSTE_DATEN_ZEILE = SchweizerListeDelegate.ERSTE_DATEN_ZEILE;
