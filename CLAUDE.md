@@ -66,15 +66,17 @@ Each tournament system typically has sheet classes for: Meldeliste (entry list),
 
 Menu items are defined in XCU files under `registry/org/openoffice/Office/` (one per tournament system + config/download/stop).
 
-**Separator-Nodes in XCU-Menüs:** Separatoren müssen **strikt sequenziell nummeriert** werden – niemals alphanumerische Suffixe (z.B. `A5A2S`) verwenden. Ein Separator belegt einfach den nächsten freien Slot in der Sequenz und enthält nur die URL-Property:
+**Node-Namen in XCU-Menüs müssen strikt sequenziell nummeriert sein.** Die dritte Stelle (der Zähler) darf **niemals** alphanumerische Suffixe enthalten (z.B. `B2A`, `A5A2S`). LibreOffice sortiert Nodes nach dem Namen — ein Suffix wie `A` in `B2A` führt zu falscher Anzeigereihenfolge. Bei jeder Änderung (Einfügen, Löschen) alle betroffenen Nummern neu durchnummerieren.
+
+Separator-Nodes belegen einfach den nächsten freien Slot:
 ```xml
-<node oor:name="A5A4" oor:op="replace">
+<node oor:name="A5" oor:op="replace">
     <prop oor:name="URL" oor:type="xs:string">
         <value>private:separator</value>
     </prop>
 </node>
 ```
-Falsch: `A5A2S`, `A5A4S` — diese werden von LibreOffice nicht als Separatoren angezeigt.
+Falsch: `B2A`, `A5A2S`, `A5A4S`
 
 ### IDL / Add-in Interfaces
 
