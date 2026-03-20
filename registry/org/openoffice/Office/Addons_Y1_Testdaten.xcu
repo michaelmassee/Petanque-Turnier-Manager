@@ -210,6 +210,25 @@
 								</prop>
 							</node>
 
+							<node oor:name="B8" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Maastrichter, Tournament (12 Teams, 3 Rounds + Finals)</value>
+									<value xml:lang="de">Maastrichter, Turnier (12 Teams, 3 Vorrunden + Finalrunden)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_testdaten_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>

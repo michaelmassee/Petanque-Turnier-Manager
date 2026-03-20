@@ -35,4 +35,6 @@ public class DefaultSheetPos {
 
 	public static final short KO_TURNIERBAUM = 2; // K.-O. Turnierbaum
 
+	public static final short MAASTRICHTER_FINALE = 4; // Maastrichter A/B/C-Finale-Blätter
+
 }

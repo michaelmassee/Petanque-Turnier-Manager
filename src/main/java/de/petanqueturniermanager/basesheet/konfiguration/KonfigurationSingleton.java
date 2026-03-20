@@ -14,6 +14,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpal
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterPropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -36,7 +37,7 @@ public class KonfigurationSingleton {
 				case LIGA:
 					return LigaPropertiesSpalte.KONFIG_PROPERTIES;
 				case MAASTRICHTER:
-					break;
+					return MaastrichterPropertiesSpalte.KONFIG_PROPERTIES;
 				case SUPERMELEE:
 					return SuperMeleePropertiesSpalte.KONFIG_PROPERTIES;
 				case SCHWEIZER:

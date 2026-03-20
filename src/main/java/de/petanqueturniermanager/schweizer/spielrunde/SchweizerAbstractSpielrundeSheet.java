@@ -87,18 +87,29 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	private final SchweizerKonfigurationSheet konfigurationSheet;
 	private final SchweizerMeldeListeSheetUpdate meldeListe;
 	private final SpielrundeHelper spielrundeHelper;
+	private final String sheetBaseName;
 	private SpielRundeNr spielRundeNrInSheet = null;
 	private boolean forceOk = false; // wird fuer Test verwendet
 
 	//	private SpielRundeNr sheetSpielRundeNr = null; // muss nicht der Aktive sein
 
 	protected SchweizerAbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, SHEET_NAMEN);
-		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
+		this(workingSpreadsheet, TurnierSystem.SCHWEIZER, SHEET_NAMEN);
+	}
+
+	protected SchweizerAbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem ts,
+			String sheetBaseName) {
+		super(workingSpreadsheet, ts, sheetBaseName);
+		this.sheetBaseName = sheetBaseName;
+		konfigurationSheet = initKonfigurationSheet(workingSpreadsheet);
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 		spielrundeHelper = new SpielrundeHelper(this, NR_CHARHEIGHT, NR_CHARHEIGHT, true,
 				konfigurationSheet.getSpielRundeHintergrundFarbeGeradeStyle(),
 				konfigurationSheet.getSpielRundeHintergrundFarbeUnGeradeStyle());
+	}
+
+	protected SchweizerKonfigurationSheet initKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new SchweizerKonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -128,7 +139,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	@VisibleForTesting
-	SchweizerMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+	protected SchweizerMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		return new SchweizerMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
@@ -138,7 +149,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	public final String getSheetName(SpielRundeNr nr) {
-		return nr.getNr() + ". " + SHEET_NAMEN;
+		return nr.getNr() + ". " + sheetBaseName;
 	}
 
 	@Override

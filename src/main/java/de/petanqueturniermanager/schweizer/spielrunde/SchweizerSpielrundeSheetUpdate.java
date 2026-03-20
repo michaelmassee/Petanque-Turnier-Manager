@@ -18,6 +18,11 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 		super(workingSpreadsheet);
 	}
 
+	protected SchweizerSpielrundeSheetUpdate(WorkingSpreadsheet workingSpreadsheet,
+			de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem ts, String sheetBaseName) {
+		super(workingSpreadsheet, ts, sheetBaseName);
+	}
+
 	@Override
 	public void doRun() throws GenerateException {
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();

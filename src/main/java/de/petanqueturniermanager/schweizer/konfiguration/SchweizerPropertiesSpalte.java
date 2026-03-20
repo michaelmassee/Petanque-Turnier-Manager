@@ -112,7 +112,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	 * @param erstePropertiesZeile
 	 * @param sheet
 	 */
-	SchweizerPropertiesSpalte(ISheet sheet) {
+	protected SchweizerPropertiesSpalte(ISheet sheet) {
 		super(sheet);
 	}
 

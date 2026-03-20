@@ -18,7 +18,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * Konfigurationssheet für das K.-O.-Turniersystem.
  */
-public class KoKonfigurationSheet extends BaseKonfigurationSheet {
+public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoBracketKonfiguration {
 
 	public static final String SHEETNAME = "KO Konfiguration";
 	private static final String SHEET_COLOR = "c12439";

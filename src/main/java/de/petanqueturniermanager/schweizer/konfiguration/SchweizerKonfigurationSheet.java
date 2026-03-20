@@ -29,8 +29,16 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 	 * @param workingSpreadsheet
 	 */
 	public SchweizerKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER);
-		propertiesSpalte = new SchweizerPropertiesSpalte(this);
+		this(workingSpreadsheet, TurnierSystem.SCHWEIZER);
+	}
+
+	protected SchweizerKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem ts) {
+		super(workingSpreadsheet, ts);
+		propertiesSpalte = erstellePropertiesSpalte();
+	}
+
+	protected SchweizerPropertiesSpalte erstellePropertiesSpalte() {
+		return new SchweizerPropertiesSpalte(this);
 	}
 
 	@Override

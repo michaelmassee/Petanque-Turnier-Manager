@@ -32,6 +32,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
@@ -249,6 +250,51 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 
 	/**
+	 * Erstellt einen einzelnen Turnierbaum-Sheet für die übergebenen Teams.
+	 * Wird von externen Klassen (z.B. MaastrichterFinalrundeSheet) für A/B/C/D-Gruppen aufgerufen.
+	 *
+	 * @param gruppeTeams Teams für diese Gruppe (müssen mindestens 2 sein)
+	 * @param sheetName   Name des zu erstellenden Sheets
+	 * @param sheetPos    Position des Sheets in der Tabelle
+	 */
+	public void erstelleGruppeBracket(TeamMeldungen gruppeTeams, String sheetName, short sheetPos)
+			throws GenerateException {
+		erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, getKonfigurationSheet());
+	}
+
+	/**
+	 * Erstellt einen KO-Bracket-Sheet mit externer Konfiguration.
+	 * Für Aufrufer ohne eigenes "KO Konfiguration"-Blatt (z.B. Maastrichter).
+	 *
+	 * @param gruppeTeams Teams für diese Gruppe (müssen mindestens 2 sein)
+	 * @param sheetName   Name des zu erstellenden Sheets
+	 * @param sheetPos    Position des Sheets in der Tabelle
+	 * @param konfig      Konfiguration (z.B. aus MaastrichterKonfigurationSheet)
+	 */
+	public void erstelleGruppeBracket(TeamMeldungen gruppeTeams, String sheetName, short sheetPos,
+			IKoBracketKonfiguration konfig) throws GenerateException {
+		if (gruppeTeams.size() < 2) {
+			return;
+		}
+		int bracketGroesse = Integer.highestOneBit(gruppeTeams.size());
+		int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
+		this.aktuellerGruppenSheetName = sheetName;
+		try {
+			NewSheet.from(this, sheetName)
+					.pos(sheetPos)
+					.hideGrid()
+					.tabColor(SHEET_COLOR)
+					.setActiv()
+					.create();
+			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
+			TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
+			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig);
+		} finally {
+			this.aktuellerGruppenSheetName = null;
+		}
+	}
+
+	/**
 	 * Erstellt alle Gruppen-Turnierbäume ohne Rückfrage-Dialog.<br>
 	 * Wird von Testdaten-Klassen aufgerufen.
 	 */
@@ -339,7 +385,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
 				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse);
+				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse, getKonfigurationSheet());
 			} finally {
 				this.aktuellerGruppenSheetName = null;
 			}
@@ -368,12 +414,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private void erstelleTurnierbaum(XSpreadsheet xSheet, TeamMeldungen meldungen, int numRunden,
-			int bracketGroesse) throws GenerateException {
+			int bracketGroesse, IKoBracketKonfiguration konfig) throws GenerateException {
 
 		sheet().processBoxinfo("K.-O. Turnierbaum erstellen");
 
-		// Konfiguration für diese Erstellung lesen
-		KoKonfigurationSheet konfig = getKonfigurationSheet();
 		this.spielbahn = konfig.getSpielbaumSpielbahn();
 		this.teamAnzeige = konfig.getSpielbaumTeamAnzeige();
 		this.spielUmPlatz3 = konfig.isSpielbaumSpielUmPlatz3();

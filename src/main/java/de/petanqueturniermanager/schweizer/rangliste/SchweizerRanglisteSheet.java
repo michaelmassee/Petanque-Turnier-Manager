@@ -102,9 +102,32 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	private final RangListeSorter rangListeSorter;
 
 	public SchweizerRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER);
-		konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
+		this(workingSpreadsheet, TurnierSystem.SCHWEIZER);
+	}
+
+	protected SchweizerRanglisteSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem ts) {
+		super(workingSpreadsheet, ts);
+		konfigurationSheet = initKonfigurationSheet(workingSpreadsheet);
 		rangListeSorter = new RangListeSorter(this);
+	}
+
+	protected SchweizerKonfigurationSheet initKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new SchweizerKonfigurationSheet(workingSpreadsheet);
+	}
+
+	/** Basisname der Spielrunden-Sheets (z.B. "Spielrunde" oder "Vorrunde"). */
+	protected String getSpielrundenBasisName() {
+		return SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+	}
+
+	/** Name des Ranglisten-Sheets. */
+	protected String getRanglistenSheetName() {
+		return SHEETNAME;
+	}
+
+	/** Erstellt das Meldelisten-Sheet-Objekt für das Lesen der Teamnamen/Nummern. */
+	protected SchweizerMeldeListeSheetUpdate erstelleMeldeListeSheet() {
+		return new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
 	}
 
 	@Override
@@ -118,7 +141,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return getSheetHelper().findByName(getRanglistenSheetName());
 	}
 
 	@Override
@@ -130,7 +153,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	public void doRun() throws GenerateException {
 		processBoxinfo("Erstelle Rangliste...");
 
-		NewSheet.from(this, SHEETNAME)
+		NewSheet.from(this, getRanglistenSheetName())
 				.pos(DefaultSheetPos.SCHWEIZER_ENDRANGLISTE)
 				.forceCreate()
 				.tabColor(SHEET_COLOR)
@@ -141,7 +164,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			return;
 		}
 
-		SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
+		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 		if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
 			processBoxinfo("Keine aktiven Meldungen gefunden.");
@@ -206,7 +229,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 		for (int runde = 1; runde <= bisSpielrunde; runde++) {
 			SheetRunner.testDoCancelTask();
-			String rundeSheetName = runde + ". " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+			String rundeSheetName = runde + ". " + getSpielrundenBasisName();
 			XSpreadsheet rundeSheet = getSheetHelper().findByName(rundeSheetName);
 			if (rundeSheet == null) {
 				continue;
@@ -501,7 +524,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		StringBuilder fbhzF  = new StringBuilder();
 
 		for (int r = 1; r <= bisSpielrunde; r++) {
-			String shRef = "$'" + r + ". " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN + "'.";
+			String shRef = "$'" + r + ". " + getSpielrundenBasisName() + "'.";
 			String tA = shRef + "$" + colTa + "$" + dzSr + ":$" + colTa + "$" + (dzSr + 999);
 			String tB = shRef + "$" + colTb + "$" + dzSr + ":$" + colTb + "$" + (dzSr + 999);
 			String eA = shRef + "$" + colEa + "$" + dzSr + ":$" + colEa + "$" + (dzSr + 999);

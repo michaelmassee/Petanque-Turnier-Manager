@@ -63,6 +63,13 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
+import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
+import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
+import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
+import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
@@ -162,6 +169,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SCHWEIZER_RANGLISTE_SORTIEREN = "schweizer_rangliste_sortieren";
 	public static final String CMD_SCHWEIZER_TESTDATEN_MELDELISTE = "schweizer_testdaten_meldeliste";
 	public static final String CMD_SCHWEIZER_TESTDATEN_TURNIER = "schweizer_testdaten_turnier";
+	// Maastrichter
+	public static final String CMD_MAASTRICHTER_START = "maastrichter_start";
+	public static final String CMD_MAASTRICHTER_UPDATE_MELDELISTE = "maastrichter_update_meldeliste";
+	public static final String CMD_MAASTRICHTER_NAECHSTE_VORRUNDE = "maastrichter_naechste_vorrunde";
+	public static final String CMD_MAASTRICHTER_AKTUELLE_VORRUNDE = "maastrichter_aktuelle_vorrunde";
+	public static final String CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE = "maastrichter_vorrunden_rangliste";
+	public static final String CMD_MAASTRICHTER_FINALRUNDEN = "maastrichter_finalrunden";
+	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER = "maastrichter_testdaten_turnier";
 	// K.-O.
 	public static final String CMD_KO_START = "ko_start";
 	public static final String CMD_KO_UPDATE_MELDELISTE = "ko_update_meldeliste";
@@ -394,6 +409,29 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SchweizerTurnierTestDaten(ws).start();
 				break;
 			// ------------------------------
+			// Maastrichter System
+			case CMD_MAASTRICHTER_START:
+				new MaastrichterMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_MAASTRICHTER_UPDATE_MELDELISTE:
+				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_MAASTRICHTER_NAECHSTE_VORRUNDE:
+				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE:
+				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE:
+				new MaastrichterVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_MAASTRICHTER_FINALRUNDEN:
+				new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
+				new MaastrichterTurnierTestDaten(ws).start();
+				break;
+			// ------------------------------
 			// K.-O.
 			case CMD_KO_START:
 				new KoMeldeListeSheetNew(ws).start();
@@ -566,6 +604,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_JGJ_DIREKTVERGLEICH                    -> ts == TurnierSystem.JGJ;
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
+			// Maastrichter
+			case CMD_MAASTRICHTER_START                     -> ts == TurnierSystem.KEIN;
+			case CMD_MAASTRICHTER_UPDATE_MELDELISTE,
+				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
+				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
+				 CMD_MAASTRICHTER_FINALRUNDEN               -> ts == TurnierSystem.MAASTRICHTER;
+			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
+			case CMD_MAASTRICHTER_TESTDATEN_TURNIER         -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
 			// K.-O.
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
@@ -621,6 +667,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				}
 			}
 			return false;
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Prüft ob mindestens eine Maastrichter-Vorrunde vorhanden ist.
+	 * Vorrunden-Sheets heißen "{runde}. Vorrunde", z.B. "1. Vorrunde".
+	 */
+	private static boolean hatMaastrichterVorrunde(WorkingSpreadsheet ws) {
+		try {
+			var doc = ws.getWorkingSpreadsheetDocument();
+			if (doc == null) {
+				return false;
+			}
+			return doc.getSheets().hasByName("1. " + MaastrichterSpielrundeSheetNaechste.SHEET_BASIS_NAME);
 		} catch (Exception e) {
 			return false;
 		}

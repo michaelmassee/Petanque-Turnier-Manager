@@ -40,12 +40,12 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	private static final String KONFIG_PROP_MELDELISTE_FORMATION = "Meldeliste Formation";
 	private static final String KONFIG_PROP_MELDELISTE_TEAMNAME = "Meldeliste Teamname";
 	private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
-	private static final String KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE = "Spielbaum Team Anzeige";
-	private static final String KONFIG_PROP_SPIELBAUM_SPIELBAHN = "Spielbaum Spielbahn";
-	private static final String KONFIG_PROP_SPIELBAUM_PLATZ3 = "Spielbaum Spiel um Platz 3";
+	public static final String KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE = "Spielbaum Team Anzeige";
+	public static final String KONFIG_PROP_SPIELBAUM_SPIELBAHN = "Spielbaum Spielbahn";
+	public static final String KONFIG_PROP_SPIELBAUM_PLATZ3 = "Spielbaum Spiel um Platz 3";
 
-	private static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
-	static final String KONFIG_PROP_MIN_REST_GROESSE = "Turnierbaum Min. Rest-Größe";
+	public static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
+	public static final String KONFIG_PROP_MIN_REST_GROESSE = "Turnierbaum Min. Rest-Größe";
 
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -111,6 +111,44 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_REST_GROESSE)
+				.setDefaultVal(16)
+				.setDescription(
+						"Mindestanzahl Teams im Rest für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …).\r\nRest < diesem Wert wird in die letzte Gruppe gefaltet.")
+				.inSideBar());
+	}
+
+	/**
+	 * Fügt die KO-Bracket-spezifischen Properties (spielbahn, teamAnzeige, spielUmPlatz3,
+	 * gruppenGroesse, minRestGroesse) zur angegebenen Liste hinzu.
+	 * Ermöglicht Wiederverwendung in anderen Turniersystemen (z.B. Maastrichter).
+	 */
+	public static void addKoBracketProperties(List<ConfigProperty<?>> props) {
+		props.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
+				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
+				.setDescription("Team-Anzeige im Spielbaum.\r\nNR=Teamnummer\r\nNAME=Teamname"))
+				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
+				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname").inSideBar());
+
+		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
+				.setDefaultVal(SpielrundeSpielbahn.X.name())
+				.setDescription("Spielbahn im Spielbaum.\r\nX=Keine Spalte\r\nL=Leere Spalte\r\nN=Durchnummerieren (1-n)\r\nR=Zufällig vergeben"))
+				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
+				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
+				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
+				.addAuswahl(SpielrundeSpielbahn.R.name(), "Zufällig vergeben").inSideBar());
+
+		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_PLATZ3)
+				.setDefaultVal("N")
+				.setDescription("Spiel um Platz 3 und 4 im Spielbaum anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+		props.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
+				.setDefaultVal(16).setDescription(
+						"Maximale Teamanzahl pro Gruppe.\r\nBei mehr Teams werden mehrere Gruppen A, B, C … erstellt.\r\nEmpfehlung: Zweierpotenz (4, 8, 16, 32), damit volle Gruppen kein Cadrage benötigen.")
+				.inSideBar());
+
+		props.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_REST_GROESSE)
 				.setDefaultVal(16)
 				.setDescription(
 						"Mindestanzahl Teams im Rest für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …).\r\nRest < diesem Wert wird in die letzte Gruppe gefaltet.")
