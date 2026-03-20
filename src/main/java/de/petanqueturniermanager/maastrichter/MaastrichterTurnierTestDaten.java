@@ -32,22 +32,50 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 /**
  * Generiert ein vollständiges Maastrichter Beispielturnier ohne Dialoge:
  * <ol>
- *   <li>Meldeliste (12 Teams, Doublette)</li>
- *   <li>3 Vorrunden (Schweizer System) mit Zufallsergebnissen</li>
+ *   <li>Meldeliste (konfigurierbare Anzahl Teams, Doublette)</li>
+ *   <li>Vorrunden (Schweizer System) mit Zufallsergebnissen</li>
  *   <li>Vorrunden-Rangliste</li>
- *   <li>Finalrunden (A/B/C/D-Bracket)</li>
+ *   <li>Finalrunden (A/B/C/…-Bracket nach GruppenAufteilungRechner)</li>
  * </ol>
  */
 public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet, MeldeListeKonstanten {
+
+	/** Standard-Konfiguration: 12 Teams, 3 Vorrunden, Gruppen à 16, Min-Rest 16 */
+	private static final int DEFAULT_ANZ_TEAMS      = 12;
+	private static final int DEFAULT_ANZ_VORRUNDEN  = 3;
+	private static final int DEFAULT_GRUPPEN_GROESSE = 16;
+	private static final int DEFAULT_MIN_REST_GROESSE = 16;
+
+	private final int anzVorrunden;
+	private final int gruppenGroesse;
+	private final int minRestGroesse;
 
 	private final MaastrichterMeldeListeSheetTestDaten meldelisteTestDaten;
 	private final MaastrichterSpielrundeSheetNaechste naechsteVorrunde;
 	private final MaastrichterVorrundenRanglisteSheet ranglisteSheet;
 	private final MaastrichterFinalrundeSheet finalrundeSheet;
 
+	/** Standard-Konstruktor: 12 Teams, 3 Vorrunden, gruppenGroesse=16, minRestGroesse=16 */
 	public MaastrichterTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
+		this(workingSpreadsheet, DEFAULT_ANZ_TEAMS, DEFAULT_ANZ_VORRUNDEN,
+				DEFAULT_GRUPPEN_GROESSE, DEFAULT_MIN_REST_GROESSE);
+	}
+
+	/**
+	 * Parametrisierter Konstruktor für beliebige Szenarien.
+	 *
+	 * @param anzTeams        Anzahl zu generierender Teams
+	 * @param anzVorrunden    Anzahl Schweizer Vorrunden
+	 * @param gruppenGroesse  Maximale Teams pro KO-Finalgruppe (Zweierpotenz)
+	 * @param minRestGroesse  Mindestzahl für eigene Restgruppe (Zweierpotenz)
+	 */
+	public MaastrichterTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet,
+			int anzTeams, int anzVorrunden, int gruppenGroesse, int minRestGroesse) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Turnier-Testdaten");
-		meldelisteTestDaten = new MaastrichterMeldeListeSheetTestDaten(workingSpreadsheet);
+		this.anzVorrunden   = anzVorrunden;
+		this.gruppenGroesse = gruppenGroesse;
+		this.minRestGroesse = minRestGroesse;
+		meldelisteTestDaten = new MaastrichterMeldeListeSheetTestDaten(workingSpreadsheet, anzTeams);
 		naechsteVorrunde = new MaastrichterSpielrundeSheetNaechste(workingSpreadsheet);
 		ranglisteSheet = new MaastrichterVorrundenRanglisteSheet(workingSpreadsheet);
 		finalrundeSheet = new MaastrichterFinalrundeSheet(workingSpreadsheet);
@@ -78,10 +106,12 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		// 1. Meldeliste erstellen (löscht alle vorhandenen Sheets)
 		meldelisteTestDaten.erstelleTestdaten();
 
-		// Spielbahn auf Bahnnummern setzen; Anzahl Vorrunden aus Konfiguration lesen
+		// Konfiguration setzen (überschreibt ggf. die Defaults der Testdaten-Klasse)
 		MaastrichterKonfigurationSheet konfigSheet = new MaastrichterKonfigurationSheet(getWorkingSpreadsheet());
 		konfigSheet.setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
-		int anzVorrunden = konfigSheet.getAnzVorrunden();
+		konfigSheet.setAnzVorrunden(anzVorrunden);
+		konfigSheet.setGruppenGroesse(gruppenGroesse);
+		konfigSheet.setMinRestGroesse(minRestGroesse);
 
 		// 2. Vorrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzVorrunden; runde++) {

@@ -177,6 +177,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE = "maastrichter_vorrunden_rangliste";
 	public static final String CMD_MAASTRICHTER_FINALRUNDEN = "maastrichter_finalrunden";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER = "maastrichter_testdaten_turnier";
+	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_57 = "maastrichter_testdaten_turnier_57";
 	// K.-O.
 	public static final String CMD_KO_START = "ko_start";
 	public static final String CMD_KO_UPDATE_MELDELISTE = "ko_update_meldeliste";
@@ -431,6 +432,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
 				new MaastrichterTurnierTestDaten(ws).start();
 				break;
+			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_57:
+				// 57 Teams: 4 Vorrunden, gruppenGroesse=16, minRestGroesse=8
+				// → GruppenAufteilungRechner ergibt [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
+				// → 57 Teams ungerade → automatisch Freilos pro Vorrunde
+				new MaastrichterTurnierTestDaten(ws, 57, 4, 16, 8).start();
+				break;
 			// ------------------------------
 			// K.-O.
 			case CMD_KO_START:
@@ -611,7 +618,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
 				 CMD_MAASTRICHTER_FINALRUNDEN               -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
-			case CMD_MAASTRICHTER_TESTDATEN_TURNIER         -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
+			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
+				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
 			// K.-O.
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,

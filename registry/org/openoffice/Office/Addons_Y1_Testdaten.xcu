@@ -229,6 +229,19 @@
 								</prop>
 							</node>
 
+							<node oor:name="C2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Maastrichter, Tournament (57 Teams, 4 Rounds + 4 Finals, last with Cadrage)</value>
+									<value xml:lang="de">Maastrichter, Turnier (57 Teams, 4 Vorrunden + 4 Finalgruppen, letzte mit Cadrage)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_testdaten_turnier_57</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>
