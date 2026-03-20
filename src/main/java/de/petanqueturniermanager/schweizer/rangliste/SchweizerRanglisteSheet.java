@@ -151,6 +151,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	@Override
 	public void doRun() throws GenerateException {
+		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		processBoxinfo("Erstelle Rangliste...");
 
 		NewSheet.from(this, getRanglistenSheetName())
@@ -214,6 +215,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				: ERSTE_DATEN_ZEILE + sortiert.size() - 1;
 		setzeDruckbereich(sheet, letzteZeile);
 
+		getxCalculatable().calculateAll();
 		getSheetHelper().setActiveSheet(sheet);
 	}
 

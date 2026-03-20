@@ -613,7 +613,15 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		for (TeamPaarung teamPaarung : paarungen) {
 			SheetRunner.testDoCancelTask();
 			if (!teamPaarung.hasB()) {
-				// Freilos – keine Begegnung eintragen
+				// Freilos – Team A ohne Gegner eintragen (leeres Team B)
+				RowData freilosRow = rangeData.addNewRow();
+				if (useTeamname) {
+					String nameA = getMeldeListe().getTeamNameByNr(teamPaarung.getA().getNr());
+					freilosRow.add(new CellData(nameA != null ? nameA : String.valueOf(teamPaarung.getA().getNr())));
+				} else {
+					freilosRow.add(new CellData(teamPaarung.getA().getNr()));
+				}
+				freilosRow.add(new CellData("")); // kein Gegner = Freilos
 				continue;
 			}
 			if (useTeamname) {

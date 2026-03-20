@@ -109,10 +109,17 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 			RowData row = data.get(i);
 			if (row.size() < 2) break;
 
+			// Funktioniert sowohl für SpielplanTeamAnzeige.NR (int) als auch .NAME (String)
 			int nrA = row.get(0).getIntVal(0);
-			if (nrA <= 0) break; // Ende der Daten
+			if (nrA <= 0) {
+				String valA = row.get(0).getStringVal();
+				if (valA == null || valA.isBlank()) break; // Ende der Daten
+			}
 			int nrB = row.get(1).getIntVal(0);
-			if (nrB <= 0) continue; // Freilos – kein Ergebnis nötig
+			if (nrB <= 0) {
+				String valB = row.get(1).getStringVal();
+				if (valB == null || valB.isBlank()) continue; // Freilos – kein Ergebnis nötig
+			}
 
 			int zeile = ERSTE_DATEN_ZEILE + i;
 			int winner = ThreadLocalRandom.current().nextInt(2); // 0 oder 1

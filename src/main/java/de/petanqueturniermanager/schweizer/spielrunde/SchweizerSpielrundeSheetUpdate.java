@@ -25,6 +25,8 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 
 	@Override
 	public void doRun() throws GenerateException {
+		getxCalculatable().enableAutomaticCalculation(false); // speed up
+
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		processBoxinfo("Aktuelle Spielrunde " + aktuelleSpielrunde.getNr());
 		setSpielRundeNrInSheet(aktuelleSpielrunde);
