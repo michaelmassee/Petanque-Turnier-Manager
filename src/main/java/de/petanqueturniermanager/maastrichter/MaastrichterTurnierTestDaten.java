@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetTestDaten;
@@ -116,7 +117,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		// 2. Vorrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzVorrunden; runde++) {
 			SheetRunner.testDoCancelTask();
-			processBoxinfo("Erstelle Vorrunde " + runde + " von " + anzVorrunden + " ...");
+			processBoxinfo(I18n.get("processbox.erstelle.vorrunde", runde, anzVorrunden));
 			naechsteVorrunde.erstelleNaechsteVorrunde();
 
 			String sheetName = runde + ". " + MaastrichterSpielrundeSheetNaechste.SHEET_BASIS_NAME;
@@ -128,12 +129,12 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 
 		// 3. Vorrunden-Rangliste erstellen
 		SheetRunner.testDoCancelTask();
-		processBoxinfo("Erstelle Vorrunden-Rangliste...");
+		processBoxinfo(I18n.get("processbox.erstelle.rangliste"));
 		ranglisteSheet.doRun();
 
 		// 4. Finalrunden erstellen
 		SheetRunner.testDoCancelTask();
-		processBoxinfo("Erstelle Finalrunden...");
+		processBoxinfo(I18n.get("processbox.erstelle.finalrunde"));
 		finalrundeSheet.doRun();
 	}
 

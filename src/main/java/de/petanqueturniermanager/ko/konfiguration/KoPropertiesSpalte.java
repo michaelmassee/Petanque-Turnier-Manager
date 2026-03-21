@@ -49,37 +49,37 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_LINKS).inSideBar());
+				.setDescription("config.desc.header.links").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_MITTE).inSideBar());
+				.setDescription("config.desc.header.mitte").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_RECHTS).inSideBar());
+				.setDescription("config.desc.header.rechts").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
 				.setDefaultVal(Formation.DOUBLETTE.name())
-				.setDescription("Formation.\r\nTETE=1 Spieler\r\nDOUBLETTE=2 Spieler\r\nTRIPLETTE=3 Spieler"))
+				.setDescription("config.desc.ko.formation"))
 				.addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
 				.addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
 				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
-				.setDefaultVal("J").setDescription("Teamname-Spalte in Meldeliste anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
-				.setDefaultVal("N").setDescription("Vereinsname-Spalte in Meldeliste anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.setDefaultVal("N").setDescription("config.desc.ko.vereinsname"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
 				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
-				.setDescription("Team-Anzeige im Spielbaum.\r\nNR=Teamnummer\r\nNAME=Teamname"))
+				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
 				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
 				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name())
-				.setDescription("Spielbahn im Spielbaum.\r\nX=Keine Spalte\r\nL=Leere Spalte\r\nN=Durchnummerieren (1-n)\r\nR=Zufällig vergeben"))
+				.setDescription("config.desc.ko.spielbaum.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
@@ -87,33 +87,31 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_PLATZ3)
 				.setDefaultVal("N")
-				.setDescription("Spiel um Platz 3 und 4 im Spielbaum anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.setDescription("config.desc.ko.spielbaum.platz3"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_HEADER)
-				.setDefaultVal(0x2544DD).setDescription("Turnierbaum Header-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A)
-				.setDefaultVal(0xDCEEFA).setDescription("Turnierbaum Team-A-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B)
-				.setDefaultVal(0xF0F7FF).setDescription("Turnierbaum Team-B-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SCORE)
-				.setDefaultVal(0xFFFDE7).setDescription("Turnierbaum Score-Zellen-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0xFFFDE7).setDescription("config.desc.ko.turnierbaum.score").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER)
-				.setDefaultVal(0xFFD700).setDescription("Turnierbaum Sieger-Zellen-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_BAHN)
-				.setDefaultVal(0xEEEEEE).setDescription("Turnierbaum Bahn-Spalten-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0xEEEEEE).setDescription("config.desc.ko.turnierbaum.bahn").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ)
-				.setDefaultVal(0xCD7F32).setDescription("Turnierbaum 3.-Platz-Zellen-Hintergrundfarbe").inSideBar());
+				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
-				.setDefaultVal(16).setDescription(
-						"Maximale Teamanzahl pro Gruppe.\r\nBei mehr Teams werden mehrere Gruppen A, B, C … erstellt.\r\nEmpfehlung: Zweierpotenz (4, 8, 16, 32), damit volle Gruppen kein Cadrage benötigen.")
+				.setDefaultVal(16).setDescription("config.desc.ko.gruppen.groesse")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_REST_GROESSE)
 				.setDefaultVal(16)
-				.setDescription(
-						"Mindestanzahl Teams im Rest für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …).\r\nRest < diesem Wert wird in die letzte Gruppe gefaltet.")
+				.setDescription("config.desc.ko.min.rest.groesse")
 				.inSideBar());
 	}
 

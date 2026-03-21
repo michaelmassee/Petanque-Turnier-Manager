@@ -38,6 +38,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -97,7 +98,8 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		if (sheet.getSpielRundeNr().getNr() < 1) {
 			sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			String errorMsg = "Ungültige Spielrunde in der Meldeliste '" + sheet.getSpielRundeNr().getNr() + "'";
-			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler")
+			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
 					.message(errorMsg).show();
 			return false;
 		}
@@ -105,7 +107,8 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			String errorMsg = "Ungültige Anzahl '" + meldungen.size() + "' von Aktive Meldungen vorhanden."
 					+ "\r\nFür Spieltag " + sheet.getSpielTag().getNr() + " mindestens 6 Meldungen aktivieren.";
-			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler")
+			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
 					.message(errorMsg).show();
 			return false;
 		}
@@ -129,8 +132,9 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				superMeleeMode);
 
 		if (!superMeleeTeamRechner.valideAnzahlSpieler()) {
-			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Spielrunde").message(
-					superMeleeTeamRechner.getAnzSpieler() + " Meldungen, ist eine ungültige Anzahl. Meldeliste Prüfen")
+			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.neue.spielrunde"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.spieler", superMeleeTeamRechner.getAnzSpieler()))
 					.show();
 			return false;
 		}
@@ -138,15 +142,13 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		sheet.setSpielRundeNr(neueSpielrundeNr);
 
 		if (meldungen.spieler().size() < 4) {
-			throw new GenerateException("Fehler beim erstellen von Spielrunde. Kann für Spieltag "
-					+ sheet.getSpielTag().getNr() + " die Spielrunde " + neueSpielrundeNr.getNr()
-					+ " nicht Auslosen. Anzahl Spieler < 4. Aktive Spieler = " + meldungen.spieler().size());
+			throw new GenerateException(I18n.get("error.spielrunde.erstellen", sheet.getSpielTag().getNr(), neueSpielrundeNr.getNr(), meldungen.spieler().size()));
 		}
 		if (sheet.getSheetHelper().findByName(getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr())) != null) {
 			String msg = "Erstelle für Spieltag " + sheet.getSpielTag().getNr() + "\r\nSpielrunde "
 					+ neueSpielrundeNr.getNr() + "\r\nneine neue Spielrunde";
 			MessageBoxResult msgBoxRslt = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL)
-					.forceOk(force).caption("Neue Spielrunde").message(msg).show();
+					.forceOk(force).caption(I18n.get("msg.caption.neue.spielrunde")).message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
 				ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 				return false;
@@ -170,9 +172,9 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		}
 		if (superMeleeMode == SuperMeleeMode.Triplette && isKannNurDoublette) {
 			MessageBox msgbox = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).forceOk(force)
-					.caption("Spielrunde Doublette");
-			msgbox.message("Für Spieltag " + sheet.getSpielTag().getNr() + "\r\nSpielrunde "
-					+ neueSpielrundeNr.getNr() + "\r\nnur Doublette Paarungen auslosen ?");
+					.caption(I18n.get("msg.caption.spielrunde.doublette"));
+			msgbox.message(I18n.get("msg.text.spielrunde.doublette",
+					sheet.getSpielTag().getNr(), neueSpielrundeNr.getNr()));
 			if (MessageBoxResult.YES == msgbox.show()) {
 				doubletteRunde = true;
 			}
@@ -214,7 +216,8 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			sheet.getSheetHelper().removeSheet(getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()));
 			konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(sheet.getSpielRundeNr().getNr() - 1));
-			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Auslosen")
+			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.fehler.auslosen"))
 					.message(e.getMessage()).show();
 			throw new RuntimeException(e);
 		}
@@ -249,8 +252,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			spielrunde = abSpielrunde;
 		}
 
-		sheet.processBoxinfo("Meldungen von gespielten Runden einlesen. Spieltag:" + spielTagNr.getNr()
-				+ " Von Runde:" + spielrunde + " Bis Runde:" + bisSpielrunde);
+		sheet.processBoxinfo(I18n.get("processbox.meldungen.gespielter.runden.einlesen", spielTagNr.getNr()));
 
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
@@ -279,8 +281,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 									team.addSpielerWennNichtVorhanden(spieler);
 								} catch (AlgorithmenException e) {
 									logger.error(e.getMessage(), e);
-									throw new GenerateException(
-											"Fehler beim einlesen der gespielten Runden. siehe log datei für details");
+									throw new GenerateException(I18n.get("error.spielrunde.einlesen"));
 								}
 							}
 						}
@@ -333,7 +334,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	// -------------------------------------------------------------------------
 
 	private void vertikaleErgbnisseFormulaEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
-		sheet.processBoxinfo("Vertikal Ergbnisspalten");
+		sheet.processBoxinfo(I18n.get("processbox.spielrunde.ergebnisse"));
 		checkArgument(spielRunde.getNr() == sheet.getSpielRundeNr().getNr());
 
 		XSpreadsheet xsheet = sheet.getXSpreadSheet();
@@ -440,7 +441,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void spielerNummerEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
-		sheet.processBoxinfo("Spielernummer einfügen");
+		sheet.processBoxinfo(I18n.get("processbox.spielrunde.einfuegen"));
 		checkArgument(spielRunde.getNr() == sheet.getSpielRundeNr().getNr());
 
 		HashSet<Integer> spielrNr = new HashSet<>();
@@ -531,7 +532,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void headerPaarungen(XSpreadsheet xsheet, MeleeSpielRunde spielRunde) throws GenerateException {
-		sheet.processBoxinfo("Header für Spielpaarungen");
+		sheet.processBoxinfo(I18n.get("processbox.spielrunde.paarungen"));
 		checkArgument(spielRunde.getNr() == sheet.getSpielRundeNr().getNr());
 
 		SpielTagNr spieltag = sheet.getSpielTag();
@@ -584,7 +585,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void headerSpielerNr(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo("Header Spielernummer");
+		sheet.processBoxinfo(I18n.get("processbox.formatiere.header"));
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER)
 				.isVisible(konfigurationSheet.zeigeArbeitsSpalten());
@@ -604,7 +605,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void printBereichDefinieren(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo("Print-Bereich");
+		sheet.processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position letzteZeile = letztePositionRechtsUnten();
 		PrintArea.from(xsheet, sheet.getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
@@ -613,14 +614,14 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet xsheet, boolean doubletteRunde)
 			throws GenerateException {
 		if (doubletteRunde) {
-			sheet.processBoxinfo("Nur Doublette Spielrunde, leere Spalten ausblenden");
+			sheet.processBoxinfo(I18n.get("processbox.meldungen.ausblenden"));
 			sheet.getSheetHelper().setColumnProperty(xsheet, ERSTE_SPALTE_RUNDESPIELPLAN + 2, "IsVisible", false);
 			sheet.getSheetHelper().setColumnProperty(xsheet, ERSTE_SPALTE_RUNDESPIELPLAN + 5, "IsVisible", false);
 		}
 	}
 
 	private void spielrundeProperties(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo("Spielrunden-Properties einfügen");
+		sheet.processBoxinfo(I18n.get("processbox.spielrunde.validieren"));
 
 		Position datenEnd = letztePositionRechtsUnten();
 
@@ -653,7 +654,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void datenformatieren(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo("Daten Formatieren");
+		sheet.processBoxinfo(I18n.get("processbox.formatiere.daten"));
 
 		Position datenStartOhneNrSpalte = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
 		Position datenEnd = letztePositionRechtsUnten();

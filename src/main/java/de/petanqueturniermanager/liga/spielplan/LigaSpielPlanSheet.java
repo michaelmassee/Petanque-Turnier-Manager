@@ -16,9 +16,11 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -121,9 +123,10 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
-			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
-					.message("Ungültige Anzahl von Meldungen").show();
+			processBoxinfo(I18n.get("processbox.abbruch"));
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.liga.spielplan"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
 			return;
 		}
 
@@ -150,7 +153,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(printBereichRangePosition());
 	}
 
@@ -356,9 +359,25 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
 		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
 				.isVisible(zeigeArbeitsSpalten);
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_A_NR_SPALTE, spalteBreite);
-		getSheetHelper().setColumnProperties(getXSpreadSheet(), TEAM_B_NR_SPALTE, spalteBreite);
+		XSpreadsheet sheet = getXSpreadSheet();
+		getSheetHelper().setColumnProperties(sheet, TEAM_A_NR_SPALTE, spalteBreite);
+		getSheetHelper().setColumnProperties(sheet, TEAM_B_NR_SPALTE, spalteBreite);
 
+		// SPIELPNKT-Zellen für Freispiel-Reihen vorbelegen
+		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
+		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
+		int zeile = ERSTE_SPIELTAG_DATEN_ZEILE;
+		for (List<TeamPaarung> spielTag : alleSpieltage) {
+			for (TeamPaarung teamPaarung : spielTag) {
+				if (!teamPaarung.getOptionalB().isPresent()) {
+					getSheetHelper().setNumberValueInCell(
+							NumberCellValue.from(sheet, SPIELPNKT_A_SPALTE, zeile, freispielPlus));
+					getSheetHelper().setNumberValueInCell(
+							NumberCellValue.from(sheet, SPIELPNKT_B_SPALTE, zeile, freispielMinus));
+				}
+				zeile++;
+			}
+		}
 	}
 
 	private void insertSpieltageDaten(List<List<TeamPaarung>> spielPlanHRunde) throws GenerateException {

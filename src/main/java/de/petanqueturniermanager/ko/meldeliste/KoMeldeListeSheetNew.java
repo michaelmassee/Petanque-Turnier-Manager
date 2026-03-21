@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -142,8 +143,9 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 							konfig.getGruppenGroesse(),
 							konfig.getMinRestGroesse());
 		} catch (com.sun.star.uno.Exception e) {
-			logger.error(e.getMessage(), e);
-			throw new GenerateException("Fehler beim Anzeigen des Parameter-Dialogs: " + e.getMessage());
+			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
+			logger.error(errMsg, e);
+			throw new GenerateException(errMsg);
 		}
 
 		if (result.isEmpty()) {

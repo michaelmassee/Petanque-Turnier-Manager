@@ -7,6 +7,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -82,7 +83,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 		// 2. Spielrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
-			processBoxinfo("Erstelle Spielrunde " + runde + " von " + anzRunden + " ...");
+			processBoxinfo(I18n.get("processbox.erstelle.spielrunde", runde, anzRunden));
 			naechsteSpielrunde.doRun();
 
 			XSpreadsheet sheet = getSheetHelper().findByName(runde + ". " + SHEET_NAMEN);

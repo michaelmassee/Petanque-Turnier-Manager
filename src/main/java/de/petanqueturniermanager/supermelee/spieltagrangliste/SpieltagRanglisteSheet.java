@@ -22,6 +22,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.FillAutoPosition;
@@ -138,8 +139,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 
 		if (anzSpielRunden == 0) {
-			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK).caption("Spieltagrangliste")
-					.message("Keine Spielrunden vorhanden").show();
+			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.spieltagrangliste"))
+					.message(I18n.get("msg.text.keine.spielrunden")).show();
 			return;
 		}
 
@@ -166,12 +168,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 		rangListeSorter.doSort();
 		Position footerPos = ranglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
-		processBoxinfo("Header festsetzen");
+		processBoxinfo(I18n.get("processbox.header.festsetzen"));
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
 		Position linksOben = Position.from(SPIELER_NR_SPALTE,
 				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
@@ -192,7 +194,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 
 	protected void updateSummenSpalten() throws GenerateException {
 
-		processBoxinfo("Summenspalten Aktualisieren");
+		processBoxinfo(I18n.get("processbox.summenspalten.aktualisieren"));
 
 		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 		if (anzSpielRunden < 1) {
@@ -264,7 +266,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 
 	private void ergebnisseFormulaEinfuegen() throws GenerateException {
 
-		processBoxinfo("Spieltag(e) Ergebnisse Einfuegen");
+		processBoxinfo(I18n.get("processbox.spieltage.ergebnisse.einfuegen"));
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());

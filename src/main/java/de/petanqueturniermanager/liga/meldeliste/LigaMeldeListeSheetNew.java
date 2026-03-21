@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
@@ -165,8 +166,9 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 		try {
 			param = LigaStartDialog.from(getWorkingSpreadsheet()).show();
 		} catch (com.sun.star.uno.Exception e) {
-			logger.error("{} Fehler beim Anzeigen des Start-Dialogs: {}", e.getMessage(), e);
-			throw new GenerateException("Fehler beim Anzeigen des Start-Dialogs: " + e.getMessage());
+			String errMsg = I18n.get("error.dialog.startdialog", e.getMessage());
+			logger.error(errMsg, e);
+			throw new GenerateException(errMsg);
 		}
 
 		if (param.isEmpty()) {

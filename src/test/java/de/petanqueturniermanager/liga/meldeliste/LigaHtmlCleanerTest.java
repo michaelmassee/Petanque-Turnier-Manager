@@ -44,8 +44,10 @@ public class LigaHtmlCleanerTest {
 
 		// for local test only
 		File target = new File("/home/michael/tmp", "LigaGeneratedClean.html");
-		System.out.println("Copy nach " + target);
-		FileUtils.copyFile(targetHtml, target);
+		if (target.getParentFile().exists()) {
+			System.out.println("Copy nach " + target);
+			FileUtils.copyFile(targetHtml, target);
+		}
 
 		List<String> reflist = Files.readAllLines(Paths.get(refHtml.toURI()));
 		List<String> targetlist = Files.readAllLines(Paths.get(targetHtml.toURI()));

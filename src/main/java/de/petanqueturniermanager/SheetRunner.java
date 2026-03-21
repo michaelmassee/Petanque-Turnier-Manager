@@ -18,6 +18,7 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -29,7 +30,7 @@ public abstract class SheetRunner extends Thread {
 
 	private static final Logger logger = LogManager.getLogger(SheetRunner.class);
 
-	private static final String VERARBEITUNG_ABGEBROCHEN = "Verarbeitung abgebrochen";
+	static final String VERARBEITUNG_ABGEBROCHEN = "Verarbeitung abgebrochen";
 	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SheetHelper sheetHelper;
 	private final TurnierSystem turnierSystem;
@@ -92,17 +93,17 @@ public abstract class SheetRunner extends Thread {
 				handleGenerateException(e);
 			} catch (Exception e) {
 				isFehler = true;
-				processBox().fehler("Interner Fehler " + e.getClass().getName()).fehler(e.getMessage())
-						.fehler("Siehe Log für weitere Infos");
+				processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
+						.fehler(I18n.get("processbox.log.hinweis"));
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 				koordinator.setRunner(null);
 				koordinator.benachrichtigeListener(); // Menü reaktivieren
 				if (isFehler) {
-					processBox().visible().fehler("!! FEHLER !!").ready();
+					processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
 				} else {
-					processBox().visible().info("**FERTIG**").ready();
+					processBox().visible().info(I18n.get("processbox.fertig.status")).ready();
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
@@ -116,8 +117,9 @@ public abstract class SheetRunner extends Thread {
 			}
 
 		} else {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch")
-					.message("Die Verarbeitung wurde nicht gestartet, weil bereits eine aktive Verarbeitung läuft.").show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
+					.caption(I18n.get("msg.caption.aktive.verarbeitung"))
+					.message(I18n.get("msg.text.verarbeitung.laeuft")).show();
 		}
 	}
 
@@ -138,7 +140,8 @@ public abstract class SheetRunner extends Thread {
 
 		if (turnierSystemAusDocument == TurnierSystem.KEIN) {
 			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("Kein Turnier-Dokument").message("Kein Turnier vorhanden").show();
+					.caption(I18n.get("msg.caption.kein.turnier.dok"))
+					.message(I18n.get("msg.text.kein.turnier")).show();
 			throw new GenerateException(VERARBEITUNG_ABGEBROCHEN);
 		}
 		return this;
@@ -168,14 +171,16 @@ public abstract class SheetRunner extends Thread {
 
 	protected void handleGenerateException(GenerateException e) {
 		if (VERARBEITUNG_ABGEBROCHEN.equals(e.getMessage())) {
-			processBox().info(VERARBEITUNG_ABGEBROCHEN);
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK).caption("Abbruch").message(e.getMessage())
-					.show();
+			processBox().info(I18n.get("msg.text.verarbeitung.abgebrochen"));
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
+					.caption(I18n.get("msg.caption.abbruch"))
+					.message(I18n.get("msg.text.verarbeitung.abgebrochen")).show();
 		} else {
 			processBox().fehler(e.getMessage());
 			getLogger().error(e.getMessage(), e);
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler").message(e.getMessage())
-					.show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.fehler"))
+					.message(e.getMessage()).show();
 		}
 	}
 

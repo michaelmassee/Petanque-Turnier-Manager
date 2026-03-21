@@ -7,7 +7,7 @@ package de.petanqueturniermanager.liga.konfiguration;
  * @author Michael Massee
  *
  */
-public interface ILigaPropertiesSpalte {
+public interface ILigaPropertiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte {
 
 	Integer getSpielPlanHeaderFarbe();
 

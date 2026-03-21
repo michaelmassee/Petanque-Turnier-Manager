@@ -26,6 +26,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class SchweizerMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeListeKonstanten {
@@ -138,8 +139,9 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner implements ISheet, 
 			param = SchweizerTurnierParameterDialog.from(getWorkingSpreadsheet()).show(Formation.DOUBLETTE, false, false,
 				SpielplanTeamAnzeige.NR, getKonfigurationSheet().getRankingModus());
 		} catch (Exception e) {
-			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
-			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
+			String errMsg = I18n.get("error.dialog.parameterdialog", e.getMessage());
+			logger.error(errMsg, e);
+			throw new GenerateException(errMsg);
 		}
 
 		if (param.isEmpty()) {

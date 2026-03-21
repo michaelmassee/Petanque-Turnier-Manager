@@ -34,6 +34,7 @@ import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -172,6 +173,8 @@ public abstract class BaseCalcUITest {
 		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
 		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
 		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
+		// I18n testseitig mit Deutsch-Fallback initialisieren (locale-unabhängig)
+		I18n.init(null);
 		// use force weil calc is clossed in afterTest
 		ProcessBox.setHeadlessMode(Boolean.parseBoolean(System.getProperty("uitest.headless", "false")));
 		ProcessBox.forceinit(starter.getxComponentContext());

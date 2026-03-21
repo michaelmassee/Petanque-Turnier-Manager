@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.sun.star.frame.XStorable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -85,7 +86,8 @@ public abstract class AbstractStore<T> {
 		boolean istGespeichert = istGespeichert();
 		if (!istGespeichert) {
 			MessageBox.from(workingSpreadsheet.getxContext(), MessageBoxTypeEnum.WARN_OK)
-					.caption("Datei nicht gespeichert").message("Das aktuelle Dokument ist noch nicht gespeichert.")
+					.caption(I18n.get("msg.caption.datei.nicht.gespeichert"))
+					.message(I18n.get("msg.text.datei.nicht.gespeichert"))
 					.show();
 		}
 		return istGespeichert;

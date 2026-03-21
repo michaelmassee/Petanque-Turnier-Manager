@@ -20,6 +20,9 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
+	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
+	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
+
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER = "Spielplan Header";
@@ -40,35 +43,39 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 	static {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE)
-				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Spielplan Hintergrundfarbe für gerade Zeilen")
+				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.liga.spielplan.gerade")
 				.inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("Spielplan Hintergrundfarbe für ungerade Zeilen").inSideBar());
+				.setDescription("config.desc.liga.spielplan.ungerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("Spielplan Header-Hintergrundfarbe")
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.liga.spielplan.header")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_LINKS).inSideBar());
+				.setDescription("config.desc.header.links").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_MITTE).inSideBar());
+				.setDescription("config.desc.header.mitte").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_RECHTS).inSideBar());
+				.setDescription("config.desc.header.rechts").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
-				.setDescription("Name der Gruppe in dieses Dokument.").inSideBar());
+				.setDescription("config.desc.liga.gruppenname").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_LOGO_URL).setDefaultVal("")
-				.setDescription("Url zur Liga Logo Datei"));
+				.setDescription("config.desc.liga.logo.url"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_PDF_IMG_URL)
-				.setDefaultVal("pdf-download.png").setDescription("Url zur Pdf Download-Image"));
+				.setDefaultVal("pdf-download.png").setDescription("config.desc.liga.pdf.img.url"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_DOWNLOAD_URL).setDefaultVal("")
-				.setDescription(
-						"Bases Url fuer den Download von Spielpläne, Ranglisten, etc.. Default ist gleiche Ordner.")
+				.setDescription("config.desc.liga.download.url")
 				.inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
 	}
 
 	/**
@@ -138,6 +145,16 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public String getPdfImageUr() {
 		return readStringProperty(KONFIG_PROP_PDF_IMG_URL);
+	}
+
+	@Override
+	public Integer getFreispielPunktePlus() {
+		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+	}
+
+	@Override
+	public Integer getFreispielPunkteMinus() {
+		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
 	}
 
 }

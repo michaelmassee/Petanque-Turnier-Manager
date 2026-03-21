@@ -22,6 +22,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
@@ -62,6 +63,7 @@ public class PetanqueTurnierMngrSingleton {
 
 		globalEventListener(context);
 		ProcessBox.init(context); // der muss zuerst
+		I18n.init(context);
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());

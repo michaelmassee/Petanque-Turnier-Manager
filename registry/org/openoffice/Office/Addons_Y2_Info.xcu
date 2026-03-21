@@ -5,6 +5,7 @@
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
 				<prop oor:name="Title" oor:type="xs:string">
 					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -23,6 +24,7 @@
 					<node oor:name="Y6" oor:op="replace">
 						<prop oor:name="Title">
 							<value xml:lang="de">Info</value>
+						<value xml:lang="en">Info</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -31,6 +33,7 @@
 							<node oor:name="Y6A" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Release-Infos</value>
+								<value xml:lang="en">Release Notes</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:releaseInfosAnzeigen</value>
@@ -42,6 +45,7 @@
 							<node oor:name="Y6B" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Plugin herunterladen</value>
+								<value xml:lang="en">Download Plugin</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:downloadExtension</value>
@@ -53,6 +57,7 @@
 							<node oor:name="Y6C" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neueste Version direkt installieren</value>
+								<value xml:lang="en">Install Latest Version Directly</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:direktAktualisieren</value>
@@ -69,6 +74,7 @@
 							<node oor:name="Y6E" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Logfile anzeigen</value>
+								<value xml:lang="en">Show Log File</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:logfileAnzeigen</value>
@@ -85,6 +91,7 @@
 							<node oor:name="Y6G" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Plugin Konfiguration</value>
+								<value xml:lang="en">Plugin Configuration</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:pluginKonfiguration</value>
@@ -96,6 +103,7 @@
 							<node oor:name="Y6H" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Protokoll-Fenster anzeigen</value>
+								<value xml:lang="en">Show Protocol Window</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:processboxAnzeigen</value>

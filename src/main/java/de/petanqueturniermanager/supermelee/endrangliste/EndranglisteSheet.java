@@ -40,6 +40,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -115,8 +116,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		int anzahlSpieltage = getAnzahlSpieltage();
 		if (anzahlSpieltage < 2) {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler")
-					.message("Ungültige anzahl von Spieltage. " + anzahlSpieltage).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.fehler"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.spieltage", anzahlSpieltage)).show();
 			return;
 		}
 
@@ -147,12 +149,12 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		rangListeSorter.doSort();
 		Position footerPos = endRanglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
-		processBoxinfo("Header festsetzen");
+		processBoxinfo(I18n.get("processbox.header.festsetzen"));
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position linksOben = Position.from(SPIELER_NR_SPALTE,
 				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
@@ -162,7 +164,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {
 
-		processBoxinfo("Formatiere gerade Ungerade Zeilen");
+		processBoxinfo(I18n.get("processbox.endrangliste.formatieren"));
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
@@ -245,7 +247,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void formatSchlechtesteSpieltagSpalte() throws GenerateException {
 
-		processBoxinfo("Formatiere Streichspieltag");
+		processBoxinfo(I18n.get("processbox.endrangliste.sortieren"));
 
 		int schlechtesteSpielTageSpalte = getSchlechtesteSpielTageSpalte();
 		NumberCellValue numberCellValueSchlechtesteSpielTag = NumberCellValue.from(getXSpreadSheet(),
@@ -303,7 +305,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void spielTageEinfuegen() throws GenerateException {
 
-		processBoxinfo("Spieltage Einfuegen");
+		processBoxinfo(I18n.get("processbox.endrangliste.spieltage"));
 
 		// verwende fill down
 		// =WENNNV(SVERWEIS(A4;$'2. Spieltag Rangliste'.$A4:$D1000;4;0);"")
@@ -348,7 +350,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	 */
 	private void updateAnzSpieltageSpalte() throws GenerateException {
 
-		processBoxinfo("Aktualisiere Anzahl Spieltage Spalte");
+		processBoxinfo(I18n.get("processbox.endrangliste.aktualisieren"));
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		int letzteSpieltagLetzteSpalte = ersteSpalteEndsumme - 1;
@@ -391,7 +393,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void updateEndSummenSpalten() throws GenerateException {
 
-		processBoxinfo("Summen Spalten Aktualisieren");
+		processBoxinfo(I18n.get("processbox.summenspalten.aktualisieren"));
 
 		List<Integer> spielerNrList = spielerSpalte.getSpielerNrList();
 		for (int spielerNr : spielerNrList) {

@@ -61,41 +61,40 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	static {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
-				.setDefaultVal(1).setDescription("Aktuelle Spieltag").inSideBarInfoPanel());
+				.setDefaultVal(1).setDescription("config.desc.supermelee.spieltag").inSideBarInfoPanel());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-				.setDefaultVal(1).setDescription("Aktuelle Spielrunde").inSideBarInfoPanel());
+				.setDefaultVal(1).setDescription("config.desc.supermelee.spielrunde").inSideBarInfoPanel());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN)
-				.setDefaultVal(0).setDescription("Neu auslosen ab Spielrunde").inSideBar());
+				.setDefaultVal(0).setDescription("config.desc.supermelee.spielrunde.neu.auslosen").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen").inSideBar());
+				.setDescription("config.desc.spielrunde.gerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen").inSideBar());
+				.setDescription("config.desc.spielrunde.ungerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("Spielrunde Header-Hintergrundfarbe")
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty
 				.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE).setDefaultVal(14540253)
-				.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag gerade Zeilen").inSideBar());
+				.setDescription("config.desc.supermelee.streich.gerade").inSideBar());
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE)
 						.setDefaultVal(Integer.valueOf("ccc8c1", 16))
-						.setDescription("Rangliste Hintergrundfarbe für Streich-Spieltag ungerade Zeilen").inSideBar());
+						.setDescription("config.desc.supermelee.streich.ungerade").inSideBar());
 
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS)
-						.setDefaultVal(0).setDescription("Pluspunkte nicht gespielte Runde").inSideBar());
+						.setDefaultVal(0).setDescription("config.desc.supermelee.nicht.gespielt.plus").inSideBar());
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS)
-						.setDefaultVal(13).setDescription("Minuspunkte nicht gespielte Runde").inSideBar());
+						.setDefaultVal(13).setDescription("config.desc.supermelee.nicht.gespielt.minus").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
-				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription(
-						"Spalte Spielbahn in Spielrunde.\r\nX=Keine Spalte\r\nL=Leere Spalte (händisch ausfüllen)\r\nN=Durchnummerieren\r\nR=Random"))
+				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
@@ -103,39 +102,35 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SUPERMELEE_MODE)
 				.setDefaultVal(SuperMeleeMode.Triplette.getKey())
-				.setDescription("Spielrunden Modus\r\nT=Triplette\r\nD=Doublette"))
+				.setDescription("config.desc.supermelee.modus"))
 				.addAuswahl(SuperMeleeMode.Triplette.getKey(), "Triplette")
 				.addAuswahl(SuperMeleeMode.Doublette.getKey(), "Doublette").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE)
 				.setDefaultVal(99)
-				.setDescription(
-						"Die Anzahl vergangene Spieltage die bei der Auslosung von neuen Spielrunden eingelesen werden. (Hat zusammen gespielt mit)")
+				.setDescription("config.desc.supermelee.anz.gespielte.spieltage")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_SPIELER_IN_SPALTE)
 				.setDefaultVal(MAX_ANZSPIELER_IN_SPALTE)
-				.setDescription("Ab wann (Anzahl Spieler) neue Spalte in Spielplan.").inSideBar());
+				.setDescription("config.desc.supermelee.anz.spieler.spalte").inSideBar());
 
 		KONFIG_PROPERTIES.add(
 				ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_1_HEADER).setDefaultVal(false)
-						.inSideBar().setDescription("Spielrunde, 1. Headerzeile mit Spieltag Info\r\nN/J (default=N)"));
+						.inSideBar().setDescription("config.desc.supermelee.spielrunde.1.header"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELRUNDE_PLAN)
 				.setDefaultVal(false).inSideBar()
-				.setDescription("Erstelle ein Spielrunde Plan zu jeder Spielrunde\r\nN/J (default=N)"));
+				.setDescription("config.desc.supermelee.spielrunde.plan"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SETZ_POS).setDefaultVal(true)
-				.inSideBar().setDescription(
-						"Bei der Generierung von Spielrunden, Setzpositionen aus der Meldeliste beachten. Default=J"));
+				.inSideBar().setDescription("config.desc.supermelee.setz.pos"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN)
-				.setDefaultVal(false).inSideBar().setDescription(
-						"Wenn true, und wenn die Anzahl der Meldungen, nur eine Doublettes oder Triplettes Runde ermöglichen, dann bei der Generierung von Spielrunden Fragen."));
+				.setDefaultVal(false).inSideBar().setDescription("config.desc.supermelee.gleiche.paarungen"));
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ENDRANGLISTE_SORT_MODE)
-				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription(
-						"Endrangliste Sortiermodus\r\nD=Spiele +, Spiele Div, ...\r\nT=Spiele +, Anzahl gespielte Spieltage, ..."))
+				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription("config.desc.supermelee.endrangliste.sort.modus"))
 				.addAuswahl(SuprMleEndranglisteSortMode.DEFAULT.getKey(), "Default,Sp+,SpΔ,PktΔ,Pkt+")
 				.addAuswahl(SuprMleEndranglisteSortMode.ANZTAGE.getKey(), "Sp+,AnzTage,SpΔ,PktΔ,Pkt+"));
 

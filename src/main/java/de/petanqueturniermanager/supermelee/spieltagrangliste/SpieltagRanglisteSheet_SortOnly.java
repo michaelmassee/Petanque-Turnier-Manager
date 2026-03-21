@@ -9,6 +9,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 
@@ -23,16 +24,16 @@ public class SpieltagRanglisteSheet_SortOnly extends SpieltagRanglisteSheet {
 		setSpieltagNr(getKonfigurationSheet().getAktiveSpieltag());
 		XSpreadsheet sheet = getXSpreadSheet();
 		if (sheet == null) {
-			String errorMsg = "Keine Rangliste vorhanden.";
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Fehler beim Sortieren von Rangliste")
-					.message(errorMsg).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.fehler.sortieren.rangliste"))
+					.message(I18n.get("msg.text.keine.rangliste")).show();
 		} else {
 			getSheetHelper().setActiveSheet(sheet);
 
 			if (!istDieAnzahlSpieltageInDerRanglisteGleichMitDerAnzahlderSpieltagesheets()) {
 				String errorMsg = "Die Anzahl der Spielrunden in der Rangliste stimt nicht überein mit der Anzahl der gespielten Speilrunden.";
 				MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-						.caption("Fehler beim Sortieren von Rangliste").message(errorMsg).show();
+						.caption(I18n.get("msg.caption.fehler.sortieren.rangliste")).message(errorMsg).show();
 			} else {
 				getRangListeSorter().doSort();
 			}

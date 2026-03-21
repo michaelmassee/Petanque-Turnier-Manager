@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Verwaltet den Laufzustand von {@link SheetRunner}-Threads.
@@ -54,7 +55,7 @@ class SheetRunnerKoordinator {
     void abbrechenPruefen() throws GenerateException {
         SheetRunner snapshot = aktuellerRunner;
         if (snapshot != null && snapshot.isInterrupted()) {
-            throw new GenerateException("Verarbeitung abgebrochen");
+            throw new GenerateException(SheetRunner.VERARBEITUNG_ABGEBROCHEN);
         }
     }
 

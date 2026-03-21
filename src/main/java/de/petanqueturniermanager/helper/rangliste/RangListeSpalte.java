@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 public class RangListeSpalte {
@@ -54,14 +55,14 @@ public class RangListeSpalte {
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		iRanglisteSheet.get().processBoxinfo("Rangliste Header");
+		iRanglisteSheet.get().processBoxinfo(I18n.get("processbox.rangliste.spalten.einfuegen"));
 
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
 		// Properties für Daten
 		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER).setWidth(1000).setCharWeight(FontWeight.BOLD).setCharHeight(11);
 
-		StringCellValue celVal = StringCellValue.from(getSheet(), Position.from(rangListeSpalte, ersteZeile - 3), "Platz").addColumnProperties(columnProperties)
+		StringCellValue celVal = StringCellValue.from(getSheet(), Position.from(rangListeSpalte, ersteZeile - 3), I18n.get("column.header.platz")).addColumnProperties(columnProperties)
 				.setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(10)
 				.setCharWeight(FontWeight.BOLD).setCharHeight(12).setEndPosMerge(Position.from(rangListeSpalte, ersteZeile - 1));
 		getSheetHelper().setStringValueInCell(celVal); // spieler nr
@@ -69,7 +70,7 @@ public class RangListeSpalte {
 
 	public void upDateRanglisteSpalte() throws GenerateException {
 
-		iRanglisteSheet.get().processBoxinfo("Rangliste Spalte Aktualisieren");
+		iRanglisteSheet.get().processBoxinfo(I18n.get("processbox.rangliste.aktualisieren"));
 		// SummenSpalten
 		int letzteZeile = getIRanglisteSheet().getLetzteMitDatenZeileInSpielerNrSpalte();
 		// int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();

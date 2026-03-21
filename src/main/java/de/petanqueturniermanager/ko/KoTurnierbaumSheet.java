@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -312,8 +313,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		XSpreadsheet meldelisteXSheet = meldeliste.getXSpreadSheet();
 		if (meldelisteXSheet == null) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("K.-O. Turnierbaum")
-					.message("Meldeliste nicht gefunden. Bitte zuerst die Meldeliste erstellen.")
+					.caption(I18n.get("msg.caption.ko.turnierbaum"))
+					.message(I18n.get("msg.text.meldeliste.nicht.gefunden"))
 					.show();
 			return;
 		}
@@ -321,7 +322,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String rangFehler = meldeliste.validiereRangSpalte();
 		if (rangFehler != null) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("K.-O. Turnierbaum – Rang-Fehler")
+					.caption(I18n.get("msg.caption.ko.rang.fehler"))
 					.message(rangFehler)
 					.show();
 			return;
@@ -330,8 +331,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		TeamMeldungen alleMeldungen = meldeliste.getMeldungenSortiertNachRangliste();
 		if (alleMeldungen.size() < 2) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("K.-O. Turnierbaum")
-					.message("Mindestens 2 Teams erforderlich. Aktuell: " + alleMeldungen.size())
+					.caption(I18n.get("msg.caption.ko.turnierbaum"))
+					.message(I18n.get("msg.text.ko.mindestens.2.teams", alleMeldungen.size()))
 					.show();
 			return;
 		}
@@ -416,7 +417,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private void erstelleTurnierbaum(XSpreadsheet xSheet, TeamMeldungen meldungen, int numRunden,
 			int bracketGroesse, IKoBracketKonfiguration konfig) throws GenerateException {
 
-		sheet().processBoxinfo("K.-O. Turnierbaum erstellen");
+		sheet().processBoxinfo(I18n.get("processbox.ko.turnierbaum.erstellen"));
 
 		this.spielbahn = konfig.getSpielbaumSpielbahn();
 		this.teamAnzeige = konfig.getSpielbaumTeamAnzeige();

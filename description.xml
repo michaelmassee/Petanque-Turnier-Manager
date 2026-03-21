@@ -20,6 +20,6 @@
 	</icon>
 	<extension-description>
 		<src lang="de" xlink:href="description/desc_de.txt"/>
-		<src lang="en" xlink:href="description/desc_de.txt"/>
+		<src lang="en" xlink:href="description/desc_en.txt"/>
 	</extension-description>
 </description>

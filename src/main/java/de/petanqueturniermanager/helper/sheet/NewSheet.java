@@ -16,6 +16,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -129,8 +130,8 @@ public class NewSheet extends BaseHelper {
 				turnierSheet.setActiv();
 				MessageBoxResult result = MessageBox
 						.from(getWorkingSpreadsheet().getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
-						.caption("Erstelle " + sheetName)
-						.message("'" + sheetName + "'\r\nist bereits vorhanden.\r\nLöschen und neu erstellen ?")
+						.caption(I18n.get("msg.caption.tabelle.erstellen", sheetName))
+					.message(I18n.get("msg.text.tabelle.erstellen.frage", sheetName))
 						.forceOk(forceOkCreateNewWhenExist).show();
 				if (MessageBoxResult.YES != result) {
 					return this;

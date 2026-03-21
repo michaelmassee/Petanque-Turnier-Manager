@@ -7,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
  * Erstellung 19.06.2022 / Michael Massee
  */
 
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -55,8 +56,8 @@ public class NewTestDatenValidator {
 	public final boolean validate() {
 		if (isTurnierVorhanden()) {
 			MessageBoxResult result = MessageBox.from(wkSheet.getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
-					.caption("Daten sind bereits vorhanden")
-					.message("Achtung: Turnier-Daten sind bereits vorhanden.\r\nLöschen und neu erstellen ?").show();
+					.caption(I18n.get("msg.caption.daten.vorhanden"))
+					.message(I18n.get("msg.text.daten.vorhanden")).show();
 			if (MessageBoxResult.NO == result) {
 				ProcessBox.from().prefix(nextLogPrefix).info("Erstelle Testdaten, Abbruch durch Benutzer.");
 				return false;

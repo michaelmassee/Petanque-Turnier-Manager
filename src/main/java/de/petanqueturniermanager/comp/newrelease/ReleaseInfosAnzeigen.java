@@ -9,6 +9,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -44,9 +45,9 @@ public class ReleaseInfosAnzeigen extends SheetRunner {
 			return;
 		}
 		String name = rel.getName() != null ? rel.getName() : rel.getTagName();
-		processBoxinfo("Release: " + (name != null ? name : "?"));
-		processBoxinfo("Release-Infos:");
+		processBoxinfo(I18n.get("processbox.release.info", (name != null ? name : "?")));
+		processBoxinfo(I18n.get("processbox.release.infos"));
 		String body = rel.getBody();
-		processBoxinfo(body != null && !body.isBlank() ? body : "(keine Beschreibung verfügbar)");
+		processBoxinfo(body != null && !body.isBlank() ? body : I18n.get("processbox.keine.beschreibung"));
 	}
 }

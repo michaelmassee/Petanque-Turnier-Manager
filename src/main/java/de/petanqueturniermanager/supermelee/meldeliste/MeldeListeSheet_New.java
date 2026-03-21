@@ -28,6 +28,7 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 
 public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<SpielerMeldungen, Spieler> {
@@ -239,8 +240,9 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 		try {
 			param = SupermeleeStartDialog.from(getWorkingSpreadsheet()).show();
 		} catch (com.sun.star.uno.Exception e) {
-			logger.error("{} Fehler beim Anzeigen des Start-Dialogs: {}", e.getMessage(), e);
-			throw new GenerateException("Fehler beim Anzeigen des Start-Dialogs: " + e.getMessage());
+			String errMsg = I18n.get("error.dialog.startdialog", e.getMessage());
+			logger.error(errMsg, e);
+			throw new GenerateException(errMsg);
 		}
 
 		if (param.isEmpty()) {

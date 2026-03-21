@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.annotations.VisibleForTesting;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -114,11 +115,10 @@ public class SuperMeleePaarungenV2 {
         SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Doublette);
 
         if (!teamRechner.valideAnzahlSpieler()) {
-            throw new AlgorithmenException(
-                    "Ungültige Spieleranzahl für Doublette-Modus: " + meldungen.spieler().size());
+            throw new AlgorithmenException(I18n.get("error.algorithmus.spieleranzahl.doublette", meldungen.spieler().size()));
         }
         if (nurTriplette && !teamRechner.isNurTripletteMoeglich()) {
-            throw new AlgorithmenException("Keine Triplette Spielrunde möglich");
+            throw new AlgorithmenException(I18n.get("error.algorithmus.keine.triplette"));
         }
 
         MeleeSpielRunde spielRunde = nurTriplette
@@ -144,11 +144,10 @@ public class SuperMeleePaarungenV2 {
         SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), SuperMeleeMode.Triplette);
 
         if (!teamRechner.valideAnzahlSpieler()) {
-            throw new AlgorithmenException(
-                    "Ungültige Spieleranzahl für Triplette-Modus: " + meldungen.spieler().size());
+            throw new AlgorithmenException(I18n.get("error.algorithmus.spieleranzahl.triplette", meldungen.spieler().size()));
         }
         if (nurDoublette && !teamRechner.isNurDoubletteMoeglich()) {
-            throw new AlgorithmenException("Keine Doublette Spielrunde möglich");
+            throw new AlgorithmenException(I18n.get("error.algorithmus.keine.doublette"));
         }
 
         MeleeSpielRunde spielRunde = nurDoublette

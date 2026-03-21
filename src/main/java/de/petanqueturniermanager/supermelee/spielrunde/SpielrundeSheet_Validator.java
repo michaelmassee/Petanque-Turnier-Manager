@@ -26,6 +26,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 // prüfen alle spielrunden für ein spieltag auf doppelte paarungen
@@ -79,7 +80,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 	}
 
 	public void validateSpieltag(SpielTagNr spielTagNr) throws GenerateException {
-		processBoxinfo("validateSpieltag " + spielTagNr.getNr());
+		processBoxinfo(I18n.get("processbox.validate.spieltag", spielTagNr.getNr()));
 
 		meldeliste.setSpielTag(spielTagNr);
 		List<Spielrunde> spielrunden = new ArrayList<>();
@@ -96,11 +97,11 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 		}
 
 		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
-		processBoxinfo("Meldungen " + alleMeldungen.size());
-		processBoxinfo("Spielrunden " + spielrunden.size());
+		processBoxinfo(I18n.get("processbox.meldungen.anzahl", alleMeldungen.size()));
+		processBoxinfo(I18n.get("processbox.spielrunden.anzahl", spielrunden.size()));
 
 		validateDoppelteTeams(alleMeldungen, spielrunden);
-		processBoxinfo("Fertig, kein fehler gefunden");
+		processBoxinfo(I18n.get("processbox.fertig.status"));
 	}
 
 	private void validateDoppelteTeams(SpielerMeldungen alleMeldungen, List<Spielrunde> spielrunden)
@@ -115,7 +116,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 				for (Spieler spielerToValidate : team.spieler()) {
 					Spieler spielerAusMeldung = alleMeldungen.findSpielerByNr(spielerToValidate.getNr());
 					if (spielerAusMeldung == null) {
-						throw new GenerateException("Spieler darf nicht null sein");
+						throw new GenerateException(I18n.get("error.spieler.null"));
 					}
 
 					int warbereitsimTeamMitNr = validateWarImTeam(spielerAusMeldung, spielerToValidate, team);
@@ -137,7 +138,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 		}
 
 		if (fehlerCntr > 0) {
-			throw new GenerateException(fehlerCntr + " Doppelte Auslosung(en) gefunden !!!");
+			throw new GenerateException(I18n.get("error.spielrunde.doppelte.auslosung", fehlerCntr));
 		}
 	}
 
@@ -204,7 +205,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 		Integer spielerNrAusSheet = getSheetHelper().getIntFromCell(spieltag, posSpielrNr);
 		if (spielerNrAusSheet > 0) {
 			if (spielrNrSet.contains(spielerNrAusSheet)) {
-				throw new GenerateException("spieler " + spielerNrAusSheet + " ist doppelt");
+				throw new GenerateException(I18n.get("error.spieler.doppelt", spielerNrAusSheet));
 			}
 			spielrNrSet.add(spielerNrAusSheet);
 			team.addSpielerWennNichtVorhanden(Spieler.from(spielerNrAusSheet));

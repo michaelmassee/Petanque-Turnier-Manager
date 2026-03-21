@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -85,7 +86,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 	private void initSheet() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
-		processBoxinfo("Erstelle " + SHEETNAME);
+		processBoxinfo(I18n.get("processbox.erstelle.sheet", SHEETNAME));
 
 		// Header
 		// --------------------------------------------

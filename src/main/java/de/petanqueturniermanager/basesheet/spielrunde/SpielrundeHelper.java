@@ -12,6 +12,7 @@ import com.sun.star.table.CellVertJustify2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
@@ -69,7 +70,7 @@ public class SpielrundeHelper {
 	public void datenErsteSpalte(SpielrundeSpielbahn spielrundeSpielbahnFlagAusKonfig, int erstZeile, int letzteZeile,
 			int nrSpalte, int headerZeile, int headerZeile2, Integer headerColor) throws GenerateException {
 
-		sheet.processBoxinfo("Erste Spalte Daten einfügen");
+		sheet.processBoxinfo(I18n.get("processbox.erste.spalte.daten.einfuegen"));
 
 		Position posHeaderZelle1 = Position.from(nrSpalte, headerZeile);
 		//Position posHeaderZelle2 = Position.from(nrSpalte, headerZeile2);

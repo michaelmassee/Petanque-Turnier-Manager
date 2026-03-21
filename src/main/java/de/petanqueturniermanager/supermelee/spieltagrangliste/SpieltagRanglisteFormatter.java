@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.konfiguration.ISuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
 
@@ -44,7 +45,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 	public void updateHeader() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo("Formatiere Header");
+		ranglisteWkRef.get().processBoxinfo(I18n.get("processbox.formatiere.header"));
 
 		ISpielTagRangliste rangliste = ranglisteWkRef.get();
 		int anzRunden = rangliste.getAnzahlRunden();
@@ -112,7 +113,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 	public void formatDaten() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo("Formatiere Daten");
+		ranglisteWkRef.get().processBoxinfo(I18n.get("processbox.formatiere.daten"));
 
 		ISpielTagRangliste rangliste = ranglisteWkRef.get();
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
@@ -140,7 +141,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 	@Override
 	public StringCellValue addFooter() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo("Fußzeile einfügen");
+		ranglisteWkRef.get().processBoxinfo(I18n.get("processbox.fusszeile.einfuegen"));
 
 		StringCellValue stringVal = super.addFooter();
 

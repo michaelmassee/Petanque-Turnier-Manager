@@ -8,6 +8,7 @@ import java.util.List;
 import com.google.common.base.MoreObjects;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /*
  * SpielRunde.java
@@ -39,7 +40,7 @@ public class MeleeSpielRunde extends NrComparable {
 			for (Spieler spieler : team.spieler()) {
 				int spielrNr = spieler.getNr();
 				if (spielrNrSet.contains(spielrNr)) {
-					throw new AlgorithmenException("Spieler bereits vorhanden " + spielrNr);
+					throw new AlgorithmenException(I18n.get("error.algorithmus.spieler.vorhanden", spielrNr));
 				}
 				spielrNrSet.add(spielrNr);
 			}
@@ -50,7 +51,7 @@ public class MeleeSpielRunde extends NrComparable {
 			for (Spieler spieler : newTeam.spieler()) {
 				int spielrNr = spieler.getNr();
 				if (spielrNrSet.contains(spielrNr)) {
-					throw new AlgorithmenException("Spieler bereits vorhanden " + spielrNr);
+					throw new AlgorithmenException(I18n.get("error.algorithmus.spieler.vorhanden", spielrNr));
 				}
 				spielrNrSet.add(spielrNr);
 			}

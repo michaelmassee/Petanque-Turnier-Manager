@@ -40,6 +40,7 @@ import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.IMeldungen;
 
 /**
@@ -56,8 +57,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private static final Logger logger = LogManager.getLogger(MeldungenSpalte.class);
 
 	public static final int DEFAULT_SPALTE_NUMBER_WIDTH = 800;
-	private static final String HEADER_SPIELER_NR = "Nr";
-	private static final String HEADER_SPIELER_NAME = "Name";
+	private static final String HEADER_SPIELER_NR_KEY = "column.header.nr";
+	private static final String HEADER_SPIELER_NAME_KEY = "column.header.name";
 	private final Formation formation;
 	private final int ersteDatenZiele; // Zeile 1 = 0
 	private final int meldungNrSpalte; // Spalte A=0, B=1
@@ -114,7 +115,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	public void formatSpielrNrUndNamenspalten() throws GenerateException {
 
-		getISheet().processBoxinfo("Formatiere Meldungen Spalten");
+		getISheet().processBoxinfo(I18n.get("processbox.meldeliste.spalten.formatieren"));
 
 		int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
@@ -139,14 +140,14 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		getISheet().processBoxinfo("Meldungen Spalten Header");
+		getISheet().processBoxinfo(I18n.get("processbox.meldeliste.spalten.header"));
 
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH)
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		StringCellValue celVal = StringCellValue
 				.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader),
-						HEADER_SPIELER_NR)
+						I18n.get(HEADER_SPIELER_NR_KEY))
 				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()).setCellBackColor(headerColor)
 				.setVertJustify(CellVertJustify2.CENTER);
@@ -158,7 +159,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		// --------------------------------------------------------------------------------------------
 
 		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
-				.spalte(ersteMeldungNameSpalte).setValue(HEADER_SPIELER_NAME)
+				.spalte(ersteMeldungNameSpalte).setValue(I18n.get(HEADER_SPIELER_NAME_KEY))
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
@@ -214,7 +215,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	public int getLetzteDatenZeileUseMin() throws GenerateException {
 		// erste  Zeile = 0
-		int letztDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
+		int letztDatenZeile = getLetzteMitDatenZeileInSpielerNrSpalte() + 10;
 		int anzZeilen = letztDatenZeile - ersteDatenZiele + 1;
 
 		if (anzZeilen < minAnzZeilen) {
@@ -276,7 +277,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			// Validieren !
 			Integer intFromCell = getSheetHelper().getIntFromCell(getXSpreadsheet(), result);
 			if (intFromCell != spielerNr) {
-				throw new GenerateException("Fehler beim Suchen von Spieler Nr. " + spielerNr + " ResultPos:" + result);
+				throw new GenerateException(I18n.get("error.spieler.suchen", spielerNr, result));
 			}
 			return result.getZeile();
 		}

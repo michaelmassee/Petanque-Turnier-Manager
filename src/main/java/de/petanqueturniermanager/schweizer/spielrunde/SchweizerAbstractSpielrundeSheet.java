@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.CHAR_HEIGHT;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.CHAR_WEIGHT;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.HORI_JUSTIFY;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.SHRINK_TO_FIT;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.VERT_JUSTIFY;
 
@@ -37,6 +38,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -122,7 +124,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 
 			String errorMsg = "Ungültige Spielrunde in der Meldeliste '" + getSpielRundeNr().getNr() + "'";
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler")
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
 					.message(errorMsg).show();
 			return false;
 		}
@@ -131,7 +133,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
 			String errorMsg = "Ungültige Anzahl '" + meldungen.size() + "' von Aktive Meldungen vorhanden."
 					+ "\r\nmindestens 6 Meldungen aktivieren.";
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Aktuelle Spielrunde Fehler")
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
 					.message(errorMsg).show();
 			return false;
 		}
@@ -197,7 +199,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
-			processBoxinfo("Gespielte Runden einlesen. Von Runde " + spielrunde + " bis " + bisSpielrunde);
+			processBoxinfo(I18n.get("processbox.gespielte.runden.einlesen", spielrunde, bisSpielrunde));
 
 			for (; spielrunde <= bisSpielrunde; spielrunde++) {
 				SheetRunner.testDoCancelTask();
@@ -330,28 +332,33 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	private void header() throws GenerateException {
-		processBoxinfo("Header Formatieren");
+		processBoxinfo(I18n.get("processbox.formatiere.header"));
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
+		boolean nameMode = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
 
 		Position headerStart = Position.from(TEAM_A_SPALTE, ERSTE_HEADER_ZEILE);
 
 		StringCellValue headerValue = StringCellValue.from(getXSpreadSheet(), headerStart)
 				.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor)
-				.setCharHeight(NR_CHARHEIGHT).setEndPosMergeSpaltePlus(3)
+				.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true).setEndPosMergeSpaltePlus(3)
 				.setValue("Spielrunde " + getSpielRundeNr().getNr());
 		getSheetHelper().setStringValueInCell(headerValue);
+
+		int zeile2CharHeight = nameMode ? 12 : NR_CHARHEIGHT;
+		String labelA = nameMode ? "Mannschaft A" : "A";
+		String labelB = nameMode ? "Mannschaft B" : "B";
 
 		StringCellValue headerValueZeile2 = StringCellValue
 				.from(getXSpreadSheet(), headerStart.zeile(ZWEITE_HEADER_ZEILE)).setVertJustify(CellVertJustify2.CENTER)
 				.setHoriJustify(CellHoriJustify.CENTER)
 				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder()).setCellBackColor(headerColor)
-				.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true);
+				.setCharHeight(zeile2CharHeight).setShrinkToFit(true);
 
-		headerValueZeile2.setValue("A");
+		headerValueZeile2.setValue(labelA);
 		getSheetHelper().setStringValueInCell(headerValueZeile2);
 
-		headerValueZeile2.setValue("B").spaltePlus(1);
+		headerValueZeile2.setValue(labelB).spaltePlus(1);
 		getSheetHelper().setStringValueInCell(headerValueZeile2);
 
 		headerValueZeile2.setValue("Ergebnis").spaltePlus(1).setEndPosMergeSpaltePlus(1);
@@ -366,7 +373,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 */
 
 	private void datenformatieren() throws GenerateException {
-		processBoxinfo("Daten Formatieren");
+		processBoxinfo(I18n.get("processbox.formatiere.daten"));
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		Position datenStart = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
@@ -391,11 +398,17 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, HORI_JUSTIFY, CellHoriJustify.CENTER);
 		getSheetHelper().setPropertyInRange(sheet, datenRangeInclErg, VERT_JUSTIFY, CellVertJustify2.CENTER);
 
-		// Teamnummer-Modus: große Schrift für A/B-Spalten
-		if (getKonfigurationSheet().getSpielplanTeamAnzeige() != SpielplanTeamAnzeige.NAME) {
-			RangePosition nrSpalten = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
-			getSheetHelper().setPropertyInRange(sheet, nrSpalten, CHAR_HEIGHT, 32);
-			getSheetHelper().setPropertyInRange(sheet, nrSpalten, CHAR_WEIGHT, FontWeight.BOLD);
+		RangePosition abSpalten = RangePosition.from(datenRangeInclErg).endeSpalte(TEAM_B_SPALTE);
+		if (getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME) {
+			// Teamname-Modus: Font 12, an Zellgröße anpassen, Spaltenbreite 6 cm
+			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_HEIGHT, 12);
+			getSheetHelper().setPropertyInRange(sheet, abSpalten, SHRINK_TO_FIT, Boolean.TRUE);
+			getSheetHelper().setColumnWidth(sheet, TEAM_A_SPALTE, 6000); // 6 cm = 6000 (1/100 mm)
+			getSheetHelper().setColumnWidth(sheet, TEAM_B_SPALTE, 6000);
+		} else {
+			// Teamnummer-Modus: große Schrift für A/B-Spalten
+			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_HEIGHT, 32);
+			getSheetHelper().setPropertyInRange(sheet, abSpalten, CHAR_WEIGHT, FontWeight.BOLD);
 		}
 
 		// Ergebnis-Spalten: Zebra + Validierung 0–13 (wie Supermelee)
@@ -431,7 +444,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * (von BAHN_NR_SPALTE/ERSTE_HEADER_ZEILE bis ERG_TEAM_B_SPALTE/letzte Datenzeile, ohne Fehler-Spalte).
 	 */
 	private void druckBereichSetzen() throws GenerateException {
-		processBoxinfo("Druckbereich setzen");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position letztePos = letztePositionRechtsUnten();
 		if (letztePos == null) {
 			return;
@@ -560,8 +573,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			List<SchweizerTeamErgebnis> ergebnisse, boolean force) throws GenerateException {
 		checkNotNull(meldungen);
 
-		processBoxinfo("Neue Spielrunde " + neueSpielrundeNr.getNr());
-		processBoxinfo(meldungen.size() + " Meldungen");
+		processBoxinfo(I18n.get("processbox.neue.spielrunde", neueSpielrundeNr.getNr()));
+		processBoxinfo(I18n.get("processbox.anzahl.meldungen", meldungen.size()));
 
 		// wenn hier dann neu erstellen
 		if (!NewSheet.from(this, getSheetName(getSpielRundeNr())).pos(DefaultSheetPos.SCHWEIZER_WORK)
@@ -608,12 +621,14 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		}
 
 		boolean useTeamname = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
+		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
+		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
 		RangeData rangeData = new RangeData();
 
 		for (TeamPaarung teamPaarung : paarungen) {
 			SheetRunner.testDoCancelTask();
 			if (!teamPaarung.hasB()) {
-				// Freilos – Team A ohne Gegner eintragen (leeres Team B)
+				// Freilos – Team A ohne Gegner eintragen, ERG mit Freispiel-Werten vorbelegen
 				RowData freilosRow = rangeData.addNewRow();
 				if (useTeamname) {
 					String nameA = getMeldeListe().getTeamNameByNr(teamPaarung.getA().getNr());
@@ -622,6 +637,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 					freilosRow.add(new CellData(teamPaarung.getA().getNr()));
 				}
 				freilosRow.add(new CellData("")); // kein Gegner = Freilos
+				freilosRow.add(new CellData(freispielPlus)); // ERG_TEAM_A vorbelegen
+				freilosRow.add(new CellData(freispielMinus)); // ERG_TEAM_B vorbelegen
 				continue;
 			}
 			if (useTeamname) {

@@ -174,4 +174,14 @@ public class SchweizerKonfigurationSheet extends BaseKonfigurationSheet
 		propertiesSpalte.setRankingModus(modus);
 	}
 
+	@Override
+	public Integer getFreispielPunktePlus() {
+		return getPropertiesSpalte().getFreispielPunktePlus();
+	}
+
+	@Override
+	public Integer getFreispielPunkteMinus() {
+		return getPropertiesSpalte().getFreispielPunkteMinus();
+	}
+
 }

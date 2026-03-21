@@ -13,6 +13,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.TeamRangliste;
 
 /**
@@ -40,7 +41,7 @@ public class Ranglisten {
 			rangliste = NewSheet.from(parentSheet.get(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
-		processBoxinfo("Rangliste einlesen");
+		processBoxinfo(I18n.get("processbox.rangliste.einlesen"));
 		Position teamNrPos = Position.from(grpNr, ersteTeamNrZeile);
 		int mxCntr = 0;
 		while (mxCntr < 9999) {

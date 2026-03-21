@@ -7,6 +7,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -34,7 +35,7 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	@Override
 	public void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		processBoxinfo("Nächste Spielrunde " + getSpielRundeNr().getNr());
+		processBoxinfo(I18n.get("processbox.naechste.spielrunde", getSpielRundeNr().getNr()));
 		naechsteSpielrundeEinfuegen();
 	}
 
@@ -55,9 +56,8 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 			if (!alleErgebnisseEingetragen(aktuelleSpielrunde)) {
 				getSheetHelper().setActiveSheet(getXSpreadSheet());
 				MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-						.caption("Nächste Runde nicht möglich")
-						.message("Es fehlen noch Ergebnisse in Runde " + aktuelleSpielrunde.getNr()
-								+ ".\nBitte alle Ergebnisse eintragen, bevor die nächste Runde erstellt wird.")
+						.caption(I18n.get("msg.caption.naechste.runde.nicht.moeglich"))
+						.message(I18n.get("msg.text.naechste.runde.ergebnisse.fehlen", aktuelleSpielrunde.getNr()))
 						.show();
 				return false;
 			}

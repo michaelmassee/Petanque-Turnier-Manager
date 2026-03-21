@@ -21,6 +21,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -147,7 +148,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo("Aktualisiere Schweizer Meldeliste");
+		sheet.processBoxinfo(I18n.get("processbox.schweizer.meldeliste.einfuegen"));
 
 		// Starke Referenz halten – WeakRef in TurnierSheet/SheetFreeze darf nicht vom GC eingesammelt werden
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
@@ -162,7 +163,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void insertHeaderInSheet(int headerColor) throws GenerateException {
-		sheet.processBoxinfo("Meldeliste Header");
+		sheet.processBoxinfo(I18n.get("processbox.schweizer.meldeliste.einlesen"));
 
 		// Turniersystem oben links (Zeile 0 = ERSTE_HEADER_ZEILE) – inkl. Ranking-Modus
 		SchweizerRankingModus rankingModus = konfigurationSheet.getRankingModus();
@@ -353,8 +354,10 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		}
 	}
 
-	int getLetzteDatenZeileUseMin() {
-		return ERSTE_DATEN_ZEILE + MIN_ANZAHL_MELDUNGEN_ZEILEN - 1;
+	int getLetzteDatenZeileUseMin() throws GenerateException {
+		int minZeile = ERSTE_DATEN_ZEILE + MIN_ANZAHL_MELDUNGEN_ZEILEN - 1;
+		int actualZeile = letzteZeileMitDaten(sheet.getXSpreadSheet()) + 10;
+		return Math.max(minZeile, actualZeile);
 	}
 
 	int getErsteDatenZiele() {

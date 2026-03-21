@@ -22,6 +22,7 @@ import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationS
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 class JGJMeldeListeDelegate implements MeldeListeKonstanten {
@@ -54,7 +55,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo("Aktualisiere Meldungen");
+		sheet.processBoxinfo(I18n.get("processbox.meldeliste.sortieren"));
 
 		TurnierSheet.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setActiv();
 		meldeListeHelper.testDoppelteMeldungen();
@@ -74,7 +75,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void formatDaten() throws GenerateException {
-		sheet.processBoxinfo("Formatiere Daten Spalten");
+		sheet.processBoxinfo(I18n.get("processbox.meldeliste.spalten.formatieren"));
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 

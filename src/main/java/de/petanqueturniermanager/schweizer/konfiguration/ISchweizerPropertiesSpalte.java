@@ -13,7 +13,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
  * @author Michael Massee
  *
  */
-public interface ISchweizerPropertiesSpalte {
+public interface ISchweizerPropertiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte {
 
 	String getKopfZeileLinks();
 

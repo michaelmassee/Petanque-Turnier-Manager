@@ -26,6 +26,7 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
@@ -156,8 +157,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 			String textFromCell = getSheetHelper().getTextFromCell(meldelisteSheet, posSpielerName);
 
 			if (StringUtils.isNotEmpty(textFromCell)) {
-				throw new GenerateException(
-						"Fehler beim füllen von Testdaten in Meldesheet. Es dürfen keine Daten vorhanden sein");
+				throw new GenerateException(I18n.get("error.testdaten.daten.vorhanden"));
 			}
 
 			getSheetHelper()

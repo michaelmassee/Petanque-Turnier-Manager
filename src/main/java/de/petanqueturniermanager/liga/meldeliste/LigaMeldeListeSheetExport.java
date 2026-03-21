@@ -29,6 +29,7 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -146,7 +147,7 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 	protected void doRun() throws GenerateException {
 
 		if (getTurnierSystem() != TurnierSystem.LIGA) {
-			throw new GenerateException("Kein oder falsches Turniersystem. " + getTurnierSystem());
+			throw new GenerateException(I18n.get("error.turniersystem.falsch", getTurnierSystem()));
 		}
 
 		delegate.upDateSheet();

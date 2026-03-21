@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -89,11 +90,13 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
 
-		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". Meldungen einlesen");
+		processBoxinfo(I18n.get("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr()));
 		SpielerMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 
 		if (aktiveUndAusgesetztMeldungen.size() == 0) {
-			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK).caption("Teilnehmer Fehler").message("Keine Meldungen vorhanden").show();
+			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.teilnehmer.fehler"))
+					.message(I18n.get("msg.text.keine.meldungen")).show();
 			return;
 		}
 
@@ -110,7 +113,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		int maxAnzSpielerInSpalte = 0;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 
-		processBoxinfo("Spieltag " + getSpielTagNr().getNr() + ". " + aktiveUndAusgesetztMeldungen.size() + " Meldungen einfügen");
+		processBoxinfo(I18n.get("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetztMeldungen.size()));
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungen.getSpielerList()) {
 
@@ -151,7 +154,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren(Position footerPos, int letzteSpalte) throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, footerPos.getZeile());
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));

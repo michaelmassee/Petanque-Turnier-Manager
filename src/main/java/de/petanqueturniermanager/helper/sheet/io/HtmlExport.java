@@ -14,6 +14,7 @@ import com.sun.star.io.IOException;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.PropertyValueHelper;
 
 /**
@@ -42,8 +43,9 @@ public class HtmlExport extends AbstractStore<HtmlExport> {
 		URI htmlFile = null;
 
 		if (!istGespeichert()) {
-			logger.warn("Dokument wurde noch nicht gespeichert, Dateiname fehlt.");
-			throw new GenerateException("Dokument wurde noch nicht gespeichert, Dateiname fehlt.");
+			String errMsg = I18n.get("error.dokument.nicht.gespeichert");
+			logger.warn(errMsg);
+			throw new GenerateException(errMsg);
 		}
 
 		String newFileName;

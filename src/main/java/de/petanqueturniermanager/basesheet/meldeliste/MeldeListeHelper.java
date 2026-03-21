@@ -35,6 +35,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -120,7 +121,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * @throws GenerateException wenn doppelt daten
 	 */
 	public void testDoppelteMeldungen() throws GenerateException {
-		meldeListe.processBoxinfo("Prüfe doppelte Daten in Meldungen");
+		meldeListe.processBoxinfo(I18n.get("processbox.meldeliste.pruefe.doppelte"));
 		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
@@ -155,8 +156,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					// RED Color
 					meldeListe.getSheetHelper()
 							.setNumberValueInCell(errCelVal.setValue((double) spielrNr).zeile(spielerZeilecntr));
-					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Nr. " + spielrNr
-							+ " ist doppelt in der Meldeliste !!!");
+					throw new GenerateException(I18n.get("error.meldeliste.spieler.nr", spielrNr));
 				}
 				spielrNrInSheet.add(spielrNr);
 			} else {
@@ -177,8 +177,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 					// RED Color
 					meldeListe.getSheetHelper()
 							.setStringValueInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
-					throw new GenerateException("Meldeliste wurde nicht Aktualisiert.\r\nSpieler Namen " + spielerName
-							+ " ist doppelt in der Meldeliste. Zeile:" + spielerZeilecntr);
+					throw new GenerateException(I18n.get("error.meldeliste.spieler.name", spielerName, spielerZeilecntr));
 				}
 				spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
 			}
@@ -212,7 +211,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
-		meldeListe.processBoxinfo("Zeilen ohne Spielernamen entfernen");
+		meldeListe.processBoxinfo(I18n.get("processbox.meldeliste.zeilen.ohne.namen.entfernen"));
 
 		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte();
@@ -305,7 +304,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public void updateMeldungenNr() throws GenerateException {
 
-		meldeListe.processBoxinfo("Aktualisiere Meldungen Nummer");
+		meldeListe.processBoxinfo(I18n.get("processbox.meldeliste.nummern.aktualisieren"));
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?

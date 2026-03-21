@@ -4,30 +4,32 @@
 
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 public enum Formation {
 
-	TETE(1, "Tête", 1), // Formé
-	DOUBLETTE(2, "Doublette", 2), // Formé
-	TRIPLETTE(3, "Triplette", 3), // Formé
-	MELEE(4, "Mêlée", 1); // wenn die Teamgroese nicht festeht, wird z.b. bei Supermelee gebraucht
+	TETE(1, "enum.formation.tete", 1), // Formé
+	DOUBLETTE(2, "enum.formation.doublette", 2), // Formé
+	TRIPLETTE(3, "enum.formation.triplette", 3), // Formé
+	MELEE(4, "enum.formation.melee", 1); // wenn die Teamgroese nicht festeht, wird z.b. bei Supermelee gebraucht
 
-	private final String bezeichnung;
+	private final String i18nKey;
 	private final int id;
 	private final int anzSpieler;
 
-	private Formation(int id, String bezeichnung, int anzSpieler) {
+	private Formation(int id, String i18nKey, int anzSpieler) {
 		this.id = id;
-		this.bezeichnung = bezeichnung;
+		this.i18nKey = i18nKey;
 		this.anzSpieler = anzSpieler;
 	}
 
 	public String getBezeichnung() {
-		return this.bezeichnung;
+		return I18n.get(i18nKey);
 	}
 
 	@Override
 	public String toString() {
-		return this.bezeichnung;
+		return getBezeichnung();
 	}
 
 	public int getId() {

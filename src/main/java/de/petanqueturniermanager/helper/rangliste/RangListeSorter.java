@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 public class RangListeSorter {
@@ -196,7 +197,7 @@ public class RangListeSorter {
 			String text = getSheetHelper().getTextFromCell(sheet, Position.from(validateSpalte, zeile));
 			if (StringUtils.isNoneBlank(text)) {
 				// error
-				throw new GenerateException("Fehler in Spieltagrangliste, Fehler in Zeile " + zeile);
+				throw new GenerateException(I18n.get("error.spieltagrangliste.zeile", zeile));
 			}
 		}
 	}

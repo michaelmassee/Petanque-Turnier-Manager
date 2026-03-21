@@ -23,6 +23,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -129,7 +130,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	void upDateSheet() throws GenerateException {
 		PageStyleHelper.from(sheet, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
-		sheet.processBoxinfo("Aktualisiere Meldungen");
+		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.aktualisieren"));
 
 		meldeListeHelper.testDoppelteMeldungen();
 		sheet.getTurnierSheet().setActiv();
@@ -173,7 +174,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	/** Aktive Spielrunde und Spieltag in den Info-Block schreiben. */
 	private void insertInfoBlock() throws GenerateException {
-		sheet.processBoxinfo("Info Block");
+		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.einfuegen"));
 		var xSheet = sheet.getXSpreadSheet();
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 		var border = BorderFactory.from().allThin().toBorder();
@@ -204,7 +205,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
-		sheet.processBoxinfo("Formatiere Spieltagspalte");
+		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.sortieren"));
 
 		var xSheet = sheet.getXSpreadSheet();
 		int hederBackColor = konfigurationSheet.getRanglisteHeaderFarbe();
@@ -227,7 +228,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void formatDaten() throws GenerateException {
-		sheet.processBoxinfo("Formatiere Daten Spalten");
+		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.formatieren"));
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
@@ -300,7 +301,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void updateSpieltageSummenSpalten() throws GenerateException {
-		sheet.processBoxinfo("Aktualisiere Summen Spalten");
+		sheet.processBoxinfo(I18n.get("processbox.summenspalten.aktualisieren"));
 
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 

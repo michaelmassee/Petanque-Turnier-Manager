@@ -25,6 +25,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Validator;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 
 /**
@@ -104,7 +105,7 @@ public class SpieltagRangliste_Validator extends SheetRunner implements ISheet {
 			XSpreadsheet spielrundeSheet = getSheetHelper().findByName(spielrundeName);
 
 			if (spielrundeSheet == null) {
-				throw new GenerateException("Spielrunde " + spielrundeName + " fehlt!");
+				throw new GenerateException(I18n.get("error.spielrunde.fehlt", spielrundeName));
 			}
 
 			// Spieler Nummer Block rechts neben die ergebnisse spalten einlesen
@@ -121,13 +122,13 @@ public class SpieltagRangliste_Validator extends SheetRunner implements ISheet {
 
 		// prüfen ob die Anzahl spieler stimmt
 		if (spielerNrListAusRangliste.size() != alleSpielrNrausSpielrunden.size()) {
-			throw new GenerateException("Spieltagrangliste, Anzahl Spieler stimmen nicht");
+			throw new GenerateException(I18n.get("error.spieltagrangliste.anzahl.spieler"));
 		}
 
 		boolean allMatch = spielerNrListAusRangliste.stream().allMatch(nr -> alleSpielrNrausSpielrunden.contains(nr));
 
 		if (!allMatch) {
-			throw new GenerateException("Spieltagrangliste, Spieler Nummer stimmen nicht");
+			throw new GenerateException(I18n.get("error.spieltagrangliste.spieler.nr"));
 		}
 	}
 }

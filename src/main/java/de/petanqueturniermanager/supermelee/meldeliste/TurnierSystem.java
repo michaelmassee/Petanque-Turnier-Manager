@@ -4,27 +4,30 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 public enum TurnierSystem {
 
-	KEIN(0, "Kein"), // wenn nur der runner gebraucht wird
-	SUPERMELEE(1, "Supermêlée"), LIGA(2, "Liga"), MAASTRICHTER(3, "Maastricht"), SCHWEIZER(4, "Schweizer"),
-	JGJ(5, "Jeder gegen Jeden"), KO(6, "K.-O.");
+	KEIN(0, "enum.turniersystem.kein"), // wenn nur der runner gebraucht wird
+	SUPERMELEE(1, "enum.turniersystem.supermelee"), LIGA(2, "enum.turniersystem.liga"),
+	MAASTRICHTER(3, "enum.turniersystem.maastrichter"), SCHWEIZER(4, "enum.turniersystem.schweizer"),
+	JGJ(5, "enum.turniersystem.jgj"), KO(6, "enum.turniersystem.ko");
 
-	private final String bezeichnung;
+	private final String i18nKey;
 	private final int id;
 
-	private TurnierSystem(int id, String bezeichnung) {
+	private TurnierSystem(int id, String i18nKey) {
 		this.id = id;
-		this.bezeichnung = bezeichnung;
+		this.i18nKey = i18nKey;
 	}
 
 	public String getBezeichnung() {
-		return bezeichnung;
+		return I18n.get(i18nKey);
 	}
 
 	@Override
 	public String toString() {
-		return bezeichnung;
+		return getBezeichnung();
 	}
 
 	public int getId() {

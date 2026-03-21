@@ -4,6 +4,7 @@ import java.util.List;
 
 import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -28,7 +29,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
-		processBoxinfo("Aktuelle Spielrunde " + aktuelleSpielrunde.getNr());
+		processBoxinfo(I18n.get("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr()));
 		setSpielRundeNrInSheet(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
 		TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

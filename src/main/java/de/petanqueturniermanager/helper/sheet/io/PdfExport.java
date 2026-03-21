@@ -21,6 +21,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.PropertyValueHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
 /**
@@ -102,8 +103,9 @@ public class PdfExport extends AbstractStore<PdfExport> {
 		URI pdfFile = null;
 
 		if (!istGespeichert()) {
-			logger.warn("Dokument wurde noch nicht gespeichert, Dateiname fehlt.");
-			throw new GenerateException("Dokument wurde noch nicht gespeichert, Dateiname fehlt.");
+			String errMsg = I18n.get("error.dokument.nicht.gespeichert");
+			logger.warn(errMsg);
+			throw new GenerateException(errMsg);
 		}
 
 		try {

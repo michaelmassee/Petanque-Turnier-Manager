@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.exception.AlgorithmenException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -42,6 +43,7 @@ public class SuperMeleePaarungenV2Test {
 
     @BeforeEach
     public void setup() {
+        I18n.init(null);
         paarungen = new SuperMeleePaarungenV2();
     }
 

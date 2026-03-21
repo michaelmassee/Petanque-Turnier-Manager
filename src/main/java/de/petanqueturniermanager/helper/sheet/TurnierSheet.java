@@ -28,6 +28,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
 /**
@@ -51,7 +52,7 @@ public class TurnierSheet {
 	public static TurnierSheet from(String name, WorkingSpreadsheet currentSpreadsheet) throws GenerateException {
 		XSpreadsheet xSpreadsheet = new SheetHelper(currentSpreadsheet).findByName(checkNotNull(name));
 		if (xSpreadsheet == null) {
-			throw new GenerateException("Die Tabelle '" + name + "' ist nicht vorhanden.");
+			throw new GenerateException(I18n.get("error.tabelle.nicht.vorhanden", name));
 		}
 		return new TurnierSheet(checkNotNull(xSpreadsheet), checkNotNull(currentSpreadsheet));
 	}

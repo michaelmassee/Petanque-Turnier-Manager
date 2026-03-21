@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
@@ -162,13 +163,11 @@ public class RangeHelper {
 
 			// array muss genau mit rangepos übereinstimmen
 			if (rangePos.getAnzahlZeilen() != dataArray.length) {
-				throw new GenerateException("Anzahl Zeilen stimmen nicht überein. range:" + rangePos.getAnzahlZeilen()
-						+ " array:" + dataArray.length);
+				throw new GenerateException(I18n.get("error.rangehelper.anzahl.zeilen", rangePos.getAnzahlZeilen(), dataArray.length));
 			}
 
 			if (rangePos.getAnzahlSpalten() != dataArray[0].length) {
-				throw new GenerateException("Anzahl Spalten stimmen nicht überein. range:" + rangePos.getAnzahlSpalten()
-						+ " array:" + dataArray[0].length);
+				throw new GenerateException(I18n.get("error.rangehelper.anzahl.spalten", rangePos.getAnzahlSpalten(), dataArray[0].length));
 			}
 
 			xCellRangeData.setDataArray(dataArray);

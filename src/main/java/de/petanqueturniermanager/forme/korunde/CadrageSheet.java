@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -105,7 +106,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 			// 2,4,8,16,32
 			int anzTeamsinGruppeAusRangliste = gruppeAusRanglist.size();
 			int anzCadrageTeams = new CadrageRechner(anzTeamsinGruppeAusRangliste).anzTeams();
-			processBoxinfo("Gruppe:" + grpCntr + " Anz Cadrage:" + anzCadrageTeams);
+			processBoxinfo(I18n.get("processbox.cadrage.gruppe", grpCntr, anzCadrageTeams));
 			if (anzCadrageTeams > 0) {
 				TeamRangliste cadrageRangliste = gruppeAusRanglist.ranglisteVonLetzte(anzCadrageTeams);
 				vorrunden.vorRundenEinlesen(cadrageRangliste);

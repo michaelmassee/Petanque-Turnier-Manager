@@ -6,6 +6,8 @@ package de.petanqueturniermanager.konfigdialog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 public class ConfigProperty<V> {
 
 	private final ConfigPropertyType type;
@@ -54,7 +56,8 @@ public class ConfigProperty<V> {
 	}
 
 	public String getDescription() {
-		return this.description;
+		if (this.description == null) return null;
+		return I18n.get(this.description);
 	}
 
 	public ConfigProperty<V> setDescription(String description) {

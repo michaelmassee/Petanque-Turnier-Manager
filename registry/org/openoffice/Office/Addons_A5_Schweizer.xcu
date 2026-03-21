@@ -9,6 +9,7 @@
 				<prop oor:name="Title" oor:type="xs:string">
 					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -87,6 +88,7 @@
 							<node oor:name="A5A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Spielrunde</value>
+								<value xml:lang="en">New Round</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_naechste_spielrunde</value>
@@ -97,6 +99,7 @@
 							<node oor:name="A5A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Spielrunde neu auslosen</value>
+								<value xml:lang="en">Re-draw Round</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_aktuelle_spielrunde</value>

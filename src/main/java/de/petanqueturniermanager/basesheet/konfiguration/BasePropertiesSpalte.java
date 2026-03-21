@@ -62,35 +62,35 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES, boolean mitRangliste) {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_LINKS)
-				.setDescription("Fußzeile Links").inSideBar());
+				.setDescription("config.desc.footer.links").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
-				.setDescription("Fußzeile Mitte").inSideBar());
+				.setDescription("config.desc.footer.mitte").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Meldeliste Hintergrundfarbe für gerade Zeilen").inSideBar());
+				.setDescription("config.desc.meldeliste.gerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("Meldeliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
+				.setDescription("config.desc.meldeliste.ungerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_HEADER)
 				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-				.setDescription("Meldeliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
+				.setDescription("config.desc.meldeliste.header").inSideBar());
 
 		if (mitRangliste) {
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_GERADE)
-					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("Rangliste Hintergrundfarbe für gerade Zeilen")
+					.setDefaultVal(DEFAULT_GERADE_BACK_COLOR).setDescription("config.desc.rangliste.gerade")
 					.inSideBar());
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE)
 					.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-					.setDescription("Rangliste Hintergrundfarbe für ungerade Zeilen").inSideBar());
+					.setDescription("config.desc.rangliste.ungerade").inSideBar());
 			KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER)
 					.setDefaultVal(DEFAULT_HEADER_BACK_COLOR)
-					.setDescription("Rangliste Hintergrundfarbe für die Tabelle-Kopfzeilen").inSideBar());
+					.setDescription("config.desc.rangliste.header").inSideBar());
 		}
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN)
 				.setDefaultVal(false)
-				.setDescription("Zeige Arbeitsdaten (N/J),Nur fuer fortgeschrittene Benutzer empfohlen. Default = N")
+				.setDescription("config.desc.zeige.arbeits.spalten")
 				.inSideBar());
 	}
 

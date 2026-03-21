@@ -155,9 +155,12 @@ public class SchweizerSystem {
 		List<Team> listBTeams = partition.get(1);
 		int listBSize = listBTeams.size();
 		return IntStream.range(0, anzTeamPaarungen).mapToObj(i -> {
-			return new TeamPaarung(listATeams.get(i),
-					(((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null))
-					.addGegner();
+			Team teamA = listATeams.get(i);
+			Team teamB = (((anzTeamPaarungen - i) <= listBSize) ? listBTeams.get(anzTeamPaarungen - i - 1) : null);
+			if (teamB == null) {
+				teamA.setHatteFreilos(true);
+			}
+			return new TeamPaarung(teamA, teamB).addGegner();
 		}).sorted((tp1, tp2) -> {
 			// Freilos an letzte Stelle
 			if (tp1.getB() == null) {

@@ -30,6 +30,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 public class ProcessBox {
 	private static final Logger logger = LogManager.getLogger(ProcessBox.class);
@@ -363,7 +364,7 @@ public class ProcessBox {
 	}
 
 	public synchronized ProcessBox fehler(String logMsg) {
-		info("Fehler: " + logMsg);
+		info(I18n.get("processbox.fehler.prefix") + " " + logMsg);
 		isFehler = true;
 		return this;
 	}

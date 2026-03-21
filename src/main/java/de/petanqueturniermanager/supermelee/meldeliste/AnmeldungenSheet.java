@@ -16,6 +16,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -77,7 +78,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
 
-		processBoxinfo("Spieltag " + getSpielTag().getNr() + ". Meldungen einlesen");
+		processBoxinfo(I18n.get("processbox.spieltag.meldungen.einlesen", getSpielTag().getNr()));
 		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
 		filleBereichNew(alleMeldungen);
 
@@ -92,7 +93,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	private void filleBereichNew(SpielerMeldungen alleMeldungen) throws GenerateException {
 
 		if (alleMeldungen.size() < 1) {
-			processBoxinfo("Keine Meldungen vorhanden !");
+			processBoxinfo(I18n.get("processbox.abbruch"));
 			return; // keine Daten
 		}
 		// Anzahl blöcke ?
@@ -183,7 +184,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));

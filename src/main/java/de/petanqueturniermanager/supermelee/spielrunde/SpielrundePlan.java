@@ -10,6 +10,7 @@ import com.sun.star.table.CellHoriJustify;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -101,7 +102,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		SpielerMeldungen meldungen = meldeListe.getAktiveMeldungen();
 
 		// Spielrunde sheet ?
-		processBoxinfo("Neuer Spielrundeplan " + getSpielRundeNr().getNr() + " für Spieltag " + getSpielTag().getNr());
+		processBoxinfo(I18n.get("processbox.neuer.spielrundeplan", getSpielRundeNr().getNr(), getSpielTag().getNr()));
 
 		if (!NewSheet.from(this, getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK)
 				.spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv().tabColor(SHEET_COLOR).create()
@@ -184,7 +185,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren(Position rechtsUnten) throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo(I18n.get("processbox.print.bereich"));
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, HEADER_ZEILE);
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));

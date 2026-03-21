@@ -37,6 +37,7 @@ import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -384,8 +385,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SCHWEIZER_NEUE_MELDELISTE:
 				if (new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.SCHWEIZER) {
 					MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-							.caption("Kein Schweizer-Turnier-Dokument")
-							.message("Kein Schweizer-Turnier vorhanden").show();
+							.caption(I18n.get("msg.caption.kein.schweizer"))
+							.message(I18n.get("msg.text.kein.schweizer")).show();
 				} else {
 					new SchweizerMeldeListeSheetNew(ws).start();
 				}
@@ -524,8 +525,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 		if (ts == TurnierSystem.KEIN) {
 			try {
-				MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Konfiguration")
-						.message("Kein Turnier vorhanden").show();
+				MessageBox.from(ws.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+						.caption(I18n.get("msg.caption.konfiguration"))
+						.message(I18n.get("msg.text.kein.turnier")).show();
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
 			}

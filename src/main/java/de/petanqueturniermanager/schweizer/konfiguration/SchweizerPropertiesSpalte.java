@@ -30,6 +30,9 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 		ADDBaseProp(KONFIG_PROPERTIES);
 	}
 
+	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
+	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
+
 	private static final String KONFIG_PROP_KOPF_ZEILE_LINKS = "Kopfzeile Links";
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
 	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
@@ -49,28 +52,27 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	static {
 
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_LINKS).inSideBar());
+				.setDescription("config.desc.header.links").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_MITTE).inSideBar());
+				.setDescription("config.desc.header.mitte").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
-				.setDescription(KONFIG_PROP_KOPF_ZEILE_RECHTS).inSideBar());
+				.setDescription("config.desc.header.rechts").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELRUNDE)
-				.setDefaultVal(1).setDescription("Aktuelle Spielrunde").inSideBarInfoPanel());
+				.setDefaultVal(1).setDescription("config.desc.aktuelle.spielrunde").inSideBarInfoPanel());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für gerade Zeilen").inSideBar());
+				.setDescription("config.desc.spielrunde.gerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE)
 				.setDefaultVal(DEFAULT_UNGERADE_BACK_COLOR)
-				.setDescription("Spielrunde Hintergrundfarbe für ungerade Zeilen").inSideBar());
+				.setDescription("config.desc.spielrunde.ungerade").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_SPIELRUNDE_COLOR_BACK_HEADER)
-				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("Spielrunde Header-Hintergrundfarbe")
+				.setDefaultVal(DEFAULT_HEADER_BACK_COLOR).setDescription("config.desc.spielrunde.header")
 				.inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
-				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription(
-						"Spalte Spielbahn in Spielrunde.\r\nX=Keine Spalte\r\nL=Leere Spalte (händisch ausfüllen)\r\nN=Durchnummerieren\r\nR=Random"))
+				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
@@ -78,32 +80,35 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
 				.setDefaultVal(Formation.TRIPLETTE.name())
-				.setDescription("Formation der Meldeliste.\r\nTETE=1 Spieler\r\nDOUBLETTE=2 Spieler\r\nTRIPLETTE=3 Spieler"))
+				.setDescription("config.desc.meldeliste.formation"))
 				.addAuswahl(Formation.TETE.name(), Formation.TETE.getBezeichnung())
 				.addAuswahl(Formation.DOUBLETTE.name(), Formation.DOUBLETTE.getBezeichnung())
 				.addAuswahl(Formation.TRIPLETTE.name(), Formation.TRIPLETTE.getBezeichnung()).inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_TEAMNAME)
-				.setDefaultVal("J").setDescription("Teamname-Spalte in Meldeliste anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.setDefaultVal("J").setDescription("config.desc.meldeliste.teamname"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
-				.setDefaultVal("N").setDescription("Vereinsname-Spalte pro Spieler anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE)
 				.setDefaultVal(SpielplanTeamAnzeige.NR.name())
-				.setDescription("Anzeige in Spielplan/Rangliste.\r\nNR=Teamnummer\r\nNAME=Teamname"))
+				.setDescription("config.desc.schweizer.spielplan.team.anzeige"))
 				.addAuswahl(SpielplanTeamAnzeige.NR.name(), "Teamnummer")
 				.addAuswahl(SpielplanTeamAnzeige.NAME.name(), "Teamname").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_RANKING_MODUS)
 				.setDefaultVal(SchweizerRankingModus.MIT_BUCHHOLZ.name())
-				.setDescription("Ranking-Modus für Rangliste und Paarungsreihenfolge.\r\n"
-						+ "MIT_BUCHHOLZ=Siege → BHZ → FBHZ → Diff → Punkte+\r\n"
-						+ "OHNE_BUCHHOLZ=Siege → Diff → Punkte+"))
+				.setDescription("config.desc.schweizer.ranking.modus"))
 				.addAuswahl(SchweizerRankingModus.MIT_BUCHHOLZ.name(), "Mit Buchholz (Standard)")
 				.addAuswahl(SchweizerRankingModus.OHNE_BUCHHOLZ.name(), "Ohne Buchholz").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
 
 	}
 
@@ -241,6 +246,16 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 	@Override
 	public void setRankingModus(SchweizerRankingModus modus) {
 		setStringProperty(KONFIG_PROP_RANKING_MODUS, modus.name());
+	}
+
+	@Override
+	public Integer getFreispielPunktePlus() {
+		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+	}
+
+	@Override
+	public Integer getFreispielPunkteMinus() {
+		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
 	}
 
 }

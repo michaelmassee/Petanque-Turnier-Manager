@@ -104,7 +104,7 @@ public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements IS
 		return delegate.getErsteDatenZiele();
 	}
 
-	public int getLetzteDatenZeileUseMin() {
+	public int getLetzteDatenZeileUseMin() throws GenerateException {
 		return delegate.getLetzteDatenZeileUseMin();
 	}
 

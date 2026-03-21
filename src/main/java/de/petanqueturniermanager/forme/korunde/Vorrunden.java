@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.TeamRangliste;
 
 /**
@@ -53,7 +54,7 @@ public class Vorrunden {
 		// vorrunden einlesen
 		XSpreadsheet vorRunden = getSheet();
 
-		processBoxinfo("Vor-Runden Team Paarungen einlesen");
+		processBoxinfo(I18n.get("processbox.vorrunden.einlesen"));
 
 		ImmutableList<Team> teamList = rangliste.getTeamListe();
 

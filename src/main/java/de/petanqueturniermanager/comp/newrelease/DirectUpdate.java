@@ -20,6 +20,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -48,8 +49,8 @@ public class DirectUpdate extends SheetRunner {
 		NewReleaseChecker checker = new NewReleaseChecker();
 		ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
 
-		processBoxinfo("Start Direkt-Aktualisierung von Pétanque-Turnier-Manager");
-		processBoxinfo("Aktuell installierte Version " + extensionsHelper.getVersionNummer());
+		processBoxinfo(I18n.get("processbox.direkt.aktualisierung.start"));
+		processBoxinfo(I18n.get("processbox.installierte.version", extensionsHelper.getVersionNummer()));
 
 		GHAsset oxtAsset = checker.getDownloadGHAsset();
 		URL downloadURL = checker.getDownloadURL(oxtAsset);
@@ -59,25 +60,24 @@ public class DirectUpdate extends SheetRunner {
 			return;
 		}
 
-		processBoxinfo("Lade herunter: " + downloadURL.toString());
+		processBoxinfo(I18n.get("processbox.lade.herunter", downloadURL.toString()));
 
 		try {
 			Path tempDir = Files.createTempDirectory("ptm_update");
 			Path tempFile = tempDir.resolve(oxtAsset.getName());
 
 			FileUtils.copyURLToFile(downloadURL, tempFile.toFile(), 30000, 30000);
-			processBoxinfo("Download abgeschlossen. Installation läuft...");
+			processBoxinfo(I18n.get("processbox.download.abgeschlossen.installation"));
 
 			Object emObj = getxContext().getServiceManager()
 					.createInstanceWithContext("com.sun.star.deployment.ExtensionManager", getxContext());
 			XExtensionManager em = Lo.qi(XExtensionManager.class, emObj);
 			em.addExtension(tempFile.toUri().toString(), new NamedValue[0], "user", null, null);
 
-			processBoxinfo("Neue Version erfolgreich installiert.");
+			processBoxinfo(I18n.get("processbox.neue.version.installiert"));
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
-					.caption("Aktualisierung abgeschlossen")
-					.message("Die neue Version wurde erfolgreich installiert.\n"
-							+ "Bitte LibreOffice neu starten, um die neue Version zu aktivieren.")
+					.caption(I18n.get("msg.caption.aktualisierung.abgeschlossen"))
+					.message(I18n.get("msg.text.aktualisierung.abgeschlossen"))
 					.show();
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);

@@ -15,6 +15,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -38,7 +39,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	// Wird immer von Sheetrunner aufgerufen
 	@Override
 	public final void update() throws GenerateException {
-		processBoxinfo("Update Konfiguration");
+		processBoxinfo(I18n.get("processbox.update.konfiguration"));
 		// validate SpielSystem
 		validateSpielSystem();
 		validateDocErstelltMitVersion();
@@ -73,8 +74,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 				de.petanqueturniermanager.helper.msgbox.ProcessBox.from()
 						.fehler("Tabellenkalkulationsdokument wurde mit Turniersystem " + turnierSystemAusDocument
 								+ " erstellt.");
-				throw new GenerateException("Turniersystem '" + getTurnierSystem() + "' stimmt nicht mit Dokument '"
-						+ turnierSystemAusDocument + "' überein");
+				throw new GenerateException(I18n.get("error.turniersystem.stimmt.nicht", getTurnierSystem(), turnierSystemAusDocument));
 			}
 		}
 	}
@@ -118,8 +118,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 				getLogger().warn("Das Turnier-Dokument wurde mit einer anderen PTM Plugin-Version erstellt");
 				MessageBoxResult answer = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO_CANCEL)
 						.caption(errMsg)
-						.message("Achtung !! Das Turnier-Dokument wurde mit einer unterschiedlichen"
-								+ " Turnier-Manager Plugin-Version erstellt.\n\nDie Version im Dokument aktualisieren?")
+						.message(I18n.get("msg.text.version.unterschied"))
 						.show();
 
 				if (answer == MessageBoxResult.CANCEL) {
@@ -174,7 +173,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 
 	@Override
 	public final XSpreadsheet getXSpreadSheet() throws GenerateException {
-		throw new GenerateException("nicht erlaubt");
+		throw new GenerateException(I18n.get("error.nicht.erlaubt"));
 	}
 
 	@Override

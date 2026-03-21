@@ -35,6 +35,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -153,7 +154,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo("Aktualisiere K.-O. Meldeliste");
+		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.aktualisieren"));
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		TurnierSheet.from(xSheet, sheet.getWorkingSpreadsheet()).setActiv();
 
@@ -211,7 +212,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void insertHeaderInSheet(int headerColor) throws GenerateException {
-		sheet.processBoxinfo("K.-O. Meldeliste Header");
+		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.einfuegen"));
 
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
@@ -344,11 +345,17 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setCharColor("00599d"));
 	}
 
+	private int getLetzteDatenZeileUseMin() throws GenerateException {
+		int minZeile = ERSTE_DATEN_ZEILE + MIN_ANZAHL_MELDUNGEN_ZEILEN - 1;
+		int actualZeile = letzteZeileMitDaten(sheet.getXSpreadSheet()) + 10;
+		return Math.max(minZeile, actualZeile);
+	}
+
 	private void formatDatenSpalten() throws GenerateException {
-		sheet.processBoxinfo("K.-O. Meldeliste Daten formatieren");
+		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.formatieren"));
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
-		int letzteDatenZeile = ERSTE_DATEN_ZEILE + MIN_ANZAHL_MELDUNGEN_ZEILEN - 1;
+		int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
 		// Zeilenfarben hier nochmals holen, damit sie nach den Fehler-Bedingungen angehängt
 		// werden können (Priorität: Fehler > Zeilenfarbe).
@@ -442,7 +449,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		MeldungenHintergrundFarbeGeradeStyle farbeGerade = konfigurationSheet.getMeldeListeHintergrundFarbeGeradeStyle();
 		MeldungenHintergrundFarbeUnGeradeStyle farbeUngerade = konfigurationSheet
 				.getMeldeListeHintergrundFarbeUnGeradeStyle();
-		int letzteDatenZeile = ERSTE_DATEN_ZEILE + MIN_ANZAHL_MELDUNGEN_ZEILEN - 1;
+		int letzteDatenZeile = getLetzteDatenZeileUseMin();
 
 		RangePosition datenRange = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
 				getAktivSpalte(), letzteDatenZeile);
@@ -456,7 +463,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 
 	/** Liefert alle aktiven Teams aus der Meldeliste, sortiert nach Nr. */
 	TeamMeldungen getAktiveMeldungen() throws GenerateException {
-		sheet.processBoxinfo("K.-O. Meldungen einlesen");
+		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.einlesen"));
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int vornameSpalte = getVornameSpalte(0);
 		int aktivSpalte = getAktivSpalte();
@@ -485,7 +492,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	 * RNG ist Pflichtfeld – vor dem Aufruf muss {@link #validiereRangSpalte} geprüft werden.
 	 */
 	TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
-		sheet.processBoxinfo("K.-O. Meldungen nach Rangliste lesen");
+		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.sortieren"));
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int vornameSpalte = getVornameSpalte(0);
 		int rngSpalte = getRanglisteSpalte();

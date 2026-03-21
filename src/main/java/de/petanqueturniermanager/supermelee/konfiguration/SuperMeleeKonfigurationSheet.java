@@ -14,6 +14,7 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGe
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
@@ -32,7 +33,7 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 
 	@Override
 	protected void doRun() throws GenerateException {
-		throw new GenerateException("nicht erlaubt");
+		throw new GenerateException(I18n.get("error.nicht.erlaubt"));
 	}
 
 	@Override

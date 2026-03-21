@@ -23,6 +23,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -55,8 +56,8 @@ public class DownloadExtension extends SheetRunner {
 		NewReleaseChecker newReleaseChecker = new NewReleaseChecker();
 		ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
 
-		processBoxinfo("Start Download von Pétanque-Turnier-Manager");
-		processBoxinfo("Aktuell installierte Version " + extensionsHelper.getVersionNummer());
+		processBoxinfo(I18n.get("processbox.download.start"));
+		processBoxinfo(I18n.get("processbox.installierte.version", extensionsHelper.getVersionNummer()));
 
 		GHRelease latest = newReleaseChecker.readLatestReleaseFromCacheFile();
 		if (latest == null) {
@@ -70,7 +71,7 @@ public class DownloadExtension extends SheetRunner {
 			processBox().fehler("keine " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
 			return;
 		}
-		processBoxinfo("GitHub Version " + latest.getName());
+		processBoxinfo(I18n.get("processbox.github.version", latest.getName()));
 		processBoxinfo(latest.getBody()); // Release Infos
 		processBoxinfo(downloadURL.toString());
 
@@ -85,18 +86,18 @@ public class DownloadExtension extends SheetRunner {
 				File selectedPath = new File(dirURL);
 				File targetFile = new File(selectedPath, oxtAsset.getName());
 				if (targetFile.exists()) {
-					processBoxinfo("Datei bereits vorhanden " + targetFile);
+					processBoxinfo(I18n.get("processbox.datei.bereits.vorhanden", targetFile));
 					MessageBoxResult answerBereitsVorhanden = MessageBox
-							.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption("Datei bereits vorhanden")
-							.message("Datei " + targetFile + " bereits vorhanden.\r\nÜberschreiben?").show();
+							.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption(I18n.get("msg.caption.datei.vorhanden"))
+							.message(I18n.get("msg.text.datei.vorhanden.ueberschreiben", targetFile)).show();
 					if (answerBereitsVorhanden == MessageBoxResult.NO) {
-						processBoxinfo("Abbruch");
+						processBoxinfo(I18n.get("processbox.abbruch"));
 						return;
 					}
-					processBoxinfo("Überschreiben");
+					processBoxinfo(I18n.get("processbox.ueberschreiben"));
 				}
 
-				processBoxinfo("Speichern in " + selectedPath.getPath());
+				processBoxinfo(I18n.get("processbox.speichern.in", selectedPath.getPath()));
 				if (selectedPath.canWrite()) {
 					FileUtils.copyURLToFile(downloadURL, targetFile, 10000, 10000);
 				} else {
@@ -108,7 +109,7 @@ public class DownloadExtension extends SheetRunner {
 				processBox().fehler(e.getMessage());
 			}
 		} else {
-			processBoxinfo("Abbruch");
+			processBoxinfo(I18n.get("processbox.abbruch"));
 		}
 	}
 
