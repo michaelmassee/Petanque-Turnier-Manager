@@ -13,10 +13,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.TURNIERSYSTEM</value>
 						<value xml:lang="de">PTM.ALG.TURNIERSYSTEM</value>
+						<value xml:lang="es">PTM.ALG.TURNIERSYSTEM</value>
+						<value xml:lang="fr">PTM.ALG.TURNIERSYSTEM</value>
+						<value xml:lang="nl">PTM.ALG.TURNIERSYSTEM</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, Turnier System.</value>
 						<value xml:lang="de">Petanque Turniermanager, Turniersystem.</value>
+						<value xml:lang="es">Petanque Turniermanager, Turniersystem.</value>
+						<value xml:lang="fr">Petanque Turniermanager, Turniersystem.</value>
+						<value xml:lang="nl">Petanque Turniermanager, Turniersystem.</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
@@ -27,10 +33,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.INTPROPERTY</value>
 						<value xml:lang="de">PTM.ALG.INTPROPERTY</value>
+						<value xml:lang="es">PTM.ALG.INTPROPERTY</value>
+						<value xml:lang="fr">PTM.ALG.INTPROPERTY</value>
+						<value xml:lang="nl">PTM.ALG.INTPROPERTY</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, get int value of Property</value>
 						<value xml:lang="de">Petanque Turniermanager, Integer-Wert einer Property</value>
+						<value xml:lang="es">Petanque Turniermanager, Integer-Wert einer Property</value>
+						<value xml:lang="fr">Petanque Turniermanager, Integer-Wert einer Property</value>
+						<value xml:lang="nl">Petanque Turniermanager, Integer-Wert einer Property</value>
 					</prop>
 					<prop oor:name="CompatibilityName">
 						<value xml:lang="en">AutoAddIn.Legacy.INTPROPERTY</value>
@@ -40,10 +52,16 @@
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">PTM PropertyName</value>
 								<value xml:lang="de">PTM Propertynamen</value>
+								<value xml:lang="es">PTM Propertynamen</value>
+								<value xml:lang="fr">PTM Propertynamen</value>
+								<value xml:lang="nl">PTM Propertynamen</value>
 							</prop>						
 							<prop oor:name="Description">
 								<value xml:lang="en">Name of the PTM Property</value>
 								<value xml:lang="de">PTM Propertynamen</value>
+								<value xml:lang="es">PTM Propertynamen</value>
+								<value xml:lang="fr">PTM Propertynamen</value>
+								<value xml:lang="nl">PTM Propertynamen</value>
 							</prop>
 						</node>
 					</node>
@@ -56,10 +74,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.STRINGPROPERTY</value>
 						<value xml:lang="de">PTM.ALG.STRINGPROPERTY</value>
+						<value xml:lang="es">PTM.ALG.STRINGPROPERTY</value>
+						<value xml:lang="fr">PTM.ALG.STRINGPROPERTY</value>
+						<value xml:lang="nl">PTM.ALG.STRINGPROPERTY</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, get string value of Property</value>
 						<value xml:lang="de">Petanque Turniermanager, String-Wert einer Property</value>
+						<value xml:lang="es">Petanque Turniermanager, String-Wert einer Property</value>
+						<value xml:lang="fr">Petanque Turniermanager, String-Wert einer Property</value>
+						<value xml:lang="nl">Petanque Turniermanager, String-Wert einer Property</value>
 					</prop>
 					<prop oor:name="CompatibilityName">
 						<value xml:lang="en">AutoAddIn.Legacy.STRINGPROPERTY</value>
@@ -69,10 +93,16 @@
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">PTM PropertyName</value>
 								<value xml:lang="de">PTM Propertynamen</value>
+								<value xml:lang="es">PTM Propertynamen</value>
+								<value xml:lang="fr">PTM Propertynamen</value>
+								<value xml:lang="nl">PTM Propertynamen</value>
 							</prop>						
 							<prop oor:name="Description">
 								<value xml:lang="en">Name of the PTM Property</value>
 								<value xml:lang="de">PTM Propertynamen</value>
+								<value xml:lang="es">PTM Propertynamen</value>
+								<value xml:lang="fr">PTM Propertynamen</value>
+								<value xml:lang="nl">PTM Propertynamen</value>
 							</prop>
 						</node>
 					</node>
@@ -85,60 +115,96 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.DIRECTCOMPARISON</value>
 						<value xml:lang="de">PTM.ALG.DIREKTVERGLEICH</value>
+						<value xml:lang="es">PTM.ALG.DIREKTVERGLEICH</value>
+						<value xml:lang="fr">PTM.ALG.DIREKTVERGLEICH</value>
+						<value xml:lang="nl">PTM.ALG.DIREKTVERGLEICH</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, calculate direct comparison.</value>
 						<value xml:lang="de">Petanque Turniermanager, führt einen Direktvergleich von Ergebnissen zwischen 2 Teams durch.</value>
+						<value xml:lang="es">Petanque Turniermanager, führt einen Direktvergleich von Ergebnissen zwischen 2 Teams durch.</value>
+						<value xml:lang="fr">Petanque Turniermanager, führt einen Direktvergleich von Ergebnissen zwischen 2 Teams durch.</value>
+						<value xml:lang="nl">Petanque Turniermanager, führt einen Direktvergleich von Ergebnissen zwischen 2 Teams durch.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="teamA" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">Team A</value>
 								<value xml:lang="de">Team A</value>
+								<value xml:lang="es">Team A</value>
+								<value xml:lang="fr">Team A</value>
+								<value xml:lang="nl">Team A</value>
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">Team A</value>
 								<value xml:lang="de">Team A</value>
+								<value xml:lang="es">Team A</value>
+								<value xml:lang="fr">Team A</value>
+								<value xml:lang="nl">Team A</value>
 							</prop>
 						</node>
 						<node oor:name="teamB" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">Team B</value>
 								<value xml:lang="de">Team B</value>
+								<value xml:lang="es">Team B</value>
+								<value xml:lang="fr">Team B</value>
+								<value xml:lang="nl">Team B</value>
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">Team B</value>
 								<value xml:lang="de">Team B</value>
+								<value xml:lang="es">Team B</value>
+								<value xml:lang="fr">Team B</value>
+								<value xml:lang="nl">Team B</value>
 							</prop>
 						</node>
 						<node oor:name="begegnungen" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">Game encounters</value>
 								<value xml:lang="de">Spielbegegnungen</value>
+								<value xml:lang="es">Spielbegegnungen</value>
+								<value xml:lang="fr">Spielbegegnungen</value>
+								<value xml:lang="nl">Spielbegegnungen</value>
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">2D Array of Game encounters</value>
 								<value xml:lang="de">2D-Array von Spielbegegnungen</value>
+								<value xml:lang="es">2D-Array von Spielbegegnungen</value>
+								<value xml:lang="fr">2D-Array von Spielbegegnungen</value>
+								<value xml:lang="nl">2D-Array von Spielbegegnungen</value>
 							</prop>
 						</node>
 						<node oor:name="siege" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">Wins</value>
 								<value xml:lang="de">Siege</value>
+								<value xml:lang="es">Siege</value>
+								<value xml:lang="fr">Siege</value>
+								<value xml:lang="nl">Siege</value>
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">2D Array of wins</value>
 								<value xml:lang="de">2D-Array von Siegen</value>
+								<value xml:lang="es">2D-Array von Siegen</value>
+								<value xml:lang="fr">2D-Array von Siegen</value>
+								<value xml:lang="nl">2D-Array von Siegen</value>
 							</prop>
 						</node>
 						<node oor:name="spielpunkte" oor:op="replace">
 							<prop oor:name="DisplayName">
 								<value xml:lang="en">Gamepoints</value>
 								<value xml:lang="de">Spielpunkte</value>
+								<value xml:lang="es">Spielpunkte</value>
+								<value xml:lang="fr">Spielpunkte</value>
+								<value xml:lang="nl">Spielpunkte</value>
 							</prop>
 							<prop oor:name="Description">
 								<value xml:lang="en">2D Array of Gamepoints</value>
 								<value xml:lang="de">2D-Array von Spielpunkten</value>
+								<value xml:lang="es">2D-Array von Spielpunkten</value>
+								<value xml:lang="fr">2D-Array von Spielpunkten</value>
+								<value xml:lang="nl">2D-Array von Spielpunkten</value>
 							</prop>
 						</node>
 					</node>
@@ -149,10 +215,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.AKTUELLE_RUNDE</value>
 						<value xml:lang="de">PTM.ALG.AKTUELLE_RUNDE</value>
+						<value xml:lang="es">PTM.ALG.AKTUELLE_RUNDE</value>
+						<value xml:lang="fr">PTM.ALG.AKTUELLE_RUNDE</value>
+						<value xml:lang="nl">PTM.ALG.AKTUELLE_RUNDE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, current round number.</value>
 						<value xml:lang="de">Petanque Turniermanager, aktuelle Rundennummer.</value>
+						<value xml:lang="es">Petanque Turniermanager, aktuelle Rundennummer.</value>
+						<value xml:lang="fr">Petanque Turniermanager, aktuelle Rundennummer.</value>
+						<value xml:lang="nl">Petanque Turniermanager, aktuelle Rundennummer.</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
@@ -163,10 +235,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.AKTUELLE_SPIELTAG</value>
 						<value xml:lang="de">PTM.ALG.AKTUELLE_SPIELTAG</value>
+						<value xml:lang="es">PTM.ALG.AKTUELLE_SPIELTAG</value>
+						<value xml:lang="fr">PTM.ALG.AKTUELLE_SPIELTAG</value>
+						<value xml:lang="nl">PTM.ALG.AKTUELLE_SPIELTAG</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, current matchday number.</value>
 						<value xml:lang="de">Petanque Turniermanager, aktueller Spieltag.</value>
+						<value xml:lang="es">Petanque Turniermanager, aktueller Spieltag.</value>
+						<value xml:lang="fr">Petanque Turniermanager, aktueller Spieltag.</value>
+						<value xml:lang="nl">Petanque Turniermanager, aktueller Spieltag.</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
@@ -177,10 +255,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.OPERATION_AKTIV</value>
 						<value xml:lang="de">PTM.ALG.OPERATION_AKTIV</value>
+						<value xml:lang="es">PTM.ALG.OPERATION_AKTIV</value>
+						<value xml:lang="fr">PTM.ALG.OPERATION_AKTIV</value>
+						<value xml:lang="nl">PTM.ALG.OPERATION_AKTIV</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="en">Petanque Turniermanager, returns 1 if an operation is currently running, otherwise 0.</value>
 						<value xml:lang="de">Petanque Turniermanager, gibt 1 zurück wenn gerade eine Operation läuft, sonst 0.</value>
+						<value xml:lang="es">Petanque Turniermanager, gibt 1 zurück wenn gerade eine Operation läuft, sonst 0.</value>
+						<value xml:lang="fr">Petanque Turniermanager, gibt 1 zurück wenn gerade eine Operation läuft, sonst 0.</value>
+						<value xml:lang="nl">Petanque Turniermanager, gibt 1 zurück wenn gerade eine Operation läuft, sonst 0.</value>
 					</prop>
 					<prop oor:name="Category">
 						<value>Add-In</value>
@@ -192,9 +276,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.TRIPL_ANZ_DOUBLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Triplette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Triplette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Triplette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Triplette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Triplette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -209,9 +300,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.TRIPL_ANZ_TRIPLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Triplette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Triplette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Triplette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Triplette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Triplette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -226,9 +324,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.TRIPL_NUR_DOUBLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Triplette-Modus: 1 wenn ausschließlich Doublette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="en">Supermêlée Triplette-Modus: 1 wenn ausschließlich Doublette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="es">Supermêlée Triplette-Modus: 1 wenn ausschließlich Doublette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="fr">Supermêlée Triplette-Modus: 1 wenn ausschließlich Doublette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="nl">Supermêlée Triplette-Modus: 1 wenn ausschließlich Doublette-Teams möglich sind, sonst 0.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -243,9 +348,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.DOUBL_ANZ_DOUBLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Doublette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Doublette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Doublette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Doublette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Doublette-Modus: Anzahl Doublette-Teams für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -260,9 +372,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.DOUBL_ANZ_TRIPLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Doublette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Doublette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Doublette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Doublette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Doublette-Modus: Anzahl Triplette-Teams für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -277,9 +396,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.DOUBL_NUR_TRIPLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Doublette-Modus: 1 wenn ausschließlich Triplette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="en">Supermêlée Doublette-Modus: 1 wenn ausschließlich Triplette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="es">Supermêlée Doublette-Modus: 1 wenn ausschließlich Triplette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="fr">Supermêlée Doublette-Modus: 1 wenn ausschließlich Triplette-Teams möglich sind, sonst 0.</value>
+						<value xml:lang="nl">Supermêlée Doublette-Modus: 1 wenn ausschließlich Triplette-Teams möglich sind, sonst 0.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -294,9 +420,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN</value>
 						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN</value>
+						<value xml:lang="es">PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.TRIPL_ANZ_PAARUNGEN</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Triplette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Triplette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Triplette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Triplette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Triplette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -311,9 +444,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN</value>
 						<value xml:lang="de">PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN</value>
+						<value xml:lang="es">PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.TRIPL_ANZ_BAHNEN</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Triplette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Triplette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Triplette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Triplette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Triplette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -328,9 +468,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN</value>
 						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN</value>
+						<value xml:lang="es">PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.DOUBL_ANZ_PAARUNGEN</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Doublette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Doublette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Doublette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Doublette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Doublette-Modus: Anzahl Paarungen (Spiele) für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -345,9 +492,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN</value>
 						<value xml:lang="de">PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN</value>
+						<value xml:lang="es">PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.DOUBL_ANZ_BAHNEN</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée Doublette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="en">Supermêlée Doublette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="es">Supermêlée Doublette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="fr">Supermêlée Doublette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
+						<value xml:lang="nl">Supermêlée Doublette-Modus: Anzahl Bahnen für gegebene Spieleranzahl.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -362,9 +516,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.VALIDE_ANZ_SPIELER</value>
 						<value xml:lang="de">PTM.SUPERMELEE.VALIDE_ANZ_SPIELER</value>
+						<value xml:lang="es">PTM.SUPERMELEE.VALIDE_ANZ_SPIELER</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.VALIDE_ANZ_SPIELER</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.VALIDE_ANZ_SPIELER</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée: 1 wenn die Spieleranzahl für ein Turnier gültig ist (nicht 7), sonst 0.</value>
+						<value xml:lang="en">Supermêlée: 1 wenn die Spieleranzahl für ein Turnier gültig ist (nicht 7), sonst 0.</value>
+						<value xml:lang="es">Supermêlée: 1 wenn die Spieleranzahl für ein Turnier gültig ist (nicht 7), sonst 0.</value>
+						<value xml:lang="fr">Supermêlée: 1 wenn die Spieleranzahl für ein Turnier gültig ist (nicht 7), sonst 0.</value>
+						<value xml:lang="nl">Supermêlée: 1 wenn die Spieleranzahl für ein Turnier gültig ist (nicht 7), sonst 0.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -379,9 +540,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée: Anzahl Triplette-Teams wenn ausschließlich Triplette möglich ist, sonst 0.</value>
+						<value xml:lang="en">Supermêlée: Anzahl Triplette-Teams wenn ausschließlich Triplette möglich ist, sonst 0.</value>
+						<value xml:lang="es">Supermêlée: Anzahl Triplette-Teams wenn ausschließlich Triplette möglich ist, sonst 0.</value>
+						<value xml:lang="fr">Supermêlée: Anzahl Triplette-Teams wenn ausschließlich Triplette möglich ist, sonst 0.</value>
+						<value xml:lang="nl">Supermêlée: Anzahl Triplette-Teams wenn ausschließlich Triplette möglich ist, sonst 0.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -396,9 +564,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE</value>
 						<value xml:lang="de">PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE</value>
+						<value xml:lang="es">PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE</value>
+						<value xml:lang="fr">PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE</value>
+						<value xml:lang="nl">PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Supermêlée: Anzahl Doublette-Teams wenn ausschließlich Doublette möglich ist, sonst 0.</value>
+						<value xml:lang="en">Supermêlée: Anzahl Doublette-Teams wenn ausschließlich Doublette möglich ist, sonst 0.</value>
+						<value xml:lang="es">Supermêlée: Anzahl Doublette-Teams wenn ausschließlich Doublette möglich ist, sonst 0.</value>
+						<value xml:lang="fr">Supermêlée: Anzahl Doublette-Teams wenn ausschließlich Doublette möglich ist, sonst 0.</value>
+						<value xml:lang="nl">Supermêlée: Anzahl Doublette-Teams wenn ausschließlich Doublette möglich ist, sonst 0.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzSpieler" oor:op="replace">
@@ -413,9 +588,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.CADRAGE.ANZ_TEAMS</value>
 						<value xml:lang="de">PTM.CADRAGE.ANZ_TEAMS</value>
+						<value xml:lang="es">PTM.CADRAGE.ANZ_TEAMS</value>
+						<value xml:lang="fr">PTM.CADRAGE.ANZ_TEAMS</value>
+						<value xml:lang="nl">PTM.CADRAGE.ANZ_TEAMS</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Cadrage: Anzahl der Teams, die eine Cadrage-Partie spielen müssen.</value>
+						<value xml:lang="en">Cadrage: Anzahl der Teams, die eine Cadrage-Partie spielen müssen.</value>
+						<value xml:lang="es">Cadrage: Anzahl der Teams, die eine Cadrage-Partie spielen müssen.</value>
+						<value xml:lang="fr">Cadrage: Anzahl der Teams, die eine Cadrage-Partie spielen müssen.</value>
+						<value xml:lang="nl">Cadrage: Anzahl der Teams, die eine Cadrage-Partie spielen müssen.</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzTeams" oor:op="replace">
@@ -430,9 +612,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.CADRAGE.ZIEL_ANZ</value>
 						<value xml:lang="de">PTM.CADRAGE.ZIEL_ANZ</value>
+						<value xml:lang="es">PTM.CADRAGE.ZIEL_ANZ</value>
+						<value xml:lang="fr">PTM.CADRAGE.ZIEL_ANZ</value>
+						<value xml:lang="nl">PTM.CADRAGE.ZIEL_ANZ</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Cadrage: Ziel-Teamanzahl nach der Cadrage (größte Zweierpotenz ≤ anzTeams).</value>
+						<value xml:lang="en">Cadrage: Ziel-Teamanzahl nach der Cadrage (größte Zweierpotenz ≤ anzTeams).</value>
+						<value xml:lang="es">Cadrage: Ziel-Teamanzahl nach der Cadrage (größte Zweierpotenz ≤ anzTeams).</value>
+						<value xml:lang="fr">Cadrage: Ziel-Teamanzahl nach der Cadrage (größte Zweierpotenz ≤ anzTeams).</value>
+						<value xml:lang="nl">Cadrage: Ziel-Teamanzahl nach der Cadrage (größte Zweierpotenz ≤ anzTeams).</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzTeams" oor:op="replace">
@@ -447,9 +636,16 @@
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.CADRAGE.ANZ_FREILOSE</value>
 						<value xml:lang="de">PTM.CADRAGE.ANZ_FREILOSE</value>
+						<value xml:lang="es">PTM.CADRAGE.ANZ_FREILOSE</value>
+						<value xml:lang="fr">PTM.CADRAGE.ANZ_FREILOSE</value>
+						<value xml:lang="nl">PTM.CADRAGE.ANZ_FREILOSE</value>
 					</prop>
 					<prop oor:name="Description">
 						<value xml:lang="de">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
+						<value xml:lang="en">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
+						<value xml:lang="es">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
+						<value xml:lang="fr">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
+						<value xml:lang="nl">Cadrage: Anzahl der Teams mit Freilos (direkt in die Hauptrunde).</value>
 					</prop>
 					<node oor:name="Parameters">
 						<node oor:name="anzTeams" oor:op="replace">

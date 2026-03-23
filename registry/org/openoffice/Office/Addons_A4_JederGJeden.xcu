@@ -10,6 +10,9 @@
 					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
 					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -117,6 +120,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste sortieren</value>
+									<value xml:lang="es">Ordenar clasificación</value>
+									<value xml:lang="fr">Trier le classement</value>
+									<value xml:lang="nl">Ranglijst sorteren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:jgj_rangliste_sortieren</value>

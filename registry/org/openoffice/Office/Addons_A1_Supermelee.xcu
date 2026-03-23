@@ -12,6 +12,9 @@
 					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
 					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -30,6 +33,9 @@
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Supermêlée</value>
 							<value xml:lang="de">Supermêlée</value>
+							<value xml:lang="es">Supermêlée</value>
+							<value xml:lang="fr">Supermêlée</value>
+							<value xml:lang="nl">Supermêlée</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -61,6 +67,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste aktualisieren</value>
+									<value xml:lang="es">Actualizar lista de inscripciones</value>
+									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
+									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:update_meldeliste</value>
@@ -182,6 +191,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List Sort</value>
 									<value xml:lang="de">Spieltag-Rangliste sortieren</value>
+									<value xml:lang="es">Ordenar clasificación del día</value>
+									<value xml:lang="fr">Trier le classement du jour</value>
+									<value xml:lang="nl">Dagklassement sorteren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spieltag_rangliste_sort</value>
@@ -195,6 +207,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Next competition day</value>
 									<value xml:lang="de">Nächster Spieltag</value>
+									<value xml:lang="es">Siguiente día de competición</value>
+									<value xml:lang="fr">Journée suivante</value>
+									<value xml:lang="nl">Volgende speeldag</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:naechste_spieltag</value>
@@ -230,6 +245,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste sortieren</value>
+									<value xml:lang="es">Ordenar clasificación final</value>
+									<value xml:lang="fr">Trier le classement final</value>
+									<value xml:lang="nl">Eindranglijst sorteren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:supermelee_endrangliste_sort</value>
@@ -265,6 +283,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate competition day</value>
 									<value xml:lang="de">Spieltag prüfen</value>
+									<value xml:lang="es">Validar día de competición</value>
+									<value xml:lang="fr">Valider la journée</value>
+									<value xml:lang="nl">Speeldag valideren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:supermelee_validate</value>
@@ -278,6 +299,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Validate Rankinglist</value>
 									<value xml:lang="de">Rangliste prüfen</value>
+									<value xml:lang="es">Validar clasificación</value>
+									<value xml:lang="fr">Valider le classement</value>
+									<value xml:lang="nl">Ranglijst valideren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:supermelee_spieltagrangliste_validate</value>

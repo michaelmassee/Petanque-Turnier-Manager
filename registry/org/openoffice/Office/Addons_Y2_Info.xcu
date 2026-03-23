@@ -6,6 +6,9 @@
 				<prop oor:name="Title" oor:type="xs:string">
 					<value xml:lang="de">PétTurnMngr</value>
 					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -37,6 +40,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="de">Release-Infos</value>
 								<value xml:lang="en">Release Notes</value>
+									<value xml:lang="es">Notas de versión</value>
+									<value xml:lang="fr">Notes de version</value>
+									<value xml:lang="nl">Versie-informatie</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:releaseInfosAnzeigen</value>
@@ -49,6 +55,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="de">Plugin herunterladen</value>
 								<value xml:lang="en">Download Plugin</value>
+									<value xml:lang="es">Descargar plugin</value>
+									<value xml:lang="fr">Télécharger le plugin</value>
+									<value xml:lang="nl">Plugin downloaden</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:downloadExtension</value>
@@ -61,6 +70,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="de">Neueste Version direkt installieren</value>
 								<value xml:lang="en">Install Latest Version Directly</value>
+									<value xml:lang="es">Instalar la versión más reciente directamente</value>
+									<value xml:lang="fr">Installer directement la dernière version</value>
+									<value xml:lang="nl">Nieuwste versie direct installeren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:direktAktualisieren</value>

@@ -9,6 +9,10 @@
 				<prop oor:name="Title" oor:type="xs:string">
 					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -61,6 +65,10 @@
 							<node oor:name="A7A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
+									<value xml:lang="en">Update Entry List</value>
+									<value xml:lang="es">Actualizar lista de inscripciones</value>
+									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
+									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_update_meldeliste</value>
@@ -79,6 +87,10 @@
 							<node oor:name="A7A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Vorrunde</value>
+									<value xml:lang="en">New Preliminary Round</value>
+									<value xml:lang="es">Nueva ronda preliminar</value>
+									<value xml:lang="fr">Nouveau tour préliminaire</value>
+									<value xml:lang="nl">Nieuwe voorronde</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_naechste_vorrunde</value>
@@ -91,6 +103,10 @@
 							<node oor:name="A7A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorrunde neu auslosen</value>
+									<value xml:lang="en">Re-draw Preliminary Round</value>
+									<value xml:lang="es">Volver a sortear la ronda preliminar</value>
+									<value xml:lang="fr">Retirer le tour préliminaire</value>
+									<value xml:lang="nl">Voorronde opnieuw loten</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_aktuelle_vorrunde</value>
@@ -131,6 +147,10 @@
 							<node oor:name="A7A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Finalrunden erstellen</value>
+									<value xml:lang="en">Create Final Rounds</value>
+									<value xml:lang="es">Crear rondas finales</value>
+									<value xml:lang="fr">Créer les tours finaux</value>
+									<value xml:lang="nl">Finalronden aanmaken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_finalrunden</value>

@@ -310,3 +310,193 @@ tasks.register('buildPlugin') {
         println "Plugin erfolgreich gebaut: ${layout.buildDirectory.get().asFile}/distributions/${project.name}-${version}.oxt"
     }
 }
+
+// ===================================================
+// i18n / XCU Übersetzung
+// ===================================================
+
+tasks.register('translateXcu') {
+    group = 'i18n'
+    description = '''\
+Ergänzt fehlende <value xml:lang="..."> in allen XCU-Dateien in registry/.
+Die Dateien werden in-place geändert (git diff zeigt die Änderungen).
+Optionen:
+  -PdryRun=true           Vorschau ohne Dateien zu ändern
+  -Pdeepl.api.key=KEY     DeepL API-Key (Free oder Pro)
+  Env DEEPL_API_KEY       DeepL API-Key via Umgebungsvariable'''
+
+    doLast {
+        // ---- Konfiguration ----
+        def zielSprachen  = ['de', 'en', 'es', 'fr', 'nl']
+        def uebersetzbare = ['Title', 'Description', 'DisplayName'] as Set
+        boolean trockenLauf = findProperty('dryRun') == 'true'
+        String deeplKey = (findProperty('deepl.api.key') ?: System.getenv('DEEPL_API_KEY') ?: '').trim()
+
+        // ---- Fallback-Wörterbuch (DE als Schlüssel, alle 5 Sprachen) ----
+        def woerterbuch = [
+            'PétTurnMngr'                            : [de: 'PétTurnMngr',                          en: 'PétTurnMngr',                               es: 'PétTurnMngr',                                       fr: 'PétTurnMngr',                                    nl: 'PétTurnMngr'],
+            'Schweizer'                              : [de: 'Schweizer',                             en: 'Swiss',                                     es: 'Sistema suizo',                                     fr: 'Suisse',                                         nl: 'Zwitsers'],
+            'Supermêlée'                             : [de: 'Supermêlée',                            en: 'Supermêlée',                                es: 'Supermêlée',                                        fr: 'Supermêlée',                                     nl: 'Supermêlée'],
+            'K.-O.'                                  : [de: 'K.-O.',                                 en: 'K.O.',                                      es: 'Eliminatoria',                                      fr: 'Élimination directe',                            nl: 'K.O.'],
+            'Turnier'                                : [de: 'Turnier',                               en: 'Tournament',                                es: 'Torneo',                                            fr: 'Tournoi',                                        nl: 'Toernooi'],
+            'Neue Meldeliste'                        : [de: 'Neue Meldeliste',                       en: 'New Entry List',                            es: 'Nueva lista de inscripciones',                      fr: "Nouvelle liste d'inscriptions",                  nl: 'Nieuwe deelnemerslijst'],
+            'Meldeliste Aktualisieren'               : [de: 'Meldeliste Aktualisieren',              en: 'Update Entry List',                         es: 'Actualizar lista de inscripciones',                 fr: "Actualiser la liste d'inscriptions",              nl: 'Deelnemerslijst bijwerken'],
+            'Meldeliste aktualisieren'               : [de: 'Meldeliste aktualisieren',              en: 'Refresh Entry List',                        es: 'Actualizar lista de inscripciones',                 fr: "Actualiser la liste d'inscriptions",              nl: 'Deelnemerslijst bijwerken'],
+            'Neue Spielrunde'                        : [de: 'Neue Spielrunde',                       en: 'New Round',                                 es: 'Nueva ronda',                                       fr: 'Nouveau tour',                                   nl: 'Nieuwe ronde'],
+            'Spielrunde neu auslosen'                : [de: 'Spielrunde neu auslosen',               en: 'Re-draw Round',                             es: 'Volver a sortear la ronda',                         fr: 'Retirer la manche',                              nl: 'Ronde opnieuw loten'],
+            'Rangliste'                              : [de: 'Rangliste',                             en: 'Ranking',                                   es: 'Clasificación',                                     fr: 'Classement',                                     nl: 'Ranglijst'],
+            'Rangliste Sortieren'                    : [de: 'Rangliste Sortieren',                   en: 'Sort Ranking',                              es: 'Ordenar clasificación',                             fr: 'Trier le classement',                            nl: 'Ranglijst sorteren'],
+            'Rangliste sortieren'                    : [de: 'Rangliste sortieren',                   en: 'Sort Ranking',                              es: 'Ordenar clasificación',                             fr: 'Trier le classement',                            nl: 'Ranglijst sorteren'],
+            'Spieltag-Rangliste sortieren'           : [de: 'Spieltag-Rangliste sortieren',          en: 'Sort Dayranking',                           es: 'Ordenar clasificación del día',                     fr: 'Trier le classement du jour',                    nl: 'Dagklassement sorteren'],
+            'Nächster Spieltag'                      : [de: 'Nächster Spieltag',                     en: 'Next Competition Day',                      es: 'Siguiente día de competición',                      fr: 'Journée suivante',                               nl: 'Volgende speeldag'],
+            'Endrangliste sortieren'                 : [de: 'Endrangliste sortieren',                en: 'Sort Final Ranking',                        es: 'Ordenar clasificación final',                       fr: 'Trier le classement final',                      nl: 'Eindranglijst sorteren'],
+            'Spieltag prüfen'                        : [de: 'Spieltag prüfen',                       en: 'Validate Competition Day',                  es: 'Validar día de competición',                        fr: 'Valider la journée',                             nl: 'Speeldag valideren'],
+            'Rangliste prüfen'                       : [de: 'Rangliste prüfen',                      en: 'Validate Ranking',                          es: 'Validar clasificación',                             fr: 'Valider le classement',                          nl: 'Ranglijst valideren'],
+            'Turnierbaum erstellen'                  : [de: 'Turnierbaum erstellen',                 en: 'Create Tournament Bracket',                 es: 'Crear árbol del torneo',                            fr: 'Créer le tableau du tournoi',                    nl: 'Toernooiboom aanmaken'],
+            'Neue Vorrunde'                          : [de: 'Neue Vorrunde',                         en: 'New Preliminary Round',                     es: 'Nueva ronda preliminar',                            fr: 'Nouveau tour préliminaire',                      nl: 'Nieuwe voorronde'],
+            'Vorrunde neu auslosen'                  : [de: 'Vorrunde neu auslosen',                 en: 'Re-draw Preliminary Round',                 es: 'Volver a sortear la ronda preliminar',              fr: 'Retirer le tour préliminaire',                   nl: 'Voorronde opnieuw loten'],
+            'Finalrunden erstellen'                  : [de: 'Finalrunden erstellen',                 en: 'Create Final Rounds',                       es: 'Crear rondas finales',                              fr: 'Créer les tours finaux',                         nl: 'Finalronden aanmaken'],
+            'Beispielturniere'                       : [de: 'Beispielturniere',                      en: 'Example Tournaments',                       es: 'Torneos de ejemplo',                                fr: "Tournois d'exemple",                             nl: 'Voorbeeldtoernooien'],
+            'Release-Infos'                          : [de: 'Release-Infos',                         en: 'Release Notes',                             es: 'Notas de versión',                                  fr: 'Notes de version',                               nl: 'Versie-informatie'],
+            'Plugin herunterladen'                   : [de: 'Plugin herunterladen',                  en: 'Download Plugin',                           es: 'Descargar plugin',                                  fr: 'Télécharger le plugin',                          nl: 'Plugin downloaden'],
+            'Neueste Version direkt installieren'    : [de: 'Neueste Version direkt installieren',   en: 'Install Latest Version Directly',           es: 'Instalar la versión más reciente directamente',     fr: 'Installer directement la dernière version',      nl: 'Nieuwste versie direct installeren'],
+            // Testdaten-Menüs
+            'Supermêlée, generiere Meldeliste mit 100 Meldungen': [de: 'Supermêlée, generiere Meldeliste mit 100 Meldungen', en: 'Supermêlée, generate Entry List with 100 Entries', es: 'Supermêlée, generar lista con 100 inscripciones', fr: 'Supermêlée, générer la liste avec 100 inscriptions', nl: 'Supermêlée, maak deelnemerslijst met 100 inschrijvingen'],
+            'Supermêlée, generiere 1 Spieltag mit 4 Spielrunden': [de: 'Supermêlée, generiere 1 Spieltag mit 4 Spielrunden', en: 'Supermêlée, generate 1 Playday with 4 Rounds', es: 'Supermêlée, generar 1 jornada con 4 rondas', fr: 'Supermêlée, générer 1 journée avec 4 tours', nl: 'Supermêlée, maak 1 speeldag met 4 ronden'],
+            'Supermêlée, generiere 5 komplette Spieltage'       : [de: 'Supermêlée, generiere 5 komplette Spieltage',        en: 'Supermêlée, generate 5 Complete Playdays',         es: 'Supermêlée, generar 5 jornadas completas',           fr: 'Supermêlée, générer 5 journées complètes',          nl: 'Supermêlée, maak 5 complete speel­dagen'],
+            'Liga, generiere Meldeliste'                         : [de: 'Liga, generiere Meldeliste',                         en: 'Liga, generate Entry List',                        es: 'Liga, generar lista de inscripciones',                fr: 'Liga, générer la liste',                             nl: 'Liga, maak deelnemerslijst'],
+            'Liga, Spielplan'                                    : [de: 'Liga, Spielplan',                                    en: 'Liga, Gameplan',                                   es: 'Liga, calendario',                                   fr: 'Liga, calendrier',                                  nl: 'Liga, speelschema'],
+            'Liga, Spielplan mit Freispiel'                      : [de: 'Liga, Spielplan mit Freispiel',                      en: 'Liga, Gameplan with Bye',                          es: 'Liga, calendario con jornada libre',                  fr: 'Liga, calendrier avec partie libre',                 nl: 'Liga, speelschema met vrijspelen'],
+            'Schweizer, generiere Meldeliste mit 16 Teams'       : [de: 'Schweizer, generiere Meldeliste mit 16 Teams',       en: 'Schweizer, generate Entry List with 16 Teams',     es: 'Schweizer, generar lista con 16 equipos',             fr: 'Schweizer, générer la liste avec 16 équipes',       nl: 'Schweizer, maak deelnemerslijst met 16 teams'],
+            'Schweizer, Turnier (3 Spielrunden + Rangliste)'     : [de: 'Schweizer, Turnier (3 Spielrunden + Rangliste)',     en: 'Schweizer, Tournament (3 Rounds + Ranking)',       es: 'Schweizer, Torneo (3 rondas + clasificación)',        fr: 'Schweizer, Tournoi (3 tours + classement)',         nl: 'Schweizer, Toernooi (3 ronden + ranglijst)'],
+        ]
+
+        // ---- DeepL-Übersetzungsfunktion ----
+        def deeplUebersetzen = { String text, String zielSprache ->
+            try {
+                def client = java.net.http.HttpClient.newHttpClient()
+                def body = "auth_key=${java.net.URLEncoder.encode(deeplKey, 'UTF-8')}" +
+                           "&text=${java.net.URLEncoder.encode(text, 'UTF-8')}" +
+                           "&target_lang=${zielSprache.toUpperCase()}"
+                def request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create('https://api-free.deepl.com/v2/translate'))
+                    .header('Content-Type', 'application/x-www-form-urlencoded')
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(body))
+                    .build()
+                def response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString())
+                if (response.statusCode() == 200) {
+                    def json = new groovy.json.JsonSlurper().parseText(response.body())
+                    return json.translations[0].text as String
+                }
+                logger.warn("DeepL HTTP ${response.statusCode()} für '${text.take(40)}' -> ${zielSprache}")
+            } catch (Exception e) {
+                logger.warn("DeepL-Aufruf fehlgeschlagen: ${e.message}")
+            }
+            return null
+        }
+
+        // ---- Übersetzung für einen Text + Zielsprache holen ----
+        def uebersetzungHolen = { String quelltext, String zielSprache ->
+            // 1. Fallback-Wörterbuch (DE als Schlüssel, exakter Match)
+            def eintrag = woerterbuch[quelltext]
+            if (eintrag?[zielSprache]) return eintrag[zielSprache] as String
+            // 2. DeepL (wenn API-Key vorhanden)
+            if (deeplKey) {
+                def ergebnis = deeplUebersetzen(quelltext, zielSprache)
+                if (ergebnis) return ergebnis
+            }
+            // 3. Quelltext unverändert kopieren
+            return quelltext
+        }
+
+        // ---- XML-Sonderzeichen escapen ----
+        def xmlEscape = { String s ->
+            s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+        }
+
+        // ---- Einzelne XCU-Datei verarbeiten (text-basiert) ----
+        // Vorteil: Originalformatierung bleibt erhalten; git diff zeigt nur neue Zeilen.
+        def xcuDateiVerarbeiten = { File xcuDatei ->
+            def zeilen = xcuDatei.readLines('UTF-8')
+            def ausgabe = [] as List<String>
+            boolean geaendert = false
+            boolean inProp = false
+            String propName = null
+            Map<String, String> gefundeneSprachenInProp = [:]
+            String einzug = null  // Einzug der value-Zeilen, wird aus erster gefundener value-Zeile übernommen
+
+            for (String zeile : zeilen) {
+                if (!inProp) {
+                    def m = zeile =~ /(\s*)<prop\s[^>]*oor:name="([^"]+)"/
+                    if (m && uebersetzbare.contains(m[0][2] as String)) {
+                        inProp = true
+                        propName = m[0][2] as String
+                        gefundeneSprachenInProp = [:]
+                        einzug = null
+                    }
+                    ausgabe << zeile
+                } else {
+                    // <value xml:lang="xx">text</value> erkennen
+                    def valueM = zeile =~ /^(\s*)<value\s+xml:lang="([^"]+)"[^>]*>(.*?)<\/value>\s*$/
+                    if (valueM) {
+                        if (einzug == null) einzug = valueM[0][1] as String
+                        gefundeneSprachenInProp[valueM[0][2] as String] = valueM[0][3] as String
+                    }
+
+                    // </prop> → fehlende Sprachen einfügen, dann Zeile ausgeben
+                    if (zeile =~ /^\s*<\/prop>/) {
+                        def fehlendeSprachcodes = zielSprachen.findAll { !gefundeneSprachenInProp.containsKey(it) }
+                        if (fehlendeSprachcodes && gefundeneSprachenInProp) {
+                            // Quelltext: DE bevorzugt, dann EN, dann erste verfügbare Sprache
+                            String quelltext = gefundeneSprachenInProp['de']
+                                ?: gefundeneSprachenInProp['en']
+                                ?: gefundeneSprachenInProp.values().first()
+                            if (quelltext?.trim()) {
+                                def zeilenEinzug = einzug ?: '\t\t\t\t\t'
+                                fehlendeSprachcodes.each { sprache ->
+                                    String uebersetzt = uebersetzungHolen(quelltext, sprache)
+                                    String neueZeile = "${zeilenEinzug}<value xml:lang=\"${sprache}\">${xmlEscape(uebersetzt)}</value>"
+                                    if (trockenLauf) {
+                                        println "  [${xcuDatei.name}] <prop ${propName}>: +${sprache} = \"${uebersetzt}\""
+                                    } else {
+                                        ausgabe << neueZeile
+                                        geaendert = true
+                                    }
+                                }
+                            }
+                        }
+                        inProp = false
+                        propName = null
+                    }
+                    ausgabe << zeile
+                }
+            }
+
+            if (geaendert) {
+                xcuDatei.withWriter('UTF-8') { writer ->
+                    ausgabe.each { writer.writeLine(it) }
+                }
+                println "  Aktualisiert: ${xcuDatei.name}"
+            }
+            return geaendert
+        }
+
+        // ---- Hauptloop ----
+        if (trockenLauf) println "=== DRY-RUN Modus (keine Dateien werden geändert) ==="
+        if (deeplKey) println "=== DeepL API-Key vorhanden ==="
+        else         println "=== Kein DeepL-Key – nur Fallback-Wörterbuch aktiv ==="
+
+        def xcuDateien = fileTree('registry').include('**/*.xcu').files.sort { it.name }
+        println "\nVerarbeite ${xcuDateien.size()} XCU-Dateien in registry/...\n"
+
+        int anzahlGeaendert = 0
+        xcuDateien.each { datei ->
+            if (xcuDateiVerarbeiten(datei)) anzahlGeaendert++
+        }
+
+        println ""
+        if (trockenLauf) println "DRY-RUN abgeschlossen – ${xcuDateien.size()} Dateien geprüft, keine Änderungen geschrieben."
+        else             println "${anzahlGeaendert} von ${xcuDateien.size()} Dateien aktualisiert."
+        if (anzahlGeaendert > 0 && !trockenLauf) println "Tipp: 'git diff registry/' zeigt alle eingefügten Übersetzungen."
+    }
+}

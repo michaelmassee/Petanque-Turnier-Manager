@@ -10,6 +10,9 @@
 					<!-- Pétanque-MenuJobExecute-Manager -->
 					<value xml:lang="de">PétTurnMngr</value>
 					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
 				</prop>
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
@@ -27,6 +30,9 @@
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Schweizer</value>
 							<value xml:lang="de">Schweizer</value>
+							<value xml:lang="es">Sistema suizo</value>
+							<value xml:lang="fr">Suisse</value>
+							<value xml:lang="nl">Zwitsers</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -60,6 +66,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">new Entrylist</value>
 									<value xml:lang="de">Neue Meldeliste</value>
+									<value xml:lang="es">Nueva lista de inscripciones</value>
+									<value xml:lang="fr">Nouvelle liste d'inscriptions</value>
+									<value xml:lang="nl">Nieuwe deelnemerslijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_neue_meldeliste</value>
@@ -73,6 +82,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Update Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
+									<value xml:lang="es">Actualizar lista de inscripciones</value>
+									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
+									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_update_meldeliste</value>
@@ -92,6 +104,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Spielrunde</value>
 								<value xml:lang="en">New Round</value>
+									<value xml:lang="es">Nueva ronda</value>
+									<value xml:lang="fr">Nouveau tour</value>
+									<value xml:lang="nl">Nieuwe ronde</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_naechste_spielrunde</value>
@@ -103,6 +118,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="de">Spielrunde neu auslosen</value>
 								<value xml:lang="en">Re-draw Round</value>
+									<value xml:lang="es">Volver a sortear la ronda</value>
+									<value xml:lang="fr">Retirer la manche</value>
+									<value xml:lang="nl">Ronde opnieuw loten</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_aktuelle_spielrunde</value>
@@ -120,6 +138,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
+									<value xml:lang="es">Clasificación</value>
+									<value xml:lang="fr">Classement</value>
+									<value xml:lang="nl">Ranglijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_rangliste</value>
@@ -131,6 +152,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste Sortieren</value>
+									<value xml:lang="es">Ordenar clasificación</value>
+									<value xml:lang="fr">Trier le classement</value>
+									<value xml:lang="nl">Ranglijst sorteren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_rangliste_sortieren</value>
