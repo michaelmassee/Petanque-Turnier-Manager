@@ -160,6 +160,11 @@ public abstract class BaseCalcUITest {
 
 	@BeforeEach
 	public void beforeTest() {
+		// Sicherstellen, dass der statische Koordinator vor jedem Test im Ausgangszustand ist.
+		// Verhindert, dass ein gestörter Zustand aus einem vorherigen Test (z.B. durch einen
+		// LibreOffice-Event der async zwischen finally-Block und dem nächsten @BeforeEach feuert)
+		// das laeuft-Flag auf true hält und run()-Aufrufe im nächsten Test als No-Op ausführt.
+		SheetRunner.koordinator.zuruecksetzen();
 		doc = OfficeDocumentHelper.from(loader).createCalc();
 		if (doc == null) {
 			System.out.println("Document creation failed");
