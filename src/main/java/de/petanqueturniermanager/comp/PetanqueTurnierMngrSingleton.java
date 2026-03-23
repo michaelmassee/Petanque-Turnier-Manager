@@ -16,10 +16,8 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
 import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
-import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
@@ -75,13 +73,13 @@ public class PetanqueTurnierMngrSingleton {
 		new NewReleaseChecker().runUpdateCache();
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
-				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				TurnierSystem.SCHWEIZER,
-				(ws, ignored) -> new SchweizerRanglisteSheet(ws)));
+				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
-				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				TurnierSystem.MAASTRICHTER,
-				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheet(ws)));
+				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));
 		/**
 		 * TODO erst dann aktivieren wenn die ranglisten auf das minimum entschlakt sind, auuser die validerungen alle formal raus
 		 * TODO nicht nur die Spieltage sonder auch die Endrangliste

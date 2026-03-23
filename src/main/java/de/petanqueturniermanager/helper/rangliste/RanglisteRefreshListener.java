@@ -63,7 +63,7 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 	 * Nutzt intern {@link SheetMetadataHelper#istRegistriertesSheet}.
 	 *
 	 * @param namedRangeKey         Schlüssel des benannten Bereichs, z.B.
-	 *                              {@link SheetMetadataHelper#SCHLUESSEL_SCHWEIZER}
+	 *                              {@link SheetMetadataHelper#SCHLUESSEL_SCHWEIZER_RANGLISTE}
 	 */
 	public static RanglisteRefreshListener fuerSchluessel(
 			XComponentContext xContext,
@@ -182,9 +182,14 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 					boolean istAufRangliste = ranglisteMatch.test(xDoc, aktuellesSheet);
 					boolean warAufRangliste = vorherigesSheet != null && ranglisteMatch.test(xDoc, vorherigesSheet);
 
+					logger.debug("selectionChanged: istAufRangliste={}, warAufRangliste={}, isRunning={}, Thread='{}'",
+							istAufRangliste, warAufRangliste, SheetRunner.isRunning(),
+							Thread.currentThread().getName());
+
 					if (istAufRangliste && !warAufRangliste && !SheetRunner.isRunning()
 							&& istPassendesDokument(xDoc)) {
-						logger.debug("Tab-Wechsel zur Rangliste → automatischer Neuaufbau");
+						logger.warn("selectionChanged: REBUILD getriggert – Thread='{}', isRunning={}",
+								Thread.currentThread().getName(), SheetRunner.isRunning());
 						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
 					}
 				} catch (Throwable t) {

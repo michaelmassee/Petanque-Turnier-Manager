@@ -2,6 +2,8 @@ package de.petanqueturniermanager.schweizer.rangliste;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +29,8 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
  * Prüft die korrekte Befüllung aller Spalten nach Turniergenerierung.
  */
 public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
+
+	private static final Logger logger = LogManager.getLogger(SchweizerRanglisteSheetUITest.class);
 
 	private static final int ANZ_TEAMS  = 16;
 	private static final int ANZ_RUNDEN = 3;
@@ -219,11 +223,26 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(runde1).as("1. Spielrunde muss existieren").isNotNull();
 		nulleErgebnisse(runde1);
 
-		// Rangliste neu aufbauen (wird im echten Betrieb durch Tab-Wechsel ausgelöst)
-		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+		// Rangliste aktualisieren – simuliert den Tab-Wechsel (Listener verwendet SchweizerRanglisteSheetUpdate)
+		logger.info("testLiveUpdate: Starte doRun() – Thread='{}'", Thread.currentThread().getName());
+		new SchweizerRanglisteSheetUpdate(wkingSpreadsheet).doRun();
+		logger.info("testLiveUpdate: doRun() beendet – Thread='{}'", Thread.currentThread().getName());
 
 		// Nach dem Nullen der 1. Runde darf kein Team mehr als ANZ_RUNDEN-1 Siege haben
 		RangeData nachher = ladeRanglisteDaten();
+		logger.info("testLiveUpdate: Rangliste nach Rebuild ({} Zeilen):", nachher.size());
+		for (int i = 0; i < nachher.size(); i++) {
+			var row = nachher.get(i);
+			logger.info("  Zeile {}: TeamNr={}, Siege={}, BHZ={}, FBHZ={}, Punkte+={}, Punkte-={}, Diff={}",
+					i + 1,
+					row.get(SchweizerRanglisteSheet.TEAM_NR_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.BHZ_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.FBHZ_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.PUNKTE_PLUS_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.PUNKTE_MINUS_SPALTE).getIntVal(-1),
+					row.get(SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE).getIntVal(-1));
+		}
 		assertThat(nachher)
 				.as("Nach Nullen der 1. Runde darf kein Team mehr als %d Siege haben", ANZ_RUNDEN - 1)
 				.extracting(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(Integer.MAX_VALUE))
@@ -233,6 +252,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		int siegeSummeNachher = nachher.stream()
 				.mapToInt(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
 				.sum();
+		logger.info("testLiveUpdate: siegeSummeVorher={}, siegeSummeNachher={}", siegeSummeVorher, siegeSummeNachher);
 		assertThat(siegeSummeNachher)
 				.as("Siegesumme muss nach Nullen der 1. Runde kleiner sein als vorher (%d)", siegeSummeVorher)
 				.isLessThan(siegeSummeVorher);

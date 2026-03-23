@@ -9,17 +9,17 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * Erstellt die Vorrunden-Rangliste für das Maastrichter Turniersystem.
- * Liest "N. Vorrunde"-Blätter statt "N. Spielrunde"-Blätter.
+ * Aktualisiert die Maastrichter Vorrunden-Rangliste ohne das Sheet neu zu erstellen.
+ *
+ * @see SchweizerRanglisteSheetUpdate
  */
-public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet {
+public class MaastrichterVorrundenRanglisteSheetUpdate extends SchweizerRanglisteSheetUpdate {
 
-	public static final String SHEETNAME = "Vorrunden-Rangliste";
-
-	public MaastrichterVorrundenRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
+	public MaastrichterVorrundenRanglisteSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER);
 	}
 
@@ -35,7 +35,7 @@ public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet
 
 	@Override
 	protected String getRanglistenSheetName() {
-		return SHEETNAME;
+		return MaastrichterVorrundenRanglisteSheet.SHEETNAME;
 	}
 
 	@Override
@@ -43,4 +43,8 @@ public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet
 		return SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX;
 	}
 
+	@Override
+	protected SchweizerRanglisteSheet erstelleNeuAufbauSheet() {
+		return new MaastrichterVorrundenRanglisteSheet(getWorkingSpreadsheet());
+	}
 }

@@ -11,6 +11,9 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.algorithmen.SchweizerSystem;
@@ -84,6 +87,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	private static final int COL_WIDTH_NR   = 800;
 	private static final int COL_WIDTH_NAME = 7000;
 	private static final int COL_WIDTH_DATA = 1400;
+
+	private static final Logger logger = LogManager.getLogger(SchweizerRanglisteSheet.class);
 
 	/** Hält die erweiterten Auswertungsdaten für die Ranglisten-Sortierung. */
 	private record TeamRanglisteData(int teamNr, int siege, int punktePlus, int punkteMinus,
@@ -162,7 +167,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	private void doRunIntern() throws GenerateException {
-		// getxCalculatable().enableAutomaticCalculation(false); // speed up
+		logger.debug("doRunIntern START – Thread='{}'", Thread.currentThread().getName());
 		processBoxinfo("processbox.rangliste.einfuegen");
 
 		NewSheet.from(this, getRanglistenSheetName())
@@ -186,9 +191,32 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			return;
 		}
 
+		insertHeader(sheet, getKonfigurationSheet().getRankingModus());
+		berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
+
+		if (SheetRunner.isRunning()) {
+			getSheetHelper().setActiveSheet(sheet);
+		}
+		logger.debug("doRunIntern ENDE – Thread='{}'", Thread.currentThread().getName());
+	}
+
+	/**
+	 * Berechnet alle Ranglisten-Daten aus den Spielrunden und schreibt sie in das Sheet.
+	 * <p>
+	 * Wird sowohl vom vollständigen Neuaufbau ({@link #doRunIntern()}) als auch vom
+	 * inkrementellen Update ({@link SchweizerRanglisteSheetUpdate}) verwendet.
+	 * Das Sheet muss bereits existieren und der Header muss gesetzt sein.
+	 */
+	protected void berechnungUndSchreiben(XSpreadsheet sheet,
+			SchweizerMeldeListeSheetUpdate meldeliste, TeamMeldungen aktiveMeldungen) throws GenerateException {
 		int bisSpielrunde = getKonfigurationSheet().getAktiveSpielRunde().getNr();
 		SchweizerRankingModus modus = getKonfigurationSheet().getRankingModus();
+		logger.debug("berechnungUndSchreiben – {} Spielrunden, Modus={}, Thread='{}'",
+				bisSpielrunde, modus, Thread.currentThread().getName());
+
 		List<TeamRanglisteData> ranglisteData = leseAlleSpielergebnisse(aktiveMeldungen, bisSpielrunde, meldeliste);
+		logger.debug("berechnungUndSchreiben – {} Teams, Siege-Summe={}",
+				ranglisteData.size(), ranglisteData.stream().mapToInt(TeamRanglisteData::siege).sum());
 
 		List<SchweizerTeamErgebnis> ergebnisse = ranglisteData.stream()
 				.map(TeamRanglisteData::toErgebnis)
@@ -210,8 +238,6 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 		// Teamnamen direkt aus der Meldeliste lesen
 		Map<Integer, String> teamNrZuName = leseTeamnamenAusSheet(meldeliste);
-
-		insertHeader(sheet, modus);
 		insertDatenAlsWerte(sheet, sortiert, bhzMap, fbhzMap, teamNrZuName);
 
 		if (!sortiert.isEmpty()) {
@@ -243,12 +269,6 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				: ERSTE_DATEN_ZEILE + sortiert.size() - 1;
 		setzeDruckbereich(sheet, letzteZeile);
 		getxCalculatable().calculateAll();
-		// setActiveSheet nur wenn über SheetRunner.run() aufgerufen (isRunning=true).
-		// Direktaufruf (z.B. im Test) würde sonst den SelectionChangeListener auslösen,
-		// der – weil isRunning=false – sofort einen zweiten doRun() startet und das Sheet korrumpiert.
-		if (SheetRunner.isRunning()) {
-			getSheetHelper().setActiveSheet(sheet);
-		}
 	}
 
 	private List<TeamRanglisteData> leseAlleSpielergebnisse(TeamMeldungen aktiveMeldungen, int bisSpielrunde,
@@ -268,8 +288,10 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
 					SheetMetadataHelper.schluesselSchweizerSpielrunde(runde), runde + ". " + getSpielrundenBasisName());
 			if (rundeSheet == null) {
+				logger.debug("leseAlleSpielergebnisse: Runde {} – Sheet nicht gefunden, übersprungen", runde);
 				continue;
 			}
+			logger.debug("leseAlleSpielergebnisse: lese Runde {}", runde);
 			leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, gegnerMap, meldeliste);
 		}
 
@@ -285,6 +307,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
 			Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
 			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
+		int dbgSiegeVorher = statsMap.values().stream().mapToInt(a -> a[0]).sum();
 
 		// Lese ab TEAM_A_SPALTE(1) bis ERG_TEAM_B_SPALTE(4), ab ERSTE_DATEN_ZEILE(2)
 		RangePosition readRange = RangePosition.from(
@@ -296,11 +319,13 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				.from(rundeSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), readRange)
 				.getDataFromRange();
 
+		int dbgZeilen = 0;
 		for (RowData row : rowsData) {
 			if (row.size() < 2) break;
 
 			int nrA = resolveTeamNr(row.get(0), meldeliste);
 			if (nrA <= 0) break; // Ende der Daten
+			dbgZeilen++;
 			Team teamA = aktiveMeldungen.getTeam(nrA);
 			if (teamA == null) continue;
 
@@ -331,6 +356,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				}
 			}
 		}
+		int dbgSiegeNachher = statsMap.values().stream().mapToInt(a -> a[0]).sum();
+		logger.debug("leseRundeEin: {} Paarungszeilen verarbeitet, neue Siege in dieser Runde: {}",
+				dbgZeilen, dbgSiegeNachher - dbgSiegeVorher);
 	}
 
 	private int resolveTeamNr(CellData cell, SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
