@@ -53,7 +53,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 
-public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpielTagRangliste {
+public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRangliste {
 
 	public static final int RANGLISTE_SPALTE = SpieltagRanglisteDelegate.RANGLISTE_SPALTE;
 	public static final int ERSTE_SPIELRUNDE_SPALTE = SpieltagRanglisteDelegate.ERSTE_SPIELRUNDE_SPALTE;
