@@ -127,7 +127,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	/** Named-Range-Schlüssel für die Sheet-Metadaten (überschreibbar für Subklassen). */
 	protected String getMetadatenSchluessel() {
-		return SheetMetadataHelper.SCHLUESSEL_SCHWEIZER;
+		return SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE;
 	}
 
 	/** Erstellt das Meldelisten-Sheet-Objekt für das Lesen der Teamnamen/Nummern. */
@@ -162,7 +162,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	private void doRunIntern() throws GenerateException {
-		getxCalculatable().enableAutomaticCalculation(false); // speed up
+		// getxCalculatable().enableAutomaticCalculation(false); // speed up
 		processBoxinfo("processbox.rangliste.einfuegen");
 
 		NewSheet.from(this, getRanglistenSheetName())
@@ -242,9 +242,13 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		int letzteZeile = sortiert.isEmpty() ? ZWEITE_HEADER_ZEILE
 				: ERSTE_DATEN_ZEILE + sortiert.size() - 1;
 		setzeDruckbereich(sheet, letzteZeile);
-
 		getxCalculatable().calculateAll();
-		getSheetHelper().setActiveSheet(sheet);
+		// setActiveSheet nur wenn über SheetRunner.run() aufgerufen (isRunning=true).
+		// Direktaufruf (z.B. im Test) würde sonst den SelectionChangeListener auslösen,
+		// der – weil isRunning=false – sofort einen zweiten doRun() startet und das Sheet korrumpiert.
+		if (SheetRunner.isRunning()) {
+			getSheetHelper().setActiveSheet(sheet);
+		}
 	}
 
 	private List<TeamRanglisteData> leseAlleSpielergebnisse(TeamMeldungen aktiveMeldungen, int bisSpielrunde,

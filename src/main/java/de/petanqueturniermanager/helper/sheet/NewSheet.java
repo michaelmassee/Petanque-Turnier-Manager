@@ -127,7 +127,11 @@ public class NewSheet extends BaseHelper {
 		if (sheet != null) {
 			turnierSheet = TurnierSheet.from(sheet, getWorkingSpreadsheet());
 			if (createNewIfExist) {
-				turnierSheet.setActiv();
+				// setActiv() nur wenn der User einen Dialog sieht – bei forceCreate() (programmatisch)
+				// würde setActiv() unnötig den RanglisteRefreshListener auslösen (isRunning=false im Test)
+				if (!forceOkCreateNewWhenExist) {
+					turnierSheet.setActiv();
+				}
 				MessageBoxResult result = MessageBox
 						.from(getWorkingSpreadsheet().getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
 						.caption(I18n.get("msg.caption.tabelle.erstellen", sheetName))

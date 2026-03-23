@@ -5,10 +5,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetView;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -232,6 +236,53 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(siegeSummeNachher)
 				.as("Siegesumme muss nach Nullen der 1. Runde kleiner sein als vorher (%d)", siegeSummeVorher)
 				.isLessThan(siegeSummeVorher);
+	}
+
+	/**
+	 * Prüft dass ein direkter {@code doRun()}-Aufruf (ohne {@link SheetRunner#run()})
+	 * das Rangliste-Sheet NICHT als aktives Sheet setzt.
+	 * <p>
+	 * Hintergrund: {@code setActiveSheet()} am Ende von {@code doRunIntern()} löst den
+	 * {@code SelectionChangeListener} aus. Der {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * prüft {@code SheetRunner.isRunning()} – ist dieses {@code false} (Direktaufruf),
+	 * würde er sofort einen zweiten konkurrierenden {@code doRun()} starten und das Sheet
+	 * korrumpieren. Der Fix: {@code setActiveSheet()} wird nur aufgerufen wenn
+	 * {@code SheetRunner.isRunning() == true}.
+	 */
+	@Test
+	public void testDirektAufruf_AktiviertNichtDasRanglisteSheet() throws GenerateException {
+		testDaten.generate();
+
+		// Explizit ein anderes Sheet aktivieren (≠ Rangliste)
+		String rundeSheetName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+		XSpreadsheet runde1 = sheetHlp.findByName(rundeSheetName);
+		assertThat(runde1).as("1. Spielrunde muss existieren").isNotNull();
+		sheetHlp.setActiveSheet(runde1);
+
+		XSpreadsheet ranglisteSheet = sheetHlp.findByName(SchweizerRanglisteSheet.SHEETNAME);
+		assertThat(ranglisteSheet).as("Rangliste muss vorhanden sein").isNotNull();
+
+		// Sicherstellen: kein laufender SheetRunner (Direktaufruf-Szenario)
+		assertThat(SheetRunner.isRunning())
+				.as("isRunning muss false sein vor direktem doRun()")
+				.isFalse();
+
+		// Direktaufruf – isRunning bleibt false während des gesamten Aufrufs
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+
+		// Das aktive Sheet darf NICHT die Rangliste sein.
+		// Wäre sie es, hätte setActiveSheet() den SelectionChangeListener ausgelöst,
+		// der (isRunning=false) sofort einen zweiten konkurrierenden doRun() startet.
+		assertThat(aktivesSheet())
+				.as("Direktes doRun() darf setActiveSheet() nicht aufrufen (würde RanglisteRefreshListener triggern)")
+				.isNotSameAs(ranglisteSheet);
+	}
+
+	/** Liefert das aktuell aktive Sheet des Dokuments über die UNO-View-API. */
+	private XSpreadsheet aktivesSheet() {
+		XSpreadsheetView view = Lo.qi(XSpreadsheetView.class,
+				Lo.qi(XModel.class, doc).getCurrentController());
+		return view != null ? view.getActiveSheet() : null;
 	}
 
 	/**
