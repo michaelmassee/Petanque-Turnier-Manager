@@ -39,6 +39,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
+									<value xml:lang="es">Inicio (nuevo torneo)</value>
+									<value xml:lang="fr">Démarrer (nouveau tournoi)</value>
+									<value xml:lang="nl">Start (nieuw toernooi)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:neue_meldeliste</value>
@@ -71,6 +74,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Registrations</value>
 									<value xml:lang="de">Anmeldungen</value>
+									<value xml:lang="es">Inscripciones</value>
+									<value xml:lang="fr">Inscriptions</value>
+									<value xml:lang="nl">Aanmeldingen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:anmeldungen</value>
@@ -84,6 +90,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Playerlist</value>
 									<value xml:lang="de">Teilnehmer</value>
+									<value xml:lang="es">Lista de jugadores</value>
+									<value xml:lang="fr">Liste des joueurs</value>
+									<value xml:lang="nl">Deelnemers</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:teilnehmer</value>
@@ -103,6 +112,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">New Play-Round</value>
 									<value xml:lang="de">Neue Spielrunde</value>
+									<value xml:lang="es">Nueva ronda</value>
+									<value xml:lang="fr">Nouvelle manche</value>
+									<value xml:lang="nl">Nieuwe speelronde</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:naechste_spielrunde</value>
@@ -116,6 +128,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Re-draw Play-Round</value>
 									<value xml:lang="de">Spielrunde neu auslosen</value>
+									<value xml:lang="es">Rehacer sorteo de ronda</value>
+									<value xml:lang="fr">Refaire le tirage</value>
+									<value xml:lang="nl">Ronde opnieuw loten</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:aktuelle_spielrunde</value>
@@ -129,6 +144,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Play Roundplan</value>
 									<value xml:lang="de">Spielrundenplan</value>
+									<value xml:lang="es">Plan de rondas</value>
+									<value xml:lang="fr">Plan des manches</value>
+									<value xml:lang="nl">Speelrondeplan</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:super_spielrundeplan</value>
@@ -148,6 +166,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Dayranking List</value>
 									<value xml:lang="de">Spieltag Rangliste</value>
+									<value xml:lang="es">Clasificación del día</value>
+									<value xml:lang="fr">Classement du jour</value>
+									<value xml:lang="nl">Dagklassement</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spieltag_rangliste</value>
@@ -193,6 +214,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Final Rankinglist</value>
 									<value xml:lang="de">Endrangliste</value>
+									<value xml:lang="es">Clasificación final</value>
+									<value xml:lang="fr">Classement final</value>
+									<value xml:lang="nl">Eindranglijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:supermelee_endrangliste</value>
@@ -225,6 +249,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Team-Pairings</value>
 									<value xml:lang="de">Team-Paarungen</value>
+									<value xml:lang="es">Emparejamientos</value>
+									<value xml:lang="fr">Appariements</value>
+									<value xml:lang="nl">Teamindelingen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:supermelee_teampaarungen</value>

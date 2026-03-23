@@ -38,6 +38,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
+									<value xml:lang="es">Inicio (nuevo torneo)</value>
+									<value xml:lang="fr">Démarrer (nouveau tournoi)</value>
+									<value xml:lang="nl">Start (nieuw toernooi)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_start</value>

@@ -27,6 +27,9 @@
 						<prop oor:name="Title" oor:type="xs:string">
 							<value xml:lang="en">Liga</value>
 							<value xml:lang="de">Liga</value>
+							<value xml:lang="es">Liga</value>
+							<value xml:lang="fr">Ligue</value>
+							<value xml:lang="nl">Liga</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -38,6 +41,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
+									<value xml:lang="es">Inicio (nuevo torneo)</value>
+									<value xml:lang="fr">Démarrer (nouveau tournoi)</value>
+									<value xml:lang="nl">Start (nieuw toernooi)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:liga_neue_meldeliste</value>
@@ -57,6 +63,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste aktualisieren</value>
+									<value xml:lang="es">Actualizar lista</value>
+									<value xml:lang="fr">Actualiser la liste</value>
+									<value xml:lang="nl">Lijst vernieuwen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:liga_update_meldeliste</value>
@@ -76,6 +85,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Gameplan</value>
 									<value xml:lang="de">Spielplan</value>
+									<value xml:lang="es">Calendario</value>
+									<value xml:lang="fr">Calendrier</value>
+									<value xml:lang="nl">Speelschema</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:liga_spielplan</value>
@@ -89,6 +101,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
+									<value xml:lang="es">Clasificación</value>
+									<value xml:lang="fr">Classement</value>
+									<value xml:lang="nl">Ranglijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:liga_rangliste</value>
@@ -115,6 +130,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Directcomparison</value>
 									<value xml:lang="de">Direktvergleich</value>
+									<value xml:lang="es">Comparación directa</value>
+									<value xml:lang="fr">Comparaison directe</value>
+									<value xml:lang="nl">Directe vergelijking</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:liga_direktvergleich</value>
@@ -134,6 +152,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Export PDF and HTML</value>
 									<value xml:lang="de">Export PDF und HTML</value>
+									<value xml:lang="es">Exportar PDF y HTML</value>
+									<value xml:lang="fr">Exporter PDF et HTML</value>
+									<value xml:lang="nl">Exporteer PDF en HTML</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:liga_export</value>
