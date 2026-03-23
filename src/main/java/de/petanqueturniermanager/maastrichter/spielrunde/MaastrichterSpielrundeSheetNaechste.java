@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.maastrichter.spielrunde;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
@@ -24,6 +25,11 @@ public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeShee
 	@Override
 	protected SchweizerKonfigurationSheet initKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
 		return new MaastrichterKonfigurationSheet(workingSpreadsheet);
+	}
+
+	@Override
+	protected String getSpielrundeSchluessel(int rundeNr) {
+		return SheetMetadataHelper.schluesselMaastrichterVorrunde(rundeNr);
 	}
 
 	/** Öffentlicher Einstiegspunkt für Testdaten-Generatoren. */

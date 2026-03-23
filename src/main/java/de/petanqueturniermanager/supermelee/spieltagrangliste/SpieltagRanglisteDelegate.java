@@ -19,6 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -78,7 +79,10 @@ class SpieltagRanglisteDelegate {
 	}
 
 	XSpreadsheet getSheet(SpielTagNr spielTagNr) throws GenerateException {
-		return sheet.getSheetHelper().findByName(getSheetName(spielTagNr));
+		return SheetMetadataHelper.findeSheetUndHeile(
+				sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				SheetMetadataHelper.schluesselSpieltagRangliste(spielTagNr.getNr()),
+				getSheetName(spielTagNr));
 	}
 
 	// Gleiche Reihenfolge in Spieltag und Endrangliste

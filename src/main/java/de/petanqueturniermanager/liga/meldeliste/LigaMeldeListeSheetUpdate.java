@@ -13,6 +13,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
@@ -20,6 +21,8 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class LigaMeldeListeSheetUpdate extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
+
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE;
 
 	private final LigaMeldeListeDelegate delegate;
 
@@ -35,7 +38,8 @@ public class LigaMeldeListeSheetUpdate extends SheetRunner implements IMeldelist
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override

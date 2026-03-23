@@ -49,6 +49,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
@@ -160,6 +161,9 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;
 		}
+		SheetMetadataHelper.schreibeSheetMetadaten(sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				sheet.getXSpreadSheet(),
+				SheetMetadataHelper.schluesselSupermeleeSpielrunde(sheet.getSpielTag().getNr(), sheet.getSpielRundeNr().getNr()));
 
 		konfigurationSheet.setAktiveSpielRunde(sheet.getSpielRundeNr());
 
@@ -252,12 +256,14 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		}
 
 		sheet.processBoxinfo("processbox.meldungen.gespielter.runden.einlesen", spielTagNr.getNr());
+		var xDoc = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
-
-			XSpreadsheet xsheet = sheet.getSheetHelper()
-					.findByName(getSheetName(spielTagNr, SpielRundeNr.from(spielrunde)));
+			// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
+			XSpreadsheet xsheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+					SheetMetadataHelper.schluesselSupermeleeSpielrunde(spielTagNr.getNr(), spielrunde),
+					getSheetName(spielTagNr, SpielRundeNr.from(spielrunde)));
 
 			if (xsheet == null) {
 				continue;

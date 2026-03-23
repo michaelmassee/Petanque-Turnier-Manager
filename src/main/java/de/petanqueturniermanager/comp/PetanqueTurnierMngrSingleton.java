@@ -15,8 +15,11 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
 import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
@@ -26,6 +29,7 @@ import de.petanqueturniermanager.comp.turnierevent.TurnierEventHandler;
 import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
@@ -70,10 +74,26 @@ public class PetanqueTurnierMngrSingleton {
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
-		addGlobalEventListener(new RanglisteRefreshListener(context,
-				SchweizerRanglisteSheet.SHEETNAME, SchweizerRanglisteSheet::new));
-		addGlobalEventListener(new RanglisteRefreshListener(context,
-				MaastrichterVorrundenRanglisteSheet.SHEETNAME, MaastrichterVorrundenRanglisteSheet::new));
+		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER,
+				TurnierSystem.SCHWEIZER,
+				(ws, ignored) -> new SchweizerRanglisteSheet(ws)));
+		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER,
+				TurnierSystem.MAASTRICHTER,
+				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheet(ws)));
+		/**
+		 * TODO erst dann aktivieren wenn die ranglisten auf das minimum entschlakt sind, auuser die validerungen alle formal raus
+		 * TODO nicht nur die Spieltage sonder auch die Endrangliste
+		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
+				TurnierSystem.SUPERMELEE,
+				(ws, xSheet) -> {
+					SpielTagNr nr = SheetMetadataHelper
+							.findeSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)
+							.orElse(null);
+					return new SpieltagRanglisteSheet(ws, nr);
+				}));
+		 **/
 	}
 
 	// register global EventListener

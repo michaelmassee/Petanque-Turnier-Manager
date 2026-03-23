@@ -35,6 +35,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -145,9 +146,20 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		return new SchweizerMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
+	/**
+	 * Liefert den Metadaten-Schlüssel für die Spielrunde mit der angegebenen Nummer.
+	 * Subklassen (z.B. Maastrichter) können dies überschreiben um einen anderen Schlüssel zu verwenden.
+	 */
+	protected String getSpielrundeSchluessel(int rundeNr) {
+		return SheetMetadataHelper.schluesselSchweizerSpielrunde(rundeNr);
+	}
+
 	@Override
-	public final XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(getSheetName(getSpielRundeNr()));
+	public XSpreadsheet getXSpreadSheet() throws GenerateException {
+		var rundeNr = getSpielRundeNr();
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getSpielrundeSchluessel(rundeNr.getNr()), getSheetName(rundeNr));
 	}
 
 	public final String getSheetName(SpielRundeNr nr) {
@@ -200,10 +212,13 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
 			processBoxinfo("processbox.gespielte.runden.einlesen", spielrunde, bisSpielrunde);
+			var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 
 			for (; spielrunde <= bisSpielrunde; spielrunde++) {
 				SheetRunner.testDoCancelTask();
-				XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(SpielRundeNr.from(spielrunde)));
+				// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
+				XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+						getSpielrundeSchluessel(spielrunde), getSheetName(SpielRundeNr.from(spielrunde)));
 				if (sheet == null) {
 					continue;
 				}
@@ -585,6 +600,9 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		// neue Spielrunde speichern, sheet vorhanden
 		getKonfigurationSheet().setAktiveSpielRunde(getSpielRundeNr());
+		SheetMetadataHelper.schreibeSheetMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getXSpreadSheet(), getSpielrundeSchluessel(getSpielRundeNr().getNr()));
 
 		SchweizerSystem schweizerSystem = new SchweizerSystem();
 

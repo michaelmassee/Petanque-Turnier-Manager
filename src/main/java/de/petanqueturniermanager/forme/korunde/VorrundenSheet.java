@@ -9,6 +9,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -20,6 +21,7 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 
 	public static final String SHEETNAME = "Ergebnisse aus Vorrunden";
 	private static final String SHEET_COLOR = "98e2d7";
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN;
 
 	public VorrundenSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
 		super(workingSpreadsheet, spielSystem);
@@ -27,7 +29,8 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override
@@ -46,7 +49,9 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 				.create().isDidCreate()) {
 
 		}
-
+		SheetMetadataHelper.schreibeSheetMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getXSpreadSheet(), METADATA_SCHLUESSEL);
 	}
 
 }

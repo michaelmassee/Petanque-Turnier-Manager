@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -128,13 +129,15 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		for (int g = 0; g < anzGruppen; g++) {
 			SheetRunner.testDoCancelTask();
 			int groesse = gruppenGroessen.get(g);
-			String sheetName = (char) ('A' + g) + "-Finale";
+			String gruppenBuchstabe = String.valueOf((char) ('A' + g));
+			String sheetName = gruppenBuchstabe + "-Finale";
 			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, groesse);
 			List<SchweizerTeamErgebnis> gruppeErg = sortiert.subList(startIndex, startIndex + groesse);
 			startIndex += groesse;
 			TeamMeldungen gruppeTeams = erstelleGruppeTeams(gruppeErg, aktiveMeldungen);
 			if (gruppeTeams.size() >= 2) {
-				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet);
+				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
+						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe));
 				sheetPos++;
 			}
 		}

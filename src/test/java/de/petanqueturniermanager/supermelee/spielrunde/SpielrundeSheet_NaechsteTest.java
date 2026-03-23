@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheets;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -88,6 +90,15 @@ public class SpielrundeSheet_NaechsteTest {
 
 		XSpreadsheet spielTag1Runde1Mock = Mockito.mock(XSpreadsheet.class);
 
+		// findeSheetUndHeile verwendet xDoc.getSheets() statt SheetHelper.findByName()
+		XSpreadsheetDocument xDocMock = Mockito.mock(XSpreadsheetDocument.class);
+		XSpreadsheets xSheetsMock = Mockito.mock(XSpreadsheets.class);
+		String sheetName = spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1));
+		Mockito.when(workingSpreadsheetMock.getWorkingSpreadsheetDocument()).thenReturn(xDocMock);
+		Mockito.when(xDocMock.getSheets()).thenReturn(xSheetsMock);
+		Mockito.when(xSheetsMock.hasByName(sheetName)).thenReturn(true);
+		Mockito.when(xSheetsMock.getByName(sheetName)).thenReturn(spielTag1Runde1Mock);
+
 		Position pospielerNr = Position.from(SpielrundeSheetKonstanten.ERSTE_SPIELERNR_SPALTE,
 				SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE);
 
@@ -103,10 +114,6 @@ public class SpielrundeSheet_NaechsteTest {
 						.thenReturn(spielerNr[idx++]);
 			}
 		}
-		Mockito
-				.when(sheetHelperMock
-						.findByName(spielrundeSheet.getSheetName(SpielTagNr.from(1), SpielRundeNr.from(1))))
-				.thenReturn(spielTag1Runde1Mock);
 
 		Position posPaarungCntr = Position.from(SpielrundeSheetKonstanten.PAARUNG_CNTR_SPALTE,
 				SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE + 1);

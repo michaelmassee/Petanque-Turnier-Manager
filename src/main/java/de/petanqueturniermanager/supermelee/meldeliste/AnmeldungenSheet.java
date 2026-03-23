@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -74,6 +75,8 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		// wenn hier dann immer neu erstellen, force = true
 		NewSheet.from(this, getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).forceCreate().hideGrid()
 				.setActiv().create();
+		SheetMetadataHelper.schreibeSheetMetadaten(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(),
+				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()));
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
@@ -197,7 +200,10 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(getSheetName(getSpielTag()));
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()),
+				getSheetName(getSpielTag()));
 	}
 
 	@Override

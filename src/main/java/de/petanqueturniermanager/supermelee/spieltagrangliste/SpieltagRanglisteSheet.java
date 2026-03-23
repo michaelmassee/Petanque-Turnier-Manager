@@ -32,6 +32,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -74,8 +75,21 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 	private final SpieltagRanglisteFormatter ranglisteFormatter;
 	private final RangListeSorter rangListeSorter;
 
+	/** Wenn gesetzt, wird dieser Spieltag in doRun() verwendet statt getAktiveSpieltag(). */
+	private final SpielTagNr spieltagNrFuerRefresh;
+
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
+		this(workingSpreadsheet, null);
+	}
+
+	/**
+	 * Konstruktor für den automatischen Refresh-Listener.
+	 * Der übergebene {@code spieltagNr} wird in {@code doRun()} direkt verwendet —
+	 * unabhängig vom konfigurierten aktiven Spieltag.
+	 */
+	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet, SpielTagNr spieltagNr) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spieltag Rangliste");
+		this.spieltagNrFuerRefresh = spieltagNr;
 		delegate = new SpieltagRanglisteDelegate(this);
 		aktuelleSpielrundeSheet = new SpielrundeSheet_Update(workingSpreadsheet);
 		rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
@@ -126,7 +140,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 	@Override
 	protected void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		generate(getKonfigurationSheet().getAktiveSpieltag());
+		SpielTagNr nr = spieltagNrFuerRefresh != null
+				? spieltagNrFuerRefresh
+				: getKonfigurationSheet().getAktiveSpieltag();
+		generate(nr);
 	}
 
 	public void generate(SpielTagNr spielTagNr) throws GenerateException {
@@ -148,6 +165,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 		// neu erstellen
 		NewSheet.from(this, getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv()
 				.forceCreate().spielTagPageStyle(getSpieltagNr()).create();
+
+		SheetMetadataHelper.schreibeSpieltagNr(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(), spielTagNr);
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		getSpielerSpalte().alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);

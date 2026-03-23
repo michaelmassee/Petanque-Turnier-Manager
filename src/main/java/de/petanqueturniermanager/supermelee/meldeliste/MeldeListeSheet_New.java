@@ -20,6 +20,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -34,6 +35,8 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<SpielerMeldungen, Spieler> {
 
 	private static final Logger logger = LogManager.getLogger(MeldeListeSheet_New.class);
+
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE;
 
 	private final SupermeleeListeDelegate delegate;
 
@@ -55,7 +58,8 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override
@@ -159,6 +163,9 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
 			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
+			SheetMetadataHelper.schreibeSheetMetadaten(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			upDateSheet();
 		}
 	}

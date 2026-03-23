@@ -17,6 +17,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -34,6 +35,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 	private static final Logger logger = LogManager.getLogger(MaastrichterMeldeListeSheetNew.class);
 
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE;
+
 	private final MaastrichterKonfigurationSheet konfigurationSheet;
 
 	public MaastrichterMeldeListeSheetNew(WorkingSpreadsheet workingSpreadsheet) {
@@ -43,7 +46,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override
@@ -118,6 +122,9 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 			konfigurationSheet.setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
 			konfigurationSheet.setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
 			konfigurationSheet.setSpielplanTeamAnzeige(spielplanTeamAnzeige);
+			SheetMetadataHelper.schreibeSheetMetadaten(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			// Layout via Schweizer-MeldeListeSheetUpdate aufbauen (Format identisch)
 			new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet()).upDateSheet();
 		}

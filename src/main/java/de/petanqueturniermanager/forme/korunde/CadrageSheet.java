@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.Team;
@@ -31,6 +32,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEETNAME = "Cadrage";
 	private static final String SHEET_COLOR = "c12439";
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_CADRAGE;
 
 	private static final String RANGLISTE_AUS_VORUNDE_SHEET = "RanglisteAusVorrunden";
 	public static final String RANGLISTE_NACH_CADRAGE_SHEET = "RanglisteNachCadrage";
@@ -51,7 +53,8 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override
@@ -63,6 +66,9 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 		vorrunden.getSheet(); // erstellen leer wenn nicht vorhanden
 		NewSheet.from(this, SHEETNAME).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+		SheetMetadataHelper.schreibeSheetMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getXSpreadSheet(), METADATA_SCHLUESSEL);
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
 	}

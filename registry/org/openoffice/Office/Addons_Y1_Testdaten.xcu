@@ -272,6 +272,28 @@
 								</prop>
 							</node>
 
+							<node oor:name="C4" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Round Robin, Example Tournament</value>
+									<value xml:lang="de">Jeder gegen Jeden, Beispielturnier</value>
+									<value xml:lang="fr">Tournoi Round Robin exemple</value>
+									<value xml:lang="nl">Iedereen tegen iedereen, voorbeeldtoernooi</value>
+									<value xml:lang="es">Todos contra todos, torneo de ejemplo</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:jgj_testdaten_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>

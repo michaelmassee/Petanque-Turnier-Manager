@@ -31,6 +31,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
@@ -50,6 +51,7 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 	private static final String SHEETNAME = "Direktvergleich";
 	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH;
 
 	private final JGJKonfigurationSheet konfigurationSheet;
 	private final JGJMeldeListeSheet_Update meldeListe;
@@ -86,7 +88,8 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override
@@ -115,6 +118,9 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 			ProcessBox.from().info("Abbruch vom Benutzer, JGJ Direktvergleich wurde nicht erstellt");
 			return;
 		}
+		SheetMetadataHelper.schreibeSheetMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getXSpreadSheet(), METADATA_SCHLUESSEL);
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);

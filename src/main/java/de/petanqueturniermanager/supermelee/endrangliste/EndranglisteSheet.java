@@ -52,6 +52,7 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -76,6 +77,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	public static final String SHEETNAME = "Endrangliste";
 	public static final String SHEET_COLOR = "d637e8";
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
@@ -107,6 +109,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		SpielTagNr spieltagNr = getKonfigurationSheet().getAktiveSpieltag();
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
 				.hideGrid().forceCreate().spielTagPageStyle(spieltagNr).create().isDidCreate()) {
+			SheetMetadataHelper.schreibeSheetMetadaten(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}
@@ -498,7 +503,8 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override

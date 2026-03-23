@@ -14,6 +14,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
@@ -36,6 +37,8 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 	public static final int AKTIV_WERT_NIMMT_TEIL = KoListeDelegate.AKTIV_WERT_NIMMT_TEIL;
 	public static final int AKTIV_WERT_AUSGESTIEGEN = KoListeDelegate.AKTIV_WERT_AUSGESTIEGEN;
 
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE;
+
 	private final KoListeDelegate delegate;
 
 	public KoMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
@@ -45,7 +48,8 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override

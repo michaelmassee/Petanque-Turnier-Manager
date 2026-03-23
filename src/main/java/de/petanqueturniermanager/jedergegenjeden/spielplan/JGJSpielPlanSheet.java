@@ -29,6 +29,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -50,6 +51,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEET_COLOR = "b0f442";
 	public static final String SHEET_NAMEN = "Spielplan";
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN;
 
 	private static final int ERSTE_SPIELTAG_HEADER_ZEILE = 0; // Zeile 0
 	public static final int ERSTE_SPIELTAG_DATEN_ZEILE = ERSTE_SPIELTAG_HEADER_ZEILE + 2; // Zeile 2
@@ -94,7 +96,8 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEET_NAMEN);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEET_NAMEN);
 	}
 
 	@Override
@@ -122,6 +125,9 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			ProcessBox.from().info("Abbruch vom Benutzer, Jeder gegen Jeden SpielPlan wurde nicht erstellt");
 			return;
 		}
+		SheetMetadataHelper.schreibeSheetMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getXSpreadSheet(), METADATA_SCHLUESSEL);
 
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
 		// nur einmal schufflePlan ! damit beim wechsel von hr nach rr keine 2 x hintereinander

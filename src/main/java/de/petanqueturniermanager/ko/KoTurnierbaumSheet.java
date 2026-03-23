@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -131,7 +132,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				return sheet;
 			}
 		}
-		// Fallback: erste vorhandene Gruppe (Einzelgruppe ohne Buchstabe, dann A)
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		// Metadaten-Suche: zuerst Einzelgruppe, dann Gruppe A
+		var found = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselKoTurnierbaum(""));
+		if (found.isPresent()) return found.get();
+		found = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselKoTurnierbaum("_A"));
+		if (found.isPresent()) return found.get();
+		// Fallback per Name: erste vorhandene Gruppe (Einzelgruppe ohne Buchstabe, dann A)
 		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME_PREFIX);
 		if (sheet != null) {
 			return sheet;
@@ -274,6 +281,21 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	public void erstelleGruppeBracket(TeamMeldungen gruppeTeams, String sheetName, short sheetPos,
 			IKoBracketKonfiguration konfig) throws GenerateException {
+		erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfig, schluesselAusSheetName(sheetName));
+	}
+
+	/**
+	 * Erstellt einen KO-Bracket-Sheet mit externer Konfiguration und explizitem Metadaten-Schlüssel.
+	 * Für Aufrufer, deren Sheet-Name nicht dem "KO Turnierbaum"-Muster folgt (z.B. Maastrichter Finale).
+	 *
+	 * @param gruppeTeams       Teams für diese Gruppe (müssen mindestens 2 sein)
+	 * @param sheetName         Name des zu erstellenden Sheets
+	 * @param sheetPos          Position des Sheets in der Tabelle
+	 * @param konfig            Konfiguration (z.B. aus MaastrichterKonfigurationSheet)
+	 * @param metadatenSchluessel expliziter Metadaten-Schlüssel für den Named-Range-Eintrag
+	 */
+	public void erstelleGruppeBracket(TeamMeldungen gruppeTeams, String sheetName, short sheetPos,
+			IKoBracketKonfiguration konfig, String metadatenSchluessel) throws GenerateException {
 		if (gruppeTeams.size() < 2) {
 			return;
 		}
@@ -288,11 +310,27 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					.setActiv()
 					.create();
 			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
+			SheetMetadataHelper.schreibeSheetMetadaten(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					xSheet, metadatenSchluessel);
 			TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
 			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig);
 		} finally {
 			this.aktuellerGruppenSheetName = null;
 		}
+	}
+
+	/**
+	 * Leitet den Metadaten-Schlüssel aus dem Sheet-Namen ab.
+	 * Einzelgruppe ("KO Turnierbaum"): leerer Suffix.
+	 * Gruppe mit Buchstabe ("KO Turnierbaum A"): Suffix "_A".
+	 */
+	static String schluesselAusSheetName(String sheetName) {
+		if (SHEETNAME_PREFIX.equals(sheetName)) {
+			return SheetMetadataHelper.schluesselKoTurnierbaum("");
+		}
+		String suffix = sheetName.substring(SHEETNAME_PREFIX.length()).replace(" ", "_");
+		return SheetMetadataHelper.schluesselKoTurnierbaum(suffix);
 	}
 
 	/**
@@ -385,6 +423,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.create();
 
 				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
+				SheetMetadataHelper.schreibeSheetMetadaten(
+						getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+						xSheet, schluesselFuerGruppe(g, anzGruppen));
 				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
 				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse, getKonfigurationSheet());
 			} finally {
@@ -401,6 +442,17 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return SHEETNAME_PREFIX;
 		}
 		return SHEETNAME_PREFIX + " " + (char) ('A' + gruppenIndex);
+	}
+
+	/**
+	 * Liefert den Metadaten-Schlüssel für einen Gruppen-Turnierbaum.
+	 * Einzelgruppe: {@code ""}-Suffix, Mehrgruppen: {@code "_A"}, {@code "_B"}, …
+	 */
+	static String schluesselFuerGruppe(int gruppenIndex, int anzGruppen) {
+		if (anzGruppen == 1) {
+			return SheetMetadataHelper.schluesselKoTurnierbaum("");
+		}
+		return SheetMetadataHelper.schluesselKoTurnierbaum("_" + (char) ('A' + gruppenIndex));
 	}
 
 	/**

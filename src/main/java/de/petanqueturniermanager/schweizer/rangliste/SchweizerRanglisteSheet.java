@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -124,6 +125,11 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		return SHEETNAME;
 	}
 
+	/** Named-Range-Schlüssel für die Sheet-Metadaten (überschreibbar für Subklassen). */
+	protected String getMetadatenSchluessel() {
+		return SheetMetadataHelper.SCHLUESSEL_SCHWEIZER;
+	}
+
 	/** Erstellt das Meldelisten-Sheet-Objekt für das Lesen der Teamnamen/Nummern. */
 	protected SchweizerMeldeListeSheetUpdate erstelleMeldeListeSheet() {
 		return new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
@@ -140,7 +146,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(getRanglistenSheetName());
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getMetadatenSchluessel(), getRanglistenSheetName());
 	}
 
 	@Override
@@ -167,6 +175,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		if (sheet == null) {
 			return;
 		}
+
+		SheetMetadataHelper.schreibeSheetMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), sheet, getMetadatenSchluessel());
 
 		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
@@ -246,10 +257,12 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			gegnerMap.put(team.getNr(), new ArrayList<>());
 		}
 
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		for (int runde = 1; runde <= bisSpielrunde; runde++) {
 			SheetRunner.testDoCancelTask();
-			String rundeSheetName = runde + ". " + getSpielrundenBasisName();
-			XSpreadsheet rundeSheet = getSheetHelper().findByName(rundeSheetName);
+			// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
+			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+					SheetMetadataHelper.schluesselSchweizerSpielrunde(runde), runde + ". " + getSpielrundenBasisName());
 			if (rundeSheet == null) {
 				continue;
 			}

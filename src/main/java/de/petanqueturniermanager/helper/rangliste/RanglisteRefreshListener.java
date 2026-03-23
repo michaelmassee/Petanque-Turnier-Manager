@@ -3,14 +3,15 @@ package de.petanqueturniermanager.helper.rangliste;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.function.Function;
+import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.container.XNamed;
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.EventObject;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
@@ -20,7 +21,10 @@ import com.sun.star.view.XSelectionSupplier;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Lauscht auf Sheet-Tab-Wechsel und OS-Fokusereignisse, um eine berechnete Rangliste
@@ -28,6 +32,10 @@ import de.petanqueturniermanager.helper.Lo;
  * <p>
  * Die Rangliste wird bei jedem Fokus-Erhalt komplett neu aufgebaut – ohne Dirty-Flag-Prüfung.
  * Konkurrierende Rebuilds werden vom {@code SheetRunnerKoordinator} verhindert.
+ * <p>
+ * Die Sheet-Identifikation erfolgt über Named Ranges ({@link SheetMetadataHelper}), nicht
+ * über den Sheet-Namen. Dadurch bleibt der Refresh stabil auch wenn der Benutzer einen
+ * Sheet-Tab umbenennt oder mehrere Sheets denselben Namen haben.
  * <p>
  * Rebuild wird ausgelöst wenn:
  * <ul>
@@ -40,23 +48,69 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 	private static final Logger logger = LogManager.getLogger(RanglisteRefreshListener.class);
 
 	private final XComponentContext xContext;
-	private final String ranglisteSheetName;
-	private final Function<WorkingSpreadsheet, SheetRunner> runnerFactory;
+	private final BiPredicate<XSpreadsheetDocument, XSpreadsheet> ranglisteMatch;
+	private final TurnierSystem erwartesTurnierSystem;
+	private final BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory;
 
 	/** Bereits registrierte Dokumente – verhindert Doppelregistrierung der Listener. */
 	private final Set<XSpreadsheetDocument> registriert =
 			Collections.newSetFromMap(new WeakHashMap<>());
 
+	// ── Factory-Methoden ────────────────────────────────────────────────────
+
 	/**
-	 * @param xContext           UNO-Komponentenkontext
-	 * @param ranglisteSheetName Name des Ranglisten-Sheets (z.B. "Rangliste", "Vorrunden-Rangliste")
-	 * @param runnerFactory      Erzeugt den zuständigen SheetRunner für den Rebuild
+	 * Erzeugt einen Listener für Sheets mit festem Named-Range-Schlüssel.
+	 * Nutzt intern {@link SheetMetadataHelper#istRegistriertesSheet}.
+	 *
+	 * @param namedRangeKey         Schlüssel des benannten Bereichs, z.B.
+	 *                              {@link SheetMetadataHelper#SCHLUESSEL_SCHWEIZER}
 	 */
-	public RanglisteRefreshListener(XComponentContext xContext, String ranglisteSheetName,
-			Function<WorkingSpreadsheet, SheetRunner> runnerFactory) {
+	public static RanglisteRefreshListener fuerSchluessel(
+			XComponentContext xContext,
+			String namedRangeKey,
+			TurnierSystem erwartesTurnierSystem,
+			BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
+		return new RanglisteRefreshListener(xContext,
+				(xDoc, sheet) -> SheetMetadataHelper.istRegistriertesSheet(xDoc, sheet, namedRangeKey),
+				erwartesTurnierSystem, runnerFactory);
+	}
+
+	/**
+	 * Erzeugt einen Listener für Supermelee-Spieltag-Ranglisten (dynamische Schlüssel).
+	 * Nutzt intern {@link SheetMetadataHelper#findeSpieltagNr}.
+	 */
+	public static RanglisteRefreshListener fuerSpieltagRangliste(
+			XComponentContext xContext,
+			TurnierSystem erwartesTurnierSystem,
+			BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
+		return new RanglisteRefreshListener(xContext,
+				(xDoc, sheet) -> SheetMetadataHelper.findeSpieltagNr(xDoc, sheet).isPresent(),
+				erwartesTurnierSystem, runnerFactory);
+	}
+
+	// ── Konstruktor ──────────────────────────────────────────────────────────
+
+	/**
+	 * @param xContext              UNO-Komponentenkontext
+	 * @param ranglisteMatch        Prüft ob ein Sheet die gesuchte Rangliste ist.
+	 *                              Bekommt Dokument + aktives Sheet übergeben.
+	 * @param erwartesTurnierSystem Nur Dokumente dieses Turniersystems werden berücksichtigt
+	 * @param runnerFactory         Erzeugt den zuständigen SheetRunner; erhält WorkingSpreadsheet
+	 *                              und das aktive XSpreadsheet (für Spieltag-Nr o.ä.)
+	 */
+	RanglisteRefreshListener(XComponentContext xContext,
+			BiPredicate<XSpreadsheetDocument, XSpreadsheet> ranglisteMatch,
+			TurnierSystem erwartesTurnierSystem,
+			BiFunction<WorkingSpreadsheet, XSpreadsheet, SheetRunner> runnerFactory) {
 		this.xContext = xContext;
-		this.ranglisteSheetName = ranglisteSheetName;
+		this.ranglisteMatch = ranglisteMatch;
+		this.erwartesTurnierSystem = erwartesTurnierSystem;
 		this.runnerFactory = runnerFactory;
+	}
+
+	/** Prüft ob das Dokument das erwartete Turniersystem hat. */
+	private boolean istPassendesDokument(XSpreadsheetDocument xDoc) {
+		return new DocumentPropertiesHelper(xDoc).getTurnierSystemAusDocument() == erwartesTurnierSystem;
 	}
 
 	// ── Dokument-Laden: SelectionChange-Listener registrieren ───────────────
@@ -99,7 +153,6 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 	 * Registriert einen XSelectionChangeListener der bei jedem Tab-Wechsel zur Rangliste
 	 * einen vollständigen Neuaufbau auslöst.
 	 * <p>
-	 * Der Listener feuert bei jeder Selektion-Änderung (Zell-Klick, Pfeiltaste, Tab-Wechsel).
 	 * Rebuild wird nur ausgelöst wenn das aktive Sheet von einem anderen Sheet zur Rangliste
 	 * wechselt (nicht bei internen Klicks innerhalb der Rangliste).
 	 */
@@ -108,30 +161,31 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 		if (selSupplier == null) return;
 
 		selSupplier.addSelectionChangeListener(new XSelectionChangeListener() {
-			private String letztesSheet = null;
+			private XSpreadsheet letztesSheet = null;
 
 			@Override
 			public void selectionChanged(EventObject e) {
 				try {
 					XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 					if (view == null) return;
-					XNamed named = Lo.qi(XNamed.class, view.getActiveSheet());
-					if (named == null) return;
 
-					String aktuellesSheet = named.getName();
-					String vorherigesSheet = letztesSheet;
+					XSpreadsheet aktuellesSheet = view.getActiveSheet();
+					if (aktuellesSheet == null) return;
+
+					XSpreadsheet vorherigesSheet = letztesSheet;
 					letztesSheet = aktuellesSheet;
 
 					// Kein Sheet-Wechsel (Klick innerhalb desselben Sheets) → nichts zu tun
-					if (aktuellesSheet.equals(vorherigesSheet)) return;
+					if (aktuellesSheet == vorherigesSheet) return;
 
 					// Rebuild nur wenn User ZUR Rangliste gewechselt hat (nicht von ihr weg)
-					boolean istAufRangliste = ranglisteSheetName.equals(aktuellesSheet);
-					boolean warAufRangliste = ranglisteSheetName.equals(vorherigesSheet);
+					boolean istAufRangliste = ranglisteMatch.test(xDoc, aktuellesSheet);
+					boolean warAufRangliste = vorherigesSheet != null && ranglisteMatch.test(xDoc, vorherigesSheet);
 
-					if (istAufRangliste && !warAufRangliste && !SheetRunner.isRunning()) {
-						logger.debug("Tab-Wechsel zur Rangliste '{}' → automatischer Neuaufbau", ranglisteSheetName);
-						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc)).run();
+					if (istAufRangliste && !warAufRangliste && !SheetRunner.isRunning()
+							&& istPassendesDokument(xDoc)) {
+						logger.debug("Tab-Wechsel zur Rangliste → automatischer Neuaufbau");
+						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
 					}
 				} catch (Throwable t) {
 					logger.error("Fehler im SelectionChangeListener", t);
@@ -143,7 +197,7 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 			}
 		});
 
-		logger.debug("XSelectionChangeListener für Rangliste '{}' registriert", ranglisteSheetName);
+		logger.debug("XSelectionChangeListener für Rangliste registriert");
 	}
 
 	// ── OnFocus: Fallback-Rebuild für Alt-Tab zurück zum LO-Fenster ──────────
@@ -160,14 +214,15 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 			XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 			if (view == null) return;
 
-			XNamed named = Lo.qi(XNamed.class, view.getActiveSheet());
-			if (named == null) return;
+			XSpreadsheet aktuellesSheet = view.getActiveSheet();
+			if (aktuellesSheet == null) return;
 
-			if (!ranglisteSheetName.equals(named.getName())) return;
+			if (!ranglisteMatch.test(xDoc, aktuellesSheet)) return;
 			if (SheetRunner.isRunning()) return;
+			if (!istPassendesDokument(xDoc)) return;
 
-			logger.debug("OnFocus mit Rangliste '{}' aktiv → automatischer Neuaufbau", ranglisteSheetName);
-			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc)).run();
+			logger.debug("OnFocus mit Rangliste aktiv → automatischer Neuaufbau");
+			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
 
 		} catch (Throwable t) {
 			logger.error("Fehler beim OnFocus-Ranglisten-Refresh", t);

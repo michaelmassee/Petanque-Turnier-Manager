@@ -10,6 +10,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
@@ -21,6 +22,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class MaastrichterMeldeListeSheetUpdate extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE;
+
 	private final SchweizerMeldeListeSheetUpdate delegate;
 
 	public MaastrichterMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
@@ -30,7 +33,8 @@ public class MaastrichterMeldeListeSheetUpdate extends SheetRunner implements IS
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override

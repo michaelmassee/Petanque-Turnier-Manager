@@ -14,6 +14,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -31,6 +32,8 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 
 	private static final Logger logger = LogManager.getLogger(JGJMeldeListeSheet_New.class);
 
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE;
+
 	private final JGJMeldeListeDelegate delegate;
 
 	public JGJMeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
@@ -45,7 +48,8 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override
@@ -145,6 +149,9 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			getKonfigurationSheet().setGruppenname(gruppenname);
+			SheetMetadataHelper.schreibeSheetMetadaten(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			delegate.upDateSheet();
 		}
 	}

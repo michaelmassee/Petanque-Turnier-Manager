@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -74,7 +75,10 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(getSheetName(getSpielTag(), getSpielRundeNr()));
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				SheetMetadataHelper.schluesselSupermeleeSpielrundePlan(getSpielTag().getNr(), getSpielRundeNr().getNr()),
+				getSheetName(getSpielTag(), getSpielRundeNr()));
 	}
 
 	@Override
@@ -110,6 +114,8 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrundeplan wurde nicht erstellt");
 			return;
 		}
+		SheetMetadataHelper.schreibeSheetMetadaten(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(),
+				SheetMetadataHelper.schluesselSupermeleeSpielrundePlan(getSpielTag().getNr(), getSpielRundeNr().getNr()));
 
 		NumberCellValue spierNrVal = NumberCellValue
 				.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))

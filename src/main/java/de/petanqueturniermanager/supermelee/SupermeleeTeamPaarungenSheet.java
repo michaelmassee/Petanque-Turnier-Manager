@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -51,6 +52,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 	public static final int DOUBL_MODE_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE = 9;
 
 	private static final String SHEET_COLOR = "f4ca46";
+	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_TEAMS;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 
@@ -60,6 +62,9 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		try {
 			if (NewSheet.from(this, SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
 					.useIfExist().create().isDidCreate()) {
+				SheetMetadataHelper.schreibeSheetMetadaten(
+						getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+						getXSpreadSheet(), METADATA_SCHLUESSEL);
 				initSheet();
 			}
 		} catch (GenerateException e) {
@@ -75,8 +80,8 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME);
-		return sheet;
+		return SheetMetadataHelper.findeSheetUndHeile(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
 	}
 
 	@Override

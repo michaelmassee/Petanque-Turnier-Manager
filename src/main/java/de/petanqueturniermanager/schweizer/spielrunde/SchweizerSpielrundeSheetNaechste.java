@@ -12,6 +12,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -49,9 +50,9 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 			return false;
 		}
 
-		// Ermitteln ob es eine aktuelle Runde gibt (= Sheet vorhanden)
+		// Ermitteln ob es eine aktuelle Runde gibt (= Sheet vorhanden); Metadaten-first via getXSpreadSheet()
 		int neueSpielrunde = aktuelleSpielrunde.getNr();
-		if (getSheetHelper().findByName(getSheetName(aktuelleSpielrunde)) != null) {
+		if (getXSpreadSheet() != null) {
 			// Aktuelle Runde vorhanden → prüfen ob alle Ergebnisse eingetragen sind
 			if (!alleErgebnisseEingetragen(aktuelleSpielrunde)) {
 				getSheetHelper().setActiveSheet(getXSpreadSheet());
@@ -83,7 +84,9 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	 * Ein Ergebnis gilt als eingetragen wenn erg_A + erg_B > 0.
 	 */
 	private boolean alleErgebnisseEingetragen(SpielRundeNr spielRundeNr) throws GenerateException {
-		XSpreadsheet sheet = getSheetHelper().findByName(getSheetName(spielRundeNr));
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+				getSpielrundeSchluessel(spielRundeNr.getNr()), getSheetName(spielRundeNr));
 		if (sheet == null) {
 			return true;
 		}
