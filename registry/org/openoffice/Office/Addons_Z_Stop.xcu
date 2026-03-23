@@ -28,8 +28,11 @@
 
 					<node oor:name="Z2" oor:op="replace">
 						<prop oor:name="Title">
-							<value xml:lang="en">~Cancel Processing</value>
 							<value xml:lang="de">~Verarbeitung abbrechen</value>
+							<value xml:lang="en">~Cancel Processing</value>
+							<value xml:lang="es">~Cancelar procesamiento</value>
+							<value xml:lang="fr">~Annuler le traitement</value>
+							<value xml:lang="nl">~Verwerking annuleren</value>
 						</prop>
 						<prop oor:name="URL">
 							<value>ptm:abbruch</value>

@@ -18,8 +18,11 @@
 					<!-- ****************************************************************** -->
 					<node oor:name="X1" oor:op="replace">
 						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="en">Preferences</value>
 							<value xml:lang="de">Konfiguration</value>
+							<value xml:lang="en">Preferences</value>
+							<value xml:lang="es">Configuración</value>
+							<value xml:lang="fr">Configuration</value>
+							<value xml:lang="nl">Configuratie</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -43,8 +46,11 @@
 							<!-- ****************************************************************** -->
 							<node oor:name="X1X2" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Header Footer</value>
 									<value xml:lang="de">Kopf/Fußzeilen</value>
+									<value xml:lang="en">Headers/Footers</value>
+									<value xml:lang="es">Encabezados y pies de página</value>
+									<value xml:lang="fr">En-têtes / Pieds de page</value>
+									<value xml:lang="nl">Kop- en voetteksten</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:konfiguration_kopffusszeilen</value>
@@ -57,8 +63,11 @@
 							<!-- ****************************************************************** -->
 							<node oor:name="X1X3" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Colors</value>
 									<value xml:lang="de">Farben</value>
+									<value xml:lang="en">Colors</value>
+									<value xml:lang="es">Colores</value>
+									<value xml:lang="fr">Couleurs</value>
+									<value xml:lang="nl">Kleuren</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:konfiguration_farben</value>
@@ -70,8 +79,11 @@
 							<!-- ****************************************************************** -->
 							<node oor:name="X1X4" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Update document plugin version</value>
 									<value xml:lang="de">Update Dokument Plugin-Version</value>
+									<value xml:lang="en">Update document plugin version</value>
+									<value xml:lang="es">Actualizar versión del plugin del documento</value>
+									<value xml:lang="fr">Mettre à jour la version du plugin du doc.</value>
+									<value xml:lang="nl">Document plugin-versie bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:konfiguration_update_erstellt_mit_version</value>

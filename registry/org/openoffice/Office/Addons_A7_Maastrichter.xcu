@@ -24,8 +24,11 @@
 							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="en">Maastrichter</value>
 							<value xml:lang="de">Maastrichter</value>
+							<value xml:lang="en">Maastrichter</value>
+							<value xml:lang="es">Maastrichter</value>
+							<value xml:lang="fr">Maastrichter</value>
+							<value xml:lang="nl">Maastrichter</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -103,6 +106,10 @@
 							<node oor:name="A7A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorrunden-Rangliste</value>
+									<value xml:lang="en">Preliminary Round Ranking</value>
+									<value xml:lang="es">Clasificación de la ronda preliminar</value>
+									<value xml:lang="fr">Classement des tours préliminaires</value>
+									<value xml:lang="nl">Ranglijst voorronde</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_vorrunden_rangliste</value>

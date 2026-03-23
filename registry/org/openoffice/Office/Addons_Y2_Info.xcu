@@ -24,7 +24,10 @@
 					<node oor:name="Y6" oor:op="replace">
 						<prop oor:name="Title">
 							<value xml:lang="de">Info</value>
-						<value xml:lang="en">Info</value>
+							<value xml:lang="en">Info</value>
+							<value xml:lang="es">Información</value>
+							<value xml:lang="fr">Info</value>
+							<value xml:lang="nl">Info</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -74,7 +77,10 @@
 							<node oor:name="Y6E" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Logfile anzeigen</value>
-								<value xml:lang="en">Show Log File</value>
+									<value xml:lang="en">Show Log File</value>
+									<value xml:lang="es">Mostrar archivo de registro</value>
+									<value xml:lang="fr">Afficher le fichier journal</value>
+									<value xml:lang="nl">Logbestand tonen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:logfileAnzeigen</value>
@@ -91,7 +97,10 @@
 							<node oor:name="Y6G" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Plugin Konfiguration</value>
-								<value xml:lang="en">Plugin Configuration</value>
+									<value xml:lang="en">Plugin Configuration</value>
+									<value xml:lang="es">Configuración del plugin</value>
+									<value xml:lang="fr">Configuration du plugin</value>
+									<value xml:lang="nl">Plugin-configuratie</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:pluginKonfiguration</value>
@@ -103,7 +112,10 @@
 							<node oor:name="Y6H" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Protokoll-Fenster anzeigen</value>
-								<value xml:lang="en">Show Protocol Window</value>
+									<value xml:lang="en">Show Protocol Window</value>
+									<value xml:lang="es">Mostrar ventana de protocolo</value>
+									<value xml:lang="fr">Afficher la fenêtre de protocole</value>
+									<value xml:lang="nl">Protocolvenster tonen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:processboxAnzeigen</value>
