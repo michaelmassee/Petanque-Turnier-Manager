@@ -83,7 +83,7 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 		// 2. Spielrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzRunden; runde++) {
 			SheetRunner.testDoCancelTask();
-			processBoxinfo(I18n.get("processbox.erstelle.spielrunde", runde, anzRunden));
+			processBoxinfo("processbox.erstelle.spielrunde", runde, anzRunden);
 			naechsteSpielrunde.doRun();
 
 			XSpreadsheet sheet = getSheetHelper().findByName(runde + ". " + SHEET_NAMEN);

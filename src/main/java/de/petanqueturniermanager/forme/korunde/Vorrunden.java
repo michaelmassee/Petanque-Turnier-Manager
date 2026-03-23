@@ -54,7 +54,7 @@ public class Vorrunden {
 		// vorrunden einlesen
 		XSpreadsheet vorRunden = getSheet();
 
-		processBoxinfo(I18n.get("processbox.vorrunden.einlesen"));
+		processBoxinfo("processbox.vorrunden.einlesen");
 
 		ImmutableList<Team> teamList = rangliste.getTeamListe();
 
@@ -95,8 +95,8 @@ public class Vorrunden {
 	/**
 	 * @param string
 	 */
-	private void processBoxinfo(String string) {
-		parentSheet.get().processBoxinfo(string);
+	private void processBoxinfo(String i18nKey, Object... args) {
+		parentSheet.get().processBoxinfo(i18nKey, args);
 
 	}
 

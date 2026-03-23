@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -126,9 +127,9 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!getAlleMeldungen().isValid()) {
-			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neuer JGJ-SpielPlan")
-					.message("Ungültige Anzahl von Meldungen").show();
+			processBoxinfo("processbox.abbruch");
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.jgj.spielplan"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
 			return;
 		}
 
@@ -154,14 +155,14 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
 		insertHeader();
 		formatData();
-		meldungenSpalte.formatSpielrNrUndNamenspalten();
+		meldungenSpalte.formatSpielrNrUndNamenspalten(false);
 		addFooter();
 		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo("processbox.print.bereich");
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(printBereichRangePosition());
 	}
 
@@ -172,7 +173,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
-		processBoxinfo("Fußzeile einfügen");
+		processBoxinfo("processbox.fusszeile.einfuegen");
 
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
@@ -443,14 +444,18 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		int[] spalteB = new int[] { JGJSpielPlanSheet.SPIELE_B_SPALTE, JGJSpielPlanSheet.SPIELPNKT_B_SPALTE };
 
 		for (int idx = 0; idx < spalteA.length; idx++) {
-			verweisAufErgbnisseEinfuegen(spalteA[idx], spalteB[idx], erstePaarungSpieltagZeileInSpielplan, anzPaarungen,
-					Position.from(spielTagFormulaPos));
+			// SPIELE (idx=0): Freispiel = automatischer Sieg (1:0) – feste Regel, kein Zellwert
+			// SPIELPNKT (idx=1): Zellen werden beim Erstellen für Freispiele vorbelegt
+			Integer fpWert = (idx == 0) ? 1 : null;
+			Integer fmWert = (idx == 0) ? 0 : null;
+			verweisAufErgbnisseEinfuegen(spalteA[idx], spalteB[idx], erstePaarungSpieltagZeileInSpielplan,
+					anzPaarungen, Position.from(spielTagFormulaPos), fpWert, fmWert);
 			spielTagFormulaPos.spaltePlus(2);
 		}
 	}
 
 	private void verweisAufErgbnisseEinfuegen(int spalteA, int spalteB, int startZeile, int anzPaarungen,
-			Position startFormulaPos) throws GenerateException {
+			Position startFormulaPos, Integer freispielPlusWert, Integer freispielMinusWert) throws GenerateException {
 		Position ersteTeamNrPos = Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE);
 
 		Position punkteAStartPos = Position.from(spalteA, startZeile);
@@ -469,16 +474,29 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		String rangeStrATeamNr = teamNrAStartPos.getAddressWith$() + ":" + teamNrAEndePos.getAddressWith$();
 		String rangeStrBTeamNr = teamNrBStartPos.getAddressWith$() + ":" + teamNrBEndePos.getAddressWith$();
 
-		// @formatter:off
-        String formulaPunktePlus = "IFNA(" + "INDEX($'" + JGJSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrAPlus + ";MATCH("
-                + ersteTeamNrPos.getAddress() + ";$'" + JGJSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrATeamNr + ";0)" + ");"
-                + "INDEX($'" + JGJSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrBPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'" + JGJSpielPlanSheet.SHEET_NAMEN +"'."
-                + rangeStrBTeamNr + ";0)" + ")" + ")";
+		String sheetRef = "$'" + JGJSpielPlanSheet.SHEET_NAMEN + "'.";
+		String matchInA = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrATeamNr + ";0)";
+		String matchInB = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrBTeamNr + ";0)";
 
-        String formulaPunkteMinus = "IFNA(" + "INDEX($'" + JGJSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrBPlus + ";MATCH("
-                + ersteTeamNrPos.getAddress() + ";$'" + JGJSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrATeamNr + ";0)" + ");"
-                + "INDEX($'" + JGJSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrAPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'" + JGJSpielPlanSheet.SHEET_NAMEN +"'."
-                + rangeStrBTeamNr + ";0)" + ")" + ")";
+		// @formatter:off
+        String formulaPunktePlus;
+        String formulaPunkteMinus;
+
+        if (freispielPlusWert != null) {
+            // Mit Freispiel-Check: wenn Team B = 0, Freispiel-Wert zurückgeben
+            String freispielCheck = "INDEX(" + sheetRef + rangeStrBTeamNr + ";" + matchInA + ")=0";
+            formulaPunktePlus  = "IFNA(IF(" + freispielCheck + ";" + freispielPlusWert
+                    + ";INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInA + "));"
+                    + "INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInB + "))";
+            formulaPunkteMinus = "IFNA(IF(" + freispielCheck + ";" + freispielMinusWert
+                    + ";INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInA + "));"
+                    + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
+        } else {
+            formulaPunktePlus  = "IFNA(INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInA + ");"
+                    + "INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInB + "))";
+            formulaPunkteMinus = "IFNA(INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInA + ");"
+                    + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
+        }
         // @formatter:on
 		boolean isvisable = getKonfigurationSheet().zeigeArbeitsSpalten();
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(isvisable);

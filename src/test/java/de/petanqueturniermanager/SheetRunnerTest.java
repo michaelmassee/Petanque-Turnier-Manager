@@ -178,7 +178,7 @@ public class SheetRunnerTest {
 		}
 
 		@Override
-		public void processBoxinfo(String infoMsg) {
+		public void processBoxinfo(String i18nKey, Object... args) {
 			// kein LibreOffice ProcessBox in Tests
 		}
 

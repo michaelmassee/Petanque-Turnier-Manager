@@ -29,7 +29,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
-		processBoxinfo(I18n.get("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr()));
+		processBoxinfo("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr());
 		setSpielRundeNrInSheet(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
 		TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();

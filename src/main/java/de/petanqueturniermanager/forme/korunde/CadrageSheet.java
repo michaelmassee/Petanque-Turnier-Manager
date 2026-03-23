@@ -106,7 +106,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 			// 2,4,8,16,32
 			int anzTeamsinGruppeAusRangliste = gruppeAusRanglist.size();
 			int anzCadrageTeams = new CadrageRechner(anzTeamsinGruppeAusRangliste).anzTeams();
-			processBoxinfo(I18n.get("processbox.cadrage.gruppe", grpCntr, anzCadrageTeams));
+			processBoxinfo("processbox.cadrage.gruppe", grpCntr, anzCadrageTeams);
 			if (anzCadrageTeams > 0) {
 				TeamRangliste cadrageRangliste = gruppeAusRanglist.ranglisteVonLetzte(anzCadrageTeams);
 				vorrunden.vorRundenEinlesen(cadrageRangliste);

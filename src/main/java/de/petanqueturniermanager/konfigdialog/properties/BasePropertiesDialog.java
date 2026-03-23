@@ -27,6 +27,7 @@ import de.petanqueturniermanager.basesheet.konfiguration.KonfigurationSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.AbstractWindowListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -66,7 +67,8 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
                 .getTurnierSystemAusDocument();
         if (turnierSystemAusDocument == TurnierSystem.KEIN) {
             MessageBox.from(currentSpreadsheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-                    .caption("Kein Turnier vorhanden").message("Kein Turnier vorhanden").show();
+                    .caption(I18n.get("msg.caption.kein.turnier"))
+                    .message(I18n.get("msg.text.kein.turnier")).show();
             return;
         }
 

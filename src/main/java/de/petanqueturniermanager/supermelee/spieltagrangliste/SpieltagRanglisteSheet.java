@@ -159,7 +159,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
 		ergebnisseFormulaEinfuegen();
 		updateSummenSpalten();
-		getSpielerSpalte().formatSpielrNrUndNamenspalten();
+		getSpielerSpalte().formatSpielrNrUndNamenspalten(false);
 		getRangListeSpalte().upDateRanglisteSpalte();
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.formatDaten();
@@ -168,12 +168,12 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 		rangListeSorter.doSort();
 		Position footerPos = ranglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
-		processBoxinfo(I18n.get("processbox.header.festsetzen"));
+		processBoxinfo("processbox.header.festsetzen");
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
 		Position linksOben = Position.from(SPIELER_NR_SPALTE,
 				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
@@ -194,7 +194,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 
 	protected void updateSummenSpalten() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.summenspalten.aktualisieren"));
+		processBoxinfo("processbox.summenspalten.aktualisieren");
 
 		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 		if (anzSpielRunden < 1) {
@@ -266,7 +266,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISheet, ISpie
 
 	private void ergebnisseFormulaEinfuegen() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.spieltage.ergebnisse.einfuegen"));
+		processBoxinfo("processbox.spieltage.ergebnisse.einfuegen");
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());

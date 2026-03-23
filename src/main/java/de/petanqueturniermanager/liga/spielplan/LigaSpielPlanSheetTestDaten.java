@@ -46,7 +46,8 @@ public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 		getSheetHelper().removeAllSheetsExclude(new String[] {});
 		getKonfigurationSheet().setGruppenname(TEST_GRUPPE);
 		// Meldeliste
-		new LigaMeldeListeSheetTestDaten(getWorkingSpreadsheet(), !mitFreispiel).testNamenEinfuegen();
+		new LigaMeldeListeSheetTestDaten(getWorkingSpreadsheet(), !mitFreispiel)
+				.erstelleUndFuelleTestDaten(TEST_GRUPPE);
 		generate();
 
 		// Rangliste

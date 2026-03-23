@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 
@@ -30,7 +31,7 @@ public class FarbenDialog extends BasePropertiesDialog {
 
 	@Override
 	protected String getTitle() {
-		return "Farben";
+		return I18n.get("dialog.title.farben");
 	}
 
 }

@@ -90,7 +90,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
 
-		processBoxinfo(I18n.get("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr()));
+		processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr());
 		SpielerMeldungen aktiveUndAusgesetztMeldungen = meldeliste.getAktiveUndAusgesetztMeldungen();
 
 		if (aktiveUndAusgesetztMeldungen.size() == 0) {
@@ -113,7 +113,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		int maxAnzSpielerInSpalte = 0;
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 
-		processBoxinfo(I18n.get("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetztMeldungen.size()));
+		processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetztMeldungen.size());
 
 		for (Spieler spieler : aktiveUndAusgesetztMeldungen.getSpielerList()) {
 
@@ -154,7 +154,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren(Position footerPos, int letzteSpalte) throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, footerPos.getZeile());
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));

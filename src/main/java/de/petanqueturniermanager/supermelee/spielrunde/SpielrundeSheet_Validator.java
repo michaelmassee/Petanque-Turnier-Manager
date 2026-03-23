@@ -80,7 +80,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 	}
 
 	public void validateSpieltag(SpielTagNr spielTagNr) throws GenerateException {
-		processBoxinfo(I18n.get("processbox.validate.spieltag", spielTagNr.getNr()));
+		processBoxinfo("processbox.validate.spieltag", spielTagNr.getNr());
 
 		meldeliste.setSpielTag(spielTagNr);
 		List<Spielrunde> spielrunden = new ArrayList<>();
@@ -97,11 +97,11 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 		}
 
 		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
-		processBoxinfo(I18n.get("processbox.meldungen.anzahl", alleMeldungen.size()));
-		processBoxinfo(I18n.get("processbox.spielrunden.anzahl", spielrunden.size()));
+		processBoxinfo("processbox.meldungen.anzahl", alleMeldungen.size());
+		processBoxinfo("processbox.spielrunden.anzahl", spielrunden.size());
 
 		validateDoppelteTeams(alleMeldungen, spielrunden);
-		processBoxinfo(I18n.get("processbox.fertig.status"));
+		processBoxinfo("processbox.fertig.status");
 	}
 
 	private void validateDoppelteTeams(SpielerMeldungen alleMeldungen, List<Spielrunde> spielrunden)

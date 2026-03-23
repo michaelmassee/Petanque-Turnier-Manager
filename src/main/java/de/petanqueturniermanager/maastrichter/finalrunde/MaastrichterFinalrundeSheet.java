@@ -20,6 +20,7 @@ import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -77,7 +78,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 	@Override
 	public void doRun() throws GenerateException {
-		processBoxinfo("Erstelle Maastrichter Finalrunden...");
+		processBoxinfo("processbox.maastrichter.finalrunde.erstellen");
 
 		SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
@@ -128,7 +129,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			SheetRunner.testDoCancelTask();
 			int groesse = gruppenGroessen.get(g);
 			String sheetName = (char) ('A' + g) + "-Finale";
-			processBoxinfo("Erstelle " + sheetName + " (" + groesse + " Teams)...");
+			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, groesse);
 			List<SchweizerTeamErgebnis> gruppeErg = sortiert.subList(startIndex, startIndex + groesse);
 			startIndex += groesse;
 			TeamMeldungen gruppeTeams = erstelleGruppeTeams(gruppeErg, aktiveMeldungen);

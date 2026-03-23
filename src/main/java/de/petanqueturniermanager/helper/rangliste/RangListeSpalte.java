@@ -55,7 +55,7 @@ public class RangListeSpalte {
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		iRanglisteSheet.get().processBoxinfo(I18n.get("processbox.rangliste.spalten.einfuegen"));
+		iRanglisteSheet.get().processBoxinfo("processbox.rangliste.spalten.einfuegen");
 
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
@@ -70,7 +70,7 @@ public class RangListeSpalte {
 
 	public void upDateRanglisteSpalte() throws GenerateException {
 
-		iRanglisteSheet.get().processBoxinfo(I18n.get("processbox.rangliste.aktualisieren"));
+		iRanglisteSheet.get().processBoxinfo("processbox.rangliste.aktualisieren");
 		// SummenSpalten
 		int letzteZeile = getIRanglisteSheet().getLetzteMitDatenZeileInSpielerNrSpalte();
 		// int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();

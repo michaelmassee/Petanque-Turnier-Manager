@@ -49,8 +49,8 @@ public class DirectUpdate extends SheetRunner {
 		NewReleaseChecker checker = new NewReleaseChecker();
 		ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
 
-		processBoxinfo(I18n.get("processbox.direkt.aktualisierung.start"));
-		processBoxinfo(I18n.get("processbox.installierte.version", extensionsHelper.getVersionNummer()));
+		processBoxinfo("processbox.direkt.aktualisierung.start");
+		processBoxinfo("processbox.installierte.version", extensionsHelper.getVersionNummer());
 
 		GHAsset oxtAsset = checker.getDownloadGHAsset();
 		URL downloadURL = checker.getDownloadURL(oxtAsset);
@@ -60,21 +60,21 @@ public class DirectUpdate extends SheetRunner {
 			return;
 		}
 
-		processBoxinfo(I18n.get("processbox.lade.herunter", downloadURL.toString()));
+		processBoxinfo("processbox.lade.herunter", downloadURL.toString());
 
 		try {
 			Path tempDir = Files.createTempDirectory("ptm_update");
 			Path tempFile = tempDir.resolve(oxtAsset.getName());
 
 			FileUtils.copyURLToFile(downloadURL, tempFile.toFile(), 30000, 30000);
-			processBoxinfo(I18n.get("processbox.download.abgeschlossen.installation"));
+			processBoxinfo("processbox.download.abgeschlossen.installation");
 
 			Object emObj = getxContext().getServiceManager()
 					.createInstanceWithContext("com.sun.star.deployment.ExtensionManager", getxContext());
 			XExtensionManager em = Lo.qi(XExtensionManager.class, emObj);
 			em.addExtension(tempFile.toUri().toString(), new NamedValue[0], "user", null, null);
 
-			processBoxinfo(I18n.get("processbox.neue.version.installiert"));
+			processBoxinfo("processbox.neue.version.installiert");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
 					.caption(I18n.get("msg.caption.aktualisierung.abgeschlossen"))
 					.message(I18n.get("msg.text.aktualisierung.abgeschlossen"))

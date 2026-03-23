@@ -121,7 +121,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 * @throws GenerateException wenn doppelt daten
 	 */
 	public void testDoppelteMeldungen() throws GenerateException {
-		meldeListe.processBoxinfo(I18n.get("processbox.meldeliste.pruefe.doppelte"));
+		meldeListe.processBoxinfo("processbox.meldeliste.pruefe.doppelte");
 		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
@@ -211,7 +211,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	 */
 
 	public void zeileOhneSpielerNamenEntfernen() throws GenerateException {
-		meldeListe.processBoxinfo(I18n.get("processbox.meldeliste.zeilen.ohne.namen.entfernen"));
+		meldeListe.processBoxinfo("processbox.meldeliste.zeilen.ohne.namen.entfernen");
 
 		doSort(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), true); // alle zeilen ohne namen nach unten sortieren, egal ob daten oder nicht
 		int letzteNrZeile = meldeListe.naechsteFreieDatenZeileInSpielerNrSpalte();
@@ -304,7 +304,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 
 	public void updateMeldungenNr() throws GenerateException {
 
-		meldeListe.processBoxinfo(I18n.get("processbox.meldeliste.nummern.aktualisieren"));
+		meldeListe.processBoxinfo("processbox.meldeliste.nummern.aktualisieren");
 
 		int letzteSpielZeile = meldeListe.getMeldungenSpalte().letzteZeileMitSpielerName();
 		if (letzteSpielZeile <= ERSTE_DATEN_ZEILE) { // daten vorhanden ?

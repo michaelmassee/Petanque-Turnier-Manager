@@ -86,7 +86,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 	private void initSheet() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
-		processBoxinfo(I18n.get("processbox.erstelle.sheet", SHEETNAME));
+		processBoxinfo("processbox.erstelle.sheet", SHEETNAME);
 
 		// Header
 		// --------------------------------------------

@@ -45,8 +45,8 @@ public class ReleaseInfosAnzeigen extends SheetRunner {
 			return;
 		}
 		String name = rel.getName() != null ? rel.getName() : rel.getTagName();
-		processBoxinfo(I18n.get("processbox.release.info", (name != null ? name : "?")));
-		processBoxinfo(I18n.get("processbox.release.infos"));
+		processBoxinfo("processbox.release.info", (name != null ? name : "?"));
+		processBoxinfo("processbox.release.infos");
 		String body = rel.getBody();
 		processBoxinfo(body != null && !body.isBlank() ? body : I18n.get("processbox.keine.beschreibung"));
 	}

@@ -126,7 +126,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		spielerEinfuegen();
 		spielerSpalte.insertHeaderInSheet(headerColor);
-		spielerSpalte.formatSpielrNrUndNamenspalten();
+		spielerSpalte.formatSpielrNrUndNamenspalten(false);
 		endRanglisteFormatter.updateHeader();
 
 		spielTageEinfuegen();
@@ -149,12 +149,12 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		rangListeSorter.doSort();
 		Position footerPos = endRanglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
-		processBoxinfo(I18n.get("processbox.header.festsetzen"));
+		processBoxinfo("processbox.header.festsetzen");
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE,
 				AbstractSuperMeleeRanglisteFormatter.ERSTE_KOPFDATEN_ZEILE);
 		Position rechtsUnten = Position.from(getLetzteSpalte(), footerPos.getZeile());
@@ -164,7 +164,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void formatDatenGeradeUngeradeMitStreichSpieltag() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.endrangliste.formatieren"));
+		processBoxinfo("processbox.endrangliste.formatieren");
 
 		// gerade / ungrade hintergrund farbe
 		// CellBackColor
@@ -247,7 +247,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void formatSchlechtesteSpieltagSpalte() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.endrangliste.sortieren"));
+		processBoxinfo("processbox.endrangliste.sortieren");
 
 		int schlechtesteSpielTageSpalte = getSchlechtesteSpielTageSpalte();
 		NumberCellValue numberCellValueSchlechtesteSpielTag = NumberCellValue.from(getXSpreadSheet(),
@@ -305,7 +305,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void spielTageEinfuegen() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.endrangliste.spieltage"));
+		processBoxinfo("processbox.endrangliste.spieltage");
 
 		// verwende fill down
 		// =WENNNV(SVERWEIS(A4;$'2. Spieltag Rangliste'.$A4:$D1000;4;0);"")
@@ -350,7 +350,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	 */
 	private void updateAnzSpieltageSpalte() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.endrangliste.aktualisieren"));
+		processBoxinfo("processbox.endrangliste.aktualisieren");
 
 		int ersteSpalteEndsumme = getErsteSummeSpalte();
 		int letzteSpieltagLetzteSpalte = ersteSpalteEndsumme - 1;
@@ -393,7 +393,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	private void updateEndSummenSpalten() throws GenerateException {
 
-		processBoxinfo(I18n.get("processbox.summenspalten.aktualisieren"));
+		processBoxinfo("processbox.summenspalten.aktualisieren");
 
 		List<Integer> spielerNrList = spielerSpalte.getSpielerNrList();
 		for (int spielerNr : spielerNrList) {

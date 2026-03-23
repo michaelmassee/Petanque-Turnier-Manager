@@ -417,7 +417,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private void erstelleTurnierbaum(XSpreadsheet xSheet, TeamMeldungen meldungen, int numRunden,
 			int bracketGroesse, IKoBracketKonfiguration konfig) throws GenerateException {
 
-		sheet().processBoxinfo(I18n.get("processbox.ko.turnierbaum.erstellen"));
+		sheet().processBoxinfo("processbox.ko.turnierbaum.erstellen");
 
 		this.spielbahn = konfig.getSpielbaumSpielbahn();
 		this.teamAnzeige = konfig.getSpielbaumTeamAnzeige();

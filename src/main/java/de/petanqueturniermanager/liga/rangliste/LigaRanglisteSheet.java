@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -125,9 +126,9 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!getAlleMeldungen().isValid()) {
-			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
-					.message("Ungültige Anzahl von Meldungen").show();
+			processBoxinfo("processbox.abbruch");
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.liga.spielplan"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
 			return;
 		}
 
@@ -153,14 +154,14 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 		insertHeader();
 		formatData();
-		meldungenSpalte.formatSpielrNrUndNamenspalten();
+		meldungenSpalte.formatSpielrNrUndNamenspalten(false);
 		addFooter();
 		printBereichDefinieren();
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo("processbox.print.bereich");
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(printBereichRangePosition());
 	}
 
@@ -171,7 +172,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	}
 
 	public StringCellValue addFooter() throws GenerateException {
-		processBoxinfo("Fußzeile einfügen");
+		processBoxinfo("processbox.fusszeile.einfuegen");
 
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
@@ -456,14 +457,15 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 				LigaSpielPlanSheet.SPIELPNKT_B_SPALTE };
 
 		for (int idx = 0; idx < spalteA.length; idx++) {
-			verweisAufErgbnisseEinfuegen(spalteA[idx], spalteB[idx], erstePaarungSpieltagZeileInSpielplan, anzPaarungen,
-					Position.from(spielTagFormulaPos));
+			// SPIELPNKT-Zellen werden beim Erstellen des Spielplans für Freispiele vorbelegt
+			verweisAufErgbnisseEinfuegen(spalteA[idx], spalteB[idx], erstePaarungSpieltagZeileInSpielplan,
+					anzPaarungen, Position.from(spielTagFormulaPos), null, null);
 			spielTagFormulaPos.spaltePlus(2);
 		}
 	}
 
 	private void verweisAufErgbnisseEinfuegen(int spalteA, int spalteB, int startZeile, int anzPaarungen,
-			Position startFormulaPos) throws GenerateException {
+			Position startFormulaPos, Integer freispielPlusWert, Integer freispielMinusWert) throws GenerateException {
 		Position ersteTeamNrPos = Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE);
 
 		Position punkteAStartPos = Position.from(spalteA, startZeile);
@@ -482,16 +484,29 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		String rangeStrATeamNr = teamNrAStartPos.getAddressWith$() + ":" + teamNrAEndePos.getAddressWith$();
 		String rangeStrBTeamNr = teamNrBStartPos.getAddressWith$() + ":" + teamNrBEndePos.getAddressWith$();
 
-		// @formatter:off
-        String formulaPunktePlus = "IFNA(" + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrAPlus + ";MATCH("
-                + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrATeamNr + ";0)" + ");"
-                + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrBPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'."
-                + rangeStrBTeamNr + ";0)" + ")" + ")";
+		String sheetRef = "$'" + LigaSpielPlanSheet.SHEET_NAMEN + "'.";
+		String matchInA = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrATeamNr + ";0)";
+		String matchInB = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrBTeamNr + ";0)";
 
-        String formulaPunkteMinus = "IFNA(" + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrBPlus + ";MATCH("
-                + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrATeamNr + ";0)" + ");"
-                + "INDEX($'" + LigaSpielPlanSheet.SHEET_NAMEN +"'." + rangeStrAPlus + ";MATCH(" + ersteTeamNrPos.getAddress() + ";$'" + LigaSpielPlanSheet.SHEET_NAMEN +"'."
-                + rangeStrBTeamNr + ";0)" + ")" + ")";
+		// @formatter:off
+        String formulaPunktePlus;
+        String formulaPunkteMinus;
+
+        if (freispielPlusWert != null) {
+            // Mit Freispiel-Check: wenn Team B = 0, Freispiel-Wert zurückgeben
+            String freispielCheck = "INDEX(" + sheetRef + rangeStrBTeamNr + ";" + matchInA + ")=0";
+            formulaPunktePlus  = "IFNA(IF(" + freispielCheck + ";" + freispielPlusWert
+                    + ";INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInA + "));"
+                    + "INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInB + "))";
+            formulaPunkteMinus = "IFNA(IF(" + freispielCheck + ";" + freispielMinusWert
+                    + ";INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInA + "));"
+                    + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
+        } else {
+            formulaPunktePlus  = "IFNA(INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInA + ");"
+                    + "INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInB + "))";
+            formulaPunkteMinus = "IFNA(INDEX(" + sheetRef + rangeStrBPlus + ";" + matchInA + ");"
+                    + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
+        }
         // @formatter:on
 		boolean isvisable = getKonfigurationSheet().zeigeArbeitsSpalten();
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(isvisable);

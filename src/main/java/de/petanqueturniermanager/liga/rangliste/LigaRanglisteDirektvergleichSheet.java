@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -103,9 +104,9 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (!alleMeldungen.isValid()) {
-			processBoxinfo("Abbruch, ungültige Anzahl von Meldungen.");
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption("Neue Liga-SpielPlan")
-					.message("Ungültige Anzahl von Meldungen").show();
+			processBoxinfo("processbox.abbruch");
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.liga.spielplan"))
+					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
 			return;
 		}
 
@@ -131,7 +132,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 	}
 
 	private void formatData() throws GenerateException {
-		processBoxinfo("Formatieren Datenbereich");
+		processBoxinfo("processbox.direktvergleich.formatieren");
 
 		RangeProperties rangeProp = RangeProperties.from()
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).centerJustify().margin(MARGIN);
@@ -157,7 +158,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 	}
 
 	private void dateneinfuegen(TeamMeldungen alleMeldungen) throws GenerateException {
-		processBoxinfo("Daten einfuegen");
+		processBoxinfo("processbox.direktvergleich.einfuegen");
 
 		Position startTeamNrPos = Position.from(ERSTE_SPALTE_DIREKTVERGLEICH, TEAM_NR_HEADER_ZEILE);
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
@@ -213,7 +214,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 	}
 
 	private void addConditionalFormuleForDirektVergleichReturnCode() throws GenerateException {
-		processBoxinfo("Bedingte Formel für Codes");
+		processBoxinfo("processbox.direktvergleich.validieren");
 
 		RangePosition rangePosDirektCode = RangePosition.from(ERSTE_SPALTE_DIREKTVERGLEICH, ERSTE_DATEN_ZEILE,
 				ERSTE_SPALTE_DIREKTVERGLEICH + anzTeams() - 1, ERSTE_DATEN_ZEILE + anzTeams() - 1);
@@ -236,7 +237,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 	 * @throws GenerateException
 	 */
 	private StringCellValue addFooter() throws GenerateException {
-		processBoxinfo("Footer");
+		processBoxinfo("processbox.fusszeile.einfuegen");
 		Position startPos = Position.from(TEAM_NR_SPALTE, footerStartLinePos() + 1);
 		StringCellValue direktvergleichResultCode = StringCellValue.from(getXSpreadSheet()).setPos(startPos)
 				.setCharHeight(8);
@@ -258,7 +259,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {
-		processBoxinfo("Print-Bereich");
+		processBoxinfo("processbox.print.bereich");
 		RangePosition allDatenRange = allDatenRange();
 		Position rechtsUnten = Position.from(allDatenRange.getEnde().getSpalte(), footerPos.getZeile());
 		Position linksOben = Position.from(0, 0);

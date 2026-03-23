@@ -26,7 +26,7 @@ public interface ISheet {
 
 	WorkingSpreadsheet getWorkingSpreadsheet();
 
-	void processBoxinfo(String infoMsg);
+	void processBoxinfo(String i18nKey, Object... args);
 
 	TurnierSheet getTurnierSheet() throws GenerateException;
 

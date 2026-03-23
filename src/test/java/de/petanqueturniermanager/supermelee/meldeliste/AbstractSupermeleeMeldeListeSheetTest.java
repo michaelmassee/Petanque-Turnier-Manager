@@ -64,7 +64,7 @@ public class AbstractSupermeleeMeldeListeSheetTest {
 			}
 
 			@Override
-			public void processBoxinfo(String infoMsg) {
+			public void processBoxinfo(String i18nKey, Object... args) {
 				// do nothing here
 			}
 		};

@@ -130,7 +130,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	void upDateSheet() throws GenerateException {
 		PageStyleHelper.from(sheet, PageStyle.PETTURNMNGR).initDefaultFooter().create().applytoSheet();
-		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.aktualisieren"));
+		sheet.processBoxinfo("processbox.supermelee.meldeliste.aktualisieren");
 
 		meldeListeHelper.testDoppelteMeldungen();
 		sheet.getTurnierSheet().setActiv();
@@ -174,7 +174,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	/** Aktive Spielrunde und Spieltag in den Info-Block schreiben. */
 	private void insertInfoBlock() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.einfuegen"));
+		sheet.processBoxinfo("processbox.supermelee.meldeliste.einfuegen");
 		var xSheet = sheet.getXSpreadSheet();
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 		var border = BorderFactory.from().allThin().toBorder();
@@ -205,7 +205,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
-		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.sortieren"));
+		sheet.processBoxinfo("processbox.supermelee.meldeliste.sortieren");
 
 		var xSheet = sheet.getXSpreadSheet();
 		int hederBackColor = konfigurationSheet.getRanglisteHeaderFarbe();
@@ -228,7 +228,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void formatDaten() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.supermelee.meldeliste.formatieren"));
+		sheet.processBoxinfo("processbox.supermelee.meldeliste.formatieren");
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 
@@ -301,7 +301,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void updateSpieltageSummenSpalten() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.summenspalten.aktualisieren"));
+		sheet.processBoxinfo("processbox.summenspalten.aktualisieren");
 
 		int headerBackColor = konfigurationSheet.getMeldeListeHeaderFarbe();
 

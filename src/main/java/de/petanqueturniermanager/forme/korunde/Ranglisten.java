@@ -41,7 +41,7 @@ public class Ranglisten {
 			rangliste = NewSheet.from(parentSheet.get(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
-		processBoxinfo(I18n.get("processbox.rangliste.einlesen"));
+		processBoxinfo("processbox.rangliste.einlesen");
 		Position teamNrPos = Position.from(grpNr, ersteTeamNrZeile);
 		int mxCntr = 0;
 		while (mxCntr < 9999) {
@@ -60,8 +60,8 @@ public class Ranglisten {
 	/**
 	 * @param string
 	 */
-	private void processBoxinfo(String string) {
-		parentSheet.get().processBoxinfo(string);
+	private void processBoxinfo(String i18nKey, Object... args) {
+		parentSheet.get().processBoxinfo(i18nKey, args);
 
 	}
 

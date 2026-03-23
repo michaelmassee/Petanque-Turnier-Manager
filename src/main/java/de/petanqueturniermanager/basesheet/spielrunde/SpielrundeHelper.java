@@ -70,7 +70,7 @@ public class SpielrundeHelper {
 	public void datenErsteSpalte(SpielrundeSpielbahn spielrundeSpielbahnFlagAusKonfig, int erstZeile, int letzteZeile,
 			int nrSpalte, int headerZeile, int headerZeile2, Integer headerColor) throws GenerateException {
 
-		sheet.processBoxinfo(I18n.get("processbox.erste.spalte.daten.einfuegen"));
+		sheet.processBoxinfo("processbox.erste.spalte.daten.einfuegen");
 
 		Position posHeaderZelle1 = Position.from(nrSpalte, headerZeile);
 		//Position posHeaderZelle2 = Position.from(nrSpalte, headerZeile2);

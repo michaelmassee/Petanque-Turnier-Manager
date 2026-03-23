@@ -78,7 +78,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
 
-		processBoxinfo(I18n.get("processbox.spieltag.meldungen.einlesen", getSpielTag().getNr()));
+		processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTag().getNr());
 		SpielerMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
 		filleBereichNew(alleMeldungen);
 
@@ -93,7 +93,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	private void filleBereichNew(SpielerMeldungen alleMeldungen) throws GenerateException {
 
 		if (alleMeldungen.size() < 1) {
-			processBoxinfo(I18n.get("processbox.abbruch"));
+			processBoxinfo("processbox.abbruch");
 			return; // keine Daten
 		}
 		// Anzahl blöcke ?
@@ -184,7 +184,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
 		Position rechtsUnten = Position.from(letzteSpalte, letzteZeile);
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));

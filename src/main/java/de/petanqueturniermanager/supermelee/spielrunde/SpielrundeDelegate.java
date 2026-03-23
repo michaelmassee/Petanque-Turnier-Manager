@@ -123,9 +123,8 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			throws GenerateException {
 		checkNotNull(meldungen);
 
-		sheet.processBoxinfo(
-				"Neue Spielrunde " + neueSpielrundeNr.getNr() + " für Spieltag " + sheet.getSpielTag().getNr());
-		sheet.processBoxinfo(meldungen.size() + " Meldungen");
+		sheet.processBoxinfo("processbox.spielrunde.neue", neueSpielrundeNr.getNr(), sheet.getSpielTag().getNr());
+		sheet.processBoxinfo("processbox.spielrunde.meldungen", meldungen.size());
 
 		SuperMeleeMode superMeleeMode = konfigurationSheet.getSuperMeleeMode();
 		SuperMeleeTeamRechner superMeleeTeamRechner = new SuperMeleeTeamRechner(meldungen.spieler().size(),
@@ -252,7 +251,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			spielrunde = abSpielrunde;
 		}
 
-		sheet.processBoxinfo(I18n.get("processbox.meldungen.gespielter.runden.einlesen", spielTagNr.getNr()));
+		sheet.processBoxinfo("processbox.meldungen.gespielter.runden.einlesen", spielTagNr.getNr());
 
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
@@ -334,7 +333,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	// -------------------------------------------------------------------------
 
 	private void vertikaleErgbnisseFormulaEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.spielrunde.ergebnisse"));
+		sheet.processBoxinfo("processbox.spielrunde.ergebnisse");
 		checkArgument(spielRunde.getNr() == sheet.getSpielRundeNr().getNr());
 
 		XSpreadsheet xsheet = sheet.getXSpreadSheet();
@@ -441,7 +440,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void spielerNummerEinfuegen(MeleeSpielRunde spielRunde) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.spielrunde.einfuegen"));
+		sheet.processBoxinfo("processbox.spielrunde.einfuegen");
 		checkArgument(spielRunde.getNr() == sheet.getSpielRundeNr().getNr());
 
 		HashSet<Integer> spielrNr = new HashSet<>();
@@ -532,7 +531,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void headerPaarungen(XSpreadsheet xsheet, MeleeSpielRunde spielRunde) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.spielrunde.paarungen"));
+		sheet.processBoxinfo("processbox.spielrunde.paarungen");
 		checkArgument(spielRunde.getNr() == sheet.getSpielRundeNr().getNr());
 
 		SpielTagNr spieltag = sheet.getSpielTag();
@@ -585,7 +584,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void headerSpielerNr(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.formatiere.header"));
+		sheet.processBoxinfo("processbox.formatiere.header");
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER)
 				.isVisible(konfigurationSheet.zeigeArbeitsSpalten());
@@ -605,7 +604,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void printBereichDefinieren(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.print.bereich"));
+		sheet.processBoxinfo("processbox.print.bereich");
 		Position letzteZeile = letztePositionRechtsUnten();
 		PrintArea.from(xsheet, sheet.getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(NUMMER_SPALTE_RUNDESPIELPLAN, ERSTE_HEADER_ZEILE, letzteZeile));
@@ -614,14 +613,14 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	private void wennNurDoubletteRundeDannSpaltenAusblenden(XSpreadsheet xsheet, boolean doubletteRunde)
 			throws GenerateException {
 		if (doubletteRunde) {
-			sheet.processBoxinfo(I18n.get("processbox.meldungen.ausblenden"));
+			sheet.processBoxinfo("processbox.meldungen.ausblenden");
 			sheet.getSheetHelper().setColumnProperty(xsheet, ERSTE_SPALTE_RUNDESPIELPLAN + 2, "IsVisible", false);
 			sheet.getSheetHelper().setColumnProperty(xsheet, ERSTE_SPALTE_RUNDESPIELPLAN + 5, "IsVisible", false);
 		}
 	}
 
 	private void spielrundeProperties(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.spielrunde.validieren"));
+		sheet.processBoxinfo("processbox.spielrunde.validieren");
 
 		Position datenEnd = letztePositionRechtsUnten();
 
@@ -654,7 +653,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	private void datenformatieren(XSpreadsheet xsheet) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.formatiere.daten"));
+		sheet.processBoxinfo("processbox.formatiere.daten");
 
 		Position datenStartOhneNrSpalte = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ERSTE_DATEN_ZEILE);
 		Position datenEnd = letztePositionRechtsUnten();

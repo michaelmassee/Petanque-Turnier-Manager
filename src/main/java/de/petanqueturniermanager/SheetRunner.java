@@ -229,8 +229,8 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	// for mocking
-	public void processBoxinfo(String infoMsg) {
-		processBox().info(infoMsg);
+	public void processBoxinfo(String i18nKey, Object... args) {
+		processBox().info(I18n.get(i18nKey, args));
 	}
 
 	public ProcessBox processBox() {

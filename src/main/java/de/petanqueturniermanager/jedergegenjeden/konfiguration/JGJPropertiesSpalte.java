@@ -17,6 +17,9 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
+	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
+	public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
+
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_GERADE = "Spielplan Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_UNGERADE = "Spielplan Hintergrund Ungerade";
 	private static final String KONFIG_PROP_SPIELPLAN_COLOR_BACK_HEADER = "Spielplan Header";
@@ -51,6 +54,11 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
 				.setDescription("Name der Gruppe in dieses Dokument.").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+				.setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+				.setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
 	}
 
 	/**
@@ -105,6 +113,16 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 	@Override
 	public void setGruppenname(String name) {
 		setStringProperty(KONFIG_PROP_NAME_GRUPPE, name);
+	}
+
+	@Override
+	public Integer getFreispielPunktePlus() {
+		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+	}
+
+	@Override
+	public Integer getFreispielPunkteMinus() {
+		return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
 	}
 
 }

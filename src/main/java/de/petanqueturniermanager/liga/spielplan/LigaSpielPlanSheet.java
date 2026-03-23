@@ -123,7 +123,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
-			processBoxinfo(I18n.get("processbox.abbruch"));
+			processBoxinfo("processbox.abbruch");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.liga.spielplan"))
 					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
@@ -153,7 +153,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(printBereichRangePosition());
 	}
 

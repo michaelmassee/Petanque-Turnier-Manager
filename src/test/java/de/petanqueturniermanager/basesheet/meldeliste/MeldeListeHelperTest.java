@@ -14,6 +14,7 @@ import org.mockito.Mockito;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.model.Spieler;
@@ -30,6 +31,7 @@ public class MeldeListeHelperTest {
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	public void init() throws GenerateException {
+		I18n.init(null);
 		iMeldelisteMock = Mockito.mock(IMeldeliste.class);
 		sheetHelperMock = Mockito.mock(SheetHelper.class);
 		meldungenSpalteMock = Mockito.mock(MeldungenSpalte.class);

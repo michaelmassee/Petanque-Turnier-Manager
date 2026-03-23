@@ -52,6 +52,7 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektver
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
@@ -161,6 +162,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_RANGLISTE_SORTIEREN = "jgj_rangliste_sortieren";
 	public static final String CMD_JGJ_RANGLISTE = "jgj_rangliste";
 	public static final String CMD_JGJ_DIREKTVERGLEICH = "jgj_direktvergleich";
+	public static final String CMD_JGJ_TESTDATEN_TURNIER = "jgj_testdaten_turnier";
 	// Schweizer
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
 	public static final String CMD_SCHWEIZER_NEUE_MELDELISTE = "schweizer_neue_meldeliste";
@@ -181,6 +183,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MAASTRICHTER_FINALRUNDEN = "maastrichter_finalrunden";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER = "maastrichter_testdaten_turnier";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_57 = "maastrichter_testdaten_turnier_57";
+	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_35 = "maastrichter_testdaten_turnier_35";
 	// K.-O.
 	public static final String CMD_KO_START = "ko_start";
 	public static final String CMD_KO_UPDATE_MELDELISTE = "ko_update_meldeliste";
@@ -377,6 +380,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_DIREKTVERGLEICH:
 				new JGJRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
 				break;
+			case CMD_JGJ_TESTDATEN_TURNIER:
+				new JGJTurnierTestDaten(ws).start();
+				break;
 			// ------------------------------
 			// Schweizer System
 			case CMD_SCHWEIZER_START:
@@ -444,6 +450,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				// → GruppenAufteilungRechner ergibt [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
 				// → 57 Teams ungerade → automatisch Freilos pro Vorrunde
 				new MaastrichterTurnierTestDaten(ws, 57, 4, 16, 8).start();
+				break;
+			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_35:
+				// 35 Teams: 3 Vorrunden, gruppenGroesse=16, minRestGroesse=8
+				// → GruppenAufteilungRechner ergibt [16,19] = Gruppe A (kein Cadrage) + Gruppe B (mit Cadrage)
+				// → 35 Teams ungerade → automatisch Freilos pro Vorrunde
+				new MaastrichterTurnierTestDaten(ws, 35, 3, 16, 8).start();
 				break;
 			// ------------------------------
 			// K.-O.
@@ -617,6 +629,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
 				 CMD_JGJ_DIREKTVERGLEICH                    -> ts == TurnierSystem.JGJ;
+			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
+			case CMD_JGJ_TESTDATEN_TURNIER                  -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
 			// Maastrichter
@@ -627,7 +641,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_MAASTRICHTER_FINALRUNDEN               -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
-				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
+				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,
+				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_35      -> ts == TurnierSystem.KEIN || ts == TurnierSystem.MAASTRICHTER;
 			// K.-O.
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,

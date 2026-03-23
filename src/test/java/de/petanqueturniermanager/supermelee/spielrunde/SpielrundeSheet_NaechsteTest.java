@@ -77,7 +77,7 @@ public class SpielrundeSheet_NaechsteTest {
 			}
 
 			@Override
-			public void processBoxinfo(String infoMsg) {
+			public void processBoxinfo(String i18nKey, Object... args) {
 				// nothing
 			}
 		};

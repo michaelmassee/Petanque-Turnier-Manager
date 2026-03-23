@@ -4,6 +4,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 
@@ -21,8 +22,8 @@ public class SchweizerRanglisteSheetSortOnly extends SchweizerRanglisteSheet {
 		XSpreadsheet sheet = getXSpreadSheet();
 		if (sheet == null) {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("Fehler beim Sortieren der Rangliste")
-					.message("Keine Rangliste vorhanden.").show();
+					.caption(I18n.get("msg.caption.fehler.sortieren.rangliste"))
+					.message(I18n.get("msg.text.keine.rangliste")).show();
 		} else {
 			getSheetHelper().setActiveSheet(sheet);
 			getRangListeSorter().doSort();

@@ -102,7 +102,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		SpielerMeldungen meldungen = meldeListe.getAktiveMeldungen();
 
 		// Spielrunde sheet ?
-		processBoxinfo(I18n.get("processbox.neuer.spielrundeplan", getSpielRundeNr().getNr(), getSpielTag().getNr()));
+		processBoxinfo("processbox.neuer.spielrundeplan", getSpielRundeNr().getNr(), getSpielTag().getNr());
 
 		if (!NewSheet.from(this, getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK)
 				.spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv().tabColor(SHEET_COLOR).create()
@@ -185,7 +185,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	}
 
 	private void printBereichDefinieren(Position rechtsUnten) throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		Position linksOben = Position.from(SPIELER_NR_SPALTE, HEADER_ZEILE);
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));

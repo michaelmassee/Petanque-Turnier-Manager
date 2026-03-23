@@ -57,6 +57,12 @@ public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet 
 		testNamenEinfuegen();
 	}
 
+	/** Erstellt das Meldeliste-Sheet und füllt es mit Testnamen. */
+	public void erstelleUndFuelleTestDaten(String gruppenname) throws GenerateException {
+		meldeListe.createMeldelisteWithParams(gruppenname);
+		testNamenEinfuegen();
+	}
+
 	/**
 	 * @throws GenerateException
 	 */

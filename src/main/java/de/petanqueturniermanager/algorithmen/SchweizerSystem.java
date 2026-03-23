@@ -97,7 +97,7 @@ public class SchweizerSystem {
 	 * @return Map von teamNr → BHZ-Wert
 	 */
 	@VisibleForTesting
-	Map<Integer, Integer> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse) {
+	public Map<Integer, Integer> berechneBuchholz(List<SchweizerTeamErgebnis> ergebnisse) {
 		Map<Integer, Integer> siegeMap = ergebnisse.stream()
 				.collect(Collectors.toMap(SchweizerTeamErgebnis::teamNr, SchweizerTeamErgebnis::siege));
 
@@ -117,7 +117,7 @@ public class SchweizerSystem {
 	 * @return Map von teamNr → FBHZ-Wert
 	 */
 	@VisibleForTesting
-	Map<Integer, Integer> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,
+	public Map<Integer, Integer> berechneFeinbuchholz(List<SchweizerTeamErgebnis> ergebnisse,
 			Map<Integer, Integer> bhzMap) {
 		return ergebnisse.stream().collect(Collectors.toMap(
 				SchweizerTeamErgebnis::teamNr,

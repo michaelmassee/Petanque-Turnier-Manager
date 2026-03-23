@@ -62,7 +62,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 
 	private void renameSpielPlanSheet() throws GenerateException {
 		String oldName = "Liga Spielplan";
-		sheet.processBoxinfo(I18n.get("processbox.pruefe.ob.vorhanden", oldName));
+		sheet.processBoxinfo("processbox.pruefe.ob.vorhanden", oldName);
 		if (sheet.getSheetHelper().findByName(oldName) != null) {
 			MessageBoxResult answer = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
 					.caption(I18n.get("msg.caption.tabelle", oldName))
@@ -90,7 +90,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.meldeliste.sortieren"));
+		sheet.processBoxinfo("processbox.meldeliste.sortieren");
 		renameSpielPlanSheet();
 
 		TurnierSheet.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setActiv();
@@ -110,7 +110,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void formatDaten() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.meldeliste.spalten.formatieren"));
+		sheet.processBoxinfo("processbox.meldeliste.spalten.formatieren");
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 

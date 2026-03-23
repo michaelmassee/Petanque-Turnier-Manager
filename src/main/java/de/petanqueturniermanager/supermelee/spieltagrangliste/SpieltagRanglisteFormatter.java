@@ -45,7 +45,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 	public void updateHeader() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo(I18n.get("processbox.formatiere.header"));
+		ranglisteWkRef.get().processBoxinfo("processbox.formatiere.header");
 
 		ISpielTagRangliste rangliste = ranglisteWkRef.get();
 		int anzRunden = rangliste.getAnzahlRunden();
@@ -113,7 +113,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 	public void formatDaten() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo(I18n.get("processbox.formatiere.daten"));
+		ranglisteWkRef.get().processBoxinfo("processbox.formatiere.daten");
 
 		ISpielTagRangliste rangliste = ranglisteWkRef.get();
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
@@ -141,7 +141,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 	@Override
 	public StringCellValue addFooter() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo(I18n.get("processbox.fusszeile.einfuegen"));
+		ranglisteWkRef.get().processBoxinfo("processbox.fusszeile.einfuegen");
 
 		StringCellValue stringVal = super.addFooter();
 

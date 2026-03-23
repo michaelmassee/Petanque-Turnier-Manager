@@ -6,7 +6,7 @@ import de.petanqueturniermanager.exception.GenerateException;
  * Erstellung 01.08.2022 / Michael Massee
  */
 
-public interface IJGJProperiesSpalte {
+public interface IJGJProperiesSpalte extends de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte {
 	Integer getSpielPlanHeaderFarbe() throws GenerateException;
 
 	Integer getSpielPlanHintergrundFarbeUnGerade() throws GenerateException;

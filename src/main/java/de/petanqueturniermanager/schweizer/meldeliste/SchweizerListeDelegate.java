@@ -57,13 +57,6 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	static final int TEAMNAME_SPALTE_WIDTH = 3000;
 	static final int VEREINSNAME_SPALTE_WIDTH = 2500;
 
-	static final String HEADER_NR = "Nr";
-	static final String HEADER_TEAMNAME = "Teamname";
-	static final String HEADER_VORNAME = "Vorname";
-	static final String HEADER_NACHNAME = "Nachname";
-	static final String HEADER_VEREINSNAME = "Verein";
-	static final String HEADER_SETZPOSITION = "SP";
-	static final String HEADER_AKTIV = "Aktiv";
 	static final int AKTIV_SPALTE_WIDTH = 700;
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
 	static final int AKTIV_WERT_AUSGESTIEGEN = 2;
@@ -148,7 +141,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.schweizer.meldeliste.einfuegen"));
+		sheet.processBoxinfo("processbox.schweizer.meldeliste.einfuegen");
 
 		// Starke Referenz halten – WeakRef in TurnierSheet/SheetFreeze darf nicht vom GC eingesammelt werden
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
@@ -163,14 +156,17 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void insertHeaderInSheet(int headerColor) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.schweizer.meldeliste.einlesen"));
+		sheet.processBoxinfo("processbox.schweizer.meldeliste.einlesen");
 
 		// Turniersystem oben links (Zeile 0 = ERSTE_HEADER_ZEILE) – inkl. Ranking-Modus
 		SchweizerRankingModus rankingModus = konfigurationSheet.getRankingModus();
-		String rankingInfo = rankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? "Ohne Buchholz" : "Mit Buchholz";
+		String rankingInfo = rankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ
+				? I18n.get("schweizer.meldeliste.ranking.ohne.buchholz")
+				: I18n.get("schweizer.meldeliste.ranking.mit.buchholz");
 		sheet.getSheetHelper().setStringValueInCell(StringCellValue
 				.from(sheet.getXSpreadSheet(), Position.from(0, ERSTE_HEADER_ZEILE),
-						"Turniersystem: " + TurnierSystem.SCHWEIZER.getBezeichnung() + "   |   Wertung: " + rankingInfo)
+						I18n.get("schweizer.meldeliste.header.turniersystem",
+								TurnierSystem.SCHWEIZER.getBezeichnung(), rankingInfo))
 				.setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD)
 				.setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP)
 				.setShrinkToFit(true).setCharColor("00599d"));
@@ -190,7 +186,8 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 		// Team-Nr Spalte: merged über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile)
 		StringCellValue nrHeader = StringCellValue
-				.from(sheet.getXSpreadSheet(), Position.from(getTeamNrSpalte(), ZWEITE_HEADER_ZEILE), HEADER_NR)
+				.from(sheet.getXSpreadSheet(), Position.from(getTeamNrSpalte(), ZWEITE_HEADER_ZEILE),
+						I18n.get("column.header.nr"))
 				.addColumnProperties(colPropNr)
 				.setCellBackColor(headerColor)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder())
@@ -201,7 +198,8 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		// Teamname-Spalte (optional): merged über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile)
 		if (teamnameAktiv) {
 			StringCellValue teamnameHeader = StringCellValue
-					.from(sheet.getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE), HEADER_TEAMNAME)
+					.from(sheet.getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE),
+							I18n.get("column.header.teamname"))
 					.addColumnProperties(colPropName.setWidth(TEAMNAME_SPALTE_WIDTH))
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
@@ -215,12 +213,13 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		StringCellValue spHeader = StringCellValue
-				.from(sheet.getXSpreadSheet(), Position.from(getSetzPositionSpalte(), ZWEITE_HEADER_ZEILE), HEADER_SETZPOSITION)
+				.from(sheet.getXSpreadSheet(), Position.from(getSetzPositionSpalte(), ZWEITE_HEADER_ZEILE),
+						I18n.get("column.header.setzposition"))
 				.addColumnProperties(colPropSP)
 				.setCellBackColor(headerColor)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
-				.setComment("Setzposition: Teams mit gleicher SP werden in Runde 1 nicht gegeneinander ausgelost.")
+				.setComment(I18n.get("schweizer.meldeliste.comment.setzposition"))
 				.setEndPosMergeZeilePlus(1);
 		sheet.getSheetHelper().setStringValueInCell(spHeader);
 
@@ -229,12 +228,13 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		StringCellValue aktivHeader = StringCellValue
-				.from(sheet.getXSpreadSheet(), Position.from(getAktivSpalte(), ZWEITE_HEADER_ZEILE), HEADER_AKTIV)
+				.from(sheet.getXSpreadSheet(), Position.from(getAktivSpalte(), ZWEITE_HEADER_ZEILE),
+						I18n.get("column.header.aktiv"))
 				.addColumnProperties(colPropAktiv)
 				.setCellBackColor(headerColor)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
-				.setComment("1 = Nimmt teil, 2 = Ausgestiegen, leer = Nimmt nicht teil")
+				.setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
 				.setEndPosMergeZeilePlus(1)
 				.setRotate90();
 		sheet.getSheetHelper().setStringValueInCell(aktivHeader);
@@ -242,7 +242,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		// Spieler-Blöcke
 		for (int s = 0; s < anzSpieler; s++) {
 			int vornameSpalte = getVornameSpalte(s);
-			String spielerTitel = "Spieler " + (s + 1);
+			String spielerTitel = I18n.get("schweizer.meldeliste.header.spieler", s + 1);
 
 			// Zeile 1 (ZWEITE_HEADER_ZEILE): Block-Titel "Spieler n" über alle Spieler-Spalten
 			StringCellValue spielerHeader = StringCellValue
@@ -257,7 +257,8 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 			// Zeile 2 (DRITTE_HEADER_ZEILE): Vorname
 			StringCellValue vornameHeader = StringCellValue
-					.from(sheet.getXSpreadSheet(), Position.from(vornameSpalte, DRITTE_HEADER_ZEILE), HEADER_VORNAME)
+					.from(sheet.getXSpreadSheet(), Position.from(vornameSpalte, DRITTE_HEADER_ZEILE),
+							I18n.get("column.header.vorname"))
 					.addColumnProperties(colPropName)
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().boldLn().forLeft().toBorder())
@@ -266,7 +267,8 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 			// Zeile 2: Nachname
 			StringCellValue nachnameHeader = StringCellValue
-					.from(sheet.getXSpreadSheet(), Position.from(getNachnameSpalte(s), DRITTE_HEADER_ZEILE), HEADER_NACHNAME)
+					.from(sheet.getXSpreadSheet(), Position.from(getNachnameSpalte(s), DRITTE_HEADER_ZEILE),
+							I18n.get("column.header.nachname"))
 					.addColumnProperties(colPropName)
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().toBorder())
@@ -277,7 +279,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 			if (vereinsnameAktiv) {
 				StringCellValue vereinsHeader = StringCellValue
 						.from(sheet.getXSpreadSheet(), Position.from(getVereinsnameSpalte(s), DRITTE_HEADER_ZEILE),
-								HEADER_VEREINSNAME)
+								I18n.get("column.header.vereinsname"))
 						.addColumnProperties(colPropName.setWidth(VEREINSNAME_SPALTE_WIDTH))
 						.setCellBackColor(headerColor)
 						.setBorder(BorderFactory.from().allThin().toBorder())
@@ -492,7 +494,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		if (duplikate.isEmpty()) {
 			return;
 		}
-		StringBuilder sb = new StringBuilder("Meldeliste wurde nicht aktualisiert.\nDoppelte Startnummern:");
+		StringBuilder sb = new StringBuilder(I18n.get("error.meldeliste.doppelte.startnummern"));
 		for (Map.Entry<Integer, List<Integer>> entry : duplikate.entrySet()) {
 			sb.append("\nNr. ").append(entry.getKey()).append(": Zeilen ");
 			List<Integer> zeilen = entry.getValue();

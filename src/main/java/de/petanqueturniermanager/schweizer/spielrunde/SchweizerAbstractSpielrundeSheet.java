@@ -122,19 +122,19 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	protected final boolean canStart(TeamMeldungen meldungen) throws GenerateException {
 		if (getSpielRundeNr().getNr() < 1) {
 			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
-
-			String errorMsg = "Ungültige Spielrunde in der Meldeliste '" + getSpielRundeNr().getNr() + "'";
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
-					.message(errorMsg).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
+					.message(I18n.get("schweizer.spielrunde.fehler.ungueltige.spielrunde", getSpielRundeNr().getNr()))
+					.show();
 			return false;
 		}
 
 		if (meldungen.size() < 6) {
 			getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
-			String errorMsg = "Ungültige Anzahl '" + meldungen.size() + "' von Aktive Meldungen vorhanden."
-					+ "\r\nmindestens 6 Meldungen aktivieren.";
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK).caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
-					.message(errorMsg).show();
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
+					.message(I18n.get("schweizer.spielrunde.fehler.zu.wenige.meldungen", meldungen.size()))
+					.show();
 			return false;
 		}
 		return true;
@@ -199,7 +199,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
 			int spielrunde = (abSpielrunde > 1) ? abSpielrunde : 1;
-			processBoxinfo(I18n.get("processbox.gespielte.runden.einlesen", spielrunde, bisSpielrunde));
+			processBoxinfo("processbox.gespielte.runden.einlesen", spielrunde, bisSpielrunde);
 
 			for (; spielrunde <= bisSpielrunde; spielrunde++) {
 				SheetRunner.testDoCancelTask();
@@ -332,7 +332,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	}
 
 	private void header() throws GenerateException {
-		processBoxinfo(I18n.get("processbox.formatiere.header"));
+		processBoxinfo("processbox.formatiere.header");
 		Integer headerColor = getKonfigurationSheet().getSpielRundeHeaderFarbe();
 		boolean nameMode = getKonfigurationSheet().getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NAME;
 
@@ -342,12 +342,12 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 				.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
 				.setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor)
 				.setCharHeight(NR_CHARHEIGHT).setShrinkToFit(true).setEndPosMergeSpaltePlus(3)
-				.setValue("Spielrunde " + getSpielRundeNr().getNr());
+				.setValue(I18n.get("schweizer.spielrunde.header.spielrunde", getSpielRundeNr().getNr()));
 		getSheetHelper().setStringValueInCell(headerValue);
 
 		int zeile2CharHeight = nameMode ? 12 : NR_CHARHEIGHT;
-		String labelA = nameMode ? "Mannschaft A" : "A";
-		String labelB = nameMode ? "Mannschaft B" : "B";
+		String labelA = nameMode ? I18n.get("schweizer.spielrunde.spalte.mannschaft.a") : "A";
+		String labelB = nameMode ? I18n.get("schweizer.spielrunde.spalte.mannschaft.b") : "B";
 
 		StringCellValue headerValueZeile2 = StringCellValue
 				.from(getXSpreadSheet(), headerStart.zeile(ZWEITE_HEADER_ZEILE)).setVertJustify(CellVertJustify2.CENTER)
@@ -361,7 +361,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		headerValueZeile2.setValue(labelB).spaltePlus(1);
 		getSheetHelper().setStringValueInCell(headerValueZeile2);
 
-		headerValueZeile2.setValue("Ergebnis").spaltePlus(1).setEndPosMergeSpaltePlus(1);
+		headerValueZeile2.setValue(I18n.get("schweizer.spielrunde.spalte.ergebnis")).spaltePlus(1).setEndPosMergeSpaltePlus(1);
 		getSheetHelper().setStringValueInCell(headerValueZeile2);
 
 	}
@@ -373,7 +373,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 */
 
 	private void datenformatieren() throws GenerateException {
-		processBoxinfo(I18n.get("processbox.formatiere.daten"));
+		processBoxinfo("processbox.formatiere.daten");
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		Position datenStart = Position.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
@@ -444,7 +444,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	 * (von BAHN_NR_SPALTE/ERSTE_HEADER_ZEILE bis ERG_TEAM_B_SPALTE/letzte Datenzeile, ohne Fehler-Spalte).
 	 */
 	private void druckBereichSetzen() throws GenerateException {
-		processBoxinfo(I18n.get("processbox.print.bereich"));
+		processBoxinfo("processbox.print.bereich");
 		Position letztePos = letztePositionRechtsUnten();
 		if (letztePos == null) {
 			return;
@@ -518,7 +518,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			String formel = "IF(OR(" +
 					"AND(ISBLANK(" + ergA + ");ISBLANK(" + ergB + "));" +
 					"AND(" + ergA + "<14;" + ergB + "<14;" + ergA + ">-1;" + ergB + ">-1;" + ergA + "<>" + ergB + ")" +
-					");\"\";\"FEHLER\")";
+					");\"\";\"" + I18n.get("schweizer.spielrunde.fehler.formel") + "\")";
 			// @formatter:on
 
 			StringCellValue cv = StringCellValue
@@ -573,13 +573,13 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 			List<SchweizerTeamErgebnis> ergebnisse, boolean force) throws GenerateException {
 		checkNotNull(meldungen);
 
-		processBoxinfo(I18n.get("processbox.neue.spielrunde", neueSpielrundeNr.getNr()));
-		processBoxinfo(I18n.get("processbox.anzahl.meldungen", meldungen.size()));
+		processBoxinfo("processbox.neue.spielrunde", neueSpielrundeNr.getNr());
+		processBoxinfo("processbox.anzahl.meldungen", meldungen.size());
 
 		// wenn hier dann neu erstellen
 		if (!NewSheet.from(this, getSheetName(getSpielRundeNr())).pos(DefaultSheetPos.SCHWEIZER_WORK)
 				.setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
-			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
+			ProcessBox.from().info(I18n.get("schweizer.spielrunde.abbruch"));
 			return false;
 		}
 

@@ -3,16 +3,19 @@ package de.petanqueturniermanager.schweizer.rangliste;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 
 /**
@@ -182,17 +185,82 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 				.allSatisfy(siege -> assertThat(siege).isBetween(0, ANZ_RUNDEN));
 	}
 
+	/**
+	 * Prüft dass die Rangliste korrekt neu aufgebaut wird nachdem Ergebnisse direkt
+	 * in der Spielrunde geändert wurden (dirty-Flag + manueller Rebuild).
+	 * <p>
+	 * Szenario:
+	 * <ol>
+	 *   <li>Vollständiges Turnier generieren (3 Runden + Rangliste)</li>
+	 *   <li>Alle Ergebnis-Zellen der 1. Spielrunde auf 0 setzen</li>
+	 *   <li>Rangliste neu aufbauen (simuliert Tab-Wechsel zur Rangliste)</li>
+	 *   <li>Kein Team kann mehr als ANZ_RUNDEN-1 Siege haben (Runde 1 ergab 0:0)</li>
+	 * </ol>
+	 */
 	@Test
-	@Disabled("Wird aktiv sobald Live-Update via Formeln verifiziert ist")
 	public void testLiveUpdate_NachErgebnisaenderung() throws GenerateException {
 		testDaten.generate();
 
-		RangeData vorher = ladeRanglisteDaten();
-		int siegeVorher = vorher.get(0).get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0);
+		// Siegesumme vor der Änderung – mindestens ein Team hat > 0 Siege
+		int siegeSummeVorher = ladeRanglisteDaten().stream()
+				.mapToInt(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
+				.sum();
+		assertThat(siegeSummeVorher)
+				.as("Vor Änderung muss Siegesumme > 0 sein")
+				.isGreaterThan(0);
 
-		// Hier würde ein Ergebnis in "1. Spielrunde" geändert werden
-		// und dann geprüft ob SIEGE sich ohne Neuaufbau aktualisiert hat.
-		// (Implementierung folgt nach Aktivierung)
-		assertThat(siegeVorher).as("Siege-Wert muss lesbar sein").isGreaterThanOrEqualTo(0);
+		// 1. Spielrunde: alle Ergebnis-Zellen auf 0 setzen
+		String rundeSheetName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+		XSpreadsheet runde1 = sheetHlp.findByName(rundeSheetName);
+		assertThat(runde1).as("1. Spielrunde muss existieren").isNotNull();
+		nulleErgebnisse(runde1);
+
+		// Rangliste neu aufbauen (wird im echten Betrieb durch Tab-Wechsel ausgelöst)
+		new SchweizerRanglisteSheet(wkingSpreadsheet).doRun();
+
+		// Nach dem Nullen der 1. Runde darf kein Team mehr als ANZ_RUNDEN-1 Siege haben
+		RangeData nachher = ladeRanglisteDaten();
+		assertThat(nachher)
+				.as("Nach Nullen der 1. Runde darf kein Team mehr als %d Siege haben", ANZ_RUNDEN - 1)
+				.extracting(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(Integer.MAX_VALUE))
+				.allSatisfy(siege -> assertThat(siege).isLessThanOrEqualTo(ANZ_RUNDEN - 1));
+
+		// Gesamtsiegezahl muss kleiner geworden sein
+		int siegeSummeNachher = nachher.stream()
+				.mapToInt(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
+				.sum();
+		assertThat(siegeSummeNachher)
+				.as("Siegesumme muss nach Nullen der 1. Runde kleiner sein als vorher (%d)", siegeSummeVorher)
+				.isLessThan(siegeSummeVorher);
+	}
+
+	/**
+	 * Setzt alle Ergebnis-Zellen (ERG_TEAM_A und ERG_TEAM_B) in der gegebenen
+	 * Spielrunde auf 0. Liest zuerst den Bereich, um die tatsächliche Zeilenzahl
+	 * zu bestimmen.
+	 */
+	private void nulleErgebnisse(XSpreadsheet sheet) throws GenerateException {
+		int startZeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE;
+		RangePosition leseRange = RangePosition.from(
+				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE, startZeile,
+				SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, startZeile + ANZ_TEAMS - 1);
+
+		RangeData data = RangeHelper
+				.from(sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), leseRange)
+				.getDataFromRange();
+
+		for (int i = 0; i < data.size(); i++) {
+			RowData row = data.get(i);
+			if (row.isEmpty()) break;
+			// Prüfen ob Zeile eine echte Paarung enthält (TeamNr A > 0 oder Teamname gesetzt)
+			int nrA = row.get(0).getIntVal(0);
+			if (nrA <= 0 && (row.get(0).getStringVal() == null || row.get(0).getStringVal().isBlank())) break;
+
+			int zeile = startZeile + i;
+			sheetHlp.setNumberValueInCell(
+					NumberCellValue.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE, zeile)).setValue(0));
+			sheetHlp.setNumberValueInCell(
+					NumberCellValue.from(sheet, Position.from(SchweizerAbstractSpielrundeSheet.ERG_TEAM_B_SPALTE, zeile)).setValue(0));
+		}
 	}
 }

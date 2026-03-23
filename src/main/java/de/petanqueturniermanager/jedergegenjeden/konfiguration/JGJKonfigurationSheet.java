@@ -89,4 +89,14 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 		propertiesSpalte.setGruppenname(name);
 	}
 
+	@Override
+	public Integer getFreispielPunktePlus() {
+		return propertiesSpalte.getFreispielPunktePlus();
+	}
+
+	@Override
+	public Integer getFreispielPunkteMinus() {
+		return propertiesSpalte.getFreispielPunkteMinus();
+	}
+
 }

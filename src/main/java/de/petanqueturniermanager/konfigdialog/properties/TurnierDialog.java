@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
@@ -33,7 +34,7 @@ public class TurnierDialog extends BasePropertiesDialog {
 
 	@Override
 	protected String getTitle() {
-		return "Turnier Konfiguration";
+		return I18n.get("dialog.title.turnier.konfiguration");
 	}
 
 }

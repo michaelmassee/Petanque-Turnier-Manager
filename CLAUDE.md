@@ -125,7 +125,7 @@ Das `sidebar/`-Package wurde neu geschrieben (2026-03), funktioniert aber in Lib
 
 ## Code Style & Language
 - **Language:** All new class names, methods, variable names, JavaDoc, and inline comments MUST be in German to match the existing codebase.
-- **UI Strings:** Any text visible to the user (e.g., in `MessageBox` or XCU files) must be in German.
+- **UI Strings & i18n:** **EVERY string visible to the user** (sheet column headers, cell contents, comments, MessageBox texts, processbox messages, error messages, labels,menus, titles – anything the user can read) **MUST be managed via the i18n framework** using `I18n.get("key")`. This applies to all new code AND any previously hardcoded strings found during work. Translations must be added to all existing language files: `messages.properties` (DE/default), `messages_en.properties`, `messages_fr.properties`, `messages_nl.properties`, `messages_es.properties` in `src/main/resources/de/petanqueturniermanager/i18n/`. Never write a user-visible string literal directly into Java code.
 - **Java Features:** The project uses Java 25. Feel free to use modern features like `var`, records, switch expressions, and text blocks where appropriate.
 
 ## Error Handling & Logging

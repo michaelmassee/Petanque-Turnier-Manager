@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
 
@@ -30,6 +31,6 @@ public class KopfFusszeilenDialog extends BasePropertiesDialog {
 
 	@Override
 	protected String getTitle() {
-		return "Kopf/Fusszeilen";
+		return I18n.get("dialog.title.kopf.fusszeilen");
 	}
 }

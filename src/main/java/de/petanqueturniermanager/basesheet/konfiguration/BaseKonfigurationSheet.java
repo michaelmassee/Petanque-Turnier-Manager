@@ -39,7 +39,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	// Wird immer von Sheetrunner aufgerufen
 	@Override
 	public final void update() throws GenerateException {
-		processBoxinfo(I18n.get("processbox.update.konfiguration"));
+		processBoxinfo("processbox.update.konfiguration");
 		// validate SpielSystem
 		validateSpielSystem();
 		validateDocErstelltMitVersion();

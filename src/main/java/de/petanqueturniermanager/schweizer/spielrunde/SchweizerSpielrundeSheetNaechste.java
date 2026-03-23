@@ -35,7 +35,7 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	@Override
 	public void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
-		processBoxinfo(I18n.get("processbox.naechste.spielrunde", getSpielRundeNr().getNr()));
+		processBoxinfo("processbox.naechste.spielrunde", getSpielRundeNr().getNr());
 		naechsteSpielrundeEinfuegen();
 	}
 

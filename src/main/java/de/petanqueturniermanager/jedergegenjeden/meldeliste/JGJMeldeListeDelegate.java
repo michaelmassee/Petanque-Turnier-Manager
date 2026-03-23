@@ -55,7 +55,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.meldeliste.sortieren"));
+		sheet.processBoxinfo("processbox.meldeliste.sortieren");
 
 		TurnierSheet.from(sheet.getXSpreadSheet(), sheet.getWorkingSpreadsheet()).setActiv();
 		meldeListeHelper.testDoppelteMeldungen();
@@ -75,7 +75,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	}
 
 	void formatDaten() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.meldeliste.spalten.formatieren"));
+		sheet.processBoxinfo("processbox.meldeliste.spalten.formatieren");
 
 		int letzteDatenZeile = meldungenSpalte.getLetzteDatenZeileUseMin();
 

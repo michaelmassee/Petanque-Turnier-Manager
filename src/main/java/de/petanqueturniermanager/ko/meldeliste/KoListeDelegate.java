@@ -154,7 +154,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 
 	void upDateSheet() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.aktualisieren"));
+		sheet.processBoxinfo("processbox.ko.meldeliste.aktualisieren");
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		TurnierSheet.from(xSheet, sheet.getWorkingSpreadsheet()).setActiv();
 
@@ -212,7 +212,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void insertHeaderInSheet(int headerColor) throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.einfuegen"));
+		sheet.processBoxinfo("processbox.ko.meldeliste.einfuegen");
 
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
@@ -352,7 +352,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	}
 
 	private void formatDatenSpalten() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.formatieren"));
+		sheet.processBoxinfo("processbox.ko.meldeliste.formatieren");
 		Formation formation = konfigurationSheet.getMeldeListeFormation();
 		int anzSpieler = formation.getAnzSpieler();
 		int letzteDatenZeile = getLetzteDatenZeileUseMin();
@@ -463,7 +463,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 
 	/** Liefert alle aktiven Teams aus der Meldeliste, sortiert nach Nr. */
 	TeamMeldungen getAktiveMeldungen() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.einlesen"));
+		sheet.processBoxinfo("processbox.ko.meldeliste.einlesen");
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int vornameSpalte = getVornameSpalte(0);
 		int aktivSpalte = getAktivSpalte();
@@ -492,7 +492,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	 * RNG ist Pflichtfeld – vor dem Aufruf muss {@link #validiereRangSpalte} geprüft werden.
 	 */
 	TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
-		sheet.processBoxinfo(I18n.get("processbox.ko.meldeliste.sortieren"));
+		sheet.processBoxinfo("processbox.ko.meldeliste.sortieren");
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int vornameSpalte = getVornameSpalte(0);
 		int rngSpalte = getRanglisteSpalte();

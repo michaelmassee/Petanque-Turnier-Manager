@@ -114,10 +114,14 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	 */
 
 	public void formatSpielrNrUndNamenspalten() throws GenerateException {
+		formatSpielrNrUndNamenspalten(true);
+	}
 
-		getISheet().processBoxinfo(I18n.get("processbox.meldeliste.spalten.formatieren"));
+	public void formatSpielrNrUndNamenspalten(boolean mitPuffer) throws GenerateException {
 
-		int letzteDatenZeile = getLetzteDatenZeileUseMin();
+		getISheet().processBoxinfo("processbox.meldeliste.spalten.formatieren");
+
+		int letzteDatenZeile = mitPuffer ? getLetzteDatenZeileUseMin() : getLetzteMitDatenZeileInSpielerNrSpalte();
 
 		// Spieler Nr
 		// -------------------------------------
@@ -140,7 +144,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		getISheet().processBoxinfo(I18n.get("processbox.meldeliste.spalten.header"));
+		getISheet().processBoxinfo("processbox.meldeliste.spalten.header");
 
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(DEFAULT_SPALTE_NUMBER_WIDTH)
 				.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)

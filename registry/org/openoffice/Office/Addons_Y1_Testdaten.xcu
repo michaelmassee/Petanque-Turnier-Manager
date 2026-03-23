@@ -256,6 +256,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="C3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Maastrichter, Tournament (35 Teams, 3 Rounds + 2 Finals: A without Cadrage, B with Cadrage)</value>
+									<value xml:lang="de">Maastrichter, Turnier (35 Teams, 3 Vorrunden + 2 Finalgruppen: A ohne Cadrage, B mit Cadrage)</value>
+									<value xml:lang="fr">Maastrichter, Tournoi (35 équipes, 3 tours préliminaires + 2 groupes: A sans Cadrage, B avec Cadrage)</value>
+									<value xml:lang="nl">Maastrichter, Toernooi (35 teams, 3 voorronden + 2 groepen: A zonder Cadrage, B met Cadrage)</value>
+									<value xml:lang="es">Maastrichter, Torneo (35 equipos, 3 rondas + 2 grupos: A sin Cadrage, B con Cadrage)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_testdaten_turnier_35</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>

@@ -14,6 +14,9 @@ import com.sun.star.document.XEventBroadcaster;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
+import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
@@ -67,6 +70,10 @@ public class PetanqueTurnierMngrSingleton {
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
+		addGlobalEventListener(new RanglisteRefreshListener(context,
+				SchweizerRanglisteSheet.SHEETNAME, SchweizerRanglisteSheet::new));
+		addGlobalEventListener(new RanglisteRefreshListener(context,
+				MaastrichterVorrundenRanglisteSheet.SHEETNAME, MaastrichterVorrundenRanglisteSheet::new));
 	}
 
 	// register global EventListener
