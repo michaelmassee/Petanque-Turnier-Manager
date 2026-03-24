@@ -7,8 +7,10 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -42,6 +44,11 @@ public class MaastrichterVorrundenRanglisteSheetUpdate extends SchweizerRanglist
 	@Override
 	protected String getMetadatenSchluessel() {
 		return SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX;
+	}
+
+	@Override
+	protected SchweizerMeldeListeSheetUpdate erstelleMeldeListeSheet() {
+		return new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
 	}
 
 	@Override
