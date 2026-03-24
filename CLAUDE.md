@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Petanque-Turnier-Manager is a **LibreOffice Calc Extension** (.oxt) for managing Petanque/Boule tournaments. It is written in Java and uses the LibreOffice UNO component model. The codebase and comments are primarily in German.
 
+
+## Code-Qualität & Refactoring-Regeln
+
+- **Zwingender Clean Code:** Alle Code-Änderungen und Neuentwicklungen müssen ausnahmslos und strikt den Clean-Code-Prinzipien entsprechen.
+- **Zero Warnings:** Der generierte oder bearbeitete Code darf absolut keine Warnungen (Warnings) enthalten oder neue verursachen. Behebe bestehende Warnungen proaktiv.
+- **Pfadfinder-Regel (Boy Scout Rule):** Sobald eine bestehende Klasse für ein Feature oder einen Bugfix angefasst wird, MUSS diese zwingend aufgeräumt, strukturiert und refaktorisiert werden (Code Smells entfernen, Lesbarkeit verbessern).
+- **Testklassen:** Diese Aufräum- und Clean-Code-Pflicht gilt ausdrücklich auch für alle zugehörigen Testklassen. Test-Code ist Produktiv-Code.
+
+
 ## Build Commands
 
 The project uses Gradle
