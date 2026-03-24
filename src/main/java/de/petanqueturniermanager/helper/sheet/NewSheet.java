@@ -165,11 +165,13 @@ public class NewSheet extends BaseHelper {
 					// Info: alle PageStyles werden in KonfigurationSheet initialisiert, (Header etc)
 					// @see KonfigurationSheet#initPageStyles
 					// @see SheetRunner#updateKonfigurationSheet
-					PageStyleHelper.from(getISheet(), pageStyleDef).initDefaultFooter().create().applytoSheet();
+					// sheet direkt übergeben – Metadaten sind zu diesem Zeitpunkt noch nicht geschrieben,
+					// daher darf applytoSheet() nicht über iSheet.getXSpreadSheet() suchen.
+					PageStyleHelper.from(getISheet(), pageStyleDef).initDefaultFooter().create().applytoSheet(sheet);
 				} else {
 					// dann nur der default, mit copyright footer
 					PageStyleHelper.from(getISheet(), new PageStyleDef(PageStyle.PETTURNMNGR)).initDefaultFooter()
-							.create().applytoSheet();
+							.create().applytoSheet(sheet);
 				}
 				didCreate = true;
 

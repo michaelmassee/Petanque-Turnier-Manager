@@ -14,6 +14,7 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XMultiServiceFactory;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
@@ -110,8 +111,12 @@ public class PageStyleHelper extends BaseHelper {
 		return this;
 	}
 
-	public PageStyleHelper applytoSheet() throws GenerateException {
-		XPropertySet xPropertySet = Lo.qi(XPropertySet.class, getXSpreadSheet());
+	public PageStyleHelper applytoSheet(XSpreadsheet xSpreadsheet) {
+		XPropertySet xPropertySet = Lo.qi(XPropertySet.class, xSpreadsheet);
+		if (xPropertySet == null) {
+			logger.error("PageStyle konnte nicht gesetzt werden: XPropertySet ist null (Sheet: {})", xSpreadsheet);
+			return this;
+		}
 		try {
 			xPropertySet.setPropertyValue("PageStyle", pageStyleDef.getPageStyleName());
 		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
@@ -119,6 +124,10 @@ public class PageStyleHelper extends BaseHelper {
 			logger.error(e.getMessage(), e);
 		}
 		return this;
+	}
+
+	public PageStyleHelper applytoSheet() throws GenerateException {
+		return applytoSheet(getXSpreadSheet());
 	}
 
 	public PageStyleHelper setFooterLeft(String string) {
