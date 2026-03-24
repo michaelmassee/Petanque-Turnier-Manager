@@ -2,10 +2,10 @@ package de.petanqueturniermanager.comp;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,27 +27,25 @@ import org.w3c.dom.NodeList;
  * <p>
  * Texte in XCU-Dateien sind direkt mehrsprachig hardcodiert (kein i18n-Framework),
  * mit {@code <value xml:lang="de">}, {@code <value xml:lang="en">} usw.
- * Jeder Menüeintrag muss alle fünf Sprachen enthalten und darf keine leeren Werte haben.
  * <p>
- * Neue XCU-Dateien nach dem Muster {@code Addons_*.xcu} werden automatisch berücksichtigt.
+ * Die erwarteten Sprachen werden dynamisch aus den vorhandenen
+ * {@code messages_*.properties}-Dateien abgeleitet. Neue Sprachdateien werden
+ * automatisch berücksichtigt — ohne Codeänderung.
  */
 class XcuMenuUebersetzungTest {
 
-    private static final Set<String> ERWARTETE_SPRACHEN = Set.of("de", "en", "es", "fr", "nl");
+    private static final Path I18N_ORDNER = Paths.get("src/main/resources/de/petanqueturniermanager/i18n/");
     private static final String OOR_NS = "http://openoffice.org/2001/registry";
     private static final String XML_NS = "http://www.w3.org/XML/1998/namespace";
 
     @Test
     void alleMenuTitelHabenAlleSprachversionen() throws Exception {
+        Set<String> erwarteteSprachen = erwarteteSprachen();
         SoftAssertions soft = new SoftAssertions();
 
-        alleAddonsXcuDateien().forEach(xcu -> {
-            try {
-                pruefeXcuDatei(xcu, soft);
-            } catch (Exception e) {
-                throw new RuntimeException("Fehler beim Parsen von " + xcu, e);
-            }
-        });
+        for (Path xcu : alleAddonsXcuDateien()) {
+            pruefeXcuDatei(xcu, erwarteteSprachen, soft);
+        }
 
         soft.assertAll();
     }
@@ -59,20 +57,46 @@ class XcuMenuUebersetzungTest {
                 .isNotEmpty();
     }
 
-    // ── Hilfsmethoden ────────────────────────────────────────────────────────
-
-    private List<Path> alleAddonsXcuDateien() throws Exception {
-        List<Path> dateien = new ArrayList<>();
-        try (Stream<Path> files = Files.walk(Paths.get("registry"))) {
-            files.filter(p -> p.getFileName().toString().startsWith("Addons_")
-                           && p.toString().endsWith(".xcu"))
-                 .sorted()
-                 .forEach(dateien::add);
-        }
-        return dateien;
+    @Test
+    void mindestensEineSpracheDateiGefunden() throws Exception {
+        assertThat(erwarteteSprachen())
+                .as("Keine messages_*.properties-Dateien gefunden — Sprachen nicht ermittelbar")
+                .isNotEmpty();
     }
 
-    private void pruefeXcuDatei(Path xcu, SoftAssertions soft) throws Exception {
+    // ── Hilfsmethoden ────────────────────────────────────────────────────────
+
+    /**
+     * Leitet die erwarteten Sprachcodes aus den vorhandenen Sprachdateien ab:
+     * {@code messages.properties} → {@code de}, {@code messages_en.properties} → {@code en} usw.
+     */
+    private Set<String> erwarteteSprachen() throws IOException {
+        Set<String> sprachen = new TreeSet<>();
+        try (Stream<Path> dateien = Files.list(I18N_ORDNER)) {
+            dateien.map(p -> p.getFileName().toString())
+                   .filter(name -> name.startsWith("messages") && name.endsWith(".properties"))
+                   .forEach(name -> {
+                       if ("messages.properties".equals(name)) {
+                           sprachen.add("de");
+                       } else {
+                           // messages_en.properties → en
+                           sprachen.add(name.substring("messages_".length(), name.length() - ".properties".length()));
+                       }
+                   });
+        }
+        return sprachen;
+    }
+
+    private List<Path> alleAddonsXcuDateien() throws IOException {
+        try (Stream<Path> files = Files.walk(Paths.get("registry"))) {
+            return files.filter(p -> p.getFileName().toString().startsWith("Addons_")
+                                  && p.toString().endsWith(".xcu"))
+                        .sorted()
+                        .toList();
+        }
+    }
+
+    private void pruefeXcuDatei(Path xcu, Set<String> erwarteteSprachen, SoftAssertions soft) throws Exception {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
         var doc = factory.newDocumentBuilder().parse(xcu.toFile());
@@ -82,42 +106,49 @@ class XcuMenuUebersetzungTest {
             Element prop = (Element) props.item(i);
             if (!"Title".equals(prop.getAttributeNS(OOR_NS, "name"))) continue;
 
-            // Alle value-Kinder mit xml:lang einlesen: lang → text
-            Map<String, String> vorhandeneSprachen = new LinkedHashMap<>();
-            NodeList values = prop.getElementsByTagName("value");
-            for (int j = 0; j < values.getLength(); j++) {
-                Element value = (Element) values.item(j);
-                String lang = value.getAttributeNS(XML_NS, "lang");
-                if (!lang.isEmpty()) {
-                    vorhandeneSprachen.put(lang, value.getTextContent().strip());
-                }
-            }
+            Map<String, String> vorhandeneSprachen = sprachwerteAus(prop);
 
-            // Kein xml:lang → kein Menüeintrag (z.B. Separator-URL), überspringen
+            // Kein xml:lang → kein Menüeintrag (z.B. Separator), überspringen
             if (vorhandeneSprachen.isEmpty()) continue;
 
             String kontext = "%s [%s]".formatted(xcu.getFileName(), knotenKontext(prop));
-
-            // 1. Fehlende Sprachen
-            Set<String> fehlend = new TreeSet<>(ERWARTETE_SPRACHEN);
-            fehlend.removeAll(vorhandeneSprachen.keySet());
-            soft.assertThat(fehlend)
-                    .as("Fehlende Sprachversionen in %s", kontext)
-                    .isEmpty();
-
-            // 2. Leere Übersetzungen
-            List<String> leer = vorhandeneSprachen.entrySet().stream()
-                    .filter(e -> e.getValue().isEmpty())
-                    .map(Map.Entry::getKey)
-                    .sorted()
-                    .toList();
-            soft.assertThat(leer)
-                    .as("Leere Übersetzungen in %s", kontext)
-                    .isEmpty();
+            pruefeVollstaendigkeit(vorhandeneSprachen, erwarteteSprachen, kontext, soft);
         }
     }
 
-    /** Liefert den oor:name des Elternknotens als Kontext für Fehlermeldungen. */
+    /** Liest alle {@code <value xml:lang="...">}-Kinder eines prop-Elements. */
+    private Map<String, String> sprachwerteAus(Element prop) {
+        Map<String, String> sprachen = new LinkedHashMap<>();
+        NodeList values = prop.getElementsByTagName("value");
+        for (int j = 0; j < values.getLength(); j++) {
+            Element value = (Element) values.item(j);
+            String lang = value.getAttributeNS(XML_NS, "lang");
+            if (!lang.isEmpty()) {
+                sprachen.put(lang, value.getTextContent().strip());
+            }
+        }
+        return sprachen;
+    }
+
+    private void pruefeVollstaendigkeit(Map<String, String> vorhanden, Set<String> erwartet,
+            String kontext, SoftAssertions soft) {
+        Set<String> fehlend = new TreeSet<>(erwartet);
+        fehlend.removeAll(vorhanden.keySet());
+        soft.assertThat(fehlend)
+                .as("Fehlende Sprachversionen in %s", kontext)
+                .isEmpty();
+
+        List<String> leer = vorhanden.entrySet().stream()
+                .filter(e -> e.getValue().isEmpty())
+                .map(Map.Entry::getKey)
+                .sorted()
+                .toList();
+        soft.assertThat(leer)
+                .as("Leere Übersetzungen in %s", kontext)
+                .isEmpty();
+    }
+
+    /** Liefert den {@code oor:name} des Elternknotens als Kontext für Fehlermeldungen. */
     private String knotenKontext(Element prop) {
         Node parent = prop.getParentNode();
         if (parent instanceof Element parentEl) {
