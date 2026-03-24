@@ -139,18 +139,22 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		String actualFormula = sheetHlp.getFormulaFromCell(sheet, testPos);
 		assertThat(actualFormula).contains("TURNIERSYSTEM");
 		
-		// Wenn Plugin geladen ist, sollte das Turniersystem korrekt sein
-		// Ohne Plugin: "Kein", "#NULL!" oder leer
+		// Formel darf keinen Syntaxfehler liefern – Plugin muss geladen sein
 		String cellValue = sheetHlp.getTextFromCell(sheet, testPos);
-		if (cellValue != null && !cellValue.isEmpty()
-				&& !cellValue.equals(TurnierSystem.KEIN.getBezeichnung())
-				&& !cellValue.contains("NULL")) {
-			assertThat(cellValue).isEqualTo(expectedSystem.getBezeichnung());
+		assertThat(cellValue).as("TURNIERSYSTEM-Formel darf keinen Fehler liefern")
+				.doesNotContain("504").doesNotContain("Fehler").doesNotContain("#NAME?");
+
+		// Wert-Assertion nur wenn Plugin das korrekte Dokument sieht
+		// (via Socket erstelltes Dokument ist nicht zwingend das aktive LO-Dokument)
+		if (cellValue != null && !cellValue.isEmpty() && !cellValue.contains("NULL")
+				&& !cellValue.equals(TurnierSystem.KEIN.getBezeichnung())) {
+			assertThat(cellValue).as("TURNIERSYSTEM-Wert muss korrekt sein")
+					.isEqualTo(expectedSystem.getBezeichnung());
 		}
 	}
 
 	@Test
-	public void testMultiplePropertiesInSameSheet() throws GenerateException {
+	public void testMultiplePropertiesInSameSheet() {
 		// Mehrere Properties setzen
 		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 2);
 		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 4);
@@ -182,7 +186,7 @@ public class GlobalImplUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	public void testPropertyUpdate() throws GenerateException {
+	public void testPropertyUpdate() {
 		// Testet Property-Round-Trip (setIntProperty / getIntProperty) sowie
 		// dass die INTPROPERTY-Formel korrekt in die Zelle eingetragen wird.
 		String propName = SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG;

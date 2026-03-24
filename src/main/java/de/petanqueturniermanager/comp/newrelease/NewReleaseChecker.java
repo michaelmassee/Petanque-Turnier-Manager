@@ -229,7 +229,7 @@ public class NewReleaseChecker {
 		URL download = null;
 		if (otxAsset != null) {
 			try {
-				download = new URL(otxAsset.getBrowserDownloadUrl());
+				download = URI.create(otxAsset.getBrowserDownloadUrl()).toURL();
 			} catch (MalformedURLException e) {
 				logger.error(e);
 			}
