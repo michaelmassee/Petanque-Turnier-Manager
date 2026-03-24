@@ -22,7 +22,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
-import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -92,8 +91,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 	}
 
 	private void testNamenEinfuegen() throws GenerateException {
-		// SchweizerMeldeListeSheetUpdate für Spaltenzugriff (Format identisch)
-		SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
+		var meldeliste = new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
 		XSpreadsheet xSheet = getXSpreadSheet();
 
 		int ersteDatenZeile = meldeliste.getErsteDatenZiele();
@@ -133,7 +131,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 			// Aktiv-Spalte: alle Teams nehmen teil
 			getSheetHelper().setNumberValueInCell(NumberCellValue.from(xSheet,
 					Position.from(meldeliste.getAktivSpalte(), zeile),
-					SchweizerMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL));
+					MaastrichterMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL));
 		}
 
 		// Formatierung + bedingte Färbung anwenden (kein doRun, keine Nummernvergabe nötig)
