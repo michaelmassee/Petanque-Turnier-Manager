@@ -6,7 +6,9 @@ package de.petanqueturniermanager.maastrichter.spielrunde;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -27,6 +29,11 @@ public class MaastrichterSpielrundeSheetUpdate extends SchweizerSpielrundeSheetU
 	@Override
 	protected String getSpielrundeSchluessel(int rundeNr) {
 		return SheetMetadataHelper.schluesselMaastrichterVorrunde(rundeNr);
+	}
+
+	@Override
+	protected SchweizerMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new MaastrichterMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
 }

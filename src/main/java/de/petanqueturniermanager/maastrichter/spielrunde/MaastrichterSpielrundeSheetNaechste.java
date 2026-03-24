@@ -7,7 +7,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -37,6 +39,11 @@ public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeShee
 	@Override
 	protected String getSheetName(SpielRundeNr nr) {
 		return SheetNamen.maastrichterVorrunde(nr.getNr());
+	}
+
+	@Override
+	protected SchweizerMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
+		return new MaastrichterMeldeListeSheetUpdate(workingSpreadsheet);
 	}
 
 	/** Öffentlicher Einstiegspunkt für Testdaten-Generatoren. */
