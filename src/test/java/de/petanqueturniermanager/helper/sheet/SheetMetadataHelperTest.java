@@ -254,6 +254,63 @@ class SheetMetadataHelperTest {
 		assertThat(result.get().getNr()).isEqualTo(2);
 	}
 
+	// ── bereinigeVerwaisteMetadaten ──────────────────────────────────────────
+
+	@Test
+	void bereinigeVerwaisteMetadaten_loeschtRefFehlerBeiPtmRange() throws Exception {
+		var rangeObj = new Object();
+		when(mockRanges.getElementNames()).thenReturn(new String[]{"__PTM_TEST__"});
+		when(mockRanges.getByName("__PTM_TEST__")).thenReturn(rangeObj);
+
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(mockRanges, obj -> "#REF!");
+
+		verify(mockRanges).removeByName("__PTM_TEST__");
+	}
+
+	@Test
+	void bereinigeVerwaisteMetadaten_loeschtBezugFehlerBeiPtmRange() throws Exception {
+		var rangeObj = new Object();
+		when(mockRanges.getElementNames()).thenReturn(new String[]{"__PTM_TEST__"});
+		when(mockRanges.getByName("__PTM_TEST__")).thenReturn(rangeObj);
+
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(mockRanges, obj -> "#BEZUG!");
+
+		verify(mockRanges).removeByName("__PTM_TEST__");
+	}
+
+	@Test
+	void bereinigeVerwaisteMetadaten_behaeltGueltigeRangesBestand() throws Exception {
+		var rangeObj = new Object();
+		when(mockRanges.getElementNames()).thenReturn(new String[]{"__PTM_TEST__"});
+		when(mockRanges.getByName("__PTM_TEST__")).thenReturn(rangeObj);
+
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(mockRanges, obj -> "$'Rangliste'.$A$1");
+
+		verify(mockRanges, never()).removeByName(any());
+	}
+
+	@Test
+	void bereinigeVerwaisteMetadaten_ignoriertNichtPtmRanges() throws Exception {
+		var rangeObj = new Object();
+		when(mockRanges.getElementNames()).thenReturn(new String[]{"MeinBereich"});
+		when(mockRanges.getByName("MeinBereich")).thenReturn(rangeObj);
+
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(mockRanges, obj -> "#REF!");
+
+		verify(mockRanges, never()).removeByName(any());
+	}
+
+	@Test
+	void bereinigeVerwaisteMetadaten_behaeltRangeBeiNullContent() throws Exception {
+		var rangeObj = new Object();
+		when(mockRanges.getElementNames()).thenReturn(new String[]{"__PTM_TEST__"});
+		when(mockRanges.getByName("__PTM_TEST__")).thenReturn(rangeObj);
+
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(mockRanges, obj -> null);
+
+		verify(mockRanges, never()).removeByName(any());
+	}
+
 	// ── Builder-Methoden ─────────────────────────────────────────────────────
 
 	@Test

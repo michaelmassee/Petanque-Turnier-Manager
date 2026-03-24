@@ -390,21 +390,24 @@ public class SheetMetadataHelper {
      * Dies bereinigt das Dokument nach manuellen oder programmatischen Sheet-Löschungen.
      */
     public static void bereinigeVerwaisteMetadaten(XSpreadsheetDocument xDoc) {
-        try {
-            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
-            if (namedRanges == null) return;
+        bereinigeVerwaisteMetadaten(namedRangesAusDoc(xDoc), obj -> {
+            XNamedRange range = Lo.qi(XNamedRange.class, obj);
+            return range != null ? range.getContent() : null;
+        });
+    }
 
+    static void bereinigeVerwaisteMetadaten(XNamedRanges namedRanges,
+            Function<Object, String> namedRangeContentAusObj) {
+        if (namedRanges == null) return;
+        try {
             String[] names = namedRanges.getElementNames();
             for (String name : names) {
                 if (name.startsWith("__PTM_")) {
                     Object rangeObj = namedRanges.getByName(name);
-                    XNamedRange range = Lo.qi(XNamedRange.class, rangeObj);
-                    if (range != null) {
-                        String content = range.getContent();
-                        if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
-                            namedRanges.removeByName(name);
-                            logger.debug("Verwaisten Metadaten-Schlüssel '{}' gelöscht (zeigte ins Leere).", name);
-                        }
+                    String content = namedRangeContentAusObj.apply(rangeObj);
+                    if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+                        namedRanges.removeByName(name);
+                        logger.debug("Verwaisten Metadaten-Schlüssel '{}' gelöscht (zeigte ins Leere).", name);
                     }
                 }
             }
