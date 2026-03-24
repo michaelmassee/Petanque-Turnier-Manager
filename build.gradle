@@ -295,6 +295,9 @@ tasks.register('beispielturnierTests', Test) {
     group = 'LibreOffice'
     description = 'Führt alle Beispielturnier-UITests durch. Locale wählbar: -Plocale=de|en|nl|fr|es'
     dependsOn 'reinstallExtension'
+    // Test-Quelldateien und Classpath aus dem test-SourceSet laden
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
     // Nie aus Cache laden – LibreOffice-Zustand kann sich geändert haben
     outputs.upToDateWhen { false }
     // LibreOffice auf Port 8100 – nur ein Worker gleichzeitig
@@ -302,10 +305,8 @@ tasks.register('beispielturnierTests', Test) {
     systemProperty 'uitest.headless', 'true'
     systemProperty 'beispielturnier.locale', project.hasProperty('locale') ? project.locale : 'de'
     systemProperty 'junit.jupiter.execution.timeout.default', '5 m'
-    useJUnitPlatform {
-        includeTags 'beispielturnier'
-    }
-    // Vollständigkeitstest (kein UI) ebenfalls mitlaufen lassen
+    useJUnitPlatform()
+    // Nur Tests im beispielturnier-Package ausführen
     filter {
         includeTestsMatching 'de.petanqueturniermanager.beispielturnier.*'
     }
