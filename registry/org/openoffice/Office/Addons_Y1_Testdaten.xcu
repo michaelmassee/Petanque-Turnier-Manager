@@ -1,11 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<node oor:name="AddonUI">
-		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
-		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/Configuration -->
-
-		<!-- oor:op="fuse" -->
-
 		<node oor:name="OfficeMenuBar">
 			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
 				<prop oor:name="Title" oor:type="xs:string">
@@ -19,9 +14,6 @@
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
 				</prop>
 				<node oor:name="Submenu">
-					<!-- ****************************************************************** -->
-					<!-- Test MenuJobExecute -->
-					<!-- ****************************************************************** -->
 					<node oor:name="Y1" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value>private:separator</value>
@@ -47,9 +39,9 @@
 						<node oor:name="Submenu">
 							<node oor:name="A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Supermêlée, generate Meldeliste with 100 Meldungen</value>
+									<value xml:lang="en">Supermêlée, generate Entry List with 100 Entries</value>
 									<value xml:lang="de">Supermêlée, generiere Meldeliste mit 100 Meldungen</value>
-									<value xml:lang="es">Supermêlée, generar lista con 100 inscripciones</value>
+									<value xml:lang="es">Supermêlée, generar lista de inscripciones con 100 entradas</value>
 									<value xml:lang="fr">Supermêlée, générer la liste avec 100 inscriptions</value>
 									<value xml:lang="nl">Supermêlée, maak deelnemerslijst met 100 inschrijvingen</value>
 								</prop>
@@ -83,7 +75,7 @@
 									<value xml:lang="de">Supermêlée, generiere 5 komplette Spieltage</value>
 									<value xml:lang="es">Supermêlée, generar 5 jornadas completas</value>
 									<value xml:lang="fr">Supermêlée, générer 5 journées complètes</value>
-									<value xml:lang="nl">Supermêlée, maak 5 complete speel­dagen</value>
+									<value xml:lang="nl">Supermêlée, maak 5 complete speeldagen</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:SpieltagRanglisteSheet_TestDaten</value>
@@ -155,9 +147,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Schweizer, generate Teamlist with 16 Teams</value>
 									<value xml:lang="de">Schweizer, generiere Meldeliste mit 16 Teams</value>
-									<value xml:lang="es">Schweizer, generar lista con 16 equipos</value>
-									<value xml:lang="fr">Schweizer, générer la liste avec 16 équipes</value>
-									<value xml:lang="nl">Schweizer, maak deelnemerslijst met 16 teams</value>
+									<value xml:lang="es">Suizo, generar lista con 16 equipos</value>
+									<value xml:lang="fr">Suisse, générer la liste avec 16 équipes</value>
+									<value xml:lang="nl">Zwitsers, maak deelnemerslijst met 16 teams</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_testdaten_meldeliste</value>
@@ -171,9 +163,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Schweizer, Tournament (3 Rounds + Ranking)</value>
 									<value xml:lang="de">Schweizer, Turnier (3 Spielrunden + Rangliste)</value>
-									<value xml:lang="es">Schweizer, Torneo (3 rondas + clasificación)</value>
-									<value xml:lang="fr">Schweizer, Tournoi (3 tours + classement)</value>
-									<value xml:lang="nl">Schweizer, Toernooi (3 ronden + ranglijst)</value>
+									<value xml:lang="es">Suizo, Torneo (3 rondas + clasificación)</value>
+									<value xml:lang="fr">Suisse, Tournoi (3 tours + classement)</value>
+									<value xml:lang="nl">Zwitsers, Toernooi (3 ronden + ranglijst)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_testdaten_turnier</value>
@@ -187,9 +179,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Schweizer, Tournament (19 Teams, odd + Bye, Teamname, Random Lane)</value>
 									<value xml:lang="de">Schweizer, Turnier (19 Teams, ungerade + Freilos, Teamname, Bahn zufällig)</value>
-									<value xml:lang="es">Schweizer, Turnier (19 Teams, ungerade + Freilos, Teamname, Bahn zufällig)</value>
-									<value xml:lang="fr">Schweizer, Turnier (19 Teams, ungerade + Freilos, Teamname, Bahn zufällig)</value>
-									<value xml:lang="nl">Schweizer, Turnier (19 Teams, ungerade + Freilos, Teamname, Bahn zufällig)</value>
+									<value xml:lang="es">Suizo, Torneo (19 equipos, impar + descansa, nombre del equipo, pista aleatoria)</value>
+									<value xml:lang="fr">Suisse, Tournoi (19 équipes, impair + exempt, nom d'équipe, terrain aléatoire)</value>
+									<value xml:lang="nl">Zwitsers, Toernooi (19 teams, oneven + vrijloting, teamnaam, willekeurige baan)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:schweizer_testdaten_turnier_19</value>
@@ -209,9 +201,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">K.-O., Entrylist only (8 Teams)</value>
 									<value xml:lang="de">K.-O., nur Meldeliste (8 Teams)</value>
-									<value xml:lang="es">K.-O., nur Meldeliste (8 Teams)</value>
-									<value xml:lang="fr">K.-O., nur Meldeliste (8 Teams)</value>
-									<value xml:lang="nl">K.-O., nur Meldeliste (8 Teams)</value>
+									<value xml:lang="es">K.-O., solo lista de inscripciones (8 equipos)</value>
+									<value xml:lang="fr">K.-O., liste d'inscriptions uniquement (8 équipes)</value>
+									<value xml:lang="nl">K.-O., alleen deelnemerslijst (8 teams)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_testdaten_nur_meldeliste</value>
@@ -225,9 +217,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">K.-O., 8 Teams (1 Group)</value>
 									<value xml:lang="de">K.-O., 8 Teams (1 Gruppe)</value>
-									<value xml:lang="es">K.-O., 8 Teams (1 Gruppe)</value>
-									<value xml:lang="fr">K.-O., 8 Teams (1 Gruppe)</value>
-									<value xml:lang="nl">K.-O., 8 Teams (1 Gruppe)</value>
+									<value xml:lang="es">K.-O., 8 equipos (1 grupo)</value>
+									<value xml:lang="fr">K.-O., 8 équipes (1 groupe)</value>
+									<value xml:lang="nl">K.-O., 8 teams (1 groep)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_testdaten_8_teams</value>
@@ -241,9 +233,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">K.-O., 16 Teams (2 Groups)</value>
 									<value xml:lang="de">K.-O., 16 Teams (2 Gruppen)</value>
-									<value xml:lang="es">K.-O., 16 Teams (2 Gruppen)</value>
-									<value xml:lang="fr">K.-O., 16 Teams (2 Gruppen)</value>
-									<value xml:lang="nl">K.-O., 16 Teams (2 Gruppen)</value>
+									<value xml:lang="es">K.-O., 16 equipos (2 grupos)</value>
+									<value xml:lang="fr">K.-O., 16 équipes (2 groupes)</value>
+									<value xml:lang="nl">K.-O., 16 teams (2 groepen)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_testdaten_16_teams</value>
@@ -257,9 +249,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">K.-O., 10 Teams (Cadrage)</value>
 									<value xml:lang="de">K.-O., 10 Teams (Cadrage)</value>
-									<value xml:lang="es">K.-O., 10 Teams (Cadrage)</value>
-									<value xml:lang="fr">K.-O., 10 Teams (Cadrage)</value>
-									<value xml:lang="nl">K.-O., 10 Teams (Cadrage)</value>
+									<value xml:lang="es">K.-O., 10 equipos (Cadrage)</value>
+									<value xml:lang="fr">K.-O., 10 équipes (Cadrage)</value>
+									<value xml:lang="nl">K.-O., 10 teams (Cadrage)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:ko_testdaten_cadrage</value>
@@ -279,9 +271,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Maastrichter, Tournament (12 Teams, 3 Rounds + Finals)</value>
 									<value xml:lang="de">Maastrichter, Turnier (12 Teams, 3 Vorrunden + Finalrunden)</value>
-									<value xml:lang="es">Maastrichter, Turnier (12 Teams, 3 Vorrunden + Finalrunden)</value>
-									<value xml:lang="fr">Maastrichter, Turnier (12 Teams, 3 Vorrunden + Finalrunden)</value>
-									<value xml:lang="nl">Maastrichter, Turnier (12 Teams, 3 Vorrunden + Finalrunden)</value>
+									<value xml:lang="es">Maastrichter, Torneo (12 equipos, 3 rondas previas + finales)</value>
+									<value xml:lang="fr">Maastrichter, Tournoi (12 équipes, 3 tours préliminaires + finales)</value>
+									<value xml:lang="nl">Maastrichter, Toernooi (12 teams, 3 voorronden + finales)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_testdaten_turnier</value>
@@ -295,9 +287,9 @@
 								<prop oor:name="Title">
 									<value xml:lang="en">Maastrichter, Tournament (57 Teams, 4 Rounds + 4 Finals, last with Cadrage)</value>
 									<value xml:lang="de">Maastrichter, Turnier (57 Teams, 4 Vorrunden + 4 Finalgruppen, letzte mit Cadrage)</value>
-									<value xml:lang="es">Maastrichter, Turnier (57 Teams, 4 Vorrunden + 4 Finalgruppen, letzte mit Cadrage)</value>
-									<value xml:lang="fr">Maastrichter, Turnier (57 Teams, 4 Vorrunden + 4 Finalgruppen, letzte mit Cadrage)</value>
-									<value xml:lang="nl">Maastrichter, Turnier (57 Teams, 4 Vorrunden + 4 Finalgruppen, letzte mit Cadrage)</value>
+									<value xml:lang="es">Maastrichter, Torneo (57 equipos, 4 rondas previas + 4 grupos finales, el último con Cadrage)</value>
+									<value xml:lang="fr">Maastrichter, Tournoi (57 équipes, 4 tours préliminaires + 4 groupes finaux, le dernier avec Cadrage)</value>
+									<value xml:lang="nl">Maastrichter, Toernooi (57 teams, 4 voorronden + 4 finalegroepen, laatste met Cadrage)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_testdaten_turnier_57</value>
@@ -313,7 +305,7 @@
 									<value xml:lang="de">Maastrichter, Turnier (35 Teams, 3 Vorrunden + 2 Finalgruppen: A ohne Cadrage, B mit Cadrage)</value>
 									<value xml:lang="fr">Maastrichter, Tournoi (35 équipes, 3 tours préliminaires + 2 groupes: A sans Cadrage, B avec Cadrage)</value>
 									<value xml:lang="nl">Maastrichter, Toernooi (35 teams, 3 voorronden + 2 groepen: A zonder Cadrage, B met Cadrage)</value>
-									<value xml:lang="es">Maastrichter, Torneo (35 equipos, 3 rondas + 2 grupos: A sin Cadrage, B con Cadrage)</value>
+									<value xml:lang="es">Maastrichter, Torneo (35 equipos, 3 rondas previas + 2 grupos: A sin Cadrage, B con Cadrage)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:maastrichter_testdaten_turnier_35</value>
