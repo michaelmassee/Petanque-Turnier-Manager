@@ -57,6 +57,14 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 		return new KoKonfigurationSheet(getWorkingSpreadsheet());
 	}
 
+	/**
+	 * Öffentlicher Einstiegspunkt für Tests: generiert das vollständige K.-O.-Turnier
+	 * ohne Dialoge direkt auf dem aktuellen Dokument.
+	 */
+	public void generate() throws GenerateException {
+		doRun();
+	}
+
 	@Override
 	protected void doRun() throws GenerateException {
 		if (!NewTestDatenValidator.from(getWorkingSpreadsheet(), getSheetHelper(), TurnierSystem.KO)

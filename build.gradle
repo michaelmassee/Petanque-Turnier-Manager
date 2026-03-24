@@ -285,6 +285,36 @@ test {
     systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
 }
 
+// Beispielturnier-Tests: führen alle registrierten Beispielturniere als UI-Test durch.
+// Unterstützte Locales: de (Standard), en, nl, fr, es.
+// Verwendung:
+//   ./gradlew beispielturnierTests              # Deutsch
+//   ./gradlew beispielturnierTests -Plocale=en  # Englisch
+//   ./gradlew beispielturnierTests -Plocale=nl  # Niederländisch
+tasks.register('beispielturnierTests', Test) {
+    group = 'LibreOffice'
+    description = 'Führt alle Beispielturnier-UITests durch. Locale wählbar: -Plocale=de|en|nl|fr|es'
+    dependsOn 'reinstallExtension'
+    // Nie aus Cache laden – LibreOffice-Zustand kann sich geändert haben
+    outputs.upToDateWhen { false }
+    // LibreOffice auf Port 8100 – nur ein Worker gleichzeitig
+    maxParallelForks = 1
+    systemProperty 'uitest.headless', 'true'
+    systemProperty 'beispielturnier.locale', project.hasProperty('locale') ? project.locale : 'de'
+    systemProperty 'junit.jupiter.execution.timeout.default', '5 m'
+    useJUnitPlatform {
+        includeTags 'beispielturnier'
+    }
+    // Vollständigkeitstest (kein UI) ebenfalls mitlaufen lassen
+    filter {
+        includeTestsMatching 'de.petanqueturniermanager.beispielturnier.*'
+    }
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        showStandardStreams = false
+    }
+}
+
 // Task: Bauen, installieren und Calc im Hintergrund starten (Gradle blockiert nicht)
 tasks.named('buildOXT').configure { mustRunAfter('clean') }
 tasks.register('startCalc') {

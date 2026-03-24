@@ -56,6 +56,24 @@ public final class I18n {
     }
 
     /**
+     * Initialisiert I18n für Tests erzwungen mit einer bestimmten Locale.
+     * Im Gegensatz zu {@link #init(XComponentContext)} überschreibt diese Methode
+     * eine vorherige Initialisierung — ausschließlich für Testcode gedacht.
+     *
+     * @param locale gewünschte Locale
+     */
+    public static void initFuerTest(Locale locale) {
+        initialisiert.set(false);
+        var utf8 = utf8Control();
+        fallback = ResourceBundle.getBundle(BUNDLE, Locale.ENGLISH, utf8);
+        bundle = Locale.ENGLISH.getLanguage().equals(locale.getLanguage())
+                ? fallback
+                : getOrFallback(locale, utf8);
+        initialisiert.set(true);
+        logger.info("I18n (Test) initialisiert: {}", locale);
+    }
+
+    /**
      * Gibt den lokalisierten Text für den angegebenen Schlüssel zurück.
      * Ist kein Bundle geladen, wird der Schlüssel selbst zurückgegeben.
      *
