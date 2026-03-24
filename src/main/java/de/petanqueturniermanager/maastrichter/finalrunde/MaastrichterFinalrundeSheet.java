@@ -37,7 +37,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
-import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -81,7 +81,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	public void doRun() throws GenerateException {
 		processBoxinfo("processbox.maastrichter.finalrunde.erstellen");
 
-		SchweizerMeldeListeSheetUpdate meldeliste = new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
+		var meldeliste = new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 		if (aktiveMeldungen == null || aktiveMeldungen.size() < 2) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
@@ -148,7 +148,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	 */
 	private List<SchweizerTeamErgebnis> leseVorrundenErgebnisse(
 			TeamMeldungen aktiveMeldungen, int anzVorrunden,
-			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
+			MaastrichterMeldeListeSheetUpdate meldeliste) throws GenerateException {
 
 		Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=siege, [1]=punkte+, [2]=punkte-
 		Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
@@ -185,7 +185,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	 */
 	private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
 			Map<Integer, int[]> statsMap, Map<Integer, List<Integer>> gegnerMap,
-			SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
+			MaastrichterMeldeListeSheetUpdate meldeliste) throws GenerateException {
 
 		RangePosition readRange = RangePosition.from(
 				SchweizerAbstractSpielrundeSheet.TEAM_A_SPALTE,
@@ -234,7 +234,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		}
 	}
 
-	private int resolveTeamNr(CellData cell, SchweizerMeldeListeSheetUpdate meldeliste) throws GenerateException {
+	private int resolveTeamNr(CellData cell, MaastrichterMeldeListeSheetUpdate meldeliste) throws GenerateException {
 		int nr = cell.getIntVal(0);
 		if (nr > 0) return nr;
 		String name = cell.getStringVal();
