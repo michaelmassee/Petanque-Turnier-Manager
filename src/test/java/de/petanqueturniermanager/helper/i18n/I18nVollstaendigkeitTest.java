@@ -6,10 +6,6 @@ package de.petanqueturniermanager.helper.i18n;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,11 +30,14 @@ import org.junit.jupiter.api.Test;
  */
 class I18nVollstaendigkeitTest {
 
+    // Direkt auf Quelldateien zeigen – nicht auf den kompilierten build-Ordner.
+    // So liest der Test immer die aktuellen Dateien, auch ohne vorherigen Rebuild.
+    private static final Path RESSOURCEN_BASIS = Paths.get("src/main/resources");
     private static final String I18N_ORDNER = "de/petanqueturniermanager/i18n/";
     private static final String REFERENZ_DATEI = "messages.properties";
 
     @Test
-    void alleSprachdateienEnthaltenAlleSchluessel() throws IOException, URISyntaxException {
+    void alleSprachdateienEnthaltenAlleSchluessel() throws IOException {
         Set<String> referenzKeys = new TreeSet<>(laden(REFERENZ_DATEI).stringPropertyNames());
 
         SoftAssertions soft = new SoftAssertions();
@@ -60,7 +59,7 @@ class I18nVollstaendigkeitTest {
     }
 
     @Test
-    void keineUnbekanntenSchluesselInSprachdateien() throws IOException, URISyntaxException {
+    void keineUnbekanntenSchluesselInSprachdateien() throws IOException {
         Set<String> referenzKeys = laden(REFERENZ_DATEI).stringPropertyNames();
 
         SoftAssertions soft = new SoftAssertions();
@@ -88,7 +87,7 @@ class I18nVollstaendigkeitTest {
     }
 
     @Test
-    void mindestensEineSprachdateiVorhanden() throws IOException, URISyntaxException {
+    void mindestensEineSprachdateiVorhanden() throws IOException {
         assertThat(alleSprachdateienEntdecken())
                 .as("Keine Sprachdateien (messages_*.properties) im i18n-Ordner gefunden")
                 .isNotEmpty();
@@ -96,14 +95,13 @@ class I18nVollstaendigkeitTest {
 
     /**
      * Entdeckt automatisch alle Sprachdateien (messages_*.properties) im i18n-Ordner.
-     * Neue Sprachdateien werden ohne Codeänderung berücksichtigt.
+     * Liest direkt aus src/main/resources – unabhängig vom build-Ordner.
      */
-    private List<String> alleSprachdateienEntdecken() throws IOException, URISyntaxException {
-        URL ordnerUrl = getClass().getClassLoader().getResource(I18N_ORDNER);
-        assertThat(ordnerUrl)
-                .as("i18n-Ordner nicht im Classpath gefunden: %s", I18N_ORDNER)
-                .isNotNull();
-        Path ordner = Paths.get(ordnerUrl.toURI());
+    private List<String> alleSprachdateienEntdecken() throws IOException {
+        Path ordner = RESSOURCEN_BASIS.resolve(I18N_ORDNER);
+        assertThat(ordner)
+                .as("i18n-Ordner nicht gefunden: %s", ordner.toAbsolutePath())
+                .isDirectory();
         try (var dateien = Files.list(ordner)) {
             return dateien
                     .map(p -> p.getFileName().toString())
@@ -114,13 +112,13 @@ class I18nVollstaendigkeitTest {
     }
 
     private Properties laden(String dateiname) throws IOException {
-        String pfad = I18N_ORDNER + dateiname;
+        Path pfad = RESSOURCEN_BASIS.resolve(I18N_ORDNER).resolve(dateiname);
+        assertThat(pfad)
+                .as("i18n-Datei nicht gefunden: %s", pfad.toAbsolutePath())
+                .isRegularFile();
         Properties props = new Properties();
-        try (InputStream stream = getClass().getClassLoader().getResourceAsStream(pfad)) {
-            assertThat(stream)
-                    .as("i18n-Datei nicht im Classpath gefunden: %s", pfad)
-                    .isNotNull();
-            props.load(new InputStreamReader(stream, StandardCharsets.UTF_8));
+        try (var reader = Files.newBufferedReader(pfad, StandardCharsets.UTF_8)) {
+            props.load(reader);
         }
         return props;
     }
