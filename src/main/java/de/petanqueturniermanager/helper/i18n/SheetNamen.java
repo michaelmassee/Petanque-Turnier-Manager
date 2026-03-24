@@ -33,6 +33,7 @@ public final class SheetNamen {
     public static final String KEY_KO_RUNDE                        = "sheet.name.ko.runde";
     public static final String KEY_CADRAGE                          = "sheet.name.cadrage";
     public static final String KEY_VORRUNDEN_ERGEBNISSE             = "sheet.name.vorrunden.ergebnisse";
+    public static final String KEY_VORRUNDEN_HILFSBLATT             = "sheet.name.vorrunden.hilfsblatt";
     public static final String KEY_MAASTRICHTER_VR_RANGLISTE        = "sheet.name.maastrichter.vorrunden.rangliste";
     public static final String KEY_ANMELDUNGEN                      = "sheet.name.anmeldungen";
     public static final String KEY_TEILNEHMER                       = "sheet.name.teilnehmer";
@@ -73,6 +74,7 @@ public final class SheetNamen {
     public static final String LEGACY_KO_RUNDE                     = "KO Runde";
     public static final String LEGACY_CADRAGE                       = "Cadrage";
     public static final String LEGACY_VORRUNDEN_ERGEBNISSE          = "Ergebnisse aus Vorrunden";
+    public static final String LEGACY_VORRUNDEN_HILFSBLATT          = "VorRunden";
     public static final String LEGACY_MAASTRICHTER_VR_RANGLISTE     = "Vorrunden-Rangliste";
     public static final String LEGACY_ANMELDUNGEN                   = "Anmeldungen";
     public static final String LEGACY_TEILNEHMER                    = "Teilnehmer";
@@ -125,6 +127,16 @@ public final class SheetNamen {
 
     public static String vorrundenErgebnisse() {
         return getOderFallback(KEY_VORRUNDEN_ERGEBNISSE, LEGACY_VORRUNDEN_ERGEBNISSE);
+    }
+
+    /**
+     * Temporäres Rechenhilfsblatt für Vorrunden-Paarungsdaten: z.B. "VorRunden".
+     *
+     * @return lokalisierter Tabellenname
+     * @see de.petanqueturniermanager.forme.korunde.Vorrunden
+     */
+    public static String vorrundenHilfsblatt() {
+        return getOderFallback(KEY_VORRUNDEN_HILFSBLATT, LEGACY_VORRUNDEN_HILFSBLATT);
     }
 
     public static String maastrichterVorrundenRangliste() {
