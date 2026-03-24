@@ -1,0 +1,4 @@
+Pétanque Toernooi Manager
+Een Pétanque/Boule toernooi-beheersextensie voor Calc.
+feedback: michael@massee.de
+https://michaelmassee.github.io/Petanque-Turnier-Manager/

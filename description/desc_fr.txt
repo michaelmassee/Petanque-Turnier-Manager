@@ -1,0 +1,4 @@
+Gestionnaire de tournois de Pétanque
+Une extension de gestion de tournois de Pétanque/Boule pour Calc.
+feedback: michael@massee.de
+https://michaelmassee.github.io/Petanque-Turnier-Manager/

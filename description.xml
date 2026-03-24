@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <description xmlns="http://openoffice.org/extensions/description/2006" xmlns:d="http://openoffice.org/extensions/description/2006" xmlns:xlink="http://www.w3.org/1999/xlink">
-	<version value="5.3.0"/>
+	<version value="5.3.10"/>
 	<identifier value="de.petanqueturniermanager"/>
 	<platform value="all"/>
 <update-information>
@@ -9,10 +9,16 @@
 	<publisher>
 		<name lang="de" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
 		<name lang="en" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
+		<name lang="fr" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
+		<name lang="nl" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
+		<name lang="es" xlink:href="https://github.com/michaelmassee/Petanque-Turnier-Manager">Michael Massee</name>
 	</publisher>
 	<display-name>
 		<name lang="de">PetanqueTurnierManager</name>
 		<name lang="en">PetanqueTurnierManager</name>
+		<name lang="fr">PetanqueTournoisManager</name>
+		<name lang="nl">PetanqueToernooiManager</name>
+		<name lang="es">PetanqueTorneoManager</name>
 	</display-name>
 	<icon>
 		<default xlink:href="images/petanqueturniermanager-logo-32px.png"/>
@@ -21,5 +27,8 @@
 	<extension-description>
 		<src lang="de" xlink:href="description/desc_de.txt"/>
 		<src lang="en" xlink:href="description/desc_en.txt"/>
+		<src lang="fr" xlink:href="description/desc_fr.txt"/>
+		<src lang="nl" xlink:href="description/desc_nl.txt"/>
+		<src lang="es" xlink:href="description/desc_es.txt"/>
 	</extension-description>
 </description>
