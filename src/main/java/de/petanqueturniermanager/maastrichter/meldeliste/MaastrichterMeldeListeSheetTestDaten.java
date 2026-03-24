@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -51,7 +52,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return getSheetHelper().findByName(SheetNamen.meldeliste());
 	}
 
 	@Override

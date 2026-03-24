@@ -92,7 +92,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 	}
 
 	String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
-		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
+		return SpielrundeSheetKonstanten.sheetName(spieltag.getNr(), spielrunde.getNr());
 	}
 
 	boolean canStart(SpielerMeldungen meldungen) throws GenerateException {

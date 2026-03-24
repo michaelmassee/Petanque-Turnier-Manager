@@ -14,6 +14,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -70,7 +71,7 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE, SHEETNAME);
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override

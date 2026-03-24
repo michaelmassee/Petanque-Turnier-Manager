@@ -18,10 +18,12 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetTestDaten;
@@ -89,7 +91,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return getSheetHelper().findByName(SheetNamen.meldeliste());
 	}
 
 	@Override
@@ -120,8 +122,10 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 			processBoxinfo("processbox.erstelle.vorrunde", runde, anzVorrunden);
 			naechsteVorrunde.erstelleNaechsteVorrunde();
 
-			String sheetName = runde + ". " + MaastrichterSpielrundeSheetNaechste.SHEET_BASIS_NAME;
-			XSpreadsheet sheet = getSheetHelper().findByName(sheetName);
+			String legacyName = runde + ". " + SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
+			XSpreadsheet sheet = SheetMetadataHelper.findeSheetUndHeile(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					SheetMetadataHelper.schluesselMaastrichterVorrunde(runde), legacyName);
 			if (sheet != null) {
 				ergebnisseEinfuegen(sheet);
 			}

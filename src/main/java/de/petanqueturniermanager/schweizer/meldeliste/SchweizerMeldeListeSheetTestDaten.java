@@ -20,6 +20,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 
 /**
  * Erzeugt eine Schweizer Meldeliste mit Testdaten (ohne Dialog).
@@ -51,7 +52,7 @@ public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements IS
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return getSheetHelper().findByName(SheetNamen.meldeliste());
 	}
 
 	@Override

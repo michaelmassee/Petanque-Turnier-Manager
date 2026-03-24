@@ -8,8 +8,8 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -48,7 +48,7 @@ public class SpieltagRanglisteSheet_TestDaten extends SheetRunner {
 		}
 
 		// clean up first
-		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { SheetNamen.supermeleeTeams() });
 
 		for (int spieltagCntr = 1; spieltagCntr <= 5; spieltagCntr++) {
 			SheetRunner.testDoCancelTask();

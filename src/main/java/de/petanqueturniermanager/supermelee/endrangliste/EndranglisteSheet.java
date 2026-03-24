@@ -41,6 +41,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -75,7 +76,6 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	public static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
-	public static final String SHEETNAME = "Endrangliste";
 	public static final String SHEET_COLOR = "d637e8";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE;
 
@@ -87,7 +87,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	private final RangListeSorter rangListeSorter;
 
 	public EndranglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, SHEETNAME);
+		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, SheetNamen.endrangliste());
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
 		spielerSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE)
@@ -107,7 +107,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spieltagNr = getKonfigurationSheet().getAktiveSpieltag();
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
+		if (NewSheet.from(this, SheetNamen.endrangliste()).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
 				.hideGrid().forceCreate().spielTagPageStyle(spieltagNr).create().isDidCreate()) {
 			SheetMetadataHelper.schreibeSheetMetadaten(
 					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
@@ -504,7 +504,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_ENDRANGLISTE);
 	}
 
 	@Override

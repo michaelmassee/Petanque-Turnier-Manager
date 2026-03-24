@@ -22,6 +22,7 @@ import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -30,7 +31,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class CadrageSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEETNAME = "Cadrage";
 	private static final String SHEET_COLOR = "c12439";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_CADRAGE;
 
@@ -54,7 +54,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_CADRAGE);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		vorrunden.getSheet(); // erstellen leer wenn nicht vorhanden
-		NewSheet.from(this, SHEETNAME).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+		NewSheet.from(this, SheetNamen.cadrage()).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		SheetMetadataHelper.schreibeSheetMetadaten(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				getXSpreadSheet(), METADATA_SCHLUESSEL);

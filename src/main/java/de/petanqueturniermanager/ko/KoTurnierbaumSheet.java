@@ -17,7 +17,6 @@ import com.sun.star.table.CellVertJustify2;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -27,6 +26,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -59,9 +59,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(KoTurnierbaumSheet.class);
 
-	public static final String SHEETNAME_PREFIX = "KO Turnierbaum";
-	/** Blattname für eine einzelne Gruppe (kein Buchstabe-Suffix). */
-	public static final String SHEETNAME = SHEETNAME_PREFIX;
 	private static final String SHEET_COLOR = "8b0000";
 
 	/** Header-Zeilen */
@@ -138,12 +135,21 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (found.isPresent()) return found.get();
 		found = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselKoTurnierbaum("_A"));
 		if (found.isPresent()) return found.get();
-		// Fallback per Name: erste vorhandene Gruppe (Einzelgruppe ohne Buchstabe, dann A)
-		XSpreadsheet sheet = getSheetHelper().findByName(SHEETNAME_PREFIX);
+		// Fallback per Name: zuerst lokalisierter Name, dann Legacy (alte deutsche Dokumente)
+		var praefix = SheetNamen.koTurnierbaumEinzel();
+		XSpreadsheet sheet = getSheetHelper().findByName(praefix);
 		if (sheet != null) {
 			return sheet;
 		}
-		return getSheetHelper().findByName(SHEETNAME_PREFIX + " A");
+		sheet = getSheetHelper().findByName(praefix + " A");
+		if (sheet != null) {
+			return sheet;
+		}
+		sheet = getSheetHelper().findByName(SheetNamen.LEGACY_KO_TURNIERBAUM_EINZEL);
+		if (sheet != null) {
+			return sheet;
+		}
+		return getSheetHelper().findByName(SheetNamen.LEGACY_KO_TURNIERBAUM_EINZEL + " A");
 	}
 
 	@Override
@@ -324,13 +330,24 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 * Leitet den Metadaten-Schlüssel aus dem Sheet-Namen ab.
 	 * Einzelgruppe ("KO Turnierbaum"): leerer Suffix.
 	 * Gruppe mit Buchstabe ("KO Turnierbaum A"): Suffix "_A".
+	 * Unterstützt sowohl lokalisierte Namen als auch Legacy-Namen (alte deutsche Dokumente).
 	 */
 	static String schluesselAusSheetName(String sheetName) {
-		if (SHEETNAME_PREFIX.equals(sheetName)) {
+		var praefix = SheetNamen.koTurnierbaumEinzel();
+		if (praefix.equals(sheetName)) {
 			return SheetMetadataHelper.schluesselKoTurnierbaum("");
 		}
-		String suffix = sheetName.substring(SHEETNAME_PREFIX.length()).replace(" ", "_");
-		return SheetMetadataHelper.schluesselKoTurnierbaum(suffix);
+		if (sheetName.startsWith(praefix)) {
+			return SheetMetadataHelper.schluesselKoTurnierbaum(
+					sheetName.substring(praefix.length()).replace(" ", "_"));
+		}
+		// Legacy: ältere deutsche Dokumente ("KO Turnierbaum")
+		var legacy = SheetNamen.LEGACY_KO_TURNIERBAUM_EINZEL;
+		if (legacy.equals(sheetName)) {
+			return SheetMetadataHelper.schluesselKoTurnierbaum("");
+		}
+		return SheetMetadataHelper.schluesselKoTurnierbaum(
+				sheetName.substring(legacy.length()).replace(" ", "_"));
 	}
 
 	/**
@@ -439,9 +456,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	static String sheetNameFuerGruppe(int gruppenIndex, int anzGruppen) {
 		if (anzGruppen == 1) {
-			return SHEETNAME_PREFIX;
+			return SheetNamen.koTurnierbaumEinzel();
 		}
-		return SHEETNAME_PREFIX + " " + (char) ('A' + gruppenIndex);
+		return SheetNamen.koTurnierbaumGruppe(String.valueOf((char) ('A' + gruppenIndex)));
 	}
 
 	/**
@@ -456,11 +473,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Löscht alle vorhandenen Turnierbaum-Sheets (Namen beginnen mit {@link #SHEETNAME_PREFIX}).
+	 * Löscht alle vorhandenen Turnierbaum-Sheets (lokalisierte und Legacy-Namen werden erkannt).
 	 */
 	private void alleGruppenSheetNamenLoeschen() throws GenerateException {
+		var praefix = SheetNamen.koTurnierbaumEinzel();
+		var legacyPraefix = SheetNamen.LEGACY_KO_TURNIERBAUM_EINZEL;
 		for (String name : getSheetHelper().getSheets().getElementNames()) {
-			if (name.startsWith(SHEETNAME_PREFIX)) {
+			if (name.startsWith(praefix) || name.startsWith(legacyPraefix)) {
 				getSheetHelper().removeSheet(name);
 			}
 		}
@@ -772,7 +791,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
 			// Teamname via SVERWEIS
-			String formel = "SVERWEIS(" + nr + ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0)";
+			String formel = "SVERWEIS(" + nr + ";" + SheetNamen.meldeliste() + ".$A:$B;2;0)";
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
 							.setCellBackColor(farbe)
@@ -924,7 +943,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String siegerNameFormel = "WENN(ISTZAHL(" + siegerNrAddr + ")*(" + siegerNrAddr
-					+ ">0);SVERWEIS(" + siegerNrAddr + ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0);\"\")";
+					+ ">0);SVERWEIS(" + siegerNrAddr + ";" + SheetNamen.meldeliste() + ".$A:$B;2;0);\"\")";
 
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),
@@ -1028,7 +1047,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			String formel = "SVERWEIS(" + nr + ";" + MeldeListeKonstanten.SHEETNAME + ".$A:$B;2;0)";
+			String formel = "SVERWEIS(" + nr + ";" + SheetNamen.meldeliste() + ".$A:$B;2;0)";
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
 							.setCellBackColor(farbe)
@@ -1198,7 +1217,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String drittePlatzNameFormel = "WENN(ISTZAHL(" + drittePlatzNrAddr + ")*(" + drittePlatzNrAddr
-					+ ">0);SVERWEIS(" + drittePlatzNrAddr + ";" + MeldeListeKonstanten.SHEETNAME
+					+ ">0);SVERWEIS(" + drittePlatzNrAddr + ";" + SheetNamen.meldeliste()
 					+ ".$A:$B;2;0);\"\")";
 
 			getSheetHelper().setFormulaInCell(

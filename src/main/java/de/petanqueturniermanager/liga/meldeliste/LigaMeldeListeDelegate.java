@@ -66,25 +66,25 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 		if (sheet.getSheetHelper().findByName(oldName) != null) {
 			MessageBoxResult answer = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
 					.caption(I18n.get("msg.caption.tabelle", oldName))
-					.message(I18n.get("msg.text.tabelle.umbenennen.frage", oldName, LigaSpielPlanSheet.SHEET_NAMEN))
+					.message(I18n.get("msg.text.tabelle.umbenennen.frage", oldName, LigaSpielPlanSheet.sheetName()))
 					.show();
 
 			if (answer == MessageBoxResult.YES) {
 				XSpreadsheet spielplan = sheet.getSheetHelper().findByName(oldName);
-				if (sheet.getSheetHelper().reNameSheet(spielplan, LigaSpielPlanSheet.SHEET_NAMEN)) {
+				if (sheet.getSheetHelper().reNameSheet(spielplan, LigaSpielPlanSheet.sheetName())) {
 					MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.INFO_OK)
 							.caption(I18n.get("msg.caption.tabelle", oldName))
-							.message(I18n.get("msg.text.tabelle.umbenannt.ok", oldName, LigaSpielPlanSheet.SHEET_NAMEN))
+							.message(I18n.get("msg.text.tabelle.umbenannt.ok", oldName, LigaSpielPlanSheet.sheetName()))
 							.show();
 				} else {
 					MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
 							.caption(I18n.get("msg.caption.tabelle", oldName))
-							.message(I18n.get("msg.text.tabelle.umbenannt.fehler", oldName, LigaSpielPlanSheet.SHEET_NAMEN))
+							.message(I18n.get("msg.text.tabelle.umbenannt.fehler", oldName, LigaSpielPlanSheet.sheetName()))
 							.show();
-					throw new GenerateException(I18n.get("error.sheet.umbenennen", oldName, LigaSpielPlanSheet.SHEET_NAMEN));
+					throw new GenerateException(I18n.get("error.sheet.umbenennen", oldName, LigaSpielPlanSheet.sheetName()));
 				}
 			} else {
-				throw new GenerateException(I18n.get("error.sheet.umbenennen", oldName, LigaSpielPlanSheet.SHEET_NAMEN));
+				throw new GenerateException(I18n.get("error.sheet.umbenennen", oldName, LigaSpielPlanSheet.sheetName()));
 			}
 		}
 	}

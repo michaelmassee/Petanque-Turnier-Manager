@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -48,7 +49,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  */
 public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEETNAME = "Direktvergleich";
 	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH;
@@ -89,7 +89,7 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_DIREKTVERGLEICH);
 	}
 
 	@Override
@@ -113,7 +113,7 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 			return;
 		}
 
-		if (!NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.JGJ_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
+		if (!NewSheet.from(this, SheetNamen.direktvergleich()).pos(DefaultSheetPos.JGJ_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, JGJ Direktvergleich wurde nicht erstellt");
 			return;
@@ -203,7 +203,7 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 	private String ligaSpielPlanVerweis(int startSpalte) throws GenerateException {
 		int anzZeilen = (spielPlan.anzRunden() * 2) * spielPlan.anzBegnungenProRunde();
 		Position startBegegnungenPos = Position.from(startSpalte, JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE);
-		return "$'" + JGJSpielPlanSheet.SHEET_NAMEN + "'." + startBegegnungenPos.getAddressWith$() + ":"
+		return "$'" + JGJSpielPlanSheet.sheetName() + "'." + startBegegnungenPos.getAddressWith$() + ":"
 				+ startBegegnungenPos.spaltePlusEins().zeilePlus(anzZeilen - 1).getAddressWith$();
 	}
 

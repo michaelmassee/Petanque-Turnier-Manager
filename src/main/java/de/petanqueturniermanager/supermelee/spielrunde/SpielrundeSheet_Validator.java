@@ -70,7 +70,7 @@ public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, Sp
 	}
 
 	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
-		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
+		return SpielrundeSheetKonstanten.sheetName(spieltag.getNr(), spielrunde.getNr());
 	}
 
 	@Override

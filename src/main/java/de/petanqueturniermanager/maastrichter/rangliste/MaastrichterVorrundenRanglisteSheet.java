@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.maastrichter.rangliste;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
@@ -17,7 +18,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet {
 
-	public static final String SHEETNAME = "Vorrunden-Rangliste";
 
 	public MaastrichterVorrundenRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER);
@@ -35,7 +35,7 @@ public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet
 
 	@Override
 	protected String getRanglistenSheetName() {
-		return SHEETNAME;
+		return SheetNamen.maastrichterVorrundenRangliste();
 	}
 
 	@Override

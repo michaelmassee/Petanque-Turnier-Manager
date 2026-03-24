@@ -93,6 +93,78 @@ class I18nVollstaendigkeitTest {
                 .isNotEmpty();
     }
 
+    @Test
+    void alleSheetNameSchluesselSindInReferenzdateiVorhanden() throws IOException {
+        Properties referenz = laden(REFERENZ_DATEI);
+        Set<String> referenzKeys = referenz.stringPropertyNames();
+
+        List<String> alleSheetKeys = List.of(
+                SheetNamen.KEY_MELDELISTE,
+                SheetNamen.KEY_RANGLISTE,
+                SheetNamen.KEY_DIREKTVERGLEICH,
+                SheetNamen.KEY_SPIELPLAN,
+                SheetNamen.KEY_ENDRANGLISTE,
+                SheetNamen.KEY_SUPERMELEE_TEAMS,
+                SheetNamen.KEY_KO_KONFIGURATION,
+                SheetNamen.KEY_KO_RUNDE,
+                SheetNamen.KEY_CADRAGE,
+                SheetNamen.KEY_VORRUNDEN_ERGEBNISSE,
+                SheetNamen.KEY_MAASTRICHTER_VR_RANGLISTE,
+                SheetNamen.KEY_ANMELDUNGEN,
+                SheetNamen.KEY_TEILNEHMER,
+                SheetNamen.KEY_SPIELRUNDE_MUSTER,
+                SheetNamen.KEY_SUPERMELEE_SPIELRUNDE_MUSTER,
+                SheetNamen.KEY_SPIELRUNDE_PLAN_MUSTER,
+                SheetNamen.KEY_SPIELTAG_RANGLISTE_MUSTER,
+                SheetNamen.KEY_KO_TURNIERBAUM_EINZEL,
+                SheetNamen.KEY_KO_TURNIERBAUM_GRUPPE_MUSTER,
+                SheetNamen.KEY_MAASTRICHTER_VORRUNDE_MUSTER,
+                SheetNamen.KEY_MAASTRICHTER_FINALRUNDE_MUSTER,
+                SheetNamen.KEY_ANMELDUNGEN_MUSTER,
+                SheetNamen.KEY_TEILNEHMER_MUSTER
+        );
+
+        SoftAssertions soft = new SoftAssertions();
+        for (String schluessel : alleSheetKeys) {
+            soft.assertThat(referenzKeys)
+                    .as("sheet.name-Schlüssel '%s' fehlt in %s", schluessel, REFERENZ_DATEI)
+                    .contains(schluessel);
+        }
+        soft.assertAll();
+    }
+
+    @Test
+    void alleSheetNameLegacyWerteStimmenMitDeutscherUebersetzungUeberein() throws IOException {
+        Properties referenz = laden(REFERENZ_DATEI);
+
+        record KeyLegacy(String schluessel, String legacy) {}
+
+        List<KeyLegacy> paare = List.of(
+                new KeyLegacy(SheetNamen.KEY_MELDELISTE,             SheetNamen.LEGACY_MELDELISTE),
+                new KeyLegacy(SheetNamen.KEY_RANGLISTE,              SheetNamen.LEGACY_RANGLISTE),
+                new KeyLegacy(SheetNamen.KEY_DIREKTVERGLEICH,        SheetNamen.LEGACY_DIREKTVERGLEICH),
+                new KeyLegacy(SheetNamen.KEY_SPIELPLAN,              SheetNamen.LEGACY_SPIELPLAN),
+                new KeyLegacy(SheetNamen.KEY_ENDRANGLISTE,           SheetNamen.LEGACY_ENDRANGLISTE),
+                new KeyLegacy(SheetNamen.KEY_SUPERMELEE_TEAMS,       SheetNamen.LEGACY_SUPERMELEE_TEAMS),
+                new KeyLegacy(SheetNamen.KEY_KO_KONFIGURATION,       SheetNamen.LEGACY_KO_KONFIGURATION),
+                new KeyLegacy(SheetNamen.KEY_KO_RUNDE,               SheetNamen.LEGACY_KO_RUNDE),
+                new KeyLegacy(SheetNamen.KEY_CADRAGE,                SheetNamen.LEGACY_CADRAGE),
+                new KeyLegacy(SheetNamen.KEY_VORRUNDEN_ERGEBNISSE,   SheetNamen.LEGACY_VORRUNDEN_ERGEBNISSE),
+                new KeyLegacy(SheetNamen.KEY_MAASTRICHTER_VR_RANGLISTE, SheetNamen.LEGACY_MAASTRICHTER_VR_RANGLISTE),
+                new KeyLegacy(SheetNamen.KEY_ANMELDUNGEN,            SheetNamen.LEGACY_ANMELDUNGEN),
+                new KeyLegacy(SheetNamen.KEY_TEILNEHMER,             SheetNamen.LEGACY_TEILNEHMER),
+                new KeyLegacy(SheetNamen.KEY_KO_TURNIERBAUM_EINZEL,  SheetNamen.LEGACY_KO_TURNIERBAUM_EINZEL)
+        );
+
+        SoftAssertions soft = new SoftAssertions();
+        for (var paar : paare) {
+            soft.assertThat(referenz.getProperty(paar.schluessel()))
+                    .as("LEGACY-Wert für '%s' stimmt nicht mit deutschem Referenzwert überein", paar.schluessel())
+                    .isEqualTo(paar.legacy());
+        }
+        soft.assertAll();
+    }
+
     /**
      * Entdeckt automatisch alle Sprachdateien (messages_*.properties) im i18n-Ordner.
      * Liest direkt aus src/main/resources – unabhängig vom build-Ordner.

@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
 
 public class SpielrundePlanUITest extends BaseCalcUITest {
@@ -47,7 +48,7 @@ public class SpielrundePlanUITest extends BaseCalcUITest {
 		spielrundePlan.run();
 
 		// validate
-		XSpreadsheet spielrundeplan1 = sheetHlp.findByName("1.1. " + SpielrundePlan.PREFIX_SHEET_NAMEN);
+		XSpreadsheet spielrundeplan1 = sheetHlp.findByName(SheetNamen.spielrundePlan(1, 1));
 		assertThat(spielrundeplan1).isNotNull();
 
 		RangePosition rangeSplrPlan = RangePosition.from(0, 0, 8, 32); // A1 I(8)33

@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 
 
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.sheet.XSpreadsheets;
-
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -59,8 +57,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 	public static final int ERSTE_SPIELRUNDE_SPALTE = SpieltagRanglisteDelegate.ERSTE_SPIELRUNDE_SPALTE;
 	public static final int ERSTE_DATEN_ZEILE = SpieltagRanglisteDelegate.ERSTE_DATEN_ZEILE;
 	public static final int SPIELER_NR_SPALTE = SpieltagRanglisteDelegate.SPIELER_NR_SPALTE;
-	public static final String SHEETNAME_SUFFIX = SpieltagRanglisteDelegate.SHEETNAME_SUFFIX;
-
 	public static final String KOPFDATEN_SUMME = "Summe";
 	public static final String KOPFDATEN_SUMME_SPIELE = "Spiele";
 	public static final String KOPFDATEN_SUMME_PUNKTE = "Punkte";
@@ -418,16 +414,17 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 	}
 
 	public int countNumberOfRanglisten() throws GenerateException {
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		int anz = 0;
-
-		XSpreadsheets sheets = getSheetHelper().getSheets();
-
-		if (sheets != null && sheets.hasElements()) {
-			String[] sheetNames = getSheetHelper().getSheets().getElementNames();
-			for (String sheetName : sheetNames) {
-				if (sheetName.contains(SHEETNAME_SUFFIX)) {
-					anz++;
-				}
+		for (int nr = 1; nr <= 99; nr++) {
+			boolean gefunden = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselSpieltagRangliste(nr)).isPresent();
+			if (!gefunden) {
+				gefunden = getSheetHelper().findByName(SpieltagRanglisteDelegate.legacySheetName(nr)) != null;
+			}
+			if (gefunden) {
+				anz++;
+			} else {
+				break;
 			}
 		}
 		return anz;

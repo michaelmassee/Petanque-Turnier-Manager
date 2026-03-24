@@ -12,6 +12,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
@@ -112,7 +113,7 @@ public class SchweizerTurnierTestDaten19TeamsUITest extends BaseCalcUITest {
 	}
 
 	private void pruefeRanglisteSheet() throws GenerateException {
-		XSpreadsheet rangliste = sheetHlp.findByName(SchweizerRanglisteSheet.SHEETNAME);
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
 		assertThat(rangliste).as("Rangliste-Sheet").isNotNull();
 
 		RangePosition ranglisteRange = RangePosition.from(

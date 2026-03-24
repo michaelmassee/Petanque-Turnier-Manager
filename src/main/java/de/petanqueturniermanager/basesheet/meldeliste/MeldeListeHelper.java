@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.IMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -196,7 +197,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return NewSheet.from(meldeListe, SHEETNAME).setDocVersionWhenNew().useIfExist().hideGrid()
+		return NewSheet.from(meldeListe, SheetNamen.meldeliste()).setDocVersionWhenNew().useIfExist().hideGrid()
 				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
 	}
 
@@ -243,7 +244,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
 		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), 999)
 				.getAddressWith$();
-		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
+		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SheetNamen.meldeliste() + "'." + ersteZelleAddress + ":" + letzteZelleAddress
 				+ ";2;0)";
 	}
 

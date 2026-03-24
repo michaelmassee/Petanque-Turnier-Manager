@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 
@@ -44,7 +45,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 
 	/** Liest alle Rangliste-Datenspalten (TEAM_NR bis PUNKTE_DIFF), ANZ_TEAMS Zeilen. */
 	private RangeData ladeRanglisteDaten() throws GenerateException {
-		XSpreadsheet rangliste = sheetHlp.findByName(SchweizerRanglisteSheet.SHEETNAME);
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
 		assertThat(rangliste).as("Rangliste-Sheet muss vorhanden sein").isNotNull();
 
 		RangePosition ranglisteRange = RangePosition.from(
@@ -279,7 +280,7 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(runde1).as("1. Spielrunde muss existieren").isNotNull();
 		sheetHlp.setActiveSheet(runde1);
 
-		XSpreadsheet ranglisteSheet = sheetHlp.findByName(SchweizerRanglisteSheet.SHEETNAME);
+		XSpreadsheet ranglisteSheet = sheetHlp.findByName(SheetNamen.rangliste());
 		assertThat(ranglisteSheet).as("Rangliste muss vorhanden sein").isNotNull();
 
 		// Sicherstellen: kein laufender SheetRunner (Direktaufruf-Szenario)

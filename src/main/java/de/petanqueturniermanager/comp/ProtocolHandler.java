@@ -70,7 +70,9 @@ import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeS
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
+import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
@@ -706,7 +708,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	/**
 	 * Prüft ob mindestens eine Maastrichter-Vorrunde vorhanden ist.
-	 * Vorrunden-Sheets heißen "{runde}. Vorrunde", z.B. "1. Vorrunde".
+	 * Unterstützt sowohl lokalisierte Namen als auch ältere Dokumente mit deutschen Blattnamen.
 	 */
 	private static boolean hatMaastrichterVorrunde(WorkingSpreadsheet ws) {
 		try {
@@ -714,7 +716,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			if (doc == null) {
 				return false;
 			}
-			return doc.getSheets().hasByName("1. " + MaastrichterSpielrundeSheetNaechste.SHEET_BASIS_NAME);
+			String legacyName = "1. " + SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
+			return doc.getSheets().hasByName(SheetNamen.maastrichterVorrunde(1))
+					|| doc.getSheets().hasByName(legacyName);
 		} catch (Exception e) {
 			return false;
 		}
@@ -722,7 +726,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	/**
 	 * Prüft ob mindestens eine Schweizer-Spielrunde vorhanden ist.
-	 * Spielrunden-Sheets heißen "{runde}. Spielrunde", z.B. "1. Spielrunde".
+	 * Unterstützt sowohl lokalisierte Namen als auch ältere Dokumente mit deutschen Blattnamen.
 	 */
 	private static boolean hatSchweizerSpielrunde(WorkingSpreadsheet ws) {
 		try {
@@ -730,7 +734,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			if (doc == null) {
 				return false;
 			}
-			return doc.getSheets().hasByName("1. Spielrunde");
+			String legacyName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+			return doc.getSheets().hasByName(SheetNamen.spielrunde(1))
+					|| doc.getSheets().hasByName(legacyName);
 		} catch (Exception e) {
 			return false;
 		}

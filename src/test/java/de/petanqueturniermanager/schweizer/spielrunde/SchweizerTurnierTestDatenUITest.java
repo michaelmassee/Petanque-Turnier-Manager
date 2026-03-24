@@ -12,6 +12,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 
 public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
@@ -64,7 +65,7 @@ public class SchweizerTurnierTestDatenUITest extends BaseCalcUITest {
 		}
 
 		// 3. Rangliste-Sheet muss vorhanden sein
-		XSpreadsheet rangliste = sheetHlp.findByName(SchweizerRanglisteSheet.SHEETNAME);
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
 		assertThat(rangliste).as("Rangliste-Sheet").isNotNull();
 
 		// Rangliste hat genau ANZ_TEAMS Zeilen (Range ab TEAM_NR_SPALTE=0, damit Konstanten als Index stimmen)

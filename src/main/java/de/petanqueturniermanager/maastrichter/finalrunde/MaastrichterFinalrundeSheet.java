@@ -27,13 +27,13 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
-import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
@@ -159,10 +159,12 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 
 		for (int runde = 1; runde <= anzVorrunden; runde++) {
 			SheetRunner.testDoCancelTask();
-			String rundeSheetName = runde + ". " + MaastrichterSpielrundeSheetNaechste.SHEET_BASIS_NAME;
-			XSpreadsheet rundeSheet = getSheetHelper().findByName(rundeSheetName);
+			String legacyName = runde + ". " + SheetNamen.LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX;
+			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(
+					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+					SheetMetadataHelper.schluesselMaastrichterVorrunde(runde), legacyName);
 			if (rundeSheet == null) {
-				logger.warn("Vorrunden-Sheet '{}' nicht gefunden, übersprungen.", rundeSheetName);
+				logger.warn("Vorrunden-Sheet '{}' nicht gefunden, übersprungen.", legacyName);
 				continue;
 			}
 			leseRundeEin(rundeSheet, aktiveMeldungen, statsMap, gegnerMap, meldeliste);

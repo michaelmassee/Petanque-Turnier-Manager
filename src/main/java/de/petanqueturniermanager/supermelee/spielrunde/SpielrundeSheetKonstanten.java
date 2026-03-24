@@ -1,8 +1,20 @@
 package de.petanqueturniermanager.supermelee.spielrunde;
 
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
+
+/** Gemeinsame Konstanten für Supermelee-Spielrunden-Sheets. */
 public interface SpielrundeSheetKonstanten {
 
-	String PREFIX_SHEET_NAMEN = "Spielrunde";
+	/**
+	 * Gibt den lokalisierten Tabellennamen für eine Supermelee-Spielrunde zurück.
+	 *
+	 * @param spieltagNr Spieltagnummer
+	 * @param rundeNr    Rundennummer
+	 * @return lokalisierter Tabellenname
+	 */
+	static String sheetName(int spieltagNr, int rundeNr) {
+		return SheetNamen.supermeleeSpielrunde(spieltagNr, rundeNr);
+	}
 
 	int ERSTE_DATEN_ZEILE = 2;
 	int ERSTE_HEADER_ZEILE = ERSTE_DATEN_ZEILE - 2;

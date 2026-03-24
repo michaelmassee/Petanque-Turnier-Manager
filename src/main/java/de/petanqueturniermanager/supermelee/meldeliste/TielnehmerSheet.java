@@ -20,6 +20,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
@@ -37,8 +38,6 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class TielnehmerSheet extends SheetRunner implements ISheet {
-
-	public static final String SHEETNAME = "Teilnehmer";
 
 	public static final int ERSTE_DATEN_ZEILE = 0;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
@@ -174,7 +173,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	}
 
 	public String getSheetName(SpielTagNr spieltagNr) {
-		return spieltagNr.getNr() + ". Spieltag " + SHEETNAME;
+		return SheetNamen.teilnehmer(spieltagNr.getNr());
 	}
 
 	public SpielTagNr getSpielTagNr() {

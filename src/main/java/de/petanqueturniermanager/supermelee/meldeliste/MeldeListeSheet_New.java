@@ -19,6 +19,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -59,7 +60,7 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override
@@ -156,7 +157,7 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
 	 */
 	public void createMeldelisteWithParams(SuperMeleeMode mode) throws GenerateException {
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
+		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			getKonfigurationSheet().setSuperMeleeMode(mode);
 			SpielTagNr spielTag1 = new SpielTagNr(1);

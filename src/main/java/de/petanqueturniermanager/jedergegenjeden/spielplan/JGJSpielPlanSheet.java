@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -50,7 +51,11 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
 public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final String SHEET_COLOR = "b0f442";
-	public static final String SHEET_NAMEN = "Spielplan";
+	public static final String LEGACY_SHEET_NAMEN = SheetNamen.LEGACY_SPIELPLAN;
+
+	public static String sheetName() {
+		return SheetNamen.spielplan();
+	}
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN;
 
 	private static final int ERSTE_SPIELTAG_HEADER_ZEILE = 0; // Zeile 0
@@ -97,7 +102,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEET_NAMEN);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, LEGACY_SHEET_NAMEN);
 	}
 
 	@Override
@@ -120,7 +125,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
-		if (!NewSheet.from(this, SHEET_NAMEN).pos(DefaultSheetPos.JGJ_WORK).setForceCreate(true).setActiv().hideGrid()
+		if (!NewSheet.from(this, sheetName()).pos(DefaultSheetPos.JGJ_WORK).setForceCreate(true).setActiv().hideGrid()
 				.tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Jeder gegen Jeden SpielPlan wurde nicht erstellt");
 			return;

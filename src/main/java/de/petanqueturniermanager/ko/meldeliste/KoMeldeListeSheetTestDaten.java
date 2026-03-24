@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -42,7 +43,7 @@ public class KoMeldeListeSheetTestDaten extends SheetRunner implements ISheet, M
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return getSheetHelper().findByName(SheetNamen.meldeliste());
 	}
 
 	@Override

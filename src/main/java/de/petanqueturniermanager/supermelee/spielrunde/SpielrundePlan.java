@@ -11,6 +11,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -52,8 +53,6 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	public static final int BLOCK_TRENNER_OFFS_SPALTE = 4;
 	public static final int ANZ_SPALTEN_IN_BLOCK = 4; // 
 
-	public static final String PREFIX_SHEET_NAMEN = "SpielrundePlan";
-
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final SpielrundeSheet_Update aktuelleSpielrundeSheet;
 	private final MeldeListeSheet_Update meldeliste;
@@ -87,11 +86,11 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 	}
 
 	public String getSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
-		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + PREFIX_SHEET_NAMEN;
+		return SheetNamen.spielrundePlan(spieltag.getNr(), spielrunde.getNr());
 	}
 
 	public String getSpielrundeSheetName(SpielTagNr spieltag, SpielRundeNr spielrunde) {
-		return spieltag.getNr() + "." + spielrunde.getNr() + ". " + SpielrundeSheetKonstanten.PREFIX_SHEET_NAMEN;
+		return SpielrundeSheetKonstanten.sheetName(spieltag.getNr(), spielrunde.getNr());
 	}
 
 	@Override

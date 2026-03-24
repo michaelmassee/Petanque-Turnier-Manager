@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -56,7 +57,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRangliste {
 
 	private static final int MARGIN = 120;
-	public static final String SHEETNAME = "Rangliste";
 	private static final String SHEET_COLOR = "d637e8";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE;
 	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
@@ -101,7 +101,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_RANGLISTE);
 	}
 
 	@Override
@@ -135,7 +135,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 			return;
 		}
 
-		if (!NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv()
+		if (!NewSheet.from(this, SheetNamen.rangliste()).pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
@@ -490,7 +490,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		String rangeStrATeamNr = teamNrAStartPos.getAddressWith$() + ":" + teamNrAEndePos.getAddressWith$();
 		String rangeStrBTeamNr = teamNrBStartPos.getAddressWith$() + ":" + teamNrBEndePos.getAddressWith$();
 
-		String sheetRef = "$'" + LigaSpielPlanSheet.SHEET_NAMEN + "'.";
+		String sheetRef = "$'" + LigaSpielPlanSheet.sheetName() + "'.";
 		String matchInA = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrATeamNr + ";0)";
 		String matchInB = "MATCH(" + ersteTeamNrPos.getAddress() + ";" + sheetRef + rangeStrBTeamNr + ";0)";
 

@@ -40,6 +40,7 @@ import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGera
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -159,10 +160,22 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		var rundeNr = getSpielRundeNr();
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getSpielrundeSchluessel(rundeNr.getNr()), getSheetName(rundeNr));
+				getSpielrundeSchluessel(rundeNr.getNr()), getLegacySheetName(rundeNr));
 	}
 
-	public final String getSheetName(SpielRundeNr nr) {
+	/**
+	 * Gibt den lokalisierten Tabellennamen für eine Spielrunde zurück (für die Sheet-Erstellung).
+	 * Kann von Subklassen überschrieben werden (z.B. für Maastrichter Vorrunden).
+	 */
+	protected String getSheetName(SpielRundeNr nr) {
+		return SheetNamen.spielrunde(nr.getNr());
+	}
+
+	/**
+	 * Gibt den unveränderlichen deutschen Legacy-Namen zurück (für {@code findeSheetUndHeile}-Fallback
+	 * bei älteren Dokumenten ohne Metadaten).
+	 */
+	protected final String getLegacySheetName(SpielRundeNr nr) {
 		return nr.getNr() + ". " + sheetBaseName;
 	}
 

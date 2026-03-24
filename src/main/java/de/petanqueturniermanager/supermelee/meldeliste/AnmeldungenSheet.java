@@ -17,6 +17,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -38,7 +39,6 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class AnmeldungenSheet extends SheetRunner implements ISheet {
-	public static final String SHEETNAME = "Anmeldungen";
 	private static final String SHEET_COLOR = "98e2d7";
 
 	public static final int ERSTE_DATEN_ZEILE = 0;
@@ -195,7 +195,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 
 	public String getSheetName(SpielTagNr spieltagNr) {
 		checkNotNull(spieltagNr);
-		return spieltagNr.getNr() + ". Spieltag " + SHEETNAME;
+		return SheetNamen.anmeldungen(spieltagNr.getNr());
 	}
 
 	@Override

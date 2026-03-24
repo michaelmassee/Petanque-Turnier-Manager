@@ -15,6 +15,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -49,7 +50,7 @@ public class MeldeListeSheet_NeuerSpieltag extends SheetRunner implements IMelde
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE, SHEETNAME);
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override

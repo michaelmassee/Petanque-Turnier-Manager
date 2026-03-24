@@ -28,6 +28,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationS
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class SchweizerMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeListeKonstanten {
@@ -48,7 +49,7 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner implements ISheet, 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override
@@ -172,7 +173,7 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner implements ISheet, 
 
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 			SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
+		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			getKonfigurationSheet().setMeldeListeFormation(formation);
 			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);

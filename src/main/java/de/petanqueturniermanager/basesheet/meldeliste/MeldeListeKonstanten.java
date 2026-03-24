@@ -3,14 +3,19 @@
  */
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
+
 /**
- * @author Michael Massee
- *
+ * Gemeinsame Konstanten für alle Meldelisten-Sheets.
  */
 public interface MeldeListeKonstanten {
 
-	String SHEETNAME = "Meldeliste";
 	String SHEET_COLOR = "2544dd";
+
+	/** Gibt den lokalisierten Tabellennamen zurück. */
+	static String sheetName() {
+		return SheetNamen.meldeliste();
+	}
 
 	int CELL_MARGIN = 100;
 

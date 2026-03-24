@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -164,7 +165,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 
 		SheetFreeze.from(xSheet, sheet.getWorkingSpreadsheet()).anzZeilen(3).doFreeze();
 
-		XSpreadsheet xKonfigSheet = sheet.getSheetHelper().findByName(KoKonfigurationSheet.SHEETNAME);
+		XSpreadsheet xKonfigSheet = sheet.getSheetHelper().findByName(SheetNamen.koKonfiguration());
 		if (xKonfigSheet != null) {
 			renderKonfigurationsZuZellen(xKonfigSheet);
 		}

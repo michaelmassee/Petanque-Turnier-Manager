@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -46,7 +47,7 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override
@@ -117,7 +118,7 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 	 * Wird von Test-Klassen aufgerufen; im normalen Ablauf via {@link #doRun()}.
 	 */
 	public void createMeldelisteWithParams() throws GenerateException {
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
+		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			SheetMetadataHelper.schreibeSheetMetadaten(
 					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),

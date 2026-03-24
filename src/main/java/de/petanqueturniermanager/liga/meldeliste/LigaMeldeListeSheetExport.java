@@ -30,6 +30,7 @@ import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -55,7 +56,7 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return getSheetHelper().findByName(SHEETNAME);
+		return getSheetHelper().findByName(SheetNamen.meldeliste());
 	}
 
 	@Override
@@ -154,14 +155,14 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 		processBox().info("Exportiere nach PDF");
 
 		LigaSpielPlanSheet ligaSpielPlanSheet = new LigaSpielPlanSheet(getWorkingSpreadsheet());
-		String fileNamePdfSpielplan = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.SHEET_NAMEN)
-				.range(ligaSpielPlanSheet.printBereichRangePosition()).prefix1(LigaSpielPlanSheet.SHEET_NAMEN)
+		String fileNamePdfSpielplan = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaSpielPlanSheet.sheetName())
+				.range(ligaSpielPlanSheet.printBereichRangePosition()).prefix1(LigaSpielPlanSheet.sheetName())
 				.doExport().toString();
 		processBox().info(fileNamePdfSpielplan);
 
 		LigaRanglisteSheet ligaRanglisteSheet = new LigaRanglisteSheet(getWorkingSpreadsheet());
-		String fileNamePdfRangliste = PdfExport.from(getWorkingSpreadsheet()).sheetName(LigaRanglisteSheet.SHEETNAME)
-				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(LigaRanglisteSheet.SHEETNAME).doExport()
+		String fileNamePdfRangliste = PdfExport.from(getWorkingSpreadsheet()).sheetName(SheetNamen.rangliste())
+				.range(ligaRanglisteSheet.printBereichRangePosition()).prefix1(SheetNamen.rangliste()).doExport()
 				.toString();
 		processBox().info(fileNamePdfRangliste);
 

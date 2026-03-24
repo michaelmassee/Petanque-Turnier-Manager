@@ -14,6 +14,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
@@ -35,7 +36,7 @@ public class SpielrundeUIHelper {
 
 		assertThat(jsonFileName).isNotNull();
 		XSpreadsheet spielrunde = sheetHlp
-				.findByName("1." + spielRndNr + ". " + SpielrundeSheetKonstanten.PREFIX_SHEET_NAMEN);
+				.findByName(SpielrundeSheetKonstanten.sheetName(1, spielRndNr));
 		assertThat(spielrunde).isNotNull();
 
 		RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,
@@ -53,7 +54,7 @@ public class SpielrundeUIHelper {
 		assertThat(jsonFile).isNotNull();
 
 		XSpreadsheet spielrunde = sheetHlp
-				.findByName("1." + spielRndNr + ". " + SpielrundeSheetKonstanten.PREFIX_SHEET_NAMEN);
+				.findByName(SpielrundeSheetKonstanten.sheetName(1, spielRndNr));
 		assertThat(spielrunde).isNotNull();
 
 		RangePosition rangeSplrNr = RangePosition.from(SpielrundeSheet_Naechste.ERSTE_SPIELERNR_SPALTE,

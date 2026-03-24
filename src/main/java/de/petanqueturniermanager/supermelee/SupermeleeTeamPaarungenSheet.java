@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -36,7 +37,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet {
 	private static final Logger logger = LogManager.getLogger(SupermeleeTeamPaarungenSheet.class);
 
-	public static final String SHEETNAME = "Supermêlée Teams";
 	public static final int ERSTE_DATEN_ZEILE = 1;
 	public static final int ANZ_SPIELER_SPALTE = 0;
 	public static final int ANZ_DOUBLETTE_SPALTE = 1;
@@ -60,7 +60,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		try {
-			if (NewSheet.from(this, SHEETNAME).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
+			if (NewSheet.from(this, SheetNamen.supermeleeTeams()).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
 					.useIfExist().create().isDidCreate()) {
 				SheetMetadataHelper.schreibeSheetMetadaten(
 						getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
@@ -81,7 +81,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_SUPERMELEE_TEAMS);
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 
 	private void initSheet() throws GenerateException {
 		XSpreadsheet sheet = getXSpreadSheet();
-		processBoxinfo("processbox.erstelle.sheet", SHEETNAME);
+		processBoxinfo("processbox.erstelle.sheet", SheetNamen.supermeleeTeams());
 
 		// Header
 		// --------------------------------------------
@@ -197,7 +197,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		String letzteZelleAddress = Position.from(spalte, ERSTE_DATEN_ZEILE + 999).getAddressWith$();
 
 		// suchkriterium;matrix;index;sortiert
-		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SHEETNAME + "'." + ersteZelleAddress + ":" + letzteZelleAddress
+		return "=VLOOKUP(" + adresseAnzSpieler + ";$'" + SheetNamen.supermeleeTeams() + "'." + ersteZelleAddress + ":" + letzteZelleAddress
 				+ ";" + (spalte + 1) + ";0)";
 	}
 

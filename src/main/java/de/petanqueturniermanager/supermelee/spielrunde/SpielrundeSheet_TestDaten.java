@@ -21,7 +21,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
@@ -142,7 +142,7 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 			return;
 		}
 
-		getSheetHelper().removeAllSheetsExclude(new String[] { SupermeleeTeamPaarungenSheet.SHEETNAME });
+		getSheetHelper().removeAllSheetsExclude(new String[] { SheetNamen.supermeleeTeams() });
 		setSpielTag(SpielTagNr.from(1));
 		getKonfigurationSheet().setAktiveSpieltag(getSpielTag());
 		generate();

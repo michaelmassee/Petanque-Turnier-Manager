@@ -26,6 +26,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 
 public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
@@ -49,7 +50,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override

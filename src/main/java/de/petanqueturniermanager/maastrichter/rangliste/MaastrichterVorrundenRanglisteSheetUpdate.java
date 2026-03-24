@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.maastrichter.rangliste;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
@@ -35,7 +36,7 @@ public class MaastrichterVorrundenRanglisteSheetUpdate extends SchweizerRanglist
 
 	@Override
 	protected String getRanglistenSheetName() {
-		return MaastrichterVorrundenRanglisteSheet.SHEETNAME;
+		return SheetNamen.maastrichterVorrundenRangliste();
 	}
 
 	@Override

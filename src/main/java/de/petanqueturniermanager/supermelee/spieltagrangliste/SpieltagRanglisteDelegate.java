@@ -18,6 +18,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.model.Spieler;
@@ -36,7 +37,13 @@ class SpieltagRanglisteDelegate {
 	static final int ERSTE_SPIELRUNDE_SPALTE = 3;
 	static final int ERSTE_DATEN_ZEILE = 3;
 	static final int SPIELER_NR_SPALTE = 0;
-	static final String SHEETNAME_SUFFIX = "Spieltag Rangliste";
+
+	/** Unveränderlicher deutscher Legacy-Name – Fallback für ältere Dokumente ohne Metadaten. */
+	static final String LEGACY_SHEETNAME_SUFFIX = "Spieltag Rangliste";
+
+	static String legacySheetName(int spieltagNr) {
+		return spieltagNr + ". " + LEGACY_SHEETNAME_SUFFIX;
+	}
 
 	private final ISheet sheet;
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
@@ -75,14 +82,14 @@ class SpieltagRanglisteDelegate {
 	}
 
 	String getSheetName(SpielTagNr spielTagNr) {
-		return spielTagNr.getNr() + ". " + SHEETNAME_SUFFIX;
+		return SheetNamen.spieltagRangliste(spielTagNr.getNr());
 	}
 
 	XSpreadsheet getSheet(SpielTagNr spielTagNr) throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
 				SheetMetadataHelper.schluesselSpieltagRangliste(spielTagNr.getNr()),
-				getSheetName(spielTagNr));
+				legacySheetName(spielTagNr.getNr()));
 	}
 
 	// Gleiche Reihenfolge in Spieltag und Endrangliste

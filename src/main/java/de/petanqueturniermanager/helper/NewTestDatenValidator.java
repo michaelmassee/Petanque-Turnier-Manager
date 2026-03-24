@@ -1,6 +1,5 @@
 package de.petanqueturniermanager.helper;
 
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
 /**
@@ -8,6 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
  */
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -69,7 +69,7 @@ public class NewTestDatenValidator {
 	public final boolean isTurnierVorhanden() {
 		TurnierSystem turnierSystemAusDocument = new DocumentPropertiesHelper(wkSheet).getTurnierSystemAusDocument();
 		return turnierSystemAusDocument == turnierSystem
-				&& sheetHelper.findByName(MeldeListeKonstanten.SHEETNAME) != null;
+				&& sheetHelper.findByName(SheetNamen.meldeliste()) != null;
 	}
 
 }

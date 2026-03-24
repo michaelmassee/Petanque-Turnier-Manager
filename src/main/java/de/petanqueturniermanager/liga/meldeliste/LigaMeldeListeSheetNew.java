@@ -26,6 +26,7 @@ import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
@@ -49,7 +50,7 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SHEETNAME);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), METADATA_SCHLUESSEL, SheetNamen.LEGACY_MELDELISTE);
 	}
 
 	@Override
@@ -146,7 +147,7 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
 	 */
 	public void createMeldelisteWithParams(String gruppenname) throws GenerateException {
-		if (NewSheet.from(this, SHEETNAME).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
+		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
 				.setDocVersionWhenNew().create().isDidCreate()) {
 			getKonfigurationSheet().setGruppenname(gruppenname);
 			SheetMetadataHelper.schreibeSheetMetadaten(

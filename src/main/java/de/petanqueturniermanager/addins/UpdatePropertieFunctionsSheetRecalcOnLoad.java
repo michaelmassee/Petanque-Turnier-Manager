@@ -63,33 +63,6 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 				GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
 			}
 		}
-		//		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class,
-		//				xModel.getCurrentController());
-		//
-		//		DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
-		//		if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
-		//
-		//			//
-		//
-		//			// just do a global recalc
-		//			XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
-		//			if (xCal != null) {
-		//				// nachteil das wird beim laden doppelt gemcht
-		//				xCal.calculateAll();
-		//			}
-		//
-		////			// XComponentContext xContext
-		////			WorkingSpreadsheet wkSheet = new WorkingSpreadsheet(weakRefContext.get());
-		////			SheetHelper shHlpr = new SheetHelper(wkSheet); // WorkingSpreadsheet
-		////			XSpreadsheet anmeldungen = shHlpr.findByName(MeldeListeKonstanten.SHEETNAME);
-		////			if (anmeldungen != null) {
-		////				// do recalc
-		////				XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
-		////				if (xCal != null) {
-		////					xCal.calculateAll();
-		////				}
-		////			}
-		//		}
 	}
 
 }

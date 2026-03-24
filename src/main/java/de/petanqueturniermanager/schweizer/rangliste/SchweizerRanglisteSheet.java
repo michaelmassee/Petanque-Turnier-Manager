@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.algorithmen.SchweizerSystem;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -66,7 +67,6 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  */
 public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
-	public static final String SHEETNAME = "Rangliste";
 	public static final String SHEET_COLOR = "d637e8";
 
 	public static final int HEADER_ZEILE          = 0;
@@ -127,7 +127,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	/** Name des Ranglisten-Sheets. */
 	protected String getRanglistenSheetName() {
-		return SHEETNAME;
+		return SheetNamen.rangliste();
 	}
 
 	/** Named-Range-Schlüssel für die Sheet-Metadaten (überschreibbar für Subklassen). */
