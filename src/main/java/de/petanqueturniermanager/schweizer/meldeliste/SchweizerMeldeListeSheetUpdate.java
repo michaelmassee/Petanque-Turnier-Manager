@@ -41,7 +41,13 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 	private final SchweizerListeDelegate delegate;
 
 	public SchweizerMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Meldeliste");
+		this(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Meldeliste");
+	}
+
+	/** Konstruktor für Subklassen, die ein anderes Turniersystem verwenden (z.B. Maastrichter). */
+	protected SchweizerMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet,
+			TurnierSystem turnierSystem, String logPrefix) {
+		super(workingSpreadsheet, turnierSystem, logPrefix);
 		delegate = new SchweizerListeDelegate(this);
 	}
 

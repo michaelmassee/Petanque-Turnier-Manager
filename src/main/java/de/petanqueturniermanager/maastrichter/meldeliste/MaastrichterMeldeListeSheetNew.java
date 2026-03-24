@@ -24,7 +24,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -117,17 +116,15 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 	 */
 	public void erstelleMeldeliste(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 			SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
-		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
-				.setDocVersionWhenNew().create().isDidCreate()) {
+		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).setDocVersionWhenNew().create();
+		if (neuesSheet.isDidCreate()) {
 			konfigurationSheet.setMeldeListeFormation(formation);
 			konfigurationSheet.setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
 			konfigurationSheet.setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
 			konfigurationSheet.setSpielplanTeamAnzeige(spielplanTeamAnzeige);
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					getXSpreadSheet(), METADATA_SCHLUESSEL);
-			// Layout via Schweizer-MeldeListeSheetUpdate aufbauen (Format identisch)
-			new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet()).upDateSheet();
+			// Layout via MaastrichterMeldeListeSheetUpdate aufbauen (Format identisch mit Schweizer)
+			new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet()).upDateSheet();
 		}
 	}
 
