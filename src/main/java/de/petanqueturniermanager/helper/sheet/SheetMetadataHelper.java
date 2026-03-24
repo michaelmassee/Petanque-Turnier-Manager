@@ -385,6 +385,35 @@ public class SheetMetadataHelper {
     // ── Hilfsmethoden ────────────────────────────────────────────────────────
 
     /**
+     * Sucht nach allen PTM-Metadaten (Named Ranges), die ins Leere zeigen (#REF!)
+     * und löscht diese ersatzlos aus dem Dokument.
+     * Dies bereinigt das Dokument nach manuellen oder programmatischen Sheet-Löschungen.
+     */
+    public static void bereinigeVerwaisteMetadaten(XSpreadsheetDocument xDoc) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges == null) return;
+
+            String[] names = namedRanges.getElementNames();
+            for (String name : names) {
+                if (name.startsWith("__PTM_")) {
+                    Object rangeObj = namedRanges.getByName(name);
+                    XNamedRange range = Lo.qi(XNamedRange.class, rangeObj);
+                    if (range != null) {
+                        String content = range.getContent();
+                        if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+                            namedRanges.removeByName(name);
+                            logger.debug("Verwaisten Metadaten-Schlüssel '{}' gelöscht (zeigte ins Leere).", name);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            logger.error("Fehler bei der Bereinigung verwaister Sheet-Metadaten", t);
+        }
+    }
+
+    /**
      * Liefert das Named-Range-Container-Objekt des Dokuments.
      */
     static XNamedRanges namedRangesAusDoc(XSpreadsheetDocument xDoc) {
@@ -410,6 +439,12 @@ public class SheetMetadataHelper {
         try {
             XNamedRange range = Lo.qi(XNamedRange.class, rangeObj);
             if (range == null) return -1;
+            // --- Prüfen ob die Referenz durch Löschen kaputt gegangen ist ---
+            String content = range.getContent();
+            if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) {
+                logger.debug("Named-Range Referenz ist ungültig geworden ({}). Sheet wurde gelöscht.", content);
+                return -1;
+            }
             XCellRangeReferrer referrer = Lo.qi(XCellRangeReferrer.class, range);
             if (referrer == null) return -1;
             XCellRangeAddressable addrAble = Lo.qi(XCellRangeAddressable.class,

@@ -10,6 +10,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -33,26 +34,33 @@ public class UpdatePropertieFunctionsSheetRecalcOnLoad implements IGlobalEventLi
 
 	@Override
 	public void onLoad(Object source) {
+		if (source == null) return;
+
+		XModel xModel = Lo.qi(XModel.class, source);
+		if (xModel == null) return;
+
+		XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
+		DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
+		boolean istPtmDokument = hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN;
+
+		if (istPtmDokument) {
+			SheetMetadataHelper.bereinigeVerwaisteMetadaten(xSpreadsheetDocument);
+		}
 
 		// propertie funktions failed on load Document?
-		if (source != null && GlobalImpl.getAndSetDirty(false)) {
-			XModel xModel = Lo.qi(XModel.class, source);
-			if (xModel != null) {
-				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
-				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(xSpreadsheetDocument);
-				if (hlpr.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
-					// just do a global recalc
-					XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
-					if (xCal != null) {
-						logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
-						// nachteil das wird beim laden doppelt gemacht
-						xCal.calculateAll();
-						GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
-					}
-				} else {
-					logger.debug("set dirty false");
+		if (GlobalImpl.getAndSetDirty(false)) {
+			if (istPtmDokument) {
+				// just do a global recalc
+				XCalculatable xCal = Lo.qi(XCalculatable.class, xSpreadsheetDocument);
+				if (xCal != null) {
+					logger.debug("onload calculateAll weil IsDirty Propertie-Funktions");
+					// nachteil das wird beim laden doppelt gemacht
+					xCal.calculateAll();
 					GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
 				}
+			} else {
+				logger.debug("set dirty false");
+				GlobalImpl.getAndSetDirty(false); // weil es sein kann das wir ein leeres document laden mit propertie funktionen
 			}
 		}
 		//		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class,

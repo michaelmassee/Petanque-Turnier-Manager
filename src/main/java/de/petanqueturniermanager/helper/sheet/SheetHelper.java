@@ -200,6 +200,7 @@ public class SheetHelper {
 		} catch (NoSuchElementException | WrappedTargetException e) {
 			// ignore
 		}
+		SheetMetadataHelper.bereinigeVerwaisteMetadaten(currentSpreadsheet.getWorkingSpreadsheetDocument());
 	}
 
 	public XSpreadsheet newIfNotExist(String sheetName, int pos) {
