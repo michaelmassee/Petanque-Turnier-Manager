@@ -48,6 +48,7 @@ L'extension propose déjà un large choix de modes de tournoi éprouvés, adapt�
 * **Système Suisse (Formule Suisse) :** Le système le plus équitable pour les tournois avec de nombreux participants et un temps limité. Comprend le calcul automatique des victoires, de la différence de boules et des points Buchholz (et Buchholz médian) pour un classement exact.
 * **Toutes rondes (Round Robin) :** Le système de ligue classique où chaque équipe affronte toutes les autres équipes au cours du tournoi.
 * **Élimination directe (Système à élimination directe) :** Pour les phases finales classiques. Une victoire signifie la qualification, une défaite l'élimination immédiate. Les appariements suivent le système croisé (1er vs Dernier, 2e vs Avant-dernier...). Une phase de cadrage est automatiquement calculée si nécessaire.
+* **Système de Maastricht :** Combine le Système Suisse avec des phases finales à élimination directe. Les équipes sont appariées selon l'algorithme suisse sur plusieurs tours préliminaires (2–5). Ensuite, les équipes sont réparties en groupes de niveau (A, B, C, D) selon leur nombre de victoires – chaque groupe dispute sa propre finale en élimination directe. Résultat : quatre vainqueurs de tournoi, une répartition équitable et des finales palpitantes.
 
 (En cours de développement)
 * **Système par Poules :** Mode classique avec phase de groupes (Poules) et répartition ultérieure dans des tableaux à élimination directe (Concours A, B, C, D).

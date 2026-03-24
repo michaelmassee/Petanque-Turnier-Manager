@@ -53,6 +53,8 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
   Das klassische Ligasystem, bei dem jedes Team im Laufe des Turniers gegen jedes andere Team antritt.
 * **K.-o.-System (Direktausscheidung):**
   Für klassische Finalrunden und reine K.-o.-Turniere. Ein Sieg bedeutet Weiterkommen, eine Niederlage das sofortige Ausscheiden. Die Paarungen folgen dem Überkreuz-System (1 vs. Letzter, 2 vs. Vorletzter …), sodass Top-Teams erst spät aufeinandertreffen. Bei Teilnehmerzahlen, die keine Zweierpotenz ergeben, wird automatisch eine Cadrage (Vorrunde) berechnet.
+* **Maastrichter System:**
+  Kombiniert das Schweizer System mit K.-o.-Finalrunden. In mehreren Vorrunden (2–5) werden die Teams nach dem Schweizer Algorithmus ausgeglichen gepaart. Anschließend werden die Teams nach Siegen in Leistungsklassen (A, B, C, D) eingeteilt – jede Klasse trägt ihr eigenes K.-o.-Finale aus. Ergebnis: vier Turniersieger, faire Gruppenaufteilung, spannende Finalrunden.
 
 (in Arbeit)
 * **Poule-System:**

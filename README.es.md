@@ -45,6 +45,7 @@ El mayor punto de venta único de este gestor de torneos es su base: **LibreOffi
 * **Sistema Suizo (Formule Suisse):** El sistema más justo para torneos con muchos participantes y tiempo limitado. Incluye cálculo automático de victorias, diferencia de puntos y puntos Buchholz.
 * **Todos contra todos (Round Robin):** El sistema clásico de liga.
 * **Sistema de eliminación directa (Knockout):** Para rondas finales clásicas. Si el número de participantes no es una potencia de dos, se calcula automáticamente un "cadrage" (ronda preliminar).
+* **Sistema de Maastricht:** Combina el Sistema Suizo con rondas finales de eliminación directa. Los equipos se emparejan según el algoritmo suizo en varias rondas preliminares (2–5). Después, los equipos se dividen en grupos de nivel (A, B, C, D) según su número de victorias – cada grupo disputa su propia final en formato knockout. Resultado: cuatro ganadores del torneo, una distribución justa y finales emocionantes.
 
 (En progreso)
 * **Sistema de Poules:** Modo clásico con fase de grupos (Poules) y posterior división en cuadros de eliminación (Torneo A, B, C, D).
