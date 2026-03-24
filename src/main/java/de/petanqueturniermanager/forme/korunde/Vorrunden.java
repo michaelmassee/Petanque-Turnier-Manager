@@ -17,18 +17,39 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Team;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.TeamRangliste;
 
 /**
- * @author Michael Massee
+ * Hilfsklasse zum Einlesen der Vorrunden-Paarungen für die KO-Runden-Berechnung.
  *
+ * <p>Diese Klasse verwaltet ein <em>temporäres Rechenhilfsblatt</em> ("VorRunden") in LibreOffice
+ * Calc. Das Sheet dient als Zwischenpuffer zwischen zwei Berechnungsschritten: Die vom User
+ * eingetragenen Paarungen aus dem permanenten {@link VorrundenSheet} werden gelesen und daraus
+ * Java-Objektgraphen ({@link de.petanqueturniermanager.model.TeamRangliste} mit Gegner-Listen)
+ * aufgebaut. So kann {@link KoGruppeABSheet} beim Generieren der KO-Paarungen
+ * Wiederholungspaarungen vermeiden.
+ *
+ * <p><b>Warum ein echtes Calc-Sheet als Puffer?</b><br>
+ * Die LibreOffice-UNO-API bietet keine direkte Möglichkeit, strukturierte Zwischenergebnisse
+ * im Java-Heap zu halten und gleichzeitig mit anderen Sheet-Operationen zu koordinieren.
+ * Das temporäre Sheet übernimmt daher die Rolle des Arbeitsspeichers zwischen den
+ * Berechnungsschritten (Cadrage → Rangliste → KO-Paarungen).
+ *
+ * <p><b>Temporär bedeutet:</b> Das Sheet besitzt keinen Metadata-Schlüssel und ist kein
+ * offizielles Turnier-Sheet. Es wird bei jedem Lauf via {@code forceCreate()} überschrieben
+ * und hat keinen dauerhaften Wert für den User.
+ *
+ * @author Michael Massee
+ * @see VorrundenSheet
+ * @see CadrageSheet
+ * @see KoGruppeABSheet
  */
 public class Vorrunden {
 
 	private static final String VORRUNDEN_SHEET = "VorRunden";
+	private static final String RNDHEADER = "Rnd";
+
 	private final WeakRefHelper<ISheet> parentSheet;
-	private final String RNDHEADER = "Rnd";
 
 	public Vorrunden(ISheet parentSheet) {
 		this.parentSheet = new WeakRefHelper<>(parentSheet);
@@ -40,7 +61,7 @@ public class Vorrunden {
 		if (null != vorRunden) {
 			getSheetHelper().setActiveSheet(vorRunden);
 		} else {
-			vorRunden = NewSheet.from(parentSheet.get(), VORRUNDEN_SHEET).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
+			vorRunden = NewSheet.temporary(parentSheet.get(), VORRUNDEN_SHEET).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
 		return vorRunden;
@@ -51,7 +72,6 @@ public class Vorrunden {
 		int headerZeile = 0;
 		int ersteTeamNrZeile = 1;
 
-		// vorrunden einlesen
 		XSpreadsheet vorRunden = getSheet();
 
 		processBoxinfo("processbox.vorrunden.einlesen");
@@ -63,23 +83,18 @@ public class Vorrunden {
 			SheetRunner.testDoCancelTask();
 			headerPos.spalte(spalteCnt);
 			String header = getSheetHelper().getTextFromCell(vorRunden, headerPos);
-			if (StringUtils.isNotEmpty(header) && StringUtils.startsWithIgnoreCase(header, RNDHEADER)) {
-				// header vorhanden
-				// team paarungen einlesen
+			if (StringUtils.isNotEmpty(header) && header.regionMatches(true, 0, RNDHEADER, 0, RNDHEADER.length())) {
 				for (int zeileCntr = ersteTeamNrZeile; zeileCntr < 999; zeileCntr++) {
-					// Team Nr ?
 					Integer cellNumTeamA = getSheetHelper().getIntFromCell(vorRunden, Position.from(spalteCnt, zeileCntr));
 					if (cellNumTeamA > 0) {
-						final Team teamA = Team.from(cellNumTeamA);
-						Team teamA_AusListe = teamList.stream().filter(team -> teamA.equals(team)).findFirst().orElse(null);
-						if (teamA_AusListe != null) {
+						var teamA = Team.from(cellNumTeamA);
+						var teamAInListe = teamList.stream().filter(teamA::equals).findFirst().orElse(null);
+						if (teamAInListe != null) {
 							Integer cellNumTeamB = getSheetHelper().getIntFromCell(vorRunden, Position.from(spalteCnt + 1, zeileCntr));
 							if (cellNumTeamB > 0) {
-								final Team teamB = Team.from(cellNumTeamB);
-								Team teamB_AusListe = teamList.stream().filter(team -> teamB.equals(team)).findFirst().orElse(null);
-								if (teamB_AusListe != null) {
-									teamB_AusListe.addGegner(teamA_AusListe); // gegenseitig eintragen als gegner
-								}
+								var teamB = Team.from(cellNumTeamB);
+								teamList.stream().filter(teamB::equals).findFirst()
+										.ifPresent(teamBInListe -> teamBInListe.addGegner(teamAInListe));
 							}
 						}
 					} else {
@@ -92,18 +107,12 @@ public class Vorrunden {
 		}
 	}
 
-	/**
-	 * @param string
-	 */
+	/** Gibt eine Prozessbox-Meldung über das übergeordnete Sheet aus. */
 	private void processBoxinfo(String i18nKey, Object... args) {
 		parentSheet.get().processBoxinfo(i18nKey, args);
-
 	}
 
-	/**
-	 * @return
-	 * @throws GenerateException
-	 */
+	/** Gibt den {@link SheetHelper} des übergeordneten Sheets zurück. */
 	private SheetHelper getSheetHelper() throws GenerateException {
 		return parentSheet.get().getSheetHelper();
 	}
