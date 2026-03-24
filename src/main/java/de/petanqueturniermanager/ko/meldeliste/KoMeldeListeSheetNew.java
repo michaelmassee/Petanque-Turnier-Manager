@@ -118,11 +118,9 @@ public class KoMeldeListeSheetNew extends SheetRunner implements ISheet, MeldeLi
 	 * Wird von Test-Klassen aufgerufen; im normalen Ablauf via {@link #doRun()}.
 	 */
 	public void createMeldelisteWithParams() throws GenerateException {
-		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
-				.setDocVersionWhenNew().create().isDidCreate()) {
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					getXSpreadSheet(), METADATA_SCHLUESSEL);
+		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).setDocVersionWhenNew().create();
+		if (neuesSheet.isDidCreate()) {
 			upDateSheet();
 		}
 	}

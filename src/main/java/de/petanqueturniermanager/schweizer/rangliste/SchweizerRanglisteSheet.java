@@ -170,7 +170,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		logger.debug("doRunIntern START – Thread='{}'", Thread.currentThread().getName());
 		processBoxinfo("processbox.rangliste.einfuegen");
 
-		NewSheet.from(this, getRanglistenSheetName())
+		NewSheet.from(this, getRanglistenSheetName(), getMetadatenSchluessel())
 				.pos(DefaultSheetPos.SCHWEIZER_ENDRANGLISTE)
 				.forceCreate()
 				.tabColor(SHEET_COLOR)
@@ -180,9 +180,6 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		if (sheet == null) {
 			return;
 		}
-
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), sheet, getMetadatenSchluessel());
 
 		SchweizerMeldeListeSheetUpdate meldeliste = erstelleMeldeListeSheet();
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();

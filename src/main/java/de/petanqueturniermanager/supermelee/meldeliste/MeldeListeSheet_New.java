@@ -44,7 +44,7 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 	public MeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Meldeliste");
 		delegate = new SupermeleeListeDelegate(this, workingSpreadsheet,
-				newSuperMeleeKonfigurationSheet(workingSpreadsheet));
+				newSuperMeleeKonfigurationSheet(workingSpreadsheet), METADATA_SCHLUESSEL);
 	}
 
 	@VisibleForTesting
@@ -157,16 +157,15 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
 	 */
 	public void createMeldelisteWithParams(SuperMeleeMode mode) throws GenerateException {
-		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
-				.setDocVersionWhenNew().create().isDidCreate()) {
+		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
+				.setDocVersionWhenNew().create();
+		if (neuesSheet.isDidCreate()) {
 			getKonfigurationSheet().setSuperMeleeMode(mode);
 			SpielTagNr spielTag1 = new SpielTagNr(1);
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
 			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			upDateSheet();
 		}
 	}

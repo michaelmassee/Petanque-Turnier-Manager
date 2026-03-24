@@ -54,7 +54,7 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 	public MeldeListeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Meldeliste");
 		delegate = new SupermeleeListeDelegate(this, workingSpreadsheet,
-				newSuperMeleeKonfigurationSheet(workingSpreadsheet));
+				newSuperMeleeKonfigurationSheet(workingSpreadsheet), SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
 	}
 
 	@VisibleForTesting

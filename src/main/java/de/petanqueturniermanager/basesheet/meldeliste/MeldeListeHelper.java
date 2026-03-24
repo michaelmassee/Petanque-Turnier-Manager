@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.HashSet;
@@ -46,9 +47,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonstanten {
 
 	private final IMeldeliste<MLD_LIST_TYPE, MLDTYPE> meldeListe;
+	private final String metadatenSchluessel;
 
-	public MeldeListeHelper(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> newMeldeListe) {
+	public MeldeListeHelper(IMeldeliste<MLD_LIST_TYPE, MLDTYPE> newMeldeListe, String metadatenSchluessel) {
 		meldeListe = checkNotNull(newMeldeListe);
+		checkArgument(StringUtils.isNotBlank(metadatenSchluessel));
+		this.metadatenSchluessel = metadatenSchluessel;
 	}
 
 	public void insertFormulaFuerDoppelteSpielerNrGeradeUngradeFarbe(int letzteDatenZeile, ISheet sheet,
@@ -197,7 +201,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return NewSheet.from(meldeListe, SheetNamen.meldeliste()).setDocVersionWhenNew().useIfExist().hideGrid()
+		return NewSheet.from(meldeListe, SheetNamen.meldeliste(), metadatenSchluessel).setDocVersionWhenNew().useIfExist().hideGrid()
 				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).create().getSheet();
 	}
 

@@ -73,10 +73,10 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		meldeliste.setSpielTag(getSpielTag());
 
 		// wenn hier dann immer neu erstellen, force = true
-		NewSheet.from(this, getSheetName(getSpielTag())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).forceCreate().hideGrid()
-				.setActiv().create();
-		SheetMetadataHelper.schreibeSheetMetadaten(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(),
-				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()));
+		NewSheet.from(this, getSheetName(getSpielTag()),
+				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()))
+				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
+				.forceCreate().hideGrid().setActiv().create();
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);

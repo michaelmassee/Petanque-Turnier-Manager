@@ -605,17 +605,14 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		processBoxinfo("processbox.anzahl.meldungen", meldungen.size());
 
 		// wenn hier dann neu erstellen
-		if (!NewSheet.from(this, getSheetName(getSpielRundeNr())).pos(DefaultSheetPos.SCHWEIZER_WORK)
-				.setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
+		if (!NewSheet.from(this, getSheetName(getSpielRundeNr()), getSpielrundeSchluessel(getSpielRundeNr().getNr()))
+				.pos(DefaultSheetPos.SCHWEIZER_WORK).setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
 			ProcessBox.from().info(I18n.get("schweizer.spielrunde.abbruch"));
 			return false;
 		}
 
 		// neue Spielrunde speichern, sheet vorhanden
 		getKonfigurationSheet().setAktiveSpielRunde(getSpielRundeNr());
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), getSpielrundeSchluessel(getSpielRundeNr().getNr()));
 
 		SchweizerSystem schweizerSystem = new SchweizerSystem();
 

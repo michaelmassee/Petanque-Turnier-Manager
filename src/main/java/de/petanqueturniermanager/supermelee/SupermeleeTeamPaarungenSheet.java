@@ -60,11 +60,9 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE);
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		try {
-			if (NewSheet.from(this, SheetNamen.supermeleeTeams()).hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
+			if (NewSheet.from(this, SheetNamen.supermeleeTeams(), METADATA_SCHLUESSEL)
+					.hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
 					.useIfExist().create().isDidCreate()) {
-				SheetMetadataHelper.schreibeSheetMetadaten(
-						getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-						getXSpreadSheet(), METADATA_SCHLUESSEL);
 				initSheet();
 			}
 		} catch (GenerateException e) {

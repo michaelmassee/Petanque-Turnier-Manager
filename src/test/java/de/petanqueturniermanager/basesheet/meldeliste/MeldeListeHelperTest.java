@@ -40,7 +40,7 @@ public class MeldeListeHelperTest {
 		Mockito.when(iMeldelisteMock.getMeldungenSpalte()).thenReturn(meldungenSpalteMock);
 		Mockito.when(iMeldelisteMock.getSheetHelper()).thenReturn(sheetHelperMock);
 
-		meldeListeHelper = new MeldeListeHelper<SpielerMeldungen, Spieler>(iMeldelisteMock) {
+		meldeListeHelper = new MeldeListeHelper<SpielerMeldungen, Spieler>(iMeldelisteMock, "TEST_SCHLUESSEL") {
 			@Override
 			public void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 				// nichts

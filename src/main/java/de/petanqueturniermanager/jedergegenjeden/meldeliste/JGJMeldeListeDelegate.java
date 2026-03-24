@@ -35,7 +35,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 	private final TurnierSystem turnierSystem;
 
-	JGJMeldeListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet, WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
+	JGJMeldeListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet, WorkingSpreadsheet ws, TurnierSystem turnierSystem,
+			String metadatenSchluessel) {
 		this.sheet = sheet;
 		this.turnierSystem = turnierSystem;
 		konfigurationSheet = new JGJKonfigurationSheet(ws);
@@ -43,7 +44,7 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 				.spalteMeldungNameWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(sheet)
 				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TETE).build();
-		meldeListeHelper = new MeldeListeHelper<>(sheet);
+		meldeListeHelper = new MeldeListeHelper<>(sheet, metadatenSchluessel);
 	}
 
 	JGJKonfigurationSheet getKonfigurationSheet() {

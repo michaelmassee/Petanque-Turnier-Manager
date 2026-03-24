@@ -107,11 +107,9 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	@Override
 	protected void doRun() throws GenerateException {
 		SpielTagNr spieltagNr = getKonfigurationSheet().getAktiveSpieltag();
-		if (NewSheet.from(this, SheetNamen.endrangliste()).pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
+		if (NewSheet.from(this, SheetNamen.endrangliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
 				.hideGrid().forceCreate().spielTagPageStyle(spieltagNr).create().isDidCreate()) {
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
 		}

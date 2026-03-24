@@ -21,6 +21,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.io.HtmlExport;
 import de.petanqueturniermanager.helper.sheet.io.PdfExport;
@@ -46,7 +47,8 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 
 	public LigaMeldeListeSheetExport(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga Export");
-		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA);
+		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA,
+				SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE);
 	}
 
 	@Override

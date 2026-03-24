@@ -39,7 +39,7 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 
 	public JGJMeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Meldeliste");
-		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ);
+		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ, METADATA_SCHLUESSEL);
 	}
 
 	@Override
@@ -147,12 +147,10 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
 	 */
 	public void createMeldelisteWithParams(String gruppenname) throws GenerateException {
-		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
-				.setDocVersionWhenNew().create().isDidCreate()) {
+		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).setDocVersionWhenNew().create();
+		if (neuesSheet.isDidCreate()) {
 			getKonfigurationSheet().setGruppenname(gruppenname);
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			delegate.upDateSheet();
 		}
 	}

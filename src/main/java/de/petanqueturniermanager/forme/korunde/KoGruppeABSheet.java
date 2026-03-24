@@ -57,10 +57,8 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		NewSheet.from(this, SheetNamen.koRunde()).tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), METADATA_SCHLUESSEL);
+		NewSheet.from(this, SheetNamen.koRunde(), METADATA_SCHLUESSEL)
+				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		koRundeErstellen();
 		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}

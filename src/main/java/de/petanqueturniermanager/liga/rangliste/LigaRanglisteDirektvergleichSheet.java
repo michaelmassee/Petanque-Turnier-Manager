@@ -113,14 +113,12 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 			return;
 		}
 
-		if (!NewSheet.from(this, SheetNamen.direktvergleich()).pos(DefaultSheetPos.LIGA_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
+		if (!NewSheet.from(this, SheetNamen.direktvergleich(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.LIGA_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga Direktvergleich wurde nicht erstellt");
 			return;
 		}
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), METADATA_SCHLUESSEL);
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);

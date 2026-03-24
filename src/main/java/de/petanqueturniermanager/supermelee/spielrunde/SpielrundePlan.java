@@ -107,14 +107,16 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		// Spielrunde sheet ?
 		processBoxinfo("processbox.neuer.spielrundeplan", getSpielRundeNr().getNr(), getSpielTag().getNr());
 
-		if (!NewSheet.from(this, getSheetName(getSpielTag(), getSpielRundeNr())).pos(DefaultSheetPos.SUPERMELEE_WORK)
-				.spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv().tabColor(SHEET_COLOR).create()
-				.isDidCreate()) {
+		var neuesSheet = NewSheet
+				.from(this, getSheetName(getSpielTag(), getSpielRundeNr()),
+						SheetMetadataHelper.schluesselSupermeleeSpielrundePlan(getSpielTag().getNr(),
+								getSpielRundeNr().getNr()))
+				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv()
+				.tabColor(SHEET_COLOR).create();
+		if (!neuesSheet.isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrundeplan wurde nicht erstellt");
 			return;
 		}
-		SheetMetadataHelper.schreibeSheetMetadaten(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(),
-				SheetMetadataHelper.schluesselSupermeleeSpielrundePlan(getSpielTag().getNr(), getSpielRundeNr().getNr()));
 
 		NumberCellValue spierNrVal = NumberCellValue
 				.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE))

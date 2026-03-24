@@ -41,7 +41,8 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 	private final MeldeListeHelper<TeamMeldungen, Team> meldeListeHelper;
 	private final TurnierSystem turnierSystem;
 
-	LigaMeldeListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet, WorkingSpreadsheet ws, TurnierSystem turnierSystem) {
+	LigaMeldeListeDelegate(IMeldeliste<TeamMeldungen, Team> sheet, WorkingSpreadsheet ws, TurnierSystem turnierSystem,
+			String metadatenSchluessel) {
 		this.sheet = sheet;
 		this.turnierSystem = turnierSystem;
 		konfigurationSheet = new LigaKonfigurationSheet(ws);
@@ -49,7 +50,7 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 				.spalteMeldungNameWidth(LigaKonfigurationSheet.LIGA_MELDUNG_NAME_WIDTH)
 				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(sheet)
 				.minAnzZeilen(MIN_ANZAHL_MELDUNGEN_ZEILEN).formation(Formation.TETE).build();
-		meldeListeHelper = new MeldeListeHelper<>(sheet);
+		meldeListeHelper = new MeldeListeHelper<>(sheet, metadatenSchluessel);
 	}
 
 	LigaKonfigurationSheet getKonfigurationSheet() {

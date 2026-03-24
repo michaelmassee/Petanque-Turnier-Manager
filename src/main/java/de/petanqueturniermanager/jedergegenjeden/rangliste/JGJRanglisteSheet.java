@@ -136,14 +136,12 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 			return;
 		}
 
-		if (!NewSheet.from(this, SheetNamen.rangliste()).pos(DefaultSheetPos.JGJ_ENDRANGLISTE).setForceCreate(true).setActiv()
+		if (!NewSheet.from(this, SheetNamen.rangliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.JGJ_ENDRANGLISTE).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, JGJ SpielPlan wurde nicht erstellt");
 			return;
 		}
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), METADATA_SCHLUESSEL);
 
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();

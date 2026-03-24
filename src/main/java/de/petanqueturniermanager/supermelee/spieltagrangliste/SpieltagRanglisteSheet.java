@@ -159,11 +159,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		}
 
 		// neu erstellen
-		NewSheet.from(this, getSheetName(getSpieltagNr())).pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv()
+		NewSheet.from(this, getSheetName(getSpieltagNr()),
+				SheetMetadataHelper.schluesselSpieltagRangliste(spielTagNr.getNr()))
+				.pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv()
 				.forceCreate().spielTagPageStyle(getSpieltagNr()).create();
-
-		SheetMetadataHelper.schreibeSpieltagNr(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(), spielTagNr);
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		getSpielerSpalte().alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeliste);

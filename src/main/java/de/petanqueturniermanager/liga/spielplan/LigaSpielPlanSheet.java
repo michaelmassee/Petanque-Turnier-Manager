@@ -138,14 +138,12 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
-		if (!NewSheet.from(this, sheetName()).pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
+		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
 				.tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), METADATA_SCHLUESSEL);
 
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
 		// nur einmal schufflePlan ! damit beim wechsel von hr nach rr keine 2 x hintereinander

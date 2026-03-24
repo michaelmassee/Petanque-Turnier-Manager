@@ -39,7 +39,7 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 
 	public LigaMeldeListeSheetNew(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga-Meldeliste");
-		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA);
+		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA, METADATA_SCHLUESSEL);
 	}
 
 	@Override
@@ -147,12 +147,10 @@ public class LigaMeldeListeSheetNew extends SheetRunner implements IMeldeliste<T
 	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
 	 */
 	public void createMeldelisteWithParams(String gruppenname) throws GenerateException {
-		if (NewSheet.from(this, SheetNamen.meldeliste()).pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR)
-				.setDocVersionWhenNew().create().isDidCreate()) {
+		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).setDocVersionWhenNew().create();
+		if (neuesSheet.isDidCreate()) {
 			getKonfigurationSheet().setGruppenname(gruppenname);
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					getXSpreadSheet(), METADATA_SCHLUESSEL);
 			delegate.upDateSheet();
 		}
 	}

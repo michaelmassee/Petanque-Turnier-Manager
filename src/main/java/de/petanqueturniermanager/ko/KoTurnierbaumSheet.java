@@ -309,16 +309,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
 		this.aktuellerGruppenSheetName = sheetName;
 		try {
-			NewSheet.from(this, sheetName)
+			NewSheet.from(this, sheetName, metadatenSchluessel)
 					.pos(sheetPos)
 					.hideGrid()
 					.tabColor(SHEET_COLOR)
 					.setActiv()
 					.create();
 			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
-			SheetMetadataHelper.schreibeSheetMetadaten(
-					getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					xSheet, metadatenSchluessel);
 			TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
 			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig);
 		} finally {
@@ -432,7 +429,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			// damit PageStyleHelper.applytoSheet() via getXSpreadSheet() das richtige Sheet trifft
 			this.aktuellerGruppenSheetName = sheetName;
 			try {
-				NewSheet.from(this, sheetName)
+				NewSheet.from(this, sheetName, schluesselFuerGruppe(g, anzGruppen))
 						.pos((short) (DefaultSheetPos.KO_TURNIERBAUM + g))
 						.hideGrid()
 						.tabColor(SHEET_COLOR)
@@ -440,9 +437,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.create();
 
 				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
-				SheetMetadataHelper.schreibeSheetMetadaten(
-						getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-						xSheet, schluesselFuerGruppe(g, anzGruppen));
 				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
 				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse, getKonfigurationSheet());
 			} finally {

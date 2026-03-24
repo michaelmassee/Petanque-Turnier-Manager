@@ -45,13 +45,8 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (NewSheet.from(this, SheetNamen.vorrundenErgebnisse()).pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
-				.create().isDidCreate()) {
-
-		}
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), METADATA_SCHLUESSEL);
+		NewSheet.from(this, SheetNamen.vorrundenErgebnisse(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv().create();
 	}
 
 }

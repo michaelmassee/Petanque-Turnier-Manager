@@ -113,14 +113,12 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 			return;
 		}
 
-		if (!NewSheet.from(this, SheetNamen.direktvergleich()).pos(DefaultSheetPos.JGJ_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
+		if (!NewSheet.from(this, SheetNamen.direktvergleich(), METADATA_SCHLUESSEL)
+				.pos(DefaultSheetPos.JGJ_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, JGJ Direktvergleich wurde nicht erstellt");
 			return;
 		}
-		SheetMetadataHelper.schreibeSheetMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				getXSpreadSheet(), METADATA_SCHLUESSEL);
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);
 		int headerBackColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 		meldungenSpalte.insertHeaderInSheet(headerBackColor);

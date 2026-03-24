@@ -87,10 +87,10 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		meldeliste.setSpielTag(getSpielTagNr());
 
 		// wenn hier dann immer neu erstellen, force = true
-		NewSheet.from(this, getSheetName(getSpielTagNr())).tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr()).forceCreate().hideGrid()
-				.setActiv().create();
-		SheetMetadataHelper.schreibeSheetMetadaten(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), getXSpreadSheet(),
-				SheetMetadataHelper.schluesselSupermeleeTeilehnehmer(getSpielTagNr().getNr()));
+		NewSheet.from(this, getSheetName(getSpielTagNr()),
+				SheetMetadataHelper.schluesselSupermeleeTeilehnehmer(getSpielTagNr().getNr()))
+				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
+				.forceCreate().hideGrid().setActiv().create();
 
 		// meldeliste nach namen sortieren !
 		meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);

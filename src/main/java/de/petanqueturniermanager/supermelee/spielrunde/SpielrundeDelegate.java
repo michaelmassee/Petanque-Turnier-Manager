@@ -154,16 +154,16 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				return false;
 			}
 		}
-		if (!NewSheet
-				.from(sheet, getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()))
+		var neuesSheet = NewSheet
+				.from(sheet, getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()),
+						SheetMetadataHelper.schluesselSupermeleeSpielrunde(sheet.getSpielTag().getNr(),
+								sheet.getSpielRundeNr().getNr()))
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(sheet.getSpielTag()).setForceCreate(force)
-				.setActiv().hideGrid().create().isDidCreate()) {
+				.setActiv().hideGrid().create();
+		if (!neuesSheet.isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;
 		}
-		SheetMetadataHelper.schreibeSheetMetadaten(sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				sheet.getXSpreadSheet(),
-				SheetMetadataHelper.schluesselSupermeleeSpielrunde(sheet.getSpielTag().getNr(), sheet.getSpielRundeNr().getNr()));
 
 		konfigurationSheet.setAktiveSpielRunde(sheet.getSpielRundeNr());
 

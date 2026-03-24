@@ -29,7 +29,7 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 
 	public JGJMeldeListeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Meldeliste");
-		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ);
+		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ, METADATA_SCHLUESSEL);
 	}
 
 	@Override

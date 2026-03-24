@@ -29,7 +29,7 @@ public class LigaMeldeListeSheetUpdate extends SheetRunner implements IMeldelist
 
 	public LigaMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.LIGA, "Liga-Meldeliste");
-		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA);
+		delegate = new LigaMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.LIGA, METADATA_SCHLUESSEL);
 	}
 
 	@Override

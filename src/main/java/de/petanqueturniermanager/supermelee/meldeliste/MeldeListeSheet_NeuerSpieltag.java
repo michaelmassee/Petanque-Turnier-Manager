@@ -33,7 +33,7 @@ public class MeldeListeSheet_NeuerSpieltag extends SheetRunner implements IMelde
 	public MeldeListeSheet_NeuerSpieltag(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Meldeliste");
 		delegate = new SupermeleeListeDelegate(this, workingSpreadsheet,
-				newSuperMeleeKonfigurationSheet(workingSpreadsheet));
+				newSuperMeleeKonfigurationSheet(workingSpreadsheet), SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE);
 	}
 
 	@VisibleForTesting

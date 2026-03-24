@@ -89,13 +89,13 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	private SpielTagNr spielTag = null;
 
 	SupermeleeListeDelegate(IMeldeliste<SpielerMeldungen, Spieler> sheet, WorkingSpreadsheet ws,
-			SuperMeleeKonfigurationSheet konfigurationSheet) {
+			SuperMeleeKonfigurationSheet konfigurationSheet, String metadatenSchluessel) {
 		this.sheet = sheet;
 		this.konfigurationSheet = konfigurationSheet;
 		meldungenSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
 				.minAnzZeilen(MIN_ANZAHL_SPIELER_ZEILEN).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(sheet)
 				.formation(Formation.MELEE).build();
-		meldeListeHelper = new MeldeListeHelper<>(sheet);
+		meldeListeHelper = new MeldeListeHelper<>(sheet, metadatenSchluessel);
 	}
 
 	SuperMeleeKonfigurationSheet getKonfigurationSheet() {
