@@ -72,6 +72,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final RangListeSorter rangListeSorter;
+	private int cachedAnzZeilen = -1;
 
 	/**
 	 * @param workingSpreadsheet
@@ -125,6 +126,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	 * @throws GenerateException
 	 */
 	public void upDateSheet() throws GenerateException {
+		cachedAnzZeilen = -1;
 		meldeListe.upDateSheet();
 
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
@@ -359,7 +361,10 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	}
 
 	private int anzZeilen() throws GenerateException {
-		return newJederGegenJeden().getAnzMeldungen();
+		if (cachedAnzZeilen < 0) {
+			cachedAnzZeilen = newJederGegenJeden().getAnzMeldungen();
+		}
+		return cachedAnzZeilen;
 	}
 
 	private int anzGesamtRunden() throws GenerateException {

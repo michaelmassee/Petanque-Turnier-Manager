@@ -150,15 +150,20 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		List<List<TeamPaarung>> spielPlanHRunde = ligaSpielPlan.schufflePlan().getSpielPlanClone();
 		List<List<TeamPaarung>> spielPlanRRunde = ligaSpielPlan.flipTeams().getSpielPlanClone();
 
-		insertDatenHeaderUndSpalteBreite();
-		insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde);
-		insertSpieltageDaten(spielPlanHRunde);
-		insertFormulaTeamNamen();
-		insertFormulaPunkte();
-		insertDatumFormulaUndFormatierungen();
-		formatieren(spielPlanHRunde);
-		printBereichDefinieren();
-		SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
+		getxCalculatable().enableAutomaticCalculation(false);
+		try {
+			insertDatenHeaderUndSpalteBreite();
+			insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde);
+			insertSpieltageDaten(spielPlanHRunde);
+			insertFormulaTeamNamen();
+			insertFormulaPunkte();
+			insertDatumFormulaUndFormatierungen();
+			formatieren(spielPlanHRunde);
+			printBereichDefinieren();
+			SheetFreeze.from(getTurnierSheet()).anzZeilen(2).doFreeze();
+		} finally {
+			getxCalculatable().enableAutomaticCalculation(true);
+		}
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
