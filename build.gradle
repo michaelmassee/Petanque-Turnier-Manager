@@ -285,6 +285,23 @@ test {
     systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
 }
 
+// UITests (ohne Beispielturnier): führt alle *UITest*-Klassen durch, außer dem Beispielturnier-Package.
+// Entspricht ./gradlew test -PuitTests=true, aber als eigenständiger Task ohne Property-Pflicht.
+tasks.register('uiTests', Test) {
+    group = 'LibreOffice'
+    description = 'Führt alle normalen UI-Tests durch (ohne Beispielturnier-Tests). Benötigt reinstallExtension.'
+    dependsOn 'reinstallExtension'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    outputs.upToDateWhen { false }
+    maxParallelForks = 1
+    systemProperty 'uitest.headless', 'true'
+    systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
+    useJUnitPlatform()
+    include '**/*UITest*'
+    exclude 'de/petanqueturniermanager/beispielturnier/**'
+}
+
 // Beispielturnier-Tests: führen alle registrierten Beispielturniere als UI-Test durch.
 // Unterstützte Locales: de (Standard), en, nl, fr, es.
 // Verwendung:
