@@ -7,7 +7,7 @@
 
 *Read this in other languages: [🇩🇪 DE](README.md) | [🇬🇧 EN](README.en.md) | [🇫🇷 FR](README.fr.md) | [🇪🇸 ES](README.es.md) | [🇳🇱 NL](README.nl.md)*
 
-**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+
 
 ---
 
@@ -23,6 +23,7 @@ Die Software wurde speziell dafür entwickelt, die Organisation und Durchführun
 * **Ressourcenschonend:** Perfekt für ältere Hardware geeignet.
 * **Alles an einem Ort:** Keine externe Datenbank nötig; alles wird direkt in LibreOffice Calc berechnet und gespeichert.
 
+**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 ---
 
 ## 🛠️ Grenzenlose Anpassbarkeit: Mach es zu *deinem* Turnier!

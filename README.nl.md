@@ -7,7 +7,7 @@
 
 *Read this in other languages: [🇩🇪 DE](README.md) | [🇬🇧 EN](README.en.md) | [🇫🇷 FR](README.fr.md) | [🇪🇸 ES](README.es.md) | [🇳🇱 NL](README.nl.md)*
 
-**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+
 
 ---
 
@@ -23,6 +23,7 @@ De software is speciaal ontwikkeld om de organisatie en uitvoering van jeu-de-bo
 * **Efficiënt:** Perfect geschikt voor oudere hardware.
 * **Alles op één plek:** Geen externe database nodig; alles wordt direct berekend en opgeslagen in LibreOffice Calc.
 
+~~~~**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 ---
 
 ## 🛠️ Grenzeloze aanpasbaarheid: Maak er *jouw* toernooi van!

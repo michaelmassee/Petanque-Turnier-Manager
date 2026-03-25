@@ -7,7 +7,6 @@
 
 *Read this in other languages: [🇩🇪 DE](README.md) | [🇬🇧 EN](README.en.md) | [🇫🇷 FR](README.fr.md) | [🇪🇸 ES](README.es.md) | [🇳🇱 NL](README.nl.md)*
 
-**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
 ---
 
@@ -22,6 +21,8 @@ Ce logiciel a été spécialement conçu pour rendre l'organisation et le dérou
 * **Gratuit & Open Source :** Pas de frais de licence, pas de publicité.
 * **Économe en ressources :** Parfaitement adapté au matériel plus ancien.
 * **Tout en un seul endroit :** Aucune base de données externe n'est nécessaire ; tout est calculé et enregistré directement dans LibreOffice Calc.
+
+**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
 ---
 
