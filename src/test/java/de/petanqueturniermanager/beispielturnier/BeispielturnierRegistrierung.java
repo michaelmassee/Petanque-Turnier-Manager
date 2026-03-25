@@ -124,7 +124,7 @@ public final class BeispielturnierRegistrierung {
 
                 new Eintrag(
                         "Liga (6 Teams, Spielplan + Rangliste)",
-                        ws -> new LigaTurnierTestDaten(ws).generate(),
+                        ws -> new LigaTurnierTestDaten(ws).generiere(),
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,

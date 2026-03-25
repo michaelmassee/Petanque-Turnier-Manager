@@ -64,7 +64,9 @@ class BeispielturnierUITest extends BaseCalcUITest {
     }
 
     static Stream<Eintrag> beispielturnierEintraege() {
-        return BeispielturnierRegistrierung.alleEintraege().stream();
+        String nur = System.getProperty("beispielturnier.nur");
+        return BeispielturnierRegistrierung.alleEintraege().stream()
+                .filter(e -> nur == null || e.bezeichnung().contains(nur));
     }
 
     @ParameterizedTest(name = "{0}")
