@@ -10,8 +10,10 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
 import de.petanqueturniermanager.ko.KoTurnierTestDaten;
+import de.petanqueturniermanager.liga.spielplan.LigaTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SupermeleeTurnierTestDaten;
 
 /**
  * Zentrale Registrierung aller vollständigen Beispielturnier-Generatoren.
@@ -109,7 +111,25 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE),
-                        "JGJTurnierTestDaten.java")
+                        "JGJTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Supermelee (5 Spieltage)",
+                        ws -> new SupermeleeTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE,
+                                SheetMetadataHelper.schluesselSpieltagRangliste(1),
+                                SheetMetadataHelper.schluesselSpieltagRangliste(5)),
+                        "SupermeleeTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Liga (6 Teams, Spielplan + Rangliste)",
+                        ws -> new LigaTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                                SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE),
+                        "LigaTurnierTestDaten.java")
         );
     }
 }
