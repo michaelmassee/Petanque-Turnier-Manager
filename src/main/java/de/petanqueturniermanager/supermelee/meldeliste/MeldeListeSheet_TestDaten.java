@@ -50,6 +50,11 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 		return konfigurationSheet;
 	}
 
+	/** Öffentlicher Einstiegspunkt für {@link de.petanqueturniermanager.beispielturnier.BeispielturnierRegistrierung}. */
+	public void generate() throws GenerateException {
+		doRun();
+	}
+
 	@Override
 	protected void doRun() throws GenerateException {
 

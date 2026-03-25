@@ -9,10 +9,21 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
+import de.petanqueturniermanager.ko.KoCadrageTurnierTestDaten;
+import de.petanqueturniermanager.ko.Ko16TeamsTurnierTestDaten;
+import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.ko.KoTurnierTestDaten;
+import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.liga.spielplan.LigaMitFreispielTurnierTestDaten;
 import de.petanqueturniermanager.liga.spielplan.LigaTurnierTestDaten;
+import de.petanqueturniermanager.maastrichter.Maastrichter35TeamsTurnierTestDaten;
+import de.petanqueturniermanager.maastrichter.Maastrichter57TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SupermeleeTurnierTestDaten;
 
 /**
@@ -129,7 +140,99 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
                                 SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE),
-                        "LigaTurnierTestDaten.java")
+                        "LigaTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Liga – Spielplan mit Freispiel",
+                        ws -> new LigaMitFreispielTurnierTestDaten(ws).erzeugeBeispielturnier(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                                SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE),
+                        "LigaMitFreispielTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Liga – nur Meldeliste",
+                        ws -> new LigaMeldeListeSheetTestDaten(ws, true).generate(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE),
+                        "LigaMeldeListeSheetTestDaten.java"),
+
+                new Eintrag(
+                        "Schweizer System – nur Meldeliste (16 Teams)",
+                        ws -> new SchweizerMeldeListeSheetTestDaten(ws).doRun(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE),
+                        "SchweizerMeldeListeSheetTestDaten.java"),
+
+                new Eintrag(
+                        "Schweizer System – Turnier (19 Teams, Freilos, Teamname, Bahn zufällig)",
+                        ws -> new Schweizer19TeamsTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE,
+                                SheetMetadataHelper.schluesselSchweizerSpielrunde(1),
+                                SheetMetadataHelper.schluesselSchweizerSpielrunde(3),
+                                SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE),
+                        "Schweizer19TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "K.-O. – nur Meldeliste (8 Teams)",
+                        ws -> new KoMeldeListeSheetTestDaten(ws, 8).erstelleMeldelisteWithTestdaten(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE),
+                        "KoMeldeListeSheetTestDaten.java"),
+
+                new Eintrag(
+                        "K.-O. – 16 Teams (2 Gruppen)",
+                        ws -> new Ko16TeamsTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE,
+                                SheetMetadataHelper.schluesselKoTurnierbaum("A"),
+                                SheetMetadataHelper.schluesselKoTurnierbaum("B")),
+                        "Ko16TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "K.-O. – 10 Teams (Cadrage)",
+                        ws -> new KoCadrageTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE,
+                                SheetMetadataHelper.schluesselKoTurnierbaum("")),
+                        "KoCadrageTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Maastrichter – Turnier (57 Teams, 4 Vorrunden + 4 Finalgruppen)",
+                        ws -> new Maastrichter57TeamsTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE,
+                                SheetMetadataHelper.schluesselMaastrichterVorrunde(1),
+                                SheetMetadataHelper.schluesselMaastrichterVorrunde(4),
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                                SheetMetadataHelper.schluesselMaastrichterFinalrunde("A"),
+                                SheetMetadataHelper.schluesselMaastrichterFinalrunde("D")),
+                        "Maastrichter57TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Maastrichter – Turnier (35 Teams, 3 Vorrunden + 2 Finalgruppen)",
+                        ws -> new Maastrichter35TeamsTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE,
+                                SheetMetadataHelper.schluesselMaastrichterVorrunde(1),
+                                SheetMetadataHelper.schluesselMaastrichterVorrunde(3),
+                                SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                                SheetMetadataHelper.schluesselMaastrichterFinalrunde("A"),
+                                SheetMetadataHelper.schluesselMaastrichterFinalrunde("B")),
+                        "Maastrichter35TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Supermêlée – nur Meldeliste (100 Meldungen)",
+                        ws -> new MeldeListeSheet_TestDaten(ws).generate(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE),
+                        "MeldeListeSheet_TestDaten.java"),
+
+                new Eintrag(
+                        "Supermêlée – 1 Spieltag mit 4 Spielrunden",
+                        ws -> new SpielrundeSheet_TestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE,
+                                SheetMetadataHelper.schluesselSpieltagRangliste(1)),
+                        "SpielrundeSheet_TestDaten.java")
         );
     }
 }

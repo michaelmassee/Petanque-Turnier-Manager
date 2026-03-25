@@ -27,7 +27,10 @@ import org.junit.jupiter.api.Test;
 class BeispielturnierVollstaendigkeitTest {
 
     private static final Path QUELL_ORDNER = Path.of("src/main/java");
-    private static final String DATEINAME_SUFFIX = "TurnierTestDaten.java";
+    /** Suffix für Klassen, die zwingend einen Registrierungseintrag benötigen. */
+    private static final String TURNIER_DATEINAME_SUFFIX = "TurnierTestDaten.java";
+    /** Suffix für alle TestDaten-Klassen (zum Validieren registrierter quelldateiNamen). */
+    private static final String ALLE_TESTDATEN_SUFFIX = "TestDaten.java";
 
     @Test
     void alleQuellklassenSindRegistriert() throws IOException {
@@ -35,7 +38,7 @@ class BeispielturnierVollstaendigkeitTest {
                 .map(BeispielturnierRegistrierung.Eintrag::quelldateiName)
                 .collect(Collectors.toSet());
 
-        List<String> gefundeneQuelldateien = alleTestdatenDateienEntdecken();
+        List<String> gefundeneQuelldateien = testdatenDateienEntdecken(TURNIER_DATEINAME_SUFFIX);
 
         SoftAssertions soft = new SoftAssertions();
         for (String dateiname : gefundeneQuelldateien) {
@@ -49,7 +52,7 @@ class BeispielturnierVollstaendigkeitTest {
 
     @Test
     void alleRegistriertenQuelldateienExistieren() throws IOException {
-        List<String> gefundeneQuelldateien = alleTestdatenDateienEntdecken();
+        List<String> gefundeneQuelldateien = testdatenDateienEntdecken(ALLE_TESTDATEN_SUFFIX);
 
         SoftAssertions soft = new SoftAssertions();
         for (var eintrag : BeispielturnierRegistrierung.alleEintraege()) {
@@ -90,17 +93,17 @@ class BeispielturnierVollstaendigkeitTest {
     }
 
     /**
-     * Entdeckt alle Dateien in {@code src/main/java}, deren Name auf
-     * {@value DATEINAME_SUFFIX} endet (z.B. {@code SchweizerTurnierTestDaten.java}).
+     * Entdeckt alle Dateien in {@code src/main/java}, deren Name auf das angegebene
+     * Suffix endet (z.B. {@code "TurnierTestDaten.java"} oder {@code "TestDaten.java"}).
      */
-    private List<String> alleTestdatenDateienEntdecken() throws IOException {
+    private List<String> testdatenDateienEntdecken(String suffix) throws IOException {
         assertThat(QUELL_ORDNER)
                 .as("Java-Quellordner nicht gefunden: %s", QUELL_ORDNER.toAbsolutePath())
                 .isDirectory();
         try (var dateistrom = Files.walk(QUELL_ORDNER)) {
             return dateistrom
                     .map(p -> p.getFileName().toString())
-                    .filter(name -> name.endsWith(DATEINAME_SUFFIX))
+                    .filter(name -> name.endsWith(suffix))
                     .sorted()
                     .toList();
         }
