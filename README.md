@@ -23,7 +23,8 @@ Die Software wurde speziell dafür entwickelt, die Organisation und Durchführun
 * **Ressourcenschonend:** Perfekt für ältere Hardware geeignet.
 * **Alles an einem Ort:** Keine externe Datenbank nötig; alles wird direkt in LibreOffice Calc berechnet und gespeichert.
 
-**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+
 ---
 
 ## 🛠️ Grenzenlose Anpassbarkeit: Mach es zu *deinem* Turnier!

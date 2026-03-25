@@ -23,7 +23,8 @@ De software is speciaal ontwikkeld om de organisatie en uitvoering van jeu-de-bo
 * **Efficiënt:** Perfect geschikt voor oudere hardware.
 * **Alles op één plek:** Geen externe database nodig; alles wordt direct berekend en opgeslagen in LibreOffice Calc.
 
-~~~~**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+
 ---
 
 ## 🛠️ Grenzeloze aanpasbaarheid: Maak er *jouw* toernooi van!

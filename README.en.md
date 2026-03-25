@@ -22,7 +22,8 @@ The software was specifically designed to make the organization and execution of
 * **Resource Efficient:** Perfectly suited for older hardware.
 * **Everything in one place:** No external database required; everything is calculated and stored directly in LibreOffice Calc.
 
-**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+
 ---
 
 ## 🛠️ Limitless Customization: Make it *your* tournament!

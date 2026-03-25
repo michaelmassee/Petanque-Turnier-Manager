@@ -22,7 +22,7 @@ Ce logiciel a été spécialement conçu pour rendre l'organisation et le dérou
 * **Économe en ressources :** Parfaitement adapté au matériel plus ancien.
 * **Tout en un seul endroit :** Aucune base de données externe n'est nécessaire ; tout est calculé et enregistré directement dans LibreOffice Calc.
 
-**Available in Languages:** 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
+Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
 ---
 
