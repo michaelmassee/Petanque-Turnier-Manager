@@ -35,6 +35,7 @@ import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -166,10 +167,8 @@ public abstract class BaseCalcUITest {
 		// das laeuft-Flag auf true hält und run()-Aufrufe im nächsten Test als No-Op ausführt.
 		SheetRunner.koordinator.zuruecksetzen();
 		doc = OfficeDocumentHelper.from(loader).createCalc();
-		if (doc == null) {
-			System.out.println("Document creation failed");
-			return;
-		}
+		Assumptions.assumeTrue(loader != null, "LibreOffice loader nicht verfügbar – UITest wird übersprungen");
+		Assumptions.assumeTrue(doc != null, "LibreOffice Calc-Dokument konnte nicht erstellt werden – UITest wird übersprungen");
 
 		if (!Boolean.parseBoolean(System.getProperty("uitest.headless", "false"))) {
 			OfficeDocumentHelper.setVisible(doc, true);
@@ -181,7 +180,9 @@ public abstract class BaseCalcUITest {
 		// I18n testseitig mit Deutsch-Fallback initialisieren (locale-unabhängig)
 		I18n.init(null);
 		// use force weil calc is clossed in afterTest
-		ProcessBox.setHeadlessMode(Boolean.parseBoolean(System.getProperty("uitest.headless", "false")));
+		var headless = Boolean.parseBoolean(System.getProperty("uitest.headless", "false"));
+		ProcessBox.setHeadlessMode(headless);
+		MessageBox.setDialogeUeberspringen(headless);
 		ProcessBox.forceinit(starter.getxComponentContext());
 	}
 

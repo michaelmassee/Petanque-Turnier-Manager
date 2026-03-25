@@ -20,6 +20,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 public class MessageBox extends AbstractMessageBox {
 	private static final Logger logger = LogManager.getLogger(MessageBox.class);
 
+	private static boolean dialogeUeberspringen = false;
+
 	private final MessageBoxTypeEnum type;
 	private boolean forceOk = false;
 	private String caption = "";
@@ -49,6 +51,10 @@ public class MessageBox extends AbstractMessageBox {
 		return this;
 	}
 
+	public static void setDialogeUeberspringen(boolean ueberspringen) {
+		dialogeUeberspringen = ueberspringen;
+	}
+
 	/**
 	 * wenn true dann kein Box sondern ja nach msgbox typ, MessageBoxResult ok return
 	 *
@@ -65,7 +71,7 @@ public class MessageBox extends AbstractMessageBox {
 	 */
 	public final MessageBoxResult show() {
 
-		if (forceOk) {
+		if (forceOk || dialogeUeberspringen) {
 			switch (type) {
 			case QUESTION_YES_NO:
 			case WARN_YES_NO:

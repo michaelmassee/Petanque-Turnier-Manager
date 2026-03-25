@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -52,6 +53,7 @@ class BeispielturnierUITest extends BaseCalcUITest {
     /** System-Property-Name für die Ziel-Locale. */
     private static final String PROP_LOCALE = "beispielturnier.locale";
 
+    @BeforeEach
     @Override
     public void beforeTest() {
         super.beforeTest();
