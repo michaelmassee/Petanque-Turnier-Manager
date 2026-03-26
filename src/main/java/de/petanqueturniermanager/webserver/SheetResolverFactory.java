@@ -1,5 +1,9 @@
 package de.petanqueturniermanager.webserver;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
@@ -31,50 +35,105 @@ public final class SheetResolverFactory {
     }
 
     /**
+     * Zentrale Konfiguration aller bekannten Sheet-Typen und ihrer Resolver-Factories.
+     * Die Iteration über diese Map bestimmt automatisch:
+     * - Die verfügbaren Sheet-Typen für die Webserver-Konfiguration
+     * - Die Resolver-Logik in der {@link #erstellen(String)}-Methode
+     * <p>
+     * Neue Typen hier hinzufügen → automatisch überall synchronisiert!
+     */
+    private static final Map<String, Supplier<SheetResolver>> RESOLVER_MAP = new LinkedHashMap<>();
+
+    static {
+        // Resolver-Factories definieren – Reihenfolge bestimmt ComboBox-Reihenfolge
+        RESOLVER_MAP.put("SCHWEIZER_RANGLISTE", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
+                        I18n.get("webserver.resolver.schweizer.rangliste")));
+        RESOLVER_MAP.put("SCHWEIZER_SPIELRUNDE", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.schweizer.spielrunde")));
+        RESOLVER_MAP.put("SCHWEIZER_AKTUELLE_SPIELRUNDE", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.schweizer.aktuelle.spielrunde")));
+        RESOLVER_MAP.put("SUPERMELEE_ENDRANGLISTE", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
+                        I18n.get("webserver.resolver.supermelee.endrangliste")));
+        RESOLVER_MAP.put("SPIELTAG_RANGLISTE", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX,
+                        I18n.get("webserver.resolver.spieltag")));
+        RESOLVER_MAP.put("SPIELTAG_TEILNEHMER", () ->
+                new SupermeleeAktiverSpieltagSheetResolver());
+        RESOLVER_MAP.put("TEILNEHMER", () ->
+                new TeilnehmerSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+                        I18n.get("webserver.resolver.teilnehmer"),
+                        new String[]{
+                                "Schweizer Teilnehmer", "Schweizer Participants",
+                                "Participants", "Participantes", "Deelnemers",
+                                "JGJ Teilnehmer", "JGJ Participants",
+                                "KO Teilnehmer", "KO Participants",
+                                "Kaskaden Teilnehmer", "Kaskaden Participants",
+                                "Ligas Teilnehmer", "Ligas Participants"
+                        }));
+        RESOLVER_MAP.put("SPIELTAG_ANMELDUNGEN", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.spieltag.anmeldungen")));
+        RESOLVER_MAP.put("JGJ_RANGLISTE", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
+                        I18n.get("webserver.resolver.jgj.rangliste")));
+        RESOLVER_MAP.put("LIGA_RANGLISTE", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
+                        I18n.get("webserver.resolver.liga.rangliste")));
+        RESOLVER_MAP.put("MAASTRICHTER_VORRUNDE", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.maastrichter.vorrunde")));
+        RESOLVER_MAP.put("KO_TURNIERBAUM", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_KO_TURNIERBAUM_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.ko.turnierbaum")));
+    }
+
+    /**
+     * Zentral definierte Liste aller bekannten Sheet-Typen für die Webserver-Konfiguration.
+     * Diese wird automatisch aus RESOLVER_MAP generiert – garantiert synchronisiert!
+     */
+    public static final String[] SHEET_TYPEN = RESOLVER_MAP.keySet().toArray(String[]::new);
+
+    /**
+     * Default Sheet-Typ für neue Webserver-Konfigurationen.
+     */
+    public static final String DEFAULT_SHEET_TYP = "SPIELTAG_RANGLISTE";
+
+    /**
      * Erzeugt einen Resolver passend zum Konfigurations-String.
+     * <p>
+     * Nutzt {@link #RESOLVER_MAP} zur Auflösung – garantiert Synchronisierung.
      *
      * @param configWert Wert aus der properties-Datei (z.B. "SCHWEIZER_RANGLISTE" oder "Meldeliste")
      * @return passender Resolver
      */
     public static SheetResolver erstellen(String configWert) {
-        return switch (configWert.toUpperCase()) {
-            case "SCHWEIZER_RANGLISTE" -> new MetadatenSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
-                    I18n.get("webserver.resolver.schweizer.rangliste"));
-            case "SCHWEIZER_SPIELRUNDE" -> new MetadatenPrefixSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX,
-                    SheetMetadataHelper.SCHLUESSEL_SUFFIX,
-                    I18n.get("webserver.resolver.schweizer.spielrunde"));
-            case "SUPERMELEE_ENDRANGLISTE" -> new MetadatenSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
-                    I18n.get("webserver.resolver.supermelee.endrangliste"));
-            case "SPIELTAG_RANGLISTE" -> new MetadatenPrefixSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
-                    SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX,
-                    I18n.get("webserver.resolver.spieltag"));
-            case "SPIELTAG_TEILNEHMER" -> new SupermeleeAktiverSpieltagSheetResolver();
-            case "TEILNEHMER" -> new MetadatenSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
-                    I18n.get("webserver.resolver.teilnehmer"));
-            case "SPIELTAG_ANMELDUNGEN" -> new MetadatenPrefixSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX,
-                    SheetMetadataHelper.SCHLUESSEL_SUFFIX,
-                    I18n.get("webserver.resolver.spieltag.anmeldungen"));
-            case "JGJ_RANGLISTE" -> new MetadatenSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
-                    I18n.get("webserver.resolver.jgj.rangliste"));
-            case "LIGA_RANGLISTE" -> new MetadatenSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
-                    I18n.get("webserver.resolver.liga.rangliste"));
-            case "MAASTRICHTER_VORRUNDE" -> new MetadatenPrefixSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
-                    SheetMetadataHelper.SCHLUESSEL_SUFFIX,
-                    I18n.get("webserver.resolver.maastrichter.vorrunde"));
-            case "KO_TURNIERBAUM" -> new MetadatenPrefixSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_KO_TURNIERBAUM_PREFIX,
-                    SheetMetadataHelper.SCHLUESSEL_SUFFIX,
-                    I18n.get("webserver.resolver.ko.turnierbaum"));
-            default -> new StaticSheetResolver(configWert);
-        };
+        var key = configWert.toUpperCase();
+        var factory = RESOLVER_MAP.get(key);
+        if (factory != null) {
+            return factory.get();
+        }
+        // Default: Exakter Sheet-Name
+        return new StaticSheetResolver(configWert);
     }
 }

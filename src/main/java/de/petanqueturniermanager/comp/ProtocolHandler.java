@@ -193,10 +193,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KO_START = "ko_start";
 	public static final String CMD_KO_UPDATE_MELDELISTE = "ko_update_meldeliste";
 	public static final String CMD_KO_TURNIERBAUM = "ko_turnierbaum";
+	public static final String CMD_KO_TEILNEHMER = "ko_teilnehmer";
 	public static final String CMD_KO_TESTDATEN_NUR_MELDELISTE = "ko_testdaten_nur_meldeliste";
 	public static final String CMD_KO_TESTDATEN_8_TEAMS = "ko_testdaten_8_teams";
 	public static final String CMD_KO_TESTDATEN_16_TEAMS = "ko_testdaten_16_teams";
 	public static final String CMD_KO_TESTDATEN_CADRAGE = "ko_testdaten_cadrage";
+	// Teilnehmer
+	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
+	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
 	// Webserver
 	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
@@ -403,6 +407,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_UPDATE_MELDELISTE:
 				new JGJMeldeListeSheet_Update(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
+			case CMD_JGJ_TEILNEHMER:
+				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+				break;
 			case CMD_JGJ_SPIELPLAN:
 				new JGJSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
@@ -434,6 +441,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_SCHWEIZER_UPDATE_MELDELISTE:
 				new SchweizerMeldeListeSheetUpdate(ws).start();
+				break;
+			case CMD_SCHWEIZER_TEILNEHMER:
+				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetUpdate(ws).start();
@@ -499,6 +509,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_KO_UPDATE_MELDELISTE:
 				new KoMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_KO_TEILNEHMER:
+				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_KO_TURNIERBAUM:
 				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().start();
@@ -775,7 +788,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_NEUE_MELDELISTE                    -> ts == TurnierSystem.KEIN;
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
-				 CMD_JGJ_DIREKTVERGLEICH                    -> ts == TurnierSystem.JGJ;
+				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER            -> ts == TurnierSystem.JGJ;
 			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_JGJ_TESTDATEN_TURNIER                  -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			// Schweizer
@@ -793,7 +806,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// K.-O.
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
-				 CMD_KO_TURNIERBAUM                         -> ts == TurnierSystem.KO;
+				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
 			// K.-O.-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
 				 CMD_KO_TESTDATEN_8_TEAMS,
@@ -801,6 +814,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KO_TESTDATEN_CADRAGE                   -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KO;
 			case CMD_SCHWEIZER_NEUE_MELDELISTE,
 				 CMD_SCHWEIZER_UPDATE_MELDELISTE,
+				 CMD_SCHWEIZER_TEILNEHMER,
 				 CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE,
 				 CMD_SCHWEIZER_RANGLISTE,
 				 CMD_SCHWEIZER_RANGLISTE_SORTIEREN          -> ts == TurnierSystem.SCHWEIZER;

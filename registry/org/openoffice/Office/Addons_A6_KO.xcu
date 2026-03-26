@@ -76,12 +76,28 @@
 							</node>
 
 							<node oor:name="A6A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Participants</value>
+									<value xml:lang="de">Teilnehmer</value>
+									<value xml:lang="es">Participantes</value>
+									<value xml:lang="fr">Participants</value>
+									<value xml:lang="nl">Deelnemers</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:ko_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A6A5" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A6A5" oor:op="replace">
+							<node oor:name="A6A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Create Tournament Bracket</value>
 									<value xml:lang="de">Turnierbaum erstellen</value>

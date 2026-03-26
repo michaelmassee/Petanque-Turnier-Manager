@@ -79,12 +79,28 @@
 							</node>
 
 							<node oor:name="A4A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Participants</value>
+									<value xml:lang="de">Teilnehmer</value>
+									<value xml:lang="es">Participantes</value>
+									<value xml:lang="fr">Participants</value>
+									<value xml:lang="nl">Deelnemers</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:jgj_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A4A5" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A5" oor:op="replace">
+							<node oor:name="A4A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Gameplan</value>
 									<value xml:lang="de">Spielplan</value>
@@ -100,7 +116,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A4A6" oor:op="replace">
+							<node oor:name="A4A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -116,7 +132,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A4A7" oor:op="replace">
+							<node oor:name="A4A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste sortieren</value>
@@ -132,7 +148,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A4A8" oor:op="replace">
+							<node oor:name="A4A9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Directcomparison</value>
 									<value xml:lang="de">Direktvergleich</value>

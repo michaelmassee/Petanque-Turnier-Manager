@@ -95,12 +95,28 @@
 							</node>
 
 							<node oor:name="A5A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Participants</value>
+									<value xml:lang="de">Teilnehmer</value>
+									<value xml:lang="es">Participantes</value>
+									<value xml:lang="fr">Participants</value>
+									<value xml:lang="nl">Deelnemers</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A5A6" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A5A6" oor:op="replace">
+							<node oor:name="A5A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Spielrunde</value>
 								<value xml:lang="en">New Round</value>
@@ -114,7 +130,7 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A5A7" oor:op="replace">
+							<node oor:name="A5A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Spielrunde neu auslosen</value>
 								<value xml:lang="en">Re-draw Round</value>
@@ -128,13 +144,13 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A5A8" oor:op="replace">
+							<node oor:name="A5A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A5A9" oor:op="replace">
+							<node oor:name="A5A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -148,7 +164,7 @@
 								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A5A10" oor:op="replace">
+							<node oor:name="A5A11" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste Sortieren</value>

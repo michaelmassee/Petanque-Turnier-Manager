@@ -52,15 +52,10 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 
 	private static final Logger logger = LogManager.getLogger(WebserverKonfigDialog.class);
 
-	// ---- Bekannte Sheet-Typ-Schlüssel ----
-	private static final String DEFAULT_TYP = "SPIELTAG";
-	private static final int DEFAULT_PORT = 8080;
-	private static final String[] SHEET_TYPEN = {
-			"SCHWEIZER_RANGLISTE", "SCHWEIZER_SPIELRUNDE",
-			"SUPERMELEE_ENDRANGLISTE", "SPIELTAG",
-			"JGJ_RANGLISTE", "LIGA_RANGLISTE",
-			"MAASTRICHTER_VORRUNDE", "KO_TURNIERBAUM"
-	};
+	// ---- Bekannte Sheet-Typ-Schlüssel (zentral definiert in SheetResolverFactory) ----
+	private static final String DEFAULT_TYP = SheetResolverFactory.DEFAULT_SHEET_TYP;
+	private static final int DEFAULT_PORT = 9000;
+	private static final String[] SHEET_TYPEN = SheetResolverFactory.SHEET_TYPEN;
 
 	// ---- Layout-Konstanten ----
 	private static final int DIALOG_BREITE = 270;
