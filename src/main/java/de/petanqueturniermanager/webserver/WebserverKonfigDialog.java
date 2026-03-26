@@ -249,9 +249,6 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 		try {
 			leseZeilenDatenAusControls();
 			zeilenDaten.remove(idx);
-			if (zeilenDaten.isEmpty()) {
-				zeilenDaten.add(new ZeilenDaten(String.valueOf(DEFAULT_PORT), DEFAULT_TYP, true));
-			}
 			aktualisiereZeilenArea();
 		} catch (com.sun.star.uno.Exception e) {
 			logger.error("Fehler beim Löschen einer Zeile: {}", e.getMessage(), e);
