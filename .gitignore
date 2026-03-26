@@ -45,3 +45,14 @@ dist/
 
 # LibreOffice
 .ooo-debug/
+
+# Node modules
+frontend/node_modules/
+
+# Build output
+frontend/build/
+frontend/dist/
+
+# IDE-Dateien
+frontend/.vscode/
+frontend/.idea/

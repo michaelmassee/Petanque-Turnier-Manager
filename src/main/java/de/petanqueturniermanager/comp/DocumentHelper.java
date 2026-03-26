@@ -116,6 +116,28 @@ public class DocumentHelper {
 	}
 
 	/**
+	 * Extrahiert das {@link XSpreadsheetDocument} aus dem {@code source}-Objekt eines
+	 * UNO-Events (z.B. {@code onUnload}).
+	 * <p>
+	 * Das Event-Source-Objekt ist typischerweise direkt das schließende Dokument oder
+	 * ein {@link XModel}-Interface darauf.
+	 *
+	 * @param source Event-Source aus {@code GlobalEventListener.notifyEvent}
+	 * @return das Spreadsheet-Dokument, oder {@code null} wenn keins erkennbar
+	 */
+	public static XSpreadsheetDocument getCurrentSpreadsheetDocumentFrom(Object source) {
+		if (source == null) {
+			return null;
+		}
+		var doc = Lo.qi(XSpreadsheetDocument.class, source);
+		if (doc != null) {
+			return doc;
+		}
+		var model = Lo.qi(XModel.class, source);
+		return model != null ? Lo.qi(XSpreadsheetDocument.class, model) : null;
+	}
+
+	/**
 	 * Returns the current SpreadsheetView <br>
 	 * mit absicht nicht public, weil mehrere Fenster gleichzeitig offen
 	 */

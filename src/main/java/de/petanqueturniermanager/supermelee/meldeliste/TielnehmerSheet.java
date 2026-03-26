@@ -66,7 +66,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				SheetMetadataHelper.schluesselSupermeleeTeilehnehmer(getSpielTagNr().getNr()),
+				SheetMetadataHelper.schluesselSpieltagTeilnehmer(getSpielTagNr().getNr()),
 				getSheetName(getSpielTagNr()));
 	}
 
@@ -88,7 +88,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 		// wenn hier dann immer neu erstellen, force = true
 		NewSheet.from(this, getSheetName(getSpielTagNr()),
-				SheetMetadataHelper.schluesselSupermeleeTeilehnehmer(getSpielTagNr().getNr()))
+				SheetMetadataHelper.schluesselSpieltagTeilnehmer(getSpielTagNr().getNr()))
 				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
 				.forceCreate().hideGrid().setActiv().create();
 

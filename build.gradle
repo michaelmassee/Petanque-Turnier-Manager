@@ -135,7 +135,7 @@ tasks.register('compileIdl', Exec) {
 tasks.register('buildOXT', Zip) {
     group = 'LibreOffice'
     description = 'Erstellt die OXT-Datei (LibreOffice Extension)'
-    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'compileIdl'
+    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'compileIdl', 'buildFrontend'
     archiveFileName.set("${project.name}-${version}.oxt")
     destinationDirectory.set(layout.buildDirectory.dir('distributions'))
 
@@ -348,6 +348,28 @@ tasks.register('startCalc') {
     }
 }
 
+// ===================================================
+// Frontend (React/Vite)
+// ===================================================
+
+tasks.register('buildFrontend', Exec) {
+    group = 'LibreOffice'
+    description = 'Baut das React-Frontend (npm run build) und legt den Output in src/main/resources ab'
+    workingDir 'frontend'
+    def npmCmd = findProperty('npm.path') ?: 'npm'
+    def nodeDir = npmCmd != 'npm' ? new File(npmCmd).parentFile.absolutePath : null
+    if (nodeDir) {
+        environment 'PATH', "${nodeDir}:${System.getenv('PATH') ?: ''}"
+    }
+    commandLine npmCmd, 'run', 'build'
+    inputs.dir('frontend/src')
+    inputs.file('frontend/package.json')
+    inputs.file('frontend/vite.config.js')
+    outputs.dir('src/main/resources/de/petanqueturniermanager/webserver/static')
+}
+
+processResources.dependsOn 'buildFrontend'
+
 // Build-Task
 tasks.register('buildPlugin') {
     group = 'LibreOffice'
@@ -411,7 +433,7 @@ Optionen:
             // Testdaten-Menüs
             'Supermêlée, generiere Meldeliste mit 100 Meldungen': [de: 'Supermêlée, generiere Meldeliste mit 100 Meldungen', en: 'Supermêlée, generate Entry List with 100 Entries', es: 'Supermêlée, generar lista con 100 inscripciones', fr: 'Supermêlée, générer la liste avec 100 inscriptions', nl: 'Supermêlée, maak deelnemerslijst met 100 inschrijvingen'],
             'Supermêlée, generiere 1 Spieltag mit 4 Spielrunden': [de: 'Supermêlée, generiere 1 Spieltag mit 4 Spielrunden', en: 'Supermêlée, generate 1 Playday with 4 Rounds', es: 'Supermêlée, generar 1 jornada con 4 rondas', fr: 'Supermêlée, générer 1 journée avec 4 tours', nl: 'Supermêlée, maak 1 speeldag met 4 ronden'],
-            'Supermêlée, generiere 5 komplette Spieltage'       : [de: 'Supermêlée, generiere 5 komplette Spieltage',        en: 'Supermêlée, generate 5 Complete Playdays',         es: 'Supermêlée, generar 5 jornadas completas',           fr: 'Supermêlée, générer 5 journées complètes',          nl: 'Supermêlée, maak 5 complete speel­dagen'],
+            'Supermêlée, generiere 5 komplette Spieltage'       : [de: 'Supermêlée, generiere 5 komplette Spieltage',        en: 'Supermêlée, generate 5 Complete Playdays',         es: 'Supermêlée, generar 5 jornadas completas',           fr: 'Supermêlée, générer 5 journées complètes',          nl: 'Supermêlée, maak 5 complete speeldagen'],
             'Liga, generiere Meldeliste'                         : [de: 'Liga, generiere Meldeliste',                         en: 'Liga, generate Entry List',                        es: 'Liga, generar lista de inscripciones',                fr: 'Liga, générer la liste',                             nl: 'Liga, maak deelnemerslijst'],
             'Liga, Spielplan'                                    : [de: 'Liga, Spielplan',                                    en: 'Liga, Gameplan',                                   es: 'Liga, calendario',                                   fr: 'Liga, calendrier',                                  nl: 'Liga, speelschema'],
             'Liga, Spielplan mit Freispiel'                      : [de: 'Liga, Spielplan mit Freispiel',                      en: 'Liga, Gameplan with Bye',                          es: 'Liga, calendario con jornada libre',                  fr: 'Liga, calendrier avec partie libre',                 nl: 'Liga, speelschema met vrijspelen'],

@@ -45,10 +45,15 @@ public class SheetMetadataHelper {
 
     private static final Logger logger = LogManager.getLogger(SheetMetadataHelper.class);
 
+    // ── Konstanten: allgemein ─────────────────────────────────────────────────
+
+    /** Exakter Schlüssel für das turniersystemübergreifende Teilnehmer-Sheet (je Turnier genau eines). */
+    public static final String SCHLUESSEL_TEILNEHMER = "__PTM_TEILNEHMER__";
+
     // ── Konstanten: bereits vorhanden ────────────────────────────────────────
 
-    public static final String SCHLUESSEL_SPIELTAG_PREFIX = "__PTM_SPIELTAG_";
-    public static final String SCHLUESSEL_SPIELTAG_SUFFIX = "__";
+    public static final String SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX = "__PTM_SPIELTAG_";
+    public static final String SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX = "__";
 
     // ── Konstanten: Supermelee ───────────────────────────────────────────────
 
@@ -56,7 +61,8 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_SUPERMELEE_ENDRANGLISTE = "__PTM_SUPERMELEE_ENDRANGLISTE__";
     public static final String SCHLUESSEL_SUPERMELEE_TEAMS = "__PTM_SUPERMELEE_TEAMS__";
     public static final String SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX = "__PTM_SUPERMELEE_ANMELDUNGEN_";
-    public static final String SCHLUESSEL_SUPERMELEE_TEILNEHMER_PREFIX = "__PTM_SUPERMELEE_TEILNEHMER_";
+    /** Prefix für nummerierte Supermelee-Teilnehmer-Sheets (1 pro Spieltag). */
+    public static final String SCHLUESSEL_SPIELTAG_TEILNEHMER_PREFIX = "__PTM_SUPERMELEE_TEILNEHMER_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PLAN_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_PLAN_";
 
@@ -107,7 +113,7 @@ public class SheetMetadataHelper {
     // ── Builder für dynamische Schlüssel ────────────────────────────────────
 
     public static String schluesselSpieltagRangliste(int spieltagNr) {
-        return SCHLUESSEL_SPIELTAG_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_SUFFIX;
+        return SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX + spieltagNr + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
     }
 
     public static String schluesselSchweizerSpielrunde(int rundeNr) {
@@ -134,8 +140,8 @@ public class SheetMetadataHelper {
         return SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX + spieltagNr + SCHLUESSEL_SUFFIX;
     }
 
-    public static String schluesselSupermeleeTeilehnehmer(int spieltagNr) {
-        return SCHLUESSEL_SUPERMELEE_TEILNEHMER_PREFIX + spieltagNr + SCHLUESSEL_SUFFIX;
+    public static String schluesselSpieltagTeilnehmer(int spieltagNr) {
+        return SCHLUESSEL_SPIELTAG_TEILNEHMER_PREFIX + spieltagNr + SCHLUESSEL_SUFFIX;
     }
 
     public static String schluesselKoTurnierbaum(String gruppenSuffix) {
@@ -171,7 +177,7 @@ public class SheetMetadataHelper {
      */
     public static void schreibeSpieltagNr(XSpreadsheetDocument xDoc,
                                           XSpreadsheet xSheet, SpielTagNr spieltagNr) {
-        String schluessel = SCHLUESSEL_SPIELTAG_PREFIX + spieltagNr.getNr() + SCHLUESSEL_SPIELTAG_SUFFIX;
+        String schluessel = SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX + spieltagNr.getNr() + SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX;
         schreibeSheetMetadaten(xDoc, xSheet, schluessel);
     }
 
@@ -208,6 +214,27 @@ public class SheetMetadataHelper {
 
 
     // ── Lesen / Suchen ───────────────────────────────────────────────────────
+
+    /**
+     * Liefert alle Metadaten-Schlüsselnamen, die mit dem gegebenen Prefix beginnen.
+     * Nützlich für prefix-basierte Sheet-Suche, z.B. alle Spielrunden-Schlüssel.
+     *
+     * @param xDoc   Spreadsheet-Dokument
+     * @param prefix Prefix des gesuchten Schlüssels (z.B. {@code __PTM_SCHWEIZER_SPIELRUNDE_})
+     * @return Array der gefundenen Schlüsselnamen (nie null, ggf. leer)
+     */
+    public static String[] getSchluesselMitPrefix(XSpreadsheetDocument xDoc, String prefix) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges == null) return new String[0];
+            return java.util.Arrays.stream(namedRanges.getElementNames())
+                    .filter(name -> name.startsWith(prefix))
+                    .toArray(String[]::new);
+        } catch (Throwable t) {
+            logger.error("Fehler beim Abrufen von Schlüsseln mit Prefix '{}'", prefix, t);
+            return new String[0];
+        }
+    }
 
     /**
      * Sucht das Sheet, das dem gegebenen Named-Range-Schlüssel zugeordnet ist.
@@ -362,14 +389,14 @@ public class SheetMetadataHelper {
         try {
             if (namedRanges == null) return Optional.empty();
             for (String name : namedRanges.getElementNames()) {
-                if (!name.startsWith(SCHLUESSEL_SPIELTAG_PREFIX)) continue;
-                if (!name.endsWith(SCHLUESSEL_SPIELTAG_SUFFIX)) continue;
+                if (!name.startsWith(SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX)) continue;
+                if (!name.endsWith(SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX)) continue;
                 try {
                     Object rangeObj = namedRanges.getByName(name);
                     Integer idx = sheetIdxAusNamedRange.apply(rangeObj);
                     if (idx != null && idx >= 0 && idx == targetSheetIdx) {
-                        String nStr = name.substring(SCHLUESSEL_SPIELTAG_PREFIX.length(),
-                                name.length() - SCHLUESSEL_SPIELTAG_SUFFIX.length());
+                        String nStr = name.substring(SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX.length(),
+                                name.length() - SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX.length());
                         return Optional.of(SpielTagNr.from(Integer.parseInt(nStr)));
                     }
                 } catch (Throwable t) {

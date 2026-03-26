@@ -25,11 +25,14 @@ import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.webserver.WebServerManager;
+import de.petanqueturniermanager.webserver.WebserverKonfigDialog;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
@@ -194,6 +197,20 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KO_TESTDATEN_8_TEAMS = "ko_testdaten_8_teams";
 	public static final String CMD_KO_TESTDATEN_16_TEAMS = "ko_testdaten_16_teams";
 	public static final String CMD_KO_TESTDATEN_CADRAGE = "ko_testdaten_cadrage";
+	// Webserver
+	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
+	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
+	public static final String CMD_WEBSERVER_STOPPEN = "webserver_stoppen";
+	public static final String CMD_WEBSERVER_URL_1  = "webserver_url_1";
+	public static final String CMD_WEBSERVER_URL_2  = "webserver_url_2";
+	public static final String CMD_WEBSERVER_URL_3  = "webserver_url_3";
+	public static final String CMD_WEBSERVER_URL_4  = "webserver_url_4";
+	public static final String CMD_WEBSERVER_URL_5  = "webserver_url_5";
+	public static final String CMD_WEBSERVER_URL_6  = "webserver_url_6";
+	public static final String CMD_WEBSERVER_URL_7  = "webserver_url_7";
+	public static final String CMD_WEBSERVER_URL_8  = "webserver_url_8";
+	public static final String CMD_WEBSERVER_URL_9  = "webserver_url_9";
+	public static final String CMD_WEBSERVER_URL_10 = "webserver_url_10";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -233,6 +250,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				public void onNew(Object source) {
 					notifyAllListeners();
 				}
+
+				@Override
+				public void onUnload(Object source) {
+					// WS stoppen wenn das Owner-Dokument geschlossen wird → andere Dokumente
+					// können danach wieder starten
+					var geschlossenesDoc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
+					if (geschlossenesDoc != null && WebServerManager.get().istOwnerDocument(geschlossenesDoc)) {
+						logger.info("Owner-Dokument geschlossen – WebServer wird gestoppt");
+						WebServerManager.get().stoppen();
+						notifyAllListeners();
+					}
+				}
 			});
 			PetanqueTurnierMngrSingleton.addTurnierEventListener(new ITurnierEventListener() {
 				@Override
@@ -271,6 +300,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
 		try {
+			// Webserver-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
+			if (behandleWebserverBefehl(command)) {
+				return;
+			}
 			ProcessBox.from().visible().clearWennNotRunning().info("Start " + command);
 			WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext);
 			switch (command) {
@@ -529,7 +562,109 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	private void handleKonfiguration(String command, WorkingSpreadsheet ws) {
+	/**
+	 * Behandelt Webserver-Befehle direkt (ohne SheetRunner-Thread).
+	 * Gibt true zurück wenn der Befehl behandelt wurde.
+	 */
+	private boolean behandleWebserverBefehl(String command) throws com.sun.star.uno.Exception {
+		switch (command) {
+			case CMD_WEBSERVER_KONFIGURATION -> new WebserverKonfigDialog(xContext).zeigen();
+			case CMD_WEBSERVER_STARTEN -> {
+				if (GlobalProperties.get().getPortKonfigurationen().isEmpty()) {
+					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
+							.caption(I18n.get("webserver.starten"))
+							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
+					new WebserverKonfigDialog(xContext).zeigen();
+				} else {
+					ProcessBox.init(xContext).visible().clear().run();
+					try {
+						WebServerManager.get().starten(xContext);
+						notifyAllListeners();
+					} finally {
+						ProcessBox.from().ready();
+					}
+				}
+			}
+			case CMD_WEBSERVER_STOPPEN -> {
+				ProcessBox.init(xContext).visible().clear().run();
+				try {
+					WebServerManager.get().stoppen();
+					notifyAllListeners();
+				} finally {
+					ProcessBox.from().ready();
+				}
+			}
+			case CMD_WEBSERVER_URL_1  -> oeffneBrowserUrlFuerSlot(0);
+			case CMD_WEBSERVER_URL_2  -> oeffneBrowserUrlFuerSlot(1);
+			case CMD_WEBSERVER_URL_3  -> oeffneBrowserUrlFuerSlot(2);
+			case CMD_WEBSERVER_URL_4  -> oeffneBrowserUrlFuerSlot(3);
+			case CMD_WEBSERVER_URL_5  -> oeffneBrowserUrlFuerSlot(4);
+			case CMD_WEBSERVER_URL_6  -> oeffneBrowserUrlFuerSlot(5);
+			case CMD_WEBSERVER_URL_7  -> oeffneBrowserUrlFuerSlot(6);
+			case CMD_WEBSERVER_URL_8  -> oeffneBrowserUrlFuerSlot(7);
+			case CMD_WEBSERVER_URL_9  -> oeffneBrowserUrlFuerSlot(8);
+			case CMD_WEBSERVER_URL_10 -> oeffneBrowserUrlFuerSlot(9);
+			default -> { return false; }
+		}
+		return true;
+	}
+
+	/**
+	 * Öffnet den Browser für den konfigurierten URL-Slot.
+	 * Loggt die Aktion in der ProcessBox.
+	 */
+	private void oeffneBrowserUrlFuerSlot(int slot) {
+		ProcessBox.init(xContext).visible();
+		var url = WebServerManager.get().getUrlFuerSlot(slot);
+		if (url != null) {
+			oeffneBrowserUrl(url);
+		} else {
+			ProcessBox.from().info(I18n.get("webserver.prozessbox.slot.nicht.aktiv", slot + 1));
+			logger.warn("Dispatch auf URL-Slot {} ohne aktive Instanz", slot);
+		}
+	}
+
+	/**
+	 * Öffnet die übergebene URL im Standard-Browser.
+	 * Nutzt {@link java.awt.Desktop#browse} als Primärweg, {@link Runtime#exec} als Fallback.
+	 */
+	private void oeffneBrowserUrl(String url) {
+		ProcessBox.from().info(I18n.get("webserver.prozessbox.browser.oeffnen", url));
+		try {
+			if (java.awt.Desktop.isDesktopSupported()
+					&& java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
+				java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+			} else {
+				oeffneBrowserUrlFallback(url);
+			}
+		} catch (Exception e) {
+			logger.warn("Desktop.browse fehlgeschlagen, Fallback aktiv: {}", e.getMessage());
+			oeffneBrowserUrlFallback(url);
+		}
+	}
+
+	/**
+	 * Fallback: Browser über OS-spezifischen Prozessaufruf öffnen.
+	 */
+	private void oeffneBrowserUrlFallback(String url) {
+		try {
+			String osName = System.getProperty("os.name");
+			String[] cmd;
+			if (osName != null && osName.toLowerCase().contains("win")) {
+				cmd = new String[]{ "rundll32", "url.dll,FileProtocolHandler", url };
+			} else if (osName != null && osName.toLowerCase().contains("mac")) {
+				cmd = new String[]{ "open", url };
+			} else {
+				cmd = new String[]{ "xdg-open", url };
+			}
+			new ProcessBuilder(cmd).start();
+		} catch (java.io.IOException e) {
+			logger.error("Browser öffnen fehlgeschlagen: {}", url, e);
+			ProcessBox.from().fehler(I18n.get("webserver.prozessbox.browser.fehler", url));
+		}
+	}
+
+		private void handleKonfiguration(String command, WorkingSpreadsheet ws) {
 		TurnierSystem ts;
 		try {
 			ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
@@ -572,9 +707,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void addStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
+		var aktivesDokument = holeAktivesDokument();
 		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
-				.add(new StatusEntry(listener, url));
-		postStatus(listener, url, isEnabled(command));
+				.add(new StatusEntry(listener, url, aktivesDokument));
+		postStatus(listener, url, isEnabled(command, aktivesDokument));
 	}
 
 	@Override
@@ -586,10 +722,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
+	/** Liefert das aktuell aktive Spreadsheet-Dokument, oder {@code null} wenn keines aktiv ist. */
+	private static XSpreadsheetDocument holeAktivesDokument() {
+		try {
+			return DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	// -------------------------------------------------------------------------
 	// Zustandsprüfung und Listener-Benachrichtigung (statisch, cross-instance)
 
-	private static boolean isEnabled(String command) {
+	private static boolean isEnabled(String command, XSpreadsheetDocument document) {
 		if (SheetRunner.isRunning()) {
 			return CMD_ABBRUCH.equals(command);
 		}
@@ -670,6 +815,32 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
+			// Webserver: Konfiguration immer aktiv; starten/stoppen je nach Zustand
+			case CMD_WEBSERVER_KONFIGURATION                -> true;
+			case CMD_WEBSERVER_STARTEN                      -> !WebServerManager.get().isLaeuft();
+			// Stoppen: nur das Owner-Dokument darf den WS stoppen
+			case CMD_WEBSERVER_STOPPEN                      -> WebServerManager.get().istOwnerDocument(document);
+			// URL-Slots: nur für das Owner-Dokument aktiv und sichtbar
+			case CMD_WEBSERVER_URL_1  -> WebServerManager.get().hatInstanzFuerSlot(0)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_2  -> WebServerManager.get().hatInstanzFuerSlot(1)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_3  -> WebServerManager.get().hatInstanzFuerSlot(2)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_4  -> WebServerManager.get().hatInstanzFuerSlot(3)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_5  -> WebServerManager.get().hatInstanzFuerSlot(4)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_6  -> WebServerManager.get().hatInstanzFuerSlot(5)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_7  -> WebServerManager.get().hatInstanzFuerSlot(6)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_8  -> WebServerManager.get().hatInstanzFuerSlot(7)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_9  -> WebServerManager.get().hatInstanzFuerSlot(8)
+					&& WebServerManager.get().istOwnerDocument(document);
+			case CMD_WEBSERVER_URL_10 -> WebServerManager.get().hatInstanzFuerSlot(9)
+					&& WebServerManager.get().istOwnerDocument(document);
 			// Release-Infos, Download, Direkt-Aktualisieren, Stop: immer aktiv
 			case CMD_RELEASE_INFOS_ANZEIGEN,
 				 CMD_DOWNLOAD_EXTENSION,
@@ -748,9 +919,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			snapshot = new HashMap<>(STATUS_LISTENERS);
 		}
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
-			boolean enabled = isEnabled(entry.getKey());
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
-				postStatus(e.listener, e.url, enabled);
+				// Dokument pro Listener übergeben: Owner-abhängige Befehle (WS stoppen/URLs)
+				// werden für jedes Dokument individuell ausgewertet
+				postStatus(e.listener, e.url, isEnabled(entry.getKey(), e.document));
 			}
 		}
 	}
@@ -761,9 +933,34 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			event.FeatureURL = url;
 			event.IsEnabled = enabled;
 			event.Requery = false;
+			setzeUrlSlotState(event, url.Path);
 			listener.statusChanged(event);
 		} catch (Exception e) {
 			logger.warn("Fehler beim Benachrichtigen des Status-Listeners: {}", e.getMessage());
+		}
+	}
+
+	/**
+	 * Setzt FeatureStateEvent.State für URL-Slot-Befehle dynamisch auf "[SheetName] – [URL]".
+	 * Platzhalter "—" wenn kein Port aktiv – verhindert Geister-Einträge im Menü.
+	 */
+	private static void setzeUrlSlotState(FeatureStateEvent event, String command) {
+		int slot = switch (command) {
+			case CMD_WEBSERVER_URL_1  -> 0;
+			case CMD_WEBSERVER_URL_2  -> 1;
+			case CMD_WEBSERVER_URL_3  -> 2;
+			case CMD_WEBSERVER_URL_4  -> 3;
+			case CMD_WEBSERVER_URL_5  -> 4;
+			case CMD_WEBSERVER_URL_6  -> 5;
+			case CMD_WEBSERVER_URL_7  -> 6;
+			case CMD_WEBSERVER_URL_8  -> 7;
+			case CMD_WEBSERVER_URL_9  -> 8;
+			case CMD_WEBSERVER_URL_10 -> 9;
+			default -> -1;
+		};
+		if (slot >= 0) {
+			var label = WebServerManager.get().getMenuLabelFuerSlot(slot);
+			event.State = label != null ? label : "—";
 		}
 	}
 
@@ -801,6 +998,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	// -------------------------------------------------------------------------
 
-	private record StatusEntry(XStatusListener listener, URL url) {
+	private record StatusEntry(XStatusListener listener, URL url, XSpreadsheetDocument document) {
 	}
 }

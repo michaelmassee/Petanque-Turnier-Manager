@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
@@ -39,6 +40,7 @@ public class PetanqueTurnierMngrSingleton {
 
 	private static GlobalEventListener globalEventListener;
 	private static final TurnierEventHandler turnierEventHandler = new TurnierEventHandler();
+	private static XComponentContext sharedContext;
 
 	private static AtomicBoolean didRun = new AtomicBoolean(); // is volatile
 
@@ -52,10 +54,16 @@ public class PetanqueTurnierMngrSingleton {
 	 * @param context
 	 */
 
+	/** Liefert den LibreOffice-Komponentenkontext (nach {@link #init} verfügbar). */
+	public static XComponentContext getContext() {
+		return sharedContext;
+	}
+
 	public static final void init(XComponentContext context) {
 		if (didRun.getAndSet(true)) {
 			return;
 		}
+		sharedContext = context;
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
@@ -71,6 +79,9 @@ public class PetanqueTurnierMngrSingleton {
 		I18n.init(context);
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
+		if (GlobalProperties.get().isWebserverAktiv()) {
+			WebServerManager.get().starten(context);
+		}
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
@@ -138,6 +149,7 @@ public class PetanqueTurnierMngrSingleton {
 
 	// ---------------------------------------------------------------------------------------------
 	public static void dispose() {
+		WebServerManager.get().stoppen();
 		if (globalEventListener != null) {
 			globalEventListener.disposing(null);
 		}

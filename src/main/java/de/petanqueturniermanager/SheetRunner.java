@@ -16,6 +16,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -89,6 +90,7 @@ public abstract class SheetRunner extends Thread {
 					updateKonfigurationSheet();
 				}
 				doRun();
+				WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
 			} catch (GenerateException e) {
 				handleGenerateException(e);
 			} catch (Exception e) {

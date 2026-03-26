@@ -48,8 +48,9 @@ public class TerminateListener implements XTerminateListener {
 	 */
 	@Override
 	public void notifyTermination(EventObject arg0) {
-		ProcessBox.dispose();
+		// WebServerManager muss zuerst gestoppt werden, da stoppen() noch ProcessBox nutzt
 		PetanqueTurnierMngrSingleton.dispose();
+		ProcessBox.dispose();
 	}
 
 	@Override

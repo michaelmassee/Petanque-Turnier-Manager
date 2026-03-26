@@ -40,9 +40,9 @@
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_X1_Konfiguration.xcu"/>
-    <manifest:file-entry 
-        manifest:media-type="application/vnd.sun.star.configuration-data" 
-        manifest:full-path="registry/org/openoffice/Office/Addons_X2_Download.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_X2_Webserver.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Y1_Testdaten.xcu"/>
