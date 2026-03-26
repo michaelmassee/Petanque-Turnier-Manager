@@ -71,7 +71,9 @@ public final class SheetResolverFactory {
                         I18n.get("webserver.resolver.spieltag")));
         RESOLVER_MAP.put("SPIELTAG_TEILNEHMER", () ->
                 new SupermeleeAktiverSpieltagSheetResolver());
-        RESOLVER_MAP.put("TEILNEHMER", () ->
+        RESOLVER_MAP.put("SPIELTAG_AKTUELLE_SPIELRUNDE", () ->
+                new SupermeleeAktiverSpielrundeSheetResolver());
+        RESOLVER_MAP.put("SPIELTAG_ANMELDUNGEN", () ->
                 new TeilnehmerSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
                         I18n.get("webserver.resolver.teilnehmer"),
