@@ -133,7 +133,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// Metadaten-Suche: zuerst Einzelgruppe, dann Gruppe A
 		var found = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselKoTurnierbaum(""));
 		if (found.isPresent()) return found.get();
-		found = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselKoTurnierbaum("_A"));
+		found = SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.schluesselKoTurnierbaum("A"));
 		if (found.isPresent()) return found.get();
 		// Fallback per Name: zuerst lokalisierter Name, dann Legacy (alte deutsche Dokumente)
 		var praefix = SheetNamen.koTurnierbaumEinzel();
@@ -326,7 +326,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	/**
 	 * Leitet den Metadaten-Schlüssel aus dem Sheet-Namen ab.
 	 * Einzelgruppe ("KO Turnierbaum"): leerer Suffix.
-	 * Gruppe mit Buchstabe ("KO Turnierbaum A"): Suffix "_A".
+	 * Gruppe mit Buchstabe ("KO Turnierbaum A"): Suffix "A".
 	 * Unterstützt sowohl lokalisierte Namen als auch Legacy-Namen (alte deutsche Dokumente).
 	 */
 	static String schluesselAusSheetName(String sheetName) {
@@ -457,13 +457,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * Liefert den Metadaten-Schlüssel für einen Gruppen-Turnierbaum.
-	 * Einzelgruppe: {@code ""}-Suffix, Mehrgruppen: {@code "_A"}, {@code "_B"}, …
+	 * Einzelgruppe: {@code ""}-Suffix, Mehrgruppen: {@code "A"}, {@code "B"}, …
 	 */
 	static String schluesselFuerGruppe(int gruppenIndex, int anzGruppen) {
 		if (anzGruppen == 1) {
 			return SheetMetadataHelper.schluesselKoTurnierbaum("");
 		}
-		return SheetMetadataHelper.schluesselKoTurnierbaum("_" + (char) ('A' + gruppenIndex));
+		return SheetMetadataHelper.schluesselKoTurnierbaum(String.valueOf((char) ('A' + gruppenIndex)));
 	}
 
 	/**
@@ -1163,7 +1163,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		String teamAAddr = Position.from(teamSpalte(feederRunde), rowFeederA).getAddressWith$();
 		String teamBAddr = Position.from(teamSpalte(feederRunde), rowFeederB).getAddressWith$();
 
-		// Verlierer = Team mit niedrigerer Punktzahl (umgekehrt zur Gewinner-Formel)
+		// Verlierer = Team mit niedrigere Punktzahl (umgekehrt zur Gewinner-Formel)
 		String formel = "WENN(ISTZAHL(" + scoreAAddr + ")*ISTZAHL(" + scoreBAddr + ");"
 				+ "WENN(" + scoreAAddr + "<" + scoreBAddr + ";" + teamAAddr + ";"
 				+ "WENN(" + scoreAAddr + ">" + scoreBAddr + ";" + teamBAddr + ";\"?\"));"

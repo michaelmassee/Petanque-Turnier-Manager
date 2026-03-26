@@ -151,6 +151,9 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 	}
 
 	public void generate() throws GenerateException {
+		if (spielTag == null) {
+			setSpielTag(SpielTagNr.from(1));
+		}
 		anmeldungenSheet.setSpielTag(getSpielTag());
 		teilnehmerSheet.setSpielTagNr(getSpielTag());
 		spieltagRanglisteSheet.setSpieltagNr(getSpielTag());
