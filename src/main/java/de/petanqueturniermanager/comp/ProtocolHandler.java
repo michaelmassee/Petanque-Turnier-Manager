@@ -94,7 +94,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpie
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.meldeliste.TielnehmerSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TeilnehmerSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -319,7 +319,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			case CMD_TEILNEHMER:
-				new TielnehmerSheet(ws).testTurnierVorhanden().start();
+				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_NAECHSTE_SPIELTAG:
 				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierVorhanden().backUpDocument().start();

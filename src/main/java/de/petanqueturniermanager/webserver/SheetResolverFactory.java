@@ -16,9 +16,9 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  *   SCHWEIZER_SPIELRUNDE    → aktuellste Schweizer Spielrunde (höchste Nummer)
  *   SUPERMELEE_ENDRANGLISTE → Supermêlée Endrangliste (exakter Schlüssel)
  *   SPIELTAG_RANGLISTE      → aktuellste Spieltag-Rangliste (höchste Nummer)
- *   SPIELTAG_TEILNEHMER     → aktuellste Spieltag-Teilnehmerliste (höchste Nummer, nur Supermelee)
+ *   SPIELTAG_TEILNEHMER     → Supermelee-Teilnehmerliste des aktiven Spieltags (aus KonfigurationSheet)
  *   SPIELTAG_ANMELDUNGEN    → aktuellste Spieltag-Anmeldungen (höchste Nummer, nur Supermelee)
- *   TEILNEHMER              → Teilnehmer-Sheet (exakter Schlüssel, alle anderen Turniersysteme)
+ *   TEILNEHMER              → Teilnehmer-Sheet (exakter Schlüssel, alle Turniersysteme außer Supermelee)
  *   JGJ_RANGLISTE           → Jeder-gegen-Jeden Rangliste (exakter Schlüssel)
  *   LIGA_RANGLISTE          → Liga Rangliste (exakter Schlüssel)
  *   MAASTRICHTER_VORRUNDE   → aktuellste Maastrichter Vorrunde (höchste Nummer)
@@ -52,10 +52,7 @@ public final class SheetResolverFactory {
                     SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
                     SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX,
                     I18n.get("webserver.resolver.spieltag"));
-            case "SPIELTAG_TEILNEHMER" -> new MetadatenPrefixSheetResolver(
-                    SheetMetadataHelper.SCHLUESSEL_SPIELTAG_TEILNEHMER_PREFIX,
-                    SheetMetadataHelper.SCHLUESSEL_SUFFIX,
-                    I18n.get("webserver.resolver.spieltag.teilnehmer"));
+            case "SPIELTAG_TEILNEHMER" -> new SupermeleeAktiverSpieltagSheetResolver();
             case "TEILNEHMER" -> new MetadatenSheetResolver(
                     SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
                     I18n.get("webserver.resolver.teilnehmer"));

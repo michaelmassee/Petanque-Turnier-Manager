@@ -37,7 +37,7 @@ import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
-public class TielnehmerSheet extends SheetRunner implements ISheet {
+public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
 	public static final int ERSTE_DATEN_ZEILE = 0;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
@@ -51,7 +51,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	private final MeldeListeSheet_Update meldeliste;
 	private SpielTagNr spielTagNr = null;
 
-	public TielnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
+	public TeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Teilnehmer");
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);
@@ -66,7 +66,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-				SheetMetadataHelper.schluesselSpieltagTeilnehmer(getSpielTagNr().getNr()),
+				SheetMetadataHelper.schluesselSupermeleeTeilnehmer(getSpielTagNr().getNr()),
 				getSheetName(getSpielTagNr()));
 	}
 
@@ -88,7 +88,7 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 
 		// wenn hier dann immer neu erstellen, force = true
 		NewSheet.from(this, getSheetName(getSpielTagNr()),
-				SheetMetadataHelper.schluesselSpieltagTeilnehmer(getSpielTagNr().getNr()))
+				SheetMetadataHelper.schluesselSupermeleeTeilnehmer(getSpielTagNr().getNr()))
 				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
 				.forceCreate().hideGrid().setActiv().create();
 
@@ -144,16 +144,17 @@ public class TielnehmerSheet extends SheetRunner implements ISheet {
 		}
 
 		int letzteSpalte = nameFormula.getPos().getSpalte();
-		// Fußzeile Anzahl Spieler
 
 		StringCellValue footer = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzSpielerInSpalte)).zeilePlusEins()
-				.setValue(aktiveUndAusgesetztMeldungen.size() + " Teilnehmer").setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
+				.setValue(I18n.get("teilnehmer.footer.anzahl", aktiveUndAusgesetztMeldungen.size()))
+				.setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
 				.setShrinkToFit(true);
 		getSheetHelper().setStringValueInCell(footer);
 		SuperMeleeTeamRechner teamRechner = new SuperMeleeTeamRechner(aktiveUndAusgesetztMeldungen.size());
-		footer.zeilePlusEins().setValue(teamRechner.getAnzDoublette() + " Doublette / " + teamRechner.getAnzTriplette() + " Triplette");
+		footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.teams",
+				teamRechner.getAnzDoublette(), teamRechner.getAnzTriplette()));
 		getSheetHelper().setStringValueInCell(footer);
-		footer.zeilePlusEins().setValue(teamRechner.getAnzBahnen() + " Spielbahnen");
+		footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.bahnen", teamRechner.getAnzBahnen()));
 		getSheetHelper().setStringValueInCell(footer);
 		printBereichDefinieren(footer.getPos(), letzteSpalte);
 	}

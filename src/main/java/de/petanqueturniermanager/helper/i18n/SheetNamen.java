@@ -268,6 +268,21 @@ public final class SheetNamen {
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{spieltagNr});
     }
 
+    /** Schweizer-Teilnehmer-Sheet. */
+    public static String schweizerTeilnehmer() {
+        return getOderFallback("sheet.name.schweizer.teilnehmer", "Schweizer Teilnehmer");
+    }
+
+    /** JGJ-Teilnehmer-Sheet. */
+    public static String jgjTeilnehmer() {
+        return getOderFallback("sheet.name.jgj.teilnehmer", "JGJ Teilnehmer");
+    }
+
+    /** KO-Teilnehmer-Sheet. */
+    public static String koTeilnehmer() {
+        return getOderFallback("sheet.name.ko.teilnehmer", "KO Teilnehmer");
+    }
+
     // ── Hilfsmethode ─────────────────────────────────────────────────────────
 
     /**

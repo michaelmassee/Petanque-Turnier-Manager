@@ -62,7 +62,7 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_SUPERMELEE_TEAMS = "__PTM_SUPERMELEE_TEAMS__";
     public static final String SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX = "__PTM_SUPERMELEE_ANMELDUNGEN_";
     /** Prefix für nummerierte Supermelee-Teilnehmer-Sheets (1 pro Spieltag). */
-    public static final String SCHLUESSEL_SPIELTAG_TEILNEHMER_PREFIX = "__PTM_SUPERMELEE_TEILNEHMER_";
+    public static final String SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX = "__PTM_SUPERMELEE_TEILNEHMER_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_";
     public static final String SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PLAN_PREFIX = "__PTM_SUPERMELEE_SPIELRUNDE_PLAN_";
 
@@ -140,8 +140,8 @@ public class SheetMetadataHelper {
         return SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX + spieltagNr + SCHLUESSEL_SUFFIX;
     }
 
-    public static String schluesselSpieltagTeilnehmer(int spieltagNr) {
-        return SCHLUESSEL_SPIELTAG_TEILNEHMER_PREFIX + spieltagNr + SCHLUESSEL_SUFFIX;
+    public static String schluesselSupermeleeTeilnehmer(int spieltagNr) {
+        return SCHLUESSEL_SUPERMELEE_SPIELTAG_TEILNEHMER_PREFIX + spieltagNr + SCHLUESSEL_SUFFIX;
     }
 
     public static String schluesselKoTurnierbaum(String gruppenSuffix) {
