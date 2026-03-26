@@ -1,0 +1,260 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<!-- ****************************************************************** -->
+					<!-- Webserver -->
+					<!-- ****************************************************************** -->
+					<node oor:name="X2" oor:op="replace">
+						<prop oor:name="Title">
+							<value xml:lang="de">Webserver</value>
+							<value xml:lang="en">Web Server</value>
+							<value xml:lang="es">Servidor web</value>
+							<value xml:lang="fr">Serveur web</value>
+							<value xml:lang="nl">Webserver</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- ****************************************************************** -->
+							<node oor:name="X2A" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Konfiguration...</value>
+									<value xml:lang="en">Configuration...</value>
+									<value xml:lang="es">Configuración...</value>
+									<value xml:lang="fr">Configuration...</value>
+									<value xml:lang="nl">Configuratie...</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_konfiguration</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2B" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2C" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Webserver starten</value>
+									<value xml:lang="en">Start web server</value>
+									<value xml:lang="es">Iniciar servidor web</value>
+									<value xml:lang="fr">Démarrer le serveur web</value>
+									<value xml:lang="nl">Webserver starten</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_starten</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2D" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Webserver stoppen</value>
+									<value xml:lang="en">Stop web server</value>
+									<value xml:lang="es">Detener servidor web</value>
+									<value xml:lang="fr">Arrêter le serveur web</value>
+									<value xml:lang="nl">Webserver stoppen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_stoppen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2E" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2F" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_1</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2G" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_2</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2H" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_3</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2I" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_4</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2J" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_5</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2K" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_6</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2L" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_7</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2M" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_8</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2N" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_9</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- ****************************************************************** -->
+							<node oor:name="X2O" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">—</value>
+									<value xml:lang="en">—</value>
+									<value xml:lang="es">—</value>
+									<value xml:lang="fr">—</value>
+									<value xml:lang="nl">—</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:webserver_url_10</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+						</node>
+					</node>
+
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>
