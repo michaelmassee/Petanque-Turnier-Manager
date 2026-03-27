@@ -20,8 +20,10 @@ public interface ICommonProperties {
 	// public static final String TABLE_BORDER = "TableBorder";
 	String TABLE_BORDER2 = "TableBorder2";
 	String HEIGHT = "Height";
-	// SHRINK_TO_FIT = Boolean, Text in der Zelle wird an der Zelle Große angepasst
+	// SHRINK_TO_FIT = Boolean, Text in der Zelle wird an der Zellgröße angepasst
 	String SHRINK_TO_FIT = "ShrinkToFit";
+	// IS_TEXT_WRAPPED = Boolean, Zeilenumbruch in der Zelle aktivieren
+	String IS_TEXT_WRAPPED = "IsTextWrapped";
 	String CELL_BACK_COLOR = "CellBackColor";
 	String ROTATEANGLE = "RotateAngle";
 	String IS_CELLBACKGROUND_TRANSPARENT = "IsCellBackgroundTransparent";

@@ -76,6 +76,10 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 		return iRanglisteSheet.get().getXSpreadSheet();
 	}
 
+	protected int getLetzteSpalte() throws GenerateException {
+		return iRanglisteSheet.get().getLetzteSpalte();
+	}
+
 	/**
 	 * Zweite Zeile, Spalte spiele + punkte von 6er spalten block
 	 *
@@ -211,23 +215,28 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 
 		int ersteFooterZeile = spielerSpalte.naechsteFreieDatenZeileInSpielerNrSpalte();
+		int anzMerge = getLetzteSpalte(); // SPIELER_NR_SPALTE = 0, daher direkt letzteSpalte
 		StringCellValue stringVal = StringCellValue
 				.from(getSheet(), Position.from(spielerSpalte.getSpielerNrSpalte(), ersteFooterZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
 
 		String anzSpielerFormula = "\"Anzahl Spieler: \" & " + spielerSpalte.formulaCountSpieler();
+		stringVal.setEndPosMergeSpaltePlus(anzMerge)
+				.addCellProperty(ICommonProperties.IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE);
 		getSheetHelper().setFormulaInCell(stringVal.setValue(anzSpielerFormula));
 
-		stringVal.addRowProperty(ICommonProperties.HEIGHT, 350);
-
-		// ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
 		SuprMleEndranglisteSortMode suprMleEndranglisteSortMode = getSuprMleEndranglisteSortMode();
 
 		String sortInfoString = "Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +, 2. Spiele Δ, 3. Punkte Δ, 4. Punkte +";
 		if (SuprMleEndranglisteSortMode.ANZTAGE == suprMleEndranglisteSortMode) {
 			sortInfoString = "Reihenfolge zur Ermittlung der Platzierung: 1. Spiele +,2. Anz Spieltage, 3. Spiele Δ, 4. Punkte Δ, 5. Punkte +";
 		}
-		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(sortInfoString));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins()
+				.setEndPosMergeSpaltePlus(anzMerge)
+				.addCellProperty(ICommonProperties.IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE)
+				.setValue(sortInfoString));
 
 		return stringVal;
 	}

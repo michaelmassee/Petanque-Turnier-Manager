@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.supermelee.spieltagrangliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.IS_TEXT_WRAPPED;
 import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.TABLE_BORDER2;
 
 import com.sun.star.sheet.XSpreadsheet;
@@ -149,8 +150,11 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();
-		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins().setValue(
-				"Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
+		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins()
+				.setEndPosMergeSpaltePlus(getLetzteSpalte())
+				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE)
+				.setValue("Nicht gespielten Runden werden mit " + nichtgespieltPlus + ":" + nichtgespieltMinus + " gewertet"));
 
 		return stringVal;
 	}

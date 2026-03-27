@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.supermelee.endrangliste;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.IS_TEXT_WRAPPED;
 
 import com.sun.star.table.CellHoriJustify;
 
@@ -85,8 +86,14 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 		StringCellValue stringVal = super.addFooter();
 
 		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins()
+				.setEndPosMergeSpaltePlus(getLetzteSpalte())
+				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE)
 				.setValue("Aus der Endranglistenwertung entfallen eine einmalige Nichtteilnahme bzw. das"));
 		getSheetHelper().setStringValueInCell(stringVal.zeilePlusEins()
+				.setEndPosMergeSpaltePlus(getLetzteSpalte())
+				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE)
 				.setValue("schlechteste Tagesergebnis wenn an allen Spieltagen teilgenommen wurde"));
 
 		return stringVal;

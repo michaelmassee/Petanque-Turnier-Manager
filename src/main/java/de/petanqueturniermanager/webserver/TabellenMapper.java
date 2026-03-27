@@ -1,7 +1,9 @@
 package de.petanqueturniermanager.webserver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,16 +20,17 @@ import com.sun.star.sheet.XSheetCellCursor;
 import com.sun.star.sheet.XSheetCellRange;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XUsedAreaCursor;
+import com.sun.star.table.CellContentType;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCell;
-import com.sun.star.table.XCellRange;
 import com.sun.star.table.XColumnRowRange;
 import com.sun.star.table.XTableColumns;
 import com.sun.star.table.XTableRows;
 import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
 
 /**
  * Mappt ein {@link XSpreadsheet} auf ein {@link TabelleModel}.
@@ -36,6 +39,7 @@ import de.petanqueturniermanager.helper.Lo;
  * <p>
  * Merge-Logik: Master-Zellen erhalten colspan/rowspan via {@code createCursorByRange} +
  * {@code collapseToMergedArea}. Slave-Positionen werden im Gitter als {@code null} markiert.
+ * Merge-Ergebnisse werden gecacht, um wiederholte UNO-Aufrufe zu vermeiden.
  * <p>
  * <strong>Muss im SheetRunner-Thread oder UNO-Event-Thread aufgerufen werden.</strong>
  */
@@ -72,11 +76,11 @@ public class TabellenMapper {
         // Gitter: null = Merge-Slave (kein <td>), "" = noch nicht verarbeitet
         var gitterRaw = new String[numZeilen][numSpalten];
         for (var zeile : gitterRaw) {
-            java.util.Arrays.fill(zeile, "");
+            Arrays.fill(zeile, "");
         }
 
         Map<String, ZelleModel> zellenMap = new LinkedHashMap<>();
-        XCellRange cellRange = Lo.qi(XCellRange.class, sheet);
+        Map<Long, CellRangeAddress> mergeCache = new HashMap<>();
 
         for (int r = 0; r < numZeilen; r++) {
             for (int c = 0; c < numSpalten; c++) {
@@ -86,43 +90,49 @@ public class TabellenMapper {
 
                 int absRow = bereich.StartRow + r;
                 int absCol = bereich.StartColumn + c;
+                long mergeKey = toMergeKey(absRow, absCol);
 
                 try {
-                    XCell cell = cellRange.getCellByPosition(absCol, absRow);
+                    XCell cell = sheet.getCellByPosition(absCol, absRow);
                     XPropertySet props = Lo.qi(XPropertySet.class, cell);
 
                     int colspan = 1;
                     int rowspan = 1;
 
                     // Merge-Erkennung via Cursor: zuverlässiger als IsMerged-Property
-                    try {
+                    // Ergebnis wird gecacht, um wiederholte UNO-Aufrufe zu vermeiden
+                    CellRangeAddress mergeAdresse = mergeCache.get(mergeKey);
+                    if (mergeAdresse == null) {
                         var einzelZelle = Lo.qi(XSheetCellRange.class,
                                 sheet.getCellRangeByPosition(absCol, absRow, absCol, absRow));
                         var mergeKursor = sheet.createCursorByRange(einzelZelle);
                         mergeKursor.collapseToMergedArea();
-                        var mergeAdresse = Lo.qi(XCellRangeAddressable.class, mergeKursor).getRangeAddress();
-                        boolean istMaster = mergeAdresse.StartRow == absRow
-                                && mergeAdresse.StartColumn == absCol
-                                && (mergeAdresse.EndRow > absRow || mergeAdresse.EndColumn > absCol);
-                        if (istMaster) {
-                            colspan = mergeAdresse.EndColumn - absCol + 1;
-                            rowspan = mergeAdresse.EndRow - absRow + 1;
-                            markiereSlaves(gitterRaw, r, c, rowspan, colspan, numZeilen, numSpalten);
+                        mergeAdresse = Lo.qi(XCellRangeAddressable.class, mergeKursor).getRangeAddress();
+                        for (int mr = mergeAdresse.StartRow; mr <= mergeAdresse.EndRow; mr++) {
+                            for (int mc = mergeAdresse.StartColumn; mc <= mergeAdresse.EndColumn; mc++) {
+                                mergeCache.put(toMergeKey(mr, mc), mergeAdresse);
+                            }
                         }
-                    } catch (Exception e) {
-                        logger.debug("Merge-Erkennung für Zelle [{},{}]: {}", r, c, e.getMessage());
+                    }
+
+                    boolean istMaster = mergeAdresse.StartRow == absRow
+                            && mergeAdresse.StartColumn == absCol
+                            && (mergeAdresse.EndRow > absRow || mergeAdresse.EndColumn > absCol);
+                    if (istMaster) {
+                        colspan = mergeAdresse.EndColumn - absCol + 1;
+                        rowspan = mergeAdresse.EndRow - absRow + 1;
+                        markiereSlaves(gitterRaw, r, c, rowspan, colspan, numZeilen, numSpalten);
                     }
 
                     String id = TabelleModel.zelleId(r, c);
                     gitterRaw[r][c] = id;
 
-                    XText cellText = Lo.qi(XText.class, cell);
-                    String wert = (cellText != null) ? cellText.getString() : "";
+                    String wert = extrahiereZellwert(cell);
 
                     zellenMap.put(id, new ZelleModel(id, wert, extrahiereStil(props, colspan, rowspan)));
 
                 } catch (Exception e) {
-                    logger.debug("Fehler beim Mappen von Zelle [{},{}]: {}", r, c, e.getMessage());
+                    logger.debug("Fehler beim Mappen von Zelle [{},{}]", r, c, e);
                     gitterRaw[r][c] = TabelleModel.zelleId(r, c);
                 }
             }
@@ -130,12 +140,68 @@ public class TabellenMapper {
 
         return new TabelleModel(
                 numZeilen, numSpalten,
-                rohGitterZuListe(gitterRaw, numZeilen, numSpalten),
+                rohGitterZuListe(gitterRaw, numZeilen),
                 zellenMap,
                 ermittleSpaltenBreiten(sheet, bereich, numSpalten),
                 ermittleZeilenHoehen(sheet, bereich, numZeilen),
                 bereich.StartRow,
                 bereich.StartColumn);
+    }
+
+    /**
+     * Extrahiert den anzuzeigenden Wert einer Zelle.
+     * <p>
+     * Textinhalt wird direkt übernommen. Numerische Werte werden als
+     * Ganzzahl oder Dezimalzahl formatiert.
+     *
+     * @param cell zu lesende Zelle
+     * @return Zellinhalt als String oder {@code null} bei leerem Inhalt / Fehler
+     */
+    private String extrahiereZellwert(XCell cell) {
+        try {
+            CellContentType type = cell.getType();
+
+            if (CellContentType.TEXT.equals(type)) {
+                XText txt = Lo.qi(XText.class, cell);
+                return (txt != null) ? txt.getString() : "";
+            }
+
+            if (CellContentType.VALUE.equals(type)) {
+                double wert = cell.getValue();
+                if (Double.isNaN(wert) || Double.isInfinite(wert)) {
+                    return null;
+                }
+                if (wert == Math.rint(wert)) {
+                    return String.valueOf((long) wert);
+                }
+                return String.valueOf(wert);
+            }
+
+            if (CellContentType.FORMULA.equals(type)) {
+                double wert = cell.getValue();
+                if (Double.isNaN(wert) || Double.isInfinite(wert)) {
+                    return null;
+                }
+                // getValue() liefert 0 sowohl für numerische 0 als auch für Text-Ergebnisse.
+                // getString() unterscheidet: "" bei leerem Textergebnis, "0" bei numerischer 0,
+                // und den eigentlichen Text bei allen anderen Textergebnissen (z.B. Spielernamen).
+                if (wert == 0.0) {
+                    XText txt = Lo.qi(XText.class, cell);
+                    String textErgebnis = (txt != null) ? txt.getString() : "";
+                    return textErgebnis.isEmpty() ? null : textErgebnis;
+                }
+                if (wert == Math.rint(wert)) {
+                    return String.valueOf((long) wert);
+                }
+                return String.valueOf(wert);
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            logger.debug("Zellwert Fehler", e);
+            return null;
+        }
     }
 
     /**
@@ -169,28 +235,48 @@ public class TabellenMapper {
         String linienLinks = null;
         String linienRechts = null;
 
+        // Jede Eigenschaftsgruppe wird separat abgefangen, damit ein Fehler in einer Gruppe
+        // die anderen nicht abbricht und der Browser maximal viele Stilinfos erhält.
+
         try {
-            // Fettschrift
+            // Schrifteigenschaften
             Object fontWeightObj = props.getPropertyValue("CharWeight");
             fett = fontWeightObj instanceof Float fw && fw >= FontWeight.BOLD;
 
-            // Kursiv
             Object fontSlantObj = props.getPropertyValue("CharPosture");
             kursiv = fontSlantObj instanceof FontSlant slant && slant == FontSlant.ITALIC;
 
-            // Hintergrundfarbe (-1 = automatisch)
+            Object fontNameObj = props.getPropertyValue("CharFontName");
+            if (fontNameObj instanceof String fn && !fn.isBlank()) {
+                schriftart = fn;
+            }
+
+            Object heightObj = props.getPropertyValue("CharHeight");
+            if (heightObj instanceof Number n) {
+                schriftgroesse = n.floatValue();
+            }
+        } catch (Exception e) {
+            logger.debug("Schrifteigenschaften nicht ermittelbar", e);
+        }
+
+        try {
+            // Farben (-1 = automatisch/transparent)
             Object bgObj = props.getPropertyValue("CellBackColor");
             if (bgObj instanceof Integer bg && bg != -1) {
                 hintergrundfarbe = String.format("#%06X", 0xFFFFFF & bg);
             }
 
-            // Schriftfarbe (-1 = automatisch)
             Object ccObj = props.getPropertyValue("CharColor");
             if (ccObj instanceof Integer cc && cc != -1) {
                 schriftfarbe = String.format("#%06X", 0xFFFFFF & cc);
             }
+        } catch (Exception e) {
+            logger.debug("Farb-Eigenschaften nicht ermittelbar", e);
+        }
 
-            // Horizontale Ausrichtung (CellHoriJustify ist kein Java-Enum → equals-Vergleich)
+        try {
+            // Ausrichtung und Layout
+            // CellHoriJustify ist kein Java-Enum → equals-Vergleich
             Object hJustObj = props.getPropertyValue("HoriJustify");
             if (hJustObj instanceof CellHoriJustify hJust) {
                 if (CellHoriJustify.CENTER.equals(hJust)) {
@@ -204,7 +290,7 @@ public class TabellenMapper {
                 }
             }
 
-            // Vertikale Ausrichtung (CellVertJustify2-Konstante als int)
+            // CellVertJustify2-Konstante als int
             Object vJustObj = props.getPropertyValue("VertJustify");
             if (vJustObj instanceof Integer vJust) {
                 vertikaleAusrichtung = switch (vJust) {
@@ -220,22 +306,13 @@ public class TabellenMapper {
                 rotationGrad = winkel / 100;
             }
 
-            // Zeilenumbruch
-            Object wrapObj = props.getPropertyValue("IsTextWrapped");
+            Object wrapObj = props.getPropertyValue(ICommonProperties.IS_TEXT_WRAPPED);
             zeilenumbruch = Boolean.TRUE.equals(wrapObj);
+        } catch (Exception e) {
+            logger.debug("Ausrichtungs-Eigenschaften nicht ermittelbar", e);
+        }
 
-            // Schriftart
-            Object fontNameObj = props.getPropertyValue("CharFontName");
-            if (fontNameObj instanceof String fn && !fn.isBlank()) {
-                schriftart = fn;
-            }
-
-            // Schriftgröße (CharHeight in Punkt)
-            Object heightObj = props.getPropertyValue("CharHeight");
-            if (heightObj instanceof Number n) {
-                schriftgroesse = n.floatValue();
-            }
-
+        try {
             // Rahmenlinien (TableBorder2)
             Object borderObj = props.getPropertyValue("TableBorder2");
             if (borderObj instanceof com.sun.star.table.TableBorder2 tb) {
@@ -244,9 +321,8 @@ public class TabellenMapper {
                 linienLinks  = linienZuCss(tb.LeftLine,   tb.IsLeftLineValid);
                 linienRechts = linienZuCss(tb.RightLine,  tb.IsRightLineValid);
             }
-
         } catch (Exception e) {
-            logger.debug("Fehler beim Extrahieren des Zell-Stils: {}", e.getMessage());
+            logger.debug("Rahmen-Eigenschaften nicht ermittelbar", e);
         }
 
         return new StyleModel(fett, kursiv, hintergrundfarbe, schriftfarbe,
@@ -283,19 +359,24 @@ public class TabellenMapper {
             XColumnRowRange colRowRange = Lo.qi(XColumnRowRange.class, sheet);
             XTableColumns columns = colRowRange.getColumns();
             for (int c = 0; c < numSpalten; c++) {
+                int absSpalte = bereich.StartColumn + c;
                 try {
-                    XPropertySet colProps = Lo.qi(XPropertySet.class,
-                            columns.getByIndex(bereich.StartColumn + c));
+                    XPropertySet colProps = Lo.qi(XPropertySet.class, columns.getByIndex(absSpalte));
                     Object brObj = colProps.getPropertyValue("Width");
+                    Object optObj = colProps.getPropertyValue("OptimalWidth");
+                    logger.info("Spaltenbreite: relSpalte={} absSpalte={} Width={} OptimalWidth={}",
+                            c, absSpalte, brObj, optObj);
                     if (brObj instanceof Integer br) {
                         breiten.put(c, br);
                     }
                 } catch (Exception e) {
-                    logger.debug("Spaltenbreite für Spalte {} nicht ermittelbar", c);
+                    logger.debug("Spaltenbreite für Spalte {} (abs={}) nicht ermittelbar", c, absSpalte, e);
                 }
             }
+            logger.info("Spaltenbreiten gesamt: StartColumn={} numSpalten={} breiten={}",
+                    bereich.StartColumn, numSpalten, breiten);
         } catch (Exception e) {
-            logger.debug("Spaltenbreiten nicht ermittelbar: {}", e.getMessage());
+            logger.debug("Spaltenbreiten nicht ermittelbar", e);
         }
         return breiten;
     }
@@ -315,11 +396,11 @@ public class TabellenMapper {
                         hoehen.put(r, h);
                     }
                 } catch (Exception e) {
-                    logger.debug("Zeilenhöhe für Zeile {} nicht ermittelbar", r);
+                    logger.debug("Zeilenhöhe für Zeile {} nicht ermittelbar", r, e);
                 }
             }
         } catch (Exception e) {
-            logger.debug("Zeilenhöhen nicht ermittelbar: {}", e.getMessage());
+            logger.debug("Zeilenhöhen nicht ermittelbar", e);
         }
         return hoehen;
     }
@@ -334,7 +415,7 @@ public class TabellenMapper {
                 }
             }
         } catch (Exception e) {
-            logger.debug("Druckbereich nicht ermittelbar, verwende Used Area: {}", e.getMessage());
+            logger.debug("Druckbereich nicht ermittelbar, verwende Used Area", e);
         }
         return ermittleUsedArea(sheet);
     }
@@ -372,16 +453,17 @@ public class TabellenMapper {
         }
     }
 
-    private List<List<String>> rohGitterZuListe(String[][] gitterRaw, int numZeilen, int numSpalten) {
+    private List<List<String>> rohGitterZuListe(String[][] gitterRaw, int numZeilen) {
         List<List<String>> gitter = new ArrayList<>(numZeilen);
-        for (int r = 0; r < numZeilen; r++) {
-            List<String> zeile = new ArrayList<>(numSpalten);
-            for (int c = 0; c < numSpalten; c++) {
-                zeile.add(gitterRaw[r][c]); // null für Slaves ist gewollt
-            }
-            gitter.add(Collections.unmodifiableList(zeile));
+        for (String[] zeile : gitterRaw) {
+            // Arrays.asList erlaubt null-Elemente (null = Merge-Slave, gewollt)
+            gitter.add(Collections.unmodifiableList(Arrays.asList(zeile)));
         }
         return gitter;
+    }
+
+    private long toMergeKey(int r, int c) {
+        return (((long) r) << 32) | (c & 0xffffffffL);
     }
 
     private static TabelleModel leeresModell() {
