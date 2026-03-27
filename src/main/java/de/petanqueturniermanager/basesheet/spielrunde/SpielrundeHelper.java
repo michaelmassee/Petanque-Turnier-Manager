@@ -160,11 +160,9 @@ public class SpielrundeHelper {
 		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
 		ConditionalFormatHelper.from(sheet, rangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr)
 				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
-
-		ConditionalFormatHelper.from(sheet, rangeErsteSpalte).formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
-		ConditionalFormatHelper.from(sheet, rangeErsteSpalte).formulaIsOddRow()
-				.style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, rangeErsteSpalte,
+				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
+				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
 
 	}
 
@@ -181,14 +179,32 @@ public class SpielrundeHelper {
 			SpielrundeHintergrundFarbeGeradeStyle spielrundeHintergrundFarbeGeradeStyle,
 			SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle) throws GenerateException {
 
-		// gerade / ungrade hintergrund farbe
-		// CellBackColor
+		ConditionalFormatHelper.clearOnly(iSheet, datenRangeOhneErsteSpalteOhneErgebnis);
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(iSheet, datenRangeOhneErsteSpalteOhneErgebnis,
+				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
+				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
+	}
 
-		ConditionalFormatHelper.from(iSheet, datenRangeOhneErsteSpalteOhneErgebnis).clear().formulaIsEvenRow()
-				.style(spielrundeHintergrundFarbeGeradeStyle).applyAndDoReset();
-		ConditionalFormatHelper.from(iSheet, datenRangeOhneErsteSpalteOhneErgebnis).formulaIsOddRow()
-				.operator(ConditionOperator.FORMULA).style(spielrundeHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-
+	/**
+	 * Formatiert den Ergebnisbereich einer Spielrunde mit Fehlerprüfung (Punktebereich 0–13,
+	 * Texteingabe, gleiche Werte) und Gerade/Ungerade-Hintergrundfarbe.
+	 *
+	 * @param ersteErgebnisSpalte 0-basierte Spaltennummer der ersten Ergebnisspalte
+	 */
+	public void formatiereErgebnissRange(ISheet iSheet, RangePosition ergebnissRange, int ersteErgebnisSpalte)
+			throws GenerateException {
+		String cellA = "INDIRECT(ADDRESS(ROW();" + (ersteErgebnisSpalte + 1) + "))";
+		String cellB = "INDIRECT(ADDRESS(ROW();" + (ersteErgebnisSpalte + 2) + "))";
+		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"
+				+ cellA + "=" + cellB + ")";
+		ConditionalFormatHelper.from(iSheet, ergebnissRange).clear()
+				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formula1("ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")")
+				.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+				.formula1(formulaGleicheWerte).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(iSheet, ergebnissRange,
+				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
+				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
 	}
 
 }

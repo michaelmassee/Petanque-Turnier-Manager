@@ -209,8 +209,8 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 					Position pos = Position.from(ERSTE_SPALTE_ERGEBNISSE, zeileCntr);
 
 					int welchenTeamHatGewonnen = ThreadLocalRandom.current().nextInt(0, 2);
-					int verliererPunkte = ThreadLocalRandom.current().nextInt(0, 13);
-					int gewinnerPunkte = ThreadLocalRandom.current().nextInt(verliererPunkte + 1, 14);
+					int gewinnerPunkte = ThreadLocalRandom.current().nextInt(9, 14);
+					int verliererPunkte = ThreadLocalRandom.current().nextInt(0, gewinnerPunkte);
 					int valA = (welchenTeamHatGewonnen == 0 ? verliererPunkte : gewinnerPunkte);
 					int valB = (welchenTeamHatGewonnen == 0 ? gewinnerPunkte : verliererPunkte);
 

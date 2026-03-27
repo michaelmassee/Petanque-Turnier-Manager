@@ -18,11 +18,9 @@ import de.petanqueturniermanager.helper.cellstyle.NichtGespieltHintergrundFarbeU
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharGreenStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharOrangeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharRedStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharGreenStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharOrangeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharRedStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -119,11 +117,8 @@ public class RanglisteGeradeUngeradeFormatHelper {
 	}
 
 	public RanglisteGeradeUngeradeFormatHelper apply() throws GenerateException {
-		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
-				geradeColor);
-
-		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(
-				ungeradeColor);
+		// Direkte Zeilenfärbung als Basis; bedingte Formatierungen überschreiben bei Bedarf
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, rangePos, geradeColor, ungeradeColor);
 
 		ConditionalFormatHelper conditionalFormatHelper = ConditionalFormatHelper.from(sheet, rangePos).clear();
 
@@ -179,9 +174,6 @@ public class RanglisteGeradeUngeradeFormatHelper {
 			conditionalFormatHelper.formula1("AND(ISODD(ROW());" + nichtGespieltBasis + ")").isFormula()
 					.style(new NichtGespieltHintergrundFarbeUnGeradeStyle(nichtGespieltUnGeradeFarbe)).applyAndDoReset();
 		}
-
-		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset()
-				.formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndDoReset();
 
 		return this;
 	}

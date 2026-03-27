@@ -16,6 +16,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
+import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -54,6 +55,45 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public static ConditionalFormatHelper from(ISheet sheet, RangePosition rangePos) {
 		return new ConditionalFormatHelper(sheet, rangePos);
+	}
+
+	/**
+	 * Löscht alle bedingten Formatierungen auf dem angegebenen Bereich, ohne neue hinzuzufügen.
+	 */
+	public static void clearOnly(ISheet sheet, RangePosition rangePos) {
+		try {
+			XPropertySet xPropSet = RangeHelper.from(sheet, rangePos).getPropertySet();
+			com.sun.star.sheet.XSheetConditionalEntries xEntries = Lo.qi(
+					com.sun.star.sheet.XSheetConditionalEntries.class,
+					xPropSet.getPropertyValue("ConditionalFormat"));
+			xEntries.clear();
+			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Schreibt Zeilenhintergrundfarben direkt (nicht via bedingte Formatierung).<br>
+	 * Gerade Zeilen (ISEVEN(ROW())) erhalten {@code geradeFarbe}, ungerade {@code ungeradeFarbe}.
+	 *
+	 * @param iSheet      Ziel-Sheet
+	 * @param range       Zielbereich
+	 * @param geradeFarbe Farbe für gerade Zeilennummern (ROW()-basiert, 1-indiziert)
+	 * @param ungeradeFarbe Farbe für ungerade Zeilennummern
+	 */
+	public static void schreibeZeilenfarbenDirekt(ISheet iSheet, RangePosition range,
+			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
+		XSpreadsheet xSheet = iSheet.getXSpreadSheet();
+		int startSpalte = range.getStartSpalte();
+		int endSpalte = range.getEndeSpalte();
+		for (int zeile = range.getStartZeile(); zeile <= range.getEndeZeile(); zeile++) {
+			// zeile ist 0-basiert; ROW()-Formel wäre zeile+1 (1-basiert)
+			int farbe = (zeile % 2 == 1) ? geradeFarbe : ungeradeFarbe;
+			iSheet.getSheetHelper().setPropertyInRange(xSheet,
+					RangePosition.from(startSpalte, zeile, endSpalte, zeile),
+					"CellBackColor", farbe);
+		}
 	}
 
 	public ConditionalFormatHelper append() {

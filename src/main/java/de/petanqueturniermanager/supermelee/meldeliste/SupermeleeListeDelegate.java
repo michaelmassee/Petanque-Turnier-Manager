@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
@@ -33,7 +32,6 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.model.Spieler;
@@ -250,23 +248,10 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 				meldungenSpalte.getLetzteMeldungNameSpalte(), letzteDatenZeile, sheet,
 				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 
-		// setzposition spalte
-		var setzpositionRangePos = RangePosition.from(meldeListeHelper.setzPositionSpalte(),
-				ERSTE_DATEN_ZEILE, meldeListeHelper.setzPositionSpalte(), letzteDatenZeile);
-		ConditionalFormatHelper.from(sheet, setzpositionRangePos).clear()
-				.formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-				.formulaIsText().styleIsFehler().applyAndDoReset()
-				.formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset()
-				.formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-
-		// Spieltag spalten
-		var spieltageRangePos = RangePosition.from(meldeListeHelper.ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
-				letzteSpielTagSpalte(), letzteDatenZeile);
-		ConditionalFormatHelper.from(sheet, spieltageRangePos).clear()
-				.formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
-				.formulaIsText().styleIsFehler().applyAndDoReset()
-				.formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset()
-				.formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		meldeListeHelper.insertFormulaSetzpositionGeradeUngradeFarbe(letzteDatenZeile, sheet,
+				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+		meldeListeHelper.insertFormulaSpieltageSpaltenGeradeUngradeFarbe(letzteDatenZeile, letzteSpielTagSpalte(),
+				sheet, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 	}
 
 	/** Liefert den Header-Text für den gegebenen Spieltag, z.B. "Spieltag 1". */

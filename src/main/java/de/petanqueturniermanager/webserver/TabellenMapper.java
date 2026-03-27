@@ -363,9 +363,6 @@ public class TabellenMapper {
                 try {
                     XPropertySet colProps = Lo.qi(XPropertySet.class, columns.getByIndex(absSpalte));
                     Object brObj = colProps.getPropertyValue("Width");
-                    Object optObj = colProps.getPropertyValue("OptimalWidth");
-                    logger.info("Spaltenbreite: relSpalte={} absSpalte={} Width={} OptimalWidth={}",
-                            c, absSpalte, brObj, optObj);
                     if (brObj instanceof Integer br) {
                         breiten.put(c, br);
                     }
@@ -373,8 +370,6 @@ public class TabellenMapper {
                     logger.debug("Spaltenbreite für Spalte {} (abs={}) nicht ermittelbar", c, absSpalte, e);
                 }
             }
-            logger.info("Spaltenbreiten gesamt: StartColumn={} numSpalten={} breiten={}",
-                    bereich.StartColumn, numSpalten, breiten);
         } catch (Exception e) {
             logger.debug("Spaltenbreiten nicht ermittelbar", e);
         }

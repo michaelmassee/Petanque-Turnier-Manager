@@ -63,19 +63,15 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				letzteDatenZeile);
 		String conditionfindDoppeltNr = "COUNTIF(" + Position.from(SPIELER_NR_SPALTE, 0).getSpalteAddressWith$() + ";"
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(sheet, nrSetPosRange).clear().
-		// ------------------------------
-				formulaIsText().styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset().
-				// ------------------------------
-				// eigentlich musste 0 = Fehler sein wird es aber nicht
-				formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN).operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset(). // nr muss >0 und <999 sein
-				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ------------------------------
-				formulaIsOddRow().style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		ConditionalFormatHelper.from(sheet, nrSetPosRange).clear()
+				.formulaIsText().styleIsFehler().applyAndDoReset()
+				.formula1(conditionfindDoppeltNr).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+				// nr muss >0 und <999 sein
+				.formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN)
+				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, nrSetPosRange,
+				meldungenHintergrundFarbeGeradeStyle.getFarbe(),
+				meldungenHintergrundFarbeUnGeradeStyle.getFarbe());
 
 	}
 
@@ -90,17 +86,37 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				letzteDatenZeile);
 		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(erstNameSpalte, 0).getSpalteAddressWith$() + ";"
 				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
-		ConditionalFormatHelper.from(sheet, nameSetPosRange).clear().
-		// ------------------------------
-				formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().operator(ConditionOperator.FORMULA).style(meldungenHintergrundFarbeGeradeStyle)
-				.applyAndDoReset().
-				// ------------------------------
-				formulaIsEvenRow().style(meldungenHintergrundFarbeGeradeStyle).applyAndDoReset().formulaIsOddRow()
-				.style(meldungenHintergrundFarbeUnGeradeStyle).applyAndDoReset();
+		ConditionalFormatHelper.from(sheet, nameSetPosRange).clear()
+				.formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
+				.applyAndDoReset();
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, nameSetPosRange,
+				meldungenHintergrundFarbeGeradeStyle.getFarbe(),
+				meldungenHintergrundFarbeUnGeradeStyle.getFarbe());
 		// -----------------------------------------------
+	}
+
+	public void insertFormulaSetzpositionGeradeUngradeFarbe(int letzteDatenZeile, ISheet sheet,
+			MeldungenHintergrundFarbeGeradeStyle geradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
+		int setzposSpalte = setzPositionSpalte();
+		var setzposRangePos = RangePosition.from(setzposSpalte, ERSTE_DATEN_ZEILE, setzposSpalte, letzteDatenZeile);
+		ConditionalFormatHelper.from(sheet, setzposRangePos).clear()
+				.formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formulaIsText().styleIsFehler().applyAndDoReset();
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, setzposRangePos,
+				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
+	}
+
+	public void insertFormulaSpieltageSpaltenGeradeUngradeFarbe(int letzteDatenZeile, int letzteSpieltagSpalte,
+			ISheet sheet, MeldungenHintergrundFarbeGeradeStyle geradeStyle,
+			MeldungenHintergrundFarbeUnGeradeStyle ungeradeStyle) throws GenerateException {
+		var spieltageRangePos = RangePosition.from(ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
+				letzteSpieltagSpalte, letzteDatenZeile);
+		ConditionalFormatHelper.from(sheet, spieltageRangePos).clear()
+				.formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formulaIsText().styleIsFehler().applyAndDoReset();
+		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, spieltageRangePos,
+				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 	}
 
 	/**

@@ -691,20 +691,6 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		sheet.getSheetHelper().setPropertyInRange(xsheet, ergbenissRange, CHAR_HEIGHT, 16);
 		sheet.getSheetHelper().setPropertyInRange(xsheet, ergbenissRange, CHAR_WEIGHT, FontWeight.BOLD);
 
-		ConditionalFormatHelper.from(sheet, ergbenissRange).clear().formula1("0").formula2("13")
-				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
-		String formula = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
-		ConditionalFormatHelper.from(sheet, ergbenissRange).formula1(formula).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset();
-		String cellA = "INDIRECT(ADDRESS(ROW();" + (ERSTE_SPALTE_ERGEBNISSE + 1) + "))";
-		String cellB = "INDIRECT(ADDRESS(ROW();" + (ERSTE_SPALTE_ERGEBNISSE + 2) + "))";
-		String gleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));" + cellA + "=" + cellB
-				+ ")";
-		ConditionalFormatHelper.from(sheet, ergbenissRange).formula1(gleicheWerte).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset();
-		ConditionalFormatHelper.from(sheet, ergbenissRange).formulaIsEvenRow()
-				.style(konfigurationSheet.getSpielRundeHintergrundFarbeGeradeStyle()).applyAndDoReset();
-		ConditionalFormatHelper.from(sheet, ergbenissRange).formulaIsOddRow()
-				.style(konfigurationSheet.getSpielRundeHintergrundFarbeUnGeradeStyle()).applyAndDoReset();
+		spielrundeHelper.formatiereErgebnissRange(sheet, ergbenissRange, ERSTE_SPALTE_ERGEBNISSE);
 	}
 }
