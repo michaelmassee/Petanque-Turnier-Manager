@@ -20,7 +20,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import com.sun.star.awt.FontWeight;
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -31,11 +30,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeGeradeStyle;
-import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -49,8 +43,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -169,54 +163,25 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		processBoxinfo("processbox.endrangliste.formatieren");
 
-		// gerade / ungrade hintergrund farbe
-		// CellBackColor
 		int spielerNrSpalte = spielerSpalte.getSpielerNrSpalte();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
 		int letzteDatenZeile = spielerSpalte.getLetzteMitDatenZeileInSpielerNrSpalte();
-		int letzteSpalte = getLetzteSpalte();
-
-		Integer streichSpieltagGeradeColor = getKonfigurationSheet()
-				.getRanglisteHintergrundFarbeStreichSpieltagGerade();
-		Integer streichSpieltagUnGeradeColor = getKonfigurationSheet()
-				.getRanglisteHintergrundFarbeStreichSpieltagUnGerade();
-		StreichSpieltagHintergrundFarbeGeradeStyle streichSpieltagHintergrundFarbeGeradeStyle = new StreichSpieltagHintergrundFarbeGeradeStyle(
-				streichSpieltagGeradeColor);
-		StreichSpieltagHintergrundFarbeUnGeradeStyle streichSpieltagHintergrundFarbeUnGeradeStyle = new StreichSpieltagHintergrundFarbeUnGeradeStyle(
-				streichSpieltagUnGeradeColor);
 
 		Integer geradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeGerade();
 		Integer unGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade();
-		RanglisteHintergrundFarbeGeradeStyle ranglisteHintergrundFarbeGeradeStyle = new RanglisteHintergrundFarbeGeradeStyle(
-				geradeColor);
-		RanglisteHintergrundFarbeUnGeradeStyle ranglisteHintergrundFarbeUnGeradeStyle = new RanglisteHintergrundFarbeUnGeradeStyle(
-				unGeradeColor);
+		Integer streichGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeStreichSpieltagGerade();
+		Integer streichUnGeradeColor = getKonfigurationSheet().getRanglisteHintergrundFarbeStreichSpieltagUnGerade();
 
-		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
+		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, getLetzteSpalte(),
+				letzteDatenZeile);
 
-		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-		// Achtung spalte plus 1 weil A ist nicht 0 sondern 1
-		String formulaSortError = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (rangListeSorter.validateSpalte() + 1)
-				+ "))))>0";
-
-		ConditionalFormatHelper.from(this, datenRange).clear().
-		// -----------------------------
-		// Formula fuer sort error, komplette zeile rot einfärben wenn fehler meldung
-				formula1(formulaSortError).operator(ConditionOperator.FORMULA).style(new FehlerStyle())
-				.applyAndDoReset().
-				// ------------------------
-				// Formula fuer streichspieltag
-				// UND(INDIREKT(ADRESSE(ZEILE();13;4;))=AUFRUNDEN((SPALTE()-1)/3);ISTGERADE(ZEILE()))
-				formula1(getFormulastreichSpieltag(true)).operator(ConditionOperator.FORMULA)
-				.style(streichSpieltagHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ---------------------
-				formula1(getFormulastreichSpieltag(false)).operator(ConditionOperator.FORMULA)
-				.style(streichSpieltagHintergrundFarbeUnGeradeStyle).applyAndDoReset().
-				// --------------------------
-				formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset().
-				// ---------------------------
-				formulaIsOddRow().style(ranglisteHintergrundFarbeUnGeradeStyle).applyAndDoReset();
-
+		RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
+				.geradeFarbe(geradeColor)
+				.ungeradeFarbe(unGeradeColor)
+				.validateSpalte(rangListeSorter.validateSpalte())
+				.streichSpieltagFormulaGerade(getFormulastreichSpieltag(true), streichGeradeColor)
+				.streichSpieltagFormulaUnGerade(getFormulastreichSpieltag(false), streichUnGeradeColor)
+				.apply();
 	}
 
 	private String getFormulastreichSpieltag(boolean iseven) throws GenerateException {

@@ -41,6 +41,10 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	Integer getNichtGespielteRundeMinus();
 
+	Integer getNichtGespieltHintergrundFarbeGerade();
+
+	Integer getNichtGespieltHintergrundFarbeUnGerade();
+
 	SpielrundeSpielbahn getSpielrundeSpielbahn();
 
 	void setSpielrundeSpielbahn(SpielrundeSpielbahn option);

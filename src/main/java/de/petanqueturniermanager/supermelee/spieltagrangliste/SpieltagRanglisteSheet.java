@@ -14,12 +14,14 @@ import java.util.stream.Collectors;
 
 
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellHoriJustify;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -173,12 +175,16 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
 		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
 		ergebnisseFormulaEinfuegen();
+		nichtGespieltFormulaEinfuegen();
 		updateSummenSpalten();
 		getSpielerSpalte().formatSpielrNrUndNamenspalten(false);
 		getRangListeSpalte().upDateRanglisteSpalte();
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.formatDaten();
-		ranglisteFormatter.formatDatenErrorGeradeUngerade(validateSpalte());
+		Integer nichtGespieltGeradeFarbe = getKonfigurationSheet().getNichtGespieltHintergrundFarbeGerade();
+		Integer nichtGespieltUnGeradeFarbe = getKonfigurationSheet().getNichtGespieltHintergrundFarbeUnGerade();
+		ranglisteFormatter.formatDatenErrorGeradeUngerade(validateSpalte(), nichtGespieltSpalteNr(),
+				nichtGespieltGeradeFarbe, nichtGespieltUnGeradeFarbe);
 		getxCalculatable().calculate();
 		rangListeSorter.doSort();
 		Position footerPos = ranglisteFormatter.addFooter().getPos();
@@ -335,6 +341,54 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 			}
 
 		}
+	}
+
+	private void nichtGespieltFormulaEinfuegen() throws GenerateException {
+
+		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
+		if (anzSpielRunden < 1) {
+			return;
+		}
+
+		XSpreadsheet sheet = getXSpreadSheet();
+		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
+		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
+
+		int ersteSpalteVertikaleErgebnisse = SpielrundeSheetKonstanten.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
+		int spielrundeSheetErsteDatenzeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
+		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
+		Position letztePosPlusPunkte = Position.from(SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_PLUS,
+				1000 + spielrundeSheetErsteDatenzeile);
+		String suchMatrixPlusPunkte = erstePos.getAddressWith$() + ":" + letztePosPlusPunkte.getAddressWith$();
+
+		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
+
+		List<String> isnaFormeln = new ArrayList<>();
+		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
+			String formulaSheetName = "$'"
+					+ aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
+			isnaFormeln.add("ISNA(VLOOKUP(" + verweisAufSpalteSpielerNr + ";" + formulaSheetName
+					+ suchMatrixPlusPunkte + ";2;0))");
+		}
+
+		String nichtGespieltFormula = "IF(OR(" + isnaFormeln.stream().collect(Collectors.joining(";")) + ");\"x\";\"\")";
+
+		int nichtGespieltSpalte = nichtGespieltSpalteNr();
+		StringCellValue cellValue = StringCellValue.from(sheet, Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE))
+				.setValue(nichtGespieltFormula)
+				.setFillAutoDown(letzteDatenzeile);
+		getSheetHelper().setFormulaInCell(cellValue);
+
+		// Spalten-Header + Sichtbarkeit (analog zu insertSortValidateSpalte)
+		ColumnProperties columnProperties = ColumnProperties.from()
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.setHoriJustify(CellHoriJustify.CENTER)
+				.isVisible(zeigeArbeitsSpalten);
+		StringCellValue header = StringCellValue
+				.from(sheet, Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE - 1))
+				.addColumnProperties(columnProperties)
+				.setValue("NG");
+		getSheetHelper().setStringValueInCell(header);
 	}
 
 	/**
@@ -545,6 +599,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 	@Override
 	public int validateSpalte() throws GenerateException {
 		return getManuellSortSpalte() + PUNKTE_DIV_OFFS;
+	}
+
+	public int nichtGespieltSpalteNr() throws GenerateException {
+		return validateSpalte() + 1;
 	}
 
 	@Override

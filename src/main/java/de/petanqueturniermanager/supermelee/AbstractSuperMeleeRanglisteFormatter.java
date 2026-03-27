@@ -147,10 +147,13 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 	}
 
 	public void formatDatenErrorGeradeUngerade(int validateSpalteNr) throws GenerateException {
+		formatDatenErrorGeradeUngerade(validateSpalteNr, -1, 0, 0);
+	}
 
-		// gerade / ungrade hintergrund farbe
+	public void formatDatenErrorGeradeUngerade(int validateSpalteNr, int nichtGespieltSpalteNr,
+			int nichtGespieltGeradeFarbe, int nichtGespieltUnGeradeFarbe) throws GenerateException {
+
 		IRangliste sheet = iRanglisteSheet.get();
-
 		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
 		int spielerNrSpalte = spielerSpalte.getSpielerNrSpalte();
 		int ersteDatenZeile = spielerSpalte.getErsteDatenZiele();
@@ -162,9 +165,12 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 		Integer unGeradeColor = propertiesSpalte.getRanglisteHintergrundFarbeUnGerade();
 
 		RangePosition datenRange = RangePosition.from(spielerNrSpalte, ersteDatenZeile, letzteSpalte, letzteDatenZeile);
-		RanglisteGeradeUngeradeFormatHelper.from(sheet, datenRange).geradeFarbe(geradeColor)
-				.ungeradeFarbe(unGeradeColor).validateSpalte(validateSpalteNr).apply();
-
+		RanglisteGeradeUngeradeFormatHelper.from(sheet, datenRange)
+				.geradeFarbe(geradeColor)
+				.ungeradeFarbe(unGeradeColor)
+				.validateSpalte(validateSpalteNr)
+				.nichtGespieltSpalte(nichtGespieltSpalteNr, nichtGespieltGeradeFarbe, nichtGespieltUnGeradeFarbe)
+				.apply();
 	}
 
 	/**

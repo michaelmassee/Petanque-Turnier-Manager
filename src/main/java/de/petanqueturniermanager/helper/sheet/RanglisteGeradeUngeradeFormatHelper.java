@@ -13,6 +13,8 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
+import de.petanqueturniermanager.helper.cellstyle.NichtGespieltHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.NichtGespieltHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharGreenStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharOrangeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeGeradeCharRedStyle;
@@ -21,6 +23,8 @@ import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGer
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharOrangeStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeCharRedStyle;
 import de.petanqueturniermanager.helper.cellstyle.RanglisteHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.StreichSpieltagHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
 /**
@@ -38,6 +42,13 @@ public class RanglisteGeradeUngeradeFormatHelper {
 	private Optional<Integer> greenCharEqualToValue = Optional.empty();
 	private Optional<String> orangeCharEvenFormula = Optional.empty();
 	private Optional<String> orangeCharOddFormula = Optional.empty();
+	private Optional<String> streichSpieltagFormulaGerade = Optional.empty();
+	private Optional<Integer> streichSpieltagFarbeGerade = Optional.empty();
+	private Optional<String> streichSpieltagFormulaUnGerade = Optional.empty();
+	private Optional<Integer> streichSpieltagFarbeUnGerade = Optional.empty();
+	private int nichtGespieltSpalteNr = -1;
+	private int nichtGespieltGeradeFarbe = Integer.valueOf("FFFF99", 16);
+	private int nichtGespieltUnGeradeFarbe = Integer.valueOf("FFE766", 16);
 
 	private RanglisteGeradeUngeradeFormatHelper(ISheet sheet, RangePosition rangePos) {
 		this.sheet = checkNotNull(sheet);
@@ -80,6 +91,25 @@ public class RanglisteGeradeUngeradeFormatHelper {
 
 	public RanglisteGeradeUngeradeFormatHelper orangeCharFormulaUnGerade(String orangeCharOddFormula) {
 		this.orangeCharOddFormula = Optional.of(orangeCharOddFormula);
+		return this;
+	}
+
+	public RanglisteGeradeUngeradeFormatHelper streichSpieltagFormulaGerade(String formula, int farbe) {
+		this.streichSpieltagFormulaGerade = Optional.of(formula);
+		this.streichSpieltagFarbeGerade = Optional.of(farbe);
+		return this;
+	}
+
+	public RanglisteGeradeUngeradeFormatHelper streichSpieltagFormulaUnGerade(String formula, int farbe) {
+		this.streichSpieltagFormulaUnGerade = Optional.of(formula);
+		this.streichSpieltagFarbeUnGerade = Optional.of(farbe);
+		return this;
+	}
+
+	public RanglisteGeradeUngeradeFormatHelper nichtGespieltSpalte(int spalteNr, int geradeFarbe, int ungeradeFarbe) {
+		this.nichtGespieltSpalteNr = spalteNr;
+		this.nichtGespieltGeradeFarbe = geradeFarbe;
+		this.nichtGespieltUnGeradeFarbe = ungeradeFarbe;
 		return this;
 	}
 
@@ -129,6 +159,25 @@ public class RanglisteGeradeUngeradeFormatHelper {
 		if (orangeCharOddFormula.isPresent()) {
 			conditionalFormatHelper.formula1(orangeCharOddFormula.get()).isFormula()
 					.style(new RanglisteHintergrundFarbeUnGeradeCharOrangeStyle(ungeradeColor)).applyAndDoReset();
+		}
+
+		if (streichSpieltagFormulaGerade.isPresent()) {
+			conditionalFormatHelper.formula1(streichSpieltagFormulaGerade.get()).isFormula()
+					.style(new StreichSpieltagHintergrundFarbeGeradeStyle(streichSpieltagFarbeGerade.get()))
+					.applyAndDoReset();
+		}
+		if (streichSpieltagFormulaUnGerade.isPresent()) {
+			conditionalFormatHelper.formula1(streichSpieltagFormulaUnGerade.get()).isFormula()
+					.style(new StreichSpieltagHintergrundFarbeUnGeradeStyle(streichSpieltagFarbeUnGerade.get()))
+					.applyAndDoReset();
+		}
+
+		if (nichtGespieltSpalteNr > -1) {
+			String nichtGespieltBasis = "LEN(TRIM(INDIRECT(ADDRESS(ROW();" + (nichtGespieltSpalteNr + 1) + "))))>0";
+			conditionalFormatHelper.formula1("AND(ISEVEN(ROW());" + nichtGespieltBasis + ")").isFormula()
+					.style(new NichtGespieltHintergrundFarbeGeradeStyle(nichtGespieltGeradeFarbe)).applyAndDoReset();
+			conditionalFormatHelper.formula1("AND(ISODD(ROW());" + nichtGespieltBasis + ")").isFormula()
+					.style(new NichtGespieltHintergrundFarbeUnGeradeStyle(nichtGespieltUnGeradeFarbe)).applyAndDoReset();
 		}
 
 		conditionalFormatHelper.formulaIsEvenRow().style(ranglisteHintergrundFarbeGeradeStyle).applyAndDoReset()

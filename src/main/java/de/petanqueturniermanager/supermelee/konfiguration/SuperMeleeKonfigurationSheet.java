@@ -77,6 +77,16 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public Integer getNichtGespieltHintergrundFarbeGerade() {
+		return propertiesSpalte.getNichtGespieltHintergrundFarbeGerade();
+	}
+
+	@Override
+	public Integer getNichtGespieltHintergrundFarbeUnGerade() {
+		return propertiesSpalte.getNichtGespieltHintergrundFarbeUnGerade();
+	}
+
+	@Override
 	public SpielrundeSpielbahn getSpielrundeSpielbahn() {
 		return propertiesSpalte.getSpielrundeSpielbahn();
 	}

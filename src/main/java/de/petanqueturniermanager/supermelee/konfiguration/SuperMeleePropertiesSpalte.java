@@ -40,6 +40,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_GERADE = "Streich-Spieltag Hintergrund Gerade";
 	private static final String KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE = "Streich-Spieltag Hintergrund Ungerade";
 
+	// Spieltagrangliste – Nicht gespielt
+	private static final String KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_GERADE = "Nicht-Gespielt Hintergrund Gerade";
+	private static final String KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_UNGERADE = "Nicht-Gespielt Hintergrund Ungerade";
+
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_PLUS = "Nicht gespielte Runde, + Punkte"; // 0
 	private static final String KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS = "Nicht gespielte Runde, - Punkte"; // 13
 
@@ -92,6 +96,15 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		KONFIG_PROPERTIES
 				.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_RANGLISTE_NICHT_GESPIELTE_RND_MINUS)
 						.setDefaultVal(13).setDescription("config.desc.supermelee.nicht.gespielt.minus").inSideBar());
+
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_GERADE)
+						.setDefaultVal(Integer.valueOf("FFFF99", 16))
+						.setDescription("config.desc.supermelee.nicht.gespielt.farbe.gerade").inSideBar());
+		KONFIG_PROPERTIES
+				.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_UNGERADE)
+						.setDefaultVal(Integer.valueOf("FFE766", 16))
+						.setDescription("config.desc.supermelee.nicht.gespielt.farbe.ungerade").inSideBar());
 
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELRUNDE_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name()).setDescription("config.desc.spielbahn"))
@@ -178,6 +191,16 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	@Override
 	public Integer getRanglisteHintergrundFarbeStreichSpieltagUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_STREICH_SPIELTAG_COLOR_BACK_UNGERADE);
+	}
+
+	@Override
+	public Integer getNichtGespieltHintergrundFarbeGerade() {
+		return readCellBackColorProperty(KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_GERADE);
+	}
+
+	@Override
+	public Integer getNichtGespieltHintergrundFarbeUnGerade() {
+		return readCellBackColorProperty(KONFIG_PROP_NICHT_GESPIELT_COLOR_BACK_UNGERADE);
 	}
 
 	@Override
