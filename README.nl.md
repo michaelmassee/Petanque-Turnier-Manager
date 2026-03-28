@@ -4,7 +4,7 @@
 
 [![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL_1.2-blue.svg)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12)
 [![Wiki](https://img.shields.io/badge/Doku-Projekt_Wiki-green.svg)](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki)
-[![Doneren met PayPal](https://img.shields.io/badge/Doneren-PayPal-blue.svg)](https://www.paypal.me/@michaelmassee1)
+[![Doneren met PayPal](https://img.shields.io/badge/Doneren-PayPal-blue.svg)](https://www.paypal.me/michaelmassee1)
 
 *Read this in other languages: [🇩🇪 DE](README.md) | [🇬🇧 EN](README.en.md) | [🇫🇷 FR](README.fr.md) | [🇪🇸 ES](README.es.md) | [🇳🇱 NL](README.nl.md)*
 
