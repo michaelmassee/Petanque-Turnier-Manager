@@ -56,7 +56,7 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 
 ---
 
-## 🌐 Ingebouwde webserver – Live weergave op de toernooiavond
+## 🌐 Ingebouwde webserver – Live weergave op de toernooidag
 
 De Pétanque Toernooi Manager heeft een **volledig ingebouwde webserver** – rechtstreeks vanuit LibreOffice Calc, zonder externe software of internetverbinding.
 
