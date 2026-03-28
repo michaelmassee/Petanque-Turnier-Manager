@@ -5,6 +5,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -112,7 +113,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
         for (Team team : aktiveMeldungen.getTeamList()) {
             teamNrVal.setValue((double) team.getNr());
-            nameFormula.setValue(formulaSverweisTeamname(teamNrVal.getPos().getAddress()));
+            nameFormula.setValue(MeldeListeHelper.teamNameVlookup(teamNrVal.getPos().getAddress()));
 
             getSheetHelper().setNumberValueInCell(teamNrVal);
             getSheetHelper().setFormulaInCell(nameFormula);
@@ -173,10 +174,6 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
         var datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
                 letzteSpalte, ERSTE_DATEN_ZEILE + anzahlZeilen - 1);
         SheetHelper.faerbeZeilenAbwechselnd(this, datenRange, geradeFarbe, ungeradeFarbe);
-    }
-
-    private String formulaSverweisTeamname(String nrAdresse) {
-        return "VLOOKUP(" + nrAdresse + ";$'" + SheetNamen.meldeliste() + "'.$A$1:$B$999;2;0)";
     }
 
     private void printBereichDefinieren(Position footerPos, int letzteSpalte) throws GenerateException {

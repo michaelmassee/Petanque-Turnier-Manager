@@ -163,6 +163,29 @@ Jedes neue Turniersystem, das einen `RanglisteRefreshListener` bekommt, benötig
 - **ALWAYS use `UnoRuntime.queryInterface()`**: `XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, obj);`
 - **Helper Usage:** Whenever possible, use the abstractions in `de.petanqueturniermanager.helper.Lo` instead of writing raw UNO boilerplate.
 
+### Calc-Formeln in `SheetHelper.setFormulaInCell()` – immer englische ODF-Funktionsnamen
+
+`SheetHelper.setFormulaInCell()` ruft intern `xCell.setFormula()` auf – das ist die **ODF-Formelsprache**, die **sprachunabhängig** und immer englisch ist. Das gilt für **alle Locales** (Deutsch, Französisch, Niederländisch, Spanisch, …) – lokalisierte Funktionsnamen führen in jeder Spracheinstellung zu `#NAME?`.
+
+Eine kleine Übersetzungsliste (`FORMULA_GERMAN_SEARCH_LIST` in `SheetHelper`) übersetzt einige deutsche Namen automatisch – aber diese Liste ist unvollständig:
+
+| Java-Code (deutsch, übersetzt) | ODF-Name |
+|-------------------------------|---------|
+| WENN | IF |
+| ISTZAHL | ISNUMBER |
+| ISTNV | ISNA |
+| WENNNV | IFNA |
+| ANZAHL | COUNT |
+| ANZAHL2 | COUNTA |
+| ZÄHLENWENN | COUNTIF |
+| ISOKALENDERWOCHE | ISOWEEKNUM |
+
+**Alle anderen Funktionen MÜSSEN direkt mit ODF-Namen geschrieben werden** – insbesondere:
+- `VLOOKUP` (nicht `SVERWEIS`, nicht `RECHERCHEV`, nicht `VERT.ZOEKEN` o.ä.)
+- Referenz-Syntax für Fremdblätter: `$'Sheetname'.$A$1:$B$999` (mit `$`-Prefix und Single Quotes)
+
+Beispiel korrekt: `"VLOOKUP(" + nr + ";$'" + SheetNamen.meldeliste() + "'.$A$1:$B$999;2;0)"`
+
 ## Code Style & Language
 - **Language:** All new class names, methods, variable names, JavaDoc, and inline comments MUST be in German to match the existing codebase.
 - **UI Strings & i18n:** **EVERY string visible to the user** (sheet column headers, cell contents, comments, MessageBox texts, processbox messages, error messages, labels,menus, titles – anything the user can read) **MUST be managed via the i18n framework** using `I18n.get("key")`. This applies to all new code AND any previously hardcoded strings found during work. Translations must be added to all existing language files: `messages.properties` (DE/default), `messages_en.properties`, `messages_fr.properties`, `messages_nl.properties`, `messages_es.properties` in `src/main/resources/de/petanqueturniermanager/i18n/`. Never write a user-visible string literal directly into Java code.

@@ -261,6 +261,17 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		}
 	}
 
+	/**
+	 * Erzeugt eine VLOOKUP-Formel, die den Teamnamen anhand der Teamnummer aus der Meldeliste liest.<br>
+	 * Der Sheet-Name wird korrekt quotiert, damit lokalisierte Namen mit Leerzeichen funktionieren.
+	 *
+	 * @param nrAdresse Zell-Adresse oder Literal, das die Teamnummer enthält
+	 * @return VLOOKUP-Formel-String
+	 */
+	public static String teamNameVlookup(String nrAdresse) {
+		return "VLOOKUP(" + nrAdresse + ";$'" + SheetNamen.meldeliste() + "'.$A$1:$B$999;2;0)";
+	}
+
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
 		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), 999)

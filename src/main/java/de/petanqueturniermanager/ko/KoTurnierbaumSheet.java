@@ -13,10 +13,12 @@ import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
+import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -785,7 +787,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
 			// Teamname via SVERWEIS
-			String formel = "SVERWEIS(" + nr + ";" + SheetNamen.meldeliste() + ".$A:$B;2;0)";
+			String formel = MeldeListeHelper.teamNameVlookup(String.valueOf(nr));
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
 							.setCellBackColor(farbe)
@@ -937,7 +939,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String siegerNameFormel = "WENN(ISTZAHL(" + siegerNrAddr + ")*(" + siegerNrAddr
-					+ ">0);SVERWEIS(" + siegerNrAddr + ";" + SheetNamen.meldeliste() + ".$A:$B;2;0);\"\")";
+					+ ">0);" + MeldeListeHelper.teamNameVlookup(siegerNrAddr) + ";\"\")";
 
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),
@@ -952,6 +954,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 	// Hilfsmethoden
 	// ---------------------------------------------------------------
+
 
 	/**
 	 * Liefert die Team-Nr des Teams an Setzposition {@code seedPos} (1-basiert).
@@ -1041,7 +1044,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			String formel = "SVERWEIS(" + nr + ";" + SheetNamen.meldeliste() + ".$A:$B;2;0)";
+			String formel = MeldeListeHelper.teamNameVlookup(String.valueOf(nr));
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
 							.setCellBackColor(farbe)
@@ -1211,8 +1214,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String drittePlatzNameFormel = "WENN(ISTZAHL(" + drittePlatzNrAddr + ")*(" + drittePlatzNrAddr
-					+ ">0);SVERWEIS(" + drittePlatzNrAddr + ";" + SheetNamen.meldeliste()
-					+ ".$A:$B;2;0);\"\")";
+					+ ">0);" + MeldeListeHelper.teamNameVlookup(drittePlatzNrAddr) + ";\"\")";
 
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),
