@@ -232,8 +232,16 @@ export default function App() {
 function Signatur() {
   return (
     <div id="signatur">
-      * Pétanque-Turnier-Manager *<br />
-      michael@massee.de
+      <a
+        href="https://michaelmassee.github.io/Petanque-Turnier-Manager/"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <img
+          src="/images/petanqueturniermanager-logo-256px.png"
+          alt="Pétanque-Turnier-Manager"
+        />
+      </a>
     </div>
   );
 }

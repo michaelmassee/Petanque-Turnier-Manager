@@ -47,13 +47,16 @@ tr.zeile-ungerade {
   position: fixed;
   bottom: 0;
   right: 0;
-  padding: 4px 12px;
-  font-size: 0.75em;
-  color: #888;
+  padding: 4px 8px;
   background: #f5f5f5;
   border-top: 1px solid #ddd;
-  text-align: right;
-  line-height: 1.4;
+}
+
+#signatur img {
+  display: block;
+  height: 40px;
+  width: auto;
+  opacity: 0.85;
 }
 
 .seiten-titel {

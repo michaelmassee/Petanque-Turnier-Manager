@@ -23,6 +23,7 @@ import com.sun.net.httpserver.HttpServer;
  * <ul>
  *   <li>{@code GET /} – React-App ({@code static/index.html} aus Classpath)</li>
  *   <li>{@code GET /assets/*} – Bundle-Dateien aus {@code static/assets/}</li>
+ *   <li>{@code GET /images/*} – Bilder aus {@code static/images/}</li>
  *   <li>{@code GET /events} – Server-Sent-Events-Stream (JSON-Diffs)</li>
  * </ul>
  * <p>
@@ -167,6 +168,9 @@ public class WebServerInstanz {
         } else if (path.startsWith("/assets/")) {
             String dateiname = path.substring("/assets/".length());
             serviereRessource(exchange, "/assets/" + dateiname, ermittleContentType(dateiname));
+        } else if (path.startsWith("/images/")) {
+            String dateiname = path.substring("/images/".length());
+            serviereRessource(exchange, "/images/" + dateiname, ermittleContentType(dateiname));
         } else {
             exchange.sendResponseHeaders(404, -1);
         }
