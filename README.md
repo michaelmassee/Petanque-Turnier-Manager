@@ -65,6 +65,27 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
 
 ---
 
+## 🌐 Eingebauter Webserver – Live-Anzeige am Turniertag
+
+Der Pétanque-Turnier-Manager hat einen **vollständig eingebauten Webserver** – direkt aus LibreOffice Calc heraus, ohne externe Software oder Internetverbindung.
+
+Während das Turnier läuft, können alle Sheets per Browser auf **Fernseher, Laptop, Tablet oder Handy** angezeigt werden – in Echtzeit, automatisch aktualisiert:
+
+* 📋 **Teilnehmerlisten** – wer spielt mit?
+* 🎯 **Aktuelle Spielrunde** – welche Paarungen laufen gerade?
+* 🏆 **Ranglisten** – live aktualisiert nach jeder Runde
+* 📊 **Eigene Tabellen** – beliebige Calc-Sheets veröffentlichen
+
+> **💡 So einfach geht's:** Webserver im Menü starten → URL im Browser öffnen → fertig. Alle Geräte im gleichen WLAN sehen die Turnierdaten live.
+
+**Technische Details:**
+* React-Frontend mit **Server-Sent Events (SSE)** – sofortige Aktualisierung ohne Seitenreload
+* Bis zu **10 URLs gleichzeitig** konfigurierbar
+* Zoom, Zentrierung und Kopf-/Fußzeilen pro Port einstellbar
+* Alle Turniersysteme unterstützt: Supermêlée, Schweizer System, Jeder-gegen-Jeden, K.-O., Maastrichter System
+
+---
+
 ## 💻 Systemvoraussetzungen
 
 Um den Turnier-Manager reibungslos nutzen zu können, müssen folgende Voraussetzungen erfüllt sein:

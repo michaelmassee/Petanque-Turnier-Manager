@@ -64,6 +64,27 @@ The extension already offers a wide selection of proven tournament modes suitabl
 
 ---
 
+## 🌐 Built-in Web Server – Live Display on Tournament Day
+
+The Pétanque Tournament Manager includes a **fully built-in web server** – running directly from LibreOffice Calc, without any external software or internet connection.
+
+While the tournament is running, all sheets can be viewed in a browser on **TVs, laptops, tablets, or phones** – in real time, updated automatically:
+
+* 📋 **Participant lists** – who is playing?
+* 🎯 **Current game round** – which matches are running right now?
+* 🏆 **Rankings** – updated live after each round
+* 📊 **Custom tables** – publish any Calc sheet you want
+
+> **💡 That easy:** Start the web server from the menu → open the URL in a browser → done. All devices on the same Wi-Fi see the tournament data live.
+
+**Technical details:**
+* React frontend with **Server-Sent Events (SSE)** – instant updates without page reload
+* Up to **10 URLs simultaneously** configurable
+* Zoom, centering and headers/footers configurable per port
+* All tournament systems supported: Supermêlée, Swiss System, Round Robin, Knockout, Maastricht System
+
+---
+
 ## 💻 System Requirements
 
 To use the Tournament Manager smoothly, the following requirements must be met:

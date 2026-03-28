@@ -54,6 +54,27 @@ El mayor punto de venta único de este gestor de torneos es su base: **LibreOffi
 
 ---
 
+## 🌐 Servidor web integrado – Visualización en vivo el día del torneo
+
+El Pétanque Tournament Manager incluye un **servidor web completamente integrado** – directamente desde LibreOffice Calc, sin software externo ni conexión a internet.
+
+Mientras se desarrolla el torneo, todas las hojas se pueden ver en un navegador en **televisores, portátiles, tabletas o móviles** – en tiempo real, actualizadas automáticamente:
+
+* 📋 **Listas de participantes** – ¿quién juega?
+* 🎯 **Ronda actual** – ¿qué partidas están en curso?
+* 🏆 **Clasificaciones** – actualizadas en vivo tras cada ronda
+* 📊 **Tablas personalizadas** – publica cualquier hoja de Calc
+
+> **💡 Así de sencillo:** Inicia el servidor web desde el menú → abre la URL en un navegador → listo. Todos los dispositivos en la misma red Wi-Fi ven los datos del torneo en vivo.
+
+**Detalles técnicos:**
+* Interfaz React con **Server-Sent Events (SSE)** – actualizaciones instantáneas sin recargar la página
+* Hasta **10 URLs simultáneas** configurables
+* Zoom, centrado y encabezados/pies de página configurables por puerto
+* Todos los sistemas de torneo compatibles: Supermêlée, Sistema suizo, Todos contra todos, K.-O., Sistema de Maastricht
+
+---
+
 ## 💻 Requisitos del sistema
 
 * **LibreOffice:** versión 25.x (o superior)

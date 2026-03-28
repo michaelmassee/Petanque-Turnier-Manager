@@ -55,6 +55,27 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 
 ---
 
+## 🌐 Ingebouwde webserver – Live weergave op de toernooiavond
+
+De Pétanque Toernooi Manager heeft een **volledig ingebouwde webserver** – rechtstreeks vanuit LibreOffice Calc, zonder externe software of internetverbinding.
+
+Terwijl het toernooi bezig is, kunnen alle sheets in een browser worden bekeken op **tv, laptop, tablet of smartphone** – in realtime, automatisch bijgewerkt:
+
+* 📋 **Deelnemerslijsten** – wie speelt er mee?
+* 🎯 **Huidige speelronde** – welke wedstrijden lopen er nu?
+* 🏆 **Ranglijsten** – live bijgewerkt na elke ronde
+* 📊 **Eigen tabellen** – publiceer elke gewenste Calc-sheet
+
+> **💡 Zo eenvoudig:** Start de webserver via het menu → open de URL in een browser → klaar. Alle apparaten op hetzelfde wifi-netwerk zien de toernooigegevens live.
+
+**Technische details:**
+* React-frontend met **Server-Sent Events (SSE)** – directe updates zonder herladen van de pagina
+* Tot **10 URL's tegelijkertijd** configureerbaar
+* Zoom, centrering en kopteksten/voetteksten instelbaar per poort
+* Alle toernooisystemen ondersteund: Supermêlée, Zwitsers systeem, Iedereen tegen iedereen, K.-O., Maastrichts systeem
+
+---
+
 ## 💻 Systeemvereisten
 
 * **LibreOffice:** vanaf versie 25.x (of nieuwer)
