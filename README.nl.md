@@ -23,6 +23,7 @@ De software is speciaal ontwikkeld om de organisatie en uitvoering van jeu-de-bo
 * **Gratis & Open Source:** Geen licentiekosten, geen reclame.
 * **Efficiënt:** Perfect geschikt voor oudere hardware.
 * **Alles op één plek:** Geen externe database nodig; alles wordt direct berekend en opgeslagen in LibreOffice Calc.
+* **Ingebouwde webserver:** Toon alle toernooigegevens live op tv, tablet of smartphone – rechtstreeks vanuit LibreOffice, zonder externe software.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 

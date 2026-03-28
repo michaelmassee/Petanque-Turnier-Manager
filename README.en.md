@@ -22,6 +22,7 @@ The software was specifically designed to make the organization and execution of
 * **Free & Open Source:** No license fees, no advertising.
 * **Resource Efficient:** Perfectly suited for older hardware.
 * **Everything in one place:** No external database required; everything is calculated and stored directly in LibreOffice Calc.
+* **Built-in Web Server:** Display all tournament data live on TVs, tablets, or phones – directly from LibreOffice, no external software needed.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 

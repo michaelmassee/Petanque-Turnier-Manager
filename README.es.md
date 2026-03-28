@@ -22,6 +22,7 @@ El software fue diseñado específicamente para hacer que la organización y eje
 * **Gratuito y de Código Abierto:** Sin costes de licencia, sin publicidad.
 * **Eficiente en recursos:** Perfectamente adecuado para hardware antiguo.
 * **Todo en un solo lugar:** No se necesita una base de datos externa; todo se calcula y almacena directamente en LibreOffice Calc.
+* **Servidor web integrado:** Muestra todos los datos del torneo en vivo en televisores, tabletas o móviles – directamente desde LibreOffice, sin software externo.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 

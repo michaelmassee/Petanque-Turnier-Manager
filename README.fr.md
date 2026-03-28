@@ -22,6 +22,7 @@ Ce logiciel a été spécialement conçu pour rendre l'organisation et le dérou
 * **Gratuit & Open Source :** Pas de frais de licence, pas de publicité.
 * **Économe en ressources :** Parfaitement adapté au matériel plus ancien.
 * **Tout en un seul endroit :** Aucune base de données externe n'est nécessaire ; tout est calculé et enregistré directement dans LibreOffice Calc.
+* **Serveur web intégré :** Affichez toutes les données du tournoi en direct sur un téléviseur, une tablette ou un smartphone – directement depuis LibreOffice, sans logiciel externe.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
