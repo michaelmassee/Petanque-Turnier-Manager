@@ -63,6 +63,8 @@ public final class WebServerManager {
 
     /** Letztes Modell pro Port (port → TabelleModel). */
     private final Map<Integer, TabelleModel> letzteModelle = new ConcurrentHashMap<>();
+    /** Letzter Seitentitel pro Port (port → Titel). */
+    private final Map<Integer, String> letzteTitel = new ConcurrentHashMap<>();
     /** Monoton steigende Version pro Port (port → AtomicInteger). */
     private final Map<Integer, AtomicInteger> versionen = new ConcurrentHashMap<>();
 
@@ -144,6 +146,7 @@ public final class WebServerManager {
         instanzen.clear();
         slots.clear();
         letzteModelle.clear();
+        letzteTitel.clear();
         versionen.clear();
         laeuft = false;
         ownerDocument = null;
@@ -171,6 +174,42 @@ public final class WebServerManager {
             return;
         }
         sseRefreshSendenIntern(ws);
+    }
+
+    /**
+     * Aktualisiert Zoom und Zentrieren aller laufenden Instanzen aus den gespeicherten GlobalProperties
+     * und pusht den neuen Zustand sofort an alle verbundenen Browser-Clients.
+     * <p>
+     * Muss nach {@link GlobalProperties#speichernWebserver} aufgerufen werden.
+     * Kein UNO-Zugriff erforderlich – verwendet ausschließlich gecachte Modelle.
+     */
+    public synchronized void konfigurationGeaendert() {
+        if (!laeuft) {
+            return;
+        }
+        var eintraege = GlobalProperties.get().getPortEintraege();
+        for (var instanz : instanzen) {
+            int port = instanz.getKonfiguration().port();
+            eintraege.stream()
+                    .filter(e -> e.port() == port)
+                    .findFirst()
+                    .ifPresent(e -> {
+                        if (e.zoom() == instanz.getKonfiguration().zoom()
+                                && e.zentrieren() == instanz.getKonfiguration().zentrieren()) {
+                            return; // keine Änderung, kein Push
+                        }
+                        var neueKonfig = new PortKonfiguration(
+                                port, instanz.getKonfiguration().resolver(), e.zoom(), e.zentrieren());
+                        TabelleModel modell = letzteModelle.get(port);
+                        String neuesJson = null;
+                        if (modell != null) {
+                            String titel = letzteTitel.getOrDefault(port, "");
+                            int version = versionen.get(port).incrementAndGet();
+                            neuesJson = GSON.toJson(SseNachricht.init(version, modell, titel, e.zoom(), e.zentrieren()));
+                        }
+                        instanz.setKonfiguration(neueKonfig, neuesJson);
+                    });
+        }
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
@@ -228,8 +267,13 @@ public final class WebServerManager {
                 return;
             }
 
-            TabelleModel neuesModell = mapper.map(sheetOpt.get());
+            var sheet = sheetOpt.get();
+            String neuerTitel = baueSeitenTitel(resolver, sheet);
+            TabelleModel neuesModell = mapper.map(sheet, ws.getWorkingSpreadsheetDocument());
             TabelleModel altesModell = letzteModelle.get(port);
+            String alterTitel = letzteTitel.get(port);
+            int zoom = instanz.getKonfiguration().zoom();
+            boolean zentrieren = instanz.getKonfiguration().zentrieren();
 
             // Layout-Änderung (Größe oder Startversatz) → vollständiges Init erzwingen
             if (altesModell != null && layoutGeaendert(altesModell, neuesModell)) {
@@ -238,28 +282,43 @@ public final class WebServerManager {
 
             TabelleModel diffModell = diffEngine.diff(altesModell, neuesModell);
 
-            boolean keineDiffNoetig = altesModell != null && diffModell.getZellen().isEmpty();
+            boolean keineDiffNoetig = altesModell != null
+                    && diffModell.getZellen().isEmpty()
+                    && !kopfFusszeileGeaendert(altesModell, neuesModell)
+                    && java.util.Objects.equals(alterTitel, neuerTitel);
             if (keineDiffNoetig) {
                 return; // nichts geändert, kein Push
             }
 
             int version = versionen.get(port).incrementAndGet();
             letzteModelle.put(port, neuesModell);
+            letzteTitel.put(port, neuerTitel);
 
             // Init-Cache immer mit vollem State aktualisieren (für neue/reconnectende Verbindungen)
-            SseNachricht initNachricht = SseNachricht.init(version, neuesModell);
+            SseNachricht initNachricht = SseNachricht.init(version, neuesModell, neuerTitel, zoom, zentrieren);
             instanz.setCachedInitJson(GSON.toJson(initNachricht));
 
             // Push: "init" beim ersten Mal, sonst "diff"
             SseNachricht push = (altesModell == null)
                     ? initNachricht
-                    : SseNachricht.diff(version, diffModell);
+                    : SseNachricht.diff(version, diffModell, neuerTitel, zoom, zentrieren);
             instanz.sseNachrichtPushen(GSON.toJson(push));
 
         } catch (Exception e) {
             logger.error("Fehler beim Rendern für Port {}: {}", port, e.getMessage(), e);
             safeProcessBoxFehler(I18n.get("webserver.prozessbox.render.fehler", port, e.getMessage()));
         }
+    }
+
+    /**
+     * Baut den Seitentitel aus dem Anzeigenamen des Resolvers und – wenn vorhanden – der laufenden Nummer.
+     * Beispiel: "Spielrunde" + Nummer 3 → "Spielrunde 3"
+     */
+    private static String baueSeitenTitel(SheetResolver resolver, XSpreadsheet sheet) {
+        var name = resolver.getAnzeigeName();
+        return resolver.getNummer(sheet)
+                .map(nr -> name + " " + nr)
+                .orElse(name);
     }
 
     private void sendeHinweis(WebServerInstanz instanz, String titel, String text) {
@@ -355,6 +414,19 @@ public final class WebServerManager {
             || altes.getSpalten()     != neues.getSpalten()
             || altes.getStartZeile()  != neues.getStartZeile()
             || altes.getStartSpalte() != neues.getStartSpalte();
+    }
+
+    /**
+     * Prüft ob sich Kopf- oder Fußzeile geändert hat.
+     * Nötig, da die {@link DiffEngine} nur Zellinhalte vergleicht.
+     */
+    private static boolean kopfFusszeileGeaendert(TabelleModel altes, TabelleModel neues) {
+        return !java.util.Objects.equals(altes.getKopfzeileLinks(),  neues.getKopfzeileLinks())
+            || !java.util.Objects.equals(altes.getKopfzeileMitte(),  neues.getKopfzeileMitte())
+            || !java.util.Objects.equals(altes.getKopfzeileRechts(), neues.getKopfzeileRechts())
+            || !java.util.Objects.equals(altes.getFusszeileLinks(),  neues.getFusszeileLinks())
+            || !java.util.Objects.equals(altes.getFusszeileMitte(),  neues.getFusszeileMitte())
+            || !java.util.Objects.equals(altes.getFusszeileRechts(), neues.getFusszeileRechts());
     }
 
     /** Baut eine URL aus einem Port – zentrale Methode, kein String-Duplikat. */

@@ -28,6 +28,9 @@ public class GlobalProperties {
 	private static final String WEBSERVER_PORT_SHEET_PREFIX = "webserver_port_";
 	private static final String WEBSERVER_PORT_SHEET_SUFFIX = "_sheet";
 	private static final String WEBSERVER_PORT_AKTIV_SUFFIX = "_aktiv";
+	private static final String WEBSERVER_PORT_ZOOM_SUFFIX = "_zoom";
+	private static final String WEBSERVER_PORT_ZENTRIEREN_SUFFIX = "_zentrieren";
+	public static final int DEFAULT_ZOOM = 100;
 
 	private static final Properties props = new Properties();
 
@@ -39,8 +42,10 @@ public class GlobalProperties {
 	 * @param port        TCP-Port
 	 * @param sheetConfig Config-String (z.B. "SCHWEIZER_RANGLISTE" oder Sheet-Tab-Name)
 	 * @param aktiv       ob dieser Port beim Webserver-Start aktiv ist
+	 * @param zoom        Zoom-Faktor in Prozent (10–500, Standard 100)
+	 * @param zentrieren  ob die Tabelle im Browser horizontal zentriert wird
 	 */
-	public record PortEintragRoh(int port, String sheetConfig, boolean aktiv) {
+	public record PortEintragRoh(int port, String sheetConfig, boolean aktiv, int zoom, boolean zentrieren) {
 		@Override
 		public String toString() {
 			return port + "=" + sheetConfig;
@@ -105,7 +110,11 @@ public class GlobalProperties {
 		List<PortKonfiguration> konfigs = new ArrayList<>();
 		for (var eintrag : getPortEintraege()) {
 			if (eintrag.aktiv()) {
-				konfigs.add(new PortKonfiguration(eintrag.port(), SheetResolverFactory.erstellen(eintrag.sheetConfig())));
+				konfigs.add(new PortKonfiguration(
+						eintrag.port(),
+						SheetResolverFactory.erstellen(eintrag.sheetConfig()),
+						eintrag.zoom(),
+						eintrag.zentrieren()));
 			}
 		}
 		return konfigs;
@@ -134,7 +143,10 @@ public class GlobalProperties {
 				if (!sheetConfig.isEmpty()) {
 					boolean aktiv = Boolean.parseBoolean(
 							props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_AKTIV_SUFFIX, "false"));
-					eintraege.add(new PortEintragRoh(port, sheetConfig, aktiv));
+					int zoom = parseZoom(props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZOOM_SUFFIX, ""));
+					boolean zentrieren = Boolean.parseBoolean(
+							props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZENTRIEREN_SUFFIX, "false"));
+					eintraege.add(new PortEintragRoh(port, sheetConfig, aktiv, zoom, zentrieren));
 				}
 			} catch (NumberFormatException e) {
 				logger.warn("Ungültige Port-Nummer in {}: '{}'", WEBSERVER_PORTS_PROP, portStr);
@@ -177,6 +189,8 @@ public class GlobalProperties {
 		for (var alt : getPortEintraege()) {
 			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_SHEET_SUFFIX);
 			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_AKTIV_SUFFIX);
+			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZOOM_SUFFIX);
+			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX);
 		}
 		props.remove(WEBSERVER_PORTS_PROP);
 		setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
@@ -193,6 +207,13 @@ public class GlobalProperties {
 				if (eintrag.aktiv()) {
 					props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_AKTIV_SUFFIX, "true");
 				}
+				if (eintrag.zoom() != DEFAULT_ZOOM) {
+					props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZOOM_SUFFIX,
+							String.valueOf(eintrag.zoom()));
+				}
+				if (eintrag.zentrieren()) {
+					props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX, "true");
+				}
 			}
 			props.setProperty(WEBSERVER_PORTS_PROP, ports.toString());
 		}
@@ -205,6 +226,18 @@ public class GlobalProperties {
 			props.store(out, "Petanque Turnier Manager Konfiguration");
 		} catch (IOException e) {
 			logger.error("Fehler beim Speichern der properties-Datei: {}", e.getMessage(), e);
+		}
+	}
+
+	private static int parseZoom(String value) {
+		if (value == null || value.isBlank()) {
+			return DEFAULT_ZOOM;
+		}
+		try {
+			int zoom = Integer.parseInt(value.trim());
+			return (zoom >= 10 && zoom <= 500) ? zoom : DEFAULT_ZOOM;
+		} catch (NumberFormatException e) {
+			return DEFAULT_ZOOM;
 		}
 	}
 

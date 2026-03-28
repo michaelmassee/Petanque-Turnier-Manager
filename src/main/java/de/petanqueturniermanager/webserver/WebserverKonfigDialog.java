@@ -58,25 +58,29 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 	private static final String[] SHEET_TYPEN = SheetResolverFactory.SHEET_TYPEN;
 
 	// ---- Layout-Konstanten ----
-	private static final int DIALOG_BREITE = 270;
+	private static final int DIALOG_BREITE = 315;
 	private static final int DIALOG_HOEHE = 250;
 	private static final int MAX_ZEILEN = 10;
 	private static final int ZEILE_H = 14;
 	private static final int PORT_X = 5;
-	private static final int PORT_W = 45;
-	private static final int TYP_X = 55;
-	private static final int TYP_W = 130;
-	private static final int AKTIV_X = 190;
-	private static final int AKTIV_W = 25;
-	private static final int DEL_X = 220;
+	private static final int PORT_W = 40;
+	private static final int TYP_X = 49;
+	private static final int TYP_W = 100;
+	private static final int ZOOM_X = 153;
+	private static final int ZOOM_W = 30;
+	private static final int ZENTRIEREN_X = 187;
+	private static final int ZENTRIEREN_W = 20;
+	private static final int AKTIV_X = 211;
+	private static final int AKTIV_W = 20;
+	private static final int DEL_X = 234;
 	private static final int DEL_W = 18;
 	private static final int ZEILE_Y_START = 33;
 	private static final int ZEILE_ABSTAND = 16;
 	private static final int FOOTER_Y = 230;
-	private static final int OK_X = 145;
+	private static final int OK_X = 180;
 	private static final int OK_W = 50;
-	private static final int ABBRECHEN_X = 200;
-	private static final int ABBRECHEN_W = 65;
+	private static final int ABBRECHEN_X = 235;
+	private static final int ABBRECHEN_W = 75;
 
 	// ---- UNO-Referenzen (gesetzt in erstelleFelder) ----
 	private XMultiServiceFactory xMSF;
@@ -90,7 +94,7 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 	private final List<String> dynamischeControlNamen = new ArrayList<>();
 	private String[] komboBoxItems;
 
-	private record ZeilenDaten(String port, String typ, boolean aktiv) {
+	private record ZeilenDaten(String port, String typ, boolean aktiv, String zoom, boolean zentrieren) {
 	}
 
 	/** Interne Exception für Validierungsfehler – bleibt im Dialog. */
@@ -144,7 +148,8 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 		zeilenDaten = new ArrayList<>();
 		for (var eintrag : gp.getPortEintraege()) {
 			zeilenDaten.add(new ZeilenDaten(
-					String.valueOf(eintrag.port()), eintrag.sheetConfig(), eintrag.aktiv()));
+					String.valueOf(eintrag.port()), eintrag.sheetConfig(), eintrag.aktiv(),
+					String.valueOf(eintrag.zoom()), eintrag.zentrieren()));
 		}
 
 		komboBoxItems = ladeComboBoxItems();
@@ -167,6 +172,12 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 		fuegeFixedTextEin("lblKopfTyp",
 				I18n.get("webserver.konfig.tabelle.kopf.typ"),
 				TYP_X, 20, TYP_W, 10);
+		fuegeFixedTextEin("lblKopfZoom",
+				I18n.get("webserver.konfig.tabelle.kopf.zoom"),
+				ZOOM_X, 20, ZOOM_W, 10);
+		fuegeFixedTextEin("lblKopfZentrieren",
+				I18n.get("webserver.konfig.tabelle.kopf.zentrieren"),
+				ZENTRIEREN_X, 20, ZENTRIEREN_W, 10);
 		fuegeFixedTextEin("lblKopfAktiv",
 				I18n.get("webserver.konfig.tabelle.kopf.aktiv"),
 				AKTIV_X, 20, AKTIV_W + DEL_W, 10);
@@ -193,6 +204,8 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 			var zd = zeilenDaten.get(i);
 			fuegeEditEinDyn("portRow_" + i, zd.port(), PORT_X, y, PORT_W, ZEILE_H);
 			fuegeComboBoxEinDyn("typRow_" + i, komboBoxItems, TYP_X, y, TYP_W, ZEILE_H, zd.typ());
+			fuegeEditEinDyn("zoomRow_" + i, zd.zoom(), ZOOM_X, y, ZOOM_W, ZEILE_H);
+			fuegeCheckBoxEinDyn("zentrierenRow_" + i, "", ZENTRIEREN_X, y, ZENTRIEREN_W, ZEILE_H, zd.zentrieren());
 			fuegeCheckBoxEinDyn("aktivRow_" + i, "", AKTIV_X, y, AKTIV_W, ZEILE_H, zd.aktiv());
 			fuegeButtonEinDyn("delRow_" + i,
 					I18n.get("webserver.konfig.btn.zeile.loeschen"),
@@ -234,7 +247,8 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 		try {
 			leseZeilenDatenAusControls();
 			zeilenDaten.add(new ZeilenDaten(
-					String.valueOf(berechneNaechstenFreienPort()), DEFAULT_TYP, true));
+					String.valueOf(berechneNaechstenFreienPort()), DEFAULT_TYP, true,
+					String.valueOf(GlobalProperties.DEFAULT_ZOOM), false));
 			aktualisiereZeilenArea();
 			XControl neuesPortFeld = xcc.getControl("portRow_" + (zeilenDaten.size() - 1));
 			if (neuesPortFeld != null) {
@@ -261,6 +275,7 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 			var eintraege = validiereUndKonvertiere();
 			boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
 			GlobalProperties.get().speichernWebserver(aktiv, eintraege);
+			WebServerManager.get().konfigurationGeaendert();
 			logger.info("Webserver-Konfiguration gespeichert: aktiv={}, ports={}", aktiv, eintraege.size());
 			xDialog.endExecute();
 		} catch (UngueltigeEingabeException e) {
@@ -282,8 +297,10 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 			}
 			String port = Lo.qi(XTextComponent.class, portCtrl).getText().trim();
 			String typ = Lo.qi(XTextComponent.class, xcc.getControl("typRow_" + i)).getText().trim();
+			String zoom = Lo.qi(XTextComponent.class, xcc.getControl("zoomRow_" + i)).getText().trim();
+			boolean zentrieren = Lo.qi(XCheckBox.class, xcc.getControl("zentrierenRow_" + i)).getState() == 1;
 			boolean ak = Lo.qi(XCheckBox.class, xcc.getControl("aktivRow_" + i)).getState() == 1;
-			zeilenDaten.add(new ZeilenDaten(port, typ, ak));
+			zeilenDaten.add(new ZeilenDaten(port, typ, ak, zoom, zentrieren));
 		}
 	}
 
@@ -314,7 +331,16 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 			if (zd.typ().isEmpty()) {
 				throw new UngueltigeEingabeException(I18n.get("webserver.konfig.fehler.typ.leer", nr));
 			}
-			ergebnis.add(new PortEintragRoh(port, zd.typ(), zd.aktiv()));
+			int zoom;
+			try {
+				zoom = zd.zoom().isEmpty() ? GlobalProperties.DEFAULT_ZOOM : Integer.parseInt(zd.zoom());
+			} catch (NumberFormatException e) {
+				throw new UngueltigeEingabeException(I18n.get("webserver.konfig.fehler.zoom.ungueltig", nr));
+			}
+			if (zoom < 10 || zoom > 500) {
+				throw new UngueltigeEingabeException(I18n.get("webserver.konfig.fehler.zoom.ungueltig", nr));
+			}
+			ergebnis.add(new PortEintragRoh(port, zd.typ(), zd.aktiv(), zoom, zd.zentrieren()));
 		}
 		return ergebnis;
 	}

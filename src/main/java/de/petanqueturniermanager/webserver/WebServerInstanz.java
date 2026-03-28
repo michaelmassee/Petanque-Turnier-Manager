@@ -41,7 +41,7 @@ public class WebServerInstanz {
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
 
-    private final PortKonfiguration konfiguration;
+    private volatile PortKonfiguration konfiguration;
     private final HttpServer httpServer;
     private final ScheduledExecutorService keepAliveExecutor;
     private final CopyOnWriteArrayList<SseVerbindung> sseVerbindungen = new CopyOnWriteArrayList<>();
@@ -129,6 +129,21 @@ public class WebServerInstanz {
 
     public PortKonfiguration getKonfiguration() {
         return konfiguration;
+    }
+
+    /**
+     * Aktualisiert die Port-Konfiguration und pusht sofort den neuen Zustand an alle Clients.
+     * Darf nur aufgerufen werden wenn sich zoom oder zentrieren geändert haben.
+     *
+     * @param neueKonfiguration neue Konfiguration mit geändertem zoom/zentrieren
+     * @param neuesInitJson     serialisiertes {@code SseNachricht} mit neuem zoom/zentrieren, oder {@code null}
+     */
+    public synchronized void setKonfiguration(PortKonfiguration neueKonfiguration, String neuesInitJson) {
+        this.konfiguration = neueKonfiguration;
+        if (neuesInitJson != null) {
+            setCachedInitJson(neuesInitJson);
+            sseNachrichtPushen(neuesInitJson);
+        }
     }
 
     // ── HTTP-Handler ─────────────────────────────────────────────────────────
