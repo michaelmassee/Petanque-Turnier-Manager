@@ -118,7 +118,7 @@ public class RanglisteGeradeUngeradeFormatHelper {
 
 	public RanglisteGeradeUngeradeFormatHelper apply() throws GenerateException {
 		// Direkte Zeilenfärbung als Basis; bedingte Formatierungen überschreiben bei Bedarf
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, rangePos, geradeColor, ungeradeColor);
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, rangePos, geradeColor, ungeradeColor);
 
 		ConditionalFormatHelper conditionalFormatHelper = ConditionalFormatHelper.from(sheet, rangePos).clear();
 

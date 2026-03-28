@@ -730,6 +730,30 @@ public class SheetHelper {
 	}
 
 	/**
+	 * Färbt Zeilen im angegebenen Bereich abwechselnd direkt (nicht via bedingte Formatierung).<br>
+	 * Gerade Zeilen (ROW()-basiert, 1-indiziert) erhalten {@code geradeFarbe}, ungerade {@code ungeradeFarbe}.
+	 *
+	 * @param iSheet        Ziel-Sheet
+	 * @param range         Zielbereich
+	 * @param geradeFarbe   Farbe für gerade Zeilennummern (ROW()-basiert, 1-indiziert)
+	 * @param ungeradeFarbe Farbe für ungerade Zeilennummern
+	 */
+	public static void faerbeZeilenAbwechselnd(ISheet iSheet, RangePosition range,
+			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
+		var xSheet = iSheet.getXSpreadSheet();
+		var sheetHelper = iSheet.getSheetHelper();
+		int startSpalte = range.getStartSpalte();
+		int endSpalte = range.getEndeSpalte();
+		for (int zeile = range.getStartZeile(); zeile <= range.getEndeZeile(); zeile++) {
+			// zeile ist 0-basiert; ROW()-Formel wäre zeile+1 (1-basiert)
+			int farbe = (zeile % 2 == 1) ? geradeFarbe : ungeradeFarbe;
+			sheetHelper.setPropertyInRange(xSheet,
+					RangePosition.from(startSpalte, zeile, endSpalte, zeile),
+					"CellBackColor", farbe);
+		}
+	}
+
+	/**
 	 * @return xcell, null whenn error or not found
 	 */
 	public XCell setPropertyInCell(XSpreadsheet sheet, Position pos, String name, Object val) {

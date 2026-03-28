@@ -85,6 +85,10 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 
 		// 3. Turnierbaum ohne Dialog erstellen
 		turnierbaumSheet.erstelleTurnierbaumOhneDialog();
+
+		// 4. Kopfzeile und Werbefußzeile setzen
+		konfig.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
+		konfig.seitenstileAktualisieren();
 	}
 
 }

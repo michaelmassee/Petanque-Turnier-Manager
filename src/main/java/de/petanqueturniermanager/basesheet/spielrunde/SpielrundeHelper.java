@@ -23,6 +23,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 /**
  * Erstellung 31.03.2024 / Michael Massee
@@ -160,7 +161,7 @@ public class SpielrundeHelper {
 		String formulaFindDoppelteSpielrNr = "AND(" + conditionfindDoppelt + ";" + conditionNotEmpty + ")";
 		ConditionalFormatHelper.from(sheet, rangeErsteSpalte).clear().formula1(formulaFindDoppelteSpielrNr)
 				.operator(ConditionOperator.FORMULA).style(fehlerStyle).applyAndDoReset();
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, rangeErsteSpalte,
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, rangeErsteSpalte,
 				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
 				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
 
@@ -180,7 +181,7 @@ public class SpielrundeHelper {
 			SpielrundeHintergrundFarbeUnGeradeStyle spielrundeHintergrundFarbeUnGeradeStyle) throws GenerateException {
 
 		ConditionalFormatHelper.clearOnly(iSheet, datenRangeOhneErsteSpalteOhneErgebnis);
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(iSheet, datenRangeOhneErsteSpalteOhneErgebnis,
+		SheetHelper.faerbeZeilenAbwechselnd(iSheet, datenRangeOhneErsteSpalteOhneErgebnis,
 				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
 				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
 	}
@@ -202,7 +203,7 @@ public class SpielrundeHelper {
 				.formula1("ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")")
 				.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
 				.formula1(formulaGleicheWerte).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(iSheet, ergebnissRange,
+		SheetHelper.faerbeZeilenAbwechselnd(iSheet, ergebnissRange,
 				spielrundeHintergrundFarbeGeradeStyle.getFarbe(),
 				spielrundeHintergrundFarbeUnGeradeStyle.getFarbe());
 	}

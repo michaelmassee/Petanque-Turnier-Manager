@@ -20,6 +20,8 @@ const leererZustand = {
   fusszeileRechts: null,
   zoom: 100,
   zentrieren: false,
+  sheetnamenAnzeigen: false,
+  kopfZeilenAnzahl: 0,
 };
 
 function reducer(state, action) {
@@ -50,6 +52,8 @@ function reducer(state, action) {
           fusszeileRechts: msg.fusszeileRechts ?? null,
           zoom: msg.zoom,
           zentrieren: msg.zentrieren,
+          sheetnamenAnzeigen: msg.sheetnamenAnzeigen ?? false,
+          kopfZeilenAnzahl: msg.kopfZeilenAnzahl ?? 0,
         },
       };
     }
@@ -79,6 +83,8 @@ function reducer(state, action) {
           fusszeileRechts: msg.fusszeileRechts ?? state.table.fusszeileRechts,
           zoom: msg.zoom ?? state.table.zoom,
           zentrieren: msg.zentrieren ?? state.table.zentrieren,
+          sheetnamenAnzeigen: msg.sheetnamenAnzeigen ?? state.table.sheetnamenAnzeigen,
+          kopfZeilenAnzahl: msg.kopfZeilenAnzahl ?? state.table.kopfZeilenAnzahl,
         },
       };
     }
@@ -127,6 +133,12 @@ export default function App() {
 
   const { table, hinweis } = state;
 
+  useEffect(() => {
+    document.title = table.seitenTitel
+      ? `${table.seitenTitel} – PTM Live`
+      : 'PTM Live';
+  }, [table.seitenTitel]);
+
   if (hinweis) {
     return (
       <>
@@ -172,7 +184,7 @@ export default function App() {
             transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
             transformOrigin: table.zentrieren ? 'top center' : 'top left',
           }}>
-            {table.seitenTitel && (
+            {table.sheetnamenAnzeigen && table.seitenTitel && (
               <div className="seiten-titel">{table.seitenTitel}</div>
             )}
             {hatKopfzeile && (
@@ -191,7 +203,7 @@ export default function App() {
               <tbody>
                 {table.gitter.map((row, r) => (
                   <tr key={r}
-                      className={r === 0 ? 'zeile-kopf' : (r % 2 === 0 ? 'zeile-gerade' : 'zeile-ungerade')}
+                      className={r < table.kopfZeilenAnzahl ? 'zeile-kopf' : (r % 2 === 0 ? 'zeile-gerade' : 'zeile-ungerade')}
                       style={{ height: toPx(table.zeilenHoehen[r] || 600) }}>
                     {row.map((id, c) =>
                       id

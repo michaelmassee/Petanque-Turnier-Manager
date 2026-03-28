@@ -70,7 +70,11 @@ public class JGJTurnierTestDaten extends JGJSpielPlanSheet {
 		processBoxinfo("processbox.erstelle.rangliste");
 		new JGJRanglisteSheet(getWorkingSpreadsheet()).upDateSheet();
 
-		// 5. Rangliste als aktives Sheet setzen
+		// 5. Kopfzeile und Werbefußzeile setzen
+		getKonfigurationSheet().setKopfZeileMitte(getTurnierSystem().getBezeichnung());
+		getKonfigurationSheet().seitenstileAktualisieren();
+
+		// 6. Rangliste als aktives Sheet setzen
 		var ranglisteSheet = new JGJRanglisteSheet(getWorkingSpreadsheet());
 		TurnierSheet.from(ranglisteSheet.getXSpreadSheet(), getWorkingSpreadsheet()).setActiv();
 	}

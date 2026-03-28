@@ -34,10 +34,13 @@ public record SseNachricht(
         String fusszeileMitte,
         String fusszeileRechts,
         int zoom,
-        boolean zentrieren) {
+        boolean zentrieren,
+        boolean sheetnamenAnzeigen,
+        int kopfZeilenAnzahl) {
 
     /** Vollständiger Tabellenzustand für neue/reconnectende Verbindungen. */
-    static SseNachricht init(int version, TabelleModel modell, String seitenTitel, int zoom, boolean zentrieren) {
+    static SseNachricht init(int version, TabelleModel modell, String seitenTitel, int zoom, boolean zentrieren,
+            boolean sheetnamenAnzeigen) {
         return new SseNachricht(
                 "init", version,
                 modell.getZeilen(), modell.getSpalten(),
@@ -48,11 +51,13 @@ public record SseNachricht(
                 seitenTitel,
                 modell.getKopfzeileLinks(), modell.getKopfzeileMitte(), modell.getKopfzeileRechts(),
                 modell.getFusszeileLinks(), modell.getFusszeileMitte(), modell.getFusszeileRechts(),
-                zoom, zentrieren);
+                zoom, zentrieren, sheetnamenAnzeigen,
+                modell.getKopfZeilenAnzahl());
     }
 
     /** Nur geänderte Zellen; Gitter, Dimensionen, Titel und Kopf-/Fußzeile immer aus dem neuen Modell. */
-    static SseNachricht diff(int version, TabelleModel diffModell, String seitenTitel, int zoom, boolean zentrieren) {
+    static SseNachricht diff(int version, TabelleModel diffModell, String seitenTitel, int zoom, boolean zentrieren,
+            boolean sheetnamenAnzeigen) {
         return new SseNachricht(
                 "diff", version,
                 diffModell.getZeilen(), diffModell.getSpalten(),
@@ -63,13 +68,14 @@ public record SseNachricht(
                 seitenTitel,
                 diffModell.getKopfzeileLinks(), diffModell.getKopfzeileMitte(), diffModell.getKopfzeileRechts(),
                 diffModell.getFusszeileLinks(), diffModell.getFusszeileMitte(), diffModell.getFusszeileRechts(),
-                zoom, zentrieren);
+                zoom, zentrieren, sheetnamenAnzeigen,
+                diffModell.getKopfZeilenAnzahl());
     }
 
     /** Hinweismeldung, wenn das konfigurierte Sheet noch nicht existiert. */
     static SseNachricht hinweis(String titel, String text) {
         return new SseNachricht("hinweis", null, null, null, null, null, null, null, titel, text,
                 null, null, null, null, null, null, null,
-                GlobalProperties.DEFAULT_ZOOM, false);
+                GlobalProperties.DEFAULT_ZOOM, false, false, 0);
     }
 }

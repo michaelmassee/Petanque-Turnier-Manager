@@ -52,6 +52,10 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 		return propertiesSpalte.getKopfZeileMitte();
 	}
 
+	public void setKopfZeileMitte(String text) {
+		propertiesSpalte.setKopfZeileMitte(text);
+	}
+
 	@Override
 	public String getKopfZeileRechts() {
 		return propertiesSpalte.getKopfZeileRechts();

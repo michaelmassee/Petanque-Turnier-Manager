@@ -170,6 +170,10 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE);
 	}
 
+	public void setKopfZeileMitte(String text) {
+		setStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE, text);
+	}
+
 	public String getKopfZeileRechts() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);
 	}

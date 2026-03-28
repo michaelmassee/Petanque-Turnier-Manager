@@ -50,6 +50,16 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 
 	protected abstract void initPageStylesTurnierSystem();
 
+	/**
+	 * Wendet Seitenstile erneut an, ohne Validierung.
+	 * Nützlich für Testdaten-Generierung, um Kopf- und Fußzeilen nach dem Setzen
+	 * der Eigenschaften sofort zu übernehmen.
+	 */
+	public final void seitenstileAktualisieren() {
+		initPageStyles();
+		initPageStylesTurnierSystem();
+	}
+
 	private void initPageStyles() {
 		// default page Style footer zeilen
 		// sicher gehen das änderungen ankommen

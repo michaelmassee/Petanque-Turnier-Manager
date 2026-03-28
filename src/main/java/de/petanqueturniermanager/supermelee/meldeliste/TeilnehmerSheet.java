@@ -16,6 +16,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -39,7 +40,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 
 public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
-	public static final int ERSTE_DATEN_ZEILE = 0;
+	public static final int ERSTE_DATEN_ZEILE = 1;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 	public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
@@ -145,6 +146,9 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
 		int letzteSpalte = nameFormula.getPos().getSpalte();
 
+		headerSchreiben(letzteSpalte);
+		zebrafarbenSchreiben(letzteSpalte, maxAnzSpielerInSpalte);
+
 		StringCellValue footer = StringCellValue.from(getXSpreadSheet(), Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzSpielerInSpalte)).zeilePlusEins()
 				.setValue(I18n.get("teilnehmer.footer.anzahl", aktiveUndAusgesetztMeldungen.size()))
 				.setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
@@ -159,9 +163,39 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 		printBereichDefinieren(footer.getPos(), letzteSpalte);
 	}
 
+	private void headerSchreiben(int letzteSpalte) throws GenerateException {
+		var headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
+		int anzahlBloecke = letzteSpalte / ANZAHL_SPALTEN + 1;
+		for (int block = 0; block < anzahlBloecke; block++) {
+			int nrSpalte = block * ANZAHL_SPALTEN + SPIELER_NR_SPALTE;
+			int nameSpalte = nrSpalte + 1;
+			getSheetHelper().setStringValueInCell(StringCellValue
+					.from(getXSpreadSheet(), Position.from(nrSpalte, 0), I18n.get("column.header.nr"))
+					.setBorder(BorderFactory.from().allThin().toBorder())
+					.setCellBackColor(headerFarbe)
+					.setHoriJustify(CellHoriJustify.CENTER));
+			getSheetHelper().setStringValueInCell(StringCellValue
+					.from(getXSpreadSheet(), Position.from(nameSpalte, 0), I18n.get("column.header.name"))
+					.setBorder(BorderFactory.from().allThin().toBorder())
+					.setCellBackColor(headerFarbe)
+					.setHoriJustify(CellHoriJustify.CENTER));
+		}
+	}
+
+	private void zebrafarbenSchreiben(int letzteSpalte, int anzahlZeilen) throws GenerateException {
+		if (anzahlZeilen <= 0) {
+			return;
+		}
+		var geradeFarbe = konfigurationSheet.getMeldeListeHintergrundFarbeGerade();
+		var ungeradeFarbe = konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade();
+		var datenRange = RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE,
+				letzteSpalte, ERSTE_DATEN_ZEILE + anzahlZeilen - 1);
+		SheetHelper.faerbeZeilenAbwechselnd(this, datenRange, geradeFarbe, ungeradeFarbe);
+	}
+
 	private void printBereichDefinieren(Position footerPos, int letzteSpalte) throws GenerateException {
 		processBoxinfo("processbox.print.bereich");
-		Position linksOben = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE);
+		Position linksOben = Position.from(SPIELER_NR_SPALTE, 0);
 		Position rechtsUnten = Position.from(letzteSpalte, footerPos.getZeile());
 		PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}

@@ -72,6 +72,7 @@ public final class WebServerManager {
     private XSpreadsheetDocument ownerDocument = null;
     private XSpreadsheetDocument registriertesDocument = null;
     private boolean laeuft = false;
+    private boolean letzterSheetnamenAnzeigen = false;
 
     private WebServerManager() {
     }
@@ -149,6 +150,7 @@ public final class WebServerManager {
         letzteTitel.clear();
         versionen.clear();
         laeuft = false;
+        letzterSheetnamenAnzeigen = false;
         ownerDocument = null;
         logger.info("Webserver gestoppt");
         safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt"));
@@ -187,6 +189,11 @@ public final class WebServerManager {
         if (!laeuft) {
             return;
         }
+        boolean neuerSheetnamenAnzeigen = GlobalProperties.get().isSheetnamenKopfzeileAnzeigen();
+        boolean globalGeaendert = neuerSheetnamenAnzeigen != letzterSheetnamenAnzeigen;
+        if (globalGeaendert) {
+            letzterSheetnamenAnzeigen = neuerSheetnamenAnzeigen;
+        }
         var eintraege = GlobalProperties.get().getPortEintraege();
         for (var instanz : instanzen) {
             int port = instanz.getKonfiguration().port();
@@ -194,7 +201,8 @@ public final class WebServerManager {
                     .filter(e -> e.port() == port)
                     .findFirst()
                     .ifPresent(e -> {
-                        if (e.zoom() == instanz.getKonfiguration().zoom()
+                        if (!globalGeaendert
+                                && e.zoom() == instanz.getKonfiguration().zoom()
                                 && e.zentrieren() == instanz.getKonfiguration().zentrieren()) {
                             return; // keine Änderung, kein Push
                         }
@@ -205,7 +213,8 @@ public final class WebServerManager {
                         if (modell != null) {
                             String titel = letzteTitel.getOrDefault(port, "");
                             int version = versionen.get(port).incrementAndGet();
-                            neuesJson = GSON.toJson(SseNachricht.init(version, modell, titel, e.zoom(), e.zentrieren()));
+                            neuesJson = GSON.toJson(SseNachricht.init(version, modell, titel,
+                                    e.zoom(), e.zentrieren(), neuerSheetnamenAnzeigen));
                         }
                         instanz.setKonfiguration(neueKonfig, neuesJson);
                     });
@@ -274,6 +283,7 @@ public final class WebServerManager {
             String alterTitel = letzteTitel.get(port);
             int zoom = instanz.getKonfiguration().zoom();
             boolean zentrieren = instanz.getKonfiguration().zentrieren();
+            boolean sheetnamenAnzeigen = GlobalProperties.get().isSheetnamenKopfzeileAnzeigen();
 
             // Layout-Änderung (Größe oder Startversatz) → vollständiges Init erzwingen
             if (altesModell != null && layoutGeaendert(altesModell, neuesModell)) {
@@ -295,13 +305,14 @@ public final class WebServerManager {
             letzteTitel.put(port, neuerTitel);
 
             // Init-Cache immer mit vollem State aktualisieren (für neue/reconnectende Verbindungen)
-            SseNachricht initNachricht = SseNachricht.init(version, neuesModell, neuerTitel, zoom, zentrieren);
+            SseNachricht initNachricht = SseNachricht.init(version, neuesModell, neuerTitel,
+                    zoom, zentrieren, sheetnamenAnzeigen);
             instanz.setCachedInitJson(GSON.toJson(initNachricht));
 
             // Push: "init" beim ersten Mal, sonst "diff"
             SseNachricht push = (altesModell == null)
                     ? initNachricht
-                    : SseNachricht.diff(version, diffModell, neuerTitel, zoom, zentrieren);
+                    : SseNachricht.diff(version, diffModell, neuerTitel, zoom, zentrieren, sheetnamenAnzeigen);
             instanz.sseNachrichtPushen(GSON.toJson(push));
 
         } catch (Exception e) {

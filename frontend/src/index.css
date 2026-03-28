@@ -22,7 +22,14 @@ table {
 td {
   padding: 2px 4px;
   overflow: hidden;
-  background: #fff;
+}
+
+tr.zeile-gerade {
+  background-color: #ffffff;
+}
+
+tr.zeile-ungerade {
+  background-color: #f0f4f8;
 }
 
 #status {
@@ -47,6 +54,34 @@ td {
   border-top: 1px solid #ddd;
   text-align: right;
   line-height: 1.4;
+}
+
+.seiten-titel {
+  padding: 8px 0 4px;
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #2c3e50;
+  border-bottom: 2px solid #2c3e50;
+  margin-bottom: 4px;
+}
+
+.seitenzeile {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 4px 0;
+  font-size: 0.9em;
+}
+
+.seitenzeile .links {
+  text-align: left;
+}
+
+.seitenzeile .mitte {
+  text-align: center;
+}
+
+.seitenzeile .rechts {
+  text-align: right;
 }
 
 .hinweis {

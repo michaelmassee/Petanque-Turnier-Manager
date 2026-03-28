@@ -117,6 +117,10 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE);
 	}
 
+	public void setKopfZeileMitte(String text) {
+		setStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE, text);
+	}
+
 	@Override
 	public String getKopfZeileRechts() {
 		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);

@@ -65,6 +65,10 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 		return propertiesSpalte.getKopfZeileMitte();
 	}
 
+	public void setKopfZeileMitte(String text) {
+		propertiesSpalte.setKopfZeileMitte(text);
+	}
+
 	public String getKopfZeileRechts() {
 		return propertiesSpalte.getKopfZeileRechts();
 	}

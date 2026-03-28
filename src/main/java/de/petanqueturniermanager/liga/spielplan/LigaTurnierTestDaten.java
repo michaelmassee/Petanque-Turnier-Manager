@@ -2,6 +2,7 @@ package de.petanqueturniermanager.liga.spielplan;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 
 /**
  * Öffentlicher Einstiegspunkt für {@link de.petanqueturniermanager.beispielturnier.BeispielturnierRegistrierung}
@@ -37,5 +38,13 @@ public class LigaTurnierTestDaten extends LigaSpielPlanSheetTestDaten {
      */
     public void erzeugeBeispielturnier() throws GenerateException {
         doRun();
+    }
+
+    @Override
+    protected void doRun() throws GenerateException {
+        super.doRun();
+        LigaKonfigurationSheet konfig = getKonfigurationSheet();
+        konfig.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
+        konfig.seitenstileAktualisieren();
     }
 }

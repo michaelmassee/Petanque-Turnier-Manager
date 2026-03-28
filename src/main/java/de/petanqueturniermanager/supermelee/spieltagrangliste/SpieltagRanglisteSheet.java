@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
@@ -428,7 +429,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 			RangePosition rundenRange = RangePosition.from(plusSpalte, ERSTE_DATEN_ZEILE, plusSpalte + 1,
 					letzteDatenzeile);
 
-			ConditionalFormatHelper.schreibeZeilenfarbenDirekt(this, rundenRange, geradeColor, ungeradeColor);
+			SheetHelper.faerbeZeilenAbwechselnd(this, rundenRange, geradeColor, ungeradeColor);
 			ConditionalFormatHelper cfHelper = ConditionalFormatHelper.from(this, rundenRange).clear();
 			cfHelper.formula1(formulaSortError).operator(ConditionOperator.FORMULA)
 					.style(new FehlerStyle()).applyAndDoReset();

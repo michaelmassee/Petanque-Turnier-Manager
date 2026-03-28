@@ -16,7 +16,6 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
-import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -73,29 +72,6 @@ public class ConditionalFormatHelper extends BaseHelper {
 		}
 	}
 
-	/**
-	 * Schreibt Zeilenhintergrundfarben direkt (nicht via bedingte Formatierung).<br>
-	 * Gerade Zeilen (ISEVEN(ROW())) erhalten {@code geradeFarbe}, ungerade {@code ungeradeFarbe}.
-	 *
-	 * @param iSheet      Ziel-Sheet
-	 * @param range       Zielbereich
-	 * @param geradeFarbe Farbe für gerade Zeilennummern (ROW()-basiert, 1-indiziert)
-	 * @param ungeradeFarbe Farbe für ungerade Zeilennummern
-	 */
-	public static void schreibeZeilenfarbenDirekt(ISheet iSheet, RangePosition range,
-			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
-		XSpreadsheet xSheet = iSheet.getXSpreadSheet();
-		int startSpalte = range.getStartSpalte();
-		int endSpalte = range.getEndeSpalte();
-		for (int zeile = range.getStartZeile(); zeile <= range.getEndeZeile(); zeile++) {
-			// zeile ist 0-basiert; ROW()-Formel wäre zeile+1 (1-basiert)
-			int farbe = (zeile % 2 == 1) ? geradeFarbe : ungeradeFarbe;
-			iSheet.getSheetHelper().setPropertyInRange(xSheet,
-					RangePosition.from(startSpalte, zeile, endSpalte, zeile),
-					"CellBackColor", farbe);
-		}
-	}
-
 	public ConditionalFormatHelper append() {
 		doClear = false;
 		return this;
@@ -126,12 +102,6 @@ public class ConditionalFormatHelper extends BaseHelper {
 	public ConditionalFormatHelper formulaIsOddAndEqualToInt(int val) {
 		formula1 = FORMULAISODDANDEQUALTOINT_STR(val);
 		conditionOperator = ConditionOperator.FORMULA;
-		return this;
-	}
-
-	public ConditionalFormatHelper operatorIsEqualTo(String val) {
-		formula1 = val;
-		conditionOperator = ConditionOperator.EQUAL;
 		return this;
 	}
 
@@ -185,30 +155,22 @@ public class ConditionalFormatHelper extends BaseHelper {
 		return this;
 	}
 
-	/**
-	 * properties auf default
-	 *
-	 * @return
-	 * @throws GenerateException
-	 */
-
-	public ConditionalFormatHelper reset() throws GenerateException {
+	/** Setzt alle Builder-Felder zurück auf den Ausgangszustand. */
+	public void reset() {
 		doClear = false;
 		conditionOperator = null;
 		formula1 = null;
 		formula2 = null;
 		styleName = null;
-		return this;
 	}
 
 	/**
-	 * Formatierung anwenden<br>
-	 * Fehler wenn irgend ein Sheet hat ein Lock
+	 * Formatierung anwenden und Builder zurücksetzen.<br>
+	 * Fehler wenn irgend ein Sheet hat ein Lock.
 	 *
-	 * @return
-	 * @throws GenerateException
+	 * @return this (für Verkettung weiterer Aufrufe)
+	 * @throws GenerateException bei UNO-API-Fehlern
 	 */
-
 	public ConditionalFormatHelper applyAndDoReset() throws GenerateException {
 		checkNotNull(conditionOperator);
 		checkNotNull(formula1);

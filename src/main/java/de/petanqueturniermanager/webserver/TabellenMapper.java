@@ -14,12 +14,16 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.FontSlant;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XNameAccess;
 import com.sun.star.sheet.XCellRangeAddressable;
+import com.sun.star.sheet.XHeaderFooterContent;
 import com.sun.star.sheet.XPrintAreas;
 import com.sun.star.sheet.XSheetCellCursor;
 import com.sun.star.sheet.XSheetCellRange;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XUsedAreaCursor;
+import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.table.CellContentType;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellRangeAddress;
@@ -31,6 +35,7 @@ import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
+import de.petanqueturniermanager.helper.pagestyle.PageProperties;
 
 /**
  * Mappt ein {@link XSpreadsheet} auf ein {@link TabelleModel}.
@@ -52,24 +57,27 @@ public class TabellenMapper {
 
     /**
      * Mappt das übergebene Sheet vollständig in ein {@link TabelleModel}.
+     * <p>
+     * Liest zusätzlich Kopf- und Fußzeile aus dem PageStyle des Sheets.
      *
      * @param sheet anzuzeigendes Sheet
-     * @return TabelleModel mit Grid, Zellen, Spaltenbreiten und Zeilenhöhen
+     * @param doc   Dokument, aus dem der PageStyle gelesen wird
+     * @return TabelleModel mit Grid, Zellen, Spaltenbreiten, Zeilenhöhen und Kopf-/Fußzeile
      */
-    public TabelleModel map(XSpreadsheet sheet) {
+    public TabelleModel map(XSpreadsheet sheet, XSpreadsheetDocument doc) {
         try {
             var bereich = ermittleDruckbereich(sheet);
             if (bereich == null) {
                 return leeresModell();
             }
-            return mapBereich(sheet, bereich);
+            return mapBereich(sheet, doc, bereich);
         } catch (Exception e) {
             logger.error("Fehler beim Mappen des Sheets auf TabelleModel", e);
             return leeresModell();
         }
     }
 
-    private TabelleModel mapBereich(XSpreadsheet sheet, CellRangeAddress bereich) {
+    private TabelleModel mapBereich(XSpreadsheet sheet, XSpreadsheetDocument doc, CellRangeAddress bereich) {
         int numZeilen = bereich.EndRow - bereich.StartRow + 1;
         int numSpalten = bereich.EndColumn - bereich.StartColumn + 1;
 
@@ -138,6 +146,7 @@ public class TabellenMapper {
             }
         }
 
+        var kopfFuss = ermittleKopfUndFusszeile(sheet, doc);
         return new TabelleModel(
                 numZeilen, numSpalten,
                 rohGitterZuListe(gitterRaw, numZeilen),
@@ -145,7 +154,109 @@ public class TabellenMapper {
                 ermittleSpaltenBreiten(sheet, bereich, numSpalten),
                 ermittleZeilenHoehen(sheet, bereich, numZeilen),
                 bereich.StartRow,
-                bereich.StartColumn);
+                bereich.StartColumn,
+                ermittleKopfZeilenAnzahl(sheet, bereich),
+                kopfFuss[0], kopfFuss[1], kopfFuss[2],
+                kopfFuss[3], kopfFuss[4], kopfFuss[5]);
+    }
+
+    /**
+     * Ermittelt die Anzahl der Kopfzeilen im gerenderten Bereich aus den Wiederholungszeilen
+     * des LibreOffice-Druckbereichs ({@code XPrintAreas.getPrintTitleRows()}).
+     * <p>
+     * Kopfzeilen sind die Zeilen, die beim Drucken auf jeder Seite oben wiederholt werden.
+     * Sie beginnen üblicherweise am Anfang des Druckbereichs.
+     *
+     * @param sheet   das Sheet, aus dem die Wiederholungszeilen gelesen werden
+     * @param bereich der Druckbereich, dessen Startzeile als Referenz dient
+     * @return Anzahl der Kopfzeilen (0 wenn nicht definiert oder nicht am Bereichsanfang)
+     */
+    private int ermittleKopfZeilenAnzahl(XSpreadsheet sheet, CellRangeAddress bereich) {
+        try {
+            XPrintAreas printAreas = Lo.qi(XPrintAreas.class, sheet);
+            if (printAreas == null || !printAreas.getPrintTitleRows()) {
+                return 0;
+            }
+            CellRangeAddress titelZeilen = printAreas.getTitleRows();
+            if (titelZeilen == null || titelZeilen.StartRow < 0 || titelZeilen.EndRow < titelZeilen.StartRow) {
+                return 0;
+            }
+            // Nur Zeilen, die am Anfang des Druckbereichs liegen, sind Kopfzeilen
+            if (titelZeilen.StartRow > bereich.StartRow) {
+                return 0;
+            }
+            int anzahl = titelZeilen.EndRow - bereich.StartRow + 1;
+            return Math.max(0, Math.min(anzahl, bereich.EndRow - bereich.StartRow + 1));
+        } catch (Exception e) {
+            logger.debug("Kopfzeilen-Anzahl nicht ermittelbar", e);
+            return 0;
+        }
+    }
+
+    /**
+     * Liest Kopf- und Fußzeile (je links/mitte/rechts) aus dem PageStyle des Sheets.
+     * <p>
+     * Gibt ein Array der Länge 6 zurück:
+     * [kopfLinks, kopfMitte, kopfRechts, fussLinks, fussMitte, fussRechts].
+     * Nicht aktivierte Bereiche werden als {@code null} zurückgegeben.
+     */
+    private String[] ermittleKopfUndFusszeile(XSpreadsheet sheet, XSpreadsheetDocument doc) {
+        var ergebnis = new String[6];
+        try {
+            var sheetProps = Lo.qi(XPropertySet.class, sheet);
+            if (sheetProps == null || doc == null) {
+                return ergebnis;
+            }
+            var styleNameObj = sheetProps.getPropertyValue("PageStyle");
+            if (!(styleNameObj instanceof String styleName) || styleName.isBlank()) {
+                return ergebnis;
+            }
+            var familienSupplier = Lo.qi(XStyleFamiliesSupplier.class, doc);
+            if (familienSupplier == null) {
+                return ergebnis;
+            }
+            XNameAccess familienNA = familienSupplier.getStyleFamilies();
+            var pageStylesObj = familienNA.getByName("PageStyles");
+            var pageStylesNA = Lo.qi(XNameAccess.class, pageStylesObj);
+            if (pageStylesNA == null || !pageStylesNA.hasByName(styleName)) {
+                return ergebnis;
+            }
+            var styleProps = Lo.qi(XPropertySet.class, pageStylesNA.getByName(styleName));
+            if (styleProps == null) {
+                return ergebnis;
+            }
+            var headerIsOnObj = styleProps.getPropertyValue(PageProperties.HEADER_IS_ON);
+            if (Boolean.TRUE.equals(headerIsOnObj)) {
+                var headerProp = styleProps.getPropertyValue(PageProperties.RIGHTPAGE_HEADER_CONTENT);
+                var headerContent = Lo.qi(XHeaderFooterContent.class, headerProp);
+                if (headerContent != null) {
+                    ergebnis[0] = leseText(headerContent.getLeftText());
+                    ergebnis[1] = leseText(headerContent.getCenterText());
+                    ergebnis[2] = leseText(headerContent.getRightText());
+                }
+            }
+            var footerIsOnObj = styleProps.getPropertyValue(PageProperties.FOOTER_IS_ON);
+            if (Boolean.TRUE.equals(footerIsOnObj)) {
+                var footerProp = styleProps.getPropertyValue(PageProperties.RIGHTPAGE_FOOTER_CONTENT);
+                var footerContent = Lo.qi(XHeaderFooterContent.class, footerProp);
+                if (footerContent != null) {
+                    ergebnis[3] = leseText(footerContent.getLeftText());
+                    ergebnis[4] = leseText(footerContent.getCenterText());
+                    ergebnis[5] = leseText(footerContent.getRightText());
+                }
+            }
+        } catch (Exception e) {
+            logger.debug("Kopf-/Fußzeile nicht ermittelbar", e);
+        }
+        return ergebnis;
+    }
+
+    private String leseText(com.sun.star.text.XText text) {
+        if (text == null) {
+            return null;
+        }
+        var inhalt = text.getString();
+        return (inhalt == null || inhalt.isBlank()) ? null : inhalt;
     }
 
     /**
@@ -462,6 +573,7 @@ public class TabellenMapper {
     }
 
     private static TabelleModel leeresModell() {
-        return new TabelleModel(0, 0, List.of(), Map.of(), Map.of(), Map.of(), 0, 0);
+        return new TabelleModel(0, 0, List.of(), Map.of(), Map.of(), Map.of(), 0, 0, 0,
+                null, null, null, null, null, null);
     }
 }

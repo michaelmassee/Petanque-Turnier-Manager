@@ -97,6 +97,11 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 			SheetRunner.testDoCancelTask();
 			ranglisteSheet.doRun();
 		}
+
+		// 4. Kopfzeile und Werbefußzeile setzen
+		var konfig = naechsteSpielrunde.getKonfigurationSheet();
+		konfig.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
+		konfig.seitenstileAktualisieren();
 	}
 
 	private void ergebnisseEinfuegen(XSpreadsheet sheet) throws GenerateException {

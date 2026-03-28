@@ -148,6 +148,10 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		SheetRunner.testDoCancelTask();
 		processBoxinfo("processbox.erstelle.finalrunde");
 		finalrundeSheet.doRun();
+
+		// 5. Kopfzeile und Werbefußzeile setzen
+		konfigSheet.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
+		konfigSheet.seitenstileAktualisieren();
 	}
 
 	/**

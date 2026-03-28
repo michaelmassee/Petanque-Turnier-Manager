@@ -40,7 +40,7 @@ public class DiffEngine {
             }
         }
 
-        // Gitter und Dimensionen kommen immer aus dem neuen Modell (Struktur kann sich ändern)
+        // Gitter, Dimensionen und Kopf-/Fußzeile kommen immer aus dem neuen Modell
         return new TabelleModel(
                 neuesModell.getZeilen(),
                 neuesModell.getSpalten(),
@@ -49,6 +49,13 @@ public class DiffEngine {
                 neuesModell.getSpaltenBreiten(),
                 neuesModell.getZeilenHoehen(),
                 neuesModell.getStartZeile(),
-                neuesModell.getStartSpalte());
+                neuesModell.getStartSpalte(),
+                neuesModell.getKopfZeilenAnzahl(),
+                neuesModell.getKopfzeileLinks(),
+                neuesModell.getKopfzeileMitte(),
+                neuesModell.getKopfzeileRechts(),
+                neuesModell.getFusszeileLinks(),
+                neuesModell.getFusszeileMitte(),
+                neuesModell.getFusszeileRechts());
     }
 }

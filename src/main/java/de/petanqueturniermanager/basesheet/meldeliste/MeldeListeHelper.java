@@ -31,6 +31,7 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
@@ -69,7 +70,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 				// nr muss >0 und <999 sein
 				.formula1("0").formula2("" + MeldungenSpalte.MAX_ANZ_MELDUNGEN)
 				.operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset();
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, nrSetPosRange,
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, nrSetPosRange,
 				meldungenHintergrundFarbeGeradeStyle.getFarbe(),
 				meldungenHintergrundFarbeUnGeradeStyle.getFarbe());
 
@@ -89,7 +90,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		ConditionalFormatHelper.from(sheet, nameSetPosRange).clear()
 				.formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
 				.applyAndDoReset();
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, nameSetPosRange,
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, nameSetPosRange,
 				meldungenHintergrundFarbeGeradeStyle.getFarbe(),
 				meldungenHintergrundFarbeUnGeradeStyle.getFarbe());
 		// -----------------------------------------------
@@ -103,7 +104,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		ConditionalFormatHelper.from(sheet, setzposRangePos).clear()
 				.formula1("0").formula2("90").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 				.formulaIsText().styleIsFehler().applyAndDoReset();
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, setzposRangePos,
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, setzposRangePos,
 				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 	}
 
@@ -115,7 +116,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		ConditionalFormatHelper.from(sheet, spieltageRangePos).clear()
 				.formula1("0").formula2("2").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
 				.formulaIsText().styleIsFehler().applyAndDoReset();
-		ConditionalFormatHelper.schreibeZeilenfarbenDirekt(sheet, spieltageRangePos,
+		SheetHelper.faerbeZeilenAbwechselnd(sheet, spieltageRangePos,
 				geradeStyle.getFarbe(), ungeradeStyle.getFarbe());
 	}
 

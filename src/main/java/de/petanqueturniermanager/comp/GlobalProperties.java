@@ -30,6 +30,7 @@ public class GlobalProperties {
 	private static final String WEBSERVER_PORT_AKTIV_SUFFIX = "_aktiv";
 	private static final String WEBSERVER_PORT_ZOOM_SUFFIX = "_zoom";
 	private static final String WEBSERVER_PORT_ZENTRIEREN_SUFFIX = "_zentrieren";
+	private static final String WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
 	public static final int DEFAULT_ZOOM = 100;
 
 	private static final Properties props = new Properties();
@@ -92,6 +93,11 @@ public class GlobalProperties {
 	/** Ob der eingebettete Webserver beim Start automatisch aktiviert werden soll. */
 	public boolean isWebserverAktiv() {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
+	}
+
+	/** Ob der Seitentitel (Blattname) über der Kopfzeile im Browser angezeigt werden soll. */
+	public boolean isSheetnamenKopfzeileAnzeigen() {
+		return getBoolean(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP);
 	}
 
 	/**
@@ -181,10 +187,11 @@ public class GlobalProperties {
 	 * Löscht zuerst alle vorhandenen {@code webserver.port.*}-Einträge, dann
 	 * schreibt die neuen Werte.
 	 *
-	 * @param aktiv       ob Webserver beim Start aktiviert werden soll
-	 * @param eintraege   Port-Einträge (PORT=SHEET_TYP)
+	 * @param aktiv               ob Webserver beim Start aktiviert werden soll
+	 * @param sheetnamenAnzeigen  ob der Seitentitel über der Kopfzeile angezeigt werden soll
+	 * @param eintraege           Port-Einträge (PORT=SHEET_TYP)
 	 */
-	public void speichernWebserver(boolean aktiv, List<PortEintragRoh> eintraege) {
+	public void speichernWebserver(boolean aktiv, boolean sheetnamenAnzeigen, List<PortEintragRoh> eintraege) {
 		// Bekannte Port-Einträge kontrolliert löschen (kein blindes removeIf)
 		for (var alt : getPortEintraege()) {
 			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_SHEET_SUFFIX);
@@ -194,6 +201,7 @@ public class GlobalProperties {
 		}
 		props.remove(WEBSERVER_PORTS_PROP);
 		setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
+		setBooleanProp(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP, sheetnamenAnzeigen);
 
 		if (!eintraege.isEmpty()) {
 			var ports = new StringBuilder();

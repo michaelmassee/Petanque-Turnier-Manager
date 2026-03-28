@@ -88,6 +88,7 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 	private XControlContainer xcc;
 	private XDialog xDialog;
 	private XCheckBox cbAktiv;
+	private XCheckBox cbSheetnamenAnzeigen;
 
 	// ---- Dialog-Zustand ----
 	private List<ZeilenDaten> zeilenDaten = new ArrayList<>();
@@ -163,8 +164,12 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 	private void erstelleStatischeControls() throws com.sun.star.uno.Exception {
 		fuegeCheckBoxEin("cbAktiv",
 				I18n.get("webserver.konfig.cb.aktiv"),
-				5, 5, 260, 12, GlobalProperties.get().isWebserverAktiv());
+				5, 5, 140, 12, GlobalProperties.get().isWebserverAktiv());
 		cbAktiv = leseCheckBox("cbAktiv");
+		fuegeCheckBoxEin("cbSheetnamenAnzeigen",
+				I18n.get("webserver.konfig.cb.sheetnamen.anzeigen"),
+				150, 5, 160, 12, GlobalProperties.get().isSheetnamenKopfzeileAnzeigen());
+		cbSheetnamenAnzeigen = leseCheckBox("cbSheetnamenAnzeigen");
 
 		fuegeFixedTextEin("lblKopfPort",
 				I18n.get("webserver.konfig.tabelle.kopf.port"),
@@ -274,7 +279,8 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 		try {
 			var eintraege = validiereUndKonvertiere();
 			boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
-			GlobalProperties.get().speichernWebserver(aktiv, eintraege);
+			boolean sheetnamenAnzeigen = cbSheetnamenAnzeigen != null && cbSheetnamenAnzeigen.getState() == 1;
+			GlobalProperties.get().speichernWebserver(aktiv, sheetnamenAnzeigen, eintraege);
 			WebServerManager.get().konfigurationGeaendert();
 			logger.info("Webserver-Konfiguration gespeichert: aktiv={}, ports={}", aktiv, eintraege.size());
 			xDialog.endExecute();
