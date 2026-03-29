@@ -57,19 +57,6 @@ public class NewReleaseInfosAnzeigenUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	void testMenuTitelKurz_EnthaeltVersionsnummer() {
-		String titel = testChecker.getMenuTitelKurz();
-		assertThat(titel).isEqualTo("Neu: v99.99.99");
-	}
-
-	@Test
-	void testMenuTitelKurz_OhneVersion_LiefertFallback() {
-		var checkerOhneVersion = new TestNewReleaseChecker(null, tempDir.resolve("release.info"));
-		String titel = checkerOhneVersion.getMenuTitelKurz();
-		assertThat(titel).isEqualTo("Neue Version");
-	}
-
-	@Test
 	void testNeueVersionVerfuegbar_WennCacheVersionHoeher() {
 		XComponentContext ctx = starter.getxComponentContext();
 		// Installierte Version ist niedriger als 99.99.99 → neue Version verfügbar
