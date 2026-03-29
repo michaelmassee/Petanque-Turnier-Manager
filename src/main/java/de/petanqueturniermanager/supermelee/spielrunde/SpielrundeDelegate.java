@@ -420,13 +420,13 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.addColumnProperties(columnProperties);
 		sheet.getSheetHelper().setStringValueInCell(headerText.setValue("Nr"));
 		sheet.getSheetHelper().setStringValueInCell(
-				headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment("Plus Punkte"));
+				headerText.setValue("+").spalte(SPALTE_VERTIKALE_ERGEBNISSE_PLUS).setComment(I18n.get("supermelee.spielrunde.comment.punkte.plus")));
 		sheet.getSheetHelper().setStringValueInCell(
-				headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment("Minus Punkte"));
+				headerText.setValue("-").spalte(SPALTE_VERTIKALE_ERGEBNISSE_MINUS).setComment(I18n.get("supermelee.spielrunde.comment.punkte.minus")));
 		sheet.getSheetHelper().setStringValueInCell(
-				headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment("Mannschaft"));
+				headerText.setValue("Tm").spalte(SPALTE_VERTIKALE_ERGEBNISSE_AB).setComment(I18n.get("supermelee.spielrunde.comment.mannschaft")));
 		sheet.getSheetHelper().setStringValueInCell(
-				headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment("Spielbahn Nr."));
+				headerText.setValue("Ba").spalte(SPALTE_VERTIKALE_ERGEBNISSE_BA_NR).setComment(I18n.get("supermelee.spielrunde.comment.spielbahn.nr")));
 	}
 
 	private void vertikaleErgbnisseEinezeileEinfuegen(Position posSpielrNr, StringCellValue spielrNrFormula)
@@ -561,10 +561,10 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		Position posSpielerNamen = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ZWEITE_HEADER_ZEILE);
 		Position posSpielerNamenMerge = Position.from(posSpielerNamen).spaltePlus(2);
 
-		headerVal.setValue("Mannschaft A").setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
+		headerVal.setValue(I18n.get("column.header.mannschaft.a")).setPos(posSpielerNamen).setEndPosMerge(posSpielerNamenMerge)
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().doubleLn().forRight().toBorder());
 		sheet.getSheetHelper().setStringValueInCell(headerVal);
-		headerVal.setValue("Mannschaft B").setPos(posSpielerNamen.spaltePlus(3))
+		headerVal.setValue(I18n.get("column.header.mannschaft.b")).setPos(posSpielerNamen.spaltePlus(3))
 				.setEndPosMerge(posSpielerNamenMerge.spaltePlus(3))
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().toBorder());
 		sheet.getSheetHelper().setStringValueInCell(headerVal);
@@ -577,7 +577,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		}
 
 		Position ergebnis = Position.from(ERSTE_SPALTE_ERGEBNISSE, ERSTE_DATEN_ZEILE - 1);
-		headerVal.setValue("Ergebnis").setPos(ergebnis).setEndPosMerge(Position.from(ergebnis).spaltePlusEins());
+		headerVal.setValue(I18n.get("column.header.ergebnis")).setPos(ergebnis).setEndPosMerge(Position.from(ergebnis).spaltePlusEins());
 		sheet.getSheetHelper().setStringValueInCell(headerVal);
 
 		for (int i = 1; i <= 2; i++) {
@@ -643,17 +643,18 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
 		int anzAktiv = meldeListe.getAnzahlAktiveSpieler(sheet.getSpielTag());
 		sheet.getSheetHelper()
-				.setStringValueInCell(propName.setValue("Aktiv :").setComment("Anzahl Spieler in diese Runde"));
+				.setStringValueInCell(propName.setValue("Aktiv :").setComment(I18n.get("supermelee.spielrunde.comment.anzahl.spieler")));
 		sheet.getSheetHelper().setNumberValueInCell(propVal.setValue((double) anzAktiv));
 
 		int anzAusg = meldeListe.getAusgestiegenSpieler(sheet.getSpielTag());
-		sheet.getSheetHelper().setStringValueInCell(propName.zeilePlusEins().setValue("Ausgestiegen :")
-				.setComment("Anzahl Spieler die nicht in diese Runde Mitspielen"));
+		sheet.getSheetHelper().setStringValueInCell(propName.zeilePlusEins()
+				.setValue(I18n.get("column.header.ausgestiegen") + " :")
+				.setComment(I18n.get("supermelee.spielrunde.comment.anzahl.ausgestiegen")));
 		sheet.getSheetHelper().setNumberValueInCell(propVal.zeilePlusEins().setValue((double) anzAusg));
 
 		SuperMeleeMode superMeleeMode = konfigurationSheet.getSuperMeleeMode();
 		sheet.getSheetHelper()
-				.setStringValueInCell(propName.zeilePlusEins().setValue("Modus :").setComment("Supermêlée Modus"));
+				.setStringValueInCell(propName.zeilePlusEins().setValue("Modus :").setComment(I18n.get("supermelee.spielrunde.comment.modus")));
 		sheet.getSheetHelper()
 				.setStringValueInCell(StringCellValue.from(propVal).zeilePlusEins().setValue(superMeleeMode.name()));
 	}

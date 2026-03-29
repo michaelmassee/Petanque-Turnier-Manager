@@ -20,6 +20,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties;
@@ -90,11 +91,11 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 
 		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerSumme = StringCellValue
-				.from(getSheet(), Position.from(ersteSummeSpalte + SPIELE_PLUS_OFFS, ZWEITE_KOPFDATEN_ZEILE), "Spiele")
+				.from(getSheet(), Position.from(ersteSummeSpalte + SPIELE_PLUS_OFFS, ZWEITE_KOPFDATEN_ZEILE), I18n.get("column.header.spiele"))
 				.setEndPosMergeSpaltePlus(2).setCellBackColor(getHeaderFarbe()).addColumnProperties(columnProperties);
 		getSheetHelper().setStringValueInCell(headerSumme
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().doubleLn().forRight().toBorder()));
-		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("Punkte")
+		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue(I18n.get("column.header.punkte"))
 				.setEndPosMergeSpaltePlus(2).setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
 	}
 
@@ -113,18 +114,18 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 				.setCellBackColor(getHeaderFarbe()).setColumnProperties(columnProperties);
 
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+")
-				.setComment("Summe Spiele +").setBorder(borderThinLeftBold()));
+				.setComment(I18n.get("supermelee.rangliste.comment.spiele.plus")).setBorder(borderThinLeftBold()));
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_MINUS_OFFS).setValue("-")
-				.setComment("Summe Spiele -").setBorder(BorderFactory.from().allThin().toBorder()));
+				.setComment(I18n.get("supermelee.rangliste.comment.spiele.minus")).setBorder(BorderFactory.from().allThin().toBorder()));
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_DIV_OFFS).setValue("Δ")
-				.setComment("Summe Spiele Differenz")
+				.setComment(I18n.get("supermelee.rangliste.comment.spiele.differenz"))
 				.setBorder(BorderFactory.from().allThin().doubleLn().forRight().toBorder()));
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue("+")
-				.setComment("Summe Punkte +").setBorder(BorderFactory.from().allThin().toBorder()));
+				.setComment(I18n.get("supermelee.rangliste.comment.punkte.plus")).setBorder(BorderFactory.from().allThin().toBorder()));
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_MINUS_OFFS).setValue("-")
-				.setComment("Summe Punkte -").setBorder(BorderFactory.from().allThin().toBorder()));
+				.setComment(I18n.get("supermelee.rangliste.comment.punkte.minus")).setBorder(BorderFactory.from().allThin().toBorder()));
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_DIV_OFFS).setValue("Δ")
-				.setComment("Summe Punkte Differenz")
+				.setComment(I18n.get("supermelee.rangliste.comment.punkte.differenz"))
 				.setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
 
 	}

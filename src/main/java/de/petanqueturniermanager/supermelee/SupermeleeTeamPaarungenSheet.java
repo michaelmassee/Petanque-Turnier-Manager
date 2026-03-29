@@ -97,27 +97,27 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		int spalteBreite = 1000;
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteBreite)
 				.setHoriJustify(CellHoriJustify.CENTER);
-		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment("Anzahl Spieler")
+		StringCellValue headerVal = StringCellValue.from(sheet, pos, "#").setComment(I18n.get("supermelee.teampaarungen.comment.anzahl.spieler"))
 				.setColumnProperties(columnProperties);
 		getSheetHelper().setStringValueInCell(headerVal);
 		getSheetHelper().setStringValueInCell(
-				headerVal.spaltePlusEins().setValue("∑x2").setComment("Tripl/Doubl\r\nDoublette Teams"));
+				headerVal.spaltePlusEins().setValue("∑x2").setComment(I18n.get("supermelee.teampaarungen.comment.tripl.doubl.doublette")));
 		getSheetHelper().setStringValueInCell(
-				headerVal.spaltePlusEins().setValue("∑x3").setComment("Tripl/Doubl\r\nTriplette Teams"));
+				headerVal.spaltePlusEins().setValue("∑x3").setComment(I18n.get("supermelee.teampaarungen.comment.tripl.doubl.triplette")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Doubl")
-				.setComment("x= mit dieser Anzahl von Spieler kann nur Doublette gespielt werden"));
+				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.doublette.spieler")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x2")
-				.setComment("Wenn nur Doublette gespielt wird, anzahl Teams."));
+				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.doublette.teams")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Ung")
-				.setComment("x= Dieser Anzahl an Spieler ist ungültig.\r\nKeine Kombinationen möglich"));
+				.setComment(I18n.get("supermelee.teampaarungen.comment.ungueltig")));
 		getSheetHelper().setStringValueInCell(
-				headerVal.spaltePlusEins().setValue("∑x2").setComment("Doubl/Tripl\r\nDoublette Teams"));
+				headerVal.spaltePlusEins().setValue("∑x2").setComment(I18n.get("supermelee.teampaarungen.comment.doubl.tripl.doublette")));
 		getSheetHelper().setStringValueInCell(
-				headerVal.spaltePlusEins().setValue("∑x3").setComment("Doubl/Tripl\r\nTriplette Teams"));
+				headerVal.spaltePlusEins().setValue("∑x3").setComment(I18n.get("supermelee.teampaarungen.comment.doubl.tripl.triplette")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("Tripl")
-				.setComment("x= mit dieser Anzahl von Spieler kann nur Triplette gespielt werden"));
+				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.triplette.spieler")));
 		getSheetHelper().setStringValueInCell(headerVal.spaltePlusEins().setValue("∑x3")
-				.setComment("Wenn nur Triplette gespielt wird, anzahl Teams."));
+				.setComment(I18n.get("supermelee.teampaarungen.comment.nur.triplette.teams")));
 
 		TableBorder2 border = BorderFactory.from().allThin().toBorder();
 		RangePosition rangePosHeader = RangePosition.from(0, 0, 9, 0); // 10 spalten

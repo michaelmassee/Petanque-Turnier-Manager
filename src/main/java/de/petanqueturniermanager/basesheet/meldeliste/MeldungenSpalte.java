@@ -152,7 +152,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		StringCellValue celVal = StringCellValue
 				.from(getXSpreadsheet(), Position.from(meldungNrSpalte, getErsteDatenZiele() - anzZeilenInHeader),
 						I18n.get(HEADER_SPIELER_NR_KEY))
-				.setComment("Meldenummer (manuell nicht ändern)").addColumnProperties(columnProperties)
+				.setComment(I18n.get("meldeliste.comment.meldenummer")).addColumnProperties(columnProperties)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()).setCellBackColor(headerColor)
 				.setVertJustify(CellVertJustify2.CENTER);
 

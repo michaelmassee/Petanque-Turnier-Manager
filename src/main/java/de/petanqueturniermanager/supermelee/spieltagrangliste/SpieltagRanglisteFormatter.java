@@ -69,9 +69,9 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		for (int spielRunde = 1; spielRunde <= anzRunden; spielRunde++) {
 			int plusSpalte = ersteSpielRundeSpalte + ((spielRunde - 1) * 2);
 			getSheetHelper().setStringValueInCell(
-					headerPlus.spalte(plusSpalte).setComment("Spielrunde " + spielRunde + " Punkte +"));
+					headerPlus.spalte(plusSpalte).setComment(I18n.get("supermelee.spieltagrangliste.comment.runde.punkte.plus", spielRunde)));
 			getSheetHelper().setStringValueInCell(
-					headerMinus.spalte(plusSpalte + 1).setComment("Spielrunde " + spielRunde + " Punkte -"));
+					headerMinus.spalte(plusSpalte + 1).setComment(I18n.get("supermelee.spieltagrangliste.comment.runde.punkte.minus", spielRunde)));
 
 			// Runden Counter
 			StringCellValue headerRndCounter = StringCellValue.from(headerPlus).setValue(spielRunde)
@@ -81,7 +81,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		// Erste Zeile Runde
 		TableBorder2 border = BorderFactory.from().allBold().thinLn().forBottom().toBorder();
 		StringCellValue rundeHeaderBez = StringCellValue.from(sheet).zeile(ERSTE_KOPFDATEN_ZEILE)
-				.spalte(ersteSpielRundeSpalte).setEndPosMergeSpaltePlus((anzRunden * 2) - 1).setValue("Runde")
+				.spalte(ersteSpielRundeSpalte).setEndPosMergeSpaltePlus((anzRunden * 2) - 1).setValue(I18n.get("column.header.runde"))
 				.setCellBackColor(getHeaderFarbe()).setBorder(border);
 		getSheetHelper().setStringValueInCell(rundeHeaderBez);
 

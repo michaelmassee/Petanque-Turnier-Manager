@@ -160,7 +160,7 @@ public class RangListeSorter {
 				.setValue("Err"); // Überschrift Validate Spalte
 
 		if (isVisible) {
-			validateHeader.setComment("Validate Spalte");
+			validateHeader.setComment(I18n.get("rangliste.comment.validate.spalte"));
 		}
 
 		getSheetHelper().setStringValueInCell(validateHeader);

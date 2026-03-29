@@ -182,14 +182,14 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		//		getSheetHelper().setStringValueInCell(
 		//				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Ergebnis").spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("column.header.ergebnis")).spalte(SPIELPNKT_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		// header zweite Zeile
 		ColumnProperties colProp = ColumnProperties.from().setWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH);
 		stValHeader.setEndPosMerge(null).zeilePlusEins().setColumnProperties(colProp);
 		// name
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Mannschaft A").spalte(NAME_A_SPALTE));
-		getSheetHelper().setStringValueInCell(stValHeader.setValue("Mannschaft B").spalte(NAME_B_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.mannschaft.a")).spalte(NAME_A_SPALTE));
+		getSheetHelper().setStringValueInCell(stValHeader.setValue(I18n.get("column.header.mannschaft.b")).spalte(NAME_B_SPALTE));
 
 		stValHeader.getColumnProperties().setWidth(PUNKTE_NR_WIDTH + 1000); // etwas breiter brauche platz zum schreiben
 

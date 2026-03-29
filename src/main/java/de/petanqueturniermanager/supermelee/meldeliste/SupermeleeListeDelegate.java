@@ -43,8 +43,6 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSp
 
 class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
-	private static final String SPIELTAG_HEADER_STR = "Spieltag";
-
 	static final String PTM_SPIELTAG = GlobalImpl
 			.FORMAT_PTM_INT_PROPERTY(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG);
 	static final String PTM_SPIELRUNDE = GlobalImpl
@@ -145,7 +143,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		var bezCelVal = StringCellValue
 				.from(sheet.getXSpreadSheet(), meldeListeHelper.setzPositionSpalte(), ZWEITE_HEADER_ZEILE, "SP")
-				.setComment("1 = Setzposition, Diesen Spieler werden nicht zusammen im gleichen Team gelost.")
+				.setComment(I18n.get("supermelee.meldeliste.comment.setzposition"))
 				.setCellBackColor(headerBackColor).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
 				.addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
@@ -179,10 +177,10 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		var posInfo = Position.from(ersteSummeSpalte(), ERSTE_ZEILE_INFO);
 
-		var labelVal = StringCellValue.from(xSheet, posInfo, SPIELTAG_HEADER_STR)
-				.setComment("Aktive Spieltag").setBorder(border).setCellBackColor(headerBackColor);
+		var labelVal = StringCellValue.from(xSheet, posInfo, I18n.get("column.header.spieltag"))
+				.setComment(I18n.get("supermelee.meldeliste.comment.aktiver.spieltag")).setBorder(border).setCellBackColor(headerBackColor);
 		sheet.getSheetHelper().setStringValueInCell(labelVal);
-		labelVal.zeilePlus(1).setValue("Spielrunde").setComment("Aktive Spielrunde");
+		labelVal.zeilePlus(1).setValue(I18n.get("column.header.spielrunde")).setComment(I18n.get("supermelee.meldeliste.comment.aktive.spielrunde"));
 		sheet.getSheetHelper().setStringValueInCell(labelVal);
 		// ---------------------------------------------------
 		setProperties();
@@ -212,7 +210,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		var bezCelSpieltagVal = StringCellValue
 				.from(xSheet, meldeListeHelper.spieltagSpalte(spieltag), ZWEITE_HEADER_ZEILE, spielTagHeader(spieltag))
-				.setComment("1 = Aktiv, 2 = Ausgestiegen, leer = InAktiv").setCellBackColor(hederBackColor)
+				.setComment(I18n.get("supermelee.meldeliste.comment.spieltag.aktiv")).setCellBackColor(hederBackColor)
 				.addColumnProperties(columnProp).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder());
 
 		bezCelSpieltagVal.setValue(spielTagHeader(spieltag));
@@ -256,7 +254,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	/** Liefert den Header-Text für den gegebenen Spieltag, z.B. "Spieltag 1". */
 	String spielTagHeader(SpielTagNr spieltag) {
-		return SPIELTAG_HEADER_STR + " " + spieltag.getNr();
+		return I18n.get("column.header.spieltag.nr", spieltag.getNr());
 	}
 
 	int letzteSpielTagSpalte() throws GenerateException {
@@ -317,56 +315,56 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		bezCelVal.setBorder(border).setCellBackColor(headerBackColor);
 
-		bezCelVal.setComment("Anzahl Spieler mit \"1\" im Spieltag").setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.aktiv")).setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Anzahl Spieler mit \"\" im Spieltag").setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.inaktiv")).setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Anzahl Spieler mit \"2\" im Spieltag").setValue("Ausgestiegen")
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.ausgestiegen")).setValue(I18n.get("column.header.ausgestiegen"))
 				.zeile(SUMMEN_AUSGESTIEGENE_ZEILE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Anzahl Aktive + Ausgestiegen").setValue("Akt + Ausg").zeile(SUMMEN_ANZ_SPIELER);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.akt.ausg")).setValue("Akt + Ausg").zeile(SUMMEN_ANZ_SPIELER);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Anzahl Aktive + Inaktiv + Ausgestiegen").setValue("Summe")
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.gesamt")).setValue(I18n.get("column.header.summe"))
 				.zeile(SUMMEN_GESAMT_ANZ_SPIELER);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
 		var modusHeaderVal = StringCellValue.from(xSheet).spalte(ersteSummeSpalte())
 				.zeile(TRIPL_MODE_HEADER).setHoriJustify(CellHoriJustify.CENTER).setValue("Supermêlée Triplette.")
-				.setComment("Triplette Teams, aufüllen mit Doublette.  Siehe Konfiguration, 'Supermêlée Modus'")
+				.setComment(I18n.get("supermelee.meldeliste.comment.tripl.modus.header"))
 				.setEndPosMergeSpaltePlus(getSpielTag().getNr());
 		sheet.getSheetHelper().setStringValueInCell(modusHeaderVal);
 
-		bezCelVal.setComment("Modus Triplette, Anzahl Doublette Teams").setValue("∑x2").zeile(TRIPL_MODE_ANZ_DOUBLETTE);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.anz.doublette")).setValue("∑x2").zeile(TRIPL_MODE_ANZ_DOUBLETTE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Modus Triplette, Anzahl Triplette Teams").setValue("∑x3").zeile(TRIPL_MODE_ANZ_TRIPLETTE);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.anz.triplette")).setValue("∑x3").zeile(TRIPL_MODE_ANZ_TRIPLETTE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment("Modus Triplette, Kann Doublette gespielt werden").setValue("Doublette");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.kann.doublette")).setValue("Doublette");
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(TRIPL_MODE_SUMMEN_KANN_DOUBLETTE_ZEILE));
 
-		bezCelVal.setComment("Modus Triplette, Anzahl Spielbahnen").setValue("Bahnen");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.tripl.spielbahnen")).setValue(I18n.get("column.header.bahnen"));
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(TRIPL_MODE_SUMMEN_SPIELBAHNEN));
 
 		modusHeaderVal.spalte(ersteSummeSpalte()).zeile(DOUBL_MODE_HEADER)
 				.setEndPosMergeSpaltePlus(getSpielTag().getNr()).setValue("Supermêlée Doublette.")
-				.setComment("Doublette Teams, aufüllen mit Triplette. Siehe Konfiguration, 'Supermêlée Modus'");
+				.setComment(I18n.get("supermelee.meldeliste.comment.doubl.modus.header"));
 		sheet.getSheetHelper().setStringValueInCell(modusHeaderVal);
 
-		bezCelVal.setComment("Modus Doublette, Anzahl Doublette").setValue("∑x2");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.anz.doublette")).setValue("∑x2");
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_DOUBLETTE));
 
-		bezCelVal.setComment("Modus Doublette, Anzahl Triplette").setValue("∑x3");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.anz.triplette")).setValue("∑x3");
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_ANZ_TRIPLETTE));
 
-		bezCelVal.setComment("Modus Doublette, Kann Triplette gespielt werden").setValue("Triplette");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.kann.triplette")).setValue("Triplette");
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_KANN_TRIPLETTE_ZEILE));
 
-		bezCelVal.setComment("Modus Doublette,Anzahl Spielbahnen").setValue("Bahnen");
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.doubl.spielbahnen")).setValue(I18n.get("column.header.bahnen"));
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal.zeile(DOUBL_MODE_SUMMEN_SPIELBAHNEN));
 
 		var formula = StringCellValue.from(xSheet).setBorder(border);

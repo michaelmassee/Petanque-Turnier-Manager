@@ -232,7 +232,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 				.setEndPosMerge(endStreichspieltag).setCharWeight(FontWeight.LIGHT).setRotateAngle(27000)
 				.setVertJustify(CellVertJustify2.CENTER).setValue("Streich")
 				.setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
-				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Streich-Spieltag")
+				.setBorder(BorderFactory.from().allBold().toBorder()).setComment(I18n.get("supermelee.endrangliste.comment.streich.spieltag"))
 				.setColumnProperties(columnProperties);
 		getSheetHelper().setStringValueInCell(headerStreichspieltag);
 		// Daten
@@ -348,7 +348,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		StringCellValue headerAnzTage = StringCellValue.from(getXSpreadSheet(), start).setEndPosMerge(end)
 				.setCharWeight(FontWeight.LIGHT).setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER)
 				.setValue("Tage").setCellBackColor(endRanglisteFormatter.getHeaderFarbe())
-				.setBorder(BorderFactory.from().allBold().toBorder()).setComment("Gespielte Tage");
+				.setBorder(BorderFactory.from().allBold().toBorder()).setComment(I18n.get("supermelee.endrangliste.comment.gespielte.tage"));
 		getSheetHelper().setStringValueInCell(headerAnzTage);
 
 		// Daten

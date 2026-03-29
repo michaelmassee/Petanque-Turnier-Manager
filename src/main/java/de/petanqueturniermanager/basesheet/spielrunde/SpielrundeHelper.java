@@ -104,7 +104,7 @@ public class SpielrundeHelper {
 						.setCellBackColor(headerColor).setCharHeight(headerCharHeight).setEndPosMergeZeilePlus(1)
 						.setValue("Bahn").setShrinkToFit(true)
 						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-						.setComment("Spielbahn");
+						.setComment(I18n.get("comment.spielbahn"));
 				sheet.getSheetHelper().setStringValueInCell(headerValue);
 			}
 			columnProperties.setWidth(900);

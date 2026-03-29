@@ -238,7 +238,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 								.toBorder())
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCharWeight(FontWeight.BOLD)
-						.setComment("Startnummer (1–999, eindeutig, nur Zahlen)")
+						.setComment(I18n.get("ko.meldeliste.comment.startnummer"))
 						.setEndPosMergeZeilePlus(1));
 
 		// Teamname-Spalte (optional): über Zeile 1+2 gemergt
@@ -312,7 +312,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCharWeight(FontWeight.BOLD)
-						.setComment("Vorherige Platzierung – bestimmt Setzreihenfolge im Spielbaum")
+						.setComment(I18n.get("ko.meldeliste.comment.setzreihenfolge"))
 						.setRotate90()
 						.setEndPosMergeZeilePlus(1));
 
@@ -328,7 +328,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCharWeight(FontWeight.BOLD)
-						.setComment("1 = Nimmt teil, 2 = Ausgestiegen, leer = Nimmt nicht teil")
+						.setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
 						.setRotate90()
 						.setEndPosMergeZeilePlus(1));
 
@@ -337,7 +337,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		sheet.getSheetHelper().setStringValueInCell(
 				StringCellValue
 						.from(sheet.getXSpreadSheet(), Position.from(0, ERSTE_HEADER_ZEILE),
-								"Turniersystem: " + TurnierSystem.KO.getBezeichnung())
+								I18n.get("meldeliste.header.turniersystem", TurnierSystem.KO.getBezeichnung()))
 						.setEndPosMergeSpaltePlus(2)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.LEFT)

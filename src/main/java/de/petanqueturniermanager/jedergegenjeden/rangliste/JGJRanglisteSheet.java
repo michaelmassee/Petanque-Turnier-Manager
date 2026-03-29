@@ -235,7 +235,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		StringCellValue header2val = StringCellValue.from(getXSpreadSheet()).setPos(header2Pos)
 				.setEndPosMergeSpaltePlus(1).setCellProperties(headerProp);
 		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
-			header2val.setValue("Spiele");
+			header2val.setValue(I18n.get("column.header.spiele"));
 			getSheetHelper().setStringValueInCell(header2val);
 
 			header2val.spaltePlus(2);
@@ -247,7 +247,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
 		// 2 header zeile
 		// Summen
-		header2val.setValue("Spiele").setEndPosMergeSpaltePlus(2);
+		header2val.setValue(I18n.get("column.header.spiele")).setEndPosMergeSpaltePlus(2);
 		getSheetHelper().setStringValueInCell(header2val);
 
 		header2val.spaltePlus(3);
@@ -261,14 +261,14 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		StringCellValue header1val = StringCellValue.from(getXSpreadSheet()).setPos(header1Pos)
 				.setEndPosMergeSpaltePlus(ANZ_RUNDEN_SPALTEN - 1).setCellProperties(headerProp);
 		for (int rundeCntr = 0; rundeCntr < anzGesamtRunden; rundeCntr++) {
-			header1val.setValue("Runde " + (rundeCntr + 1));
+			header1val.setValue(I18n.get("column.header.runde.nr", rundeCntr + 1));
 			getSheetHelper().setStringValueInCell(header1val);
 			header1val.spaltePlus(ANZ_RUNDEN_SPALTEN);
 		}
 
 		// 1 header zeile
 		// summen
-		header1val.setValue("Summen").setEndPosMergeSpaltePlus(ANZ_SUMMEN_SPALTEN - 2);
+		header1val.setValue(I18n.get("column.header.summen")).setEndPosMergeSpaltePlus(ANZ_SUMMEN_SPALTEN - 2);
 		getSheetHelper().setStringValueInCell(header1val);
 
 		// Begegnungen
@@ -277,7 +277,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		begegnungenHeader.setPos(header1val.getPos()).spaltePlus(ANZ_SUMMEN_SPALTEN - 1);
 		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(2).centerJustify()
 				.setBorder(begegnungenBrd).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
-				.setComment("Die Anzahl an gespielten Begegnungen");
+				.setComment(I18n.get("comment.begegnungen"));
 		getSheetHelper().setStringValueInCell(begegnungenHeader);
 
 	}

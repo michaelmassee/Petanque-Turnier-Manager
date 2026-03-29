@@ -377,7 +377,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	public void insertTurnierSystemInHeader(TurnierSystem turnierSystem) throws GenerateException {
 		// oben links
 		meldeListe.getSheetHelper().setStringValueInCell(StringCellValue
-				.from(getXSpreadSheet(), Position.from(0, 0), "Turniersystem: " + turnierSystem.getBezeichnung())
+				.from(getXSpreadSheet(), Position.from(0, 0), I18n.get("meldeliste.header.turniersystem", turnierSystem.getBezeichnung()))
 				.setEndPosMergeSpaltePlus(1).setCharWeight(FontWeight.BOLD).setHoriJustify(CellHoriJustify.LEFT)
 				.setVertJustify(CellVertJustify2.TOP).setShrinkToFit(true).setCharColor("00599d"));
 	}

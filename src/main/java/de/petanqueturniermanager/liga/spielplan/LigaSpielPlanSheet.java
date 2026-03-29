@@ -323,7 +323,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 				.spalte(NAME_A_SPALTE).setEndPosMergeSpaltePlus(1));
 
 		getSheetHelper().setStringValueInCell(
-				stValHeader.setValue("Punkte").spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
+				stValHeader.setValue(I18n.get("column.header.punkte")).spalte(PUNKTE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
 				stValHeader.setValue("Siege").spalte(SPIELE_A_SPALTE).setEndPosMergeSpaltePlus(1));
 		getSheetHelper().setStringValueInCell(
