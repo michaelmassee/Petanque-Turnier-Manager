@@ -69,9 +69,12 @@ public class DirectUpdate extends SheetRunner {
 			FileUtils.copyURLToFile(downloadURL, tempFile.toFile(), 30000, 30000);
 			processBoxinfo("processbox.download.abgeschlossen.installation");
 
-			Object emObj = getxContext().getServiceManager()
-					.createInstanceWithContext("com.sun.star.deployment.ExtensionManager", getxContext());
+			Object emObj = getxContext().getValueByName(
+					"/singletons/com.sun.star.deployment.ExtensionManager");
 			XExtensionManager em = Lo.qi(XExtensionManager.class, emObj);
+			if (em == null) {
+				throw new GenerateException("ExtensionManager nicht verfügbar (Singleton nicht gefunden).");
+			}
 			em.addExtension(tempFile.toUri().toString(), new NamedValue[0], "user", null, null);
 
 			processBoxinfo("processbox.neue.version.installiert");
