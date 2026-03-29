@@ -193,7 +193,7 @@ public class ProcessBox {
 		boolean neueVersion = checker.checkForNewRelease(xContext);
 		SwingUtilities.invokeLater(() -> {
 			if (neueVersion) {
-				neueVersionLabel.setText(checker.getMenuTitelKurz() + " verfügbar");
+				neueVersionLabel.setText(I18n.get("processbox.neue.version.verfuegbar"));
 			}
 			neueVersionLabel.setVisible(neueVersion);
 			frame.revalidate();

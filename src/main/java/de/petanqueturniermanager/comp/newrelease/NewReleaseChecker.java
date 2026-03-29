@@ -198,14 +198,6 @@ public class NewReleaseChecker {
 		return newVersionAvailable;
 	}
 
-	/**
-	 * Liefert einen kurzen Menütitel für den "Neue Version"-Menüpunkt, z.B. "Neu: v5.2.0".
-	 */
-	public String getMenuTitelKurz() {
-		String ver = latestVersionFromCacheFile();
-		return ver != null ? "Neu: v" + ver : "Neue Version";
-	}
-
 	GHAsset getDownloadGHAsset() {
 		GHAsset otxAsset = null;
 
