@@ -38,6 +38,8 @@ public final class SheetResolverFactory {
     public static final String RESOLVER_POULE_MELDELISTE = "POULE_MELDELISTE";
     /** Schlüssel für den Poule-Teilnehmer-Resolver. */
     public static final String RESOLVER_POULE_TEILNEHMER = "POULE_TEILNEHMER";
+    /** Schlüssel für den Poule-Vorrunde-Resolver. */
+    public static final String RESOLVER_POULE_VORRUNDE = "POULE_VORRUNDE";
 
     /**
      * Zentrale Konfiguration aller bekannten Sheet-Typen und ihrer Resolver-Factories.
@@ -121,6 +123,10 @@ public final class SheetResolverFactory {
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
                         I18n.get("webserver.resolver.poule.teilnehmer")));
+        RESOLVER_MAP.put(RESOLVER_POULE_VORRUNDE, () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
+                        I18n.get("webserver.resolver.poule.vorrunde")));
     }
 
     /**

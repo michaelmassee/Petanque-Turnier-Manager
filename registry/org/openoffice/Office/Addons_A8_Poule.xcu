@@ -107,6 +107,28 @@
 								</prop>
 							</node>
 
+							<node oor:name="A8A6" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A8A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Vorrunde erstellen</value>
+									<value xml:lang="en">Create Preliminary Round</value>
+									<value xml:lang="es">Crear ronda preliminar</value>
+									<value xml:lang="fr">Créer le tour préliminaire</value>
+									<value xml:lang="nl">Voorronde aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_vorrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

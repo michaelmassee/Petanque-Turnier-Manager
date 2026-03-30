@@ -99,6 +99,7 @@ public class SheetMetadataHelper {
     // ── Konstanten: Poule ────────────────────────────────────────────────────
 
     public static final String SCHLUESSEL_POULE_MELDELISTE = "__PTM_POULE_MELDELISTE__";
+    public static final String SCHLUESSEL_POULE_VORRUNDE   = "__PTM_POULE_VORRUNDE__";
 
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 

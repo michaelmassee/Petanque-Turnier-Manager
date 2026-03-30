@@ -308,6 +308,11 @@ public final class SheetNamen {
         return getOderFallback("sheet.name.poule.teilnehmer", "Poule Teilnehmer");
     }
 
+    /** Poule-Vorrunde-Sheet. */
+    public static String pouleVorrunde() {
+        return getOderFallback("sheet.name.poule.vorrunde", "Poule Vorrunde");
+    }
+
     // ── Hilfsmethode ─────────────────────────────────────────────────────────
 
     /**

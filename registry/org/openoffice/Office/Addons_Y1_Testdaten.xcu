@@ -359,6 +359,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="C8" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Poule A/B, Example Tournament (16 Teams)</value>
+									<value xml:lang="de">Poule A/B, Beispielturnier (16 Teams)</value>
+									<value xml:lang="fr">Poule A/B, tournoi exemple (16 équipes)</value>
+									<value xml:lang="nl">Poule A/B, voorbeeldtoernooi (16 teams)</value>
+									<value xml:lang="es">Poule A/B, torneo de ejemplo (16 equipos)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_testdaten_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>
