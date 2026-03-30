@@ -151,12 +151,21 @@ Jedes neue Turniersystem, das einen `RanglisteRefreshListener` bekommt, benötig
 `getSheetHelper().setActiveSheet(sheet)` **nur aufrufen wenn `SheetRunner.isRunning() == true`** (d.h. der Aufruf kommt vom Menü über `SheetRunner.run()`). Bei direktem `doRun()`-Aufruf (Listener, Test) darf `setActiveSheet` **nicht** aufgerufen werden – das würde erneut `selectionChanged` feuern.
 
 ## Business Logic & Rules
-- **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `SchweizerTurnierSystem.md`.
-  **Crucial:** Always read this document before making changes to classes in the `de.petanqueturniermanager.algorithmen` or `de.petanqueturniermanager.schweizer` packages!
-- **Supermelee System:** The complete ruleset for the tournament system in Petanque is documented in `SupermeleeTurnierSystem.md`.
-- **KO System:**  The complete ruleset for the tournament system in Petanque is documented in `KORundeTurnierSystem.md`.
-- **Maastrichter System:**  The complete ruleset for the tournament system in Petanque is documented in `MaastrichterTurniersystem.md`.
-- **Kaskaden oder Erweitertes A-B-C-D System:**  The complete ruleset for the tournament system in Petanque is documented in `KaskadenTurnierSystem.md`.
+- **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `turniersysteme/03_Schweizer.md`.
+- **Supermelee System:** The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/07_Supermelee.md`.
+- **KO System:**  The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/05_KO.md`.
+- **Maastrichter System:**  The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/04_Maastrichter.md`.
+- **Kaskaden oder Erweitertes A-B-C-D System:**  The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/06_Kaskaden-KO.md`.
+- **Arena-Pétanque:** Documented in `turniersysteme/16_ArenaPetanque.md`.
+- **Crazy-Mêlée:** Documented in `turniersysteme/15_CrazyMelee.md`.
+- **Dänisches System:** Documented in `turniersysteme/11_DaenischesSystem.md`.
+- **Formule 4:** Documented in `turniersysteme/13_Formule4.md`.
+- **Kölner Sextet:** Documented in `turniersysteme/10_KoelnerSextet.md`.
+- **Monrad-System:** Documented in `turniersysteme/12_MonradSystem.md`.
+- **Tête-Series:** Documented in `turniersysteme/14_TeteSeries.md`.
+- **Trip-Tête / Trio-System:** Documented in `turniersysteme/09_TripTete.md`.
+- **Poule-AB:** Documented in `turniersysteme/02_Poule-AB.md`.
+- **Formule_X:** Documented in `turniersysteme/08_Formule_X.md`.
 
 ### UNO API Strict Rules
 - **NEVER use standard Java casts** for UNO interfaces (e.g., `(XSpreadsheetDocument) doc` is forbidden).
