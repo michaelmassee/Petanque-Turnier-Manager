@@ -34,6 +34,11 @@ public final class SheetResolverFactory {
     private SheetResolverFactory() {
     }
 
+    /** Schlüssel für den Poule-Meldeliste-Resolver. */
+    public static final String RESOLVER_POULE_MELDELISTE = "POULE_MELDELISTE";
+    /** Schlüssel für den Poule-Teilnehmer-Resolver. */
+    public static final String RESOLVER_POULE_TEILNEHMER = "POULE_TEILNEHMER";
+
     /**
      * Zentrale Konfiguration aller bekannten Sheet-Typen und ihrer Resolver-Factories.
      * Die Iteration über diese Map bestimmt automatisch:
@@ -108,6 +113,14 @@ public final class SheetResolverFactory {
                         SheetMetadataHelper.SCHLUESSEL_KO_TURNIERBAUM_PREFIX,
                         SheetMetadataHelper.SCHLUESSEL_SUFFIX,
                         I18n.get("webserver.resolver.ko.turnierbaum")));
+        RESOLVER_MAP.put(RESOLVER_POULE_MELDELISTE, () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE,
+                        I18n.get("webserver.resolver.poule.meldeliste")));
+        RESOLVER_MAP.put(RESOLVER_POULE_TEILNEHMER, () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
+                        I18n.get("webserver.resolver.poule.teilnehmer")));
     }
 
     /**

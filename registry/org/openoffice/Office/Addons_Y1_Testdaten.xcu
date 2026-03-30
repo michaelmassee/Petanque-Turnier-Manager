@@ -337,6 +337,28 @@
 								</prop>
 							</node>
 
+							<node oor:name="C6" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="C7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Poule A/B, Entry List only (16 Teams)</value>
+									<value xml:lang="de">Poule A/B, nur Meldeliste (16 Teams)</value>
+									<value xml:lang="fr">Poule A/B, liste d'inscriptions uniquement (16 équipes)</value>
+									<value xml:lang="nl">Poule A/B, alleen deelnemerslijst (16 teams)</value>
+									<value xml:lang="es">Poule A/B, solo lista de inscripciones (16 equipos)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_testdaten_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>

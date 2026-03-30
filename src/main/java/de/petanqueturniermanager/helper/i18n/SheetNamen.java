@@ -298,6 +298,16 @@ public final class SheetNamen {
         return getOderFallback("sheet.name.ko.teilnehmer", "KO Teilnehmer");
     }
 
+    /** Poule-Meldeliste-Sheet. */
+    public static String pouleMeldeliste() {
+        return getOderFallback("sheet.name.poule.meldeliste", "Poule Meldeliste");
+    }
+
+    /** Poule-Teilnehmer-Sheet. */
+    public static String pouleTeilnehmer() {
+        return getOderFallback("sheet.name.poule.teilnehmer", "Poule Teilnehmer");
+    }
+
     // ── Hilfsmethode ─────────────────────────────────────────────────────────
 
     /**

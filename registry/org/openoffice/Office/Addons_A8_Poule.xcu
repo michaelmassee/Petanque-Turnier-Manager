@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<!-- ****************************************************************** -->
+					<!-- Poule A/B -->
+					<node oor:name="A8" oor:op="fuse">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="ImageIdentifier" oor:type="xs:string">
+							<value/>
+						</prop>
+						<prop oor:name="Title" oor:type="xs:string">
+							<value xml:lang="en">Poule A/B</value>
+							<value xml:lang="de">Poule A/B</value>
+							<value xml:lang="es">Poule A/B</value>
+							<value xml:lang="fr">Poule A/B</value>
+							<value xml:lang="nl">Poule A/B</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+						<node oor:name="Submenu">
+							<!-- name= bestimmt reihenfolge im menu -->
+							<!-- ****************************************************************** -->
+							<node oor:name="A8A1" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Start (new Tournament)</value>
+									<value xml:lang="de">Start (neues Turnier)</value>
+									<value xml:lang="es">Inicio (nuevo torneo)</value>
+									<value xml:lang="fr">Démarrer (nouveau tournoi)</value>
+									<value xml:lang="nl">Start (nieuw toernooi)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_start</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A8A2" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A8A3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">New Entry List</value>
+									<value xml:lang="de">Neue Meldeliste</value>
+									<value xml:lang="es">Nueva lista de inscripciones</value>
+									<value xml:lang="fr">Nouvelle liste d'inscriptions</value>
+									<value xml:lang="nl">Nieuwe deelnemerslijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_neue_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A8A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Update Entry List</value>
+									<value xml:lang="de">Meldeliste Aktualisieren</value>
+									<value xml:lang="es">Actualizar lista de inscripciones</value>
+									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
+									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_update_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A8A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Participants</value>
+									<value xml:lang="de">Teilnehmer</value>
+									<value xml:lang="es">Participantes</value>
+									<value xml:lang="fr">Participants</value>
+									<value xml:lang="nl">Deelnemers</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+						</node>
+					</node>
+					<!-- ****************************************************************** -->
+
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>

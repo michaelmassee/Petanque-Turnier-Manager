@@ -19,6 +19,7 @@ import de.petanqueturniermanager.liga.spielplan.LigaTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.Maastrichter35TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.Maastrichter57TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
@@ -232,7 +233,13 @@ public final class BeispielturnierRegistrierung {
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE,
                                 SheetMetadataHelper.schluesselSpieltagRangliste(1)),
-                        "SpielrundeSheet_TestDaten.java")
+                        "SpielrundeSheet_TestDaten.java"),
+
+                new Eintrag(
+                        "Poule A/B \u2013 nur Meldeliste (16 Teams)",
+                        ws -> new PouleMeldeListeSheetTestDaten(ws).doRun(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE),
+                        "PouleMeldeListeSheetTestDaten.java")
         );
     }
 }

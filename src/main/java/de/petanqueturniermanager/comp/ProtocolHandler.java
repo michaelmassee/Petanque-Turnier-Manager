@@ -77,6 +77,10 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
+import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
@@ -201,6 +205,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	// Teilnehmer
 	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
 	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
+	// Poule A/B
+	public static final String CMD_POULE_START               = "poule_start";
+	public static final String CMD_POULE_NEUE_MELDELISTE     = "poule_neue_meldeliste";
+	public static final String CMD_POULE_UPDATE_MELDELISTE   = "poule_update_meldeliste";
+	public static final String CMD_POULE_TEILNEHMER          = "poule_teilnehmer";
+	public static final String CMD_POULE_TESTDATEN_MELDELISTE = "poule_testdaten_meldeliste";
 	// Webserver
 	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
@@ -529,6 +539,23 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KoTurnierTestDaten(ws, 10).start();
 				break;
 			// ------------------------------
+			// Poule A/B
+			case CMD_POULE_START:
+				new PouleMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_POULE_NEUE_MELDELISTE:
+				new PouleMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_POULE_UPDATE_MELDELISTE:
+				new PouleMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_POULE_TEILNEHMER:
+				new PouleTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_POULE_TESTDATEN_MELDELISTE:
+				new PouleMeldeListeSheetTestDaten(ws).start();
+				break;
+			// ------------------------------
 			// Konfiguration
 			case CMD_KONFIGURATION_TURNIER:
 				handleKonfiguration(command, ws);
@@ -807,6 +834,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
 				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
+			// Poule A/B
+			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
+			case CMD_POULE_NEUE_MELDELISTE,
+				 CMD_POULE_UPDATE_MELDELISTE,
+				 CMD_POULE_TEILNEHMER                      -> ts == TurnierSystem.POULE;
+			case CMD_POULE_TESTDATEN_MELDELISTE             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
 			// K.-O.-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
 				 CMD_KO_TESTDATEN_8_TEAMS,

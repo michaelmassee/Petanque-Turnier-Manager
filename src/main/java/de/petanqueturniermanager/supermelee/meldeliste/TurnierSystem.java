@@ -11,7 +11,8 @@ public enum TurnierSystem {
 	KEIN(0, "enum.turniersystem.kein"), // wenn nur der runner gebraucht wird
 	SUPERMELEE(1, "enum.turniersystem.supermelee"), LIGA(2, "enum.turniersystem.liga"),
 	MAASTRICHTER(3, "enum.turniersystem.maastrichter"), SCHWEIZER(4, "enum.turniersystem.schweizer"),
-	JGJ(5, "enum.turniersystem.jgj"), KO(6, "enum.turniersystem.ko");
+	JGJ(5, "enum.turniersystem.jgj"), KO(6, "enum.turniersystem.ko"),
+	POULE(7, "enum.turniersystem.poule");
 
 	private final String i18nKey;
 	private final int id;

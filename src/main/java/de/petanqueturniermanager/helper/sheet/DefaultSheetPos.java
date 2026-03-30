@@ -37,4 +37,6 @@ public class DefaultSheetPos {
 
 	public static final short MAASTRICHTER_FINALE = 4; // Maastrichter A/B/C-Finale-Blätter
 
+	public static final short POULE_WORK = 2; // Poule Teilnehmer, etc.
+
 }

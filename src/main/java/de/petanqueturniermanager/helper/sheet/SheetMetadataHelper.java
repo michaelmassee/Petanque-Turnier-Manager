@@ -96,6 +96,10 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX = "__PTM_MAASTRICHTER_VORRUNDE_";
     public static final String SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX = "__PTM_MAASTRICHTER_FINALRUNDE_";
 
+    // ── Konstanten: Poule ────────────────────────────────────────────────────
+
+    public static final String SCHLUESSEL_POULE_MELDELISTE = "__PTM_POULE_MELDELISTE__";
+
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 
     public static final String SCHLUESSEL_FORME_VORRUNDEN = "__PTM_FORME_VORRUNDEN__";

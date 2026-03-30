@@ -15,6 +15,7 @@ import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterPropertiesSpalte;
+import de.petanqueturniermanager.poule.konfiguration.PoulePropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -46,6 +47,8 @@ public class KonfigurationSingleton {
 					return JGJPropertiesSpalte.KONFIG_PROPERTIES;
 				case KO:
 					return KoPropertiesSpalte.KONFIG_PROPERTIES;
+				case POULE:
+					return PoulePropertiesSpalte.KONFIG_PROPERTIES;
 				default:
 					logger.error("TurnierSystem ungültig " + turnierSystem.getBezeichnung());
 					break;
