@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -82,7 +83,8 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 					konfigurationSheet.getSpielbaumSpielbahn(),
 					konfigurationSheet.isSpielbaumSpielUmPlatz3(),
 					konfigurationSheet.getGruppenGroesse(),
-					konfigurationSheet.getMinRestGroesse());
+					konfigurationSheet.getMinRestGroesse(),
+					konfigurationSheet.getMaastrichterGruppenModus());
 		} catch (Exception e) {
 			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
 			throw new GenerateException("Fehler beim Anzeigen des Parameterdialogs: " + e.getMessage());
@@ -105,6 +107,7 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 		konfigurationSheet.setSpielbaumSpielUmPlatz3(param.get().spielUmPlatz3);
 		konfigurationSheet.setGruppenGroesse(param.get().gruppenGroesse);
 		konfigurationSheet.setMinRestGroesse(param.get().minRestGroesse);
+		konfigurationSheet.setMaastrichterGruppenModus(param.get().gruppenModus);
 
 		erstelleMeldeliste(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen,
 				param.get().spielplanTeamAnzeige);

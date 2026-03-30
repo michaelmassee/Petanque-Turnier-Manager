@@ -33,6 +33,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -48,7 +49,13 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Ablauf:
  * <ol>
  *   <li>Alle "N. Vorrunde"-Blätter lesen → Siege/Punkte pro Team berechnen</li>
- *   <li>Teams nach Siegen gruppieren: A = max. Siege, B = max-1, C = max-2, D = Rest</li>
+ *   <li>Teams nach konfiguriertem Modus in Finalgruppen einteilen:
+ *       <ul>
+ *         <li>{@link MaastrichterGruppenModus#NACH_SIEGEN}: A = max. Siege, B = max-1, ...</li>
+ *         <li>{@link MaastrichterGruppenModus#NACH_GROESSE}: gleichmäßige Aufteilung via
+ *             {@code GruppenAufteilungRechner}</li>
+ *       </ul>
+ *   </li>
  *   <li>Innerhalb jeder Gruppe nach Schweizer Kriterien sortieren (für Setzliste)</li>
  *   <li>Pro nicht-leerer Gruppe mit ≥2 Teams: KO-Bracket-Blatt erstellen</li>
  * </ol>
@@ -111,29 +118,27 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
-		// Gruppen nach Rang-Aufteilung (identisch zum KO-System)
-		int gruppenGroesse = konfigSheet.getGruppenGroesse();
-		int minRestGroesse = konfigSheet.getMinRestGroesse();
-		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
-				sortiert.size(), gruppenGroesse, minRestGroesse);
-		int anzGruppen = gruppenGroessen.size();
+		// Gruppen gemäß konfiguriertem Modus bilden
+		MaastrichterGruppenModus gruppenModus = konfigSheet.getMaastrichterGruppenModus();
+		List<List<SchweizerTeamErgebnis>> gruppen = switch (gruppenModus) {
+			case NACH_SIEGEN -> teileNachSiegen(sortiert, anzVorrunden);
+			case NACH_GROESSE -> teileNachGroesse(sortiert,
+					konfigSheet.getGruppenGroesse(), konfigSheet.getMinRestGroesse());
+		};
 
 		// Alte Finale-Blätter löschen
 		alleFinaleSheetNamenLoeschen();
 
 		// KO-Bracket für jede Gruppe erstellen
 		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
-		int startIndex = 0;
 		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
 
-		for (int g = 0; g < anzGruppen; g++) {
+		for (int g = 0; g < gruppen.size(); g++) {
 			SheetRunner.testDoCancelTask();
-			int groesse = gruppenGroessen.get(g);
+			List<SchweizerTeamErgebnis> gruppeErg = gruppen.get(g);
 			String gruppenBuchstabe = String.valueOf((char) ('A' + g));
-			String sheetName = gruppenBuchstabe + "-Finale";
-			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, groesse);
-			List<SchweizerTeamErgebnis> gruppeErg = sortiert.subList(startIndex, startIndex + groesse);
-			startIndex += groesse;
+			String sheetName = SheetNamen.koFinaleGruppe(gruppenBuchstabe);
+			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, gruppeErg.size());
 			TeamMeldungen gruppeTeams = erstelleGruppeTeams(gruppeErg, aktiveMeldungen);
 			if (gruppeTeams.size() >= 2) {
 				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
@@ -141,6 +146,46 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 				sheetPos++;
 			}
 		}
+	}
+
+	/**
+	 * Teilt die sortierten Teams nach exakter Sieganzahl in Gruppen auf.
+	 * A = maxSiege, B = maxSiege-1, C = maxSiege-2, usw. Leere Gruppen werden übersprungen.
+	 */
+	private List<List<SchweizerTeamErgebnis>> teileNachSiegen(
+			List<SchweizerTeamErgebnis> sortiert, int anzVorrunden) {
+
+		Map<Integer, List<SchweizerTeamErgebnis>> nachSiegen = new HashMap<>();
+		for (SchweizerTeamErgebnis erg : sortiert) {
+			nachSiegen.computeIfAbsent(erg.siege(), k -> new ArrayList<>()).add(erg);
+		}
+
+		List<List<SchweizerTeamErgebnis>> gruppen = new ArrayList<>();
+		for (int siege = anzVorrunden; siege >= 0; siege--) {
+			List<SchweizerTeamErgebnis> gruppe = nachSiegen.get(siege);
+			if (gruppe != null && !gruppe.isEmpty()) {
+				gruppen.add(gruppe);
+			}
+		}
+		return gruppen;
+	}
+
+	/**
+	 * Teilt die sortierten Teams gleichmäßig nach Rang auf (bisheriges Verhalten).
+	 */
+	private List<List<SchweizerTeamErgebnis>> teileNachGroesse(
+			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse, int minRestGroesse) {
+
+		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
+				sortiert.size(), gruppenGroesse, minRestGroesse);
+
+		List<List<SchweizerTeamErgebnis>> gruppen = new ArrayList<>();
+		int startIndex = 0;
+		for (int groesse : gruppenGroessen) {
+			gruppen.add(new ArrayList<>(sortiert.subList(startIndex, startIndex + groesse)));
+			startIndex += groesse;
+		}
+		return gruppen;
 	}
 
 	/**
@@ -262,12 +307,13 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Löscht alle vorhandenen Finale-Sheets (Namen nach Muster "[A-Z]-Finale").
+	 * Löscht alle vorhandenen Finale-Sheets (A-Finale bis Z-Finale gemäß i18n-Muster).
 	 */
 	private void alleFinaleSheetNamenLoeschen() throws GenerateException {
-		for (String name : getSheetHelper().getSheets().getElementNames()) {
-			if (name.matches("[A-Z]-Finale")) {
-				getSheetHelper().removeSheet(name);
+		for (char c = 'A'; c <= 'Z'; c++) {
+			String sheetName = SheetNamen.koFinaleGruppe(String.valueOf(c));
+			if (getSheetHelper().findByName(sheetName) != null) {
+				getSheetHelper().removeSheet(sheetName);
 			}
 		}
 	}

@@ -29,14 +29,16 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
  * Modaler Dialog zur Abfrage der Turnier-Parameter für ein neues Maastrichter Turnier.
- * Erweitert den Schweizer-Dialog um das Feld "Anzahl Vorrunden".
+ * Erweitert den Schweizer-Dialog um Anzahl Vorrunden und Finalgruppen-Einteilungsmodus.
  */
 public class MaastrichterTurnierParameterDialog {
 
@@ -53,11 +55,13 @@ public class MaastrichterTurnierParameterDialog {
 		public final boolean spielUmPlatz3;
 		public final int gruppenGroesse;
 		public final int minRestGroesse;
+		public final MaastrichterGruppenModus gruppenModus;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 				SpielplanTeamAnzeige spielplanTeamAnzeige, SchweizerRankingModus rankingModus, int anzVorrunden,
 				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielUmPlatz3, int gruppenGroesse, int minRestGroesse) {
+				boolean spielUmPlatz3, int gruppenGroesse, int minRestGroesse,
+				MaastrichterGruppenModus gruppenModus) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
 			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
@@ -69,6 +73,7 @@ public class MaastrichterTurnierParameterDialog {
 			this.spielUmPlatz3 = spielUmPlatz3;
 			this.gruppenGroesse = gruppenGroesse;
 			this.minRestGroesse = minRestGroesse;
+			this.gruppenModus = gruppenModus;
 		}
 	}
 
@@ -83,7 +88,8 @@ public class MaastrichterTurnierParameterDialog {
 			boolean defaultVereinsnameAnzeigen, SpielplanTeamAnzeige defaultSpielplanTeamAnzeige,
 			SchweizerRankingModus defaultRankingModus, int defaultAnzVorrunden,
 			KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige, SpielrundeSpielbahn defaultSpielbaumSpielbahn,
-			boolean defaultSpielUmPlatz3, int defaultGruppenGroesse, int defaultMinRestGroesse)
+			boolean defaultSpielUmPlatz3, int defaultGruppenGroesse, int defaultMinRestGroesse,
+			MaastrichterGruppenModus defaultGruppenModus)
 			throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
@@ -96,8 +102,8 @@ public class MaastrichterTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(350));
-		dlgProps.setPropertyValue("Title", "Maastrichter Turnier \u2013 Parameter");
+		dlgProps.setPropertyValue("Height", Integer.valueOf(410));
+		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
 		Object dialog = xMCF.createInstanceWithContext("com.sun.star.awt.UnoControlDialog", context);
@@ -108,7 +114,7 @@ public class MaastrichterTurnierParameterDialog {
 		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
-		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
+		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.maastrichter.formation.label"), 8, 8, 80, 10);
 		addRadioButton(xMSF, cont, "radioTete", Formation.TETE.getBezeichnung(), 8, 21, 140, 10,
 				defaultFormation == Formation.TETE);
 		addRadioButton(xMSF, cont, "radioDoublette", Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10,
@@ -117,44 +123,59 @@ public class MaastrichterTurnierParameterDialog {
 				defaultFormation == Formation.TRIPLETTE);
 
 		addFixedLine(xMSF, cont, "sep1", 5, 59, 150, 2);
-		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen", 8, 65, 140, 10, defaultTeamnameAnzeigen);
-		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen", 8, 79, 140, 10, defaultVereinsnameAnzeigen);
+		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.maastrichter.teamname.anzeigen"), 8, 65, 140, 10,
+				defaultTeamnameAnzeigen);
+		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.maastrichter.vereinsname.anzeigen"), 8, 79, 140, 10,
+				defaultVereinsnameAnzeigen);
 
 		addFixedLine(xMSF, cont, "sep2", 5, 95, 150, 2);
-		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 99, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielplanNr", "Teamnummer", 8, 111, 140, 10,
+		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 99, 140, 10);
+		addRadioButton(xMSF, cont, "radioSpielplanNr", I18n.get("dialog.maastrichter.auswahl.nr"), 8, 111, 140, 10,
 				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielplanName", "Teamname", 8, 123, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielplanName", I18n.get("dialog.maastrichter.auswahl.name"), 8, 123, 140, 10,
 				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME);
 
 		addFixedLine(xMSF, cont, "sep3", 5, 137, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 141, 140, 10);
-		addRadioButton(xMSF, cont, "radioMitBuchholz", "Mit Buchholz (Standard)", 8, 153, 140, 10,
-				defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
-		addRadioButton(xMSF, cont, "radioOhneBuchholz", "Ohne Buchholz", 8, 165, 140, 10,
-				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
+		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.maastrichter.ranking.modus.label"), 8, 141, 140, 10);
+		addRadioButton(xMSF, cont, "radioMitBuchholz", I18n.get("dialog.maastrichter.ranking.mit.buchholz"), 8, 153,
+				140, 10, defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
+		addRadioButton(xMSF, cont, "radioOhneBuchholz", I18n.get("dialog.maastrichter.ranking.ohne.buchholz"), 8, 165,
+				140, 10, defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
 
 		addFixedLine(xMSF, cont, "sep4", 5, 179, 150, 2);
-		addLabel(xMSF, cont, "lblAnzVorrunden", "Anzahl Vorrunden (2-5):", 8, 183, 100, 10);
+		addLabel(xMSF, cont, "lblAnzVorrunden", I18n.get("dialog.maastrichter.anz.vorrunden.label"), 8, 183, 100, 10);
 		addNumericField(xMSF, cont, "nfAnzVorrunden", defaultAnzVorrunden, 2, 5, 112, 181, 40, 12);
 
 		addFixedLine(xMSF, cont, "sep5", 5, 200, 150, 2);
-		addLabel(xMSF, cont, "lblSpielbaumTeamAnzeige", "Spielbaum Team-Anzeige:", 8, 204, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbaumNr", "Teamnummer", 8, 216, 140, 10,
+		addLabel(xMSF, cont, "lblSpielbaumTeamAnzeige", I18n.get("dialog.maastrichter.spielbaum.anzeige.label"), 8,
+				204, 140, 10);
+		addRadioButton(xMSF, cont, "radioSpielbaumNr", I18n.get("dialog.maastrichter.auswahl.nr"), 8, 216, 140, 10,
 				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielbaumName", "Teamname", 8, 228, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbaumName", I18n.get("dialog.maastrichter.auswahl.name"), 8, 228, 140, 10,
 				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME);
 
-		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", "Spiel um Platz 3 und 4", 8, 242, 140, 10, defaultSpielUmPlatz3);
+		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 242, 140, 10,
+				defaultSpielUmPlatz3);
 
 		addFixedLine(xMSF, cont, "sep6", 5, 256, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenGroesse", "Max. Teams pro Gruppe:", 8, 260, 100, 10);
-		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 258, 40, 12);
-		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Gruppe:", 8, 275, 100, 10);
-		addNumericField(xMSF, cont, "nfMinRestGroesse", defaultMinRestGroesse, 1, 256, 112, 273, 40, 12);
+		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 260, 140, 10);
+		addRadioButton(xMSF, cont, "radioNachSiegen", I18n.get("dialog.maastrichter.gruppen.modus.nach.siegen"), 8,
+				272, 140, 10, defaultGruppenModus == MaastrichterGruppenModus.NACH_SIEGEN);
+		addRadioButton(xMSF, cont, "radioNachGroesse", I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse"), 8,
+				284, 140, 10, defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE);
+		addLabel(xMSF, cont, "lblGruppenModusHinweis", I18n.get("dialog.maastrichter.gruppen.modus.hinweis"), 8, 296,
+				150, 10);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 330, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 330, 60, 14);
+		addFixedLine(xMSF, cont, "sep7", 5, 310, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 314, 100,
+				10);
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 312, 40, 12);
+		addLabel(xMSF, cont, "lblMinRestGroesse", I18n.get("dialog.maastrichter.min.rest.groesse.label"), 8, 329, 100,
+				10);
+		addNumericField(xMSF, cont, "nfMinRestGroesse", defaultMinRestGroesse, 1, 256, 112, 327, 40, 12);
+
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 390, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 390, 60, 14);
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
@@ -201,11 +222,13 @@ public class MaastrichterTurnierParameterDialog {
 			KoSpielbaumTeamAnzeige spielbaumTeamAnzeige = isRadioSelected(xcc, "radioSpielbaumName")
 					? KoSpielbaumTeamAnzeige.NAME : KoSpielbaumTeamAnzeige.NR;
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbSpielUmPlatz3");
+			MaastrichterGruppenModus gruppenModus = isRadioSelected(xcc, "radioNachGroesse")
+					? MaastrichterGruppenModus.NACH_GROESSE : MaastrichterGruppenModus.NACH_SIEGEN;
 			int gruppenGroesse = readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse);
 			int minRestGroesse = readNumericField(xcc, "nfMinRestGroesse", defaultMinRestGroesse);
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
 					spielplanAnzeige, rankingModus, anzVorrunden, spielbaumTeamAnzeige,
-					SpielrundeSpielbahn.X, spielUmPlatz3, gruppenGroesse, minRestGroesse));
+					SpielrundeSpielbahn.X, spielUmPlatz3, gruppenGroesse, minRestGroesse, gruppenModus));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();

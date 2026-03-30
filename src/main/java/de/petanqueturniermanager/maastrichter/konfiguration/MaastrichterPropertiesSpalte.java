@@ -8,6 +8,7 @@ import java.util.List;
 
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
@@ -23,11 +24,19 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
 	private static final String KONFIG_PROP_ANZ_VORRUNDEN = "Anzahl Vorrunden";
+	static final String KONFIG_PROP_GRUPPEN_MODUS = "Gruppen-Modus";
 
 	static {
 		KONFIG_PROPERTIES.addAll(SchweizerPropertiesSpalte.KONFIG_PROPERTIES);
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_VORRUNDEN)
 				.setDefaultVal(3).setDescription("Anzahl Vorrunden im Schweizer System (2-5)").inSideBar());
+		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
+				.from(KONFIG_PROP_GRUPPEN_MODUS)
+				.setDefaultVal(MaastrichterGruppenModus.NACH_SIEGEN.name())
+				.setDescription("Wie Teams in Finalgruppen eingeteilt werden"))
+				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (A=max, B=max-1, ...)")
+				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Nach Gruppengr\u00f6\u00dfe (GruppenAufteilungRechner)")
+				.inSideBar());
 		// KO-Bracket-Properties wiederverwenden (keine Duplikation)
 		KoPropertiesSpalte.addKoBracketProperties(KONFIG_PROPERTIES);
 	}
@@ -99,6 +108,19 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 
 	public void setMinRestGroesse(int minRestGroesse) {
 		writeIntProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_REST_GROESSE, Math.max(1, minRestGroesse));
+	}
+
+	public MaastrichterGruppenModus getMaastrichterGruppenModus() {
+		String val = readStringProperty(KONFIG_PROP_GRUPPEN_MODUS);
+		try {
+			return MaastrichterGruppenModus.valueOf(val);
+		} catch (IllegalArgumentException | NullPointerException e) {
+			return MaastrichterGruppenModus.NACH_SIEGEN;
+		}
+	}
+
+	public void setMaastrichterGruppenModus(MaastrichterGruppenModus modus) {
+		setStringProperty(KONFIG_PROP_GRUPPEN_MODUS, modus.name());
 	}
 
 }

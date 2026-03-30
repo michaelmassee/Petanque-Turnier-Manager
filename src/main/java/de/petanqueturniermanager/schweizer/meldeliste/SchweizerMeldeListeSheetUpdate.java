@@ -48,7 +48,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 	protected SchweizerMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet,
 			TurnierSystem turnierSystem, String logPrefix) {
 		super(workingSpreadsheet, turnierSystem, logPrefix);
-		delegate = new SchweizerListeDelegate(this);
+		delegate = new SchweizerListeDelegate(this, turnierSystem);
 	}
 
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE;

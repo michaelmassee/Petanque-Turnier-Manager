@@ -697,7 +697,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (mitCadrage) {
 			int titelStartSpalte = mitBahn() ? cadrageBahnSpalte() : cadrageTeamSpalte();
 			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(titelStartSpalte, HEADER_ZEILE_TITEL), "Cadrage")
+					StringCellValue.from(xSheet, Position.from(titelStartSpalte, HEADER_ZEILE_TITEL), I18n.get("column.header.cadrage"))
 							.setEndPosMergeSpaltePlus(colGroupSize - 1)
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.CENTER)
@@ -705,7 +705,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCharColor("FFFFFF")
 							.setBorder(BorderFactory.from().allThin().toBorder()));
 			if (mitBahn()) {
-				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), "Bahn");
+				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), I18n.get("column.header.bahn"));
 			}
 			schreibeSpaltenHeader(xSheet, cadrageTeamSpalte(), teamHeader);
 			schreibeSpaltenHeader(xSheet, cadrageScoreSpalte(), "Pkt");
@@ -727,7 +727,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 			// Zeile 1: Spalten-Überschriften
 			if (mitBahn()) {
-				schreibeSpaltenHeader(xSheet, bahnSpalte(r), "Bahn");
+				schreibeSpaltenHeader(xSheet, bahnSpalte(r), I18n.get("column.header.bahn"));
 			}
 			schreibeSpaltenHeader(xSheet, teamSpalte(r), teamHeader);
 			schreibeSpaltenHeader(xSheet, scoreSpalte(r), "Pkt");
@@ -735,7 +735,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		// Sieger-Header (merged über siegerSpalte + siegerNameSpalte)
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), HEADER_ZEILE_TITEL), "Sieger")
+				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), HEADER_ZEILE_TITEL), I18n.get("column.header.sieger"))
 						.setEndPosMergeSpaltePlus(1)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
@@ -745,12 +745,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private String berechnRundenTitel(int r, int numRunden) {
 		if (r == numRunden) {
-			return "Finale";
+			return I18n.get("ko.runde.titel.finale");
 		} else if (r == numRunden - 1) {
-			return "Halbfinale";
+			return I18n.get("ko.runde.titel.halbfinale");
 		} else {
 			int anzTeamsInRunde = 1 << (numRunden - r + 1);
-			return "1/" + (anzTeamsInRunde / 2) + "-Finale";
+			return I18n.get("ko.runde.titel.ntel.finale", anzTeamsInRunde / 2);
 		}
 	}
 

@@ -63,9 +63,15 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 
 	private final ISheet sheet;
 	private final SchweizerKonfigurationSheet konfigurationSheet;
+	private final TurnierSystem turnierSystem;
 
 	SchweizerListeDelegate(ISheet sheet) {
+		this(sheet, TurnierSystem.SCHWEIZER);
+	}
+
+	SchweizerListeDelegate(ISheet sheet, TurnierSystem turnierSystem) {
 		this.sheet = checkNotNull(sheet);
+		this.turnierSystem = checkNotNull(turnierSystem);
 		konfigurationSheet = new SchweizerKonfigurationSheet(sheet.getWorkingSpreadsheet());
 	}
 
@@ -166,7 +172,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		sheet.getSheetHelper().setStringValueInCell(StringCellValue
 				.from(sheet.getXSpreadSheet(), Position.from(0, ERSTE_HEADER_ZEILE),
 						I18n.get("schweizer.meldeliste.header.turniersystem",
-								TurnierSystem.SCHWEIZER.getBezeichnung(), rankingInfo))
+								turnierSystem.getBezeichnung(), rankingInfo))
 				.setEndPosMergeSpaltePlus(2).setCharWeight(FontWeight.BOLD)
 				.setHoriJustify(CellHoriJustify.LEFT).setVertJustify(CellVertJustify2.TOP)
 				.setShrinkToFit(true).setCharColor("00599d"));
@@ -220,7 +226,8 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 				.setVertJustify(CellVertJustify2.CENTER)
 				.setComment(I18n.get("schweizer.meldeliste.comment.setzposition"))
-				.setEndPosMergeZeilePlus(1);
+				.setEndPosMergeZeilePlus(1)
+				.setRotate90();
 		sheet.getSheetHelper().setStringValueInCell(spHeader);
 
 		// Aktiv-Spalte: merged über beide Header-Zeilen

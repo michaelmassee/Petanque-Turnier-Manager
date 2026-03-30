@@ -102,7 +102,7 @@ public class SpielrundeHelper {
 				StringCellValue headerValue = StringCellValue.from(sheet, posHeaderZelle1).setRotateAngle(27000)
 						.setVertJustify(CellVertJustify2.CENTER).setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(headerColor).setCharHeight(headerCharHeight).setEndPosMergeZeilePlus(1)
-						.setValue("Bahn").setShrinkToFit(true)
+						.setValue(I18n.get("column.header.bahn")).setShrinkToFit(true)
 						.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
 						.setComment(I18n.get("comment.spielbahn"));
 				sheet.getSheetHelper().setStringValueInCell(headerValue);

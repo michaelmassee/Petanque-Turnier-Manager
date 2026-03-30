@@ -209,7 +209,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		getSheetHelper().setStringValueInCell(
 				header.spalte(spielerSpalte).spaltePlus(SPIELER_TEAM_OFFS_SPALTE).setValue("Team"));
 		getSheetHelper().setStringValueInCell(
-				header.spalte(spielerSpalte).spaltePlus(SPIELER_BAHN_NR_OFFS_SPALTE).setValue("Bahn"));
+				header.spalte(spielerSpalte).spaltePlus(SPIELER_BAHN_NR_OFFS_SPALTE).setValue(I18n.get("column.header.bahn")));
 	}
 
 	private String sVerweisSpielrundeSpalte(Position spielerNr, int letzteSpalte, int idx) throws GenerateException {

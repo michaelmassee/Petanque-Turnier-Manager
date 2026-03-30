@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
@@ -123,6 +124,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		konfigSheet.setAnzVorrunden(anzVorrunden);
 		konfigSheet.setGruppenGroesse(gruppenGroesse);
 		konfigSheet.setMinRestGroesse(minRestGroesse);
+		konfigSheet.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_SIEGEN);
 
 		// 2. Vorrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzVorrunden; runde++) {

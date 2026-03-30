@@ -94,4 +94,12 @@ public class MaastrichterKonfigurationSheet extends SchweizerKonfigurationSheet 
 		getPropertiesSpalte().setSpielbaumSpielUmPlatz3(anzeigen);
 	}
 
+	public MaastrichterGruppenModus getMaastrichterGruppenModus() {
+		return getPropertiesSpalte().getMaastrichterGruppenModus();
+	}
+
+	public void setMaastrichterGruppenModus(MaastrichterGruppenModus modus) {
+		getPropertiesSpalte().setMaastrichterGruppenModus(modus);
+	}
+
 }

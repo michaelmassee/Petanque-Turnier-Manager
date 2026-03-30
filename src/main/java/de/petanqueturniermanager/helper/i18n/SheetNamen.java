@@ -56,6 +56,8 @@ public final class SheetNamen {
     public static final String KEY_MAASTRICHTER_VORRUNDE_MUSTER     = "sheet.name.maastrichter.vorrunde.muster";
     /** Maastrichter Finalrunde: {0} = Gruppenbuchstabe. Beispiel: "Finalrunde A" */
     public static final String KEY_MAASTRICHTER_FINALRUNDE_MUSTER   = "sheet.name.maastrichter.finalrunde.muster";
+    /** KO-Finale-Gruppe: {0} = Buchstabe. Beispiel: "A-Finale" */
+    public static final String KEY_KO_FINALE_GRUPPE_MUSTER          = "sheet.name.ko.finale.gruppe.muster";
     /** Supermelee Anmeldungen: {0} = Spieltagnummer. Beispiel: "1. Spieltag Anmeldungen" */
     public static final String KEY_ANMELDUNGEN_MUSTER               = "sheet.name.anmeldungen.muster";
     /** Supermelee Teilnehmer: {0} = Spieltagnummer. Beispiel: "1. Spieltag Teilnehmer" */
@@ -83,6 +85,7 @@ public final class SheetNamen {
     public static final String LEGACY_SPIELRUNDE_PLAN_PRAEFIX       = "SpielrundePlan";
     public static final String LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX = "Vorrunde";
     public static final String LEGACY_MAASTRICHTER_FINALRUNDE_PRAEFIX = "Finalrunde";
+    public static final String LEGACY_KO_FINALE_GRUPPE_SUFFIX        = "Finale";
 
     private SheetNamen() {
     }
@@ -243,6 +246,18 @@ public final class SheetNamen {
     public static String maastrichterFinalrunde(String buchstabe) {
         var muster = getOderFallback(KEY_MAASTRICHTER_FINALRUNDE_MUSTER,
                 LEGACY_MAASTRICHTER_FINALRUNDE_PRAEFIX + " {0}");
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{buchstabe});
+    }
+
+    /**
+     * KO-Finale-Gruppe: z.B. "A-Finale".
+     *
+     * @param buchstabe Gruppenbuchstabe, z.B. "A", "B"
+     * @return lokalisierter Tabellenname
+     */
+    public static String koFinaleGruppe(String buchstabe) {
+        var muster = getOderFallback(KEY_KO_FINALE_GRUPPE_MUSTER,
+                "{0}-" + LEGACY_KO_FINALE_GRUPPE_SUFFIX);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{buchstabe});
     }
 
