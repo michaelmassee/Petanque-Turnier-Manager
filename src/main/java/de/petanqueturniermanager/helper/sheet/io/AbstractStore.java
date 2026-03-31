@@ -46,7 +46,7 @@ public abstract class AbstractStore<T> {
 	protected AbstractStore(WorkingSpreadsheet workingSpreadsheet) {
 		this.workingSpreadsheet = workingSpreadsheet;
 		xStorable = workingSpreadsheet.getXStorable();
-		location = xStorable.getLocation();
+		location = xStorable != null ? xStorable.getLocation() : "";
 		sheetHelper = new SheetHelper(workingSpreadsheet);
 	}
 
