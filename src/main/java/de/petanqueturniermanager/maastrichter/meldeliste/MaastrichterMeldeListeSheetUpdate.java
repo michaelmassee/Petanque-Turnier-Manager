@@ -10,6 +10,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -26,7 +27,8 @@ public class MaastrichterMeldeListeSheetUpdate extends SchweizerMeldeListeSheetU
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE;
 
 	public MaastrichterMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Meldeliste");
+		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Meldeliste",
+				new MaastrichterKonfigurationSheet(workingSpreadsheet));
 	}
 
 	@Override
@@ -38,11 +40,6 @@ public class MaastrichterMeldeListeSheetUpdate extends SchweizerMeldeListeSheetU
 	@Override
 	public TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
-	}
-
-	@Override
-	protected void doRun() throws GenerateException {
-		upDateSheet();
 	}
 
 }

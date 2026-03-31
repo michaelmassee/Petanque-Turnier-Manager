@@ -23,6 +23,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -70,9 +71,13 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	}
 
 	SchweizerListeDelegate(ISheet sheet, TurnierSystem turnierSystem) {
+		this(sheet, turnierSystem, new SchweizerKonfigurationSheet(sheet.getWorkingSpreadsheet()));
+	}
+
+	SchweizerListeDelegate(ISheet sheet, TurnierSystem turnierSystem, SchweizerKonfigurationSheet konfigurationSheet) {
 		this.sheet = checkNotNull(sheet);
 		this.turnierSystem = checkNotNull(turnierSystem);
-		konfigurationSheet = new SchweizerKonfigurationSheet(sheet.getWorkingSpreadsheet());
+		this.konfigurationSheet = checkNotNull(konfigurationSheet);
 	}
 
 	SchweizerKonfigurationSheet getKonfigurationSheet() {
@@ -373,18 +378,34 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		return ERSTE_DATEN_ZEILE;
 	}
 
-	/**
-	 * Liest alle aktiven Team-Meldungen aus dem Sheet.
-	 * Fallback: Wenn kein Team einen Aktiv-Wert hat, nehmen alle teil.
-	 */
+	/** Liest alle aktiven Team-Meldungen aus dem Sheet (Aktiv-Spalte == AKTIV_WERT_NIMMT_TEIL). */
 	TeamMeldungen getAktiveMeldungen() throws GenerateException {
 		XSpreadsheet xSheet = sheet.getXSpreadSheet();
 		int letzteZeile = letzteZeileMitDaten(xSheet);
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			int aktivWert = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getAktivSpalte(), zeile));
+			if (aktivWert == AKTIV_WERT_NIMMT_TEIL) {
+				int setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getSetzPositionSpalte(), zeile));
+				meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
+			}
+		}
+		return meldungen;
+	}
 
-		record TeamZeile(int nr, int setzPos, int aktivWert) {}
-		List<TeamZeile> alleTeams = new ArrayList<>();
-		boolean hatAktivEintrag = false;
-
+	/** Liest alle Team-Meldungen aus dem Sheet, unabhängig vom Aktiv-Status. */
+	TeamMeldungen getAlleMeldungen() throws GenerateException {
+		XSpreadsheet xSheet = sheet.getXSpreadSheet();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		TeamMeldungen meldungen = new TeamMeldungen();
 		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
 			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
 			if (vorname == null || vorname.isEmpty()) {
@@ -395,20 +416,27 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				continue;
 			}
 			int setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getSetzPositionSpalte(), zeile));
-			int aktivWert = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getAktivSpalte(), zeile));
-			if (aktivWert > 0) {
-				hatAktivEintrag = true;
-			}
-			alleTeams.add(new TeamZeile(nr, setzPos, aktivWert));
-		}
-
-		TeamMeldungen meldungen = new TeamMeldungen();
-		for (TeamZeile tz : alleTeams) {
-			if (!hatAktivEintrag || tz.aktivWert() == AKTIV_WERT_NIMMT_TEIL) {
-				meldungen.addTeamWennNichtVorhanden(Team.from(tz.nr()).setSetzPos(tz.setzPos()));
-			}
+			meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
 		}
 		return meldungen;
+	}
+
+	/** Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL (1). */
+	void alleTeamsAktivieren() throws GenerateException {
+		XSpreadsheet xSheet = sheet.getXSpreadSheet();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(getVornameSpalte(0), zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			sheet.getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(xSheet, Position.from(getAktivSpalte(), zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+		}
 	}
 
 	/**

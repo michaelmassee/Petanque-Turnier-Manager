@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.sun.star.frame.XStorable;
 import com.sun.star.sheet.XCalculatable;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -40,6 +41,10 @@ public class SheetRunnerTest {
 		xCalculatableMock = Mockito.mock(XCalculatable.class);
 
 		Mockito.when(workingSpreadsheetMock.getxCalculatable()).thenReturn(xCalculatableMock);
+		// XStorable mocken: kein Speicherpfad → autoSave/backUp überspringen
+		var xStorableMock = Mockito.mock(XStorable.class);
+		Mockito.when(xStorableMock.getLocation()).thenReturn("");
+		Mockito.when(workingSpreadsheetMock.getXStorable()).thenReturn(xStorableMock);
 
 		testRunner = new TestSheetRunner(workingSpreadsheetMock, TurnierSystem.KEIN, "TestPrefix", processBoxMock);
 	}

@@ -38,6 +38,14 @@ public abstract class SheetRunner extends Thread {
 	// package-private: damit SheetRunnerTest den Koordinator austauschen kann
 	static SheetRunnerKoordinator koordinator = new SheetRunnerKoordinator();
 
+	/**
+	 * Gesetzt von {@link #start()}, um anzuzeigen dass der Koordinator bereits
+	 * vor dem Thread-Start vorgemerkt wurde. Verhindert die Race-Condition zwischen
+	 * {@code Thread.start()} und dem eigentlichen {@code run()}-Aufruf, in der
+	 * {@code isRunning()} fälschlicherweise {@code false} zurückgibt.
+	 */
+	private volatile boolean koordinatorVorgekoppelt = false;
+
 	private String logPrefix = null;
 
 	protected String getLogPrefix() {
@@ -76,16 +84,41 @@ public abstract class SheetRunner extends Thread {
 		koordinator.addZustandsListener(listener);
 	}
 
+	/**
+	 * Startet den SheetRunner asynchron als Thread und schließt dabei die Race-Condition,
+	 * die zwischen {@code Thread.start()} und dem eigentlichen {@code run()}-Einstieg entsteht:
+	 * In diesem Zeitfenster sah {@code isRunning()} fälschlicherweise {@code false}, was
+	 * dazu führen konnte, dass der {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * parallel einen zweiten Runner startete und damit das Prozess-Fenster zweimal öffnete.
+	 * <p>
+	 * Durch {@link #koordinatorVorgekoppelt} erkennt {@link #run()}, dass der Koordinator
+	 * bereits gesetzt wurde, und überspringt die erneute Prüfung.
+	 */
+	@Override
+	public final synchronized void start() {
+		if (!koordinator.getAndSetLaeuft(true)) {
+			koordinatorVorgekoppelt = true;
+			super.start();
+		} else {
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
+					.caption(I18n.get("msg.caption.aktive.verarbeitung"))
+					.message(I18n.get("msg.text.verarbeitung.laeuft")).show();
+		}
+	}
+
 	@Override
 	public final void run() {
-		if (!koordinator.getAndSetLaeuft(true)) {
+		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
+		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
 			koordinator.setRunner(this);
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
 
 			try {
-				processBox().run();
+				if (koordinatorVorgekoppelt) {
+					processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
+				}
 				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()) {
 					updateKonfigurationSheet();
 				}
@@ -102,10 +135,16 @@ public abstract class SheetRunner extends Thread {
 				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 				koordinator.setRunner(null);
 				koordinator.benachrichtigeListener(); // Menü reaktivieren
-				if (isFehler) {
-					processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
+				if (koordinatorVorgekoppelt || isFehler) {
+					// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
+					if (isFehler) {
+						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
+					} else {
+						processBox().visible().info(I18n.get("processbox.fertig.status")).ready();
+					}
 				} else {
-					processBox().visible().info(I18n.get("processbox.fertig.status")).ready();
+					// Listener-ausgelöst, kein Fehler: nur in ProcessBox loggen, Fenster NICHT aufpoppen
+					processBox().info(I18n.get("processbox.fertig.status"));
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
 			}
@@ -228,6 +267,30 @@ public abstract class SheetRunner extends Thread {
 
 	public static boolean isRunning() {
 		return koordinator.isRunning();
+	}
+
+	/**
+	 * Signalisiert, dass das nächste {@code selectionChanged}-Ereignis zur Rangliste
+	 * vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+	 * ignoriert werden soll.
+	 * <p>
+	 * Muss direkt nach {@code getSheetHelper().setActiveSheet(sheet)} aufgerufen werden,
+	 * wenn das Sheet die Rangliste ist. LibreOffice feuert {@code selectionChanged}
+	 * asynchron – das Ereignis kann nach {@code setLaeuft(false)} ankommen und würde
+	 * sonst einen unerwünschten zweiten Neuaufbau auslösen.
+	 */
+	public static void unterdrückeNaechstesSelectionChange() {
+		koordinator.unterdrückeNaechstesSelectionChange();
+	}
+
+	/**
+	 * Liest und löscht das Unterdrückungs-Flag atomar.
+	 * Wird vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener} genutzt.
+	 *
+	 * @return {@code true} wenn das nächste selectionChanged ignoriert werden soll
+	 */
+	public static boolean consumeSelectionChangeSuppression() {
+		return koordinator.consumeSelectionChangeSuppression();
 	}
 
 	// for mocking

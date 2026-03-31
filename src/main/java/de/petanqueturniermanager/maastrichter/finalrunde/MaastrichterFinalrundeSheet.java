@@ -22,7 +22,9 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -88,12 +90,16 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	public void doRun() throws GenerateException {
 		processBoxinfo("processbox.maastrichter.finalrunde.erstellen");
 
+		if (!pruefeUndAktualisiereVorrundenRangliste()) {
+			return;
+		}
+
 		var meldeliste = new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 		if (aktiveMeldungen == null || aktiveMeldungen.size() < 2) {
-			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("Maastrichter Finalrunde")
-					.message("Mindestens 2 aktive Teams erforderlich.")
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("maastrichter.finalrunde.caption"))
+					.message(I18n.get("maastrichter.finalrunde.fehler.zu.wenige.teams"))
 					.show();
 			return;
 		}
@@ -111,9 +117,9 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 				.sortiereNachAuswertungskriterien(ergebnisse, modus);
 
 		if (sortiert.isEmpty()) {
-			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
-					.caption("Maastrichter Finalrunde")
-					.message("Keine Ergebnisse gefunden. Bitte zuerst alle Vorrunden eintragen.")
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("maastrichter.finalrunde.caption"))
+					.message(I18n.get("maastrichter.finalrunde.fehler.keine.ergebnisse"))
 					.show();
 			return;
 		}
@@ -304,6 +310,28 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 			}
 		}
 		return gruppeTeams;
+	}
+
+	/**
+	 * Prüft ob die Vorrunden-Rangliste vorhanden ist. Wenn nicht, wird der Benutzer gefragt ob sie
+	 * erstellt werden soll. Wenn vorhanden (oder gerade erstellt), wird sie immer aktualisiert.
+	 *
+	 * @return true wenn die Rangliste vorhanden und aktualisiert wurde, false wenn abgebrochen
+	 */
+	private boolean pruefeUndAktualisiereVorrundenRangliste() throws GenerateException {
+		var ranglisteUpdate = new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet());
+		if (ranglisteUpdate.getXSpreadSheet() == null) {
+			MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+					.caption(I18n.get("maastrichter.finalrunde.vorrunden.rangliste.fehlt.caption"))
+					.message(I18n.get("maastrichter.finalrunde.vorrunden.rangliste.fehlt.text"))
+					.show();
+			if (result != MessageBoxResult.YES) {
+				return false;
+			}
+		}
+		processBoxinfo("processbox.rangliste.aktualisieren");
+		ranglisteUpdate.doRun();
+		return true;
 	}
 
 	/**

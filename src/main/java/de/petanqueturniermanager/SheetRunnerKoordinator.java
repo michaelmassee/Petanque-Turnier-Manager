@@ -32,6 +32,15 @@ class SheetRunnerKoordinator {
     private final List<Runnable> zustandsListener =
             Collections.synchronizedList(new ArrayList<>());
 
+    /**
+     * Wird gesetzt wenn der Runner {@code setActiveSheet()} aufruft, damit der
+     * {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+     * das dadurch ausgelöste {@code selectionChanged}-Ereignis ignoriert.
+     * Asynchrone Ereignisse aus LibreOffice können sonst nach {@code setLaeuft(false)}
+     * ankommen und einen unerwünschten zweiten Neuaufbau starten.
+     */
+    private final AtomicBoolean selectionChangeUnterdrücken = new AtomicBoolean(false);
+
     /** Gibt zurück, ob aktuell ein {@link SheetRunner} aktiv ist. */
     boolean isRunning() {
         return laeuft.get();
@@ -84,6 +93,24 @@ class SheetRunnerKoordinator {
         laeuft.set(wert);
     }
 
+    /**
+     * Signalisiert, dass das nächste {@code selectionChanged}-Ereignis, das auf die
+     * Rangliste zeigt, vom {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
+     * ignoriert werden soll. Wird gesetzt bevor der Runner {@code setActiveSheet()} aufruft.
+     */
+    void unterdrückeNaechstesSelectionChange() {
+        selectionChangeUnterdrücken.set(true);
+    }
+
+    /**
+     * Liest und löscht das Unterdrückungs-Flag atomar.
+     *
+     * @return {@code true} wenn das nächste selectionChanged ignoriert werden soll
+     */
+    boolean consumeSelectionChangeSuppression() {
+        return selectionChangeUnterdrücken.getAndSet(false);
+    }
+
     /** Benachrichtigt alle registrierten Zustandslistener. */
     void benachrichtigeListener() {
         for (Runnable r : new ArrayList<>(zustandsListener)) {
@@ -100,5 +127,6 @@ class SheetRunnerKoordinator {
         laeuft.set(false);
         aktuellerRunner = null;
         zustandsListener.clear();
+        selectionChangeUnterdrücken.set(false);
     }
 }

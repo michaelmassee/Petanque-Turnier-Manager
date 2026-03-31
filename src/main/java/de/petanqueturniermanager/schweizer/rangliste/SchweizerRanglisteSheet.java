@@ -193,6 +193,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 		if (SheetRunner.isRunning()) {
 			getSheetHelper().setActiveSheet(sheet);
+			SheetRunner.unterdrückeNaechstesSelectionChange();
 		}
 		logger.debug("doRunIntern ENDE – Thread='{}'", Thread.currentThread().getName());
 	}
