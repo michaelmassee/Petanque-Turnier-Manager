@@ -1,19 +1,15 @@
 package de.petanqueturniermanager.helper.msgbox;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -64,9 +60,11 @@ public class ProcessBox {
 	private ArrayList<ImageIcon> inworkIcons;
 
 	private DialogTools dialogTools;
-	private final ScheduledExecutorService drawInWorkIcon;
-	private ScheduledFuture<?> drawInWorkIconScheduled;
+	private Timer spinnerTimer;
+	private int inWorkImgIdx = 0;
 
+	private volatile boolean disposed = false;
+	private final AtomicBoolean laeuft = new AtomicBoolean(false);
 	private boolean isFehler = false;
 	private final XComponentContext xContext;
 
@@ -74,13 +72,15 @@ public class ProcessBox {
 		this.xContext = checkNotNull(xContext);
 		if (headlessMode) {
 			frame = null;
-			drawInWorkIcon = null;
 			return;
 		}
 		frame = new JFrame();
 		dialogTools = DialogTools.from(xContext, frame);
-		drawInWorkIcon = Executors.newScheduledThreadPool(1);
 		inworkIcons = new ArrayList<>();
+		spinnerTimer = new Timer(100, _ -> {
+			statusLabel.setIcon(inworkIcons.get(inWorkImgIdx));
+			inWorkImgIdx = (inWorkImgIdx + 1) % inworkIcons.size();
+		});
 		logOut = null;
 		logfileBtn = null;
 		cancelBtn = null;
@@ -93,11 +93,12 @@ public class ProcessBox {
 	}
 
 	public static ProcessBox from() {
-		if (ProcessBox.processBox == null) {
+		var pb = ProcessBox.processBox; // ein einzelner volatile-Lesezugriff
+		if (pb == null) {
 			logger.error("ProcessBox nicht initialisiert");
-			throw new NullPointerException("ProcessBox nicht initialisiert");
+			throw new IllegalStateException("ProcessBox nicht initialisiert");
 		}
-		return ProcessBox.processBox;
+		return pb;
 	}
 
 	/**
@@ -115,11 +116,10 @@ public class ProcessBox {
 	 * nur intern verwenden
 	 */
 	private void _dispose() {
-		if (drawInWorkIcon != null) {
-			drawInWorkIcon.shutdownNow();
-		}
-		if (drawInWorkIconScheduled != null) {
-			drawInWorkIconScheduled.cancel(true);
+		disposed = true;
+		laeuft.set(false);
+		if (spinnerTimer != null) {
+			spinnerTimer.stop();
 		}
 		if (frame != null) {
 			frame.dispose();
@@ -133,6 +133,7 @@ public class ProcessBox {
 	 */
 	public static ProcessBox forceinit(XComponentContext xContext) {
 		checkNotNull(xContext);
+		checkState(!SheetRunner.isRunning(), "forceinit darf nicht aufgerufen werden während SheetRunner aktiv ist");
 		synchronized (ProcessBox.class) {
 			if (ProcessBox.processBox != null) {
 				ProcessBox.processBox._dispose();
@@ -243,8 +244,8 @@ public class ProcessBox {
 				g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
 				int w = getWidth();
 				int h = getHeight();
-				Color color1 = new Color(Integer.valueOf("eaf4ff", 16).intValue());
-				Color color2 = new Color(Integer.valueOf("d6e9ff", 16).intValue());
+				Color color1 = new Color(Integer.parseInt("eaf4ff", 16));
+				Color color2 = new Color(Integer.parseInt("d6e9ff", 16));
 				GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
 				g2d.setPaint(gp);
 				g2d.fillRect(0, 0, w, h);
@@ -290,13 +291,7 @@ public class ProcessBox {
 			logfileBtn = new JButton("Log");
 			logfileBtn.setEnabled(true);
 			logfileBtn.setToolTipText("Logdatei");
-			logfileBtn.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Log4J.openLogFile();
-				}
-			});
+			logfileBtn.addActionListener(_ -> Log4J.openLogFile());
 
 			gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
 			gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
@@ -309,13 +304,7 @@ public class ProcessBox {
 			cancelBtn = new JButton("Stop");
 			cancelBtn.setEnabled(false);
 			cancelBtn.setToolTipText("Stop verarbeitung");
-			cancelBtn.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					SheetRunner.cancelRunner();
-				}
-			});
+			cancelBtn.addActionListener(_ -> SheetRunner.cancelRunner());
 
 			gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
 			gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
@@ -412,8 +401,9 @@ public class ProcessBox {
 
 	/** Zeigt die ProcessBox im Vordergrund – sicher aufrufbar auch wenn noch nicht initialisiert. */
 	public static void zeigeImVordergrund() {
-		if (processBox != null) {
-			SwingUtilities.invokeLater(() -> processBox.visible().toFront());
+		var pb = processBox; // ein einzelner volatile-Lesezugriff
+		if (pb != null) {
+			SwingUtilities.invokeLater(() -> pb.visible().toFront());
 		}
 	}
 
@@ -439,40 +429,49 @@ public class ProcessBox {
 	public ProcessBox run() {
 		logger.debug("ProcessBox run");
 		if (headlessMode) return this;
-		if (drawInWorkIconScheduled != null && !drawInWorkIconScheduled.isDone()) {
+		if (!laeuft.compareAndSet(false, true)) {
+			return this;
+		}
+		if (disposed) {
+			laeuft.set(false);
 			return this;
 		}
 		toFront();
-		if (cancelBtn != null) {
-			cancelBtn.setEnabled(true);
-		}
-		statusLabel.setToolTipText("In Arbeit");
-		drawInWorkIconScheduled = drawInWorkIcon.scheduleAtFixedRate(new UpdateInWorkIcon(inworkIcons, statusLabel), 0,
-				100, TimeUnit.MILLISECONDS);
+		SwingUtilities.invokeLater(() -> {
+			if (cancelBtn != null) {
+				cancelBtn.setEnabled(true);
+			}
+			statusLabel.setToolTipText("In Arbeit");
+			spinnerTimer.restart();
+		});
 		return this;
 	}
 
 	public ProcessBox ready() {
-		if (headlessMode) return this;
-		if (drawInWorkIconScheduled != null) {
-			drawInWorkIconScheduled.cancel(true);
+		if (headlessMode || disposed) return this;
+		if (!laeuft.getAndSet(false)) {
+			return this;
+		}
+		if (spinnerTimer != null) {
+			spinnerTimer.stop();
 		}
 		toFront();
-		if (cancelBtn != null) {
-			cancelBtn.setEnabled(false);
-		}
-
-		if (isFehler) {
-			if (statusLabel != null && imageIconError != null) {
-				statusLabel.setIcon(imageIconError);
-				statusLabel.setToolTipText("Fehler");
+		SwingUtilities.invokeLater(() -> {
+			if (cancelBtn != null) {
+				cancelBtn.setEnabled(false);
 			}
-		} else {
-			if (statusLabel != null && imageIconReady != null) {
-				statusLabel.setIcon(imageIconReady);
-				statusLabel.setToolTipText("Fertig");
+			if (isFehler) {
+				if (statusLabel != null && imageIconError != null) {
+					statusLabel.setIcon(imageIconError);
+					statusLabel.setToolTipText("Fehler");
+				}
+			} else {
+				if (statusLabel != null && imageIconReady != null) {
+					statusLabel.setIcon(imageIconReady);
+					statusLabel.setToolTipText("Fertig");
+				}
 			}
-		}
+		});
 		return this;
 	}
 
@@ -483,25 +482,4 @@ public class ProcessBox {
 		return frame;
 	}
 
-}
-// Animated gifs are not working !
-
-class UpdateInWorkIcon implements Runnable {
-	private int inWorkImgIdx = 0;
-	private final ArrayList<ImageIcon> inworkIcons;
-	private final JLabel statusLabel;
-
-	public UpdateInWorkIcon(ArrayList<ImageIcon> inworkIcons, JLabel statusLabel) {
-		this.inworkIcons = inworkIcons;
-		this.statusLabel = statusLabel;
-	}
-
-	@Override
-	public void run() {
-		if (inWorkImgIdx >= inworkIcons.size()) {
-			inWorkImgIdx = 0;
-		}
-		statusLabel.setIcon(inworkIcons.get(inWorkImgIdx));
-		inWorkImgIdx++;
-	}
 }
