@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
@@ -25,6 +26,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -530,6 +532,21 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	SpielerMeldungen getAlleMeldungen() throws GenerateException {
 		return meldeListeHelperGetMeldungen(getSpielTag(), null);
+	}
+
+	/** Setzt alle Spieler mit gültiger Spielernummer auf SpielrundeGespielt.JA (aktiv) für den aktuellen Spieltag. */
+	void alleSpielAktivieren() throws GenerateException {
+		XSpreadsheet xSheet = sheet.getXSpreadSheet();
+		int letzteZeile = meldungenSpalte.letzteZeileMitSpielerName();
+		int spieltagSpalte = aktuelleSpieltagSpalte();
+		NumberCellValue celVal = NumberCellValue.from(xSheet, Position.from(spieltagSpalte, ERSTE_DATEN_ZEILE));
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(SPIELER_NR_SPALTE, zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			sheet.getSheetHelper().setNumberValueInCell(celVal.setValue((double) SpielrundeGespielt.JA.getId()).zeile(zeile));
+		}
 	}
 
 	private SpielerMeldungen meldeListeHelperGetMeldungen(SpielTagNr spieltag,

@@ -12,6 +12,10 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -151,6 +155,20 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 		setSpielRundeNr(aktuelleSpielrunde);
 		getMeldeListe().upDateSheet();
 		SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
+
+		if (aktiveMeldungen.size() == 0) {
+			SpielerMeldungen alleMeldungen = getMeldeListe().getAlleMeldungen();
+			if (alleMeldungen.size() > 0) {
+				MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+						.caption(I18n.get("msg.caption.keine.aktiven.meldungen"))
+						.message(I18n.get("msg.text.keine.aktiven.spieler.aktivieren", alleMeldungen.size()))
+						.show();
+				if (result == MessageBoxResult.YES) {
+					getMeldeListe().alleSpielAktivieren();
+					aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
+				}
+			}
+		}
 
 		if (!canStart(aktiveMeldungen)) {
 			return false;

@@ -40,9 +40,4 @@ public class MaastrichterMeldeListeSheetUpdate extends SchweizerMeldeListeSheetU
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
-	@Override
-	protected void doRun() throws GenerateException {
-		upDateSheet();
-	}
-
 }

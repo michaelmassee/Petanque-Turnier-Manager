@@ -14,7 +14,11 @@ import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -107,6 +111,10 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 	@Override
 	public SpielerMeldungen getAlleMeldungen() throws GenerateException {
 		return delegate.getAlleMeldungen();
+	}
+
+	public void alleSpielAktivieren() throws GenerateException {
+		delegate.alleSpielAktivieren();
 	}
 
 	@Override
@@ -227,5 +235,29 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 	protected void doRun() throws GenerateException {
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		upDateSheet();
+		pruefeUndFragObAlleAktivieren();
+	}
+
+	private void pruefeUndFragObAlleAktivieren() throws GenerateException {
+		SpielerMeldungen aktiveMeldungen = getAktiveMeldungen();
+		if (aktiveMeldungen.size() > 0) {
+			return;
+		}
+		SpielerMeldungen alleMeldungen = getAlleMeldungen();
+		if (alleMeldungen.size() == 0) {
+			return;
+		}
+		MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+				.caption(I18n.get("msg.caption.keine.aktiven.meldungen"))
+				.message(I18n.get("msg.text.keine.aktiven.spieler.aktivieren", alleMeldungen.size()))
+				.show();
+		if (result == MessageBoxResult.YES) {
+			alleSpielAktivieren();
+		} else {
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
+					.message(I18n.get("supermelee.spielrunde.fehler.zu.wenige.meldungen", 0))
+					.show();
+		}
 	}
 }

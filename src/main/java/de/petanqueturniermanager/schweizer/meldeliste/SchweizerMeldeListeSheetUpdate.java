@@ -16,6 +16,11 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -26,7 +31,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 
 public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
@@ -117,6 +121,14 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 		return delegate.getAktiveMeldungen();
 	}
 
+	public TeamMeldungen getAlleMeldungen() throws GenerateException {
+		return delegate.getAlleMeldungen();
+	}
+
+	public void alleTeamsAktivieren() throws GenerateException {
+		delegate.alleTeamsAktivieren();
+	}
+
 	public int getTeamNrByTeamname(String teamname) throws GenerateException {
 		return delegate.getTeamNrByTeamname(teamname);
 	}
@@ -143,16 +155,52 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 
 	@Override
 	protected void doRun() throws GenerateException {
+		if (vollstaendigAktualisieren()) {
+			pruefeUndFragObAlleAktivieren();
+		}
+	}
+
+	/**
+	 * Bereinigt, sortiert, vergibt Nummern und aktualisiert das Sheet vollständig.
+	 * Wird von doRun() und von Spielrunde-Sheets vor dem Erstellen einer neuen Runde aufgerufen.
+	 *
+	 * @return true wenn das Sheet gefunden und aktualisiert wurde, false wenn kein Sheet vorhanden
+	 */
+	public boolean vollstaendigAktualisieren() throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();
 		if (xSheet == null) {
 			logger.warn("Schweizer Meldeliste nicht gefunden");
-			return;
+			return false;
 		}
 		stringsBesinigen(xSheet);
 		teamnummernVergeben(xSheet);
 		nachTeamNrSortieren(xSheet);
 		pruefeAufDoppelteTeamNr(xSheet);
 		upDateSheet();
+		return true;
+	}
+
+	private void pruefeUndFragObAlleAktivieren() throws GenerateException {
+		TeamMeldungen aktiveMeldungen = getAktiveMeldungen();
+		if (aktiveMeldungen.size() > 0) {
+			return;
+		}
+		TeamMeldungen alleMeldungen = getAlleMeldungen();
+		if (alleMeldungen.size() == 0) {
+			return;
+		}
+		MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+				.caption(I18n.get("msg.caption.keine.aktiven.meldungen"))
+				.message(I18n.get("msg.text.keine.aktiven.teams.aktivieren", alleMeldungen.size()))
+				.show();
+		if (result == MessageBoxResult.YES) {
+			alleTeamsAktivieren();
+		} else {
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
+					.message(I18n.get("schweizer.spielrunde.fehler.zu.wenige.meldungen", 0))
+					.show();
+		}
 	}
 
 	private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
