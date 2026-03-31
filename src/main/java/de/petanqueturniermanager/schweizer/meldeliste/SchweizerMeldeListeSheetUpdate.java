@@ -55,6 +55,13 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 		delegate = new SchweizerListeDelegate(this, turnierSystem);
 	}
 
+	/** Konstruktor für Subklassen, die ein abweichendes Konfigurationssheet benötigen (z.B. Maastrichter). */
+	protected SchweizerMeldeListeSheetUpdate(WorkingSpreadsheet workingSpreadsheet,
+			TurnierSystem turnierSystem, String logPrefix, SchweizerKonfigurationSheet konfigurationSheet) {
+		super(workingSpreadsheet, turnierSystem, logPrefix);
+		delegate = new SchweizerListeDelegate(this, turnierSystem, konfigurationSheet);
+	}
+
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE;
 
 	@Override

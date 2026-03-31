@@ -66,6 +66,7 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 		// setActiveSheet nur wenn über SheetRunner.run() aufgerufen (isRunning=true).
 		if (SheetRunner.isRunning()) {
 			getSheetHelper().setActiveSheet(sheet);
+			SheetRunner.unterdrückeNaechstesSelectionChange();
 		}
 		logger.debug("RanglisteUpdate ENDE – Thread='{}'", Thread.currentThread().getName());
 	}

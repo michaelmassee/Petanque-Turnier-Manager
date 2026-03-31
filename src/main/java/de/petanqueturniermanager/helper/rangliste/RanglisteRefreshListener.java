@@ -188,6 +188,13 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 
 					if (istAufRangliste && !warAufRangliste && !SheetRunner.isRunning()
 							&& istPassendesDokument(xDoc)) {
+						// Flag erst hier konsumieren (wenn isRunning()==false), damit ein
+						// synchrones Ereignis das Flag nicht vorzeitig verbraucht und das
+						// asynchrone Ereignis danach unkontrolliert durchrutscht.
+						if (SheetRunner.consumeSelectionChangeSuppression()) {
+							logger.debug("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
+							return;
+						}
 						logger.warn("selectionChanged: REBUILD getriggert – Thread='{}', isRunning={}",
 								Thread.currentThread().getName(), SheetRunner.isRunning());
 						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
@@ -225,6 +232,10 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 			if (!ranglisteMatch.test(xDoc, aktuellesSheet)) return;
 			if (SheetRunner.isRunning()) return;
 			if (!istPassendesDokument(xDoc)) return;
+			if (SheetRunner.consumeSelectionChangeSuppression()) {
+				logger.debug("onFocus: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
+				return;
+			}
 
 			logger.debug("OnFocus mit Rangliste aktiv → automatischer Neuaufbau");
 			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();

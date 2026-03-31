@@ -71,9 +71,13 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 	}
 
 	SchweizerListeDelegate(ISheet sheet, TurnierSystem turnierSystem) {
+		this(sheet, turnierSystem, new SchweizerKonfigurationSheet(sheet.getWorkingSpreadsheet()));
+	}
+
+	SchweizerListeDelegate(ISheet sheet, TurnierSystem turnierSystem, SchweizerKonfigurationSheet konfigurationSheet) {
 		this.sheet = checkNotNull(sheet);
 		this.turnierSystem = checkNotNull(turnierSystem);
-		konfigurationSheet = new SchweizerKonfigurationSheet(sheet.getWorkingSpreadsheet());
+		this.konfigurationSheet = checkNotNull(konfigurationSheet);
 	}
 
 	SchweizerKonfigurationSheet getKonfigurationSheet() {

@@ -40,7 +40,7 @@ public class ProcessBox {
 	private static final int MIN_HEIGHT = 200;
 	private static final int MIN_WIDTH = 600;
 	private static final String TITLE = "Pétanque Turnier Manager";
-	private static ProcessBox processBox;
+	private static volatile ProcessBox processBox;
 	private static boolean headlessMode = false;
 	private static final SimpleDateFormat SIMPLEDATEFORMAT = new SimpleDateFormat("HH:mm:ss");
 
@@ -104,9 +104,10 @@ public class ProcessBox {
 	 * Box schließen, kann wieder geöfnet werden
 	 */
 	public static void dispose() {
-		// zuerst prüfen ob noch vorhanden
-		if (ProcessBox.processBox != null) {
-			from()._dispose();
+		synchronized (ProcessBox.class) {
+			if (ProcessBox.processBox != null) {
+				ProcessBox.processBox._dispose();
+			}
 		}
 	}
 
@@ -114,6 +115,12 @@ public class ProcessBox {
 	 * nur intern verwenden
 	 */
 	private void _dispose() {
+		if (drawInWorkIcon != null) {
+			drawInWorkIcon.shutdownNow();
+		}
+		if (drawInWorkIconScheduled != null) {
+			drawInWorkIconScheduled.cancel(true);
+		}
 		if (frame != null) {
 			frame.dispose();
 		}
@@ -122,28 +129,31 @@ public class ProcessBox {
 	}
 
 	/**
-	 * new Box with XComponentContext
-	 * 
-	 * @param xContext
-	 * @return
+	 * Neue Box anlegen; vorhandene Instanz wird vorher disposed.
 	 */
 	public static ProcessBox forceinit(XComponentContext xContext) {
 		checkNotNull(xContext);
-		ProcessBox.processBox = new ProcessBox(xContext);
-		return ProcessBox.processBox;
+		synchronized (ProcessBox.class) {
+			if (ProcessBox.processBox != null) {
+				ProcessBox.processBox._dispose();
+			}
+			ProcessBox.processBox = new ProcessBox(xContext);
+			return ProcessBox.processBox;
+		}
 	}
 
 	/**
-	 * only once !
-	 * 
-	 * @param xContext
-	 * @return
+	 * Einmalige Initialisierung; bei bereits vorhandener Instanz wird diese zurückgegeben.
 	 */
 	public static ProcessBox init(XComponentContext xContext) {
 		logger.debug("ProcessBox INIT");
 		checkNotNull(xContext);
 		if (ProcessBox.processBox == null) {
-			ProcessBox.processBox = new ProcessBox(xContext);
+			synchronized (ProcessBox.class) {
+				if (ProcessBox.processBox == null) {
+					ProcessBox.processBox = new ProcessBox(xContext);
+				}
+			}
 		}
 		return ProcessBox.processBox;
 	}
@@ -429,6 +439,9 @@ public class ProcessBox {
 	public ProcessBox run() {
 		logger.debug("ProcessBox run");
 		if (headlessMode) return this;
+		if (drawInWorkIconScheduled != null && !drawInWorkIconScheduled.isDone()) {
+			return this;
+		}
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(true);
@@ -441,7 +454,9 @@ public class ProcessBox {
 
 	public ProcessBox ready() {
 		if (headlessMode) return this;
-		drawInWorkIconScheduled.cancel(true);
+		if (drawInWorkIconScheduled != null) {
+			drawInWorkIconScheduled.cancel(true);
+		}
 		toFront();
 		if (cancelBtn != null) {
 			cancelBtn.setEnabled(false);
