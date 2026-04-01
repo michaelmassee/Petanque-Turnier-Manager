@@ -129,6 +129,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="A8A8" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Poule Spielpläne erstellen</value>
+									<value xml:lang="en">Create Poule Game Plans</value>
+									<value xml:lang="es">Crear planes de juego de Poule</value>
+									<value xml:lang="fr">Créer les plans de jeu des poules</value>
+									<value xml:lang="nl">Poule speelplannen aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_spielplaene</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

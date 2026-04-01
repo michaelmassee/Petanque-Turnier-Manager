@@ -98,8 +98,9 @@ public class SheetMetadataHelper {
 
     // ── Konstanten: Poule ────────────────────────────────────────────────────
 
-    public static final String SCHLUESSEL_POULE_MELDELISTE = "__PTM_POULE_MELDELISTE__";
-    public static final String SCHLUESSEL_POULE_VORRUNDE   = "__PTM_POULE_VORRUNDE__";
+    public static final String SCHLUESSEL_POULE_MELDELISTE      = "__PTM_POULE_MELDELISTE__";
+    public static final String SCHLUESSEL_POULE_VORRUNDE        = "__PTM_POULE_VORRUNDE__";
+    public static final String SCHLUESSEL_POULE_SPIELPLAN_PREFIX = "__PTM_POULE_SPIELPLAN_";
 
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 
@@ -151,6 +152,10 @@ public class SheetMetadataHelper {
 
     public static String schluesselKoTurnierbaum(String gruppenSuffix) {
         return SCHLUESSEL_KO_TURNIERBAUM_PREFIX + gruppenSuffix + SCHLUESSEL_SUFFIX;
+    }
+
+    public static String schluesselPouleSpielplan(int pouleNr) {
+        return SCHLUESSEL_POULE_SPIELPLAN_PREFIX + pouleNr + SCHLUESSEL_SUFFIX;
     }
 
     // ── Schreiben ────────────────────────────────────────────────────────────

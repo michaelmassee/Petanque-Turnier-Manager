@@ -156,7 +156,7 @@ public class PouleTeilnehmerSheet extends SheetRunner implements ISheet {
      * @return VLOOKUP-Formel-String
      */
     private String pouleMeldelisteVlookup(String nrAdresse) {
-        return "VLOOKUP(" + nrAdresse + ";$'" + SheetNamen.pouleMeldeliste() + "'.$A$1:$B$999;2;0)";
+        return "VLOOKUP(" + nrAdresse + ";$'" + SheetNamen.meldeliste() + "'.$A$1:$B$999;2;0)";
     }
 
     private void headerSchreiben(int letzteSpalte) throws GenerateException {
