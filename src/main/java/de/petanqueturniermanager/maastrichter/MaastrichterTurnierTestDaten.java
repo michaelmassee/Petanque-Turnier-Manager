@@ -28,6 +28,7 @@ import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeS
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
@@ -58,6 +59,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 	private final MaastrichterSpielrundeSheetNaechste naechsteVorrunde;
 	private final MaastrichterVorrundenRanglisteSheet ranglisteSheet;
 	private final MaastrichterFinalrundeSheet finalrundeSheet;
+	private final MaastrichterTeilnehmerSheet teilnehmerSheet;
 
 	/** Standard-Konstruktor: 12 Teams, 3 Vorrunden, gruppenGroesse=16, minRestGroesse=16 */
 	public MaastrichterTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
@@ -83,6 +85,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		naechsteVorrunde = new MaastrichterSpielrundeSheetNaechste(workingSpreadsheet);
 		ranglisteSheet = new MaastrichterVorrundenRanglisteSheet(workingSpreadsheet);
 		finalrundeSheet = new MaastrichterFinalrundeSheet(workingSpreadsheet);
+		teilnehmerSheet = new MaastrichterTeilnehmerSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -151,7 +154,12 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		processBoxinfo("processbox.erstelle.finalrunde");
 		finalrundeSheet.doRun();
 
-		// 5. Kopfzeile und Werbefußzeile setzen
+		// 5. Teilnehmerliste erstellen
+		SheetRunner.testDoCancelTask();
+		processBoxinfo("processbox.erstelle.teilnehmerliste");
+		teilnehmerSheet.generate();
+
+		// 6. Kopfzeile und Werbefußzeile setzen
 		konfigSheet.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
 		konfigSheet.seitenstileAktualisieren();
 	}

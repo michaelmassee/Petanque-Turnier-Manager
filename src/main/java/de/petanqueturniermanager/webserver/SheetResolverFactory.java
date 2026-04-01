@@ -93,6 +93,7 @@ public final class SheetResolverFactory {
                                 "Participants", "Participantes", "Deelnemers",
                                 "JGJ Teilnehmer", "JGJ Participants",
                                 "KO Teilnehmer", "KO Participants",
+                                "Maastrichter Teilnehmer", "Maastrichter Participants",
                                 "Kaskaden Teilnehmer", "Kaskaden Participants",
                                 "Ligas Teilnehmer", "Ligas Participants"
                         }));

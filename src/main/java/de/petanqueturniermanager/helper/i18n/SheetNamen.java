@@ -298,6 +298,11 @@ public final class SheetNamen {
         return getOderFallback("sheet.name.ko.teilnehmer", "KO Teilnehmer");
     }
 
+    /** Maastrichter-Teilnehmer-Sheet. */
+    public static String maastrichterTeilnehmer() {
+        return getOderFallback("sheet.name.maastrichter.teilnehmer", "Maastrichter Teilnehmer");
+    }
+
     // ── Hilfsmethode ─────────────────────────────────────────────────────────
 
     /**
