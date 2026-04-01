@@ -72,6 +72,7 @@ import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
@@ -192,6 +193,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_MAASTRICHTER_AKTUELLE_VORRUNDE = "maastrichter_aktuelle_vorrunde";
 	public static final String CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE = "maastrichter_vorrunden_rangliste";
 	public static final String CMD_MAASTRICHTER_FINALRUNDEN = "maastrichter_finalrunden";
+	public static final String CMD_MAASTRICHTER_TEILNEHMER = "maastrichter_teilnehmer";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER = "maastrichter_testdaten_turnier";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_57 = "maastrichter_testdaten_turnier_57";
 	public static final String CMD_MAASTRICHTER_TESTDATEN_TURNIER_35 = "maastrichter_testdaten_turnier_35";
@@ -500,6 +502,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_MAASTRICHTER_FINALRUNDEN:
 				new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_MAASTRICHTER_TEILNEHMER:
+				new MaastrichterTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER:
 				new MaastrichterTurnierTestDaten(ws).start();
@@ -835,7 +840,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_MAASTRICHTER_UPDATE_MELDELISTE,
 				 CMD_MAASTRICHTER_NAECHSTE_VORRUNDE,
 				 CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE,
-				 CMD_MAASTRICHTER_FINALRUNDEN               -> ts == TurnierSystem.MAASTRICHTER;
+				 CMD_MAASTRICHTER_FINALRUNDEN,
+				 CMD_MAASTRICHTER_TEILNEHMER                -> ts == TurnierSystem.MAASTRICHTER;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE         -> ts == TurnierSystem.MAASTRICHTER && hatMaastrichterVorrunde(ws);
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER,
 				 CMD_MAASTRICHTER_TESTDATEN_TURNIER_57,

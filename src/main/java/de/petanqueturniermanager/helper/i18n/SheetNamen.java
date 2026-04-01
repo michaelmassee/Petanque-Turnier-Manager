@@ -283,36 +283,6 @@ public final class SheetNamen {
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{spieltagNr});
     }
 
-    /** Schweizer-Teilnehmer-Sheet. */
-    public static String schweizerTeilnehmer() {
-        return getOderFallback("sheet.name.schweizer.teilnehmer", "Schweizer Teilnehmer");
-    }
-
-    /** JGJ-Teilnehmer-Sheet. */
-    public static String jgjTeilnehmer() {
-        return getOderFallback("sheet.name.jgj.teilnehmer", "JGJ Teilnehmer");
-    }
-
-    /** KO-Teilnehmer-Sheet. */
-    public static String koTeilnehmer() {
-        return getOderFallback("sheet.name.ko.teilnehmer", "KO Teilnehmer");
-    }
-
-    /** Poule-Meldeliste-Sheet. */
-    public static String pouleMeldeliste() {
-        return getOderFallback("sheet.name.poule.meldeliste", "Poule Meldeliste");
-    }
-
-    /** Poule-Teilnehmer-Sheet. */
-    public static String pouleTeilnehmer() {
-        return getOderFallback("sheet.name.poule.teilnehmer", "Poule Teilnehmer");
-    }
-
-    /** Poule-Vorrunde-Sheet. */
-    public static String pouleVorrunde() {
-        return getOderFallback("sheet.name.poule.vorrunde", "Poule Vorrunde");
-    }
-
     // ── Hilfsmethode ─────────────────────────────────────────────────────────
 
     /**

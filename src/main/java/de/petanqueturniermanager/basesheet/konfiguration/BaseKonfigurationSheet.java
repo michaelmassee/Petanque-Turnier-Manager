@@ -206,6 +206,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		return getPropertiesSpalte().getRanglisteHeaderFarbe();
 	}
 
+	@Override
+	public final Integer getMaxAnzTeilnehmerInSpalte() {
+		return getPropertiesSpalte().getMaxAnzTeilnehmerInSpalte();
+	}
+
 	/**
 	 * @return the propertiesSpalte
 	 */

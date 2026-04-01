@@ -10,18 +10,14 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 /**
  * Löst die aktuelle Spielrunde vom <em>aktuellen Spieltag</em> für Supermelee auf.
  * <p>
- * Der aktive Spieltag wird zur Laufzeit aus dem {@link SuperMeleeKonfigurationSheet}
- * gelesen, sodass der Webserver immer die aktuelle Spielrunde des laufenden Spieltags
- * anzeigt – unabhängig davon, wie viele Spieltage bereits angelegt sind.
- * <p>
- * Innerhalb eines Spieltags wird die Spielrunde mit der höchsten Nummer ausgewählt
- * (z.B. "1.3. Spielrunde" wenn Spielrunden 1, 2, 3 existieren).
+ * Spieltag und Spielrunde werden direkt aus den Properties des
+ * {@link SuperMeleeKonfigurationSheet} gelesen (Property "Spieltag" und "Spielrunde"),
+ * sodass der Webserver immer exakt die aktive Spielrunde anzeigt.
  */
 public class SupermeleeAktiverSpielrundeSheetResolver implements SheetResolver {
 
@@ -37,53 +33,13 @@ public class SupermeleeAktiverSpielrundeSheetResolver implements SheetResolver {
             return Optional.empty();
         }
         try {
-            SpielTagNr spieltagNr = new SuperMeleeKonfigurationSheet(ws).getAktiveSpieltag();
-            letzterSpieltagNr = spieltagNr.getNr();
+            var konfigSheet = new SuperMeleeKonfigurationSheet(ws);
+            letzterSpieltagNr = konfigSheet.getAktiveSpieltag().getNr();
+            letzteRundeNr = konfigSheet.getAktiveSpielRunde().getNr();
 
-            // Suche höchste Rundennummer für diesen Spieltag
-            String[] schluessel = SheetMetadataHelper.getSchluesselMitPrefix(doc,
-                    SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX);
-
-            int hoesteRunde = -1;
-            String hoesteSchluessel = null;
-
-            for (String key : schluessel) {
-                if (!key.endsWith(SheetMetadataHelper.SCHLUESSEL_SUFFIX)) {
-                    continue;
-                }
-                // Schlüssel-Format: __PTM_SUPERMELEE_SPIELRUNDE_{spieltag}_{runde}__
-                String mittelTeil = key.substring(
-                        SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX.length(),
-                        key.length() - SheetMetadataHelper.SCHLUESSEL_SUFFIX.length());
-
-                String[] teile = mittelTeil.split("_");
-                if (teile.length != 2) {
-                    continue;
-                }
-
-                try {
-                    int st = Integer.parseInt(teile[0]);
-                    int runde = Integer.parseInt(teile[1]);
-
-                    // Nur Spielrunden vom aktuellen Spieltag
-                    if (st == letzterSpieltagNr && runde > hoesteRunde) {
-                        hoesteRunde = runde;
-                        hoesteSchluessel = key;
-                    }
-                } catch (NumberFormatException e) {
-                    logger.debug("Keine gültigen Nummern in Schlüssel '{}'", key);
-                }
-            }
-
-            if (hoesteSchluessel == null) {
-                letzteRundeNr = -1;
-                logger.debug("Keine Spielrunde für Spieltag {} gefunden", letzterSpieltagNr);
-                return Optional.empty();
-            }
-
-            letzteRundeNr = hoesteRunde;
+            String schluessel = SheetMetadataHelper.schluesselSupermeleeSpielrunde(letzterSpieltagNr, letzteRundeNr);
             logger.debug("Aktuelle Spielrunde: Spieltag {}, Runde {}", letzterSpieltagNr, letzteRundeNr);
-            return SheetMetadataHelper.findeSheet(doc, hoesteSchluessel);
+            return SheetMetadataHelper.findeSheet(doc, schluessel);
         } catch (Exception e) {
             logger.error("Fehler beim Auflösen der aktuellen Supermelee-Spielrunde", e);
             return Optional.empty();

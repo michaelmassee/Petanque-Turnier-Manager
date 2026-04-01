@@ -160,6 +160,28 @@
 								</prop>
 							</node>
 
+							<node oor:name="A7A11" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A7A12" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Teilnehmerliste</value>
+									<value xml:lang="en">Participants List</value>
+									<value xml:lang="es">Lista de participantes</value>
+									<value xml:lang="fr">Liste des participants</value>
+									<value xml:lang="nl">Deelnemerslijst</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:maastrichter_teilnehmer</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

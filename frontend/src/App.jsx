@@ -152,19 +152,6 @@ export default function App() {
     );
   }
 
-  if (table.zeilen === 0) {
-    return (
-      <>
-        <div className="hinweis">
-          <div className="hinweis-symbol">🏆</div>
-          <div className="hinweis-titel">Petanque-Turnier-Manager</div>
-          <div className="hinweis-text">Warte auf Turnierdaten…</div>
-        </div>
-        <Signatur />
-      </>
-    );
-  }
-
   const hatKopfzeile = table.kopfzeileLinks?.trim()
     || table.kopfzeileMitte?.trim()
     || table.kopfzeileRechts?.trim();

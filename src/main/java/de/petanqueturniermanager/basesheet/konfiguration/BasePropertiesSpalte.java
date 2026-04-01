@@ -52,6 +52,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN = "Zeige Arbeitsspalten"; // diesen Daten werden nur intern gebraucht, default = false
 
+	public static final String KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE = "Teilnehmerliste Anzahl je Spalte";
+	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
+
 	protected final WeakRefHelper<ISheet> sheetWkRef;
 	private final DocumentPropertiesHelper docPropHelper;
 
@@ -91,6 +94,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN)
 				.setDefaultVal(false)
 				.setDescription("config.desc.zeige.arbeits.spalten")
+				.inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE)
+				.setDefaultVal(DEFAULT_ANZ_TEILNEHMER_IN_SPALTE)
+				.setDescription("config.desc.teilnehmer.anzahl.spalte")
 				.inSideBar());
 	}
 
@@ -224,6 +232,11 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public Integer getRanglisteHintergrundFarbeUnGerade() {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_UNGERADE);
+	}
+
+	@Override
+	public Integer getMaxAnzTeilnehmerInSpalte() {
+		return readIntProperty(KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE);
 	}
 
 }

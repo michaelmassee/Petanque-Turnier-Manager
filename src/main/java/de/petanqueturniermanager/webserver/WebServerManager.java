@@ -105,6 +105,11 @@ public final class WebServerManager {
             try {
                 var instanz = new WebServerInstanz(konfig);
                 instanz.starten();
+                // Sofort Initial-Hinweis setzen, damit Clients die sich vor dem ersten Rendering
+                // verbinden i18n-Text erhalten statt einer leeren Antwort.
+                instanz.setCachedInitJson(GSON.toJson(SseNachricht.hinweis(
+                        I18n.get("webserver.hinweis.kein.dokument.titel"),
+                        I18n.get("webserver.hinweis.kein.dokument.text"))));
                 instanzen.add(instanz);
                 if (slots.size() < MAX_URL_SLOTS) {
                     slots.add(instanz);

@@ -128,6 +128,10 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 		return delegate.letzteZeileMitSpielerName();
 	}
 
+	public void doSort(int spalteNr, boolean aufsteigend) throws GenerateException {
+		delegate.doSort(spalteNr, aufsteigend);
+	}
+
 	public void upDateSheet() throws GenerateException {
 		delegate.upDateSheet();
 	}

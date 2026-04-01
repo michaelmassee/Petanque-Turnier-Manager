@@ -1,8 +1,9 @@
-package de.petanqueturniermanager.ko.meldeliste;
+/**
+ * Erstellung 2026 / Michael Massee
+ */
+package de.petanqueturniermanager.maastrichter.meldeliste;
 
-import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
-import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
@@ -12,7 +13,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -25,38 +25,41 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
+import com.sun.star.table.CellHoriJustify;
+
 /**
- * Bereinigte Teilnehmerliste für das K.-O. Turniersystem – als Aushang und Webseite.
+ * Bereinigte Teilnehmerliste für das Maastrichter Turniersystem – als Aushang und Webseite.
  * Listet alle aktiven Teams in einem mehrspaltigem Raster auf.
  */
-public class TeilnehmerSheet extends SheetRunner implements ISheet {
+public class MaastrichterTeilnehmerSheet extends SheetRunner implements ISheet {
 
     public static final int ERSTE_DATEN_ZEILE = 1;
     public static final int TEAM_NR_SPALTE = 0;
     public static final int TEAM_NAME_SPALTE = 1;
     public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
 
-    private static final String SHEET_COLOR = "c44a4a";
+    private static final String SHEET_COLOR = "c48a4a";
     private static final int TEAM_NAME_SPALTE_WIDTH = 6000;
 
-    private final KoKonfigurationSheet konfigurationSheet;
-    private final KoMeldeListeSheetUpdate meldeliste;
+    private final MaastrichterKonfigurationSheet konfigurationSheet;
+    private final MaastrichterMeldeListeSheetUpdate meldeliste;
 
-    public TeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
-        super(workingSpreadsheet, TurnierSystem.KO, "KO-Teilnehmer");
-        konfigurationSheet = new KoKonfigurationSheet(workingSpreadsheet);
-        meldeliste = new KoMeldeListeSheetUpdate(workingSpreadsheet);
+    public MaastrichterTeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
+        super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Teilnehmer");
+        konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
+        meldeliste = new MaastrichterMeldeListeSheetUpdate(workingSpreadsheet);
     }
 
     @Override
-    protected KoKonfigurationSheet getKonfigurationSheet() {
+    protected MaastrichterKonfigurationSheet getKonfigurationSheet() {
         return konfigurationSheet;
     }
 
@@ -81,11 +84,11 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
     public void generate() throws GenerateException {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
-                .tabColor(SHEET_COLOR).pos(DefaultSheetPos.KO_TURNIERBAUM)
+                .tabColor(SHEET_COLOR).pos(DefaultSheetPos.MAASTRICHTER_WORK)
                 .forceCreate().hideGrid().setActiv().create();
 
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
-        meldeliste.doSort(meldeliste.getTeamnameSpalte(), true);
+        meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         if (aktiveMeldungen.size() == 0) {
@@ -141,7 +144,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
         StringCellValue footer = StringCellValue.from(getXSpreadSheet(),
                 Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzTeamsInSpalte)).zeilePlusEins()
                 .setValue(I18n.get("teilnehmer.footer.anzahl", aktiveMeldungen.size()))
-                .setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
+                .setEndPosMergeSpalte(letzteSpalte).setCharWeight(com.sun.star.awt.FontWeight.BOLD).setCharHeight(12)
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);
         printBereichDefinieren(footer.getPos(), letzteSpalte);

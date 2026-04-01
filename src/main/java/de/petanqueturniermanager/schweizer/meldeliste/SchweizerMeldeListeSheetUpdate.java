@@ -156,6 +156,21 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 		delegate.pruefeAufDoppelteTeamNr(xSheet);
 	}
 
+	/**
+	 * Sortiert die Meldeliste nach der angegebenen Spalte.
+	 * Wird von TeilnehmerSheet aufgerufen, um vor der Ausgabe nach Name zu sortieren.
+	 */
+	public void doSort(int spalteNr, boolean aufsteigend) throws GenerateException {
+		XSpreadsheet xSheet = getXSpreadSheet();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		if (letzteZeile < ERSTE_DATEN_ZEILE) {
+			return;
+		}
+		RangePosition range = RangePosition.from(getTeamNrSpalte(), ERSTE_DATEN_ZEILE,
+				getSetzPositionSpalte(), letzteZeile);
+		SortHelper.from(this, range).spalteToSort(spalteNr).aufSteigendSortieren(aufsteigend).doSort();
+	}
+
 	// ---------------------------------------------------------------
 	// Eigene Methoden
 	// ---------------------------------------------------------------

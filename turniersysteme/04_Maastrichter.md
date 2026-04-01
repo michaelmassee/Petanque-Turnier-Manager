@@ -47,14 +47,32 @@ Gleiche Regeln wie im Schweizer System (siehe Kapitel 3):
 ---
 # 3. Aufteilung in A-, B-, C- und D-Turniere
 
-Direkt nach Runde 3:
+## 3.1 Standard: Viertel-Aufteilung
+
+Nach Runde 3 werden alle Teams in eine Rangliste gebracht:
+1. zuerst nach Siegen (3:0, 2:1, 1:2, 0:3)
+2. bei Gleichstand nach Feinwertung (z. B. Buchholz, Punktdifferenz)
+
+Diese Rangliste wird von oben nach unten in vier gleich große Gruppen aufgeteilt:
+- oberes Viertel → A-Turnier
+- zweites Viertel → B-Turnier
+- drittes Viertel → C-Turnier
+- unteres Viertel → D-Turnier
+
+> **Hinweis:** Es kann vorkommen, dass ein 2:1-Team im A-Turnier spielt, während ein anderes
+> 2:1-Team nur im B-Turnier landet – entscheidend ist die Platzierung, nicht allein die Bilanz.
+
+## 3.2 Alternative bei sehr großer Teilnehmerzahl: Aufteilung strikt nach Siegen
+
+Nur wenn die Teilnehmerzahl so groß ist, dass alle vier Felder gut besetzt sind, kann alternativ
+eine **strikte Aufteilung nach Sieganzahl** verwendet werden:
+
 - **A-Turnier:** alle Teams mit 3:0
 - **B-Turnier:** alle Teams mit 2:1
 - **C-Turnier:** alle Teams mit 1:2
 - **D-Turnier:** alle Teams mit 0:3
 
-Empfehlung der Turniersoftware und Praxis:
-- Wenn Felder ungerade sind, wird später per **Cadrage** aufgefüllt.
+Wenn einzelne Felder ungerade sind, wird per **Cadrage** aufgefüllt (siehe Kapitel 5).
 
 ---
 # 4. KO-Phase in den Feldern
