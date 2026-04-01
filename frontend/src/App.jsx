@@ -203,7 +203,7 @@ export default function App() {
               <tbody>
                 {table.gitter.map((row, r) => (
                   <tr key={r}
-                      className={r < table.kopfZeilenAnzahl ? 'zeile-kopf' : (r % 2 === 0 ? 'zeile-gerade' : 'zeile-ungerade')}
+                      className={r < table.kopfZeilenAnzahl ? 'zeile-kopf' : undefined}
                       style={{ height: toPx(table.zeilenHoehen[r] || 600) }}>
                     {row.map((id, c) =>
                       id
