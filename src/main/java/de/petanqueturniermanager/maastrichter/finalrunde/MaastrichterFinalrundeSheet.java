@@ -136,17 +136,18 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		alleFinaleSheetNamenLoeschen();
 
 		// KO-Bracket für jede Gruppe erstellen
+		// Buchstabe wird nur für Gruppen mit ≥2 Teams vergeben, damit 'A' immer belegt ist
 		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
 		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
+		char naechsterBuchstabe = 'A';
 
-		for (int g = 0; g < gruppen.size(); g++) {
+		for (List<SchweizerTeamErgebnis> gruppeErg : gruppen) {
 			SheetRunner.testDoCancelTask();
-			List<SchweizerTeamErgebnis> gruppeErg = gruppen.get(g);
-			String gruppenBuchstabe = String.valueOf((char) ('A' + g));
-			String sheetName = SheetNamen.koFinaleGruppe(gruppenBuchstabe);
-			processBoxinfo("processbox.erstelle.sheet.teams", sheetName, gruppeErg.size());
 			TeamMeldungen gruppeTeams = erstelleGruppeTeams(gruppeErg, aktiveMeldungen);
 			if (gruppeTeams.size() >= 2) {
+				String gruppenBuchstabe = String.valueOf(naechsterBuchstabe++);
+				String sheetName = SheetNamen.koFinaleGruppe(gruppenBuchstabe);
+				processBoxinfo("processbox.erstelle.sheet.teams", sheetName, gruppeErg.size());
 				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
 						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe));
 				sheetPos++;

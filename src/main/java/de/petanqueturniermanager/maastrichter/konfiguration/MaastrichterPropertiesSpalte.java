@@ -32,10 +32,10 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 				.setDefaultVal(3).setDescription("Anzahl Vorrunden im Schweizer System (2-5)").inSideBar());
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_GRUPPEN_MODUS)
-				.setDefaultVal(MaastrichterGruppenModus.NACH_SIEGEN.name())
+				.setDefaultVal(MaastrichterGruppenModus.NACH_GROESSE.name())
 				.setDescription("Wie Teams in Finalgruppen eingeteilt werden"))
-				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (A=max, B=max-1, ...)")
-				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Nach Gruppengr\u00f6\u00dfe (GruppenAufteilungRechner)")
+				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Viertel-Aufteilung nach Rang (Standard)")
+				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (Alternative bei gro\u00dfer Teilnehmerzahl)")
 				.inSideBar());
 		// KO-Bracket-Properties wiederverwenden (keine Duplikation)
 		KoPropertiesSpalte.addKoBracketProperties(KONFIG_PROPERTIES);

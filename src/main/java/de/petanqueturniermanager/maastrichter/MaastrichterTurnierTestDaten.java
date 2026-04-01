@@ -124,7 +124,7 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		konfigSheet.setAnzVorrunden(anzVorrunden);
 		konfigSheet.setGruppenGroesse(gruppenGroesse);
 		konfigSheet.setMinRestGroesse(minRestGroesse);
-		konfigSheet.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_SIEGEN);
+		konfigSheet.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_GROESSE);
 
 		// 2. Vorrunden erstellen und mit Zufallsergebnissen füllen
 		for (int runde = 1; runde <= anzVorrunden; runde++) {
