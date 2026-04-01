@@ -16,30 +16,29 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  *
  * <p>Bekannte Schlüsselwörter:
  * <pre>
- *   SCHWEIZER_RANGLISTE     → Schweizer Rangliste (exakter Schlüssel)
- *   SCHWEIZER_SPIELRUNDE    → aktuellste Schweizer Spielrunde (höchste Nummer)
- *   SUPERMELEE_ENDRANGLISTE → Supermêlée Endrangliste (exakter Schlüssel)
- *   SPIELTAG_RANGLISTE      → aktuellste Spieltag-Rangliste (höchste Nummer)
- *   SPIELTAG_TEILNEHMER     → Supermelee-Teilnehmerliste des aktiven Spieltags (aus KonfigurationSheet)
- *   SPIELTAG_ANMELDUNGEN    → aktuellste Spieltag-Anmeldungen (höchste Nummer, nur Supermelee)
- *   TEILNEHMER              → Teilnehmer-Sheet (exakter Schlüssel, alle Turniersysteme außer Supermelee)
- *   JGJ_RANGLISTE           → Jeder-gegen-Jeden Rangliste (exakter Schlüssel)
- *   LIGA_RANGLISTE          → Liga Rangliste (exakter Schlüssel)
- *   MAASTRICHTER_VORRUNDE   → aktuellste Maastrichter Vorrunde (höchste Nummer)
- *   KO_TURNIERBAUM          → aktuellster K.-O.-Turnierbaum (höchste Nummer)
+ *   SCHWEIZER_RANGLISTE      → Schweizer Rangliste (exakter Schlüssel)
+ *   SCHWEIZER_SPIELRUNDE     → aktuellste Schweizer Spielrunde (höchste Nummer)
+ *   SCHWEIZER_AKTUELLE_SPIELRUNDE → Schweizer Spielrunde (aktuell, höchste Nummer)
+ *   SUPERMELEE_ENDRANGLISTE  → Supermêlée Endrangliste (exakter Schlüssel)
+ *   SUPERMELEE_SPIELRUNDE    → aktuellste Supermelee-Spielrunde (höchste Nummer)
+ *   SPIELTAG_RANGLISTE       → aktuellste Spieltag-Rangliste (höchste Nummer)
+ *   SPIELTAG_TEILNEHMER      → Supermelee-Teilnehmerliste des aktiven Spieltags (aus KonfigurationSheet)
+ *   SPIELTAG_AKTUELLE_SPIELRUNDE → aktuelle Spielrunde des aktiven Spieltags (Supermelee)
+ *   TEILNEHMER               → Teilnehmer-Sheet (exakter Schlüssel, alle Turniersysteme außer Supermelee)
+ *   SPIELTAG_ANMELDUNGEN     → aktuellste Spieltag-Anmeldungen (höchste Nummer, nur Supermelee)
+ *   JGJ_RANGLISTE            → Jeder-gegen-Jeden Rangliste (exakter Schlüssel)
+ *   JGJ_SPIELPLAN            → Jeder-gegen-Jeden Spielplan (exakter Schlüssel)
+ *   LIGA_RANGLISTE           → Liga Rangliste (exakter Schlüssel)
+ *   LIGA_SPIELPLAN           → Liga Spielplan (exakter Schlüssel)
+ *   MAASTRICHTER_VORRUNDE    → aktuellste Maastrichter Vorrunde (höchste Nummer)
+ *   KO_TURNIERBAUM           → aktuellster K.-O.-Turnierbaum (höchste Nummer)
+ *   VORRUNDE_RANGLISTE       → Vorrunden-Ergebnisse Forme/KO-System (exakter Schlüssel)
  * </pre>
  */
 public final class SheetResolverFactory {
 
     private SheetResolverFactory() {
     }
-
-    /** Schlüssel für den Poule-Meldeliste-Resolver. */
-    public static final String RESOLVER_POULE_MELDELISTE = "POULE_MELDELISTE";
-    /** Schlüssel für den Poule-Teilnehmer-Resolver. */
-    public static final String RESOLVER_POULE_TEILNEHMER = "POULE_TEILNEHMER";
-    /** Schlüssel für den Poule-Vorrunde-Resolver. */
-    public static final String RESOLVER_POULE_VORRUNDE = "POULE_VORRUNDE";
 
     /**
      * Zentrale Konfiguration aller bekannten Sheet-Typen und ihrer Resolver-Factories.
@@ -71,6 +70,11 @@ public final class SheetResolverFactory {
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
                         I18n.get("webserver.resolver.supermelee.endrangliste")));
+        RESOLVER_MAP.put("SUPERMELEE_SPIELRUNDE", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.supermelee.spielrunde")));
         RESOLVER_MAP.put("SPIELTAG_RANGLISTE", () ->
                 new MetadatenPrefixSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
@@ -80,7 +84,7 @@ public final class SheetResolverFactory {
                 new SupermeleeAktiverSpieltagSheetResolver());
         RESOLVER_MAP.put("SPIELTAG_AKTUELLE_SPIELRUNDE", () ->
                 new SupermeleeAktiverSpielrundeSheetResolver());
-        RESOLVER_MAP.put("SPIELTAG_ANMELDUNGEN", () ->
+        RESOLVER_MAP.put("TEILNEHMER", () ->
                 new TeilnehmerSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
                         I18n.get("webserver.resolver.teilnehmer"),
@@ -101,10 +105,18 @@ public final class SheetResolverFactory {
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
                         I18n.get("webserver.resolver.jgj.rangliste")));
+        RESOLVER_MAP.put("JGJ_SPIELPLAN", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
+                        I18n.get("webserver.resolver.jgj.spielplan")));
         RESOLVER_MAP.put("LIGA_RANGLISTE", () ->
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE,
                         I18n.get("webserver.resolver.liga.rangliste")));
+        RESOLVER_MAP.put("LIGA_SPIELPLAN", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN,
+                        I18n.get("webserver.resolver.liga.spielplan")));
         RESOLVER_MAP.put("MAASTRICHTER_VORRUNDE", () ->
                 new MetadatenPrefixSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
@@ -115,18 +127,10 @@ public final class SheetResolverFactory {
                         SheetMetadataHelper.SCHLUESSEL_KO_TURNIERBAUM_PREFIX,
                         SheetMetadataHelper.SCHLUESSEL_SUFFIX,
                         I18n.get("webserver.resolver.ko.turnierbaum")));
-        RESOLVER_MAP.put(RESOLVER_POULE_MELDELISTE, () ->
+        RESOLVER_MAP.put("VORRUNDE_RANGLISTE", () ->
                 new MetadatenSheetResolver(
-                        SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE,
-                        I18n.get("webserver.resolver.poule.meldeliste")));
-        RESOLVER_MAP.put(RESOLVER_POULE_TEILNEHMER, () ->
-                new MetadatenSheetResolver(
-                        SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
-                        I18n.get("webserver.resolver.poule.teilnehmer")));
-        RESOLVER_MAP.put(RESOLVER_POULE_VORRUNDE, () ->
-                new MetadatenSheetResolver(
-                        SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
-                        I18n.get("webserver.resolver.poule.vorrunde")));
+                        SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN,
+                        I18n.get("webserver.resolver.vorrunde.rangliste")));
     }
 
     /**

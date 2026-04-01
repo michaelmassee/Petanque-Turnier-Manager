@@ -19,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
-import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
@@ -49,7 +48,6 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.print.PrintArea;
-import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -447,24 +445,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		getSheetHelper().setPropertyInRange(sheet, ergebnisRange, CHAR_HEIGHT, 32);
 		getSheetHelper().setPropertyInRange(sheet, ergebnisRange, CHAR_WEIGHT, FontWeight.BOLD);
 
-		ConditionalFormatHelper.from(this, ergebnisRange).clear()
-				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN)
-				.styleIsFehler().applyAndDoReset();
-		String istText = "ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")";
-		ConditionalFormatHelper.from(this, ergebnisRange)
-				.formula1(istText).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset();
-		// gleiche Werte in beiden Ergebnisspalten → Fehler (z.B. 7:7)
-		// INDIRECT(ADDRESS(ROW();colNum)) ist zeilenrelativ – kein fixer basisZeile-Offset nötig
-		String cellA = "INDIRECT(ADDRESS(ROW();" + (ERG_TEAM_A_SPALTE + 1) + "))";
-		String cellB = "INDIRECT(ADDRESS(ROW();" + (ERG_TEAM_B_SPALTE + 1) + "))";
-		String gleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));" + cellA + "=" + cellB + ")";
-		ConditionalFormatHelper.from(this, ergebnisRange).formula1(gleicheWerte).operator(ConditionOperator.FORMULA)
-				.styleIsFehler().applyAndDoReset();
-		ConditionalFormatHelper.from(this, ergebnisRange)
-				.formulaIsEvenRow().style(geradeColor).applyAndDoReset();
-		ConditionalFormatHelper.from(this, ergebnisRange)
-				.formulaIsOddRow().style(unGeradeColor).applyAndDoReset();
+		spielrundeHelper.formatiereErgebnissRange(this, ergebnisRange, ERG_TEAM_A_SPALTE);
 	}
 
 	/**

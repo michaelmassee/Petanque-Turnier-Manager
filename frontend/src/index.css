@@ -24,13 +24,6 @@ td {
   overflow: hidden;
 }
 
-tr.zeile-gerade {
-  background-color: #ffffff;
-}
-
-tr.zeile-ungerade {
-  background-color: #f0f4f8;
-}
 
 #status {
   position: fixed;
