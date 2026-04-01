@@ -42,7 +42,6 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
     public static final int TEAM_NR_SPALTE = 0;
     public static final int TEAM_NAME_SPALTE = 1;
     public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
-    public static final int MAX_ANZ_TEAMS_IN_SPALTE = 40;
 
     private static final String SHEET_COLOR = "4a8fc4";
     private static final int TEAM_NAME_SPALTE_WIDTH = 6000;
@@ -86,6 +85,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
                 .forceCreate().hideGrid().setActiv().create();
 
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
+        meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         if (aktiveMeldungen.size() == 0) {
@@ -107,6 +107,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
         int teamCntr = 1;
         int maxAnzTeamsInSpalte = 0;
+        int maxAnzTeilnehmerInSpalte = konfigurationSheet.getMaxAnzTeilnehmerInSpalte();
         spalteFormat(teamNrVal, celPropNr, nameFormula, celPropName);
 
         processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", aktiveMeldungen.size());
@@ -121,13 +122,13 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
             teamNrVal.zeilePlusEins();
             nameFormula.zeilePlusEins();
 
-            if ((teamCntr / MAX_ANZ_TEAMS_IN_SPALTE) * MAX_ANZ_TEAMS_IN_SPALTE == teamCntr) {
-                teamNrVal.spalte((teamCntr / MAX_ANZ_TEAMS_IN_SPALTE) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
+            if ((teamCntr / maxAnzTeilnehmerInSpalte) * maxAnzTeilnehmerInSpalte == teamCntr) {
+                teamNrVal.spalte((teamCntr / maxAnzTeilnehmerInSpalte) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
                 nameFormula.spalte(teamNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
                 spalteFormat(teamNrVal, celPropNr, nameFormula, celPropName);
             }
             teamCntr++;
-            if (maxAnzTeamsInSpalte < MAX_ANZ_TEAMS_IN_SPALTE) {
+            if (maxAnzTeamsInSpalte < maxAnzTeilnehmerInSpalte) {
                 maxAnzTeamsInSpalte++;
             }
         }

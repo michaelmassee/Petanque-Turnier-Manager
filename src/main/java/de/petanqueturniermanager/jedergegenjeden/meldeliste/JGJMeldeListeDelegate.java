@@ -140,4 +140,8 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 		return meldungenSpalte.letzteZeileMitSpielerName();
 	}
 
+	void doSort(int spalteNr, boolean aufsteigend) throws GenerateException {
+		meldeListeHelper.doSort(spalteNr, aufsteigend);
+	}
+
 }

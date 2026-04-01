@@ -34,4 +34,6 @@ public interface IPropertiesSpalte {
 
 	boolean zeigeArbeitsSpalten();
 
+	Integer getMaxAnzTeilnehmerInSpalte();
+
 }

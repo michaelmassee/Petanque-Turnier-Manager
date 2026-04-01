@@ -44,7 +44,6 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 	public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
-	public static final int MAX_ANZSPIELER_IN_SPALTE = 40;
 
 	private static final String SHEET_COLOR = "6542f4";
 
@@ -117,6 +116,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
 		int spielerCntr = 1;
 		int maxAnzSpielerInSpalte = 0;
+		int maxAnzTeilnehmerInSpalte = konfigurationSheet.getMaxAnzTeilnehmerInSpalte();
 		spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 
 		processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetztMeldungen.size());
@@ -132,14 +132,14 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 			spierNrVal.zeilePlusEins();
 			nameFormula.zeilePlusEins();
 
-			if ((spielerCntr / MAX_ANZSPIELER_IN_SPALTE) * MAX_ANZSPIELER_IN_SPALTE == spielerCntr) {
-				// Nächste Block
-				spierNrVal.spalte((spielerCntr / MAX_ANZSPIELER_IN_SPALTE) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
+			if ((spielerCntr / maxAnzTeilnehmerInSpalte) * maxAnzTeilnehmerInSpalte == spielerCntr) {
+				// Nächster Block
+				spierNrVal.spalte((spielerCntr / maxAnzTeilnehmerInSpalte) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
 				nameFormula.spalte(spierNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
 				spalteFormat(spierNrVal, celPropNr, nameFormula, celPropName);
 			}
 			spielerCntr++;
-			if (maxAnzSpielerInSpalte < MAX_ANZSPIELER_IN_SPALTE) {
+			if (maxAnzSpielerInSpalte < maxAnzTeilnehmerInSpalte) {
 				maxAnzSpielerInSpalte++;
 			}
 		}
