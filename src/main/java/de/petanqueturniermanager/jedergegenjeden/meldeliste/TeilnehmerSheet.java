@@ -63,7 +63,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
         return SheetMetadataHelper.findeSheetUndHeile(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
-                SheetNamen.jgjTeilnehmer());
+                SheetNamen.teilnehmer());
     }
 
     @Override
@@ -77,7 +77,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
     }
 
     public void generate() throws GenerateException {
-        NewSheet.from(this, SheetNamen.jgjTeilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
+        NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
                 .tabColor(SHEET_COLOR).pos(DefaultSheetPos.JGJ_WORK)
                 .forceCreate().hideGrid().setActiv().create();
 

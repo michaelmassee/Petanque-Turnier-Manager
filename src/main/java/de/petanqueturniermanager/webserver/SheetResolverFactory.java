@@ -20,7 +20,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  *   SCHWEIZER_SPIELRUNDE     → aktuellste Schweizer Spielrunde (höchste Nummer)
  *   SCHWEIZER_AKTUELLE_SPIELRUNDE → Schweizer Spielrunde (aktuell, höchste Nummer)
  *   SUPERMELEE_ENDRANGLISTE  → Supermêlée Endrangliste (exakter Schlüssel)
- *   SUPERMELEE_SPIELRUNDE    → aktuellste Supermelee-Spielrunde (höchste Nummer)
+ *   SUPERMELEE_SPIELRUNDE    → aktuelle Supermelee-Spielrunde (aus Properties: Spieltag + Spielrunde)
  *   SPIELTAG_RANGLISTE       → aktuellste Spieltag-Rangliste (höchste Nummer)
  *   SPIELTAG_TEILNEHMER      → Supermelee-Teilnehmerliste des aktiven Spieltags (aus KonfigurationSheet)
  *   SPIELTAG_AKTUELLE_SPIELRUNDE → aktuelle Spielrunde des aktiven Spieltags (Supermelee)
@@ -71,10 +71,7 @@ public final class SheetResolverFactory {
                         SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
                         I18n.get("webserver.resolver.supermelee.endrangliste")));
         RESOLVER_MAP.put("SUPERMELEE_SPIELRUNDE", () ->
-                new MetadatenPrefixSheetResolver(
-                        SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_SPIELRUNDE_PREFIX,
-                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
-                        I18n.get("webserver.resolver.supermelee.spielrunde")));
+                new SupermeleeAktiverSpielrundeSheetResolver());
         RESOLVER_MAP.put("SPIELTAG_RANGLISTE", () ->
                 new MetadatenPrefixSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,

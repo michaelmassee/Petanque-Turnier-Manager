@@ -68,7 +68,7 @@ public class MaastrichterTeilnehmerSheet extends SheetRunner implements ISheet {
         return SheetMetadataHelper.findeSheetUndHeile(
                 getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
-                SheetNamen.maastrichterTeilnehmer());
+                SheetNamen.teilnehmer());
     }
 
     @Override
@@ -83,7 +83,7 @@ public class MaastrichterTeilnehmerSheet extends SheetRunner implements ISheet {
     }
 
     public void generate() throws GenerateException {
-        NewSheet.from(this, SheetNamen.maastrichterTeilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
+        NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
                 .tabColor(SHEET_COLOR).pos(DefaultSheetPos.MAASTRICHTER_WORK)
                 .forceCreate().hideGrid().setActiv().create();
 
