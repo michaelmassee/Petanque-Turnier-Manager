@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -18,6 +17,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 
 import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Erstellung 04.07.2022 / Michael Massee<br>
@@ -86,7 +86,9 @@ public class LigaHtmlCleaner {
 	}
 
 	public LigaHtmlCleaner pdfDownloadBaseUrl(String pdfDownloadBaseUrl) {
-		this.pdfDownloadBaseUrl = StringUtils.appendIfMissing(pdfDownloadBaseUrl, "/");
+		this.pdfDownloadBaseUrl = pdfDownloadBaseUrl != null && !pdfDownloadBaseUrl.endsWith("/")
+				? pdfDownloadBaseUrl + "/"
+				: pdfDownloadBaseUrl;
 		return this;
 	}
 
@@ -172,7 +174,7 @@ public class LigaHtmlCleaner {
 		if (ranglisteClone != null) {
 			cleanUpTable(ranglisteClone);
 
-			String reihenfolge = "Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte Δ, 4. Direktvergleich";
+			String reihenfolge = I18n.get("liga.rangliste.reihenfolge.platzierung");
 			Element reihenfolgeEL = ranglisteClone.selectFirst("tr:containsWholeText(" + reihenfolge + ")");
 			if (reihenfolgeEL != null) {
 				reihenfolgeEL.remove();

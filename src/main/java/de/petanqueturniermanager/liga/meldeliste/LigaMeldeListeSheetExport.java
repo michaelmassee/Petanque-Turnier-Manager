@@ -5,7 +5,9 @@
 package de.petanqueturniermanager.liga.meldeliste;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 
@@ -42,6 +44,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetExport.class);
+	private static final String PDF_BILD_RESSOURCE = "images/pdf-download.png";
 
 	private final LigaMeldeListeDelegate delegate;
 
@@ -182,7 +185,6 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 		String fileNameOnlyPdfRangliste = FilenameUtils.getName(fileNamePdfRangliste);
 
 		try {
-
 			String baseDownloadUrl = StringUtils.strip(delegate.getKonfigurationSheet().getBaseDownloadUrl());
 			if (StringUtils.isNotEmpty(baseDownloadUrl)) {
 				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
@@ -195,11 +197,17 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 				processBox().info("Liga-Logo: " + ligaLogoUr);
 			}
 
+			File htmlExportFile = new File(htmlExportFileUri);
+			File htmlExportVerzeichnis = htmlExportFile.getParentFile();
+
 			String pdfImgUr = StringUtils.strip(delegate.getKonfigurationSheet().getPdfImageUr());
-			if (StringUtils.isEmpty(pdfImgUr)) {
-				processBox().info("Warnung: PDF-Image fehlt in der Turnierkonfiguration");
+			if (StringUtils.isNotEmpty(pdfImgUr)) {
+				processBox().info("PDF-Image (konfiguriert): " + pdfImgUr);
 			} else {
-				processBox().info("PDF-Image: " + pdfImgUr);
+				pdfImgUr = pdfBildInExportVerzeichnisKopieren(htmlExportVerzeichnis);
+				if (pdfImgUr != null) {
+					processBox().info(I18n.get("liga.export.pdf.bild.kopiert"));
+				}
 			}
 
 			String gruppenname = StringUtils.strip(delegate.getKonfigurationSheet().getGruppenname());
@@ -209,7 +217,6 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 				processBox().info("Gruppenname: " + gruppenname);
 			}
 
-			File htmlExportFile = new File(htmlExportFileUri);
 			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
 			name = StringUtils.replace(name, ".html", ".clean.html");
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
@@ -221,6 +228,29 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}
+	}
 
+	private String pdfBildInExportVerzeichnisKopieren(File htmlExportVerzeichnis) throws IOException {
+		File bilderVerzeichnis = new File(htmlExportVerzeichnis, "images");
+
+		if (!bilderVerzeichnis.exists() && !bilderVerzeichnis.mkdirs()) {
+			throw new IOException("Konnte Bilderverzeichnis nicht erstellen: " + bilderVerzeichnis);
+		}
+
+
+		File zielDatei = new File(bilderVerzeichnis, "pdf-download.png");
+		if (!zielDatei.exists()) {
+			try (InputStream in = LigaMeldeListeSheetExport.class.getResourceAsStream(PDF_BILD_RESSOURCE)) {
+				if (in == null) {
+					logger.error("Classpath-Ressource nicht gefunden: {}", PDF_BILD_RESSOURCE);
+					processBox().info(I18n.get("liga.export.pdf.bild.ressource.fehler"));
+					return null;
+				}
+				try (var out = new FileOutputStream(zielDatei)) {
+					in.transferTo(out);
+				}
+			}
+		}
+		return PDF_BILD_RESSOURCE;
 	}
 }

@@ -183,8 +183,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
 				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
-		getSheetHelper().setStringValueInCell(stringVal.setValue(
-				"Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte +, 4. Spielpunkte Δ, 5. Direktvergleich, 6. das Los"));
+		getSheetHelper().setStringValueInCell(stringVal.setValue(I18n.get("liga.rangliste.reihenfolge.platzierung")));
 		return stringVal;
 	}
 
