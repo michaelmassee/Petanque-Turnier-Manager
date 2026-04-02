@@ -173,7 +173,6 @@ public class LigaHtmlCleaner {
 		Element ranglisteClone = findRanglisteTable(ligaHtmlOrg);
 		if (ranglisteClone != null) {
 			cleanUpTable(ranglisteClone);
-			leereZeilenEntfernen(ranglisteClone);
 
 			String reihenfolge = I18n.get("liga.rangliste.reihenfolge.platzierung");
 			Element reihenfolgeEL = ranglisteClone.selectFirst("tr:containsWholeText(" + reihenfolge + ")");
@@ -320,11 +319,17 @@ public class LigaHtmlCleaner {
 
 	private void leereZeilenEntfernen(Element table) {
 		for (Element zeile : table.select("tr")) {
-			boolean alleZellenLeer = zeile.select("td,th").stream().allMatch(zelle -> zelle.text().isBlank());
+			boolean alleZellenLeer = zeile.select("td,th").stream().allMatch(this::istZelleLeer);
 			if (alleZellenLeer) {
 				zeile.remove();
 			}
 		}
+	}
+
+	private boolean istZelleLeer(Element zelle) {
+		Element zelleOhneBr = zelle.clone();
+		zelleOhneBr.select("br").remove();
+		return zelleOhneBr.text().isBlank();
 	}
 
 	private void cleanUpTable(Element table) {
@@ -336,6 +341,7 @@ public class LigaHtmlCleaner {
 		for (Element elA : table.select("a")) {
 			elA.remove();
 		}
+		leereZeilenEntfernen(table);
 	}
 
 	private void addMetaTagsToHeader(Document ligaHtmlNew) {
