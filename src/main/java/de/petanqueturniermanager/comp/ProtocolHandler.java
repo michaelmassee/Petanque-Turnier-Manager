@@ -78,6 +78,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
+import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
 import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
@@ -223,6 +224,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_POULE_VORRUNDEN_RANGLISTE   = "poule_vorrunden_rangliste";
 	public static final String CMD_POULE_KO                    = "poule_ko";
 	public static final String CMD_POULE_TESTDATEN_TURNIER     = "poule_testdaten_turnier";
+	public static final String CMD_POULE_TESTDATEN_TURNIER_37  = "poule_testdaten_turnier_37";
 	// Webserver
 	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
@@ -585,6 +587,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_POULE_TESTDATEN_TURNIER:
 				new PouleTurnierTestDaten(ws).start();
 				break;
+			case CMD_POULE_TESTDATEN_TURNIER_37:
+				new Poule37TeamsTurnierTestDaten(ws).start();
+				break;
 			// ------------------------------
 			// Konfiguration
 			case CMD_KONFIGURATION_TURNIER:
@@ -875,7 +880,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_POULE_SPIELPLAENE,
 				 CMD_POULE_VORRUNDEN_RANGLISTE,
 				 CMD_POULE_KO                               -> ts == TurnierSystem.POULE;
-			case CMD_POULE_TESTDATEN_TURNIER                -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
+			case CMD_POULE_TESTDATEN_TURNIER,
+				 CMD_POULE_TESTDATEN_TURNIER_37             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.POULE;
 			// K.-O.-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE,
 				 CMD_KO_TESTDATEN_8_TEAMS,

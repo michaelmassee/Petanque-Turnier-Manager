@@ -375,6 +375,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="C9" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Poule A/B, Complete Tournament (37 Teams, Ranking + KO)</value>
+									<value xml:lang="de">Poule A/B, Komplettes Turnier (37 Teams, Rangliste + KO)</value>
+									<value xml:lang="fr">Poule A/B, tournoi complet (37 équipes, classement + KO)</value>
+									<value xml:lang="nl">Poule A/B, compleet toernooi (37 teams, ranglijst + KO)</value>
+									<value xml:lang="es">Poule A/B, torneo completo (37 equipos, clasificación + KO)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:poule_testdaten_turnier_37</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>
