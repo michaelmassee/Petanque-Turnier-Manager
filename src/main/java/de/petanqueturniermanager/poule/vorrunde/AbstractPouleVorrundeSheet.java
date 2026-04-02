@@ -40,17 +40,16 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
 
     public static final int ERSTE_DATEN_ZEILE = 2;
 
-    protected static final int SPALTE_BAHN = 0;
-    protected static final int SPALTE_BESCHR = 1;
-    protected static final int SPALTE_POULE_NR = 2;
-    protected static final int SPALTE_TEAM_A_NR = 3;
+    protected static final int SPALTE_BAHN      = 0;
+    protected static final int SPALTE_BESCHR    = 1;
+    public static final int SPALTE_POULE_NR     = 2;
+    public static final int SPALTE_TEAM_A_NR    = 3;
     protected static final int SPALTE_TEAM_A_NAME = 4;
-    protected static final int SPALTE_TEAM_B_NR = 5;
+    public static final int SPALTE_TEAM_B_NR    = 5;
     protected static final int SPALTE_TEAM_B_NAME = 6;
-    public static final int SPALTE_ERG_A = 7;
-    public static final int SPALTE_ERG_B = 8;
-    protected static final int SPALTE_FEHLER = 9;
-    protected static final int LETZTE_SPALTE = SPALTE_FEHLER;
+    public static final int SPALTE_ERG_A        = 7;
+    public static final int SPALTE_ERG_B        = 8;
+    protected static final int SPALTE_FEHLER    = 9;
 
     protected static final int VIERER_POULE_DATEN_ZEILEN = 5;
     protected static final int DREIER_POULE_DATEN_ZEILEN = 3;
@@ -91,6 +90,40 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         return konfigurationSheet;
     }
 
+    /**
+     * Gibt an, ob die Bahn-Spalte im Sheet sichtbar ist.
+     * Standard: false (Vorrunde zeigt keine Bahn-Spalte).
+     * Spielplan-Sheets überschreiben diese Methode.
+     */
+    protected boolean zeigeBahnSpalte() throws GenerateException {
+        return false;
+    }
+
+    /**
+     * Gibt an, ob die Fehler-Spalte geschrieben werden soll.
+     * Standard: true (Vorrunde: Ergebnisse werden hier eingetragen, Fehlerprüfung aktiv).
+     * Spielplan-Sheets überschreiben auf false.
+     */
+    protected boolean schreibeFehlerSpalte() {
+        return true;
+    }
+
+    /**
+     * Gibt an, ob die ERG-Zellen per Formel mit dem Vorrunde-Sheet verknüpft werden.
+     * Standard: false (Vorrunde: leere Zellen für manuelle Eintragung).
+     * Spielplan-Sheets überschreiben auf true.
+     */
+    protected boolean verknuepfeMitVorrunde() {
+        return false;
+    }
+
+    /**
+     * Letzte Datenspalte des Sheets (inkl. Fehler-Spalte oder ohne, je nach Sheet-Typ).
+     */
+    protected int letzeSpalte() {
+        return SPALTE_FEHLER;
+    }
+
     // ---------------------------------------------------------------
     // Header
     // ---------------------------------------------------------------
@@ -98,10 +131,12 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     protected void headerSchreiben(XSpreadsheet xSheet) throws GenerateException {
         var headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
 
-        getSheetHelper().setStringValueInCell(
-                schreibeHeaderZelle(xSheet, SPALTE_BAHN, 0,
-                        I18n.get("poule.vorrunde.header.bahn"), headerFarbe)
-                        .setEndPosMergeZeilePlus(1));
+        if (zeigeBahnSpalte()) {
+            getSheetHelper().setStringValueInCell(
+                    schreibeHeaderZelle(xSheet, SPALTE_BAHN, 0,
+                            I18n.get("poule.vorrunde.header.bahn"), headerFarbe)
+                            .setEndPosMergeZeilePlus(1));
+        }
 
         getSheetHelper().setStringValueInCell(
                 schreibeHeaderZelle(xSheet, SPALTE_BESCHR, 0,
@@ -158,7 +193,8 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 .setBorder(BorderFactory.from().allThin().toBorder())
                 .setCharWeight(FontWeight.BOLD)
                 .setHoriJustify(CellHoriJustify.CENTER)
-                .setVertJustify(CellVertJustify2.CENTER);
+                .setVertJustify(CellVertJustify2.CENTER)
+                .setShrinkToFit(true);
     }
 
     // ---------------------------------------------------------------
@@ -166,8 +202,13 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     // ---------------------------------------------------------------
 
     protected void spaltenBreitenSetzen(XSpreadsheet xSheet) throws GenerateException {
-        getSheetHelper().setColumnProperties(xSheet, SPALTE_BAHN,
-                ColumnProperties.from().setWidth(BAHN_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
+        if (zeigeBahnSpalte()) {
+            getSheetHelper().setColumnProperties(xSheet, SPALTE_BAHN,
+                    ColumnProperties.from().setWidth(BAHN_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
+        } else {
+            getSheetHelper().setColumnProperties(xSheet, SPALTE_BAHN,
+                    ColumnProperties.from().isVisible(false));
+        }
         getSheetHelper().setColumnProperties(xSheet, SPALTE_BESCHR,
                 ColumnProperties.from().setWidth(BESCHR_SPALTE_BREITE));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_POULE_NR,
@@ -184,16 +225,21 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 ColumnProperties.from().setWidth(ERG_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
         getSheetHelper().setColumnProperties(xSheet, SPALTE_ERG_B,
                 ColumnProperties.from().setWidth(ERG_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
-        getSheetHelper().setColumnProperties(xSheet, SPALTE_FEHLER,
-                ColumnProperties.from().setWidth(FEHLER_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
+        if (schreibeFehlerSpalte()) {
+            getSheetHelper().setColumnProperties(xSheet, SPALTE_FEHLER,
+                    ColumnProperties.from().setWidth(FEHLER_SPALTE_BREITE).setHoriJustify(CellHoriJustify.CENTER));
+        } else {
+            getSheetHelper().setColumnProperties(xSheet, SPALTE_FEHLER,
+                    ColumnProperties.from().isVisible(false));
+        }
     }
 
     // ---------------------------------------------------------------
     // Poule-Blöcke schreiben
     // ---------------------------------------------------------------
 
-    protected int schreibeViererPoule(XSpreadsheet xSheet, PouleSeedingService.Poule poule,
-            int basisZeile, int spielbahnZaehler) throws GenerateException {
+    protected void schreibeViererPoule(XSpreadsheet xSheet, PouleSeedingService.Poule poule,
+            int basisZeile, int vorrundeStartZeile) throws GenerateException {
 
         var teams = poule.teams();
 
@@ -212,31 +258,34 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         int rVerlierer = basisZeile + 3;
         int rBarrage = basisZeile + 4;
 
-        spielbahnZaehler = schreibeSpielZeileR1(xSheet, rSpielA,
+        schreibeSpielZeileR1(xSheet, rSpielA,
                 I18n.get("poule.vorrunde.spiel.a"),
-                teams.get(0).getNr(), teams.get(1).getNr(), spielbahnZaehler);
+                teams.get(0).getNr(), teams.get(1).getNr(),
+                vorrundeStartZeile);
 
-        spielbahnZaehler = schreibeSpielZeileR1(xSheet, rSpielB,
+        schreibeSpielZeileR1(xSheet, rSpielB,
                 I18n.get("poule.vorrunde.spiel.b"),
-                teams.get(2).getNr(), teams.get(3).getNr(), spielbahnZaehler);
+                teams.get(2).getNr(), teams.get(3).getNr(),
+                vorrundeStartZeile + 1);
 
-        spielbahnZaehler = schreibeSpielZeileFormula(xSheet, rSieger,
+        schreibeSpielZeileFormula(xSheet, rSieger,
                 I18n.get("poule.vorrunde.siegerspiel"),
-                siegerFormel(rSpielA), siegerFormel(rSpielB), spielbahnZaehler);
+                siegerFormel(rSpielA), siegerFormel(rSpielB),
+                vorrundeStartZeile + 2);
 
-        spielbahnZaehler = schreibeSpielZeileFormula(xSheet, rVerlierer,
+        schreibeSpielZeileFormula(xSheet, rVerlierer,
                 I18n.get("poule.vorrunde.verliererspiel"),
-                verliererFormel(rSpielA), verliererFormel(rSpielB), spielbahnZaehler);
+                verliererFormel(rSpielA), verliererFormel(rSpielB),
+                vorrundeStartZeile + 3);
 
-        spielbahnZaehler = schreibeSpielZeileFormula(xSheet, rBarrage,
+        schreibeSpielZeileFormula(xSheet, rBarrage,
                 I18n.get("poule.vorrunde.barrage"),
-                verliererFormel(rSieger), siegerFormel(rVerlierer), spielbahnZaehler);
-
-        return spielbahnZaehler;
+                verliererFormel(rSieger), siegerFormel(rVerlierer),
+                vorrundeStartZeile + 4);
     }
 
-    protected int schreibeDreierPoule(XSpreadsheet xSheet, PouleSeedingService.Poule poule,
-            int basisZeile, int spielbahnZaehler) throws GenerateException {
+    protected void schreibeDreierPoule(XSpreadsheet xSheet, PouleSeedingService.Poule poule,
+            int basisZeile, int vorrundeStartZeile) throws GenerateException {
 
         var teams = poule.teams();
 
@@ -249,26 +298,26 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                         .setCharWeight(FontWeight.BOLD)
                         .setBorder(BorderFactory.from().allThin().toBorder()));
 
-        spielbahnZaehler = schreibeSpielZeileR1(xSheet, basisZeile,
+        schreibeSpielZeileR1(xSheet, basisZeile,
                 I18n.get("poule.vorrunde.spiel.1"),
-                teams.get(0).getNr(), teams.get(1).getNr(), spielbahnZaehler);
+                teams.get(0).getNr(), teams.get(1).getNr(),
+                vorrundeStartZeile);
 
-        spielbahnZaehler = schreibeSpielZeileR1(xSheet, basisZeile + 1,
+        schreibeSpielZeileR1(xSheet, basisZeile + 1,
                 I18n.get("poule.vorrunde.spiel.2"),
-                teams.get(0).getNr(), teams.get(2).getNr(), spielbahnZaehler);
+                teams.get(0).getNr(), teams.get(2).getNr(),
+                vorrundeStartZeile + 1);
 
-        spielbahnZaehler = schreibeSpielZeileR1(xSheet, basisZeile + 2,
+        schreibeSpielZeileR1(xSheet, basisZeile + 2,
                 I18n.get("poule.vorrunde.spiel.3"),
-                teams.get(1).getNr(), teams.get(2).getNr(), spielbahnZaehler);
-
-        return spielbahnZaehler;
+                teams.get(1).getNr(), teams.get(2).getNr(),
+                vorrundeStartZeile + 2);
     }
 
-    private int schreibeSpielZeileR1(XSpreadsheet xSheet, int zeile, String beschreibung,
-            int teamANr, int teamBNr, int spielbahnZaehler) throws GenerateException {
+    private void schreibeSpielZeileR1(XSpreadsheet xSheet, int zeile, String beschreibung,
+            int teamANr, int teamBNr, int vorrundeZeile) throws GenerateException {
 
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_BAHN, zeile)).setValue(spielbahnZaehler));
+        // Bahn-Spalte: nur in Spielplan-Sheets (zeigeBahnSpalte()), dann leer (manuelle Eintragung)
 
         getSheetHelper().setStringValueInCell(
                 StringCellValue.from(xSheet, Position.from(SPALTE_BESCHR, zeile), beschreibung));
@@ -287,16 +336,17 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 Position.from(SPALTE_TEAM_B_NAME, zeile),
                 vlookupDirekt(Position.from(SPALTE_TEAM_B_NR, zeile).getAddress())));
 
-        schreibeFehlerFormel(xSheet, zeile, false);
+        schreibeErgZellen(xSheet, zeile, vorrundeZeile);
 
-        return spielbahnZaehler + 1;
+        if (schreibeFehlerSpalte()) {
+            schreibeFehlerFormel(xSheet, zeile, false);
+        }
     }
 
-    private int schreibeSpielZeileFormula(XSpreadsheet xSheet, int zeile, String beschreibung,
-            String teamAFormel, String teamBFormel, int spielbahnZaehler) throws GenerateException {
+    private void schreibeSpielZeileFormula(XSpreadsheet xSheet, int zeile, String beschreibung,
+            String teamAFormel, String teamBFormel, int vorrundeZeile) throws GenerateException {
 
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_BAHN, zeile)).setValue(spielbahnZaehler));
+        // Bahn-Spalte: nur in Spielplan-Sheets (zeigeBahnSpalte()), dann leer (manuelle Eintragung)
 
         getSheetHelper().setStringValueInCell(
                 StringCellValue.from(xSheet, Position.from(SPALTE_BESCHR, zeile), beschreibung));
@@ -315,9 +365,38 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 Position.from(SPALTE_TEAM_B_NAME, zeile),
                 vlookupMitGuard(Position.from(SPALTE_TEAM_B_NR, zeile).getAddress())));
 
-        schreibeFehlerFormel(xSheet, zeile, true);
+        schreibeErgZellen(xSheet, zeile, vorrundeZeile);
 
-        return spielbahnZaehler + 1;
+        if (schreibeFehlerSpalte()) {
+            schreibeFehlerFormel(xSheet, zeile, true);
+        }
+    }
+
+    /**
+     * Schreibt die ERG-Zellen A und B.
+     * Im Vorrunde-Sheet bleiben sie leer (manuelle Eintragung).
+     * In Spielplan-Sheets werden Formeln eingetragen, die auf die entsprechenden
+     * Zellen im Vorrunde-Sheet verweisen.
+     */
+    private void schreibeErgZellen(XSpreadsheet xSheet, int zeile, int vorrundeZeile)
+            throws GenerateException {
+        if (!verknuepfeMitVorrunde()) {
+            return;
+        }
+        getSheetHelper().setFormulaInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_ERG_A, zeile),
+                        vorrundeZellRef(SPALTE_ERG_A, vorrundeZeile)));
+        getSheetHelper().setFormulaInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_ERG_B, zeile),
+                        vorrundeZellRef(SPALTE_ERG_B, vorrundeZeile)));
+    }
+
+    /**
+     * Erstellt einen absoluten Zellverweis auf das Poule-Vorrunde-Sheet.
+     * Beispiel: {@code $'Poule Vorrunde'.$H$3}
+     */
+    private String vorrundeZellRef(int spalte, int zeile) {
+        return "$'" + SheetNamen.pouleVorrunde() + "'.$" + (char) ('A' + spalte) + "$" + (zeile + 1);
     }
 
     // ---------------------------------------------------------------
@@ -398,14 +477,19 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     // ---------------------------------------------------------------
 
     protected void formatierungDurchfuehren(XSpreadsheet xSheet, int letzteDatenZeile) throws GenerateException {
-        var datenRange = RangePosition.from(SPALTE_BAHN, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteDatenZeile);
+        var datenRange = RangePosition.from(SPALTE_BAHN, ERSTE_DATEN_ZEILE, letzeSpalte(), letzteDatenZeile);
 
         getSheetHelper().setPropertiesInRange(xSheet, datenRange,
                 CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder()));
 
+        var letzteSpalteRange = RangePosition.from(letzeSpalte(), ERSTE_DATEN_ZEILE, letzeSpalte(), letzteDatenZeile);
+        getSheetHelper().setPropertiesInRange(xSheet, letzteSpalteRange,
+                CellProperties.from().setBorder(BorderFactory.from().keinRechtsBorder().toBorder()));
+
         int geradeColor = konfigurationSheet.getMeldeListeHintergrundFarbeGerade();
         int unGeradeColor = konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade();
-        SheetHelper.faerbeZeilenAbwechselnd(this, datenRange, geradeColor, unGeradeColor);
+        var zebraRange = RangePosition.from(SPALTE_BAHN, ERSTE_DATEN_ZEILE, SPALTE_ERG_B, letzteDatenZeile);
+        SheetHelper.faerbeZeilenAbwechselnd(this, zebraRange, geradeColor, unGeradeColor);
 
         var ergebnissRange = RangePosition.from(SPALTE_ERG_A, ERSTE_DATEN_ZEILE, SPALTE_ERG_B, letzteDatenZeile);
         var spielrundeHelper = new SpielrundeHelper(this,
@@ -418,6 +502,6 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         PrintArea.from(xSheet, getWorkingSpreadsheet())
                 .setPrintArea(RangePosition.from(
                         Position.from(SPALTE_BAHN, 0),
-                        Position.from(LETZTE_SPALTE, letzteDatenZeile)));
+                        Position.from(letzeSpalte(), letzteDatenZeile)));
     }
 }

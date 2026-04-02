@@ -129,6 +129,22 @@ public final class SheetResolverFactory {
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN,
                         I18n.get("webserver.resolver.vorrunde.rangliste")));
+        RESOLVER_MAP.put("POULE_VORRUNDE", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
+                        I18n.get("webserver.resolver.poule.vorrunde")));
+        RESOLVER_MAP.put("POULE_VORRUNDEN_RANGLISTE", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
+                        I18n.get("webserver.resolver.poule.vorrunden.rangliste")));
+        RESOLVER_MAP.put("POULE_KO_A", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselPouleKo("A"),
+                        I18n.get("webserver.resolver.poule.ko.a")));
+        RESOLVER_MAP.put("POULE_KO_B", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselPouleKo("B"),
+                        I18n.get("webserver.resolver.poule.ko.b")));
     }
 
     /**

@@ -39,6 +39,7 @@ public final class SheetNamen {
     public static final String KEY_TEILNEHMER                       = "sheet.name.teilnehmer";
     public static final String KEY_POULE_VORRUNDE                   = "sheet.name.poule.vorrunde";
     public static final String KEY_POULE_TEILNEHMER                 = "sheet.name.poule.teilnehmer";
+    public static final String KEY_POULE_VORRUNDEN_RANGLISTE        = "sheet.name.poule.vorrunden.rangliste";
 
     // ── i18n-Schlüssel – Muster mit Platzhaltern ─────────────────────────────
 
@@ -93,6 +94,7 @@ public final class SheetNamen {
     public static final String LEGACY_POULE_VORRUNDE                 = "Poule Vorrunde";
     public static final String LEGACY_POULE_TEILNEHMER               = "Poule Teilnehmer";
     public static final String LEGACY_POULE_SPIELPLAN_PRAEFIX        = "Spielplan";
+    public static final String LEGACY_POULE_VORRUNDEN_RANGLISTE      = "Poule Vorrunden-Rangliste";
 
     private SheetNamen() {
     }
@@ -167,6 +169,10 @@ public final class SheetNamen {
 
     public static String pouleTeilnehmer() {
         return getOderFallback(KEY_POULE_TEILNEHMER, LEGACY_POULE_TEILNEHMER);
+    }
+
+    public static String pouleVorrundenRangliste() {
+        return getOderFallback(KEY_POULE_VORRUNDEN_RANGLISTE, LEGACY_POULE_VORRUNDEN_RANGLISTE);
     }
 
     /**

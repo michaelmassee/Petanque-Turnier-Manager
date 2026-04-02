@@ -73,15 +73,14 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements IS
         spaltenBreitenSetzen(xSheet);
 
         int aktuelleZeile = ERSTE_DATEN_ZEILE;
-        int spielbahnZaehler = 1;
 
         for (var poule : poules) {
             SheetRunner.testDoCancelTask();
             if (poule.teams().size() == 4) {
-                spielbahnZaehler = schreibeViererPoule(xSheet, poule, aktuelleZeile, spielbahnZaehler);
+                schreibeViererPoule(xSheet, poule, aktuelleZeile, aktuelleZeile);
                 aktuelleZeile += VIERER_POULE_DATEN_ZEILEN + SPACER_ZEILEN;
             } else {
-                spielbahnZaehler = schreibeDreierPoule(xSheet, poule, aktuelleZeile, spielbahnZaehler);
+                schreibeDreierPoule(xSheet, poule, aktuelleZeile, aktuelleZeile);
                 aktuelleZeile += DREIER_POULE_DATEN_ZEILEN + SPACER_ZEILEN;
             }
         }

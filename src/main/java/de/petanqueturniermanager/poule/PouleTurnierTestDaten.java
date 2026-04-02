@@ -21,6 +21,8 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
+import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheet;
+import de.petanqueturniermanager.poule.vorrunde.PouleSpielplaeneSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleSeedingService;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -29,7 +31,9 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Generiert ein vollständiges Poule-A/B-Beispielturnier ohne Dialoge:
  * <ol>
  *   <li>Meldeliste (16 Teams, Triplette)</li>
+ *   <li>Teilnehmerliste</li>
  *   <li>Vorrunde (alle Poule-Gruppen mit Spielplan)</li>
+ *   <li>Spielpläne (je ein Sheet pro Gruppe)</li>
  *   <li>Zufallsergebnisse für alle Matches</li>
  * </ol>
  */
@@ -37,14 +41,18 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
 
     private final PouleMeldeListeSheetTestDaten meldelisteTestDaten;
     private final PouleMeldeListeSheetUpdate meldeliste;
+    private final PouleTeilnehmerSheet teilnehmerSheet;
     private final PouleVorrundeSheet vorrundeSheet;
+    private final PouleSpielplaeneSheet spielplaeneSheet;
     private final PouleKonfigurationSheet konfigurationSheet;
 
     public PouleTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.POULE, "Poule-Turnier-Testdaten");
         meldelisteTestDaten = new PouleMeldeListeSheetTestDaten(workingSpreadsheet);
         meldeliste = new PouleMeldeListeSheetUpdate(workingSpreadsheet);
+        teilnehmerSheet = new PouleTeilnehmerSheet(workingSpreadsheet);
         vorrundeSheet = new PouleVorrundeSheet(workingSpreadsheet);
+        spielplaeneSheet = new PouleSpielplaeneSheet(workingSpreadsheet);
         konfigurationSheet = new PouleKonfigurationSheet(workingSpreadsheet);
     }
 
@@ -84,13 +92,19 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
         // 2. Meldeliste aktualisieren – befüllt this.meldeliste für ergebnisseEinfuegen()
         meldeliste.upDateSheet();
 
-        // 3. Vorrunde erstellen
+        // 3. Teilnehmerliste erstellen
+        teilnehmerSheet.generate();
+
+        // 4. Vorrunde erstellen
         vorrundeSheet.doRun();
 
-        // 4. Ergebnisse einfügen
+        // 5. Spielpläne erstellen (je ein Sheet pro Gruppe)
+        spielplaeneSheet.doRun();
+
+        // 6. Ergebnisse einfügen
         ergebnisseEinfuegen();
 
-        // 5. Seitenstile setzen
+        // 7. Seitenstile setzen
         konfigurationSheet.seitenstileAktualisieren();
     }
 

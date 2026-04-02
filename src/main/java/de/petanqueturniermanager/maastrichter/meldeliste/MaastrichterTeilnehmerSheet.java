@@ -160,12 +160,14 @@ public class MaastrichterTeilnehmerSheet extends SheetRunner implements ISheet {
                     .from(getXSpreadSheet(), Position.from(nrSpalte, 0), I18n.get("column.header.nr"))
                     .setBorder(BorderFactory.from().allThin().toBorder())
                     .setCellBackColor(headerFarbe)
-                    .setHoriJustify(CellHoriJustify.CENTER));
+                    .setHoriJustify(CellHoriJustify.CENTER)
+                    .setShrinkToFit(true));
             getSheetHelper().setStringValueInCell(StringCellValue
                     .from(getXSpreadSheet(), Position.from(nameSpalte, 0), I18n.get("column.header.name"))
                     .setBorder(BorderFactory.from().allThin().toBorder())
                     .setCellBackColor(headerFarbe)
-                    .setHoriJustify(CellHoriJustify.CENTER));
+                    .setHoriJustify(CellHoriJustify.CENTER)
+                    .setShrinkToFit(true));
         }
     }
 

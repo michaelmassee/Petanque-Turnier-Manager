@@ -75,4 +75,14 @@ public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements I
         propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
     }
 
+    @Override
+    public boolean isSpielplanMitBahnspalte() {
+        return propertiesSpalte.isSpielplanMitBahnspalte();
+    }
+
+    @Override
+    public void setSpielplanMitBahnspalte(boolean mitBahnspalte) {
+        propertiesSpalte.setSpielplanMitBahnspalte(mitBahnspalte);
+    }
+
 }

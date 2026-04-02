@@ -150,7 +150,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			MessageBoxResult msgBoxRslt = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL)
 					.forceOk(force).caption(I18n.get("msg.caption.neue.spielrunde")).message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
-				ProcessBox.from().info(I18n.get("supermelee.spielrunde.abbruch"));
+				ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 				return false;
 			}
 		}
@@ -161,7 +161,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(sheet.getSpielTag()).setForceCreate(force)
 				.setActiv().hideGrid().create();
 		if (!neuesSheet.isDidCreate()) {
-			ProcessBox.from().info(I18n.get("supermelee.spielrunde.abbruch"));
+			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;
 		}
 
@@ -555,7 +555,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.addCellProperty(CHAR_WEIGHT, FontWeight.BOLD).setEndPosMerge(ersteHeaderZeileMerge)
 				.addCellProperty(HORI_JUSTIFY, CellHoriJustify.CENTER)
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().toBorder()).setCharHeight(13)
-				.setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe);
+				.setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe).setShrinkToFit(true);
 		sheet.getSheetHelper().setStringValueInCell(headerVal);
 
 		Position posSpielerNamen = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ZWEITE_HEADER_ZEILE);
@@ -595,7 +595,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER)
 				.isVisible(konfigurationSheet.zeigeArbeitsSpalten());
 		StringCellValue headerCelVal = StringCellValue.from(xsheet, Position.from(pos), "#")
-				.addColumnProperties(columnProperties);
+				.addColumnProperties(columnProperties).setShrinkToFit(true);
 		sheet.getSheetHelper().setStringValueInCell(headerCelVal);
 		headerCelVal.spaltePlusEins();
 

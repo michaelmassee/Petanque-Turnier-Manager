@@ -44,7 +44,7 @@ public class NewReleaseInfosAnzeigenUITest extends BaseCalcUITest {
 		}
 
 		@Override
-		String latestVersionFromCacheFile() {
+		public String latestVersionFromCacheFile() {
 			return simulierteVersion;
 		}
 	}

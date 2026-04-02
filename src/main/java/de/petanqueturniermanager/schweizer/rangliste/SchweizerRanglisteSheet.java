@@ -422,7 +422,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.setCellBackColor(headerColor)
 					.setBorder(border)
 					.setHoriJustify(CellHoriJustify.CENTER)
-					.setEndPosMergeZeilePlus(1);  // vertikal Row 0 + Row 1
+					.setEndPosMergeZeilePlus(1)  // vertikal Row 0 + Row 1
+					.setShrinkToFit(true);
 			if (col == PLATZ_SPALTE) {
 				cv.setRotate90().setCharWeight(com.sun.star.awt.FontWeight.BOLD)
 						.setVertJustify(CellVertJustify2.CENTER);
@@ -436,7 +437,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				.setCellBackColor(headerColor)
 				.setBorder(BorderFactory.from().allThin().toBorder())
 				.setHoriJustify(CellHoriJustify.CENTER)
-				.setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE));  // horizontal G–I
+				.setEndPosMergeSpalte(PUNKTE_DIFF_SPALTE)  // horizontal G–I
+				.setShrinkToFit(true));
 
 		// ── Zeile 1: Sub-Header für die Punkte-Spalten ───────────────────────────
 		String[] subTexte = {
@@ -449,7 +451,8 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.from(sheet, Position.from(subCols[i], ZWEITE_HEADER_ZEILE), subTexte[i])
 					.setCellBackColor(headerColor)
 					.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
-					.setHoriJustify(CellHoriJustify.CENTER));
+					.setHoriJustify(CellHoriJustify.CENTER)
+					.setShrinkToFit(true));
 		}
 	}
 

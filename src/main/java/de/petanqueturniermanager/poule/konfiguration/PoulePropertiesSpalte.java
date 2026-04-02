@@ -24,9 +24,10 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
         ADDBaseProp(KONFIG_PROPERTIES, false); // Rangliste-Farben noch nicht benötigt
     }
 
-    private static final String KONFIG_PROP_MELDELISTE_FORMATION  = "Meldeliste Formation";
-    private static final String KONFIG_PROP_MELDELISTE_TEAMNAME   = "Meldeliste Teamname";
+    private static final String KONFIG_PROP_MELDELISTE_FORMATION   = "Meldeliste Formation";
+    private static final String KONFIG_PROP_MELDELISTE_TEAMNAME    = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
+    private static final String KONFIG_PROP_SPIELPLAN_MIT_BAHN = "Spielplan Bahnspalte";
 
     static {
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
@@ -42,6 +43,10 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
 
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
                 .setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
+                .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_MIT_BAHN)
+                .setDefaultVal("N").setDescription("config.desc.poule.spielplan.mit.bahnspalte"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
     }
 
@@ -84,6 +89,16 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
     @Override
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+    }
+
+    @Override
+    public boolean isSpielplanMitBahnspalte() {
+        return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_SPIELPLAN_MIT_BAHN));
+    }
+
+    @Override
+    public void setSpielplanMitBahnspalte(boolean mitBahnspalte) {
+        setStringProperty(KONFIG_PROP_SPIELPLAN_MIT_BAHN, mitBahnspalte ? "J" : "N");
     }
 
 }

@@ -39,9 +39,9 @@ import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
-import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -126,29 +126,23 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		meldeListe.upDateSheet();
-		var ranglisteVorhanden = SheetMetadataHelper
-				.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-						SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE)
-				.isPresent();
-		if (generate(meldeListe.getAlleMeldungen()) && ranglisteVorhanden) {
-			new LigaRanglisteSheet(getWorkingSpreadsheet()).upDateSheet();
-		}
+		generate(meldeListe.getAlleMeldungen());
 	}
 
-	public boolean generate(TeamMeldungen meldungen) throws GenerateException {
+	public void generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
 			processBoxinfo("processbox.abbruch");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.liga.spielplan"))
 					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
-			return false;
+			return;
 		}
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
 				.tabColor(SHEET_COLOR).create().isDidCreate()) {
-			processBoxinfo("liga.spielplan.abbruch");
-			return false;
+			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
+			return;
 		}
 
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
@@ -170,7 +164,6 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);
 		}
-		return true;
 	}
 
 	private void printBereichDefinieren() throws GenerateException {

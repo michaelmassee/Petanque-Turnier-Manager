@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -115,7 +116,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 		if (!NewSheet.from(this, SheetNamen.direktvergleich(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
-			processBoxinfo("liga.direktvergleich.abbruch");
+			ProcessBox.from().info("Abbruch vom Benutzer, Liga Direktvergleich wurde nicht erstellt");
 			return;
 		}
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);

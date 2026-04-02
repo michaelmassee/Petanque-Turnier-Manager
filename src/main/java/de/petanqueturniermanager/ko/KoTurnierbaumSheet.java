@@ -703,7 +703,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCellBackColor(headerFarbe)
 							.setCharColor("FFFFFF")
-							.setBorder(BorderFactory.from().allThin().toBorder()));
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setShrinkToFit(true));
 			if (mitBahn()) {
 				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), I18n.get("column.header.bahn"));
 			}
@@ -723,7 +724,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCellBackColor(headerFarbe)
 							.setCharColor("FFFFFF")
-							.setBorder(BorderFactory.from().allThin().toBorder()));
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setShrinkToFit(true));
 
 			// Zeile 1: Spalten-Überschriften
 			if (mitBahn()) {
@@ -740,7 +742,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(siegerFarbe)
-						.setBorder(BorderFactory.from().allThin().toBorder()));
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setShrinkToFit(true));
 	}
 
 	private String berechnRundenTitel(int r, int numRunden) {
@@ -761,7 +764,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(headerFarbe)
 						.setCharColor("FFFFFF")
-						.setBorder(BorderFactory.from().allThin().toBorder()));
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setShrinkToFit(true));
 	}
 
 	// ---------------------------------------------------------------

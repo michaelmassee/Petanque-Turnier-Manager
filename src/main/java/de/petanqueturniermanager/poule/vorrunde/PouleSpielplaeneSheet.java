@@ -49,6 +49,26 @@ public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
     }
 
     @Override
+    protected boolean zeigeBahnSpalte() throws GenerateException {
+        return getKonfigurationSheet().isSpielplanMitBahnspalte();
+    }
+
+    @Override
+    protected boolean schreibeFehlerSpalte() {
+        return false;
+    }
+
+    @Override
+    protected boolean verknuepfeMitVorrunde() {
+        return true;
+    }
+
+    @Override
+    protected int letzeSpalte() {
+        return SPALTE_ERG_B;
+    }
+
+    @Override
     public void doRun() throws GenerateException {
         processBoxinfo("processbox.poule.spielplaene.erstellen");
         meldeliste.upDateSheet();
@@ -66,13 +86,16 @@ public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
         var gruppenGroessen = PouleGruppenRechner.berechneGruppenGroessen(anzTeams);
         var poules = PouleSeedingService.verteileTeams(meldungen, gruppenGroessen);
 
+        int vorrundeZeile = ERSTE_DATEN_ZEILE;
         for (var poule : poules) {
             SheetRunner.testDoCancelTask();
-            erstellePouleSpielplanSheet(poule);
+            erstellePouleSpielplanSheet(poule, vorrundeZeile);
+            vorrundeZeile += poule.teams().size() == 4 ? VIERER_POULE_ZEILEN : DREIER_POULE_ZEILEN;
         }
     }
 
-    private void erstellePouleSpielplanSheet(PouleSeedingService.Poule poule) throws GenerateException {
+    private void erstellePouleSpielplanSheet(PouleSeedingService.Poule poule, int vorrundeStartZeile)
+            throws GenerateException {
         var sheetName = SheetNamen.pouleSpielplan(poule.pouleNr());
         var metaKey = SheetMetadataHelper.schluesselPouleSpielplan(poule.pouleNr());
 
@@ -91,10 +114,10 @@ public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
 
             int letzteDatenZeile;
             if (poule.teams().size() == 4) {
-                schreibeViererPoule(aktuellesPouleSheet, poule, ERSTE_DATEN_ZEILE, 1);
+                schreibeViererPoule(aktuellesPouleSheet, poule, ERSTE_DATEN_ZEILE, vorrundeStartZeile);
                 letzteDatenZeile = ERSTE_DATEN_ZEILE + VIERER_POULE_DATEN_ZEILEN - 1;
             } else {
-                schreibeDreierPoule(aktuellesPouleSheet, poule, ERSTE_DATEN_ZEILE, 1);
+                schreibeDreierPoule(aktuellesPouleSheet, poule, ERSTE_DATEN_ZEILE, vorrundeStartZeile);
                 letzteDatenZeile = ERSTE_DATEN_ZEILE + DREIER_POULE_DATEN_ZEILEN - 1;
             }
 

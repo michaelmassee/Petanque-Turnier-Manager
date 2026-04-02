@@ -154,7 +154,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 						I18n.get(HEADER_SPIELER_NR_KEY))
 				.setComment(I18n.get("meldeliste.comment.meldenummer")).addColumnProperties(columnProperties)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight().toBorder()).setCellBackColor(headerColor)
-				.setVertJustify(CellVertJustify2.CENTER);
+				.setVertJustify(CellVertJustify2.CENTER).setShrinkToFit(true);
 
 		if (anzZeilenInHeader > 1) {
 			celVal.setEndPosMergeZeilePlus(1);

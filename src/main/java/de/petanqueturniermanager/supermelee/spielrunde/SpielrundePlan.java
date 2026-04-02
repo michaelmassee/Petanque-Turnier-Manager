@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -113,7 +114,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv()
 				.tabColor(SHEET_COLOR).create();
 		if (!neuesSheet.isDidCreate()) {
-			processBoxinfo("supermelee.spielrundeplan.abbruch");
+			ProcessBox.from().info("Abbruch vom Benutzer, Spielrundeplan wurde nicht erstellt");
 			return;
 		}
 
@@ -201,7 +202,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 		Position ersteHeader = Position.from(ersteSpielerNr).zeile(HEADER_ZEILE_2);
 		int spielerSpalte = ersteSpielerNr.getSpalte();
 		StringCellValue header = StringCellValue.from(getXSpreadSheet(), ersteHeader).setCharWeight(FontWeight.BOLD)
-				.setCharHeight(8);
+				.setCharHeight(8).setShrinkToFit(true);
 		getSheetHelper().setStringValueInCell(header.setValue("Nr."));
 		getSheetHelper().setStringValueInCell(
 				header.spalte(spielerSpalte).spaltePlus(SPIELER_NAME_OFFS_SPALTE).setValue("Name"));

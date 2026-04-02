@@ -23,4 +23,8 @@ public interface IPoulePropertiesSpalte extends IPropertiesSpalte {
 
     void setMeldeListeVereinsnameAnzeigen(boolean anzeigen);
 
+    boolean isSpielplanMitBahnspalte();
+
+    void setSpielplanMitBahnspalte(boolean mitBahnspalte);
+
 }

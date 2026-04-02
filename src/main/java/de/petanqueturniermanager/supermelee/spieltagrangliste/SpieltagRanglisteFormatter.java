@@ -61,7 +61,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerPlus = StringCellValue
 				.from(sheet, Position.from(ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+")
-				.addColumnProperties(columnProperties).setCellBackColor(getHeaderFarbe());
+				.addColumnProperties(columnProperties).setCellBackColor(getHeaderFarbe()).setShrinkToFit(true);
 		StringCellValue headerMinus = StringCellValue.from(headerPlus).setValue("-");
 
 		headerPlus.setBorder(borderThinLeftBold());
@@ -82,7 +82,7 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		TableBorder2 border = BorderFactory.from().allBold().thinLn().forBottom().toBorder();
 		StringCellValue rundeHeaderBez = StringCellValue.from(sheet).zeile(ERSTE_KOPFDATEN_ZEILE)
 				.spalte(ersteSpielRundeSpalte).setEndPosMergeSpaltePlus((anzRunden * 2) - 1).setValue(I18n.get("column.header.runde"))
-				.setCellBackColor(getHeaderFarbe()).setBorder(border);
+				.setCellBackColor(getHeaderFarbe()).setBorder(border).setShrinkToFit(true);
 		getSheetHelper().setStringValueInCell(rundeHeaderBez);
 
 		// -------------------------

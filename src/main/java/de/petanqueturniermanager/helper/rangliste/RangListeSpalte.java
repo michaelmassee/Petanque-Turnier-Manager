@@ -64,7 +64,7 @@ public class RangListeSpalte {
 
 		StringCellValue celVal = StringCellValue.from(getSheet(), Position.from(rangListeSpalte, ersteZeile - 3), I18n.get("column.header.platz")).addColumnProperties(columnProperties)
 				.setRotateAngle(27000).setVertJustify(CellVertJustify2.CENTER).setBorder(BorderFactory.from().allThin().toBorder()).setCellBackColor(headerColor).setCharHeight(10)
-				.setCharWeight(FontWeight.BOLD).setCharHeight(12).setEndPosMerge(Position.from(rangListeSpalte, ersteZeile - 1));
+				.setCharWeight(FontWeight.BOLD).setCharHeight(12).setEndPosMerge(Position.from(rangListeSpalte, ersteZeile - 1)).setShrinkToFit(true);
 		getSheetHelper().setStringValueInCell(celVal); // spieler nr
 	}
 
