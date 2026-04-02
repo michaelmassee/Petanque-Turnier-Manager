@@ -173,6 +173,7 @@ public class LigaHtmlCleaner {
 		Element ranglisteClone = findRanglisteTable(ligaHtmlOrg);
 		if (ranglisteClone != null) {
 			cleanUpTable(ranglisteClone);
+			leereZeilenEntfernen(ranglisteClone);
 
 			String reihenfolge = I18n.get("liga.rangliste.reihenfolge.platzierung");
 			Element reihenfolgeEL = ranglisteClone.selectFirst("tr:containsWholeText(" + reihenfolge + ")");
@@ -315,6 +316,15 @@ public class LigaHtmlCleaner {
 			logger.error(e.getMessage(), e);
 		}
 		return null;
+	}
+
+	private void leereZeilenEntfernen(Element table) {
+		for (Element zeile : table.select("tr")) {
+			boolean alleZellenLeer = zeile.select("td,th").stream().allMatch(zelle -> zelle.text().isBlank());
+			if (alleZellenLeer) {
+				zeile.remove();
+			}
+		}
 	}
 
 	private void cleanUpTable(Element table) {
