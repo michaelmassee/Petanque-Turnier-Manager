@@ -47,8 +47,12 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
     private final PouleKonfigurationSheet konfigurationSheet;
 
     public PouleTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
+        this(workingSpreadsheet, 16);
+    }
+
+    public PouleTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
         super(workingSpreadsheet, TurnierSystem.POULE, "Poule-Turnier-Testdaten");
-        meldelisteTestDaten = new PouleMeldeListeSheetTestDaten(workingSpreadsheet);
+        meldelisteTestDaten = new PouleMeldeListeSheetTestDaten(workingSpreadsheet, anzTeams);
         meldeliste = new PouleMeldeListeSheetUpdate(workingSpreadsheet);
         teilnehmerSheet = new PouleTeilnehmerSheet(workingSpreadsheet);
         vorrundeSheet = new PouleVorrundeSheet(workingSpreadsheet);
