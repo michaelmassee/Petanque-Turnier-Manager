@@ -26,7 +26,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -139,7 +138,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		if (!NewSheet.from(this, SheetNamen.rangliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.JGJ_ENDRANGLISTE).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
-			ProcessBox.from().info("Abbruch vom Benutzer, JGJ SpielPlan wurde nicht erstellt");
+			processBoxinfo("jgj.rangliste.abbruch");
 			return;
 		}
 

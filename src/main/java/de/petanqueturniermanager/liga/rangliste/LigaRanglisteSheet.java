@@ -6,6 +6,8 @@ package de.petanqueturniermanager.liga.rangliste;
 import java.util.Arrays;
 import java.util.List;
 
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.IS_TEXT_WRAPPED;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -26,7 +28,6 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -140,7 +141,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		if (!NewSheet.from(this, SheetNamen.rangliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv()
 				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
-			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
+			processBoxinfo("liga.rangliste.abbruch");
 			return;
 		}
 
@@ -182,9 +183,12 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
-				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
-		getSheetHelper().setStringValueInCell(stringVal.setValue(
-				"Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte +, 4. Spielpunkte Δ, 5. Direktvergleich, 6. das Los"));
+				.setHoriJustify(CellHoriJustify.LEFT)
+				.setCharHeight(8)
+				.setEndPosMergeSpalte(getLetzteSpalte())
+				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE);
+		getSheetHelper().setStringValueInCell(stringVal.setValue(I18n.get("liga.rangliste.reihenfolge.platzierung")));
 		return stringVal;
 	}
 

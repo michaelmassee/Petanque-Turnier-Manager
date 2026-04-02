@@ -150,7 +150,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			MessageBoxResult msgBoxRslt = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL)
 					.forceOk(force).caption(I18n.get("msg.caption.neue.spielrunde")).message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
-				ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
+				ProcessBox.from().info(I18n.get("supermelee.spielrunde.abbruch"));
 				return false;
 			}
 		}
@@ -161,7 +161,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(sheet.getSpielTag()).setForceCreate(force)
 				.setActiv().hideGrid().create();
 		if (!neuesSheet.isDidCreate()) {
-			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
+			ProcessBox.from().info(I18n.get("supermelee.spielrunde.abbruch"));
 			return false;
 		}
 
