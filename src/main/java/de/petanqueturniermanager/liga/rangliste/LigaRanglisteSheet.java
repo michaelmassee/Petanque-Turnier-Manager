@@ -6,6 +6,8 @@ package de.petanqueturniermanager.liga.rangliste;
 import java.util.Arrays;
 import java.util.List;
 
+import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonProperties.IS_TEXT_WRAPPED;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -181,7 +183,11 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 		int ersteFooterZeile = getFooterZeile();
 		StringCellValue stringVal = StringCellValue.from(this, Position.from(TEAM_NR_SPALTE, ersteFooterZeile))
-				.setHoriJustify(CellHoriJustify.LEFT).setCharHeight(8);
+				.setHoriJustify(CellHoriJustify.LEFT)
+				.setCharHeight(8)
+				.setEndPosMergeSpalte(getLetzteSpalte())
+				.addCellProperty(IS_TEXT_WRAPPED, Boolean.TRUE)
+				.addRowProperty("OptimalHeight", Boolean.TRUE);
 		getSheetHelper().setStringValueInCell(stringVal.setValue(I18n.get("liga.rangliste.reihenfolge.platzierung")));
 		return stringVal;
 	}

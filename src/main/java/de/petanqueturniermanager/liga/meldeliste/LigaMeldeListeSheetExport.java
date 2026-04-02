@@ -44,7 +44,9 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldeliste<TeamMeldungen, Team> {
 
 	private static final Logger logger = LogManager.getLogger(LigaMeldeListeSheetExport.class);
-	private static final String PDF_BILD_RESSOURCE = "images/pdf-download.png";
+	private static final String PDF_BILDER_VERZEICHNIS = "images";
+	private static final String PDF_BILD_DATEINAME    = "pdf-download.png";
+	private static final String PDF_BILD_RESSOURCE    = PDF_BILDER_VERZEICHNIS + "/" + PDF_BILD_DATEINAME;
 
 	private final LigaMeldeListeDelegate delegate;
 
@@ -200,14 +202,9 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 			File htmlExportFile = new File(htmlExportFileUri);
 			File htmlExportVerzeichnis = htmlExportFile.getParentFile();
 
-			String pdfImgUr = StringUtils.strip(delegate.getKonfigurationSheet().getPdfImageUr());
-			if (StringUtils.isNotEmpty(pdfImgUr)) {
-				processBox().info("PDF-Image (konfiguriert): " + pdfImgUr);
-			} else {
-				pdfImgUr = pdfBildInExportVerzeichnisKopieren(htmlExportVerzeichnis);
-				if (pdfImgUr != null) {
-					processBox().info(I18n.get("liga.export.pdf.bild.kopiert"));
-				}
+			String pdfImgUr = pdfBildInExportVerzeichnisKopieren(htmlExportVerzeichnis);
+			if (pdfImgUr != null) {
+				processBox().info(I18n.get("liga.export.pdf.bild.kopiert"));
 			}
 
 			String gruppenname = StringUtils.strip(delegate.getKonfigurationSheet().getGruppenname());
@@ -218,7 +215,7 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 			}
 
 			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
-			name = StringUtils.replace(name, ".html", ".clean.html");
+			name = name.replace(".html", ".clean.html");
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
 			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(ligaLogoUr)
 					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)
@@ -231,14 +228,13 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 	}
 
 	private String pdfBildInExportVerzeichnisKopieren(File htmlExportVerzeichnis) throws IOException {
-		File bilderVerzeichnis = new File(htmlExportVerzeichnis, "images");
+		File bilderVerzeichnis = new File(htmlExportVerzeichnis, PDF_BILDER_VERZEICHNIS);
 
 		if (!bilderVerzeichnis.exists() && !bilderVerzeichnis.mkdirs()) {
 			throw new IOException("Konnte Bilderverzeichnis nicht erstellen: " + bilderVerzeichnis);
 		}
 
-
-		File zielDatei = new File(bilderVerzeichnis, "pdf-download.png");
+		File zielDatei = new File(bilderVerzeichnis, PDF_BILD_DATEINAME);
 		if (!zielDatei.exists()) {
 			try (InputStream in = LigaMeldeListeSheetExport.class.getResourceAsStream(PDF_BILD_RESSOURCE)) {
 				if (in == null) {
