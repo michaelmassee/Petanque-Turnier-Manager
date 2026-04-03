@@ -96,6 +96,14 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX = "__PTM_MAASTRICHTER_VORRUNDE_";
     public static final String SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX = "__PTM_MAASTRICHTER_FINALRUNDE_";
 
+    // ── Konstanten: Poule ────────────────────────────────────────────────────
+
+    public static final String SCHLUESSEL_POULE_MELDELISTE           = "__PTM_POULE_MELDELISTE__";
+    public static final String SCHLUESSEL_POULE_VORRUNDE             = "__PTM_POULE_VORRUNDE__";
+    public static final String SCHLUESSEL_POULE_SPIELPLAN_PREFIX      = "__PTM_POULE_SPIELPLAN_";
+    public static final String SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE   = "__PTM_POULE_VORRUNDEN_RANGLISTE__";
+    public static final String SCHLUESSEL_POULE_KO_PREFIX             = "__PTM_POULE_KO_";
+
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 
     public static final String SCHLUESSEL_FORME_VORRUNDEN = "__PTM_FORME_VORRUNDEN__";
@@ -146,6 +154,14 @@ public class SheetMetadataHelper {
 
     public static String schluesselKoTurnierbaum(String gruppenSuffix) {
         return SCHLUESSEL_KO_TURNIERBAUM_PREFIX + gruppenSuffix + SCHLUESSEL_SUFFIX;
+    }
+
+    public static String schluesselPouleSpielplan(int pouleNr) {
+        return SCHLUESSEL_POULE_SPIELPLAN_PREFIX + pouleNr + SCHLUESSEL_SUFFIX;
+    }
+
+    public static String schluesselPouleKo(String buchstabe) {
+        return SCHLUESSEL_POULE_KO_PREFIX + buchstabe + SCHLUESSEL_SUFFIX;
     }
 
     // ── Schreiben ────────────────────────────────────────────────────────────

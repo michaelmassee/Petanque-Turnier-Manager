@@ -12,6 +12,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -20,7 +21,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 public class VorrundenSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "98e2d7";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN;
 
 	public VorrundenSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
@@ -46,7 +46,7 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		NewSheet.from(this, SheetNamen.vorrundenErgebnisse(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv().create();
+				.pos(DefaultSheetPos.MELDELISTE).tabColor(SheetTabFarben.TEILNEHMER).hideGrid().setActiv().create();
 	}
 
 }

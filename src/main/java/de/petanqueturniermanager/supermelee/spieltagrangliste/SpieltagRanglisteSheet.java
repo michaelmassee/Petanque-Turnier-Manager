@@ -169,6 +169,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		NewSheet.from(this, getSheetName(getSpieltagNr()),
 				SheetMetadataHelper.schluesselSpieltagRangliste(spielTagNr.getNr()))
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).hideGrid().setActiv()
+				.tabColor(getKonfigurationSheet().getRanglisteTabFarbe())
 				.forceCreate().spielTagPageStyle(getSpieltagNr()).create();
 
 		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
@@ -176,9 +177,8 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		getSpielerSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.updateHeader();
 
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
-		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
-		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
+		rangListeSorter.insertSortValidateSpalte(false);
+		rangListeSorter.insertManuelsortSpalten(false);
 		ergebnisseFormulaEinfuegen();
 		nichtGespieltFormulaEinfuegen();
 		updateSummenSpalten();
@@ -357,8 +357,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 
 		XSpreadsheet sheet = getXSpreadSheet();
 		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
-
 		int ersteSpalteVertikaleErgebnisse = SpielrundeSheetKonstanten.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
 		int spielrundeSheetErsteDatenzeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
 		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
@@ -388,7 +386,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		ColumnProperties columnProperties = ColumnProperties.from()
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
 				.setHoriJustify(CellHoriJustify.CENTER)
-				.isVisible(zeigeArbeitsSpalten);
+				.isVisible(false);
 		StringCellValue header = StringCellValue
 				.from(sheet, Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE - 1))
 				.addColumnProperties(columnProperties)

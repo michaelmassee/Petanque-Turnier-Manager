@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -48,7 +49,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  */
 public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH;
 
@@ -114,8 +114,8 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 
 		if (!NewSheet.from(this, SheetNamen.direktvergleich(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.JGJ_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
-				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
-			processBoxinfo("jgj.direktvergleich.abbruch");
+				.hideGrid().tabColor(konfigurationSheet.getDirektvergleichTabFarbe()).create().isDidCreate()) {
+			ProcessBox.from().info("Abbruch vom Benutzer, JGJ Direktvergleich wurde nicht erstellt");
 			return;
 		}
 		meldungenSpalte.alleAktiveUndAusgesetzteMeldungenAusmeldelisteEinfuegen(meldeListe);

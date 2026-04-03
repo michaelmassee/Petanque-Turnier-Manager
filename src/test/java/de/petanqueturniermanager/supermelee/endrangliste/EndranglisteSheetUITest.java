@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -59,7 +58,6 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		// erst mal eine meldeListe erstellen
 		testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc);
 		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
-		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		spieltagRangliste = new SpieltagRanglisteSheet(wkingSpreadsheet);
 		endranglisteSheetSort = new EndranglisteSheet_Sort(wkingSpreadsheet);
 		meldeListeSheet_NeuerSpieltag = new MeldeListeSheet_NeuerSpieltag(wkingSpreadsheet);

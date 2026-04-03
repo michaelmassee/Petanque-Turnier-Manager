@@ -116,6 +116,22 @@ public class BorderFactory {
 		return this;
 	}
 
+	/**
+	 * Setzt nur den rechten Rand auf "kein Rahmen" (IsRightLineValid=true, leere Linie).
+	 * Alle anderen Richtungen bleiben unverändert (IsXxxValid=false).
+	 * Nützlich um nach {@link #allThin()} den rechten Außenrand gezielt zu entfernen.
+	 */
+	public BorderFactory keinRechtsBorder() {
+		rightLine = leereLine();
+		return this;
+	}
+
+	private BorderLine2 leereLine() {
+		BorderLine2 borderLine = new BorderLine2();
+		borderLine.LineStyle = BorderLineStyle.NONE;
+		return borderLine;
+	}
+
 	public BorderFactory allBold() {
 		topLine = boldLine();
 		bottomLine = boldLine();

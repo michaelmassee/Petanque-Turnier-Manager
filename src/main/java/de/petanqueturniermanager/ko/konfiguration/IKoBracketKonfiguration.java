@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.ko.konfiguration;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 
 /**
@@ -17,7 +18,12 @@ public interface IKoBracketKonfiguration {
 	SpielrundeSpielbahn getSpielbaumSpielbahn();
 	boolean isSpielbaumSpielUmPlatz3();
 
-	// Farben: Default-Werte entsprechen KoPropertiesSpalte-Defaults
+	// Tab-Farbe KO-Turnierbaum (konfigurierbar, Default aus SheetTabFarben)
+	default int getKoTurnierbaumTabFarbe() {
+		return SheetTabFarben.KO_TURNIERBAUM;
+	}
+
+	// Zellfarben: Default-Werte entsprechen KoPropertiesSpalte-Defaults
 	default int getTurnierbaumHeaderFarbe()      { return 0x2544DD; }
 	default int getTurnierbaumTeamAFarbe()       { return 0xDCEEFA; }
 	default int getTurnierbaumTeamBFarbe()       { return 0xF0F7FF; }

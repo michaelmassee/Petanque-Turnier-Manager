@@ -109,6 +109,11 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public String getPdfImageUr() {
+		return propertiesSpalte.getPdfImageUr();
+	}
+
+	@Override
 	public Integer getFreispielPunktePlus() {
 		return propertiesSpalte.getFreispielPunktePlus();
 	}

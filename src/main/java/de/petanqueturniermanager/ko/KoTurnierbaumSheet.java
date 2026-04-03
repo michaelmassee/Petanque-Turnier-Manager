@@ -61,8 +61,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(KoTurnierbaumSheet.class);
 
-	private static final String SHEET_COLOR = "8b0000";
-
 	/** Header-Zeilen */
 	private static final int HEADER_ZEILE_TITEL = 0;
 	private static final int HEADER_ZEILE_SPALTEN = 1;
@@ -314,7 +312,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			NewSheet.from(this, sheetName, metadatenSchluessel)
 					.pos(sheetPos)
 					.hideGrid()
-					.tabColor(SHEET_COLOR)
+					.tabColor(konfig.getKoTurnierbaumTabFarbe())
 					.setActiv()
 					.create();
 			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
@@ -434,7 +432,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				NewSheet.from(this, sheetName, schluesselFuerGruppe(g, anzGruppen))
 						.pos((short) (DefaultSheetPos.KO_TURNIERBAUM + g))
 						.hideGrid()
-						.tabColor(SHEET_COLOR)
+						.tabColor(getKonfigurationSheet().getKoTurnierbaumTabFarbe())
 						.setActiv()
 						.create();
 
@@ -703,7 +701,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCellBackColor(headerFarbe)
 							.setCharColor("FFFFFF")
-							.setBorder(BorderFactory.from().allThin().toBorder()));
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setShrinkToFit(true));
 			if (mitBahn()) {
 				schreibeSpaltenHeader(xSheet, cadrageBahnSpalte(), I18n.get("column.header.bahn"));
 			}
@@ -723,7 +722,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCellBackColor(headerFarbe)
 							.setCharColor("FFFFFF")
-							.setBorder(BorderFactory.from().allThin().toBorder()));
+							.setBorder(BorderFactory.from().allThin().toBorder())
+							.setShrinkToFit(true));
 
 			// Zeile 1: Spalten-Überschriften
 			if (mitBahn()) {
@@ -740,7 +740,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(siegerFarbe)
-						.setBorder(BorderFactory.from().allThin().toBorder()));
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setShrinkToFit(true));
 	}
 
 	private String berechnRundenTitel(int r, int numRunden) {
@@ -761,7 +762,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(headerFarbe)
 						.setCharColor("FFFFFF")
-						.setBorder(BorderFactory.from().allThin().toBorder()));
+						.setBorder(BorderFactory.from().allThin().toBorder())
+						.setShrinkToFit(true));
 	}
 
 	// ---------------------------------------------------------------

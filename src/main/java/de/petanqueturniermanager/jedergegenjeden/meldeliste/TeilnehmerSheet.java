@@ -42,8 +42,6 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
     public static final int TEAM_NAME_SPALTE = 1;
     public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
 
-    private static final String SHEET_COLOR = "4ac48f";
-
     private final JGJKonfigurationSheet konfigurationSheet;
     private final JGJMeldeListeSheet_Update meldeliste;
 
@@ -78,7 +76,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
     public void generate() throws GenerateException {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
-                .tabColor(SHEET_COLOR).pos(DefaultSheetPos.JGJ_WORK)
+                .tabColor(getKonfigurationSheet().getTeilnehmerTabFarbe()).pos(DefaultSheetPos.JGJ_WORK)
                 .forceCreate().hideGrid().setActiv().create();
 
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
@@ -154,12 +152,14 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
                     .from(getXSpreadSheet(), Position.from(nrSpalte, 0), I18n.get("column.header.nr"))
                     .setBorder(BorderFactory.from().allThin().toBorder())
                     .setCellBackColor(headerFarbe)
-                    .setHoriJustify(CellHoriJustify.CENTER));
+                    .setHoriJustify(CellHoriJustify.CENTER)
+                    .setShrinkToFit(true));
             getSheetHelper().setStringValueInCell(StringCellValue
                     .from(getXSpreadSheet(), Position.from(nameSpalte, 0), I18n.get("column.header.name"))
                     .setBorder(BorderFactory.from().allThin().toBorder())
                     .setCellBackColor(headerFarbe)
-                    .setHoriJustify(CellHoriJustify.CENTER));
+                    .setHoriJustify(CellHoriJustify.CENTER)
+                    .setShrinkToFit(true));
         }
     }
 

@@ -39,9 +39,9 @@ import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
-import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.LigaSpielPlan;
@@ -56,7 +56,6 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
  */
 public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "b0f442";
 	public static final String LEGACY_SHEET_NAMEN = SheetNamen.LEGACY_SPIELPLAN;
 
 	public static String sheetName() {
@@ -126,29 +125,23 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		meldeListe.upDateSheet();
-		var ranglisteVorhanden = SheetMetadataHelper
-				.findeSheet(getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-						SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE)
-				.isPresent();
-		if (generate(meldeListe.getAlleMeldungen()) && ranglisteVorhanden) {
-			new LigaRanglisteSheet(getWorkingSpreadsheet()).upDateSheet();
-		}
+		generate(meldeListe.getAlleMeldungen());
 	}
 
-	public boolean generate(TeamMeldungen meldungen) throws GenerateException {
+	public void generate(TeamMeldungen meldungen) throws GenerateException {
 		if (!meldungen.isValid()) {
 			processBoxinfo("processbox.abbruch");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.liga.spielplan"))
 					.message(I18n.get("msg.text.ungueltige.anzahl.meldungen")).show();
-			return false;
+			return;
 		}
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
-				.tabColor(SHEET_COLOR).create().isDidCreate()) {
-			processBoxinfo("liga.spielplan.abbruch");
-			return false;
+				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create().isDidCreate()) {
+			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
+			return;
 		}
 
 		LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(meldungen);
@@ -170,7 +163,6 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		} finally {
 			getxCalculatable().enableAutomaticCalculation(true);
 		}
-		return true;
 	}
 
 	private void printBereichDefinieren() throws GenerateException {
@@ -377,9 +369,8 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData).setRangeProperties(
 				RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
 		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-				.isVisible(zeigeArbeitsSpalten);
+				.isVisible(false);
 		XSpreadsheet sheet = getXSpreadSheet();
 		getSheetHelper().setColumnProperties(sheet, TEAM_A_NR_SPALTE, spalteBreite);
 		getSheetHelper().setColumnProperties(sheet, TEAM_B_NR_SPALTE, spalteBreite);

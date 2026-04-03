@@ -49,7 +49,8 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 		StringCellValue spieltagheader = StringCellValue.from(getSheet(), Position.from(ERSTE_KOPFDATEN_ZEILE, 0))
 				.setCellBackColor(getHeaderFarbe())
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
-				.setHoriJustify(CellHoriJustify.CENTER);
+				.setHoriJustify(CellHoriJustify.CENTER)
+				.setShrinkToFit(true);
 		for (int spielTag = 1; spielTag <= anzSpieltagen; spielTag++) {
 			int ersteSpalteSpieltagBlock = ersteSpielTagSpalte + ((spielTag - 1) * anzSpaltenInSpieltag);
 			// ERSTE_KOPFDATEN_ZEILE

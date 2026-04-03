@@ -23,6 +23,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.Log4J;
+import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
@@ -201,12 +202,16 @@ public class ProcessBox {
         if (neueVersionLabel == null) {
             return;
         }
-        NewReleaseChecker checker = new NewReleaseChecker();
+        var checker = new NewReleaseChecker();
         boolean neueVersion = checker.checkForNewRelease(xContext);
+        String installierteVersion = ExtensionsHelper.from(xContext).getVersionNummer();
+        String neueVersionNummer = checker.latestVersionFromCacheFile();
         SwingUtilities.invokeLater(() -> {
             if (disposed) return;
             if (neueVersion) {
-                neueVersionLabel.setText(I18n.get("processbox.neue.version.verfuegbar"));
+                neueVersionLabel.setText(I18n.get("processbox.neue.version.verfuegbar",
+                        installierteVersion != null ? installierteVersion : "?",
+                        neueVersionNummer != null ? neueVersionNummer : "?"));
             }
             neueVersionLabel.setVisible(neueVersion);
             frame.revalidate();

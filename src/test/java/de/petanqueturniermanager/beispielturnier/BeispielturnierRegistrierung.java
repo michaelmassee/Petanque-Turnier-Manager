@@ -19,6 +19,9 @@ import de.petanqueturniermanager.liga.spielplan.LigaTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.Maastrichter35TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.Maastrichter57TeamsTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
+import de.petanqueturniermanager.poule.Poule37TeamsTurnierTestDaten;
+import de.petanqueturniermanager.poule.PouleTurnierTestDaten;
+import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
@@ -232,7 +235,32 @@ public final class BeispielturnierRegistrierung {
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_MELDELISTE,
                                 SheetMetadataHelper.schluesselSpieltagRangliste(1)),
-                        "SpielrundeSheet_TestDaten.java")
+                        "SpielrundeSheet_TestDaten.java"),
+
+                new Eintrag(
+                        "Poule A/B \u2013 nur Meldeliste (16 Teams)",
+                        ws -> new PouleMeldeListeSheetTestDaten(ws).doRun(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE),
+                        "PouleMeldeListeSheetTestDaten.java"),
+
+                new Eintrag(
+                        "Poule A/B \u2013 Meldeliste + Vorrunde (16 Teams)",
+                        ws -> new PouleTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE),
+                        "PouleTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Poule A/B \u2013 Komplettes Turnier (37 Teams, Rangliste + KO)",
+                        ws -> new Poule37TeamsTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE,
+                                SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
+                                SheetMetadataHelper.schluesselPouleKo("A"),
+                                SheetMetadataHelper.schluesselPouleKo("B")),
+                        "Poule37TeamsTurnierTestDaten.java")
         );
     }
 }

@@ -30,6 +30,19 @@ public enum DirektvergleichResult {
 		return code;
 	}
 
+	/**
+	 * Liefert den Komparator-Wert für die Verwendung in {@link java.util.Comparator#compare}.
+	 *
+	 * @return -1 wenn GEWONNEN (a vor b), +1 wenn VERLOREN (b vor a), 0 sonst
+	 */
+	public int toKomparatorWert() {
+		return switch (this) {
+			case GEWONNEN -> -1;
+			case VERLOREN -> 1;
+			default -> 0;
+		};
+	}
+
 	public String getAnzeigeText() {
 		if (anzeigeText != null) {
 			return anzeigeText;

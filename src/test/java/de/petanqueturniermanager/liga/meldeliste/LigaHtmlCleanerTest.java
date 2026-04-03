@@ -5,20 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.IntStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import de.petanqueturniermanager.helper.i18n.I18n;
+import java.nio.file.Path;
 
 public class LigaHtmlCleanerTest {
 
@@ -30,11 +26,6 @@ public class LigaHtmlCleanerTest {
 
 	@TempDir
 	Path tempDir;
-
-	@BeforeEach
-	void setUp() {
-		I18n.initFuerTest(Locale.GERMAN);
-	}
 
 	@Test
 	public void testCleanUp() throws Exception {

@@ -16,12 +16,14 @@ public class ConfigProperty<V> {
 	private String description;
 	private boolean inSideBar; // uebergang properties nach sidebar
 	private boolean inSideBarInfoPanel; // obere Panel, read only felder
+	private boolean tabFarbe; // Tab-Farben-Dialog
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
 		this.key = checkNotNull(key);
 		inSideBar = false;
 		inSideBarInfoPanel = false;
+		tabFarbe = false;
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
@@ -93,6 +95,15 @@ public class ConfigProperty<V> {
 
 	public final boolean isInSideBarInfoPanel() {
 		return inSideBarInfoPanel;
+	}
+
+	public ConfigProperty<V> tabFarbe() {
+		this.tabFarbe = true;
+		return this;
+	}
+
+	public final boolean isTabFarbe() {
+		return tabFarbe;
 	}
 
 }

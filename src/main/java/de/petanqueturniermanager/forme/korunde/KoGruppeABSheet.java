@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.TeamRangliste;
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -26,7 +27,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class KoGruppeABSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "98e2d7";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_KO_GRUPPE;
 
 	private final Vorrunden vorrunden;
@@ -58,7 +58,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		NewSheet.from(this, SheetNamen.koRunde(), METADATA_SCHLUESSEL)
-				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+				.tabColor(SheetTabFarben.TEILNEHMER).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		koRundeErstellen();
 		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}

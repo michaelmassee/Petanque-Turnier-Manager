@@ -37,6 +37,9 @@ public final class SheetNamen {
     public static final String KEY_MAASTRICHTER_VR_RANGLISTE        = "sheet.name.maastrichter.vorrunden.rangliste";
     public static final String KEY_ANMELDUNGEN                      = "sheet.name.anmeldungen";
     public static final String KEY_TEILNEHMER                       = "sheet.name.teilnehmer";
+    public static final String KEY_POULE_VORRUNDE                   = "sheet.name.poule.vorrunde";
+    public static final String KEY_POULE_TEILNEHMER                 = "sheet.name.poule.teilnehmer";
+    public static final String KEY_POULE_VORRUNDEN_RANGLISTE        = "sheet.name.poule.vorrunden.rangliste";
 
     // ── i18n-Schlüssel – Muster mit Platzhaltern ─────────────────────────────
 
@@ -62,6 +65,8 @@ public final class SheetNamen {
     public static final String KEY_ANMELDUNGEN_MUSTER               = "sheet.name.anmeldungen.muster";
     /** Supermelee Teilnehmer: {0} = Spieltagnummer. Beispiel: "1. Spieltag Teilnehmer" */
     public static final String KEY_TEILNEHMER_MUSTER                = "sheet.name.teilnehmer.muster";
+    /** Poule-Spielplan: {0} = Gruppennummer. Beispiel: "Poule 1 Spielplan" */
+    public static final String KEY_POULE_SPIELPLAN_MUSTER           = "sheet.name.poule.spielplan.muster";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -86,6 +91,10 @@ public final class SheetNamen {
     public static final String LEGACY_MAASTRICHTER_VORRUNDE_PRAEFIX = "Vorrunde";
     public static final String LEGACY_MAASTRICHTER_FINALRUNDE_PRAEFIX = "Finalrunde";
     public static final String LEGACY_KO_FINALE_GRUPPE_SUFFIX        = "Finale";
+    public static final String LEGACY_POULE_VORRUNDE                 = "Poule Vorrunde";
+    public static final String LEGACY_POULE_TEILNEHMER               = "Poule Teilnehmer";
+    public static final String LEGACY_POULE_SPIELPLAN_PRAEFIX        = "Spielplan";
+    public static final String LEGACY_POULE_VORRUNDEN_RANGLISTE      = "Poule Vorrunden-Rangliste";
 
     private SheetNamen() {
     }
@@ -152,6 +161,26 @@ public final class SheetNamen {
 
     public static String teilnehmer() {
         return getOderFallback(KEY_TEILNEHMER, LEGACY_TEILNEHMER);
+    }
+
+    public static String pouleVorrunde() {
+        return getOderFallback(KEY_POULE_VORRUNDE, LEGACY_POULE_VORRUNDE);
+    }
+
+    public static String pouleTeilnehmer() {
+        return getOderFallback(KEY_POULE_TEILNEHMER, LEGACY_POULE_TEILNEHMER);
+    }
+
+    public static String pouleVorrundenRangliste() {
+        return getOderFallback(KEY_POULE_VORRUNDEN_RANGLISTE, LEGACY_POULE_VORRUNDEN_RANGLISTE);
+    }
+
+    /**
+     * Poule-Meldeliste: identisch mit der Standard-Meldeliste.
+     * Das Poule-System verwendet keinen eigenen Blattnamen für die Meldeliste.
+     */
+    public static String pouleMeldeliste() {
+        return meldeliste();
     }
 
     // ── Accessor-Methoden – Composite-Tabellennamen ──────────────────────────
@@ -281,6 +310,17 @@ public final class SheetNamen {
     public static String teilnehmer(int spieltagNr) {
         var muster = getOderFallback(KEY_TEILNEHMER_MUSTER, "{0}. Spieltag " + LEGACY_TEILNEHMER);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{spieltagNr});
+    }
+
+    /**
+     * Poule-Spielplan-Sheet: z.B. "Poule 1 Spielplan".
+     *
+     * @param pouleNr Nummer der Gruppe
+     * @return lokalisierter Tabellenname
+     */
+    public static String pouleSpielplan(int pouleNr) {
+        var muster = getOderFallback(KEY_POULE_SPIELPLAN_MUSTER, "Poule {0} " + LEGACY_POULE_SPIELPLAN_PRAEFIX);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{pouleNr});
     }
 
     // ── Hilfsmethode ─────────────────────────────────────────────────────────

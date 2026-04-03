@@ -26,6 +26,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -56,7 +57,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste {
 
 	private static final int MARGIN = 120;
-	private static final String SHEET_COLOR = "d637e8";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE;
 	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
@@ -137,8 +137,8 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
 		if (!NewSheet.from(this, SheetNamen.rangliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.JGJ_ENDRANGLISTE).setForceCreate(true).setActiv()
-				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
-			processBoxinfo("jgj.rangliste.abbruch");
+				.hideGrid().tabColor(getKonfigurationSheet().getRanglisteTabFarbe()).create().isDidCreate()) {
+			ProcessBox.from().info("Abbruch vom Benutzer, JGJ SpielPlan wurde nicht erstellt");
 			return;
 		}
 
@@ -151,9 +151,8 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSpalte.upDateRanglisteSpalte();
 		rangListeSpalte.insertHeaderInSheet(headerBackColor);
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
-		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
-		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
+		rangListeSorter.insertSortValidateSpalte(false);
+		rangListeSorter.insertManuelsortSpalten(false);
 		rangListeSorter.doSort();
 
 		insertHeader();
@@ -220,7 +219,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		BorderFactory borderHeaderFact = BorderFactory.from().allThin().boldLn().forBottom();
 		TableBorder2 borderHeader3 = borderHeaderFact.toBorder();
 		RangeProperties rangePropZeile3 = RangeProperties.from().centerJustify().setBorder(borderHeader3)
-				.setCellBackColor(headerBackColor).margin(MARGIN);
+				.setCellBackColor(headerBackColor).margin(MARGIN).setShrinkToFit(true);
 		RangeHelper.from(this, data.getRangePosition(Position.from(ERSTE_SPIELTAG_SPALTE, ERSTE_DATEN_ZEILE - 1)))
 				.setDataInRange(data).setRangeProperties(rangePropZeile3);
 
@@ -275,7 +274,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 		StringCellValue begegnungenHeader = StringCellValue.from(getXSpreadSheet());
 		begegnungenHeader.setPos(header1val.getPos()).spaltePlus(ANZ_SUMMEN_SPALTEN - 1);
 		begegnungenHeader.setValue("Begegn.").setRotate90().setEndPosMergeZeilePlus(2).centerJustify()
-				.setBorder(begegnungenBrd).setCellBackColor(headerBackColor).setShrinkToFit(true).setShrinkToFit(true)
+				.setBorder(begegnungenBrd).setCellBackColor(headerBackColor).setShrinkToFit(true)
 				.setComment(I18n.get("comment.begegnungen"));
 		getSheetHelper().setStringValueInCell(begegnungenHeader);
 
@@ -501,8 +500,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
                     + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
         }
         // @formatter:on
-		boolean isvisable = getKonfigurationSheet().zeigeArbeitsSpalten();
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(isvisable);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(false);
 
 		StringCellValue spielTagFormula = StringCellValue.from(getXSpreadSheet()).setPos(startFormulaPos)
 				.setValue(formulaPunktePlus).setFillAutoDownZeilePlus(anzZeilen() - 1)

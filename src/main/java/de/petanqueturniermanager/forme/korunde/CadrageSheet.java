@@ -23,6 +23,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -31,7 +32,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class CadrageSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "c12439";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_CADRAGE;
 
 	private static final String RANGLISTE_AUS_VORUNDE_SHEET = "RanglisteAusVorrunden";
@@ -66,7 +66,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 		vorrunden.getSheet(); // erstellen leer wenn nicht vorhanden
 		NewSheet.from(this, SheetNamen.cadrage(), METADATA_SCHLUESSEL)
-				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+				.tabColor(SheetTabFarben.FORME_CADRAGE).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
 	}

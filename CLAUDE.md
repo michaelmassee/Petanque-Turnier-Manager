@@ -13,6 +13,7 @@ Petanque-Turnier-Manager is a **LibreOffice Calc Extension** (.oxt) for managing
 - **Replace Deprecated Code:** Any deprecated (`@Deprecated`) methods, classes, or APIs encountered in the modified context MUST be proactively migrated to their current, recommended alternatives.
 - **Boy Scout Rule:** If you touch or modify an existing class, you MUST clean it up and refactor it to meet current quality standards (remove code smells, improve readability and structure).
 - **Test Classes Included:** The strict Clean Code, zero warnings, and refactoring rules apply equally to all Test classes. Treat test code with the same care as production code.
+- **Kein zellenweises Schreiben in Schleifen:** Schleifen, die einzelne Zellen nacheinander beschreiben, sind zu vermeiden. Stattdessen MUSS `RangeHelper` (zusammen mit `RangeData`/`RowData`) verwendet werden, um Daten als Block in einen Zellbereich zu schreiben.
 
 ## Build Commands
 

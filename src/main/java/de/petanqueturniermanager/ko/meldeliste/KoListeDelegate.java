@@ -231,7 +231,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setVertJustify(CellVertJustify2.CENTER)
 						.setCharWeight(FontWeight.BOLD)
 						.setComment(I18n.get("ko.meldeliste.comment.startnummer"))
-						.setEndPosMergeZeilePlus(1));
+						.setEndPosMergeZeilePlus(1)
+						.setShrinkToFit(true));
 
 		// Teamname-Spalte (optional): über Zeile 1+2 gemergt
 		if (teamnameAktiv) {
@@ -242,7 +243,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 							.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
 							.setVertJustify(CellVertJustify2.CENTER)
 							.setCharWeight(FontWeight.BOLD)
-							.setEndPosMergeZeilePlus(1));
+							.setEndPosMergeZeilePlus(1)
+							.setShrinkToFit(true));
 		}
 
 		// Spieler-Blöcke
@@ -260,7 +262,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 							.setVertJustify(CellVertJustify2.CENTER)
 							.setHoriJustify(CellHoriJustify.CENTER)
 							.setCharWeight(FontWeight.BOLD)
-							.setEndPosMergeSpalte(vornameSpalte + spaltenProSpieler - 1));
+							.setEndPosMergeSpalte(vornameSpalte + spaltenProSpieler - 1)
+							.setShrinkToFit(true));
 
 			// Zeile 2 (DRITTE_HEADER_ZEILE): Vorname
 			sheet.getSheetHelper().setStringValueInCell(
@@ -269,7 +272,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 							.addColumnProperties(colPropName)
 							.setCellBackColor(headerColor)
 							.setBorder(BorderFactory.from().allThin().boldLn().forLeft().toBorder())
-							.setVertJustify(CellVertJustify2.CENTER));
+							.setVertJustify(CellVertJustify2.CENTER)
+							.setShrinkToFit(true));
 
 			// Zeile 2: Nachname
 			sheet.getSheetHelper().setStringValueInCell(
@@ -278,7 +282,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 							.addColumnProperties(colPropName)
 							.setCellBackColor(headerColor)
 							.setBorder(BorderFactory.from().allThin().toBorder())
-							.setVertJustify(CellVertJustify2.CENTER));
+							.setVertJustify(CellVertJustify2.CENTER)
+							.setShrinkToFit(true));
 
 			// Zeile 2: Vereinsname (optional)
 			if (vereinsnameAktiv) {
@@ -288,7 +293,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 								.addColumnProperties(colPropName.setWidth(VEREINSNAME_SPALTE_WIDTH))
 								.setCellBackColor(headerColor)
 								.setBorder(BorderFactory.from().allThin().toBorder())
-								.setVertJustify(CellVertJustify2.CENTER));
+								.setVertJustify(CellVertJustify2.CENTER)
+								.setShrinkToFit(true));
 			}
 		}
 
@@ -306,7 +312,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setCharWeight(FontWeight.BOLD)
 						.setComment(I18n.get("ko.meldeliste.comment.setzreihenfolge"))
 						.setRotate90()
-						.setEndPosMergeZeilePlus(1));
+						.setEndPosMergeZeilePlus(1)
+						.setShrinkToFit(true));
 
 		// Aktiv-Spalte: über Zeile 1+2 gemergt
 		ColumnProperties colPropAktiv = ColumnProperties.from().setWidth(AKTIV_SPALTE_WIDTH)
@@ -322,7 +329,8 @@ class KoListeDelegate implements MeldeListeKonstanten {
 						.setCharWeight(FontWeight.BOLD)
 						.setComment(I18n.get("schweizer.meldeliste.comment.aktiv"))
 						.setRotate90()
-						.setEndPosMergeZeilePlus(1));
+						.setEndPosMergeZeilePlus(1)
+						.setShrinkToFit(true));
 
 		// Zeile 0 (ERSTE_HEADER_ZEILE): System-Info – nach allen Spalten-Properties setzen,
 		// damit addColumnProperties() die Ausrichtung dieser Zeile nicht überschreibt

@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.basesheet.konfiguration;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 
@@ -11,6 +12,34 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGer
  *
  */
 public interface IPropertiesSpalte {
+
+	// ---------------------------------------------------------------
+	// Tab-Farben (konfigurierbar, Defaults aus SheetTabFarben)
+	// ---------------------------------------------------------------
+
+	default int getMeldelisteTabFarbe() {
+		return SheetTabFarben.MELDELISTE;
+	}
+
+	default int getTeilnehmerTabFarbe() {
+		return SheetTabFarben.TEILNEHMER;
+	}
+
+	default int getSpielrundeTabFarbe() {
+		return SheetTabFarben.SPIELRUNDE;
+	}
+
+	default int getRanglisteTabFarbe() {
+		return SheetTabFarben.RANGLISTE;
+	}
+
+	default int getDirektvergleichTabFarbe() {
+		return SheetTabFarben.DIREKTVERGLEICH;
+	}
+
+	// ---------------------------------------------------------------
+	// Zellhintergrundfarben
+	// ---------------------------------------------------------------
 
 	Integer getMeldeListeHintergrundFarbeGerade();
 
@@ -31,8 +60,6 @@ public interface IPropertiesSpalte {
 	String getFusszeileLinks();
 
 	String getFusszeileMitte();
-
-	boolean zeigeArbeitsSpalten();
 
 	Integer getMaxAnzTeilnehmerInSpalte();
 

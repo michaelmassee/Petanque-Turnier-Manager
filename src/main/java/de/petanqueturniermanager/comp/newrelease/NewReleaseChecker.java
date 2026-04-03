@@ -156,7 +156,7 @@ public class NewReleaseChecker {
 		return ret;
 	}
 
-	String latestVersionFromCacheFile() {
+	public String latestVersionFromCacheFile() {
 		String latestVersionFromCacheFile = null;
 
 		GHRelease readLatestRelease = readLatestReleaseFromCacheFile();

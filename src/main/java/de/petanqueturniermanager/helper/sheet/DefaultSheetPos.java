@@ -38,4 +38,8 @@ public class DefaultSheetPos {
 	public static final short MAASTRICHTER_WORK = 2;   // Maastrichter Teilnehmer und andere Arbeitsblätter
 	public static final short MAASTRICHTER_FINALE = 4; // Maastrichter A/B/C-Finale-Blätter
 
+	public static final short POULE_WORK      = 2; // Poule Teilnehmer, etc.
+	public static final short POULE_RANGLISTE = 3; // Poule Vorrunden-Rangliste
+	public static final short POULE_KO        = 4; // Poule KO-Bracket-Blätter (A-Finale, B-Finale)
+
 }

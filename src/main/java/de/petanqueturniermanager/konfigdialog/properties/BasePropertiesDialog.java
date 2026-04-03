@@ -135,6 +135,8 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
             });
         }
 
+        erstelleNachHauptFelder(guiFactoryCreateParam, addConfigElementsToWindow);
+
         // Höhe anpassen
         int dialogHeight = Math.min(Math.max(layout.getHeight() / 2, DIALOG_MIN_HEIGHT), DIALOG_MAX_HEIGHT);
         try {
@@ -142,6 +144,15 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
+    }
+
+    /**
+     * Erweiterungspunkt: wird nach den Haupt-Feldern aufgerufen.
+     * Unterklassen können hier zusätzliche Elemente (z. B. Trennlinie + Tab-Farben) hinzufügen.
+     */
+    protected void erstelleNachHauptFelder(GuiFactoryCreateParam param,
+            AddConfigElementsToWindow addConfigElementsToWindow) throws com.sun.star.uno.Exception {
+        // Standard: keine weiteren Felder
     }
 
     /**

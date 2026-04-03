@@ -6,6 +6,7 @@ package de.petanqueturniermanager.ko.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -25,6 +26,8 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	static {
 		ADDBaseProp(KONFIG_PROPERTIES, false);
 	}
+
+	private static final String KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM       = "Tab-Farbe KO-Turnierbaum";
 
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_HEADER       = "Turnierbaum Header Farbe";
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A       = "Turnierbaum Team A Farbe";
@@ -89,6 +92,10 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal("N")
 				.setDescription("config.desc.ko.spielbaum.platz3"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM)
+				.setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
+				.setDescription("config.desc.tab.farbe.ko.turnierbaum").tabFarbe());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_HEADER)
 				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header").inSideBar());
@@ -265,6 +272,10 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	public void setMinRestGroesse(int minRestGroesse) {
 		writeIntProperty(KONFIG_PROP_MIN_REST_GROESSE, Math.max(1, minRestGroesse));
+	}
+
+	public int getKoTurnierbaumTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM);
 	}
 
 	public int getTurnierbaumHeaderFarbe()      { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_HEADER); }

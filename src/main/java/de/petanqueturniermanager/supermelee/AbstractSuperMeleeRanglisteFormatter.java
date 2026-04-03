@@ -92,7 +92,7 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 		ColumnProperties columnProperties = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerSumme = StringCellValue
 				.from(getSheet(), Position.from(ersteSummeSpalte + SPIELE_PLUS_OFFS, ZWEITE_KOPFDATEN_ZEILE), I18n.get("column.header.spiele"))
-				.setEndPosMergeSpaltePlus(2).setCellBackColor(getHeaderFarbe()).addColumnProperties(columnProperties);
+				.setEndPosMergeSpaltePlus(2).setCellBackColor(getHeaderFarbe()).addColumnProperties(columnProperties).setShrinkToFit(true);
 		getSheetHelper().setStringValueInCell(headerSumme
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().doubleLn().forRight().toBorder()));
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + PUNKTE_PLUS_OFFS).setValue(I18n.get("column.header.punkte"))
@@ -111,7 +111,7 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(spalteWidth)
 				.setHoriJustify(CellHoriJustify.CENTER);
 		StringCellValue headerSumme = StringCellValue.from(getSheet(), Position.from(0, DRITTE_KOPFDATEN_ZEILE), "+")
-				.setCellBackColor(getHeaderFarbe()).setColumnProperties(columnProperties);
+				.setCellBackColor(getHeaderFarbe()).setColumnProperties(columnProperties).setShrinkToFit(true);
 
 		getSheetHelper().setStringValueInCell(headerSumme.spalte(ersteSummeSpalte + SPIELE_PLUS_OFFS).setValue("+")
 				.setComment(I18n.get("supermelee.rangliste.comment.spiele.plus")).setBorder(borderThinLeftBold()));
@@ -136,7 +136,7 @@ public abstract class AbstractSuperMeleeRanglisteFormatter {
 				.from(getSheet(), Position.from(summeSpalte + SPIELE_PLUS_OFFS, ERSTE_KOPFDATEN_ZEILE), "Summe")
 				.setColumnProperties(columnProperties).setEndPosMergeSpaltePlus(5)
 				.setBorder(BorderFactory.from().allThin().boldLn().forLeft().forTop().forRight().toBorder())
-				.setCellBackColor(getHeaderFarbe());
+				.setCellBackColor(getHeaderFarbe()).setShrinkToFit(true);
 		getSheetHelper().setStringValueInCell(headerSumme);
 	}
 

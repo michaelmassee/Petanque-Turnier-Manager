@@ -150,7 +150,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			MessageBoxResult msgBoxRslt = MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.QUESTION_OK_CANCEL)
 					.forceOk(force).caption(I18n.get("msg.caption.neue.spielrunde")).message(msg).show();
 			if (MessageBoxResult.CANCEL == msgBoxRslt) {
-				ProcessBox.from().info(I18n.get("supermelee.spielrunde.abbruch"));
+				ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 				return false;
 			}
 		}
@@ -161,7 +161,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(sheet.getSpielTag()).setForceCreate(force)
 				.setActiv().hideGrid().create();
 		if (!neuesSheet.isDidCreate()) {
-			ProcessBox.from().info(I18n.get("supermelee.spielrunde.abbruch"));
+			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;
 		}
 
@@ -415,7 +415,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		Position ersteHeaderZeile = Position.from(ERSTE_SPALTE_VERTIKALE_ERGEBNISSE, ZWEITE_HEADER_ZEILE);
 		ColumnProperties columnProperties = ColumnProperties.from()
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
-				.setVertJustify(CellVertJustify2.CENTER).isVisible(konfigurationSheet.zeigeArbeitsSpalten());
+				.setVertJustify(CellVertJustify2.CENTER).isVisible(false);
 		StringCellValue headerText = StringCellValue.from(xsheet, ersteHeaderZeile)
 				.addColumnProperties(columnProperties);
 		sheet.getSheetHelper().setStringValueInCell(headerText.setValue("Nr"));
@@ -555,7 +555,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				.addCellProperty(CHAR_WEIGHT, FontWeight.BOLD).setEndPosMerge(ersteHeaderZeileMerge)
 				.addCellProperty(HORI_JUSTIFY, CellHoriJustify.CENTER)
 				.addCellProperty(TABLE_BORDER2, BorderFactory.from().allThin().toBorder()).setCharHeight(13)
-				.setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe);
+				.setVertJustify(CellVertJustify2.CENTER).setCellBackColor(headerFarbe).setShrinkToFit(true);
 		sheet.getSheetHelper().setStringValueInCell(headerVal);
 
 		Position posSpielerNamen = Position.from(ERSTE_SPALTE_RUNDESPIELPLAN, ZWEITE_HEADER_ZEILE);
@@ -593,9 +593,9 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		sheet.processBoxinfo("processbox.formatiere.header");
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER)
-				.isVisible(konfigurationSheet.zeigeArbeitsSpalten());
+				.isVisible(false);
 		StringCellValue headerCelVal = StringCellValue.from(xsheet, Position.from(pos), "#")
-				.addColumnProperties(columnProperties);
+				.addColumnProperties(columnProperties).setShrinkToFit(true);
 		sheet.getSheetHelper().setStringValueInCell(headerCelVal);
 		headerCelVal.spaltePlusEins();
 

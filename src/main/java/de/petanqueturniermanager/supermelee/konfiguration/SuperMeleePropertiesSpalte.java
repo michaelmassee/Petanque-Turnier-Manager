@@ -7,6 +7,7 @@ package de.petanqueturniermanager.supermelee.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -60,7 +61,8 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	// wenn nur Doublettes oder Triplettes mögliche dann fragen bei derRunde Generierung. Default false
 	public static final String KONFIG_PROP_FRAGE_GLEICHE_PAARUNGEN = "Gleiche Paarungen";
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
-	public static final String KONFIG_PROP_ENDRANGLISTE_SORT_MODE = "Endrangliste Sortiermodus"; // 
+	public static final String KONFIG_PROP_ENDRANGLISTE_SORT_MODE = "Endrangliste Sortiermodus"; //
+	private static final String KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN = "Tab-Farbe Team-Paarungen";
 
 	static {
 
@@ -146,6 +148,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription("config.desc.supermelee.endrangliste.sort.modus"))
 				.addAuswahl(SuprMleEndranglisteSortMode.DEFAULT.getKey(), "Default,Sp+,SpΔ,PktΔ,Pkt+")
 				.addAuswahl(SuprMleEndranglisteSortMode.ANZTAGE.getKey(), "Sp+,AnzTage,SpΔ,PktΔ,Pkt+"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN)
+				.setDefaultVal(SheetTabFarben.SUPERMELEE_TEAM_PAARUNGEN)
+				.setDescription("config.desc.tab.farbe.supermelee.team.paarungen").tabFarbe());
 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
@@ -319,6 +325,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		}
 		return SuprMleEndranglisteSortMode.DEFAULT;
 
+	}
+
+	@Override
+	public int getSupermeleeTeamPaarungenTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN);
 	}
 
 	@Override

@@ -1,12 +1,12 @@
 package de.petanqueturniermanager.comp;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -17,12 +17,16 @@ import de.petanqueturniermanager.webserver.PortKonfiguration;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
 
 public class GlobalProperties {
+
 	private static final Logger logger = LogManager.getLogger(GlobalProperties.class);
+
 	private static final String FILENAME = "PetanqueTurnierManager.properties";
+
 	private static final String LOG_LEVEL_PROP = "loglevel";
 	private static final String CREATE_BACKUP_PROP = "backup";
 	private static final String AUTOSAVE_PROP = "autosave";
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
+
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
 	private static final String WEBSERVER_PORTS_PROP = "webserver_ports";
 	private static final String WEBSERVER_PORT_SHEET_PREFIX = "webserver_port_";
@@ -31,21 +35,16 @@ public class GlobalProperties {
 	private static final String WEBSERVER_PORT_ZOOM_SUFFIX = "_zoom";
 	private static final String WEBSERVER_PORT_ZENTRIEREN_SUFFIX = "_zentrieren";
 	private static final String WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
+
 	public static final int DEFAULT_ZOOM = 100;
 
-	private static final Properties props = new Properties();
+	// 🔥 zentrale Runtime-Map
+	private static final ConcurrentHashMap<String, String> propMap = new ConcurrentHashMap<>();
 
 	private static GlobalProperties instance = null;
 
-	/**
-	 * Roher Port-Eintrag für den Konfigurationsdialog (ohne aufgelösten SheetResolver).
-	 *
-	 * @param port        TCP-Port
-	 * @param sheetConfig Config-String (z.B. "SCHWEIZER_RANGLISTE" oder Sheet-Tab-Name)
-	 * @param aktiv       ob dieser Port beim Webserver-Start aktiv ist
-	 * @param zoom        Zoom-Faktor in Prozent (10–500, Standard 100)
-	 * @param zentrieren  ob die Tabelle im Browser horizontal zentriert wird
-	 */
+	private final ReentrantLock fileLock = new ReentrantLock();
+
 	public record PortEintragRoh(int port, String sheetConfig, boolean aktiv, int zoom, boolean zentrieren) {
 		@Override
 		public String toString() {
@@ -55,25 +54,97 @@ public class GlobalProperties {
 
 	public static GlobalProperties get() {
 		if (instance == null) {
-			GlobalProperties.instance = new GlobalProperties();
+			try {
+				instance = new GlobalProperties();
+			} catch (Exception e) {
+				logger.error("Initialisierung fehlgeschlagen", e);
+				instance = new GlobalProperties(true);
+			}
 		}
 		return instance;
 	}
 
 	private GlobalProperties() {
 		readProperties();
-		setLogLevel();
+		safeSetLogLevel();
 	}
 
+	private GlobalProperties(boolean fallback) {
+		if (fallback) {
+			logger.warn("GlobalProperties im Fallback-Modus gestartet (leere Konfiguration)");
+		}
+	}
+
+	// ----------------------------------------------------
+	// Laden / Speichern
+	// ----------------------------------------------------
 	private void readProperties() {
-		var propFile = new File(System.getProperty("user.home"), FILENAME);
+		fileLock.lock();
 		try {
-			propFile.createNewFile();
-			try (var fileInputStream = new FileInputStream(propFile)) {
-				props.load(fileInputStream);
+			var path = Path.of(System.getProperty("user.home"), FILENAME);
+
+			try {
+				Files.createFile(path);
+			} catch (java.nio.file.FileAlreadyExistsException ignored) {
 			}
-		} catch (IOException e) {
-			logger.error("Fehler beim Laden der properties-Datei: {}", e.getMessage(), e);
+
+			Properties loaded = new Properties();
+
+			try (var in = Files.newInputStream(path)) {
+				loaded.load(in);
+			}
+
+			propMap.clear();
+			for (String key : loaded.stringPropertyNames()) {
+				propMap.put(key, loaded.getProperty(key));
+			}
+
+		} catch (Exception e) {
+			logger.error("Fehler beim Laden", e);
+		} finally {
+			fileLock.unlock();
+		}
+	}
+
+	private void speichernDatei() {
+
+		if (!fileLock.tryLock()) {
+			return;
+		}
+
+		try {
+			var path = Path.of(System.getProperty("user.home"), FILENAME);
+			var tmp = path.resolveSibling(FILENAME + ".tmp");
+
+			Properties props = new Properties();
+			for (var e : propMap.entrySet()) {
+				props.setProperty(e.getKey(), e.getValue());
+			}
+
+			try (var out = Files.newOutputStream(tmp)) {
+				props.store(out, "Petanque Turnier Manager Konfiguration");
+			}
+
+			Files.move(tmp, path,
+					java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+					java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+
+		} catch (Exception e) {
+			logger.error("Fehler beim Speichern", e);
+		} finally {
+			fileLock.unlock();
+		}
+	}
+	// ----------------------------------------------------
+	// Getter
+	// ----------------------------------------------------
+
+	private boolean getBoolean(String key) {
+		try {
+			return Boolean.parseBoolean(propMap.getOrDefault(key, "false"));
+		} catch (Exception e) {
+			logger.warn("Fehler beim Lesen Boolean {}", key, e);
+			return false;
 		}
 	}
 
@@ -85,195 +156,222 @@ public class GlobalProperties {
 		return getBoolean(CREATE_BACKUP_PROP);
 	}
 
-	/** Wenn true, liefert NewReleaseChecker immer "neue Version verfügbar" (Entwicklungsmodus). */
 	public boolean isNewVersionCheckImmerTrue() {
 		return getBoolean(NEW_VERSION_CHECK_PROP);
 	}
 
-	/** Ob der eingebettete Webserver beim Start automatisch aktiviert werden soll. */
 	public boolean isWebserverAktiv() {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
 	}
 
-	/** Ob der Seitentitel (Blattname) über der Kopfzeile im Browser angezeigt werden soll. */
 	public boolean isSheetnamenKopfzeileAnzeigen() {
 		return getBoolean(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP);
 	}
 
-	/**
-	 * Liefert alle konfigurierten Port-Konfigurationen mit aufgelösten SheetResolvern.
-	 * <p>
-	 * Format in der properties-Datei:
-	 * <pre>
-	 *   webserver.ports=8081,8082
-	 *   webserver.port.8081.sheet=SCHWEIZER_RANGLISTE
-	 *   webserver.port.8082.sheet=SCHWEIZER_SPIELRUNDE
-	 * </pre>
-	 *
-	 * @return Liste der Port-Konfigurationen (nie null, ggf. leer)
-	 */
+	public String getLogLevel() {
+		return propMap.getOrDefault(LOG_LEVEL_PROP, "").trim();
+	}
+
+	// ----------------------------------------------------
+	// Port-Konfiguration
+	// ----------------------------------------------------
+
 	public List<PortKonfiguration> getPortKonfigurationen() {
 		List<PortKonfiguration> konfigs = new ArrayList<>();
+
 		for (var eintrag : getPortEintraege()) {
-			if (eintrag.aktiv()) {
+			if (!eintrag.aktiv()) continue;
+
+			try {
+				var resolver = SheetResolverFactory.erstellen(eintrag.sheetConfig());
+				if (resolver == null) {
+					logger.warn("Resolver null für {}", eintrag);
+					continue;
+				}
+
 				konfigs.add(new PortKonfiguration(
 						eintrag.port(),
-						SheetResolverFactory.erstellen(eintrag.sheetConfig()),
+						resolver,
 						eintrag.zoom(),
 						eintrag.zentrieren()));
+
+			} catch (Exception e) {
+				logger.error("Fehler bei Port-Konfiguration {}", eintrag, e);
 			}
 		}
+
 		return konfigs;
 	}
 
-	/**
-	 * Liefert alle konfigurierten Ports als rohe Einträge (ohne SheetResolver).
-	 * Wird vom Konfigurationsdialog verwendet.
-	 *
-	 * @return Liste der Port-Einträge (nie null, ggf. leer)
-	 */
 	public List<PortEintragRoh> getPortEintraege() {
 		List<PortEintragRoh> eintraege = new ArrayList<>();
-		var portsStr = props.getProperty(WEBSERVER_PORTS_PROP, "").trim();
-		if (portsStr.isEmpty()) {
-			return eintraege;
-		}
-		for (var portStr : portsStr.split(",")) {
-			portStr = portStr.trim();
-			if (portStr.isEmpty()) {
-				continue;
-			}
-			try {
-				int port = Integer.parseInt(portStr);
-				var sheetConfig = props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_SHEET_SUFFIX, "").trim();
-				if (!sheetConfig.isEmpty()) {
-					boolean aktiv = Boolean.parseBoolean(
-							props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_AKTIV_SUFFIX, "false"));
-					int zoom = parseZoom(props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZOOM_SUFFIX, ""));
-					boolean zentrieren = Boolean.parseBoolean(
-							props.getProperty(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZENTRIEREN_SUFFIX, "false"));
+
+		try {
+			var portsStr = propMap.getOrDefault(WEBSERVER_PORTS_PROP, "").trim();
+			if (portsStr.isEmpty()) return eintraege;
+
+			for (var portStr : portsStr.split(",")) {
+				try {
+					portStr = portStr.trim();
+					if (portStr.isEmpty()) continue;
+
+					int port = Integer.parseInt(portStr);
+
+					var sheetConfig = propMap.getOrDefault(
+							WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_SHEET_SUFFIX, "").trim();
+
+					if (sheetConfig.isEmpty()) continue;
+
+					boolean aktiv = getBoolean(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_AKTIV_SUFFIX);
+					int zoom = parseZoom(propMap.get(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZOOM_SUFFIX));
+					boolean zentrieren = getBoolean(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZENTRIEREN_SUFFIX);
+
 					eintraege.add(new PortEintragRoh(port, sheetConfig, aktiv, zoom, zentrieren));
+
+				} catch (Exception e) {
+					logger.warn("Ungültiger Port-Eintrag '{}'", portStr, e);
 				}
-			} catch (NumberFormatException e) {
-				logger.warn("Ungültige Port-Nummer in {}: '{}'", WEBSERVER_PORTS_PROP, portStr);
 			}
+
+		} catch (Exception e) {
+			logger.error("Fehler beim Lesen der Port-Einträge", e);
 		}
+
 		return eintraege;
 	}
 
-	/** Liefert den konfigurierten Log-Level ("debug", "info" oder leer). */
-	public String getLogLevel() {
-		return props.getProperty(LOG_LEVEL_PROP, "").trim();
-	}
+	// ----------------------------------------------------
+	// Speichern
+	// ----------------------------------------------------
 
-	/**
-	 * Speichert Plugin-Basiskonfiguration (ohne Webserver-Einstellungen).
-	 */
 	public void speichern(boolean autosave, boolean backup, boolean newVersionCheck, String logLevel) {
-		setBooleanProp(AUTOSAVE_PROP, autosave);
-		setBooleanProp(CREATE_BACKUP_PROP, backup);
-		setBooleanProp(NEW_VERSION_CHECK_PROP, newVersionCheck);
-		if (logLevel != null && !logLevel.isBlank()) {
-			props.setProperty(LOG_LEVEL_PROP, logLevel.trim().toLowerCase());
-		} else {
-			props.remove(LOG_LEVEL_PROP);
-		}
-		speichernDatei();
-		setLogLevel();
-	}
+		try {
+			setBooleanProp(AUTOSAVE_PROP, autosave);
+			setBooleanProp(CREATE_BACKUP_PROP, backup);
+			setBooleanProp(NEW_VERSION_CHECK_PROP, newVersionCheck);
 
-	/**
-	 * Speichert Webserver-Konfiguration.
-	 * Löscht zuerst alle vorhandenen {@code webserver.port.*}-Einträge, dann
-	 * schreibt die neuen Werte.
-	 *
-	 * @param aktiv               ob Webserver beim Start aktiviert werden soll
-	 * @param sheetnamenAnzeigen  ob der Seitentitel über der Kopfzeile angezeigt werden soll
-	 * @param eintraege           Port-Einträge (PORT=SHEET_TYP)
-	 */
-	public void speichernWebserver(boolean aktiv, boolean sheetnamenAnzeigen, List<PortEintragRoh> eintraege) {
-		// Bekannte Port-Einträge kontrolliert löschen (kein blindes removeIf)
-		for (var alt : getPortEintraege()) {
-			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_SHEET_SUFFIX);
-			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_AKTIV_SUFFIX);
-			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZOOM_SUFFIX);
-			props.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX);
-		}
-		props.remove(WEBSERVER_PORTS_PROP);
-		setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
-		setBooleanProp(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP, sheetnamenAnzeigen);
-
-		if (!eintraege.isEmpty()) {
-			var ports = new StringBuilder();
-			for (var eintrag : eintraege) {
-				if (!ports.isEmpty()) {
-					ports.append(",");
-				}
-				ports.append(eintrag.port());
-				props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_SHEET_SUFFIX,
-						eintrag.sheetConfig());
-				if (eintrag.aktiv()) {
-					props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_AKTIV_SUFFIX, "true");
-				}
-				if (eintrag.zoom() != DEFAULT_ZOOM) {
-					props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZOOM_SUFFIX,
-							String.valueOf(eintrag.zoom()));
-				}
-				if (eintrag.zentrieren()) {
-					props.setProperty(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX, "true");
-				}
+			if (logLevel != null && !logLevel.isBlank()) {
+				propMap.put(LOG_LEVEL_PROP, logLevel.trim().toLowerCase());
+			} else {
+				propMap.remove(LOG_LEVEL_PROP);
 			}
-			props.setProperty(WEBSERVER_PORTS_PROP, ports.toString());
+
+			speichernDatei();
+			safeSetLogLevel();
+
+		} catch (Exception e) {
+			logger.error("Fehler beim Speichern", e);
 		}
-		speichernDatei();
 	}
 
-	private void speichernDatei() {
-		var propFile = new File(System.getProperty("user.home"), FILENAME);
-		try (var out = new FileOutputStream(propFile)) {
-			props.store(out, "Petanque Turnier Manager Konfiguration");
-		} catch (IOException e) {
-			logger.error("Fehler beim Speichern der properties-Datei: {}", e.getMessage(), e);
+	public void speichernWebserver(boolean aktiv, boolean sheetnamenAnzeigen, List<PortEintragRoh> eintraege) {
+		try {
+			for (var alt : getPortEintraege()) {
+				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_SHEET_SUFFIX);
+				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_AKTIV_SUFFIX);
+				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZOOM_SUFFIX);
+				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX);
+			}
+
+			propMap.remove(WEBSERVER_PORTS_PROP);
+
+			setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
+			setBooleanProp(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP, sheetnamenAnzeigen);
+
+			if (!eintraege.isEmpty()) {
+				var ports = new StringBuilder();
+
+				for (var eintrag : eintraege) {
+					if (!ports.isEmpty()) ports.append(",");
+					ports.append(eintrag.port());
+
+					propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_SHEET_SUFFIX, eintrag.sheetConfig());
+
+					if (eintrag.aktiv())
+						propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_AKTIV_SUFFIX, "true");
+
+					if (eintrag.zoom() != DEFAULT_ZOOM)
+						propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZOOM_SUFFIX, String.valueOf(eintrag.zoom()));
+
+					if (eintrag.zentrieren())
+						propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX, "true");
+				}
+
+				propMap.put(WEBSERVER_PORTS_PROP, ports.toString());
+			}
+
+			speichernDatei();
+
+		} catch (Exception e) {
+			logger.error("Fehler beim Speichern Webserver", e);
+		}
+	}
+
+	// ----------------------------------------------------
+	// Extras
+	// ----------------------------------------------------
+
+	public int getTabFarbe(String konfigPropKey, int defaultVal) {
+		try {
+			var key = toTabFarbGlobalKey(konfigPropKey);
+			var val = propMap.get(key);
+
+			if (val == null || val.isBlank()) return defaultVal;
+
+			return Integer.parseInt(val.trim(), 16);
+
+		} catch (Exception e) {
+			logger.warn("Fehler bei TabFarbe {}", konfigPropKey, e);
+			return defaultVal;
+		}
+	}
+
+	private static String toTabFarbGlobalKey(String konfigPropKey) {
+		return "tabfarbe." + konfigPropKey.toLowerCase()
+				.replace("tab-farbe ", "")
+				.replace(" ", "_");
+	}
+
+	private void setBooleanProp(String key, boolean value) {
+		try {
+			if (value) propMap.put(key, "true");
+			else propMap.remove(key);
+		} catch (Exception e) {
+			logger.warn("Fehler beim Setzen {}", key, e);
 		}
 	}
 
 	private static int parseZoom(String value) {
-		if (value == null || value.isBlank()) {
-			return DEFAULT_ZOOM;
-		}
 		try {
+			if (value == null || value.isBlank()) return DEFAULT_ZOOM;
 			int zoom = Integer.parseInt(value.trim());
 			return (zoom >= 10 && zoom <= 500) ? zoom : DEFAULT_ZOOM;
-		} catch (NumberFormatException e) {
+		} catch (Exception e) {
 			return DEFAULT_ZOOM;
 		}
 	}
 
-	private void setBooleanProp(String key, boolean value) {
-		if (value) {
-			props.setProperty(key, "true");
-		} else {
-			props.remove(key);
-		}
-	}
+	private void safeSetLogLevel() {
+		try {
+			var logLevel = getLogLevel();
+			if (logLevel.isBlank()) return;
 
-	private boolean getBoolean(String propKey) {
-		if (props != null && props.containsKey(propKey)) {
-			return Boolean.parseBoolean(props.getProperty(propKey));
-		}
-		return false;
-	}
+			var loggerCfg = LogManager.getLogger(Log4J.LOGGERNAME);
 
-	private void setLogLevel() {
-		var logLevel = (String) props.get(LOG_LEVEL_PROP);
-		if (logLevel != null && !logLevel.isBlank()) {
-			logLevel = logLevel.trim();
-			var loggerAusConfigDatei = LogManager.getLogger(Log4J.LOGGERNAME);
-			if (logLevel.equalsIgnoreCase("debug")) {
-				Configurator.setLevel(loggerAusConfigDatei, Level.DEBUG);
-			} else if (logLevel.equalsIgnoreCase("info")) {
-				Configurator.setLevel(loggerAusConfigDatei, Level.INFO);
+			switch (logLevel) {
+				case "debug" -> Configurator.setLevel(loggerCfg, Level.DEBUG);
+				case "info" -> Configurator.setLevel(loggerCfg, Level.INFO);
+				default -> logger.warn("Unbekanntes LogLevel: {}", logLevel);
 			}
+
+		} catch (Exception e) {
+			logger.error("Fehler beim Setzen des LogLevels", e);
 		}
+	}
+
+
+	static void resetForTest() {
+		instance = null;
+		propMap.clear();
 	}
 }
