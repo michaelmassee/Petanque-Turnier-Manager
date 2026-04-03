@@ -27,4 +27,8 @@ public interface IPoulePropertiesSpalte extends IPropertiesSpalte {
 
     void setSpielplanMitBahnspalte(boolean mitBahnspalte);
 
+    int getPouleVorrundeTabFarbe();
+
+    int getPouleVorrundenRanglisteTabFarbe();
+
 }

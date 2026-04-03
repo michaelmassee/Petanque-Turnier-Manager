@@ -24,8 +24,8 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -58,9 +58,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet {
 
     private static final Logger logger = LogManager.getLogger(PouleVorrundenRanglisteSheet.class);
-
-    // Farbe des Ranglistensheets (unterscheidet sich vom Vorrunden-Sheet "4a8faa")
-    private static final String SHEET_COLOR = "facd73";
 
     // Hintergrundfarben für A- und B-Turnier-Zeilen
     private static final int FARBE_A_TURNIER = 0x00CC66;
@@ -133,7 +130,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
 
         NewSheet.from(this, SheetNamen.pouleVorrundenRangliste(),
                         SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE)
-                .tabColor(SHEET_COLOR)
+                .tabColor(konfigurationSheet.getPouleVorrundenRanglisteTabFarbe())
                 .pos(DefaultSheetPos.POULE_RANGLISTE)
                 .forceCreate()
                 .hideGrid()
@@ -160,12 +157,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
         spaltenBreitenSetzen(xSheet);
         headerSchreiben(xSheet);
 
-        int aktuelleZeile = HEADER_ZEILEN;
-        for (int gruppenIndex = 0; gruppenIndex < sortiertGruppen.size(); gruppenIndex++) {
-            SheetRunner.testDoCancelTask();
-            var gruppe = sortiertGruppen.get(gruppenIndex);
-            aktuelleZeile = schreibeGruppenZeilen(xSheet, gruppe, gruppenIndex + 1, aktuelleZeile);
-        }
+        int aktuelleZeile = schreibeDatenZeilen(xSheet, sortiertGruppen);
 
         int letzteDatenZeile = aktuelleZeile - 1;
         if (letzteDatenZeile >= HEADER_ZEILEN) {
@@ -300,118 +292,112 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     }
 
     /**
-     * Schreibt die Datenzeilen für eine Gruppe und gibt die nächste freie Zeile zurück.
+     * Sammelt alle Datenzeilen aller Gruppen, schreibt sie per RangeHelper in Bulk-Aufrufen
+     * und formatiert anschließend per setPropertiesInRange.
+     *
+     * @return die nächste freie Zeile nach den Datenzeilen
      */
-    private int schreibeGruppenZeilen(XSpreadsheet xSheet, List<PouleTeamErgebnis> gruppe,
-            int gruppenNr, int startZeile) throws GenerateException {
+    private int schreibeDatenZeilen(XSpreadsheet xSheet, List<List<PouleTeamErgebnis>> sortiertGruppen)
+            throws GenerateException {
 
-        int aktuelleZeile = startZeile;
-        int gruppenGroesse = gruppe.size();
+        var block1 = new RangeData(); // Platz, Gruppe, Nr
+        var block2 = new RangeData(); // Siege, Ndlg, PktPlus, PktMinus, Diff, Turnier
+        var aTurnierZeilen = new ArrayList<Integer>();
+        var bTurnierZeilen = new ArrayList<Integer>();
+        int aktuelleZeile = HEADER_ZEILEN;
 
-        for (int platzIndex = 0; platzIndex < gruppenGroesse; platzIndex++) {
-            var erg = gruppe.get(platzIndex);
-            int platz = platzIndex + 1;
-            boolean istATurnier = istATurnierPlatz(platz, gruppenGroesse);
-            int hintergrundFarbe = istATurnier ? FARBE_A_TURNIER : FARBE_B_TURNIER;
-            String turnierBuchstabe = istATurnier ? "A" : "B";
+        for (int gruppenIndex = 0; gruppenIndex < sortiertGruppen.size(); gruppenIndex++) {
+            SheetRunner.testDoCancelTask();
+            var gruppe = sortiertGruppen.get(gruppenIndex);
+            int gruppenNr = gruppenIndex + 1;
 
-            schreibeDatenZeile(xSheet, aktuelleZeile, platz, gruppenNr, erg,
-                    turnierBuchstabe, hintergrundFarbe);
-            aktuelleZeile++;
+            for (int platzIndex = 0; platzIndex < gruppe.size(); platzIndex++) {
+                var erg = gruppe.get(platzIndex);
+                int platz = platzIndex + 1;
+                boolean istATurnier = platz <= 2;
+
+                var row1 = block1.addNewRow();
+                row1.newInt(platz);
+                row1.newInt(gruppenNr);
+                row1.newInt(erg.teamNr());
+
+                var row2 = block2.addNewRow();
+                row2.newInt(erg.siege());
+                row2.newInt(erg.niederlagen());
+                row2.newInt(erg.erzieltePunkte());
+                row2.newInt(erg.erzieltePunkte() - erg.punkteDifferenz());
+                row2.newInt(erg.punkteDifferenz());
+                row2.newString(istATurnier ? "A" : "B");
+
+                if (istATurnier) {
+                    aTurnierZeilen.add(aktuelleZeile);
+                } else {
+                    bTurnierZeilen.add(aktuelleZeile);
+                }
+                aktuelleZeile++;
+            }
+        }
+
+        if (block1.isEmpty()) {
+            return HEADER_ZEILEN;
+        }
+
+        var doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        RangeHelper.from(xSheet, doc, block1.getRangePosition(Position.from(SPALTE_PLATZ, HEADER_ZEILEN)))
+                .setDataInRange(block1);
+        RangeHelper.from(xSheet, doc, block2.getRangePosition(Position.from(SPALTE_SIEGE, HEADER_ZEILEN)))
+                .setDataInRange(block2);
+
+        // VLOOKUP-Formel für Name-Spalte (referenziert Nr-Zelle in gleicher Zeile)
+        for (int z = HEADER_ZEILEN; z < aktuelleZeile; z++) {
+            String vlookup = "VLOOKUP(" + Position.from(SPALTE_NR, z).getAddress()
+                    + ";$'" + SheetNamen.meldeliste() + "'.$A$4:$B$999;2;0)";
+            getSheetHelper().setFormulaInCell(
+                    StringCellValue.from(xSheet, Position.from(SPALTE_NAME, z), vlookup));
+        }
+
+        // Formatierung: Rahmen + Zentrierung für alle Datenzellen
+        int letzteZeile = aktuelleZeile - 1;
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_PLATZ, HEADER_ZEILEN, LETZTE_SPALTE, letzteZeile),
+                CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder())
+                        .setHoriJustify(CellHoriJustify.CENTER));
+
+        // Vertikale Trennlinien aus dem Header in den Datenbereich übernehmen
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_SIEGE, HEADER_ZEILEN, SPALTE_SIEGE, letzteZeile),
+                CellProperties.from().setBorder(BorderFactory.from().allThin().doubleLn().forLeft().toBorder()));
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_PKT_PLUS, HEADER_ZEILEN, SPALTE_PKT_PLUS, letzteZeile),
+                CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forLeft().toBorder()));
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_DIFF, HEADER_ZEILEN, SPALTE_DIFF, letzteZeile),
+                CellProperties.from().setBorder(BorderFactory.from().allThin().boldLn().forRight().toBorder()));
+
+        // Name-Spalte: linksbündig
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_NAME, HEADER_ZEILEN, SPALTE_NAME, letzteZeile),
+                CellProperties.from().setHoriJustify(CellHoriJustify.LEFT));
+
+        // Turnier-Spalte: fett
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_TURNIER, HEADER_ZEILEN, SPALTE_TURNIER, letzteZeile),
+                CellProperties.from().setCharWeight(FontWeight.BOLD));
+
+        // Hintergrundfarbe: A-Turnier (grün)
+        for (int zeile : aTurnierZeilen) {
+            getSheetHelper().setPropertiesInRange(xSheet,
+                    RangePosition.from(SPALTE_PLATZ, zeile, LETZTE_SPALTE, zeile),
+                    CellProperties.from().setCellBackColor(FARBE_A_TURNIER));
+        }
+        // Hintergrundfarbe: B-Turnier (rot)
+        for (int zeile : bTurnierZeilen) {
+            getSheetHelper().setPropertiesInRange(xSheet,
+                    RangePosition.from(SPALTE_PLATZ, zeile, LETZTE_SPALTE, zeile),
+                    CellProperties.from().setCellBackColor(FARBE_B_TURNIER));
         }
 
         return aktuelleZeile;
-    }
-
-    /**
-     * Bestimmt ob ein Platz in einer Gruppe zum A-Turnier gehört.
-     * 4er-Poule: Platz 1+2 = A, Platz 3+4 = B.
-     * 3er-Poule: Platz 1+2 = A, Platz 3 = B.
-     */
-    private boolean istATurnierPlatz(int platz, int gruppenGroesse) {
-        return platz <= 2;
-    }
-
-    /**
-     * Schreibt eine einzelne Datenzeile in das Ranglistenblatt.
-     */
-    private void schreibeDatenZeile(XSpreadsheet xSheet, int zeile, int platz,
-            int gruppenNr, PouleTeamErgebnis erg, String turnier,
-            int hintergrundFarbe) throws GenerateException {
-
-        var border = BorderFactory.from().allThin().toBorder();
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_PLATZ, zeile))
-                        .setValue(platz)
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_GRUPPE, zeile))
-                        .setValue(gruppenNr)
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_NR, zeile))
-                        .setValue(erg.teamNr())
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        // Name per VLOOKUP aus Meldeliste
-        String vlookup = "VLOOKUP(" + Position.from(SPALTE_NR, zeile).getAddress()
-                + ";$'" + SheetNamen.meldeliste() + "'.$A$4:$B$999;2;0)";
-        getSheetHelper().setFormulaInCell(
-                StringCellValue.from(xSheet, Position.from(SPALTE_NAME, zeile), vlookup)
-                        .setBorder(border)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_SIEGE, zeile))
-                        .setValue(erg.siege())
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_NDLG, zeile))
-                        .setValue(erg.niederlagen())
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_PKT_PLUS, zeile))
-                        .setValue(erg.erzieltePunkte())
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        int pktMinus = erg.erzieltePunkte() - erg.punkteDifferenz();
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_PKT_MINUS, zeile))
-                        .setValue(pktMinus)
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setNumberValueInCell(
-                NumberCellValue.from(xSheet, Position.from(SPALTE_DIFF, zeile))
-                        .setValue(erg.punkteDifferenz())
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCellBackColor(hintergrundFarbe));
-
-        getSheetHelper().setStringValueInCell(
-                StringCellValue.from(xSheet, Position.from(SPALTE_TURNIER, zeile), turnier)
-                        .setBorder(border)
-                        .setHoriJustify(CellHoriJustify.CENTER)
-                        .setCharWeight(FontWeight.BOLD)
-                        .setCellBackColor(hintergrundFarbe));
     }
 
     private void headerSchreiben(XSpreadsheet xSheet) throws GenerateException {
@@ -445,7 +431,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                         .setShrinkToFit(true).setEndPosMergeSpaltePlus(1));
 
         getSheetHelper().setStringValueInCell(
-                StringCellValue.from(xSheet, Position.from(SPALTE_SIEGE, 1),  I18n.get("schweizer.rangliste.spalte.punkte.plus"))
+                StringCellValue.from(xSheet, Position.from(SPALTE_SIEGE, 1), I18n.get("schweizer.rangliste.spalte.punkte.plus"))
                         .setCellBackColor(headerFarbe)
                         .setBorder(BorderFactory.from().allThin().doubleLn().forLeft().boldLn().forBottom().toBorder())
                         .setCharWeight(FontWeight.BOLD)
@@ -454,7 +440,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                         .setShrinkToFit(true));
 
         getSheetHelper().setStringValueInCell(
-                StringCellValue.from(xSheet, Position.from(SPALTE_NDLG, 1),  I18n.get("schweizer.rangliste.spalte.punkte.minus"))
+                StringCellValue.from(xSheet, Position.from(SPALTE_NDLG, 1), I18n.get("schweizer.rangliste.spalte.punkte.minus"))
                         .setCellBackColor(headerFarbe)
                         .setBorder(border)
                         .setCharWeight(FontWeight.BOLD)

@@ -254,7 +254,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LOGFILE_ANZEIGEN      = "logfileAnzeigen";
 	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
-
 	private final XComponentContext xContext;
 
 	public ProtocolHandler(XComponentContext xContext) {

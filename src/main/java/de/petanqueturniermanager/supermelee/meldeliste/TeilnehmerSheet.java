@@ -45,8 +45,6 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
 	public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
 
-	private static final String SHEET_COLOR = "6542f4";
-
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
 	private final MeldeListeSheet_Update meldeliste;
 	private SpielTagNr spielTagNr = null;
@@ -89,7 +87,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 		// wenn hier dann immer neu erstellen, force = true
 		NewSheet.from(this, getSheetName(getSpielTagNr()),
 				SheetMetadataHelper.schluesselSupermeleeTeilnehmer(getSpielTagNr().getNr()))
-				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
+				.tabColor(konfigurationSheet.getTeilnehmerTabFarbe()).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTagNr())
 				.forceCreate().hideGrid().setActiv().create();
 
 		// meldeliste nach namen sortieren !

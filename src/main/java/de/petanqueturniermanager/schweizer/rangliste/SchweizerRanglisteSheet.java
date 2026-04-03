@@ -67,8 +67,6 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  */
 public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
-	public static final String SHEET_COLOR = "d637e8";
-
 	public static final int HEADER_ZEILE          = 0;
 	public static final int ZWEITE_HEADER_ZEILE   = 1;
 	public static final int ERSTE_DATEN_ZEILE     = 2;
@@ -173,7 +171,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		NewSheet.from(this, getRanglistenSheetName(), getMetadatenSchluessel())
 				.pos(DefaultSheetPos.SCHWEIZER_ENDRANGLISTE)
 				.forceCreate()
-				.tabColor(SHEET_COLOR)
+				.tabColor(getKonfigurationSheet().getRanglisteTabFarbe())
 				.create();
 
 		XSpreadsheet sheet = getXSpreadSheet();

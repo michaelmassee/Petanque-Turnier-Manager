@@ -194,4 +194,9 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 		return getPropertiesSpalte().getSpielRundeHintergrundFarbeUnGeradeStyle();
 	}
 
+	@Override
+	public int getSupermeleeTeamPaarungenTabFarbe() {
+		return propertiesSpalte.getSupermeleeTeamPaarungenTabFarbe();
+	}
+
 }

@@ -61,8 +61,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(KoTurnierbaumSheet.class);
 
-	private static final String SHEET_COLOR = "8b0000";
-
 	/** Header-Zeilen */
 	private static final int HEADER_ZEILE_TITEL = 0;
 	private static final int HEADER_ZEILE_SPALTEN = 1;
@@ -314,7 +312,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			NewSheet.from(this, sheetName, metadatenSchluessel)
 					.pos(sheetPos)
 					.hideGrid()
-					.tabColor(SHEET_COLOR)
+					.tabColor(konfig.getKoTurnierbaumTabFarbe())
 					.setActiv()
 					.create();
 			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
@@ -434,7 +432,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				NewSheet.from(this, sheetName, schluesselFuerGruppe(g, anzGruppen))
 						.pos((short) (DefaultSheetPos.KO_TURNIERBAUM + g))
 						.hideGrid()
-						.tabColor(SHEET_COLOR)
+						.tabColor(getKonfigurationSheet().getKoTurnierbaumTabFarbe())
 						.setActiv()
 						.create();
 

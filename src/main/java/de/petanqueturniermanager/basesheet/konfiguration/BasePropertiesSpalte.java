@@ -10,6 +10,8 @@ import java.util.List;
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
@@ -50,10 +52,15 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	public static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 
-	public static final String KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN = "Zeige Arbeitsspalten"; // diesen Daten werden nur intern gebraucht, default = false
-
 	public static final String KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE = "Teilnehmerliste Anzahl je Spalte";
 	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
+
+	// Tab-Farben (Document Properties Schlüssel)
+	public static final String KONFIG_PROP_TAB_COLOR_MELDELISTE      = "Tab-Farbe Meldeliste";
+	public static final String KONFIG_PROP_TAB_COLOR_TEILNEHMER      = "Tab-Farbe Teilnehmer";
+	public static final String KONFIG_PROP_TAB_COLOR_SPIELRUNDE      = "Tab-Farbe Spielrunde";
+	public static final String KONFIG_PROP_TAB_COLOR_RANGLISTE       = "Tab-Farbe Rangliste";
+	public static final String KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH = "Tab-Farbe Direktvergleich";
 
 	protected final WeakRefHelper<ISheet> sheetWkRef;
 	private final DocumentPropertiesHelper docPropHelper;
@@ -91,15 +98,26 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 					.setDescription("config.desc.rangliste.header").inSideBar());
 		}
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN)
-				.setDefaultVal(false)
-				.setDescription("config.desc.zeige.arbeits.spalten")
-				.inSideBar());
-
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDefaultVal(DEFAULT_ANZ_TEILNEHMER_IN_SPALTE)
 				.setDescription("config.desc.teilnehmer.anzahl.spalte")
 				.inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_MELDELISTE)
+				.setDefaultVal(SheetTabFarben.MELDELISTE)
+				.setDescription("config.desc.tab.farbe.meldeliste").tabFarbe());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_TEILNEHMER)
+				.setDefaultVal(SheetTabFarben.TEILNEHMER)
+				.setDescription("config.desc.tab.farbe.teilnehmer").tabFarbe());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_SPIELRUNDE)
+				.setDefaultVal(SheetTabFarben.SPIELRUNDE)
+				.setDescription("config.desc.tab.farbe.spielrunde").tabFarbe());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_RANGLISTE)
+				.setDefaultVal(SheetTabFarben.RANGLISTE)
+				.setDescription("config.desc.tab.farbe.rangliste").tabFarbe());
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH)
+				.setDefaultVal(SheetTabFarben.DIREKTVERGLEICH)
+				.setDescription("config.desc.tab.farbe.direktvergleich").tabFarbe());
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {
@@ -120,15 +138,28 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	/**
+	 * Liest einen Integer-Property-Wert. Für Tab-Farb-Properties gilt die Fallback-Kette:
+	 * Document Properties → PetanqueTurnierManager.properties → SheetTabFarben-Konstante.
 	 *
-	 * @param name
-	 * @return defaultVal aus ConfigProperty, -1 wenn fehler @
+	 * @param key Property-Schlüssel
+	 * @return gespeicherter Wert oder Fallback-Default
 	 */
 	public int readIntProperty(String key) {
-		Integer val = null;
+		int hardcodedDefault = getHardcodedDefault(key);
+		int effectiveDefault = istTabFarbProp(key)
+				? GlobalProperties.get().getTabFarbe(key, hardcodedDefault)
+				: hardcodedDefault;
+		return docPropHelper.getIntProperty(key, effectiveDefault);
+	}
+
+	private int getHardcodedDefault(String key) {
 		Object defaultVal = getDefaultProp(key);
-		val = docPropHelper.getIntProperty(key, (defaultVal == null) ? 0 : (Integer) defaultVal);
-		return val;
+		return defaultVal == null ? 0 : (Integer) defaultVal;
+	}
+
+	private boolean istTabFarbProp(String key) {
+		return getKonfigProperties().stream()
+				.anyMatch(p -> p.getKey().equals(key) && p.isTabFarbe());
 	}
 
 	/**
@@ -215,11 +246,6 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	@Override
-	public final boolean zeigeArbeitsSpalten() {
-		return readBooleanProperty(KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN);
-	}
-
-	@Override
 	public Integer getRanglisteHeaderFarbe() {
 		return readCellBackColorProperty(KONFIG_PROP_RANGLISTE_COLOR_BACK_HEADER);
 	}
@@ -237,6 +263,31 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public Integer getMaxAnzTeilnehmerInSpalte() {
 		return readIntProperty(KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE);
+	}
+
+	@Override
+	public int getMeldelisteTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_MELDELISTE);
+	}
+
+	@Override
+	public int getTeilnehmerTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_TEILNEHMER);
+	}
+
+	@Override
+	public int getSpielrundeTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_SPIELRUNDE);
+	}
+
+	@Override
+	public int getRanglisteTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_RANGLISTE);
+	}
+
+	@Override
+	public int getDirektvergleichTabFarbe() {
+		return readIntProperty(KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH);
 	}
 
 }

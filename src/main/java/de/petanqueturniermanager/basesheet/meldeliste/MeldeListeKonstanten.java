@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.basesheet.meldeliste;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 
 /**
@@ -10,7 +11,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
  */
 public interface MeldeListeKonstanten {
 
-	String SHEET_COLOR = "2544dd";
+	int SHEET_COLOR = SheetTabFarben.MELDELISTE;
 
 	/** Gibt den lokalisierten Tabellennamen zurück. */
 	static String sheetName() {

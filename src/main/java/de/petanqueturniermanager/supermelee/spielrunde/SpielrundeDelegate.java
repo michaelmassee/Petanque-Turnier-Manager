@@ -415,7 +415,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		Position ersteHeaderZeile = Position.from(ERSTE_SPALTE_VERTIKALE_ERGEBNISSE, ZWEITE_HEADER_ZEILE);
 		ColumnProperties columnProperties = ColumnProperties.from()
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
-				.setVertJustify(CellVertJustify2.CENTER).isVisible(konfigurationSheet.zeigeArbeitsSpalten());
+				.setVertJustify(CellVertJustify2.CENTER).isVisible(false);
 		StringCellValue headerText = StringCellValue.from(xsheet, ersteHeaderZeile)
 				.addColumnProperties(columnProperties);
 		sheet.getSheetHelper().setStringValueInCell(headerText.setValue("Nr"));
@@ -593,7 +593,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		sheet.processBoxinfo("processbox.formatiere.header");
 		Position pos = Position.from(ERSTE_SPIELERNR_SPALTE - 1, ERSTE_DATEN_ZEILE - 1);
 		ColumnProperties columnProperties = ColumnProperties.from().setWidth(800).setHoriJustify(CellHoriJustify.CENTER)
-				.isVisible(konfigurationSheet.zeigeArbeitsSpalten());
+				.isVisible(false);
 		StringCellValue headerCelVal = StringCellValue.from(xsheet, Position.from(pos), "#")
 				.addColumnProperties(columnProperties).setShrinkToFit(true);
 		sheet.getSheetHelper().setStringValueInCell(headerCelVal);

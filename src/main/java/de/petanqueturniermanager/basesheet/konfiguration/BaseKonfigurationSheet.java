@@ -177,11 +177,6 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
-	public final boolean zeigeArbeitsSpalten() {
-		return getPropertiesSpalte().zeigeArbeitsSpalten();
-	}
-
-	@Override
 	public final XSpreadsheet getXSpreadSheet() throws GenerateException {
 		throw new GenerateException(I18n.get("error.nicht.erlaubt"));
 	}
@@ -209,6 +204,31 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	@Override
 	public final Integer getMaxAnzTeilnehmerInSpalte() {
 		return getPropertiesSpalte().getMaxAnzTeilnehmerInSpalte();
+	}
+
+	@Override
+	public final int getMeldelisteTabFarbe() {
+		return getPropertiesSpalte().getMeldelisteTabFarbe();
+	}
+
+	@Override
+	public final int getTeilnehmerTabFarbe() {
+		return getPropertiesSpalte().getTeilnehmerTabFarbe();
+	}
+
+	@Override
+	public final int getSpielrundeTabFarbe() {
+		return getPropertiesSpalte().getSpielrundeTabFarbe();
+	}
+
+	@Override
+	public final int getRanglisteTabFarbe() {
+		return getPropertiesSpalte().getRanglisteTabFarbe();
+	}
+
+	@Override
+	public final int getDirektvergleichTabFarbe() {
+		return getPropertiesSpalte().getDirektvergleichTabFarbe();
 	}
 
 	/**

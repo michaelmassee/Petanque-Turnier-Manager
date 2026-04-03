@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -32,7 +31,6 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
 		testMeldeListeErstellen.run();
 		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
-		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		docPropHelper.setStringProperty(JGJPropertiesSpalte.KONFIG_PROP_NAME_GRUPPE, "Gruppe Test");
 	}
 

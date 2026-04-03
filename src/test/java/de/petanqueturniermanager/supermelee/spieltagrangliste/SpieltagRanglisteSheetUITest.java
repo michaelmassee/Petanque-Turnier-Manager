@@ -24,9 +24,7 @@ import com.google.gson.JsonIOException;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -43,7 +41,6 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(SpieltagRanglisteSheetUITest.class);
 
-	private DocumentPropertiesHelper docPropHelper;
 	private RanglisteTestDaten<SpieltagRanglisteSheetUITest> ranglisteTestDaten;
 
 	@BeforeEach
@@ -52,8 +49,6 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 		TestSuperMeleeMeldeListeErstellen testMeldeListeErstellen = new TestSuperMeleeMeldeListeErstellen(
 				wkingSpreadsheet, doc);
 		testMeldeListeErstellen.run();
-		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
-		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		ranglisteTestDaten = new RanglisteTestDaten<>(wkingSpreadsheet, sheetHlp, this);
 	}
 

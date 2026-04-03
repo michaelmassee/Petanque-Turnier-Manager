@@ -6,11 +6,13 @@ package de.petanqueturniermanager.poule.konfiguration;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
+import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 
 /**
  * Konfigurationsspalte für das Poule-A/B-Turniersystem.
@@ -27,7 +29,9 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
     private static final String KONFIG_PROP_MELDELISTE_FORMATION   = "Meldeliste Formation";
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME    = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
-    private static final String KONFIG_PROP_SPIELPLAN_MIT_BAHN = "Spielplan Bahnspalte";
+    private static final String KONFIG_PROP_SPIELPLAN_MIT_BAHN                = "Spielplan Bahnspalte";
+    private static final String KONFIG_PROP_TAB_COLOR_POULE_VORRUNDE          = "Tab-Farbe Poule-Vorrunde";
+    private static final String KONFIG_PROP_TAB_COLOR_POULE_VORRUNDEN_RANGL   = "Tab-Farbe Poule-Vorrunden-Rangliste";
 
     static {
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_FORMATION)
@@ -48,6 +52,13 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELPLAN_MIT_BAHN)
                 .setDefaultVal("N").setDescription("config.desc.poule.spielplan.mit.bahnspalte"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_POULE_VORRUNDE)
+                .setDefaultVal(SheetTabFarben.POULE_VORRUNDE)
+                .setDescription("config.desc.tab.farbe.poule.vorrunde").tabFarbe());
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_POULE_VORRUNDEN_RANGL)
+                .setDefaultVal(SheetTabFarben.POULE_VORRUNDEN_RANGLISTE)
+                .setDescription("config.desc.tab.farbe.poule.vorrunden.rangliste").tabFarbe());
     }
 
     protected PoulePropertiesSpalte(ISheet sheet) {
@@ -99,6 +110,16 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
     @Override
     public void setSpielplanMitBahnspalte(boolean mitBahnspalte) {
         setStringProperty(KONFIG_PROP_SPIELPLAN_MIT_BAHN, mitBahnspalte ? "J" : "N");
+    }
+
+    @Override
+    public int getPouleVorrundeTabFarbe() {
+        return readIntProperty(KONFIG_PROP_TAB_COLOR_POULE_VORRUNDE);
+    }
+
+    @Override
+    public int getPouleVorrundenRanglisteTabFarbe() {
+        return readIntProperty(KONFIG_PROP_TAB_COLOR_POULE_VORRUNDEN_RANGL);
     }
 
 }

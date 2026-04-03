@@ -56,7 +56,6 @@ import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter
  */
 public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "b0f442";
 	public static final String LEGACY_SHEET_NAMEN = SheetNamen.LEGACY_SPIELPLAN;
 
 	public static String sheetName() {
@@ -140,7 +139,7 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 		if (!NewSheet.from(this, sheetName(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_WORK).setForceCreate(true).setActiv().hideGrid()
-				.tabColor(SHEET_COLOR).create().isDidCreate()) {
+				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
@@ -370,9 +369,8 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData).setRangeProperties(
 				RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
 		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-				.isVisible(zeigeArbeitsSpalten);
+				.isVisible(false);
 		XSpreadsheet sheet = getXSpreadSheet();
 		getSheetHelper().setColumnProperties(sheet, TEAM_A_NR_SPALTE, spalteBreite);
 		getSheetHelper().setColumnProperties(sheet, TEAM_B_NR_SPALTE, spalteBreite);

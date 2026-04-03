@@ -85,4 +85,14 @@ public class PouleKonfigurationSheet extends BaseKonfigurationSheet implements I
         propertiesSpalte.setSpielplanMitBahnspalte(mitBahnspalte);
     }
 
+    @Override
+    public int getPouleVorrundeTabFarbe() {
+        return propertiesSpalte.getPouleVorrundeTabFarbe();
+    }
+
+    @Override
+    public int getPouleVorrundenRanglisteTabFarbe() {
+        return propertiesSpalte.getPouleVorrundenRanglisteTabFarbe();
+    }
+
 }

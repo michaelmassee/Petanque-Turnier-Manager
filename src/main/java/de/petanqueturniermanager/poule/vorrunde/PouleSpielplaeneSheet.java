@@ -27,9 +27,6 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  */
 public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
 
-    private static final String SHEET_COLOR = "05ff8a";
-
-
     public PouleSpielplaeneSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, "Poule-Spielplaene");
     }
@@ -99,7 +96,7 @@ public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
         var metaKey = SheetMetadataHelper.schluesselPouleSpielplan(poule.pouleNr());
 
         NewSheet.from(this, sheetName, metaKey)
-                .tabColor(SHEET_COLOR)
+                .tabColor(getKonfigurationSheet().getSpielrundeTabFarbe())
                 .pos(DefaultSheetPos.POULE_WORK)
                 .forceCreate().hideGrid().create();
 

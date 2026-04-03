@@ -59,6 +59,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
+import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -71,7 +72,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 	private static final Logger LOGGER = LogManager.getLogger(SchweizerAbstractSpielrundeSheet.class);
 
-	public static final String SHEET_COLOR = "b0f442";
+	public static final int SHEET_COLOR = SheetTabFarben.SPIELRUNDE;
 	public static final String SHEET_NAMEN = "Spielrunde";
 
 	public static final int ERSTE_HEADER_ZEILE = 0;

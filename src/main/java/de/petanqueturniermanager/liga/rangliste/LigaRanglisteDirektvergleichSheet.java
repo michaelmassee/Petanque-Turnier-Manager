@@ -49,7 +49,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
  */
 public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements ISheet {
 
-	private static final String SHEET_COLOR = "42d4f5";
 	private static final int MARGIN = 120;
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH;
 
@@ -115,7 +114,7 @@ public class LigaRanglisteDirektvergleichSheet extends SheetRunner implements IS
 
 		if (!NewSheet.from(this, SheetNamen.direktvergleich(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_DIREKTEVERGLEICH).setForceCreate(true).setActiv()
-				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
+				.hideGrid().tabColor(konfigurationSheet.getDirektvergleichTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga Direktvergleich wurde nicht erstellt");
 			return;
 		}

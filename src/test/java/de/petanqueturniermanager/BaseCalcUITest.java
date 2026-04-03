@@ -29,7 +29,6 @@ import com.sun.star.frame.XComponentLoader;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -176,7 +175,6 @@ public abstract class BaseCalcUITest {
 		wkingSpreadsheet = new WorkingSpreadsheet(starter.getxComponentContext(), doc);
 		sheetHlp = new SheetHelper(starter.getxComponentContext(), doc);
 		docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
-		docPropHelper.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_ZEIGE_ARBEITS_SPALTEN, true);
 		// I18n testseitig mit Deutsch-Fallback initialisieren (locale-unabhängig)
 		I18n.init(null);
 		// use force weil calc is clossed in afterTest

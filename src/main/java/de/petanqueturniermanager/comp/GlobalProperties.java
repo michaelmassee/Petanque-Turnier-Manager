@@ -249,6 +249,38 @@ public class GlobalProperties {
 		}
 	}
 
+	/**
+	 * Liest eine Tab-Farbe aus der Properties-Datei.
+	 * Format: {@code tabfarbe.meldeliste=2544dd} (Hex ohne {@code #} oder {@code 0x}).
+	 *
+	 * @param konfigPropKey Schlüssel aus BasePropertiesSpalte (z.B. {@code "Tab-Farbe Meldeliste"})
+	 * @param defaultVal    Rückgabewert wenn kein Eintrag vorhanden
+	 * @return gespeicherter Farbwert oder defaultVal
+	 */
+	public int getTabFarbe(String konfigPropKey, int defaultVal) {
+		var globalKey = toTabFarbGlobalKey(konfigPropKey);
+		var val = props.getProperty(globalKey);
+		if (val == null || val.isBlank()) {
+			return defaultVal;
+		}
+		try {
+			return Integer.parseInt(val.trim(), 16);
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger Tab-Farb-Wert in {}: '{}' für Key '{}'", FILENAME, val, globalKey);
+			return defaultVal;
+		}
+	}
+
+	/**
+	 * Wandelt einen Konfig-Property-Schlüssel in einen GlobalProperties-Schlüssel um.
+	 * Beispiel: {@code "Tab-Farbe Meldeliste"} → {@code "tabfarbe.meldeliste"}
+	 */
+	private static String toTabFarbGlobalKey(String konfigPropKey) {
+		return "tabfarbe." + konfigPropKey.toLowerCase()
+				.replace("tab-farbe ", "")
+				.replace(" ", "_");
+	}
+
 	private void setBooleanProp(String key, boolean value) {
 		if (value) {
 			props.setProperty(key, "true");

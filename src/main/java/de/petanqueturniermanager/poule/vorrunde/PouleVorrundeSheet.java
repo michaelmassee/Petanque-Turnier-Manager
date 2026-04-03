@@ -28,8 +28,6 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  */
 public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements ISheet {
 
-    private static final String SHEET_COLOR = "ff691f";
-
     public PouleVorrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, "Poule-Vorrunde");
     }
@@ -66,7 +64,7 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements IS
         var poules = PouleSeedingService.verteileTeams(meldungen, gruppenGroessen);
 
         NewSheet.from(this, SheetNamen.pouleVorrunde(), SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDE)
-                .tabColor(SHEET_COLOR).pos(DefaultSheetPos.POULE_WORK)
+                .tabColor(getKonfigurationSheet().getPouleVorrundeTabFarbe()).pos(DefaultSheetPos.POULE_WORK)
                 .forceCreate().hideGrid().create();
 
         var xSheet = getXSpreadSheet();

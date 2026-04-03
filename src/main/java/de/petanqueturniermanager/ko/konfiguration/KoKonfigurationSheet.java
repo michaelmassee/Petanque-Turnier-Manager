@@ -20,8 +20,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoBracketKonfiguration {
 
-	private static final String SHEET_COLOR = "c12439";
-
 	private final KoPropertiesSpalte propertiesSpalte;
 
 	public KoKonfigurationSheet(WorkingSpreadsheet workingSpreadsheet) {
@@ -136,6 +134,9 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 	public void setMinRestGroesse(int minRestGroesse) {
 		propertiesSpalte.setMinRestGroesse(minRestGroesse);
 	}
+
+	@Override
+	public int getKoTurnierbaumTabFarbe()       { return propertiesSpalte.getKoTurnierbaumTabFarbe(); }
 
 	public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
 	public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }

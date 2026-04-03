@@ -70,7 +70,6 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 	public static final int ERSTE_SORTSPALTE_OFFSET = 3; // zur letzte spalte = anz Spieltage
 
-	public static final String SHEET_COLOR = "d637e8";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
@@ -102,7 +101,7 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 	protected void doRun() throws GenerateException {
 		SpielTagNr spieltagNr = getKonfigurationSheet().getAktiveSpieltag();
 		if (NewSheet.from(this, SheetNamen.endrangliste(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(SHEET_COLOR).setActiv()
+				.pos(DefaultSheetPos.SUPERMELEE_ENDRANGLISTE).tabColor(konfigurationSheet.getRanglisteTabFarbe()).setActiv()
 				.hideGrid().forceCreate().spielTagPageStyle(spieltagNr).create().isDidCreate()) {
 			getxCalculatable().enableAutomaticCalculation(false); // speed up
 			upDateSheet();
@@ -130,9 +129,8 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 		getxCalculatable().calculate();
 		updateEndSummenSpalten();
 
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
-		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
-		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
+		rangListeSorter.insertSortValidateSpalte(false);
+		rangListeSorter.insertManuelsortSpalten(false);
 
 		endRanglisteFormatter.formatDaten();
 		rangListeSpalte.upDateRanglisteSpalte();

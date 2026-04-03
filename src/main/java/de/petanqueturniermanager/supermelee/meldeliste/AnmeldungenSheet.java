@@ -39,8 +39,6 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 
 public class AnmeldungenSheet extends SheetRunner implements ISheet {
-	private static final String SHEET_COLOR = "98e2d7";
-
 	public static final int ERSTE_DATEN_ZEILE = 0;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
 	public static final int SPIELER_NAME_SPALTE = 1; // Spalte A=0
@@ -75,7 +73,7 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		// wenn hier dann immer neu erstellen, force = true
 		NewSheet.from(this, getSheetName(getSpielTag()),
 				SheetMetadataHelper.schluesselSupermeleeAnmeldungen(getSpielTag().getNr()))
-				.tabColor(SHEET_COLOR).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
+				.tabColor(konfigurationSheet.getTeilnehmerTabFarbe()).pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag())
 				.forceCreate().hideGrid().setActiv().create();
 
 		// meldeliste nach namen sortieren !

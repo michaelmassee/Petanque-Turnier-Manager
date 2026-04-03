@@ -51,7 +51,6 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 	public static final int DOUBL_MODE_NUR_TRIPLETTE_SPALTE = 8;
 	public static final int DOUBL_MODE_NUR_TRIPLETTE_ANZ_TRIPL_SPALTE = 9;
 
-	private static final String SHEET_COLOR = "f4ca46";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_TEAMS;
 
 	private final SuperMeleeKonfigurationSheet konfigurationSheet;
@@ -61,7 +60,7 @@ public class SupermeleeTeamPaarungenSheet extends SheetRunner implements ISheet 
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		try {
 			if (NewSheet.from(this, SheetNamen.supermeleeTeams(), METADATA_SCHLUESSEL)
-					.hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(SHEET_COLOR)
+					.hideGrid().pos(DefaultSheetPos.SUPERMELEE_TEAMS).tabColor(konfigurationSheet.getSupermeleeTeamPaarungenTabFarbe())
 					.useIfExist().create().isDidCreate()) {
 				initSheet();
 			}

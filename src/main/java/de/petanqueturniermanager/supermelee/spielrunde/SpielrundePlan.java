@@ -41,8 +41,6 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *
  */
 public class SpielrundePlan extends SheetRunner implements ISheet {
-	private static final String SHEET_COLOR = "b0f442";
-
 	public static final int HEADER_ZEILE = 0; // Spieltag
 	public static final int HEADER_ZEILE_2 = 1; // nr + Team + bahn
 	public static final int ERSTE_DATEN_ZEILE = 2;
@@ -112,7 +110,7 @@ public class SpielrundePlan extends SheetRunner implements ISheet {
 						SheetMetadataHelper.schluesselSupermeleeSpielrundePlan(getSpielTag().getNr(),
 								getSpielRundeNr().getNr()))
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(getSpielTag()).setForceCreate(true).setActiv()
-				.tabColor(SHEET_COLOR).create();
+				.tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create();
 		if (!neuesSheet.isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrundeplan wurde nicht erstellt");
 			return;

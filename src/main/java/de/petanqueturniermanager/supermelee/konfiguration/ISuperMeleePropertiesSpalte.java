@@ -73,4 +73,6 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode();
 
+	int getSupermeleeTeamPaarungenTabFarbe();
+
 }

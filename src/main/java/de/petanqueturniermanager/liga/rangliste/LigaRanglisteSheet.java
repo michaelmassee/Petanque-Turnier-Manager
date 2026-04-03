@@ -57,7 +57,6 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRangliste {
 
 	private static final int MARGIN = 120;
-	private static final String SHEET_COLOR = "d637e8";
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE;
 	private static final int ERSTE_DATEN_ZEILE = 3; // Zeile 4
 	private static final int TEAM_NR_SPALTE = 0; // Spalte A=0
@@ -139,7 +138,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 
 		if (!NewSheet.from(this, SheetNamen.rangliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.LIGA_ENDRANGLISTE).setForceCreate(true).setActiv()
-				.hideGrid().tabColor(SHEET_COLOR).create().isDidCreate()) {
+				.hideGrid().tabColor(getKonfigurationSheet().getRanglisteTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Liga SpielPlan wurde nicht erstellt");
 			return;
 		}
@@ -153,9 +152,8 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 		RangListeSpalte rangListeSpalte = new RangListeSpalte(RANGLISTE_SPALTE, this);
 		rangListeSpalte.upDateRanglisteSpalte();
 		rangListeSpalte.insertHeaderInSheet(headerBackColor);
-		boolean zeigeArbeitsSpalten = getKonfigurationSheet().zeigeArbeitsSpalten();
-		rangListeSorter.insertSortValidateSpalte(zeigeArbeitsSpalten);
-		rangListeSorter.insertManuelsortSpalten(zeigeArbeitsSpalten);
+		rangListeSorter.insertSortValidateSpalte(false);
+		rangListeSorter.insertManuelsortSpalten(false);
 		rangListeSorter.doSort();
 
 		insertHeader();
@@ -517,8 +515,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
                     + "INDEX(" + sheetRef + rangeStrAPlus + ";" + matchInB + "))";
         }
         // @formatter:on
-		boolean isvisable = getKonfigurationSheet().zeigeArbeitsSpalten();
-		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(isvisable);
+		ColumnProperties columnProperties = ColumnProperties.from().setWidth(PUNKTE_NR_WIDTH).isVisible(false);
 
 		StringCellValue spielTagFormula = StringCellValue.from(getXSpreadSheet()).setPos(startFormulaPos)
 				.setValue(formulaPunktePlus).setFillAutoDownZeilePlus(anzZeilen() - 1)

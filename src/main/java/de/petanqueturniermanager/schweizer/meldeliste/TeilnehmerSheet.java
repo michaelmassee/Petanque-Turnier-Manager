@@ -43,7 +43,6 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
     public static final int TEAM_NAME_SPALTE = 1;
     public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
 
-    private static final String SHEET_COLOR = "4a8fc4";
     private static final int TEAM_NAME_SPALTE_WIDTH = 6000;
 
     private final SchweizerKonfigurationSheet konfigurationSheet;
@@ -81,7 +80,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
     public void generate() throws GenerateException {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
-                .tabColor(SHEET_COLOR).pos(DefaultSheetPos.SCHWEIZER_WORK)
+                .tabColor(getKonfigurationSheet().getTeilnehmerTabFarbe()).pos(DefaultSheetPos.SCHWEIZER_WORK)
                 .forceCreate().hideGrid().setActiv().create();
 
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");

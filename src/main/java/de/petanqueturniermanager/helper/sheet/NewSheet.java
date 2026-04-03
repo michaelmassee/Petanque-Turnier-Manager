@@ -98,6 +98,10 @@ public class NewSheet extends BaseHelper {
 		return this;
 	}
 
+	public NewSheet tabColor(int color) {
+		return tabColor(Integer.toHexString(color));
+	}
+
 	public NewSheet spielTagPageStyle(SpielTagNr spielTagNr) {
 		pageStyleDef = new PageStyleDef(spielTagNr);
 		return this;
