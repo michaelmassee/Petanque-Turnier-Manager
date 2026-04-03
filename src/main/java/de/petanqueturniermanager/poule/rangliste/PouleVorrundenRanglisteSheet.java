@@ -79,7 +79,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     private static final int SPALTE_TURNIER = 9;
     private static final int LETZTE_SPALTE  = SPALTE_TURNIER;
 
-    private static final int HEADER_ZEILEN  = 1;
+    private static final int HEADER_ZEILEN  = 2;
 
     // Spaltenbreiten
     private static final int BREITE_PLATZ   = 900;
@@ -416,17 +416,91 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
 
     private void headerSchreiben(XSpreadsheet xSheet) throws GenerateException {
         int headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
-        TableBorder2 border = BorderFactory.from().allThin().toBorder();
+        TableBorder2 border = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
 
-        schreibeHeaderZelle(xSheet, SPALTE_PLATZ, I18n.get("column.header.platz"), headerFarbe, border);
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_PLATZ, 0), I18n.get("column.header.platz"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(border)
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true).setRotate90().setEndPosMergeZeilePlus(1));
+
+        // schreibeHeaderZelle(xSheet, SPALTE_PLATZ, I18n.get("column.header.platz"), headerFarbe, border);
         schreibeHeaderZelle(xSheet, SPALTE_GRUPPE, I18n.get("poule.rangliste.header.gruppe"), headerFarbe, border);
         schreibeHeaderZelle(xSheet, SPALTE_NR, I18n.get("column.header.nr"), headerFarbe, border);
         schreibeHeaderZelle(xSheet, SPALTE_NAME, I18n.get("column.header.name"), headerFarbe, border);
-        schreibeHeaderZelle(xSheet, SPALTE_SIEGE, I18n.get("column.header.siege"), headerFarbe, border);
-        schreibeHeaderZelle(xSheet, SPALTE_NDLG, I18n.get("column.header.niederlagen"), headerFarbe, border);
-        schreibeHeaderZelle(xSheet, SPALTE_PKT_PLUS, I18n.get("schweizer.rangliste.spalte.punkte.plus"), headerFarbe, border);
-        schreibeHeaderZelle(xSheet, SPALTE_PKT_MINUS, I18n.get("schweizer.rangliste.spalte.punkte.minus"), headerFarbe, border);
-        schreibeHeaderZelle(xSheet, SPALTE_DIFF, I18n.get("schweizer.rangliste.spalte.punkte.differenz"), headerFarbe, border);
+
+
+
+        // Spiele
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_SIEGE, 0), I18n.get("column.header.spiele"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(BorderFactory.from().allThin().doubleLn().forLeft().toBorder())
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true).setEndPosMergeSpaltePlus(1));
+
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_SIEGE, 1),  I18n.get("schweizer.rangliste.spalte.punkte.plus"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(BorderFactory.from().allThin().doubleLn().forLeft().boldLn().forBottom().toBorder())
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true));
+
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_NDLG, 1),  I18n.get("schweizer.rangliste.spalte.punkte.minus"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(border)
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true));
+
+        // Punke
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_PKT_PLUS, 0), I18n.get("column.header.punkte"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forLeft().boldLn().forRight().toBorder())
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true).setEndPosMergeSpaltePlus(2));
+
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_PKT_PLUS, 1), I18n.get("schweizer.rangliste.spalte.punkte.plus"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forLeft().forBottom().toBorder())
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true));
+
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_PKT_MINUS, 1), I18n.get("schweizer.rangliste.spalte.punkte.minus"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(border)
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true));
+
+        getSheetHelper().setStringValueInCell(
+                StringCellValue.from(xSheet, Position.from(SPALTE_DIFF, 1), I18n.get("schweizer.rangliste.spalte.punkte.differenz"))
+                        .setCellBackColor(headerFarbe)
+                        .setBorder(BorderFactory.from().allThin().boldLn().forRight().forBottom().toBorder())
+                        .setCharWeight(FontWeight.BOLD)
+                        .setHoriJustify(CellHoriJustify.CENTER)
+                        .setVertJustify(CellVertJustify2.CENTER)
+                        .setShrinkToFit(true));
+
+
+
         schreibeHeaderZelle(xSheet, SPALTE_TURNIER, I18n.get("poule.rangliste.header.turnier"), headerFarbe, border);
     }
 
@@ -439,7 +513,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
                         .setCharWeight(FontWeight.BOLD)
                         .setHoriJustify(CellHoriJustify.CENTER)
                         .setVertJustify(CellVertJustify2.CENTER)
-                        .setShrinkToFit(true));
+                        .setShrinkToFit(true).setEndPosMergeZeilePlus(1));
     }
 
     private void spaltenBreitenSetzen(XSpreadsheet xSheet) throws GenerateException {

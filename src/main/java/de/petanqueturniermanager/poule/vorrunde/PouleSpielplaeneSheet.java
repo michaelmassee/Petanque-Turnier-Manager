@@ -66,10 +66,6 @@ public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
         return true;
     }
 
-    @Override
-    protected int letzeSpalte() {
-        return SPALTE_ERG_B;
-    }
 
     @Override
     public void doRun() throws GenerateException {

@@ -167,13 +167,13 @@ public class PouleTeilnehmerSheet extends SheetRunner implements ISheet {
             int nameSpalte = nrSpalte + 1;
             getSheetHelper().setStringValueInCell(StringCellValue
                     .from(getXSpreadSheet(), Position.from(nrSpalte, 0), I18n.get("column.header.nr"))
-                    .setBorder(BorderFactory.from().allThin().toBorder())
+                    .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
                     .setCellBackColor(headerFarbe)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setShrinkToFit(true));
             getSheetHelper().setStringValueInCell(StringCellValue
                     .from(getXSpreadSheet(), Position.from(nameSpalte, 0), I18n.get("column.header.name"))
-                    .setBorder(BorderFactory.from().allThin().toBorder())
+                    .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder())
                     .setCellBackColor(headerFarbe)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setShrinkToFit(true));

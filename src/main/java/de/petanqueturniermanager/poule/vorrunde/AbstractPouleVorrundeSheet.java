@@ -117,11 +117,12 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     }
 
     /**
-     * Letzte Datenspalte des Sheets (inkl. Fehler-Spalte oder ohne, je nach Sheet-Typ).
+     * Letzte Datenspalte des Sheets (Ohne Fehler-Spalte).
      */
-    protected int letzeSpalte() {
-        return SPALTE_FEHLER;
+    final protected int letzeSpalte() {
+        return SPALTE_ERG_B;
     }
+
 
     // ---------------------------------------------------------------
     // Header
@@ -481,9 +482,6 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
         getSheetHelper().setPropertiesInRange(xSheet, datenRange,
                 CellProperties.from().setBorder(BorderFactory.from().allThin().toBorder()));
 
-        var letzteSpalteRange = RangePosition.from(letzeSpalte(), ERSTE_DATEN_ZEILE, letzeSpalte(), letzteDatenZeile);
-        getSheetHelper().setPropertiesInRange(xSheet, letzteSpalteRange,
-                CellProperties.from().setBorder(BorderFactory.from().keinRechtsBorder().toBorder()));
 
         int geradeColor = konfigurationSheet.getMeldeListeHintergrundFarbeGerade();
         int unGeradeColor = konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade();
