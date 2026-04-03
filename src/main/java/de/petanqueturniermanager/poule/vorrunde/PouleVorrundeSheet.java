@@ -28,6 +28,8 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
  */
 public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements ISheet {
 
+    private static final String SHEET_COLOR = "ff691f";
+
     public PouleVorrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, "Poule-Vorrunde");
     }

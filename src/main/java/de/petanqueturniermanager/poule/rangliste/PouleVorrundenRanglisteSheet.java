@@ -60,7 +60,7 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     private static final Logger logger = LogManager.getLogger(PouleVorrundenRanglisteSheet.class);
 
     // Farbe des Ranglistensheets (unterscheidet sich vom Vorrunden-Sheet "4a8faa")
-    private static final String SHEET_COLOR = "8faa4a";
+    private static final String SHEET_COLOR = "facd73";
 
     // Hintergrundfarben für A- und B-Turnier-Zeilen
     private static final int FARBE_A_TURNIER = 0x00CC66;

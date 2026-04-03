@@ -46,7 +46,7 @@ public class PouleTeilnehmerSheet extends SheetRunner implements ISheet {
     public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
     public static final int MAX_ANZ_TEAMS_IN_SPALTE = 40;
 
-    private static final String SHEET_COLOR = "4a8faa";
+    private static final String SHEET_COLOR = "31f705";
     private static final int TEAM_NAME_SPALTE_WIDTH = 6000;
 
     private final PouleKonfigurationSheet konfigurationSheet;

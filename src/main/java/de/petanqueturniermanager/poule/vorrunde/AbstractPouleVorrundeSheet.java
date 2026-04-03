@@ -68,7 +68,6 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     private static final int ERG_SPALTE_BREITE = 800;
     private static final int FEHLER_SPALTE_BREITE = 1500;
 
-    protected static final String SHEET_COLOR = "4a8faa";
 
     private final PouleKonfigurationSheet konfigurationSheet;
     protected final PouleMeldeListeSheetUpdate meldeliste;

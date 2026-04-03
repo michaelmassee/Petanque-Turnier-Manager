@@ -27,6 +27,9 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  */
 public class PouleSpielplaeneSheet extends AbstractPouleVorrundeSheet {
 
+    private static final String SHEET_COLOR = "05ff8a";
+
+
     public PouleSpielplaeneSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, "Poule-Spielplaene");
     }
