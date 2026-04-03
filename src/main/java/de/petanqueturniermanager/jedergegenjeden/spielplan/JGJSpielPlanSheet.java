@@ -336,7 +336,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private String freispielName(String formulaName) {
-		return "WENNNV(" + formulaName + ";\"Freispiel\")";
+		return "WENNNV(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
 	}
 
 	private int letzteSpielZeile() throws GenerateException {

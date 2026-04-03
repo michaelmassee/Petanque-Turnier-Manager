@@ -62,14 +62,6 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	 */
 	static final int ERSTE_DATEN_ZEILE = 3;
 
-	static final String HEADER_RANGLISTE = "RNG";
-	static final String HEADER_AKTIV = "Aktiv";
-	static final String HEADER_NR = "Nr";
-	static final String HEADER_TEAMNAME = "Teamname";
-	static final String HEADER_VORNAME = "Vorname";
-	static final String HEADER_NACHNAME = "Nachname";
-	static final String HEADER_VEREINSNAME = "Verein";
-
 	static final int AKTIV_WERT_NIMMT_TEIL = 1;
 	static final int AKTIV_WERT_AUSGESTIEGEN = 2;
 
@@ -231,7 +223,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		// Team-Nr Spalte: über Zeile 1+2 (ZWEITE + DRITTE Header-Zeile) gemergt
 		sheet.getSheetHelper().setStringValueInCell(
 				StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getTeamNrSpalte(), ZWEITE_HEADER_ZEILE),
-						HEADER_NR)
+						I18n.get("column.header.nr"))
 						.addColumnProperties(colPropNr)
 						.setCellBackColor(headerColor)
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().doubleLn().forRight()
@@ -245,7 +237,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 		// Teamname-Spalte (optional): über Zeile 1+2 gemergt
 		if (teamnameAktiv) {
 			sheet.getSheetHelper().setStringValueInCell(
-					StringCellValue.from(sheet.getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE), HEADER_TEAMNAME)
+					StringCellValue.from(sheet.getXSpreadSheet(), Position.from(1, ZWEITE_HEADER_ZEILE), I18n.get("column.header.teamname"))
 							.addColumnProperties(colPropName.setWidth(TEAMNAME_SPALTE_WIDTH))
 							.setCellBackColor(headerColor)
 							.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
@@ -276,7 +268,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 			// Zeile 2 (DRITTE_HEADER_ZEILE): Vorname
 			sheet.getSheetHelper().setStringValueInCell(
 					StringCellValue.from(sheet.getXSpreadSheet(), Position.from(vornameSpalte, DRITTE_HEADER_ZEILE),
-							HEADER_VORNAME)
+							I18n.get("column.header.vorname"))
 							.addColumnProperties(colPropName)
 							.setCellBackColor(headerColor)
 							.setBorder(BorderFactory.from().allThin().boldLn().forLeft().toBorder())
@@ -286,7 +278,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 			// Zeile 2: Nachname
 			sheet.getSheetHelper().setStringValueInCell(
 					StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getNachnameSpalte(s), DRITTE_HEADER_ZEILE),
-							HEADER_NACHNAME)
+							I18n.get("column.header.nachname"))
 							.addColumnProperties(colPropName)
 							.setCellBackColor(headerColor)
 							.setBorder(BorderFactory.from().allThin().toBorder())
@@ -297,7 +289,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 			if (vereinsnameAktiv) {
 				sheet.getSheetHelper().setStringValueInCell(
 						StringCellValue.from(sheet.getXSpreadSheet(),
-								Position.from(getVereinsnameSpalte(s), DRITTE_HEADER_ZEILE), HEADER_VEREINSNAME)
+								Position.from(getVereinsnameSpalte(s), DRITTE_HEADER_ZEILE), I18n.get("column.header.vereinsname"))
 								.addColumnProperties(colPropName.setWidth(VEREINSNAME_SPALTE_WIDTH))
 								.setCellBackColor(headerColor)
 								.setBorder(BorderFactory.from().allThin().toBorder())
@@ -312,7 +304,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		sheet.getSheetHelper().setStringValueInCell(
 				StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getRanglisteSpalte(), ZWEITE_HEADER_ZEILE),
-						HEADER_RANGLISTE)
+						I18n.get("column.header.rng"))
 						.addColumnProperties(colPropRng)
 						.setCellBackColor(headerColor)
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
@@ -329,7 +321,7 @@ class KoListeDelegate implements MeldeListeKonstanten {
 				.margin(MeldeListeKonstanten.CELL_MARGIN);
 		sheet.getSheetHelper().setStringValueInCell(
 				StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getAktivSpalte(), ZWEITE_HEADER_ZEILE),
-						HEADER_AKTIV)
+						I18n.get("column.header.aktiv"))
 						.addColumnProperties(colPropAktiv)
 						.setCellBackColor(headerColor)
 						.setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
