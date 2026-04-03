@@ -317,17 +317,17 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 		bezCelVal.setBorder(border).setCellBackColor(headerBackColor);
 
-		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.aktiv")).setValue("Aktiv").zeile(SUMMEN_AKTIVE_ZEILE);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.aktiv")).setValue(I18n.get("column.header.aktiv")).zeile(SUMMEN_AKTIVE_ZEILE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.inaktiv")).setValue("InAktiv").zeile(SUMMEN_INAKTIVE_ZEILE);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.inaktiv")).setValue(I18n.get("column.header.inaktiv")).zeile(SUMMEN_INAKTIVE_ZEILE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.anzahl.ausgestiegen")).setValue(I18n.get("column.header.ausgestiegen"))
 				.zeile(SUMMEN_AUSGESTIEGENE_ZEILE);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
-		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.akt.ausg")).setValue("Akt + Ausg").zeile(SUMMEN_ANZ_SPIELER);
+		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.akt.ausg")).setValue(I18n.get("supermelee.meldeliste.label.akt.ausg")).zeile(SUMMEN_ANZ_SPIELER);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
 
 		bezCelVal.setComment(I18n.get("supermelee.meldeliste.comment.gesamt")).setValue(I18n.get("column.header.summe"))
