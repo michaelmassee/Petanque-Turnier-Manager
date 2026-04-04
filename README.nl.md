@@ -51,8 +51,7 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 * **Knock-out Systeem (Directe eliminatie):** Voor klassieke finalerondes. Bij een aantal deelnemers dat geen macht van twee is, wordt automatisch een tussenronde (cadrage) berekend.
 * **Maastrichts Systeem:** Combineert het Zwitsers Systeem met knock-out finalerondes. Teams worden in meerdere voorronden (2–5) volgens het Zwitserse algoritme gekoppeld. Daarna worden de teams op basis van hun aantal overwinningen ingedeeld in prestatiegroepen (A, B, C, D) – elke groep speelt zijn eigen knock-out finale. Resultaat: vier toernooiwinnaars, eerlijke groepsindeling en spannende finales.
 
-(In ontwikkeling)
-* **Poulesysteem:** Klassieke modus met groepsfase (Poules) en daaropvolgende verdeling in knock-out schema's (A-, B-, C-, D-toernooi).
+* **Poule-A/B-systeem:** Klassieke modus met groepsfase (Poules) volgens het principe van dubbele eliminatie (light), gevolgd door een verdeling in A-toernooi (hoofdtoernooi) en B-toernooi (troosttoernooi).
 
 ---
 

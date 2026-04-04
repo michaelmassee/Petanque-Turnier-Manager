@@ -14,7 +14,7 @@ Stand: 2026-03-30
 | Schweizer System | `03_Schweizer.md` | `schweizer/` | `Addons_A5_Schweizer.xcu` | ✅ Implementiert |
 | KO-System | `05_KO.md` | `ko/` + `forme/korunde/` | `Addons_A6_KO.xcu` | ✅ Implementiert |
 | Maastrichter | `04_Maastrichter.md` | `maastrichter/` | `Addons_A7_Maastrichter.xcu` | ✅ Implementiert |
-| Poule-AB | `02_Poule-AB.md` | — | — | ❌ Nicht implementiert |
+| Poule-AB | `02_Poule-AB.md` | `poule/` | `Addons_A8_Poule.xcu` | ✅ Implementiert |
 | Kaskaden-KO | `06_Kaskaden-KO.md` | — | — | ❌ Nicht implementiert |
 | Formule-X | `08_Formule_X.md` | — | — | ❌ Nicht implementiert |
 | Trip-Tête | `09_TripTete.md` | — | — | ❌ Nicht implementiert |
@@ -26,7 +26,7 @@ Stand: 2026-03-30
 | Crazy-Mêlée | `15_CrazyMelee.md` | — | — | ❌ Nicht implementiert |
 | Arena-Pétanque | `16_ArenaPetanque.md` | — | — | ❌ Nicht implementiert |
 
-**Ergebnis: 6 von 17 Turniersystemen sind implementiert.**
+**Ergebnis: 7 von 17 Turniersystemen sind implementiert.**
 
 ---
 

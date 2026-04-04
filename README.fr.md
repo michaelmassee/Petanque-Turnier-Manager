@@ -53,8 +53,7 @@ L'extension propose déjà un large choix de modes de tournoi éprouvés, adapt�
 * **Élimination directe (Système à élimination directe) :** Pour les phases finales classiques. Une victoire signifie la qualification, une défaite l'élimination immédiate. Les appariements suivent le système croisé (1er vs Dernier, 2e vs Avant-dernier...). Une phase de cadrage est automatiquement calculée si nécessaire.
 * **Système de Maastricht :** Combine le Système Suisse avec des phases finales à élimination directe. Les équipes sont appariées selon l'algorithme suisse sur plusieurs tours préliminaires (2–5). Ensuite, les équipes sont réparties en groupes de niveau (A, B, C, D) selon leur nombre de victoires – chaque groupe dispute sa propre finale en élimination directe. Résultat : quatre vainqueurs de tournoi, une répartition équitable et des finales palpitantes.
 
-(En cours de développement)
-* **Système par Poules :** Mode classique avec phase de groupes (Poules) et répartition ultérieure dans des tableaux à élimination directe (Concours A, B, C, D).
+* **Système Poule A/B :** Mode classique avec phase de groupes (Poules) selon le principe de la double élimination légère, suivi d'une répartition en Concours A (tableau principal) et Concours B (consolante).
 
 ---
 

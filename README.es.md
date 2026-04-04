@@ -50,8 +50,7 @@ El mayor punto de venta único de este gestor de torneos es su base: **LibreOffi
 * **Sistema de eliminación directa (Knockout):** Para rondas finales clásicas. Si el número de participantes no es una potencia de dos, se calcula automáticamente un "cadrage" (ronda preliminar).
 * **Sistema de Maastricht:** Combina el Sistema Suizo con rondas finales de eliminación directa. Los equipos se emparejan según el algoritmo suizo en varias rondas preliminares (2–5). Después, los equipos se dividen en grupos de nivel (A, B, C, D) según su número de victorias – cada grupo disputa su propia final en formato knockout. Resultado: cuatro ganadores del torneo, una distribución justa y finales emocionantes.
 
-(En progreso)
-* **Sistema de Poules:** Modo clásico con fase de grupos (Poules) y posterior división en cuadros de eliminación (Torneo A, B, C, D).
+* **Sistema Poule A/B:** Modo clásico con fase de grupos (Poules) según el principio de doble eliminación ligera, seguido de una división en Torneo A (cuadro principal) y Torneo B (consolación).
 
 ---
 

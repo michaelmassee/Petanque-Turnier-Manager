@@ -59,9 +59,8 @@ The extension already offers a wide selection of proven tournament modes suitabl
 * **Maastricht System:**
   Combines the Swiss System with knockout final rounds. Teams are paired using the Swiss algorithm over several preliminary rounds (2–5). Afterwards, teams are divided into performance groups (A, B, C, D) based on their number of wins – each group then plays its own knockout final. Result: four tournament winners, fair group allocation, and exciting finals.
 
-(In progress)
-* **Poule System:**
-  Classic mode with a group phase (Poules) and subsequent division into knockout brackets (A, B, C, D tournament).
+* **Poule A/B System:**
+  Classic mode with a group phase (Poules) using a Double-Elimination-Light format, followed by division into the A-tournament (main bracket) and B-tournament (consolation bracket).
 
 ---
 

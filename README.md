@@ -60,9 +60,8 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
 * **Maastrichter System:**
   Kombiniert das Schweizer System mit K.-o.-Finalrunden. In mehreren Vorrunden (2–5) werden die Teams nach dem Schweizer Algorithmus ausgeglichen gepaart. Anschließend werden die Teams nach Siegen in Leistungsklassen (A, B, C, D) eingeteilt – jede Klasse trägt ihr eigenes K.-o.-Finale aus. Ergebnis: vier Turniersieger, faire Gruppenaufteilung, spannende Finalrunden.
 
-(in Arbeit)
-* **Poule-System:**
-  Klassischer Modus mit Gruppenphase (Poules) und anschließender Aufteilung in K.-o.-Bäume (A-, B-, C-, D-Turnier).
+* **Poule-A/B-System:**
+  Klassischer Modus mit Gruppenphase (Poules) im Double-Elimination-Light-Verfahren und anschließender Aufteilung in A-Turnier (Hauptturnier) und B-Turnier (Consolante).
 
 ---
 
