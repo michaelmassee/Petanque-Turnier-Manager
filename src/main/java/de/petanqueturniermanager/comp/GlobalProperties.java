@@ -38,12 +38,14 @@ public class GlobalProperties {
 
 	public static final int DEFAULT_ZOOM = 100;
 
-	// 🔥 zentrale Runtime-Map
+	// zentrale Runtime-Map
 	private static final ConcurrentHashMap<String, String> propMap = new ConcurrentHashMap<>();
 
-	private static GlobalProperties instance = null;
+	private static volatile GlobalProperties instance = null;
 
-	private final ReentrantLock fileLock = new ReentrantLock();
+	private static final ReentrantLock fileLock = new ReentrantLock();
+
+	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
 
 	public record PortEintragRoh(int port, String sheetConfig, boolean aktiv, int zoom, boolean zentrieren) {
 		@Override
@@ -54,11 +56,15 @@ public class GlobalProperties {
 
 	public static GlobalProperties get() {
 		if (instance == null) {
-			try {
-				instance = new GlobalProperties();
-			} catch (Exception e) {
-				logger.error("Initialisierung fehlgeschlagen", e);
-				instance = new GlobalProperties(true);
+			synchronized (GlobalProperties.class) {
+				if (instance == null) {
+					try {
+						instance = new GlobalProperties();
+					} catch (Exception e) {
+						logger.error("Initialisierung fehlgeschlagen", e);
+						instance = new GlobalProperties(true);
+					}
+				}
 			}
 		}
 		return instance;
@@ -106,11 +112,9 @@ public class GlobalProperties {
 		}
 	}
 
-	private void speichernDatei() {
+	private static void speichernDatei() {
 
-		if (!fileLock.tryLock()) {
-			return;
-		}
+		fileLock.lock();
 
 		try {
 			var path = Path.of(System.getProperty("user.home"), FILENAME);
@@ -140,12 +144,7 @@ public class GlobalProperties {
 	// ----------------------------------------------------
 
 	private boolean getBoolean(String key) {
-		try {
-			return Boolean.parseBoolean(propMap.getOrDefault(key, "false"));
-		} catch (Exception e) {
-			logger.warn("Fehler beim Lesen Boolean {}", key, e);
-			return false;
-		}
+		return Boolean.parseBoolean(propMap.getOrDefault(key, "false"));
 	}
 
 	public boolean isAutoSave() {
@@ -234,7 +233,7 @@ public class GlobalProperties {
 			}
 
 		} catch (Exception e) {
-			logger.error("Fehler beim Lesen der Port-Einträge", e);
+			logger.warn("Fehler beim Lesen der Port-Einträge", e);
 		}
 
 		return eintraege;
@@ -327,26 +326,25 @@ public class GlobalProperties {
 	}
 
 	private static String toTabFarbGlobalKey(String konfigPropKey) {
-		return "tabfarbe." + konfigPropKey.toLowerCase()
+		return TABFARBE_PRAEFIX + konfigPropKey.toLowerCase()
 				.replace("tab-farbe ", "")
 				.replace(" ", "_");
 	}
 
-	private void setBooleanProp(String key, boolean value) {
-		try {
-			if (value) propMap.put(key, "true");
-			else propMap.remove(key);
-		} catch (Exception e) {
-			logger.warn("Fehler beim Setzen {}", key, e);
-		}
+	private static void setBooleanProp(String key, boolean value) {
+		if (value) propMap.put(key, "true");
+		else propMap.remove(key);
 	}
 
 	private static int parseZoom(String value) {
+		if (value == null || value.isBlank()) return DEFAULT_ZOOM;
 		try {
-			if (value == null || value.isBlank()) return DEFAULT_ZOOM;
 			int zoom = Integer.parseInt(value.trim());
-			return (zoom >= 10 && zoom <= 500) ? zoom : DEFAULT_ZOOM;
-		} catch (Exception e) {
+			if (zoom >= 10 && zoom <= 500) return zoom;
+			logger.warn("Zoom-Wert außerhalb des erlaubten Bereichs (10-500): {}, verwende Standard {}", zoom, DEFAULT_ZOOM);
+			return DEFAULT_ZOOM;
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger Zoom-Wert '{}', verwende Standard {}", value.trim(), DEFAULT_ZOOM);
 			return DEFAULT_ZOOM;
 		}
 	}
@@ -370,6 +368,7 @@ public class GlobalProperties {
 	}
 
 
+	// nur für Tests
 	static void resetForTest() {
 		instance = null;
 		propMap.clear();
