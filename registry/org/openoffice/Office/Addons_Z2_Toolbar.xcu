@@ -1,0 +1,190 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+		<!-- https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/AddOns/Menus -->
+
+		<node oor:name="OfficeToolBar">
+			<node oor:name="de.petanqueturniermanager.toolbar" oor:op="replace">
+
+				<prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+					<value xml:lang="de">PétTurnMngr Symbolleiste</value>
+					<value xml:lang="en">PétTurnMngr Toolbar</value>
+					<value xml:lang="es">Barra PétTurnMngr</value>
+					<value xml:lang="fr">Barre PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr Werkbalk</value>
+				</prop>
+
+				<prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+					<value xml:lang="de">PétTurnMngr Symbolleiste</value>
+					<value xml:lang="en">PétTurnMngr Toolbar</value>
+					<value xml:lang="es">Barra PétTurnMngr</value>
+					<value xml:lang="fr">Barre PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr Werkbalk</value>
+				</prop>
+
+
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 1: Turnier starten -->
+				<node oor:name="m1" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:toolbar_start</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Turnier starten</value>
+						<value xml:lang="en">Start Tournament</value>
+						<value xml:lang="es">Iniciar torneo</value>
+						<value xml:lang="fr">Démarrer tournoi</value>
+						<value xml:lang="nl">Toernooi starten</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Trennlinie -->
+				<node oor:name="m2" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>private:separator</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 3: Weiter (nächste Runde) -->
+				<node oor:name="m3" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:toolbar_weiter</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Weiter</value>
+						<value xml:lang="en">Next Round</value>
+						<value xml:lang="es">Siguiente ronda</value>
+						<value xml:lang="fr">Ronde suivante</value>
+						<value xml:lang="nl">Volgende ronde</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 4: Vorrunden Rangliste -->
+				<node oor:name="m4" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:toolbar_vorrunden_rangliste</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Vorrunden Rangliste</value>
+						<value xml:lang="en">Preliminary Ranking</value>
+						<value xml:lang="es">Clasificación preliminar</value>
+						<value xml:lang="fr">Classement préliminaire</value>
+						<value xml:lang="nl">Voorronde klassement</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 5: Teilnehmer -->
+				<node oor:name="m5" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:toolbar_teilnehmer</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Teilnehmer</value>
+						<value xml:lang="en">Participants</value>
+						<value xml:lang="es">Participantes</value>
+						<value xml:lang="fr">Participants</value>
+						<value xml:lang="nl">Deelnemers</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+
+			</node>
+		</node>
+
+		<!-- Icons für Toolbar-Schaltflächen: Command-URL → Bilddatei -->
+		<!-- ImageIdentifier in OfficeToolBar-Items funktioniert in modernen LO-Versionen nicht. -->
+		<!-- Icons müssen in einem separaten Images-Node definiert werden. -->
+		<!-- %origin% zeigt auf das Verzeichnis dieser XCU-Datei (registry/org/openoffice/Office/). -->
+		<node oor:name="Images">
+			<node oor:name="de.petanqueturniermanager.toolbar.start" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:toolbar_start</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-start.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-start.png</value>
+					</prop>
+				</node>
+			</node>
+
+			<node oor:name="de.petanqueturniermanager.toolbar.weiter" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:toolbar_weiter</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-weiter.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-weiter.png</value>
+					</prop>
+				</node>
+			</node>
+
+			<node oor:name="de.petanqueturniermanager.toolbar.vorrunden_rangliste" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:toolbar_vorrunden_rangliste</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-vorrunden-rangliste.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-vorrunden-rangliste.png</value>
+					</prop>
+				</node>
+			</node>
+
+			<node oor:name="de.petanqueturniermanager.toolbar.teilnehmer" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:toolbar_teilnehmer</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-teilnehmer.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-teilnehmer.png</value>
+					</prop>
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>

@@ -116,6 +116,9 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_SortOnly;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
+import de.petanqueturniermanager.toolbar.ToolbarAktionDispatcher;
+import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
+import de.petanqueturniermanager.toolbar.TurnierSystemAuswahlDialog;
 
 /**
  * UNO ProtocolHandler für das benutzerdefinierte Protokoll "ptm:".
@@ -254,12 +257,20 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LOGFILE_ANZEIGEN      = "logfileAnzeigen";
 	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
+	// Symbolleiste
+	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
+	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
+	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
+	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
 	private final XComponentContext xContext;
 
 	public ProtocolHandler(XComponentContext xContext) {
 		this.xContext = xContext;
 		SHARED_CONTEXT = xContext;
 		PetanqueTurnierMngrSingleton.init(xContext);
+		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
+		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt)
+		ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
 		if (REGISTERED.compareAndSet(false, true)) {
 			NewReleaseChecker.addCacheUpdateCallback(ProtocolHandler::notifyAllListeners);
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
@@ -626,6 +637,20 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
 				break;
+			// ------------------------------
+			// Symbolleiste
+			case CMD_TOOLBAR_START:
+				new TurnierSystemAuswahlDialog(ws).zeige();
+				break;
+			case CMD_TOOLBAR_WEITER:
+				ToolbarAktionDispatcher.weiter(ws);
+				break;
+			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE:
+				ToolbarAktionDispatcher.vorrundenRangliste(ws);
+				break;
+			case CMD_TOOLBAR_TEILNEHMER:
+				ToolbarAktionDispatcher.teilnehmer(ws);
+				break;
 			default:
 				ProcessBox.from().fehler("ungueltige Aktion " + command);
 				logger.warn("Unbekannter Befehl: {}", command);
@@ -937,6 +962,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
 				 CMD_ABBRUCH                                -> true;
+			// Symbolleiste
+			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
+			case CMD_TOOLBAR_WEITER,
+				 CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
+				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN;
 			default -> false;
 			};
 		} catch (Exception e) {

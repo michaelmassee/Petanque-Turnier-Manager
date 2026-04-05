@@ -176,6 +176,13 @@ tasks.register('buildOXT', Zip) {
         into 'registry/org/openoffice/Office/UI/images'
     }
 
+    // Toolbar-Icons: %origin% in Addons_Z2_Toolbar.xcu ist relativ zur XCU-Datei,
+    // daher müssen die Bilder auch unter registry/org/openoffice/Office/images/ liegen.
+    from('images') {
+        include 'toolbar-*.png'
+        into 'registry/org/openoffice/Office/images'
+    }
+
     // Runtime dependencies (libs)
     from(layout.buildDirectory.dir('runtime-libs')) {
         into 'libs'
