@@ -259,6 +259,10 @@ public class DocumentPropertiesHelper {
 		setStringProperty(propName, StringTools.booleanToString(newVal));
 	}
 
+	public boolean getTurnierModusAusDocument() {
+		return getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIER_MODUS, false);
+	}
+
 	public TurnierSystem getTurnierSystemAusDocument() {
 		TurnierSystem turnierSystemAusDocument = TurnierSystem.KEIN;
 		int spielsystem = getIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,

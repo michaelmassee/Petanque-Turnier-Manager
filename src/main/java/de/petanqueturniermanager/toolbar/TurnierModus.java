@@ -13,12 +13,11 @@ import com.sun.star.frame.XLayoutManager;
 import com.sun.star.frame.XModel;
 import com.sun.star.ui.XUIElement;
 
-import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Verwaltung des Turnier-Modus (Kiosk-Modus) für LibreOffice Calc.
@@ -34,7 +33,6 @@ public class TurnierModus {
             "private:resource/menubar/menubar",
             "private:resource/toolbar/standardbar",
             "private:resource/toolbar/formatobjectbar",
-            "private:resource/toolbar/formulabar",
             "private:resource/statusbar/statusbar"
     );
 
@@ -59,18 +57,20 @@ public class TurnierModus {
             var lm = holeLayoutManager(ws);
             if (lm == null) return;
 
-            // Wir prüfen den IST-Zustand direkt am aktuellen Frame/LayoutManager
-            // Anstatt die globale Variable 'aktiv' zu nutzen
             boolean istGeradeKiosk = !lm.isElementVisible("private:resource/menubar/menubar");
-
+            boolean neuerZustand;
             if (istGeradeKiosk) {
-                deaktivierenIntern(lm);
+                deaktivierenIntern(lm, ws);
+                neuerZustand = false;
             } else {
-                aktivierenIntern(lm);
+                aktivierenIntern(lm, ws);
+                neuerZustand = true;
             }
 
-            // TODO im Document speichern nicht in der Properties Datei !
-            // GlobalProperties.get().setStartupTurnierModus(!istGeradeKiosk);
+            var docProps = new DocumentPropertiesHelper(ws);
+            if (docProps.getTurnierSystemAusDocument() != TurnierSystem.KEIN) {
+                docProps.setBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIER_MODUS, neuerZustand);
+            }
         } catch (Exception e) {
             logger.error("Fehler beim Umschalten", e);
         }
@@ -81,7 +81,7 @@ public class TurnierModus {
         try {
             var lm = holeLayoutManager(ws);
             if (lm == null) return;
-            aktivierenIntern(lm);
+            aktivierenIntern(lm, ws);
         } catch (Exception e) {
             logger.error("Fehler beim Aktivieren des Turnier-Modus", e);
         }
@@ -94,7 +94,7 @@ public class TurnierModus {
 
             // PTM-Toolbar immer zuerst anzeigen
             lm.showElement(ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL);
-            deaktivierenIntern(lm);
+            deaktivierenIntern(lm, ws);
         } catch (Exception e) {
             logger.error("Fehler beim Wiederherstellen der UI-Elemente", e);
         }
@@ -106,7 +106,7 @@ public class TurnierModus {
 
     // -------------------------------------------------------------------------
 
-    private void aktivierenIntern(XLayoutManager lm) {
+    private void aktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
         gespeicherteElemente.clear();
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 
@@ -123,11 +123,15 @@ public class TurnierModus {
                     lm.hideElement(url);
                 }
             }
+
         } catch (Exception e) {
             logger.error(e);
         } finally {
             lm.unlock();
         }
+
+        // Rechnerleiste via ShowFormulaBar-Property ausblenden (lm.hideElement greift hier nicht)
+        blendeRechnerleiste(ws, false);
 
         // Nach dem Lock: Toolbar explizit einblenden – wie ToolbarAnzeigenListener.zeigeToolbarInFrame()
         try {
@@ -136,9 +140,11 @@ public class TurnierModus {
         } catch (Exception e) {
             logger.error("Fehler beim Einblenden der PTM-Toolbar nach TurnierModus-Aktivierung", e);
         }
+
+        aktiv = true;
     }
 
-    private void deaktivierenIntern(XLayoutManager lm) {
+    private void deaktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
         var zuRestaurieren = gespeicherteElemente.isEmpty() ? STANDARD_ELEMENTE : gespeicherteElemente;
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 
@@ -161,6 +167,23 @@ public class TurnierModus {
             lm.unlock(); // UI berechnet sich jetzt einmalig neu
             gespeicherteElemente.clear();
             aktiv = false;
+        }
+
+        // Rechnerleiste via ShowFormulaBar-Property wiederherstellen
+        blendeRechnerleiste(ws, true);
+    }
+
+    private void blendeRechnerleiste(WorkingSpreadsheet ws, boolean anzeigen) {
+        try {
+            var xModel = Lo.qi(XModel.class, ws.getWorkingSpreadsheetDocument());
+            if (xModel == null) return;
+            var controller = xModel.getCurrentController();
+            if (controller == null) return;
+            var controllerProps = Lo.qi(XPropertySet.class, controller);
+            if (controllerProps == null) return;
+            controllerProps.setPropertyValue("ShowFormulaBar", anzeigen);
+        } catch (Exception e) {
+            logger.warn("Konnte Rechnerleiste nicht {}: {}", anzeigen ? "einblenden" : "ausblenden", e.getMessage());
         }
     }
 

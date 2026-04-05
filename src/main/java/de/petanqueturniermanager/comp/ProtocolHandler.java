@@ -294,18 +294,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onLoad(Object source) {
-					// Safety-Restore + Auto-Aktivierung Turnier-Modus: nur einmal pro Session
-					if (TurnierModus.get().startupNochNichtDurchgefuehrt()) {
-						var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
-						if (doc != null) {
-							var ws = new WorkingSpreadsheet(xContext, doc);
+					var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
+					if (doc != null) {
+						var ws = new WorkingSpreadsheet(xContext, doc);
+						// Gewünschten Zustand zuerst lesen (unabhängig vom UI-Zustand)
+						boolean kiosk = new DocumentPropertiesHelper(ws).getTurnierModusAusDocument();
+						// Safety-Restore: einmal pro Session – garantiert neutralen Ausgangszustand
+						if (TurnierModus.get().startupNochNichtDurchgefuehrt()) {
 							TurnierModus.get().wiederherstellenAlleElemente(ws);
-							if (GlobalProperties.get().isStartupTurnierModus()) {
-								TurnierModus.get().aktivieren(ws);
-							}
 						}
-						notifyAllListeners();
+						// Deterministisch aktivieren: neutral → kiosk wenn Property gesetzt
+						if (kiosk) {
+							TurnierModus.get().aktivieren(ws);
+						}
 					}
+					notifyAllListeners();
 				}
 
 				@Override
@@ -866,7 +869,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			return false;
 		}
 		try {
-			WorkingSpreadsheet ws = new WorkingSpreadsheet(ctx);
+			WorkingSpreadsheet ws = document != null
+					? new WorkingSpreadsheet(ctx, document)
+					: new WorkingSpreadsheet(ctx);
 			TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
 			return switch (command) {
 			// SuperMelee: neues Turnier nur wenn keins aktiv

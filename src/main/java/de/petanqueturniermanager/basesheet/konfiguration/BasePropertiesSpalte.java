@@ -40,6 +40,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 	public static final String KONFIG_PROP_NAME_TURNIERSYSTEM = "Turniersystem";
 	public static final String KONFIG_PROP_ERSTELLT_MIT_VERSION = "Erstellt mit Version";
+	public static final String KONFIG_PROP_NAME_TURNIER_MODUS = "TurnierModus";
 
 	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE = "Meldeliste Hintergrund Gerade";
 	public static final String KONFIG_PROP_MELDELISTE_COLOR_BACK_UNGERADE = "Meldeliste Hintergrund Ungerade";
