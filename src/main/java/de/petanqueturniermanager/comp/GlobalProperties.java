@@ -36,6 +36,8 @@ public class GlobalProperties {
 	private static final String WEBSERVER_PORT_ZENTRIEREN_SUFFIX = "_zentrieren";
 	private static final String WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
 
+	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
+
 	public static final int DEFAULT_ZOOM = 100;
 
 	// zentrale Runtime-Map
@@ -165,6 +167,15 @@ public class GlobalProperties {
 
 	public boolean isSheetnamenKopfzeileAnzeigen() {
 		return getBoolean(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP);
+	}
+
+	public boolean isStartupTurnierModus() {
+		return getBoolean(STARTUP_TURNIER_MODUS_PROP);
+	}
+
+	public void setStartupTurnierModus(boolean aktiv) {
+		setBooleanProp(STARTUP_TURNIER_MODUS_PROP, aktiv);
+		speichernDatei();
 	}
 
 	public String getLogLevel() {

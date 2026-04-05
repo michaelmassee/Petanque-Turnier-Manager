@@ -118,6 +118,7 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
 import de.petanqueturniermanager.toolbar.ToolbarAktionDispatcher;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.toolbar.TurnierSystemAuswahlDialog;
 
 /**
@@ -262,6 +263,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
+	// Turnier Modus
+	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
 
 	public ProtocolHandler(XComponentContext xContext) {
@@ -287,6 +290,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				@Override
 				public void onNew(Object source) {
 					notifyAllListeners();
+				}
+
+				@Override
+				public void onLoad(Object source) {
+					// Safety-Restore + Auto-Aktivierung Turnier-Modus: nur einmal pro Session
+					if (TurnierModus.get().startupNochNichtDurchgefuehrt()) {
+						var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
+						if (doc != null) {
+							var ws = new WorkingSpreadsheet(xContext, doc);
+							TurnierModus.get().wiederherstellenAlleElemente(ws);
+							if (GlobalProperties.get().isStartupTurnierModus()) {
+								TurnierModus.get().aktivieren(ws);
+							}
+						}
+						notifyAllListeners();
+					}
 				}
 
 				@Override
@@ -703,6 +722,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_WEBSERVER_URL_8  -> oeffneBrowserUrlFuerSlot(7);
 			case CMD_WEBSERVER_URL_9  -> oeffneBrowserUrlFuerSlot(8);
 			case CMD_WEBSERVER_URL_10 -> oeffneBrowserUrlFuerSlot(9);
+			case CMD_TURNIER_MODUS -> {
+				var ws = new WorkingSpreadsheet(xContext);
+				TurnierModus.get().umschalten(ws);
+				notifyAllListeners();
+			}
 			default -> { return false; }
 		}
 		return true;
@@ -967,6 +991,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER,
 				 CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN;
+			// Turnier Modus – immer aktiviert
+			case CMD_TURNIER_MODUS                          -> true;
 			default -> false;
 			};
 		} catch (Exception e) {
@@ -1079,6 +1105,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		if (slot >= 0) {
 			var label = WebServerManager.get().getMenuLabelFuerSlot(slot);
 			event.State = label != null ? label : "—";
+		}
+		if (CMD_TURNIER_MODUS.equals(command)) {
+			event.State = TurnierModus.get().istAktiv();
 		}
 	}
 

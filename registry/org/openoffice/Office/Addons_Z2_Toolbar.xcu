@@ -22,7 +22,6 @@
 					<value xml:lang="nl">PétTurnMngr Werkbalk</value>
 				</prop>
 
-
 				<prop oor:name="Context" oor:type="xs:string">
 					<value>com.sun.star.sheet.SpreadsheetDocument</value>
 				</prop>
@@ -120,6 +119,35 @@
 				</node>
 
 				<!-- ****************************************************************** -->
+				<!-- Trennlinie -->
+				<node oor:name="m6" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>private:separator</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 7: Turnier Modus (Kiosk-Toggle) -->
+				<node oor:name="m7" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:turnier_modus</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Turnier Modus</value>
+						<value xml:lang="en">Tournament Mode</value>
+						<value xml:lang="es">Modo torneo</value>
+						<value xml:lang="fr">Mode tournoi</value>
+						<value xml:lang="nl">Toernooi modus</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
 
 			</node>
 		</node>
@@ -181,6 +209,20 @@
 					</prop>
 					<prop oor:name="ImageBigURL" oor:type="xs:string">
 						<value>%origin%/images/toolbar-teilnehmer.png</value>
+					</prop>
+				</node>
+			</node>
+
+			<node oor:name="de.petanqueturniermanager.toolbar.turnier_modus" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:turnier_modus</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-turnier-modus.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-turnier-modus.png</value>
 					</prop>
 				</node>
 			</node>
