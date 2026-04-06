@@ -119,16 +119,37 @@
 				</node>
 
 				<!-- ****************************************************************** -->
-				<!-- Trennlinie -->
+				<!-- Schaltfläche 6: Turnier Konfiguration -->
 				<node oor:name="m6" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:konfiguration_turnier</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Turnier Konfiguration</value>
+						<value xml:lang="en">Tournament Configuration</value>
+						<value xml:lang="es">Configuración del torneo</value>
+						<value xml:lang="fr">Configuration du tournoi</value>
+						<value xml:lang="nl">Toernooi configuratie</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Trennlinie -->
+				<node oor:name="m7" oor:op="replace">
 					<prop oor:name="URL" oor:type="xs:string">
 						<value>private:separator</value>
 					</prop>
 				</node>
 
 				<!-- ****************************************************************** -->
-				<!-- Schaltfläche 7: Turnier Modus (Kiosk-Toggle) -->
-				<node oor:name="m7" oor:op="replace">
+				<!-- Schaltfläche 8: Turnier Modus (Kiosk-Toggle) -->
+				<node oor:name="m8" oor:op="replace">
 					<prop oor:name="URL" oor:type="xs:string">
 						<value>ptm:turnier_modus</value>
 					</prop>
@@ -138,6 +159,56 @@
 						<value xml:lang="es">Modo torneo</value>
 						<value xml:lang="fr">Mode tournoi</value>
 						<value xml:lang="nl">Toernooi modus</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Trennlinie -->
+				<node oor:name="m9" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>private:separator</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 10: Webserver starten -->
+				<node oor:name="m10" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:webserver_starten</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Webserver starten</value>
+						<value xml:lang="en">Start Web Server</value>
+						<value xml:lang="es">Iniciar servidor web</value>
+						<value xml:lang="fr">Démarrer le serveur web</value>
+						<value xml:lang="nl">Webserver starten</value>
+					</prop>
+					<prop oor:name="Target" oor:type="xs:string">
+						<value>_self</value>
+					</prop>
+					<prop oor:name="Context" oor:type="xs:string">
+						<value>com.sun.star.sheet.SpreadsheetDocument</value>
+					</prop>
+				</node>
+
+				<!-- ****************************************************************** -->
+				<!-- Schaltfläche 11: Webserver stoppen -->
+				<node oor:name="m11" oor:op="replace">
+					<prop oor:name="URL" oor:type="xs:string">
+						<value>ptm:webserver_stoppen</value>
+					</prop>
+					<prop oor:name="Title">
+						<value xml:lang="de">Webserver stoppen</value>
+						<value xml:lang="en">Stop Web Server</value>
+						<value xml:lang="es">Detener servidor web</value>
+						<value xml:lang="fr">Arrêter le serveur web</value>
+						<value xml:lang="nl">Webserver stoppen</value>
 					</prop>
 					<prop oor:name="Target" oor:type="xs:string">
 						<value>_self</value>
@@ -213,6 +284,20 @@
 				</node>
 			</node>
 
+			<node oor:name="de.petanqueturniermanager.toolbar.konfiguration_turnier" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:konfiguration_turnier</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-konfiguration.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-konfiguration.png</value>
+					</prop>
+				</node>
+			</node>
+
 			<node oor:name="de.petanqueturniermanager.toolbar.turnier_modus" oor:op="replace">
 				<prop oor:name="URL" oor:type="xs:string">
 					<value>ptm:turnier_modus</value>
@@ -223,6 +308,34 @@
 					</prop>
 					<prop oor:name="ImageBigURL" oor:type="xs:string">
 						<value>%origin%/images/toolbar-turnier-modus.png</value>
+					</prop>
+				</node>
+			</node>
+
+			<node oor:name="de.petanqueturniermanager.toolbar.webserver_starten" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:webserver_starten</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-webserver-starten.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-webserver-starten.png</value>
+					</prop>
+				</node>
+			</node>
+
+			<node oor:name="de.petanqueturniermanager.toolbar.webserver_stoppen" oor:op="replace">
+				<prop oor:name="URL" oor:type="xs:string">
+					<value>ptm:webserver_stoppen</value>
+				</prop>
+				<node oor:name="UserDefinedImages">
+					<prop oor:name="ImageSmallURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-webserver-stoppen.png</value>
+					</prop>
+					<prop oor:name="ImageBigURL" oor:type="xs:string">
+						<value>%origin%/images/toolbar-webserver-stoppen.png</value>
 					</prop>
 				</node>
 			</node>
