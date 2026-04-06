@@ -16,7 +16,7 @@
 				<node oor:name="Submenu">
 
 					<!-- ****************************************************************** -->
-					<!-- Info -->
+					<!-- Extra -->
 					<!-- ****************************************************************** -->
 					<node oor:name="Y5" oor:op="replace">
 						<prop oor:name="URL" oor:type="xs:string">
@@ -26,11 +26,11 @@
 
 					<node oor:name="Y6" oor:op="replace">
 						<prop oor:name="Title">
-							<value xml:lang="de">Info</value>
-							<value xml:lang="en">Info</value>
-							<value xml:lang="es">Información</value>
-							<value xml:lang="fr">Info</value>
-							<value xml:lang="nl">Info</value>
+							<value xml:lang="de">Extra</value>
+							<value xml:lang="en">Extra</value>
+							<value xml:lang="es">Extra</value>
+							<value xml:lang="fr">Extra</value>
+							<value xml:lang="nl">Extra</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
