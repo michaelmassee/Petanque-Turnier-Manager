@@ -14,6 +14,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.sun.star.sheet.XCalculatable;
+import de.petanqueturniermanager.helper.Lo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
@@ -259,6 +261,13 @@ public abstract class BaseCalcUITest {
 			e.printStackTrace();
 		}
 
+	}
+
+	protected void recalcAll() {
+		XCalculatable xCalc = Lo.qi(XCalculatable.class, doc);
+		if (xCalc != null) {
+			xCalc.calculateAll();
+		}
 	}
 
 }

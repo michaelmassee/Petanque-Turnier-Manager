@@ -19,14 +19,6 @@
 					<!-- name= bestimmt Reihenfolge im Menü (nach Y6/Info, vor Z1/Stop-Separator) -->
 
 					<!-- ****************************************************************** -->
-					<!-- Trennlinie vor Turnier Modus -->
-					<node oor:name="Y7" oor:op="replace">
-						<prop oor:name="URL" oor:type="xs:string">
-							<value>private:separator</value>
-						</prop>
-					</node>
-
-					<!-- ****************************************************************** -->
 					<!-- Turnier Modus Toggle (Checkbox) -->
 					<node oor:name="Y8" oor:op="replace">
 						<prop oor:name="Title">
@@ -45,6 +37,12 @@
 					</node>
 
 					<!-- ****************************************************************** -->
+
+					<node oor:name="Y9" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value>private:separator</value>
+						</prop>
+					</node>
 
 				</node>
 			</node>
