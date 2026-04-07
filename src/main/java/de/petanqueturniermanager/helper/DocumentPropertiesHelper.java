@@ -241,7 +241,6 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param key
 	 * @param defaultVal
 	 * @return
 	 */
@@ -251,8 +250,6 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param key
-	 * @param defaultVal
 	 * @return
 	 */
 	public void setBooleanProperty(String propName, Boolean newVal) {
