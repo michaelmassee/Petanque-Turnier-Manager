@@ -154,11 +154,11 @@
 						<value>ptm:turnier_modus</value>
 					</prop>
 					<prop oor:name="Title">
-						<value xml:lang="de">Turnier Modus</value>
-						<value xml:lang="en">Tournament Mode</value>
-						<value xml:lang="es">Modo torneo</value>
-						<value xml:lang="fr">Mode tournoi</value>
-						<value xml:lang="nl">Toernooi modus</value>
+						<value xml:lang="de">Turnieransicht</value>
+						<value xml:lang="en">Tournament View</value>
+						<value xml:lang="es">Vista de torneo</value>
+						<value xml:lang="fr">Vue tournoi</value>
+						<value xml:lang="nl">Toernooiweergave</value>
 					</prop>
 					<prop oor:name="Target" oor:type="xs:string">
 						<value>_self</value>
