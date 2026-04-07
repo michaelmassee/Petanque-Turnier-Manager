@@ -17,6 +17,9 @@ import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -72,6 +75,7 @@ public class TurnierModus {
             }
         } catch (Exception e) {
             logger.error("Fehler beim Umschalten", e);
+            zeigeFehlermeldung(ws);
         }
     }
 
@@ -82,6 +86,7 @@ public class TurnierModus {
             aktivierenIntern(lm, ws);
         } catch (Exception e) {
             logger.error("Fehler beim Aktivieren des Turnier-Modus", e);
+            zeigeFehlermeldung(ws);
         }
     }
 
@@ -95,6 +100,7 @@ public class TurnierModus {
             deaktivierenIntern(lm, ws);
         } catch (Exception e) {
             logger.error("Fehler beim Wiederherstellen der UI-Elemente", e);
+            zeigeFehlermeldung(ws);
         }
     }
 
@@ -103,6 +109,13 @@ public class TurnierModus {
     }
 
     // -------------------------------------------------------------------------
+
+    private void zeigeFehlermeldung(WorkingSpreadsheet ws) {
+        MessageBox.from(ws, MessageBoxTypeEnum.ERROR_OK)
+                .caption(I18n.get("turnier.modus"))
+                .message(I18n.get("turnier.modus.fehler"))
+                .show();
+    }
 
     private void aktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
         gespeicherteElemente.clear();

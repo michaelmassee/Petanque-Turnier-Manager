@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.document.XEventListener;
 import com.sun.star.lang.EventObject;
 
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 
 public class GlobalEventListener implements XEventListener {
 
@@ -209,8 +208,6 @@ public class GlobalEventListener implements XEventListener {
 	 *
 	 */
 	private void onUnload(Object source) {
-		// DocumentPropertiesHelper aufräumen
-		DocumentPropertiesHelper.removeDocument(source);
 		for (IGlobalEventListener listner : listeners) {
 			try {
 				listner.onUnload(source);
