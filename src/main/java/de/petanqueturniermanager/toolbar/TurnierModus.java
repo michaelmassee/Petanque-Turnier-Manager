@@ -51,7 +51,6 @@ public class TurnierModus {
         return aktiv;
     }
 
-
     public void umschalten(WorkingSpreadsheet ws) {
         try {
             var lm = holeLayoutManager(ws);
@@ -75,7 +74,6 @@ public class TurnierModus {
             logger.error("Fehler beim Umschalten", e);
         }
     }
-
 
     public void aktivieren(WorkingSpreadsheet ws) {
         try {
@@ -112,34 +110,35 @@ public class TurnierModus {
 
         try {
             lm.lock();
-            XUIElement[] elements = lm.getElements();
-            for (XUIElement el : elements) {
-                String url = el.getResourceURL();
-                // contains() statt equals() – robust gegen abweichende URL-Prefix-Formen
-                if (url == null || url.contains("de.petanqueturniermanager.toolbar")) continue;
-
-                if (lm.isElementVisible(url)) {
-                    gespeicherteElemente.add(url);
-                    lm.hideElement(url);
+            // Nicht-PTM-Elemente ausblenden. url==null → unbekanntes Element → NICHT ausblenden.
+            try {
+                for (XUIElement el : lm.getElements()) {
+                    String url = el.getResourceURL();
+                    if (url == null) continue;
+                    if (url.contains("de.petanqueturniermanager.toolbar")) continue;
+                    if (lm.isElementVisible(url)) {
+                        gespeicherteElemente.add(url);
+                        lm.hideElement(url);
+                    }
                 }
+            } catch (Exception e) {
+                logger.error("Fehler beim Ausblenden der UI-Elemente", e);
             }
-
-        } catch (Exception e) {
-            logger.error(e);
         } finally {
             lm.unlock();
         }
 
-        // Rechnerleiste via ShowFormulaBar-Property ausblenden (lm.hideElement greift hier nicht)
+        // Rechnerleiste zuerst ausblenden – setPropertyValue("ShowFormulaBar") kann einen
+        // LO-internen Layout-Refresh auslösen, der Context-sensitive Toolbars neu bewertet.
         blendeRechnerleiste(ws, false);
 
-        // Nach dem Lock: Toolbar explizit einblenden – wie ToolbarAnzeigenListener.zeigeToolbarInFrame()
-        try {
-            lm.createElement(ptmUrl);
-            lm.showElement(ptmUrl);
-        } catch (Exception e) {
-            logger.error("Fehler beim Einblenden der PTM-Toolbar nach TurnierModus-Aktivierung", e);
-        }
+        // PTM-Toolbar nach dem Layout-Refresh einblenden.
+        // Addon-Toolbars (addon_* URL) brauchen kein createElement – LO verwaltet sie via XCU.
+        lm.showElement(ptmUrl);
+        lm.requestElement(ptmUrl);
+
+        // Toolbar zusätzlich in allen Frames sicherstellen (belt-and-suspenders)
+        ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(ws.getxContext());
 
         aktiv = true;
     }
@@ -149,7 +148,7 @@ public class TurnierModus {
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 
         try {
-            lm.lock(); // UI einfrieren
+            lm.lock();
 
             for (String url : zuRestaurieren) {
                 if (url != null && !url.equals(ptmUrl)) {
@@ -161,10 +160,10 @@ public class TurnierModus {
                 }
             }
 
-            lm.showElement(ptmUrl); // PTM Toolbar zur Sicherheit nochmal triggern
+            lm.showElement(ptmUrl); // PTM-Toolbar zur Sicherheit nochmal triggern
 
         } finally {
-            lm.unlock(); // UI berechnet sich jetzt einmalig neu
+            lm.unlock();
             gespeicherteElemente.clear();
             aktiv = false;
         }

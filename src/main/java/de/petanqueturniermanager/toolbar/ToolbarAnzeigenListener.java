@@ -38,7 +38,11 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
 
     private static final Logger logger = LogManager.getLogger(ToolbarAnzeigenListener.class);
 
-    static final String TOOLBAR_RESOURCE_URL = "private:resource/toolbar/de.petanqueturniermanager.toolbar";
+    // Addon-Toolbars erhalten von LibreOffice intern den Prefix "addon_".
+    // Die korrekte Resource-URL für OfficeToolBar-Einträge aus XCU lautet daher:
+    //   private:resource/toolbar/addon_<NodeName>
+    // Die plain URL ohne "addon_" erzeugt eine leere Phantom-Toolbar ohne Buttons.
+    static final String TOOLBAR_RESOURCE_URL = "private:resource/toolbar/addon_de.petanqueturniermanager.toolbar";
 
     /** Bereits beim Laden abgeschlossene Dokumente – verhindert Doppelaufruf falls onLoad + onNew beide feuern. */
     @Override
@@ -63,17 +67,22 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
         try {
             var xDesktop = DocumentHelper.getCurrentDesktop(xContext);
             if (xDesktop == null) {
+                logger.debug("zeigeToolbarInAllenFrames: kein Desktop gefunden");
                 return;
             }
             var xFramesSupplier = Lo.qi(XFramesSupplier.class, xDesktop);
             if (xFramesSupplier == null) {
+                logger.debug("zeigeToolbarInAllenFrames: XFramesSupplier nicht verfügbar");
                 return;
             }
             var xFrames = xFramesSupplier.getFrames();
             if (xFrames == null) {
+                logger.debug("zeigeToolbarInAllenFrames: Frames-Container ist null");
                 return;
             }
-            for (int i = 0; i < xFrames.getCount(); i++) {
+            int anzahl = xFrames.getCount();
+            logger.debug("zeigeToolbarInAllenFrames: {} Frame(s) gefunden", anzahl);
+            for (int i = 0; i < anzahl; i++) {
                 try {
                     var xFrame = Lo.qi(XFrame.class, xFrames.getByIndex(i));
                     zeigeToolbarInFrame(xFrame);
@@ -121,8 +130,12 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
             if (xLayoutManager == null) {
                 return;
             }
-            xLayoutManager.createElement(TOOLBAR_RESOURCE_URL);
+            // Addon-Toolbar (addon_* URL) via showElement + requestElement einblenden.
+            // createElement ist NICHT nötig – LO verwaltet Addon-Toolbars intern via XCU.
             xLayoutManager.showElement(TOOLBAR_RESOURCE_URL);
+            boolean result = xLayoutManager.requestElement(TOOLBAR_RESOURCE_URL);
+            logger.debug("zeigeToolbarInFrame '{}': showElement+requestElement={} isVisible={}",
+                    xFrame.getName(), result, xLayoutManager.isElementVisible(TOOLBAR_RESOURCE_URL));
         } catch (Exception e) {
             logger.error("Fehler beim Anzeigen der Symbolleiste in Frame '{}'",
                     xFrame.getName(), e);
