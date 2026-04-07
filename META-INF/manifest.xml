@@ -17,10 +17,6 @@
     
     <!-- Addon Menu Configurations -->
     <manifest:file-entry
-            manifest:media-type="application/vnd.sun.star.configuration-data"
-            manifest:full-path="registry/org/openoffice/Office/Addons_Y3_TurnierModus.xcu"/>
-
-    <manifest:file-entry 
         manifest:media-type="application/vnd.sun.star.configuration-data" 
         manifest:full-path="registry/org/openoffice/Office/Addons_A1_Supermelee.xcu"/>
     <manifest:file-entry 
@@ -56,6 +52,9 @@
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Y2_Info.xcu"/>
+    <manifest:file-entry
+            manifest:media-type="application/vnd.sun.star.configuration-data"
+            manifest:full-path="registry/org/openoffice/Office/Addons_Y3_TurnierModus.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Z_Stop.xcu"/>
