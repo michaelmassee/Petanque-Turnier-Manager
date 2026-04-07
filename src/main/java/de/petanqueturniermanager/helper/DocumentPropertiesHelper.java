@@ -6,9 +6,10 @@ package de.petanqueturniermanager.helper;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Locale;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Hashtable;
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +24,7 @@ import com.sun.star.beans.XPropertyContainer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.document.XDocumentProperties;
 import com.sun.star.document.XDocumentPropertiesSupplier;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.XSpreadsheetDocument;
@@ -37,16 +39,25 @@ import de.petanqueturniermanager.comp.turnierevent.TurnierEventType;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * Setzt und liest Document-Properties (benutzerdefinierte Metadaten).<br>
+ * http://www.openoffice.org/api/docs/common/ref/com/sun/star/document/XDocumentProperties.html <br>
+ * https://forum.openoffice.org/en/forum/viewtopic.php?t=33455 <br>
  * <br>
- * Kein globaler Cache – jede Instanz liest frisch vom Dokument.<br>
- * Schlüssel werden lowercase normalisiert für O(1) case-insensitiven Zugriff.
+ * Setzt und liest Docoment properties<br>
+ *
  */
+
 public class DocumentPropertiesHelper {
 	private static final Logger logger = LogManager.getLogger(DocumentPropertiesHelper.class);
 
+	// TODO ist das noch notwendig ?
+	// Wegen core dumps die ich nicht nachvolziehen kann, eigene Properties liste in speicher.
+	// Hashtable is synchronized
+	// key search ignore case
+	private static final Hashtable<Integer, Hashtable<String, String>> PROPLISTE = new Hashtable<>();
+
 	private final XSpreadsheetDocument xSpreadsheetDocument;
-	private final ConcurrentHashMap<String, String> currentPropListe;
+	private final Hashtable<String, String> currentPropListe;
+	private boolean firstLoad = false;
 
 	public DocumentPropertiesHelper(WorkingSpreadsheet currentSpreadsheet) {
 		this(checkNotNull(currentSpreadsheet).getWorkingSpreadsheetDocument());
@@ -54,27 +65,25 @@ public class DocumentPropertiesHelper {
 
 	public DocumentPropertiesHelper(XSpreadsheetDocument xSpreadsheetDocument) {
 		this.xSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
-		currentPropListe = new ConcurrentHashMap<>();
-		// Kein globaler Cache – jede Instanz liest frisch vom Dokument.
-		// Lifecycle wird implizit durch Instanz-GC gehandhabt.
-		ladeDokumentProperties();
-	}
-
-	private void ladeDokumentProperties() {
-		XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
-		XPropertySet xPropertySet = getXPropertySet();
-		for (Property userProp : xMultiPropertySet.getPropertySetInfo().getProperties()) {
-			try {
-				Object propVal = xPropertySet.getPropertyValue(userProp.Name);
-				currentPropListe.put(
-						userProp.Name.toLowerCase(Locale.ROOT),
-						propVal != null ? propVal.toString() : "");
-			} catch (UnknownPropertyException | WrappedTargetException e) {
-				logger.debug("Property '{}' nicht lesbar: {}", userProp.Name, e.getMessage());
+		Integer xSpreadsheetDocumentHash = xSpreadsheetDocument.hashCode();
+		if (PROPLISTE.containsKey((xSpreadsheetDocumentHash))) {
+			currentPropListe = PROPLISTE.get(xSpreadsheetDocumentHash);
+		} else {
+			// einmal laden
+			currentPropListe = new Hashtable<>();
+			// properties aus dokument laden
+			XMultiPropertySet xMultiPropertySet = getXMultiPropertySet();
+			XPropertySet xPropertySet = getXPropertySet();
+			Property[] properties = xMultiPropertySet.getPropertySetInfo().getProperties();
+			for (Property userProp : properties) {
+				try {
+					Object propVal = xPropertySet.getPropertyValue(userProp.Name);
+					currentPropListe.put(userProp.Name, propVal.toString());
+				} catch (UnknownPropertyException | WrappedTargetException e) {
+				}
 			}
-		}
-		if (currentPropListe.isEmpty()) {
-			logger.debug("Dokument hat keine benutzerdefinierten Properties");
+			PROPLISTE.put(xSpreadsheetDocumentHash, currentPropListe);
+			firstLoad = true;
 		}
 	}
 
@@ -83,24 +92,35 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * Prüft ob das PTM-Pflichtfeld (Turniersystem) vorhanden ist.
-	 * Robustere Alternative zu {@link #isEmpty()} – ein Dokument kann legitim
-	 * leer sein, während ein PTM-Dokument immer dieses Pflichtfeld besitzt.
+	 * Document close
 	 */
-	public boolean hasRequiredProperties() {
-		return currentPropListe.containsKey(
-				BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM.toLowerCase(Locale.ROOT));
+	public static synchronized void removeDocument(Object source) {
+		try {
+			if (source != null) {
+				XModel xModel = Lo.qi(XModel.class, source);
+				XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
+				// null dann wenn kein XSpreadsheetDocument
+				if (xSpreadsheetDocument != null) {
+					PROPLISTE.remove(xSpreadsheetDocument.hashCode());
+				}
+			}
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
 	}
 
 	/**
-	 * Property in interne Map und Dokument speichern
+	 * Property in interne Cache, und Document speichern
+	 *
+	 * @param propName
+	 * @param val
 	 */
 	public void setStringProperty(String propName, String val) {
 		if (val != null) {
-			String oldVal = currentPropListe.get(propName.toLowerCase(Locale.ROOT));
-			if (!Objects.equals(oldVal, val)) {
+			String oldVal = currentPropListe.get(propName);
+			if (!StringUtils.equals(oldVal, val)) {
 				setStringPropertyInDocument(propName, val);
-				currentPropListe.put(propName.toLowerCase(Locale.ROOT), val);
+				currentPropListe.put(propName, val);
 				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,
 						new OnProperiesChangedEvent(xSpreadsheetDocument).addChanged(propName, oldVal, val));
 			}
@@ -109,11 +129,13 @@ public class DocumentPropertiesHelper {
 
 	/**
 	 * fügt ein neues Property zum Dokument hinzu, wenn nicht vorhanden<br>
-	 * speichert den neuen Wert
+	 * speichert der neue wert
+	 * 
 	 */
 	private void setStringPropertyInDocument(String propName, String val) {
-		boolean didExist = insertStringPropertyIfNotExist(propName, val);
+		boolean didExist = insertStringPropertyIfNotExist(propName, val); // zuerst neu einfuegen wenn nicht vorhanden
 		if (didExist) {
+			// wenn bereits vorhanden dann wert updaten!
 			XPropertySet propSet = getXPropertySet();
 			try {
 				propSet.setPropertyValue(propName, val);
@@ -125,6 +147,10 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
+	 * https://api.libreoffice.org/docs/idl/ref/namespacecom_1_1sun_1_1star_1_1beans_1_1PropertyAttribute.html#a04101331ecfe0e8dc89c54c7e557c07f
+	 *
+	 * @param name
+	 * @param val
 	 * @return true wenn bereits vorhanden
 	 */
 	private boolean insertStringPropertyIfNotExist(String name, String val) {
@@ -159,17 +185,44 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param propName   case insensitive
-	 * @param defaultVal Rückgabewert wenn Property nicht vorhanden
+	 * 
+	 * @param propName case insenitive
+	 * @param defaultVal
+	 * @return
 	 */
 	public String getStringProperty(String propName, String defaultVal) {
-		return currentPropListe.getOrDefault(propName.toLowerCase(Locale.ROOT), defaultVal);
+		Optional<String> korrektPropName = currentPropListe.keySet().stream()
+				.filter(key -> key.equalsIgnoreCase(propName)).findFirst();
+		if (korrektPropName.isPresent()) {
+			return currentPropListe.get(korrektPropName.get());
+		}
+		return defaultVal;
 	}
 
 	/**
-	 * @param propName   Name des Property
-	 * @param defaultVal Rückgabewert wenn Property nicht vorhanden oder nicht parsbar
-	 * @return gespeicherter int-Wert oder defaultVal
+	 * @param propName = name vom property
+	 * @return default when not found
+	 */
+	private String getStringPropertyFromDocument(String propName, boolean ignoreNotFound, String defaultVal) {
+		XPropertySet propSet = getXPropertySet();
+		Object propVal = null;
+		try {
+			propVal = propSet.getPropertyValue(propName);
+		} catch (UnknownPropertyException | WrappedTargetException e) {
+			if (!ignoreNotFound) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+
+		if (propVal instanceof String strval) {
+			return strval;
+		}
+		return defaultVal;
+	}
+
+	/**
+	 * @param propName = name vom property
+	 * @return -1 when not found
 	 */
 	public int getIntProperty(String propName, int defaultVal) {
 		String stringProperty = getStringProperty(propName, "" + defaultVal);
@@ -180,18 +233,28 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
-	 * @param propName Name des Property
-	 * @param val      int-Wert wird als String gespeichert
+	 * @param propName
+	 * @param val int val wird als String gespeichert
 	 */
 	public void setIntProperty(String propName, int val) {
 		setStringProperty(propName, "" + val);
 	}
 
+	/**
+	 * @param key
+	 * @param defaultVal
+	 * @return
+	 */
 	public boolean getBooleanProperty(String propName, Boolean defaultVal) {
 		String stringProperty = getStringProperty(propName, StringTools.booleanToString(defaultVal));
 		return StringTools.stringToBoolean(stringProperty);
 	}
 
+	/**
+	 * @param key
+	 * @param defaultVal
+	 * @return
+	 */
 	public void setBooleanProperty(String propName, Boolean newVal) {
 		setStringProperty(propName, StringTools.booleanToString(newVal));
 	}
@@ -208,5 +271,12 @@ public class DocumentPropertiesHelper {
 			turnierSystemAusDocument = TurnierSystem.findById(spielsystem);
 		}
 		return turnierSystemAusDocument;
+	}
+
+	/**
+	 * @return true wenn properties das erste mal geladen wurde
+	 */
+	public boolean isFirstLoad() {
+		return firstLoad;
 	}
 }

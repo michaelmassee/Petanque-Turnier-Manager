@@ -13,37 +13,29 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.Direktvergleich;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
-import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
-import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.addin.XGlobal;
 
-public final class GlobalImpl extends AbstractAddInImpl implements XGlobal, ITurnierEventListener {
+public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	static final Logger logger = LogManager.getLogger(GlobalImpl.class);
 
 	private final XComponentContext xContext;
 	private static final String implName = GlobalImpl.class.getName();
 	private static final String SERVICE_NAME = "de.petanqueturniermanager.addin.GlobalAddIn";
 	// WICHTIG: Beide Services müssen registriert sein!
-	private static final String[] serviceNames = {
+	private static final String[] serviceNames = { 
 		SERVICE_NAME,
 		"com.sun.star.sheet.AddIn"  // Standard AddIn Service
 	};
 
 	private static AtomicBoolean isDirty = new AtomicBoolean(false);
-
-	// Instanz-Cache pro Dokument – vermeidet wiederholte UNO-Bulk-Reads bei Formel-Auswertungen.
-	// Wird invalidiert wenn Properties geändert werden (via ITurnierEventListener)
-	// oder wenn das Dokument wechselt (anderer doc-Hash).
-	private volatile int cachedDocHash = 0;
-	private volatile DocumentPropertiesHelper cachedHelper = null;
 
 	// DisplayNames aus GlobalAddIn.xcu - diese werden für Formeln in Calc verwendet
 	// =PTM.ALG.INTPROPERTY("propertyname")
@@ -80,7 +72,6 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal, ITur
 		this.xContext = xContext;
 		GlobalImpl.isDirty = new AtomicBoolean(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
-		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 	}
 
 	public static final XSingleComponentFactory __getComponentFactory(String name) {
@@ -107,37 +98,24 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal, ITur
 		try {
 			XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
 			if (doc != null) {
-				int docHash = doc.hashCode();
-				if (cachedHelper != null && cachedDocHash == docHash) {
-					return cachedHelper; // Cache-Hit: gleiches Dokument, Properties unverändert
-				}
 				DocumentPropertiesHelper hlpr = new DocumentPropertiesHelper(doc);
-				if (hlpr.hasRequiredProperties()) {
-					cachedHelper = hlpr;
-					cachedDocHash = docHash;
-					return hlpr;
+				if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
+					// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
+					// oder das Dokument hat keine properties aber PTM Funktionen.
+					logger.debug("properties isFirstLoad and isEmpty=true");
+					GlobalImpl.isDirty.set(true);
+					return null;
 				}
-				invalidateCache();
+				return hlpr;
 			}
-			// Kein PTM-Dokument erkannt oder Dokument nicht gefunden
+			// das hat nicht funktioniert
 			GlobalImpl.isDirty.set(true);
-			logger.debug("Kein PTM-Dokument erkannt");
+			logger.debug("XSpreadsheetDocument = null");
 		} catch (Exception e) {
 			logger.error("getDocumentPropertiesHelper", e);
-			invalidateCache();
 			GlobalImpl.isDirty.set(true);
 		}
 		return null;
-	}
-
-	private void invalidateCache() {
-		cachedHelper = null;
-		cachedDocHash = 0;
-	}
-
-	@Override
-	public void onPropertiesChanged(ITurnierEvent eventObj) {
-		invalidateCache(); // Properties geändert → beim nächsten Formel-Call neu laden
 	}
 
 	@Override
