@@ -250,8 +250,11 @@
                         <value>.uno:Open</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Open</value>
+                        <value xml:lang="de">Öffnen</value>
                         <value xml:lang="en">Open</value>
+                        <value xml:lang="es">Abrir</value>
+                        <value xml:lang="fr">Ouvrir</value>
+                        <value xml:lang="nl">Openen</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
@@ -266,8 +269,11 @@
                         <value>.uno:Save</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Save</value>
+                        <value xml:lang="de">Speichern</value>
                         <value xml:lang="en">Save</value>
+                        <value xml:lang="es">Guardar</value>
+                        <value xml:lang="fr">Enregistrer</value>
+                        <value xml:lang="nl">Opslaan</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
@@ -279,8 +285,11 @@
                         <value>.uno:Print</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Print</value>
+                        <value xml:lang="de">Drucken</value>
                         <value xml:lang="en">Print</value>
+                        <value xml:lang="es">Imprimir</value>
+                        <value xml:lang="fr">Imprimer</value>
+                        <value xml:lang="nl">Afdrukken</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
@@ -293,8 +302,11 @@
                         <value>.uno:PrintPreview</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Print Preview</value>
+                        <value xml:lang="de">Druckvorschau</value>
                         <value xml:lang="en">Print Preview</value>
+                        <value xml:lang="es">Vista previa de impresión</value>
+                        <value xml:lang="fr">Aperçu avant impression</value>
+                        <value xml:lang="nl">Afdrukvoorbeeld</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
@@ -306,8 +318,11 @@
                         <value>.uno:ExportToPDF</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">PDF Export</value>
-                        <value xml:lang="en">PDF Export</value>
+                        <value xml:lang="de">Als PDF exportieren</value>
+                        <value xml:lang="en">Export as PDF</value>
+                        <value xml:lang="es">Exportar como PDF</value>
+                        <value xml:lang="fr">Exporter en PDF</value>
+                        <value xml:lang="nl">Exporteren als PDF</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
@@ -323,6 +338,9 @@
                     <prop oor:name="Title">
                         <value xml:lang="de">Druckbereich</value>
                         <value xml:lang="en">Print Area</value>
+                        <value xml:lang="es">Área de impresión</value>
+                        <value xml:lang="fr">Zone d'impression</value>
+                        <value xml:lang="nl">Afdrukgebied</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
