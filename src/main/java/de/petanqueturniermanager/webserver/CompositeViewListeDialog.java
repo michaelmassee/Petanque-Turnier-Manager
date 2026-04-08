@@ -1,7 +1,9 @@
 package de.petanqueturniermanager.webserver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,8 +30,12 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
+import com.sun.star.sheet.XSpreadsheetDocument;
+
+import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
+import de.petanqueturniermanager.comp.GlobalProperties.PanelEintragRoh;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -82,6 +88,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private List<CompositeViewEintragRoh> eintraege = new ArrayList<>();
     private final List<String> dynamischeControlNamen = new ArrayList<>();
     private String[] komboBoxItems;
+    private String[] panelKomboBoxItems;
 
     /** Interne Exception für Validierungsfehler. */
     private static final class UngueltigeEingabeException extends Exception {
@@ -128,6 +135,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
         eintraege = new ArrayList<>(GlobalProperties.get().getCompositeViewEintraege());
         komboBoxItems = SheetResolverFactory.SHEET_TYPEN;
+        panelKomboBoxItems = ladePanelKomboBoxItems();
 
         erstelleStatischeControls();
         aktualisiereZeilenArea();
@@ -137,8 +145,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         fuegeFixedTextEin("lblKopfPort",
                 I18n.get("webserver.konfig.tabelle.kopf.port"),
                 PORT_X, 20, PORT_W, 10);
-        fuegeFixedTextEin("lblKopfLayout",
-                I18n.get("webserver.composite.konfig.tabelle.kopf.layout"),
+        fuegeFixedTextEin("lblKopfPanel0",
+                I18n.get("webserver.composite.konfig.tabelle.kopf.panel0"),
                 LAYOUT_X, 20, LAYOUT_W, 10);
         fuegeFixedTextEin("lblKopfZoom",
                 I18n.get("webserver.konfig.tabelle.kopf.zoom"),
@@ -165,8 +173,9 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         for (int i = 0; i < eintraege.size(); i++) {
             int y = ZEILE_Y_START + i * ZEILE_ABSTAND;
             var e = eintraege.get(i);
+            String panel0Sheet = e.panels().isEmpty() ? "" : e.panels().get(0).sheetConfig();
             fuegeEditEinDyn("portRow_" + i, String.valueOf(e.port()), PORT_X, y, PORT_W, ZEILE_H);
-            fuegeFixedTextEinDyn("layoutRow_" + i, bauseLayoutBeschreibung(e), LAYOUT_X, y, LAYOUT_W, ZEILE_H);
+            fuegeComboBoxEinDyn("panel0Row_" + i, panelKomboBoxItems, LAYOUT_X, y, LAYOUT_W, ZEILE_H, panel0Sheet);
             fuegeEditEinDyn("zoomRow_" + i, String.valueOf(e.zoom()), ZOOM_X, y, ZOOM_W, ZEILE_H);
             fuegeCheckBoxEinDyn("aktivRow_" + i, "", AKTIV_X, y, AKTIV_W, ZEILE_H, e.aktiv());
             fuegeButtonEinDyn("editRow_" + i,
@@ -266,6 +275,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private void leseZeilenDatenAusControls() {
         for (int i = 0; i < eintraege.size(); i++) {
             XControl portCtrl = xcc.getControl("portRow_" + i);
+            XControl panel0Ctrl = xcc.getControl("panel0Row_" + i);
             XControl zoomCtrl = xcc.getControl("zoomRow_" + i);
             XControl aktivCtrl = xcc.getControl("aktivRow_" + i);
             if (portCtrl == null) break;
@@ -277,12 +287,23 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
             // Port: 0 signalisiert leer/ungültig für die Validierung
             int port = 0;
             try { port = portStr.isEmpty() ? 0 : Integer.parseInt(portStr); } catch (NumberFormatException ignored) {}
-            int zoom = eintraege.get(i).zoom();
+            var alt = eintraege.get(i);
+            int zoom = alt.zoom();
             try { zoom = zoomStr.isEmpty() ? GlobalProperties.DEFAULT_ZOOM : Integer.parseInt(zoomStr); } catch (NumberFormatException ignored) {}
 
-            var alt = eintraege.get(i);
-            eintraege.set(i, new CompositeViewEintragRoh(port, aktiv, zoom, alt.layoutJson(), alt.panels()));
+            List<PanelEintragRoh> neuePanels = aktualisierePanel0(alt.panels(), panel0Ctrl);
+            eintraege.set(i, new CompositeViewEintragRoh(port, aktiv, zoom, alt.layoutJson(), neuePanels));
         }
+    }
+
+    private List<PanelEintragRoh> aktualisierePanel0(List<PanelEintragRoh> panels, XControl panel0Ctrl) {
+        if (panel0Ctrl == null || panels.isEmpty()) {
+            return panels;
+        }
+        String neuesSheet = Lo.qi(XTextComponent.class, panel0Ctrl).getText().trim();
+        var neuePanels = new ArrayList<>(panels);
+        neuePanels.set(0, new PanelEintragRoh(neuesSheet, panels.get(0).zoom()));
+        return neuePanels;
     }
 
     private void validiereEintraege() throws UngueltigeEingabeException {
@@ -311,8 +332,14 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     // ---- Hilfsmethoden ----
 
-    private static String bauseLayoutBeschreibung(CompositeViewEintragRoh e) {
-        return e.panels().size() + " Panels";
+    private String[] ladePanelKomboBoxItems() {
+        var items = new LinkedHashSet<String>();
+        XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
+        if (doc != null) {
+            items.addAll(Arrays.asList(doc.getSheets().getElementNames()));
+        }
+        items.addAll(Arrays.asList(SheetResolverFactory.SHEET_TYPEN));
+        return items.toArray(String[]::new);
     }
 
     private int berechneNaechstenFreienPort() {
@@ -361,6 +388,21 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height",    h);
         props.setPropertyValue("Text",      text != null ? text : "");
         props.setPropertyValue("MultiLine", Boolean.FALSE);
+        cont.insertByName(name, model);
+        dynamischeControlNamen.add(name);
+    }
+
+    private void fuegeComboBoxEinDyn(String name, String[] items, int x, int y, int w, int h, String selected)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlComboBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX",      x);
+        props.setPropertyValue("PositionY",      y);
+        props.setPropertyValue("Width",          w);
+        props.setPropertyValue("Height",         h);
+        props.setPropertyValue("StringItemList", items);
+        props.setPropertyValue("Text",           selected != null ? selected : "");
+        props.setPropertyValue("Dropdown",       Boolean.TRUE);
         cont.insertByName(name, model);
         dynamischeControlNamen.add(name);
     }

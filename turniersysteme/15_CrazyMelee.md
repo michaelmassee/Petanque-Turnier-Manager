@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 17 – Crazy‑Mêlée (Premium-Version)
+# 🏆 Kapitel 17 – Crazy‑Mêlée
 
 Das **Crazy‑Mêlée** ist eines der beliebtesten Spaß‑ und Freizeit‑Turniersysteme im Boule- und Pétanque‑Sport. Es gehört zur Familie der Mêlée‑Formate, geht aber noch einen Schritt weiter: **Maximale Durchmischung, maximale Überraschung, minimaler Organisationsaufwand, maximaler Spielspaß.**
 
@@ -171,5 +170,3 @@ Crazy‑Mêlée ist bewusst ein **Fun‑Turnier**, kein Leistungssystem.
 
 Ob Vereinsabend, Saisonabschluss oder Sommerfest: Crazy‑Mêlée bringt Gruppen zusammen, fördert neue Begegnungen und sorgt für viele Lacher und schöne Spiele.
 
----
-# Ende von Kapitel 17 – Crazy‑Mêlée
