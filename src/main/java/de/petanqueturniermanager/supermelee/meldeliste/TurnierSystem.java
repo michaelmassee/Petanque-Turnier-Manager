@@ -35,6 +35,10 @@ public enum TurnierSystem {
 		return id;
 	}
 
+	public boolean hatMehrereSpielTage() {
+		return this == SUPERMELEE;
+	}
+
 	public static TurnierSystem findById(int id) {
 		for (TurnierSystem spielsystem : values()) {
 			if (spielsystem.getId() == id) {

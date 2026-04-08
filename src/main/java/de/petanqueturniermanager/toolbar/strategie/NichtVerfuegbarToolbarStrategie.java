@@ -35,6 +35,16 @@ public class NichtVerfuegbarToolbarStrategie implements ITurnierSystemToolbarStr
         zeigeNichtVerfuegbar(ws, I18n.get("toolbar.teilnehmer.nicht.verfuegbar"));
     }
 
+    @Override
+    public void naechsterSpieltag(WorkingSpreadsheet ws) throws Exception {
+        zeigeNichtVerfuegbar(ws, I18n.get("toolbar.naechster.spieltag.nicht.verfuegbar"));
+    }
+
+    @Override
+    public void gesamtrangliste(WorkingSpreadsheet ws) throws Exception {
+        zeigeNichtVerfuegbar(ws, I18n.get("toolbar.gesamtrangliste.nicht.verfuegbar"));
+    }
+
     private void zeigeNichtVerfuegbar(WorkingSpreadsheet ws, String nachricht) throws Exception {
         logger.warn("Toolbar-Aktion nicht verfügbar für aktives Turniersystem: {}", nachricht);
         MessageBox.from(ws, MessageBoxTypeEnum.INFO_OK)

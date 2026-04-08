@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons"
+                    xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <node oor:name="AddonUI">
+
+        <node oor:name="OfficeToolBar">
+            <node oor:name="de.petanqueturniermanager.toolbar.spieltag" oor:op="replace">
+
+                <prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+                    <value xml:lang="de">PétTurnMngr Spieltag</value>
+                    <value xml:lang="en">PétTurnMngr Competition Day</value>
+                    <value xml:lang="es">PétTurnMngr Jornada</value>
+                    <value xml:lang="fr">PétTurnMngr Journée</value>
+                    <value xml:lang="nl">PétTurnMngr Speeldag</value>
+                </prop>
+
+                <prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+                    <value xml:lang="de">PétTurnMngr Spieltag</value>
+                    <value xml:lang="en">PétTurnMngr Competition Day</value>
+                    <value xml:lang="es">PétTurnMngr Jornada</value>
+                    <value xml:lang="fr">PétTurnMngr Journée</value>
+                    <value xml:lang="nl">PétTurnMngr Speeldag</value>
+                </prop>
+
+                <prop oor:name="Context" oor:type="xs:string">
+                    <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                </prop>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 1: Nächster Spieltag -->
+                <node oor:name="m1" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_naechster_spieltag</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Nächster Spieltag</value>
+                        <value xml:lang="en">Next Competition Day</value>
+                        <value xml:lang="es">Siguiente jornada</value>
+                        <value xml:lang="fr">Journée suivante</value>
+                        <value xml:lang="nl">Volgende speeldag</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 2: Gesamtrangliste -->
+                <node oor:name="m2" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_gesamtrangliste</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Gesamtrangliste</value>
+                        <value xml:lang="en">Overall Ranking</value>
+                        <value xml:lang="es">Clasificación general</value>
+                        <value xml:lang="fr">Classement général</value>
+                        <value xml:lang="nl">Totaalklassement</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+            </node>
+        </node>
+
+    </node>
+</oor:component-data>

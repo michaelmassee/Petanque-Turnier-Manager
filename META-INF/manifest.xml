@@ -61,6 +61,9 @@
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Z2_Toolbar.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_Z3_SpieltagToolbar.xcu"/>
     <!-- Sidebar deaktiviert – XCU-Einträge auskommentiert damit kein Deck/Panel in LO erscheint
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"

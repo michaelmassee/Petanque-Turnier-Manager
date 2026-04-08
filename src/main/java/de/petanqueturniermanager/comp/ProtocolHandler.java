@@ -116,6 +116,7 @@ import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteS
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_SortOnly;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
+import de.petanqueturniermanager.toolbar.SpieltagToolbarSteuerung;
 import de.petanqueturniermanager.toolbar.ToolbarAktionDispatcher;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
 import de.petanqueturniermanager.toolbar.TurnierModus;
@@ -265,6 +266,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
+	public static final String CMD_TOOLBAR_NAECHSTER_SPIELTAG    = "toolbar_naechster_spieltag";
+	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	// Turnier Modus
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
@@ -276,6 +279,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
 		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt)
 		ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
+		SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
 		if (REGISTERED.compareAndSet(false, true)) {
 			NewReleaseChecker.addCacheUpdateCallback(ProtocolHandler::notifyAllListeners);
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
@@ -678,6 +682,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_TEILNEHMER:
 				ToolbarAktionDispatcher.teilnehmer(ws);
 				break;
+			case CMD_TOOLBAR_NAECHSTER_SPIELTAG:
+				ToolbarAktionDispatcher.naechsterSpieltag(ws);
+				break;
+			case CMD_TOOLBAR_GESAMTRANGLISTE:
+				ToolbarAktionDispatcher.gesamtrangliste(ws);
+				break;
 			default:
 				ProcessBox.from().fehler("ungueltige Aktion " + command);
 				logger.warn("Unbekannter Befehl: {}", command);
@@ -1001,6 +1011,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER,
 				 CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN;
+			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
+				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
 			// Neues Turnier in neuer Datei – immer aktiviert (unabhängig vom aktuellen Dokument)
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI             -> true;
 			// Turnier Modus – immer aktiviert
@@ -1080,6 +1092,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				// werden für jedes Dokument individuell ausgewertet
 				postStatus(e.listener, e.url, isEnabled(entry.getKey(), e.document));
 			}
+		}
+		// Spieltag-Toolbar je nach aktivem Turniersystem ein-/ausblenden
+		var ctx = SHARED_CONTEXT;
+		if (ctx != null) {
+			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
 		}
 	}
 

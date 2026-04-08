@@ -40,4 +40,20 @@ public final class ToolbarAktionDispatcher {
         TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
         TurnierSystemToolbarStrategieRegistry.get(system).teilnehmer(ws);
     }
+
+    /**
+     * Wechselt zum nächsten Spieltag des aktiven Turniersystems.
+     */
+    public static void naechsterSpieltag(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).naechsterSpieltag(ws);
+    }
+
+    /**
+     * Erstellt die Gesamtrangliste des aktiven Turniersystems.
+     */
+    public static void gesamtrangliste(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).gesamtrangliste(ws);
+    }
 }
