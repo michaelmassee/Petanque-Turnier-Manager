@@ -12,8 +12,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kohsuke.github.GHAsset;
 
-import com.sun.star.beans.NamedValue;
-import com.sun.star.deployment.XExtensionManager;
+import com.sun.star.system.SystemShellExecuteFlags;
+import com.sun.star.system.XSystemShellExecute;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -69,13 +69,17 @@ public class DirectUpdate extends SheetRunner {
 			FileUtils.copyURLToFile(downloadURL, tempFile.toFile(), 30000, 30000);
 			processBoxinfo("processbox.download.abgeschlossen.installation");
 
-			Object emObj = getxContext().getValueByName(
-					"/singletons/com.sun.star.deployment.ExtensionManager");
-			XExtensionManager em = Lo.qi(XExtensionManager.class, emObj);
-			if (em == null) {
-				throw new GenerateException("ExtensionManager nicht verfügbar (Singleton nicht gefunden).");
+			// addExtension() schlägt fehl wenn das Plugin gerade läuft (JARs gesperrt).
+			// Stattdessen: OXT-Datei über SystemShellExecute im Extension-Manager öffnen.
+			var xShell = Lo.createInstanceMCF(
+					XSystemShellExecute.class,
+					"com.sun.star.system.SystemShellExecute",
+					getxContext().getServiceManager(),
+					getxContext());
+			if (xShell == null) {
+				throw new GenerateException("SystemShellExecute nicht verfügbar.");
 			}
-			em.addExtension(tempFile.toUri().toString(), new NamedValue[0], "user", null, null);
+			xShell.execute(tempFile.toUri().toString(), "", (short) SystemShellExecuteFlags.URIS_ONLY);
 
 			processBoxinfo("processbox.neue.version.installiert");
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.INFO_OK)
