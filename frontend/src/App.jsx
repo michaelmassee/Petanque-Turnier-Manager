@@ -1,5 +1,7 @@
 import { useReducer, useEffect, useRef } from 'react';
 import Cell from './Cell';
+import Panel from './Panel';
+import SplitPaneComposite from './SplitPaneComposite';
 
 // 1/100 mm → Pixel (gerundet, verhindert Sub-Pixel-Layout-Drift)
 const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
@@ -24,10 +26,59 @@ const leererZustand = {
   kopfZeilenAnzahl: 0,
 };
 
+function panelAusNachricht(msg, vorherigePanels) {
+  const zellen = {};
+  if (msg.zellen) {
+    msg.zellen.forEach((z) => { zellen[z.id] = z; });
+  }
+  return {
+    panelId: msg.panelId,
+    zoom: msg.zoom ?? 100,
+    seitenTitel: msg.seitenTitel ?? null,
+    zeilen: msg.zeilen || 0,
+    spalten: msg.spalten || 0,
+    gitter: msg.gitter || [],
+    zellen,
+    spaltenBreiten: msg.spaltenBreiten || {},
+    zeilenHoehen: msg.zeilenHoehen || {},
+    kopfzeileLinks: msg.kopfzeileLinks ?? null,
+    kopfzeileMitte: msg.kopfzeileMitte ?? null,
+    kopfzeileRechts: msg.kopfzeileRechts ?? null,
+    fusszeileLinks: msg.fusszeileLinks ?? null,
+    fusszeileMitte: msg.fusszeileMitte ?? null,
+    fusszeileRechts: msg.fusszeileRechts ?? null,
+    kopfZeilenAnzahl: msg.kopfZeilenAnzahl ?? 0,
+  };
+}
+
+function panelDiffAusNachricht(msg, vorher) {
+  const neueZellen = { ...(vorher?.zellen || {}) };
+  if (msg.zellen) {
+    msg.zellen.forEach((z) => { neueZellen[z.id] = z; });
+  }
+  return {
+    panelId: msg.panelId,
+    zoom: msg.zoom ?? vorher?.zoom ?? 100,
+    seitenTitel: msg.seitenTitel ?? vorher?.seitenTitel ?? null,
+    zeilen: msg.zeilen || vorher?.zeilen || 0,
+    spalten: msg.spalten || vorher?.spalten || 0,
+    gitter: msg.gitter || vorher?.gitter || [],
+    zellen: neueZellen,
+    spaltenBreiten: msg.spaltenBreiten || vorher?.spaltenBreiten || {},
+    zeilenHoehen: msg.zeilenHoehen || vorher?.zeilenHoehen || {},
+    kopfzeileLinks: msg.kopfzeileLinks ?? vorher?.kopfzeileLinks ?? null,
+    kopfzeileMitte: msg.kopfzeileMitte ?? vorher?.kopfzeileMitte ?? null,
+    kopfzeileRechts: msg.kopfzeileRechts ?? vorher?.kopfzeileRechts ?? null,
+    fusszeileLinks: msg.fusszeileLinks ?? vorher?.fusszeileLinks ?? null,
+    fusszeileMitte: msg.fusszeileMitte ?? vorher?.fusszeileMitte ?? null,
+    fusszeileRechts: msg.fusszeileRechts ?? vorher?.fusszeileRechts ?? null,
+    kopfZeilenAnzahl: msg.kopfZeilenAnzahl ?? vorher?.kopfZeilenAnzahl ?? 0,
+  };
+}
+
 function reducer(state, action) {
   switch (action.type) {
     case 'INIT': {
-      // Vollständiger Tabellenzustand – ersetzt state.table, state.ui bleibt erhalten
       const msg = action.payload;
       const zellen = {};
       if (msg.zellen) {
@@ -36,6 +87,7 @@ function reducer(state, action) {
       return {
         ...state,
         hinweis: null,
+        composite: null,
         table: {
           zeilen: msg.zeilen || 0,
           spalten: msg.spalten || 0,
@@ -58,7 +110,6 @@ function reducer(state, action) {
       };
     }
     case 'PATCH': {
-      // Nur geänderte Zellen mergen; Gitter, Dimensionen und Kopf-/Fußzeile aus dem neuen Modell
       const msg = action.payload;
       const neueZellen = { ...state.table.zellen };
       if (msg.zellen) {
@@ -67,6 +118,7 @@ function reducer(state, action) {
       return {
         ...state,
         hinweis: null,
+        composite: null,
         table: {
           zeilen: msg.zeilen || state.table.zeilen,
           spalten: msg.spalten || state.table.spalten,
@@ -88,6 +140,41 @@ function reducer(state, action) {
         },
       };
     }
+    case 'COMPOSITE_INIT': {
+      const msg = action.payload;
+      const panels = {};
+      if (msg.panels) {
+        msg.panels.forEach((p) => { panels[p.panelId] = panelAusNachricht(p); });
+      }
+      return {
+        ...state,
+        hinweis: null,
+        table: leererZustand,
+        composite: {
+          layout: msg.layout,
+          zoom: msg.zoom ?? 100,
+          panels,
+        },
+      };
+    }
+    case 'COMPOSITE_PATCH': {
+      const msg = action.payload;
+      const neuerePanels = { ...(state.composite?.panels || {}) };
+      if (msg.panels) {
+        msg.panels.forEach((p) => {
+          neuerePanels[p.panelId] = panelDiffAusNachricht(p, neuerePanels[p.panelId]);
+        });
+      }
+      return {
+        ...state,
+        hinweis: null,
+        composite: {
+          layout: msg.layout ?? state.composite?.layout,
+          zoom: msg.zoom ?? state.composite?.zoom ?? 100,
+          panels: neuerePanels,
+        },
+      };
+    }
     case 'HINWEIS':
       return { ...state, hinweis: action.payload };
     default:
@@ -98,11 +185,11 @@ function reducer(state, action) {
 export default function App() {
   const [state, dispatch] = useReducer(reducer, {
     table: leererZustand,
-    ui: {},          // lokaler UI-Zustand (Scroll, Zoom …) – wird von INIT nicht berührt
-    hinweis: null,   // { titel, text } oder null
+    ui: {},
+    hinweis: null,
+    composite: null,
   });
 
-  // Version-Guard: veraltete oder doppelte Events ignorieren
   const versionRef = useRef(0);
 
   useEffect(() => {
@@ -111,17 +198,25 @@ export default function App() {
     src.onmessage = (e) => {
       const msg = JSON.parse(e.data);
 
-      // Hinweis-Nachrichten haben keine Version
       if (msg.typ === 'hinweis') {
         dispatch({ type: 'HINWEIS', payload: msg });
         return;
       }
 
       if (msg.version <= versionRef.current) {
-        return; // Out-of-order oder Duplikat ignorieren
+        return;
       }
       versionRef.current = msg.version;
-      dispatch({ type: msg.typ === 'init' ? 'INIT' : 'PATCH', payload: msg });
+
+      if (msg.typ === 'composite_init') {
+        dispatch({ type: 'COMPOSITE_INIT', payload: msg });
+      } else if (msg.typ === 'composite_diff') {
+        dispatch({ type: 'COMPOSITE_PATCH', payload: msg });
+      } else if (msg.typ === 'init') {
+        dispatch({ type: 'INIT', payload: msg });
+      } else if (msg.typ === 'diff') {
+        dispatch({ type: 'PATCH', payload: msg });
+      }
     };
 
     src.onerror = () => {
@@ -131,13 +226,21 @@ export default function App() {
     return () => src.close();
   }, []);
 
-  const { table, hinweis } = state;
+  const { table, hinweis, composite } = state;
 
   useEffect(() => {
-    document.title = table.seitenTitel
-      ? `${table.seitenTitel} – PTM Live`
-      : 'PTM Live';
-  }, [table.seitenTitel]);
+    if (composite) {
+      // Titel aus erstem Panel nehmen
+      const erstesPanel = composite.panels[0];
+      document.title = erstesPanel?.seitenTitel
+        ? `${erstesPanel.seitenTitel} – PTM Live`
+        : 'PTM Live';
+    } else {
+      document.title = table.seitenTitel
+        ? `${table.seitenTitel} – PTM Live`
+        : 'PTM Live';
+    }
+  }, [table.seitenTitel, composite]);
 
   if (hinweis) {
     return (
@@ -152,6 +255,21 @@ export default function App() {
     );
   }
 
+  // Composite View
+  if (composite && composite.layout) {
+    return (
+      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+        <SplitPaneComposite
+          knoten={composite.layout}
+          panels={composite.panels}
+          sheetnamenAnzeigen={true}
+        />
+        <Signatur />
+      </div>
+    );
+  }
+
+  // Einzel-Ansicht (bestehend, unverändert)
   const hatKopfzeile = table.kopfzeileLinks?.trim()
     || table.kopfzeileMitte?.trim()
     || table.kopfzeileRechts?.trim();
@@ -195,7 +313,7 @@ export default function App() {
                     {row.map((id, c) =>
                       id
                         ? <Cell key={id} data={table.zellen[id]} />
-                        : null  // Merge-Slave → kein <td>
+                        : null
                     )}
                   </tr>
                 ))}

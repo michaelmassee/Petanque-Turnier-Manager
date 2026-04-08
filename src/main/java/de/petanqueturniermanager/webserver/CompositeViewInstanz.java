@@ -17,61 +17,51 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Kapselt einen HTTP-Server auf einem einzelnen Port mit SSE-Unterstützung.
+ * Kapselt einen HTTP-Server für einen Composite View (mehrere Panels auf einer Seite).
  * <p>
- * Stellt folgende Endpunkte bereit:
+ * Stellt dieselben Endpunkte wie {@link WebServerInstanz} bereit:
  * <ul>
  *   <li>{@code GET /} – React-App ({@code static/index.html} aus Classpath)</li>
- *   <li>{@code GET /assets/*} – Bundle-Dateien aus {@code static/assets/}</li>
- *   <li>{@code GET /images/*} – Bilder aus {@code static/images/}</li>
- *   <li>{@code GET /events} – Server-Sent-Events-Stream (JSON-Diffs)</li>
+ *   <li>{@code GET /assets/*} und {@code GET /images/*} – statische Ressourcen</li>
+ *   <li>{@code GET /events} – SSE-Stream mit {@link CompositeSseNachricht}s</li>
  * </ul>
- * <p>
- * HTTP-Handler-Threads greifen <strong>nur</strong> auf den gecachten JSON-String zu –
- * niemals direkt auf UNO. Der Cache wird ausschließlich im SheetRunner-Thread befüllt.
- * <p>
- * Bei jeder neuen SSE-Verbindung wird sofort der gecachte Init-State gesendet,
- * sodass Browser nach einem Reconnect sofort den vollständigen Tabellenzustand erhalten.
  */
-public class WebServerInstanz implements SseElternInstanz {
+public class CompositeViewInstanz implements SseElternInstanz {
 
-    private static final Logger logger = LogManager.getLogger(WebServerInstanz.class);
+    private static final Logger logger = LogManager.getLogger(CompositeViewInstanz.class);
 
     private static final int KEEPALIVE_INTERVALL_SEKUNDEN = 15;
     private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
 
-    private volatile PortKonfiguration konfiguration;
+    private volatile CompositeViewKonfiguration konfiguration;
     private final HttpServer httpServer;
     private final ScheduledExecutorService keepAliveExecutor;
     private final CopyOnWriteArrayList<SseVerbindung> sseVerbindungen = new CopyOnWriteArrayList<>();
 
     /**
-     * Gecachter vollständiger Tabellenzustand als JSON ({@code SseNachricht} mit {@code typ="init"}).
+     * Gecachter vollständiger Zustand aller Panels als JSON.
      * Wird bei jeder neuen SSE-Verbindung sofort gesendet.
-     * Schreibzugriff nur synchronisiert.
      */
     private volatile String cachedInitJson;
     private volatile boolean laeuft = false;
 
-    public WebServerInstanz(PortKonfiguration konfiguration) throws IOException {
+    public CompositeViewInstanz(CompositeViewKonfiguration konfiguration) throws IOException {
         this.konfiguration = konfiguration;
         httpServer = HttpServer.create(new InetSocketAddress(konfiguration.port()), 10);
         httpServer.setExecutor(Executors.newCachedThreadPool());
-        // Nur zwei Kontexte: SSE-Stream und alles andere (Root + Assets)
-        // Ein einziger catch-all-Handler vermeidet Routing-Probleme mit com.sun.net.httpserver
         httpServer.createContext("/events", this::handleEvents);
         httpServer.createContext("/debug/sse", this::handleDebugSse);
         httpServer.createContext("/", this::handleStatischOderRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "PTM-WebServer-KeepAlive-" + konfiguration.port());
+            var t = new Thread(r, "PTM-CompositeView-KeepAlive-" + konfiguration.port());
             t.setDaemon(true);
             return t;
         });
     }
 
-    /** Startet den HTTP-Server und den Keep-Alive-Hintergrund-Thread. */
+    /** Startet den HTTP-Server und den Keep-Alive-Hintergrundthread. */
     public void starten() {
         httpServer.start();
         laeuft = true;
@@ -80,66 +70,47 @@ public class WebServerInstanz implements SseElternInstanz {
                 KEEPALIVE_INTERVALL_SEKUNDEN,
                 KEEPALIVE_INTERVALL_SEKUNDEN,
                 TimeUnit.SECONDS);
-        logger.info("WebServer gestartet auf Port {}", konfiguration.port());
+        logger.info("CompositeView-Server gestartet auf Port {}", konfiguration.port());
     }
 
-    /**
-     * Stoppt den HTTP-Server und schließt alle offenen SSE-Verbindungen.
-     * Nach diesem Aufruf ist die Instanz nicht mehr verwendbar.
-     */
+    /** Stoppt den HTTP-Server und schließt alle offenen SSE-Verbindungen. */
     public void stoppen() {
         laeuft = false;
         keepAliveExecutor.shutdownNow();
         sseVerbindungen.forEach(SseVerbindung::schliessen);
         sseVerbindungen.clear();
         httpServer.stop(0);
-        logger.info("WebServer gestoppt auf Port {}", konfiguration.port());
+        logger.info("CompositeView-Server gestoppt auf Port {}", konfiguration.port());
     }
 
-    /** Gibt zurück ob dieser Server läuft. */
     public boolean laeuft() {
         return laeuft;
     }
 
-    /**
-     * Aktualisiert den gecachten vollständigen Init-State.
-     * Synchronisiert, um Out-of-order-Updates bei schnellen Mehrfachklicks zu verhindern.
-     *
-     * @param json serialisiertes {@code SseNachricht} mit {@code typ="init"}
-     */
     public synchronized void setCachedInitJson(String json) {
         this.cachedInitJson = json;
     }
 
-    /** Liefert den zuletzt gecachten Init-State (für neue Verbindungen). */
     public String getCachedInitJson() {
         return cachedInitJson;
     }
 
-    /** Sendet eine SSE-Nachricht an alle verbundenen Browser-Clients. */
     public void sseNachrichtPushen(String json) {
         sseVerbindungen.forEach(v -> v.senden(json));
     }
 
-    /** Entfernt eine abgebrochene SSE-Verbindung aus der Liste. */
     public void verbindungEntfernen(SseVerbindung verbindung) {
         sseVerbindungen.remove(verbindung);
         logger.debug("SSE-Verbindung auf Port {} entfernt, aktiv: {}",
                 konfiguration.port(), sseVerbindungen.size());
     }
 
-    public PortKonfiguration getKonfiguration() {
+    public CompositeViewKonfiguration getKonfiguration() {
         return konfiguration;
     }
 
-    /**
-     * Aktualisiert die Port-Konfiguration und pusht sofort den neuen Zustand an alle Clients.
-     * Darf nur aufgerufen werden wenn sich zoom oder zentrieren geändert haben.
-     *
-     * @param neueKonfiguration neue Konfiguration mit geändertem zoom/zentrieren
-     * @param neuesInitJson     serialisiertes {@code SseNachricht} mit neuem zoom/zentrieren, oder {@code null}
-     */
-    public synchronized void setKonfiguration(PortKonfiguration neueKonfiguration, String neuesInitJson) {
+    /** Aktualisiert die Konfiguration und pusht sofort den neuen gecachten Zustand. */
+    public synchronized void setKonfiguration(CompositeViewKonfiguration neueKonfiguration, String neuesInitJson) {
         this.konfiguration = neueKonfiguration;
         if (neuesInitJson != null) {
             setCachedInitJson(neuesInitJson);
@@ -147,16 +118,8 @@ public class WebServerInstanz implements SseElternInstanz {
         }
     }
 
-    // ── HTTP-Handler ─────────────────────────────────────────────────────────
+    // ── HTTP-Handler ────────────────────────────────────────────────────────────
 
-    /**
-     * Einziger HTTP-Handler für alle nicht-SSE-Requests.
-     * <ul>
-     *   <li>{@code /} → {@code index.html}</li>
-     *   <li>{@code /assets/*} → Bundle-Dateien aus {@code static/assets/}</li>
-     *   <li>Alles andere → 404</li>
-     * </ul>
-     */
     private void handleStatischOderRoot(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
@@ -176,7 +139,6 @@ public class WebServerInstanz implements SseElternInstanz {
         }
     }
 
-    /** Öffnet eine SSE-Verbindung, sendet sofort den Init-State und hält den Stream offen. */
     private void handleEvents(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
@@ -192,10 +154,9 @@ public class WebServerInstanz implements SseElternInstanz {
         OutputStream os = exchange.getResponseBody();
         var verbindung = new SseVerbindung(os, this);
         sseVerbindungen.add(verbindung);
-        logger.debug("Neue SSE-Verbindung auf Port {}, aktiv: {}",
+        logger.debug("Neue SSE-Verbindung auf CompositeView-Port {}, aktiv: {}",
                 konfiguration.port(), sseVerbindungen.size());
 
-        // Reconnect-Intervall und sofortiger Init-State
         try {
             os.write("retry: 30000\n\n".getBytes(StandardCharsets.UTF_8));
             os.flush();
@@ -203,10 +164,9 @@ public class WebServerInstanz implements SseElternInstanz {
             verbindungEntfernen(verbindung);
             return;
         }
-        verbindung.sendeInitNachricht(); // sofort vollständigen Zustand senden
+        verbindung.sendeInitNachricht();
     }
 
-    /** Gibt den gecachten Init-State als rohen JSON-Text aus (nur für Diagnose). */
     private void handleDebugSse(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
@@ -222,15 +182,11 @@ public class WebServerInstanz implements SseElternInstanz {
         }
     }
 
-    // ── Classpath-Ressource ausliefern ────────────────────────────────────────
-
     private void serviereRessource(HttpExchange exchange, String relativerPfad, String contentType)
             throws IOException {
-        // Führendes '/' entfernen – ClassLoader.getResourceAsStream() erwartet relativen Pfad
         String ressourcePfad = (STATIC_RESOURCE_PREFIX + relativerPfad).replaceFirst("^/", "");
         InputStream gefunden = getClass().getClassLoader().getResourceAsStream(ressourcePfad);
         if (gefunden == null) {
-            // Fallback: Class-basiertes Laden mit absolutem Pfad
             gefunden = getClass().getResourceAsStream("/" + ressourcePfad);
         }
         if (gefunden == null) {

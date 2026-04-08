@@ -20,9 +20,9 @@ public class SseVerbindung {
     private static final Logger logger = LogManager.getLogger(SseVerbindung.class);
 
     private final OutputStream outputStream;
-    private final WebServerInstanz elternInstanz;
+    private final SseElternInstanz elternInstanz;
 
-    public SseVerbindung(OutputStream outputStream, WebServerInstanz elternInstanz) {
+    public SseVerbindung(OutputStream outputStream, SseElternInstanz elternInstanz) {
         this.outputStream = outputStream;
         this.elternInstanz = elternInstanz;
     }

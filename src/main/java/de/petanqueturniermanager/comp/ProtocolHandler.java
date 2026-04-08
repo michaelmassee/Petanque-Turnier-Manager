@@ -31,6 +31,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.webserver.WebserverKonfigDialog;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
@@ -233,6 +234,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_POULE_TESTDATEN_TURNIER_37  = "poule_testdaten_turnier_37";
 	// Webserver
 	public static final String CMD_WEBSERVER_KONFIGURATION = "webserver_konfiguration";
+	public static final String CMD_WEBSERVER_COMPOSITE_VIEWS = "webserver_composite_views";
 	public static final String CMD_WEBSERVER_STARTEN = "webserver_starten";
 	public static final String CMD_WEBSERVER_STOPPEN = "webserver_stoppen";
 	public static final String CMD_WEBSERVER_URL_1  = "webserver_url_1";
@@ -705,6 +707,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private boolean behandleWebserverBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
 			case CMD_WEBSERVER_KONFIGURATION -> new WebserverKonfigDialog(xContext).zeigen();
+			case CMD_WEBSERVER_COMPOSITE_VIEWS -> new CompositeViewListeDialog(xContext).zeigen(null);
 			case CMD_WEBSERVER_STARTEN -> {
 				if (GlobalProperties.get().getPortKonfigurationen().isEmpty()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
@@ -972,8 +975,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
-			// Webserver: Konfiguration immer aktiv; starten/stoppen je nach Zustand
-			case CMD_WEBSERVER_KONFIGURATION                -> true;
+			// Webserver: Konfiguration und Composite Views immer aktiv; starten/stoppen je nach Zustand
+			case CMD_WEBSERVER_KONFIGURATION,
+				 CMD_WEBSERVER_COMPOSITE_VIEWS              -> true;
 			case CMD_WEBSERVER_STARTEN                      -> !WebServerManager.get().isLaeuft();
 			// Stoppen: nur das Owner-Dokument darf den WS stoppen
 			case CMD_WEBSERVER_STOPPEN                      -> WebServerManager.get().istOwnerDocument(document);

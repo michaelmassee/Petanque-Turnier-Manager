@@ -13,6 +13,34 @@ body {
   min-height: 100vh;
 }
 
+/* ── react-split-pane ─────────────────────────────────────────────────────── */
+.SplitPane {
+  height: 100% !important;
+}
+
+.Resizer {
+  background: #888;
+  opacity: 0.2;
+  z-index: 1;
+  transition: opacity 0.2s ease;
+}
+
+.Resizer:hover {
+  opacity: 0.5;
+}
+
+.Resizer.vertical {
+  cursor: col-resize;
+  width: 5px;
+  margin: 0 -2px;
+}
+
+.Resizer.horizontal {
+  cursor: row-resize;
+  height: 5px;
+  margin: -2px 0;
+}
+
 table {
   border-collapse: collapse;
   table-layout: fixed;

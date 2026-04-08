@@ -8,13 +8,19 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.gson.GsonBuilder;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
+import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
+import de.petanqueturniermanager.webserver.PanelKonfiguration;
 import de.petanqueturniermanager.webserver.PortKonfiguration;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
+import de.petanqueturniermanager.webserver.SplitKnoten;
+import de.petanqueturniermanager.webserver.SplitKnotenAdapter;
 
 public class GlobalProperties {
 
@@ -36,6 +42,16 @@ public class GlobalProperties {
 	private static final String WEBSERVER_PORT_ZENTRIEREN_SUFFIX = "_zentrieren";
 	private static final String WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
 
+	private static final String WEBSERVER_COMPOSITE_PORTS_PROP = "webserver_composite_ports";
+	private static final String WEBSERVER_COMPOSITE_PREFIX = "webserver_composite_";
+	private static final String WEBSERVER_COMPOSITE_AKTIV_SUFFIX = "_aktiv";
+	private static final String WEBSERVER_COMPOSITE_ZOOM_SUFFIX = "_zoom";
+	private static final String WEBSERVER_COMPOSITE_LAYOUT_SUFFIX = "_layout";
+	private static final String WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX = "_panel_count";
+	private static final String WEBSERVER_COMPOSITE_PANEL_INFIX = "_panel_";
+	private static final String WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX = "_sheet";
+	private static final String WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX = "_zoom";
+
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
 
 	public static final int DEFAULT_ZOOM = 100;
@@ -53,6 +69,30 @@ public class GlobalProperties {
 		@Override
 		public String toString() {
 			return port + "=" + sheetConfig;
+		}
+	}
+
+	/**
+	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
+	 */
+	public record PanelEintragRoh(String sheetConfig, int zoom) {}
+
+	/**
+	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
+	 *
+	 * @param port       TCP-Port
+	 * @param aktiv      ob dieser View aktiv ist
+	 * @param zoom       globaler Zoom-Faktor in % (10–500)
+	 * @param layoutJson JSON-serialisierter {@link SplitKnoten}-Baum
+	 * @param panels     Liste der Panel-Konfigurationen (Reihenfolge = panelIndex)
+	 */
+	public record CompositeViewEintragRoh(
+			int port, boolean aktiv, int zoom,
+			String layoutJson,
+			List<PanelEintragRoh> panels) {
+		@Override
+		public String toString() {
+			return port + " [composite, panels=" + panels.size() + "]";
 		}
 	}
 
@@ -248,6 +288,141 @@ public class GlobalProperties {
 		}
 
 		return eintraege;
+	}
+
+	// ----------------------------------------------------
+	// Composite View-Konfiguration
+	// ----------------------------------------------------
+
+	/**
+	 * Gibt alle gespeicherten Composite View-Einträge zurück (aktiv und inaktiv).
+	 */
+	public List<CompositeViewEintragRoh> getCompositeViewEintraege() {
+		List<CompositeViewEintragRoh> eintraege = new ArrayList<>();
+		try {
+			var portsStr = propMap.getOrDefault(WEBSERVER_COMPOSITE_PORTS_PROP, "").trim();
+			if (portsStr.isEmpty()) return eintraege;
+
+			for (var portStr : portsStr.split(",")) {
+				portStr = portStr.trim();
+				if (portStr.isEmpty()) continue;
+				try {
+					int port = Integer.parseInt(portStr);
+					boolean aktiv = getBoolean(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_AKTIV_SUFFIX);
+					int zoom = parseZoom(propMap.get(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_ZOOM_SUFFIX));
+					String layoutJson = propMap.getOrDefault(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, "").trim();
+					if (layoutJson.isEmpty()) continue;
+
+					int panelCount = 0;
+					try {
+						panelCount = Integer.parseInt(propMap.getOrDefault(
+								WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, "0").trim());
+					} catch (NumberFormatException ignored) {
+					}
+
+					List<PanelEintragRoh> panels = new ArrayList<>();
+					for (int i = 0; i < panelCount; i++) {
+						String sheetConfig = propMap.getOrDefault(
+								WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, "").trim();
+						if (sheetConfig.isEmpty()) continue;
+						int panelZoom = parseZoom(propMap.get(
+								WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
+						panels.add(new PanelEintragRoh(sheetConfig, panelZoom));
+					}
+					if (!panels.isEmpty()) {
+						eintraege.add(new CompositeViewEintragRoh(port, aktiv, zoom, layoutJson, panels));
+					}
+				} catch (Exception e) {
+					logger.warn("Ungültiger Composite-Port-Eintrag '{}'", portStr, e);
+				}
+			}
+		} catch (Exception e) {
+			logger.warn("Fehler beim Lesen der Composite-View-Einträge", e);
+		}
+		return eintraege;
+	}
+
+	/**
+	 * Gibt alle aktiven Composite Views als fertige Konfigurationsobjekte zurück.
+	 */
+	public List<CompositeViewKonfiguration> getCompositeViewKonfigurationen() {
+		List<CompositeViewKonfiguration> konfigs = new ArrayList<>();
+		var gson = new GsonBuilder()
+				.registerTypeAdapter(SplitKnoten.class, new SplitKnotenAdapter())
+				.create();
+
+		for (var eintrag : getCompositeViewEintraege()) {
+			if (!eintrag.aktiv()) continue;
+			try {
+				SplitKnoten wurzel = gson.fromJson(eintrag.layoutJson(), SplitKnoten.class);
+				if (wurzel == null) {
+					logger.warn("Ungültiger Layout-JSON für Port {}", eintrag.port());
+					continue;
+				}
+				List<PanelKonfiguration> panels = new ArrayList<>();
+				for (var p : eintrag.panels()) {
+					var resolver = SheetResolverFactory.erstellen(p.sheetConfig());
+					if (resolver == null) {
+						logger.warn("Resolver null für Panel-Config '{}'", p.sheetConfig());
+						continue;
+					}
+					panels.add(new PanelKonfiguration(resolver, p.zoom()));
+				}
+				if (!panels.isEmpty()) {
+					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.zoom(), wurzel, panels));
+				}
+			} catch (Exception e) {
+				logger.error("Fehler bei Composite-View-Konfiguration {}", eintrag, e);
+			}
+		}
+		return konfigs;
+	}
+
+	/**
+	 * Speichert alle Composite View-Einträge in der Properties-Datei.
+	 * Löscht zuvor alle alten Composite-Einträge.
+	 */
+	public void speichernCompositeViews(List<CompositeViewEintragRoh> eintraege) {
+		try {
+			// Alte Einträge löschen
+			for (var alt : getCompositeViewEintraege()) {
+				String prefix = WEBSERVER_COMPOSITE_PREFIX + alt.port();
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX);
+				for (int i = 0; i < alt.panels().size(); i++) {
+					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
+					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
+				}
+			}
+			propMap.remove(WEBSERVER_COMPOSITE_PORTS_PROP);
+
+			if (!eintraege.isEmpty()) {
+				var ports = new StringBuilder();
+				for (var eintrag : eintraege) {
+					if (!ports.isEmpty()) ports.append(",");
+					ports.append(eintrag.port());
+					String prefix = WEBSERVER_COMPOSITE_PREFIX + eintrag.port();
+					if (eintrag.aktiv())
+						propMap.put(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX, "true");
+					if (eintrag.zoom() != DEFAULT_ZOOM)
+						propMap.put(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX, String.valueOf(eintrag.zoom()));
+					propMap.put(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX, eintrag.layoutJson());
+					propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, String.valueOf(eintrag.panels().size()));
+					for (int i = 0; i < eintrag.panels().size(); i++) {
+						var panel = eintrag.panels().get(i);
+						propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());
+						if (panel.zoom() != DEFAULT_ZOOM)
+							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
+					}
+				}
+				propMap.put(WEBSERVER_COMPOSITE_PORTS_PROP, ports.toString());
+			}
+			speichernDatei();
+		} catch (Exception e) {
+			logger.error("Fehler beim Speichern der Composite Views", e);
+		}
 	}
 
 	// ----------------------------------------------------

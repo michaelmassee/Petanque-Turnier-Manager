@@ -16,12 +16,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XModifyBroadcaster;
 
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -46,16 +48,20 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 public final class WebServerManager {
 
     private static final Logger logger = LogManager.getLogger(WebServerManager.class);
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(SplitKnoten.class, new SplitKnotenAdapter())
+            .create();
     private static final WebServerManager INSTANCE = new WebServerManager();
 
     /** Maximale Anzahl URL-Slots im Menü. */
     private static final int MAX_URL_SLOTS = 10;
 
-    /** Alle laufenden Instanzen (alle konfigurierten Ports). */
+    /** Alle laufenden Einzel-Instanzen (alle konfigurierten Ports). */
     private final List<WebServerInstanz> instanzen = new ArrayList<>();
     /** Die ersten MAX_URL_SLOTS Instanzen (nach Port sortiert) für Menü-URL-Anzeige. */
     private final List<WebServerInstanz> slots = new ArrayList<>(MAX_URL_SLOTS);
+    /** Alle laufenden Composite-View-Instanzen. */
+    private final List<CompositeViewInstanz> compositeInstanzen = new ArrayList<>();
 
     private final TabellenMapper mapper = new TabellenMapper();
     private final DiffEngine diffEngine = new DiffEngine();
@@ -67,6 +73,13 @@ public final class WebServerManager {
     private final Map<Integer, String> letzteTitel = new ConcurrentHashMap<>();
     /** Monoton steigende Version pro Port (port → AtomicInteger). */
     private final Map<Integer, AtomicInteger> versionen = new ConcurrentHashMap<>();
+
+    /** Letzte Panel-Modelle pro Composite-Port und Panel-ID (port → panelId → TabelleModel). */
+    private final Map<Integer, Map<Integer, TabelleModel>> letzteCompositeModelle = new ConcurrentHashMap<>();
+    /** Letzte Panel-Titel pro Composite-Port und Panel-ID (port → panelId → Titel). */
+    private final Map<Integer, Map<Integer, String>> letzteCompositeTitel = new ConcurrentHashMap<>();
+    /** Monoton steigende Version pro Composite-Port (port → AtomicInteger). */
+    private final Map<Integer, AtomicInteger> compositeVersionen = new ConcurrentHashMap<>();
 
     /** Dokument, das den WebServer gestartet hat – nur dieses darf ihn wieder stoppen. */
     private XSpreadsheetDocument ownerDocument = null;
@@ -93,14 +106,17 @@ public final class WebServerManager {
             return;
         }
         var portKonfigs = new ArrayList<>(GlobalProperties.get().getPortKonfigurationen());
-        if (portKonfigs.isEmpty()) {
+        var compositeKonfigs = new ArrayList<>(GlobalProperties.get().getCompositeViewKonfigurationen());
+        if (portKonfigs.isEmpty() && compositeKonfigs.isEmpty()) {
             logger.info("Keine Webserver-Ports konfiguriert, kein Start");
             return;
         }
         instanzen.clear();
         slots.clear();
+        compositeInstanzen.clear();
         portKonfigs.sort(Comparator.comparingInt(PortKonfiguration::port));
         safeProcessBoxInfo(I18n.get("webserver.prozessbox.starten"));
+
         for (var konfig : portKonfigs) {
             try {
                 var instanz = new WebServerInstanz(konfig);
@@ -123,7 +139,28 @@ public final class WebServerManager {
                 safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", konfig.port(), e.getMessage()));
             }
         }
-        if (!instanzen.isEmpty()) {
+
+        for (var konfig : compositeKonfigs) {
+            try {
+                var instanz = new CompositeViewInstanz(konfig);
+                instanz.starten();
+                instanz.setCachedInitJson(GSON.toJson(CompositeSseNachricht.hinweis(
+                        I18n.get("webserver.hinweis.kein.dokument.titel"),
+                        I18n.get("webserver.hinweis.kein.dokument.text"))));
+                compositeInstanzen.add(instanz);
+                compositeVersionen.put(konfig.port(), new AtomicInteger(0));
+                letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
+                letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
+                logger.info("Composite-View-Server gestartet auf Port {}", konfig.port());
+                safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
+            } catch (IOException e) {
+                logger.error("Fehler beim Starten des Composite-View-Servers auf Port {}: {}",
+                        konfig.port(), e.getMessage(), e);
+                safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", konfig.port(), e.getMessage()));
+            }
+        }
+
+        if (!instanzen.isEmpty() || !compositeInstanzen.isEmpty()) {
             laeuft = true;
             ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
             logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
@@ -149,11 +186,18 @@ public final class WebServerManager {
         for (var instanz : instanzen) {
             instanz.stoppen();
         }
+        for (var instanz : compositeInstanzen) {
+            instanz.stoppen();
+        }
         instanzen.clear();
         slots.clear();
+        compositeInstanzen.clear();
         letzteModelle.clear();
         letzteTitel.clear();
         versionen.clear();
+        letzteCompositeModelle.clear();
+        letzteCompositeTitel.clear();
+        compositeVersionen.clear();
         laeuft = false;
         letzterSheetnamenAnzeigen = false;
         ownerDocument = null;
@@ -224,12 +268,53 @@ public final class WebServerManager {
                         instanz.setKonfiguration(neueKonfig, neuesJson);
                     });
         }
+
+        var compositeEintraege = GlobalProperties.get().getCompositeViewEintraege();
+        for (var instanz : compositeInstanzen) {
+            int port = instanz.getKonfiguration().port();
+            compositeEintraege.stream()
+                    .filter(e -> e.port() == port)
+                    .findFirst()
+                    .ifPresent(e -> {
+                        if (!globalGeaendert && e.zoom() == instanz.getKonfiguration().zoom()) {
+                            return;
+                        }
+                        var panelModelle = letzteCompositeModelle.get(port);
+                        var panelTitel = letzteCompositeTitel.get(port);
+                        if (panelModelle == null || panelModelle.isEmpty()) {
+                            return;
+                        }
+                        var alleInitPanels = new ArrayList<CompositePanelNachricht>();
+                        var konfig = instanz.getKonfiguration();
+                        for (int i = 0; i < konfig.panels().size(); i++) {
+                            var vollModell = panelModelle.get(i);
+                            var panelKonfig = konfig.panels().get(i);
+                            if (vollModell != null) {
+                                alleInitPanels.add(CompositePanelNachricht.init(
+                                        i, vollModell,
+                                        panelTitel != null ? panelTitel.getOrDefault(i, "") : "",
+                                        panelKonfig.zoom()));
+                            }
+                        }
+                        if (!alleInitPanels.isEmpty()) {
+                            int version = compositeVersionen.get(port).incrementAndGet();
+                            String neuesJson = GSON.toJson(CompositeSseNachricht.init(
+                                    version, alleInitPanels, konfig.wurzel(), e.zoom()));
+                            instanz.setKonfiguration(
+                                    new CompositeViewKonfiguration(port, e.zoom(), konfig.wurzel(), konfig.panels()),
+                                    neuesJson);
+                        }
+                    });
+        }
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
         registriereModifyListenerFallsNoetig(ws);
         for (var instanz : instanzen) {
             renderUndPushen(instanz, ws);
+        }
+        for (var instanz : compositeInstanzen) {
+            renderUndPushenComposite(instanz, ws);
         }
     }
 
@@ -326,6 +411,94 @@ public final class WebServerManager {
         }
     }
 
+    private void renderUndPushenComposite(CompositeViewInstanz instanz, WorkingSpreadsheet ws) {
+        int port = instanz.getKonfiguration().port();
+        var konfig = instanz.getKonfiguration();
+        var panelModelle = letzteCompositeModelle.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
+        var panelTitel = letzteCompositeTitel.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
+        try {
+            var panelNachrichten = new ArrayList<CompositePanelNachricht>();
+            boolean irgendeineAenderung = false;
+            boolean erstesRendering = false;
+
+            for (int i = 0; i < konfig.panels().size(); i++) {
+                var panelKonfig = konfig.panels().get(i);
+                var sheetOpt = panelKonfig.resolver().resolve(ws);
+                if (sheetOpt.isEmpty()) {
+                    sendeCompositeHinweis(instanz,
+                            I18n.get("webserver.hinweis.sheet.nicht.gefunden.titel"),
+                            I18n.get("webserver.hinweis.sheet.nicht.gefunden.text",
+                                    panelKonfig.resolver().getAnzeigeName()));
+                    return;
+                }
+                var sheet = sheetOpt.get();
+                String neuerTitel = baueSeitenTitel(panelKonfig.resolver(), sheet);
+                TabelleModel neuesModell = mapper.map(sheet, ws.getWorkingSpreadsheetDocument());
+                TabelleModel altesModell = panelModelle.get(i);
+                String alterTitel = panelTitel.get(i);
+
+                if (altesModell != null && layoutGeaendert(altesModell, neuesModell)) {
+                    altesModell = null;
+                }
+
+                TabelleModel diffModell = diffEngine.diff(altesModell, neuesModell);
+                boolean panelGeaendert = altesModell == null
+                        || !diffModell.getZellen().isEmpty()
+                        || kopfFusszeileGeaendert(altesModell, neuesModell)
+                        || !java.util.Objects.equals(alterTitel, neuerTitel);
+
+                if (altesModell == null) {
+                    erstesRendering = true;
+                }
+
+                panelModelle.put(i, neuesModell);
+                panelTitel.put(i, neuerTitel);
+
+                if (panelGeaendert) {
+                    irgendeineAenderung = true;
+                }
+                // Beim ersten Rendering (altesModell == null) vollständiges Modell senden,
+                // sonst nur Diff wenn nötig
+                TabelleModel zuSendendesModell = (altesModell == null) ? neuesModell : diffModell;
+                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom()));
+            }
+
+            if (!irgendeineAenderung) {
+                return;
+            }
+
+            int version = compositeVersionen.get(port).incrementAndGet();
+
+            // Init-Cache mit vollem State aller Panels befüllen
+            var alleInitPanels = new ArrayList<CompositePanelNachricht>();
+            for (int i = 0; i < konfig.panels().size(); i++) {
+                var vollModell = panelModelle.get(i);
+                var panelKonfig = konfig.panels().get(i);
+                if (vollModell != null) {
+                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom()));
+                }
+            }
+            CompositeSseNachricht initNachricht = CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom());
+            instanz.setCachedInitJson(GSON.toJson(initNachricht));
+
+            // Push: beim ersten Rendering init, sonst diff mit geänderten Panels
+            CompositeSseNachricht push = erstesRendering
+                    ? initNachricht
+                    : CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom());
+            instanz.sseNachrichtPushen(GSON.toJson(push));
+
+        } catch (Exception e) {
+            logger.error("Fehler beim Rendern des Composite Views für Port {}: {}", port, e.getMessage(), e);
+            safeProcessBoxFehler(I18n.get("webserver.prozessbox.render.fehler", port, e.getMessage()));
+        }
+    }
+
+    private void sendeCompositeHinweis(CompositeViewInstanz instanz, String titel, String text) {
+        String json = GSON.toJson(CompositeSseNachricht.hinweis(titel, text));
+        instanz.setCachedInitJson(json);
+        instanz.sseNachrichtPushen(json);
+    }
+
     /**
      * Baut den Seitentitel aus dem Anzeigenamen des Resolvers und – wenn vorhanden – der laufenden Nummer.
      * Beispiel: "Spielrunde" + Nummer 3 → "Spielrunde 3"
@@ -346,6 +519,9 @@ public final class WebServerManager {
     private void sendeHinweisAnAlle(String titel, String text) {
         for (var instanz : instanzen) {
             sendeHinweis(instanz, titel, text);
+        }
+        for (var instanz : compositeInstanzen) {
+            sendeCompositeHinweis(instanz, titel, text);
         }
     }
 
