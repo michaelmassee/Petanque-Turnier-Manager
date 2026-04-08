@@ -120,6 +120,7 @@ import de.petanqueturniermanager.toolbar.ToolbarAktionDispatcher;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.toolbar.TurnierSystemAuswahlDialog;
+import de.petanqueturniermanager.toolbar.TurnierSystemNeueDateiAuswahlDialog;
 
 /**
  * UNO ProtocolHandler für das benutzerdefinierte Protokoll "ptm:".
@@ -263,6 +264,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
+	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
 	// Turnier Modus
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
@@ -664,6 +666,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_START:
 				new TurnierSystemAuswahlDialog(ws).zeige();
 				break;
+			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI:
+				new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
+				break;
 			case CMD_TOOLBAR_WEITER:
 				ToolbarAktionDispatcher.weiter(ws);
 				break;
@@ -996,6 +1001,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER,
 				 CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN;
+			// Neues Turnier in neuer Datei – immer aktiviert (unabhängig vom aktuellen Dokument)
+			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI             -> true;
 			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
 			default -> false;

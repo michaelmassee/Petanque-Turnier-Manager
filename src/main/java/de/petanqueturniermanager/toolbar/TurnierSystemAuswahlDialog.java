@@ -18,6 +18,8 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 
+import com.sun.star.uno.XComponentContext;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -48,7 +50,7 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
     private static final String CTL_BTN_OK        = "btnOk";
     private static final String CTL_BTN_ABBRECHEN = "btnAbbrechen";
 
-    private static final TurnierSystem[] AUSWAHL_SYSTEME = {
+    protected static final TurnierSystem[] AUSWAHL_SYSTEME = {
         TurnierSystem.SUPERMELEE,
         TurnierSystem.SCHWEIZER,
         TurnierSystem.MAASTRICHTER,
@@ -58,12 +60,22 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
         TurnierSystem.KO
     };
 
-    private final WorkingSpreadsheet ws;
-    private XListBox listBox;
+    private WorkingSpreadsheet ws;
+    protected XListBox listBox;
 
     public TurnierSystemAuswahlDialog(WorkingSpreadsheet ws) {
         super(ws.getxContext());
         this.ws = ws;
+    }
+
+    /**
+     * Konstruktor für Unterklassen, die kein bestehendes Dokument benötigen.
+     * {@code ws} bleibt {@code null} – {@link #beiOkGeklickt()} muss in der Unterklasse
+     * vollständig überschrieben werden.
+     */
+    protected TurnierSystemAuswahlDialog(XComponentContext xContext) {
+        super(xContext);
+        this.ws = null;
     }
 
     public void zeige() throws com.sun.star.uno.Exception {
@@ -139,22 +151,23 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
         }
 
         logger.info("Turnier-Start: {}", gewaehltesTurnierSystem.getBezeichnung());
-        starteNeueTurnier(gewaehltesTurnierSystem);
+        starteNeueTurnierInDokument(ws, gewaehltesTurnierSystem);
     }
 
     private boolean isTurnierBereitsVorhanden() {
         return new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument() != TurnierSystem.KEIN;
     }
 
-    private void starteNeueTurnier(TurnierSystem system) throws Exception {
+    protected static void starteNeueTurnierInDokument(WorkingSpreadsheet zielWs, TurnierSystem system)
+            throws Exception {
         switch (system) {
-            case SUPERMELEE   -> new MeldeListeSheet_New(ws).start();
-            case SCHWEIZER    -> new SchweizerMeldeListeSheetNew(ws).start();
-            case MAASTRICHTER -> new MaastrichterMeldeListeSheetNew(ws).start();
-            case POULE        -> new PouleMeldeListeSheetNew(ws).start();
-            case LIGA         -> new LigaMeldeListeSheetNew(ws).start();
-            case JGJ          -> new JGJMeldeListeSheet_New(ws).start();
-            case KO           -> new KoMeldeListeSheetNew(ws).start();
+            case SUPERMELEE   -> new MeldeListeSheet_New(zielWs).start();
+            case SCHWEIZER    -> new SchweizerMeldeListeSheetNew(zielWs).start();
+            case MAASTRICHTER -> new MaastrichterMeldeListeSheetNew(zielWs).start();
+            case POULE        -> new PouleMeldeListeSheetNew(zielWs).start();
+            case LIGA         -> new LigaMeldeListeSheetNew(zielWs).start();
+            case JGJ          -> new JGJMeldeListeSheet_New(zielWs).start();
+            case KO           -> new KoMeldeListeSheetNew(zielWs).start();
             default           -> logger.warn("Unbekanntes Turniersystem für Start-Aktion: {}", system);
         }
     }

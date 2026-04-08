@@ -229,18 +229,26 @@
                 </node>
 
 
-<!--                <node oor:name="m13" oor:op="replace">
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 13: Neues Turnier in neuer Datei -->
+                <node oor:name="m13" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>.uno:NewDoc?DocType=scalc</value>
+                        <value>ptm:toolbar_neu_in_neuer_datei</value>
                     </prop>
                     <prop oor:name="Title">
-                        <value xml:lang="de">Neue Tabelle</value>
-                        <value xml:lang="en">New Spreadsheet</value>
+                        <value xml:lang="de">Neues Turnier in neuer Datei</value>
+                        <value xml:lang="en">New Tournament in New File</value>
+                        <value xml:lang="es">Nuevo torneo en nuevo archivo</value>
+                        <value xml:lang="fr">Nouveau tournoi dans un nouveau fichier</value>
+                        <value xml:lang="nl">Nieuw toernooi in nieuw bestand</value>
                     </prop>
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
                     </prop>
-                </node>-->
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
 
 
                 <node oor:name="m14" oor:op="replace">
@@ -465,6 +473,20 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-webserver-stoppen.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.neu_in_neuer_datei" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_neu_in_neuer_datei</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-neu-in-neuer-datei.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-neu-in-neuer-datei.png</value>
                     </prop>
                 </node>
             </node>

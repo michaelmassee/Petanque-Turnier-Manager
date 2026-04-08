@@ -83,6 +83,17 @@ public class OfficeDocumentHelper {
 		return Lo.qi(XSpreadsheetDocument.class, doc);
 	}
 
+	/**
+	 * Erstellt ein neues, sichtbares Calc-Dokument ohne Hidden-Flag,
+	 * sodass es sofort in einem eigenen Frame angezeigt wird.
+	 *
+	 * @return das neue XSpreadsheetDocument, oder {@code null} bei Fehler
+	 */
+	public XSpreadsheetDocument createSichtbaresCalc() {
+		XComponent doc = createDoc(CALC_STR, new PropertyValue[0]);
+		return Lo.qi(XSpreadsheetDocument.class, doc);
+	}
+
 	private XComponent createDoc(String docType) {
 		return createDoc(docType, PropertyValueHelper.from().add("Hidden", true).propList());
 	}
