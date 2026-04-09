@@ -13,6 +13,7 @@ import java.util.Map;
 public record CompositePanelNachricht(
         int panelId,
         int zoom,
+        boolean zentriert,
         String seitenTitel,
         Integer zeilen,
         Integer spalten,
@@ -31,9 +32,9 @@ public record CompositePanelNachricht(
     /**
      * Erstellt eine vollständige Panel-Nachricht (init) aus einem TabelleModel.
      */
-    static CompositePanelNachricht init(int panelId, TabelleModel modell, String seitenTitel, int zoom) {
+    static CompositePanelNachricht init(int panelId, TabelleModel modell, String seitenTitel, int zoom, boolean zentriert) {
         return new CompositePanelNachricht(
-                panelId, zoom, seitenTitel,
+                panelId, zoom, zentriert, seitenTitel,
                 modell.getZeilen(), modell.getSpalten(),
                 modell.getGitter(),
                 new ArrayList<>(modell.getZellen().values()),
@@ -46,9 +47,9 @@ public record CompositePanelNachricht(
     /**
      * Erstellt eine differenzielle Panel-Nachricht (diff) aus einem DiffModel.
      */
-    static CompositePanelNachricht diff(int panelId, TabelleModel diffModell, String seitenTitel, int zoom) {
+    static CompositePanelNachricht diff(int panelId, TabelleModel diffModell, String seitenTitel, int zoom, boolean zentriert) {
         return new CompositePanelNachricht(
-                panelId, zoom, seitenTitel,
+                panelId, zoom, zentriert, seitenTitel,
                 diffModell.getZeilen(), diffModell.getSpalten(),
                 diffModell.getGitter(),
                 new ArrayList<>(diffModell.getZellen().values()),

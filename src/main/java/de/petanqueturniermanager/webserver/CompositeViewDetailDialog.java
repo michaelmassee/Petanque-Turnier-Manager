@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,18 +61,19 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private static final int ZEILE_H = 14;
     private static final int KOPF_Y = 5;
     private static final int TRENN_Y1 = 22;
-    private static final int LAYOUT_BEREICH_Y = 26;
-    private static final int PANEL_BTN_H = 14;
-    private static final int PANEL_BTN_W = 80;
-    private static final int PANEL_BTN_X_START = 5;
     private static final int AKTIONS_BTN_Y_OFFSET = 18;
-    private static final int TRENN_Y2_OFFSET = 34;
-    private static final int PANEL_KONFIG_Y_OFFSET = 38;
     private static final int FOOTER_Y = 312;
     private static final int OK_X = 235;
     private static final int OK_W = 50;
     private static final int ABBRECHEN_X = 290;
     private static final int ABBRECHEN_W = 125;
+
+    // ---- Vorschau-Konstanten ----
+    private static final int VORSCHAU_X             = 5;
+    private static final int VORSCHAU_BREITE        = 400;
+    private static final int VORSCHAU_HOEHE         = 100;
+    private static final int VORSCHAU_LABEL_ABSTAND = 10;
+    private static final int VORSCHAU_MIN_GROESSE   = 10;
 
     // ---- UNO-Referenzen ----
     private XMultiServiceFactory xMSF;
@@ -91,6 +92,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<String> panelSheets = new ArrayList<>();
     /** Zoom pro Panel (Index = Panel-ID). */
     private final List<Integer> panelZooms = new ArrayList<>();
+    /** Zentriert-Flag pro Panel (Index = Panel-ID). */
+    private final List<Boolean> panelZentriert = new ArrayList<>();
     /** Index des aktuell ausgewählten Panels (-1 = keines). */
     private int ausgewaehlterPanelIndex = 0;
 
@@ -158,6 +161,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void initialisiereZustand() {
         panelSheets.clear();
         panelZooms.clear();
+        panelZentriert.clear();
 
         if (initialerEintrag != null && !initialerEintrag.panels().isEmpty()) {
             // Bestehenden Eintrag laden
@@ -176,12 +180,14 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             for (var p : initialerEintrag.panels()) {
                 panelSheets.add(p.sheetConfig());
                 panelZooms.add(p.zoom());
+                panelZentriert.add(p.zentriert());
             }
         } else {
             // Neuer Eintrag: ein Panel, leerer Baum
             wurzel = new SplitBlatt(0);
             panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
             panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
+            panelZentriert.add(Boolean.FALSE);
         }
         ausgewaehlterPanelIndex = 0;
     }
@@ -197,8 +203,6 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         fuegeEditEin("txtZoom", String.valueOf(zoom), 108, KOPF_Y, 30, ZEILE_H);
         fuegeCheckBoxEin("cbAktiv", I18n.get("webserver.konfig.tabelle.kopf.aktiv"), 150, KOPF_Y, 60, ZEILE_H, aktiv == 1);
 
-        fuegeFixedTextEin("lblLayout", I18n.get("webserver.composite.konfig.bereich.layout"), 5, TRENN_Y1, 200, ZEILE_H);
-
         // OK/Abbrechen
         fuegeButtonEin("btnOk", I18n.get("dialog.ok"), OK_X, FOOTER_Y, OK_W, ZEILE_H, (short) PushButtonType.STANDARD_value);
         fuegeButtonEin("btnAbbrechen", I18n.get("dialog.abbrechen"), ABBRECHEN_X, FOOTER_Y, ABBRECHEN_W, ZEILE_H, (short) PushButtonType.CANCEL_value);
@@ -208,38 +212,11 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void aktualisiereDynamischeArea() throws com.sun.star.uno.Exception {
         bereinigeDynamischeControls();
 
-        // Panel-Buttons für alle Blattknoten zeichnen
-        var blaetter = sammleBlaetter(wurzel);
-        int panelBtnY = LAYOUT_BEREICH_Y;
-        for (int i = 0; i < blaetter.size(); i++) {
-            int panelId = blaetter.get(i);
-            String sheetName = panelId < panelSheets.size() ? panelSheets.get(panelId) : "?";
-            String label = ausgewaehlterPanelIndex == panelId
-                    ? I18n.get("webserver.composite.konfig.panel.label.ausgewaehlt", panelId, sheetName)
-                    : I18n.get("webserver.composite.konfig.panel.label", panelId, sheetName);
-            int x = PANEL_BTN_X_START + i * (PANEL_BTN_W + 4);
-            if (x + PANEL_BTN_W > DIALOG_BREITE - 5) {
-                // Zweite Zeile wenn nötig
-                panelBtnY += PANEL_BTN_H + 2;
-                x = PANEL_BTN_X_START;
-            }
-            fuegeButtonEinDyn("panelBtn_" + panelId, label, x, panelBtnY, PANEL_BTN_W, PANEL_BTN_H,
-                    (short) PushButtonType.STANDARD_value);
-            final int pid = panelId;
-            registriereActionListenerDyn("panelBtn_" + pid, () -> waehlePanel(pid));
-        }
-
-        // Aktions-Buttons
-        int aktionY = panelBtnY + AKTIONS_BTN_Y_OFFSET;
-        fuegeButtonEinDyn("btnSplitH",
-                I18n.get("webserver.composite.konfig.split.h"),
-                5, aktionY, 100, ZEILE_H, (short) PushButtonType.STANDARD_value);
-        fuegeButtonEinDyn("btnSplitV",
-                I18n.get("webserver.composite.konfig.split.v"),
-                109, aktionY, 100, ZEILE_H, (short) PushButtonType.STANDARD_value);
-        fuegeButtonEinDyn("btnBlattLoeschen",
-                I18n.get("webserver.composite.konfig.blatt.loeschen"),
-                213, aktionY, 80, ZEILE_H, (short) PushButtonType.STANDARD_value);
+        // Aktions-Buttons (direkt unter dem Kopf)
+        int aktionY = TRENN_Y1;
+        fuegeButtonEinDyn("btnSplitH", I18n.get("webserver.composite.konfig.split.h"), 5, aktionY, 100, ZEILE_H);
+        fuegeButtonEinDyn("btnSplitV", I18n.get("webserver.composite.konfig.split.v"), 109, aktionY, 100, ZEILE_H);
+        fuegeButtonEinDyn("btnBlattLoeschen", I18n.get("webserver.composite.konfig.blatt.loeschen"), 213, aktionY, 80, ZEILE_H);
         registriereActionListenerDyn("btnSplitH", this::splitzeHorizontal);
         registriereActionListenerDyn("btnSplitV", this::splitzeVertikal);
         registriereActionListenerDyn("btnBlattLoeschen", this::loescheBlatt);
@@ -253,24 +230,27 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         }
 
         // Panel-Konfiguration für das ausgewählte Panel
-        int konfY = aktionY + TRENN_Y2_OFFSET;
-        fuegeFixedTextEinDyn("lblPanelKonfig",
-                I18n.get("webserver.composite.konfig.bereich.panel"),
-                5, konfY - 14, 200, ZEILE_H);
+        int konfY = aktionY + AKTIONS_BTN_Y_OFFSET;
+        fuegeFixedTextEinDyn("lblPanelKonfig", I18n.get("webserver.composite.konfig.bereich.panel"), 5, konfY, 200, ZEILE_H);
 
-        fuegeFixedTextEinDyn("lblPanelSheet",
-                I18n.get("webserver.composite.konfig.panel.sheet.label"),
-                5, konfY, 25, ZEILE_H);
-        String aktuellesSheet = ausgewaehlterPanelIndex < panelSheets.size()
-                ? panelSheets.get(ausgewaehlterPanelIndex) : "";
-        fuegeComboBoxEinDyn("cbPanelSheet", ladeComboBoxItems(), 33, konfY, 150, ZEILE_H, aktuellesSheet);
+        int konfFelderY = konfY + ZEILE_H;
+        String aktuellesSheet = ausgewaehlterPanelIndex < panelSheets.size() ? panelSheets.get(ausgewaehlterPanelIndex) : "";
+        fuegeFixedTextEinDyn("lblPanelSheet", I18n.get("webserver.composite.konfig.panel.sheet.label"), 5, konfFelderY, 25, ZEILE_H);
+        fuegeComboBoxEinDyn("cbPanelSheet", ladeComboBoxItems(), 33, konfFelderY, 150, ZEILE_H, aktuellesSheet);
 
-        fuegeFixedTextEinDyn("lblPanelZoom",
-                I18n.get("webserver.composite.konfig.panel.zoom.label"),
-                190, konfY, 25, ZEILE_H);
-        int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size()
-                ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
-        fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 218, konfY, 35, ZEILE_H);
+        int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
+        fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 190, konfFelderY, 25, ZEILE_H);
+        fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 218, konfFelderY, 35, ZEILE_H);
+
+        boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
+        fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 258, konfFelderY, 80, ZEILE_H, aktuellZentriert);
+
+        // ---- Layout-Vorschau ----
+        int vorschauLabelY = konfFelderY + ZEILE_H + VORSCHAU_LABEL_ABSTAND;
+        fuegeFixedTextEinDyn("lblVorschau", I18n.get("webserver.composite.konfig.bereich.vorschau"), 5, vorschauLabelY, 200, ZEILE_H);
+
+        int vorschauY = vorschauLabelY + ZEILE_H;
+        zeichneKnotenVorschau(wurzel, VORSCHAU_X, vorschauY, VORSCHAU_BREITE, VORSCHAU_HOEHE, new AtomicInteger());
     }
 
     // ---- Panel-Builder-Aktionen ----
@@ -290,6 +270,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int neuerPanelIndex = panelSheets.size();
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
+        panelZentriert.add(Boolean.FALSE);
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.horizontal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -301,6 +282,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int neuerPanelIndex = panelSheets.size();
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
+        panelZentriert.add(Boolean.FALSE);
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.vertikal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -315,6 +297,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         // Panel-Config entfernen und Indizes im Baum anpassen
         panelSheets.remove(zuLoeschenderIndex);
         panelZooms.remove(zuLoeschenderIndex);
+        panelZentriert.remove(zuLoeschenderIndex);
         wurzel = renumeriereNachLoeschen(wurzel, zuLoeschenderIndex);
         ausgewaehlterPanelIndex = Math.min(ausgewaehlterPanelIndex, panelSheets.size() - 1);
         aktualisiereUndFange();
@@ -333,8 +316,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void beimOkKlick() {
         speicherePanelKonfiguration();
         try {
-            var eintrag = validiereUndBaue();
-            ergebnis = eintrag;
+            ergebnis = validiereUndBaue();
             xDialog.endExecute();
         } catch (UngueltigeEingabeException e) {
             MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
@@ -347,6 +329,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void speicherePanelKonfiguration() {
         XControl sheetCtrl = xcc.getControl("cbPanelSheet");
         XControl zoomCtrl = xcc.getControl("txtPanelZoom");
+        XControl zentriertCtrl = xcc.getControl("cbPanelZentriert");
         if (sheetCtrl != null && ausgewaehlterPanelIndex < panelSheets.size()) {
             panelSheets.set(ausgewaehlterPanelIndex,
                     Lo.qi(XTextComponent.class, sheetCtrl).getText().trim());
@@ -356,6 +339,9 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 int z = Integer.parseInt(Lo.qi(XTextComponent.class, zoomCtrl).getText().trim());
                 panelZooms.set(ausgewaehlterPanelIndex, z);
             } catch (NumberFormatException ignored) {}
+        }
+        if (zentriertCtrl != null && ausgewaehlterPanelIndex < panelZentriert.size()) {
+            panelZentriert.set(ausgewaehlterPanelIndex, Lo.qi(XCheckBox.class, zentriertCtrl).getState() == 1);
         }
     }
 
@@ -399,7 +385,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         List<PanelEintragRoh> panels = new ArrayList<>();
         for (int i = 0; i < panelSheets.size(); i++) {
             int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
-            panels.add(new PanelEintragRoh(panelSheets.get(i), pZoom));
+            boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
+            panels.add(new PanelEintragRoh(panelSheets.get(i), pZoom, pZentriert));
         }
 
         // Layout serialisieren
@@ -412,25 +399,6 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     // ---- Baum-Operationen (statisch für Testbarkeit) ----
-
-    /**
-     * Sammelt alle Panel-Indices aus den Blattknoten in Inorder-Reihenfolge.
-     */
-    static List<Integer> sammleBlaetter(SplitKnoten knoten) {
-        List<Integer> result = new ArrayList<>();
-        sammleBlaetterRekursiv(knoten, result);
-        return result;
-    }
-
-    private static void sammleBlaetterRekursiv(SplitKnoten knoten, List<Integer> result) {
-        switch (knoten) {
-            case SplitBlatt blatt -> result.add(blatt.panel());
-            case SplitTeilung teilung -> {
-                sammleBlaetterRekursiv(teilung.links(), result);
-                sammleBlaetterRekursiv(teilung.rechts(), result);
-            }
-        }
-    }
 
     /**
      * Ersetzt den Blattknoten mit dem gegebenen Panel-Index durch einen neuen Knoten.
@@ -470,7 +438,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     private static boolean istBlattMitIndex(SplitKnoten knoten, int index) {
-        return knoten instanceof SplitBlatt b && b.panel() == index;
+        return knoten instanceof SplitBlatt(int panel) && panel == index;
     }
 
     /**
@@ -578,15 +546,21 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         dynamischeControlNamen.add(name);
     }
 
-    private void fuegeButtonEinDyn(String name, String label, int x, int y, int w, int h, short pushButtonType)
+    private void fuegeButtonEinDyn(String name, String label, int x, int y, int w, int h)
             throws com.sun.star.uno.Exception {
-        fuegeButtonEin(name, label, x, y, w, h, pushButtonType);
+        fuegeButtonEin(name, label, x, y, w, h, (short) PushButtonType.STANDARD_value);
         dynamischeControlNamen.add(name);
     }
 
     private void fuegeEditEinDyn(String name, String text, int x, int y, int w, int h)
             throws com.sun.star.uno.Exception {
         fuegeEditEin(name, text, x, y, w, h);
+        dynamischeControlNamen.add(name);
+    }
+
+    private void fuegeCheckBoxEinDyn(String name, String label, int x, int y, int w, int h, boolean checked)
+            throws com.sun.star.uno.Exception {
+        fuegeCheckBoxEin(name, label, x, y, w, h, checked);
         dynamischeControlNamen.add(name);
     }
 
@@ -603,6 +577,76 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         props.setPropertyValue("Dropdown",       Boolean.TRUE);
         cont.insertByName(name, model);
         dynamischeControlNamen.add(name);
+    }
+
+    /**
+     * Fügt einen flachen Button als dynamisches Control ein.
+     * Dient als anklickbares Tile für die Layout-Vorschau.
+     *
+     * @param aktiv   Ob dieses Panel aktuell ausgewählt ist (erhält "▶ "-Prefix)
+     * @param tooltip Vollständiger Sheet-Name für den HelpText/Tooltip
+     */
+    private void fuegeVorschauButtonEinDyn(String name, String label, int x, int y, int w, int h,
+            boolean aktiv, String tooltip)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlButtonModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label",     aktiv ? "▶ " + label : label);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width",     w);
+        props.setPropertyValue("Height",    h);
+        if (tooltip != null && !tooltip.isEmpty()) {
+            props.setPropertyValue("HelpText", tooltip);
+        }
+        cont.insertByName(name, model);
+        dynamischeControlNamen.add(name);
+    }
+
+    /**
+     * Zeichnet den Split-Baum rekursiv als beschriftete GroupBox-Kacheln in den Vorschaubereich.
+     * <p>
+     * Jeder Blattknoten wird als bordiertes Rechteck dargestellt. Das aktive Panel erhält
+     * ein "▶ "-Prefix und ist per Mausklick anwählbar.
+     * Mindestgröße je Kachel: {@value VORSCHAU_MIN_GROESSE}px.
+     *
+     * @param zaehler  {@link AtomicInteger} für eindeutige Control-Namen
+     */
+    private void zeichneKnotenVorschau(SplitKnoten knoten, int x, int y, int w, int h,
+            AtomicInteger zaehler)
+            throws com.sun.star.uno.Exception {
+        w = Math.max(w, VORSCHAU_MIN_GROESSE);
+        h = Math.max(h, VORSCHAU_MIN_GROESSE);
+        switch (knoten) {
+            case SplitBlatt blatt -> {
+                String sheetName = blatt.panel() < panelSheets.size() ? panelSheets.get(blatt.panel()) : "?";
+                String kurzName = sheetName != null && sheetName.length() > 20
+                        ? sheetName.substring(0, 18) + "…"
+                        : sheetName;
+                int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
+                boolean pZentriert = blatt.panel() < panelZentriert.size() && panelZentriert.get(blatt.panel());
+                String suffix = " [" + pZoom + "%" + (pZentriert ? " Z" : "") + "]";
+                String label = "P" + blatt.panel() + ": " + kurzName + suffix;
+                boolean istAktiv = blatt.panel() == ausgewaehlterPanelIndex;
+                String ctlName = "vorschauBox_" + zaehler.getAndIncrement();
+                fuegeVorschauButtonEinDyn(ctlName, label, x, y, w, h, istAktiv, sheetName);
+                final int panelId = blatt.panel();
+                registriereActionListenerDyn(ctlName, () -> waehlePanel(panelId));
+            }
+            case SplitTeilung teilung -> {
+                if (teilung.istHorizontal()) {
+                    int linksBreite  = (int) (w * teilung.groesse() / 100.0f);
+                    int rechtsBreite = w - linksBreite;
+                    zeichneKnotenVorschau(teilung.links(),  x,              y, linksBreite,  h, zaehler);
+                    zeichneKnotenVorschau(teilung.rechts(), x + linksBreite, y, rechtsBreite, h, zaehler);
+                } else {
+                    int obenHoehe  = (int) (h * teilung.groesse() / 100.0f);
+                    int untenHoehe = h - obenHoehe;
+                    zeichneKnotenVorschau(teilung.links(),  x, y,             w, obenHoehe,  zaehler);
+                    zeichneKnotenVorschau(teilung.rechts(), x, y + obenHoehe, w, untenHoehe, zaehler);
+                }
+            }
+        }
     }
 
     private void registriereActionListenerDyn(String ctlName, Runnable aktion) {

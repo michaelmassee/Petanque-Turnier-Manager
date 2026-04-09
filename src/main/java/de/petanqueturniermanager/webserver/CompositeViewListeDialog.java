@@ -302,7 +302,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         }
         String neuesSheet = Lo.qi(XTextComponent.class, panel0Ctrl).getText().trim();
         var neuePanels = new ArrayList<>(panels);
-        neuePanels.set(0, new PanelEintragRoh(neuesSheet, panels.get(0).zoom()));
+        neuePanels.set(0, new PanelEintragRoh(neuesSheet, panels.get(0).zoom(), panels.get(0).zentriert()));
         return neuePanels;
     }
 

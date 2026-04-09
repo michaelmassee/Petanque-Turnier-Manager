@@ -293,7 +293,7 @@ public final class WebServerManager {
                                 alleInitPanels.add(CompositePanelNachricht.init(
                                         i, vollModell,
                                         panelTitel != null ? panelTitel.getOrDefault(i, "") : "",
-                                        panelKonfig.zoom()));
+                                        panelKonfig.zoom(), panelKonfig.zentriert()));
                             }
                         }
                         if (!alleInitPanels.isEmpty()) {
@@ -460,7 +460,7 @@ public final class WebServerManager {
                 // Beim ersten Rendering (altesModell == null) vollständiges Modell senden,
                 // sonst nur Diff wenn nötig
                 TabelleModel zuSendendesModell = (altesModell == null) ? neuesModell : diffModell;
-                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom()));
+                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom(), panelKonfig.zentriert()));
             }
 
             if (!irgendeineAenderung) {
@@ -475,7 +475,7 @@ public final class WebServerManager {
                 var vollModell = panelModelle.get(i);
                 var panelKonfig = konfig.panels().get(i);
                 if (vollModell != null) {
-                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom()));
+                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom(), panelKonfig.zentriert()));
                 }
             }
             CompositeSseNachricht initNachricht = CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom());
