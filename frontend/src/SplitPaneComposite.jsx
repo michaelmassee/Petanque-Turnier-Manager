@@ -13,9 +13,8 @@ import Panel from './Panel';
  *
  * @param {Object} props.knoten - aktueller Baumknoten
  * @param {Object[]} props.panels - Array aller Panel-Tabellenzustände (Index = Panel-ID)
- * @param {boolean} props.sheetnamenAnzeigen - ob Blattnamen angezeigt werden
  */
-export default function SplitPaneComposite({ knoten, panels, sheetnamenAnzeigen }) {
+export default function SplitPaneComposite({ knoten, panels }) {
   if (!knoten) return null;
 
   // Blattknoten
@@ -23,7 +22,7 @@ export default function SplitPaneComposite({ knoten, panels, sheetnamenAnzeigen 
     const table = panels[knoten.panel];
     return (
       <div style={{ height: '100%', overflow: 'auto' }}>
-        <Panel table={table} sheetnamenAnzeigen={sheetnamenAnzeigen} />
+        <Panel table={table} sheetnamenAnzeigen={table?.blattnameAnzeigen ?? false} />
       </div>
     );
   }
@@ -39,12 +38,10 @@ export default function SplitPaneComposite({ knoten, panels, sheetnamenAnzeigen 
       <SplitPaneComposite
         knoten={knoten.links}
         panels={panels}
-        sheetnamenAnzeigen={sheetnamenAnzeigen}
       />
       <SplitPaneComposite
         knoten={knoten.rechts}
         panels={panels}
-        sheetnamenAnzeigen={sheetnamenAnzeigen}
       />
     </SplitPane>
   );

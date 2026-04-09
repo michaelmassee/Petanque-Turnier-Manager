@@ -26,7 +26,7 @@ const leererZustand = {
   kopfZeilenAnzahl: 0,
 };
 
-function panelAusNachricht(msg, vorherigePanels) {
+function panelAusNachricht(msg) {
   const zellen = {};
   if (msg.zellen) {
     msg.zellen.forEach((z) => { zellen[z.id] = z; });
@@ -34,6 +34,8 @@ function panelAusNachricht(msg, vorherigePanels) {
   return {
     panelId: msg.panelId,
     zoom: msg.zoom ?? 100,
+    zentrieren: msg.zentriert ?? false,
+    blattnameAnzeigen: msg.blattnameAnzeigen ?? false,
     seitenTitel: msg.seitenTitel ?? null,
     zeilen: msg.zeilen || 0,
     spalten: msg.spalten || 0,
@@ -59,6 +61,8 @@ function panelDiffAusNachricht(msg, vorher) {
   return {
     panelId: msg.panelId,
     zoom: msg.zoom ?? vorher?.zoom ?? 100,
+    zentrieren: msg.zentriert ?? vorher?.zentrieren ?? false,
+    blattnameAnzeigen: msg.blattnameAnzeigen ?? vorher?.blattnameAnzeigen ?? false,
     seitenTitel: msg.seitenTitel ?? vorher?.seitenTitel ?? null,
     zeilen: msg.zeilen || vorher?.zeilen || 0,
     spalten: msg.spalten || vorher?.spalten || 0,
@@ -262,7 +266,6 @@ export default function App() {
         <SplitPaneComposite
           knoten={composite.layout}
           panels={composite.panels}
-          sheetnamenAnzeigen={true}
         />
         <Signatur />
       </div>

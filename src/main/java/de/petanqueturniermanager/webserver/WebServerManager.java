@@ -58,10 +58,10 @@ public final class WebServerManager {
 
     /** Alle laufenden Einzel-Instanzen (alle konfigurierten Ports). */
     private final List<WebServerInstanz> instanzen = new ArrayList<>();
-    /** Die ersten MAX_URL_SLOTS Instanzen (nach Port sortiert) für Menü-URL-Anzeige. */
-    private final List<WebServerInstanz> slots = new ArrayList<>(MAX_URL_SLOTS);
     /** Alle laufenden Composite-View-Instanzen. */
     private final List<CompositeViewInstanz> compositeInstanzen = new ArrayList<>();
+    /** Die ersten MAX_URL_SLOTS Instanzen (Einzel + Composite, nach Port sortiert) für Menü-URL-Anzeige. */
+    private final List<WebServerSlot> slots = new ArrayList<>(MAX_URL_SLOTS);
 
     private final TabellenMapper mapper = new TabellenMapper();
     private final DiffEngine diffEngine = new DiffEngine();
@@ -127,9 +127,6 @@ public final class WebServerManager {
                         I18n.get("webserver.hinweis.kein.dokument.titel"),
                         I18n.get("webserver.hinweis.kein.dokument.text"))));
                 instanzen.add(instanz);
-                if (slots.size() < MAX_URL_SLOTS) {
-                    slots.add(instanz);
-                }
                 versionen.put(konfig.port(), new AtomicInteger(0));
                 logger.info("Webserver gestartet auf Port {}", konfig.port());
                 safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
@@ -159,6 +156,16 @@ public final class WebServerManager {
                 safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", konfig.port(), e.getMessage()));
             }
         }
+
+        // Slots (Einzel + Composite) nach Port sortiert befüllen
+        var alleInstanzen = new ArrayList<WebServerSlot>(instanzen.size() + compositeInstanzen.size());
+        alleInstanzen.addAll(instanzen);
+        alleInstanzen.addAll(compositeInstanzen);
+        alleInstanzen.stream()
+                .filter(WebServerSlot::laeuft)
+                .sorted(Comparator.comparingInt(WebServerSlot::getPort))
+                .limit(MAX_URL_SLOTS)
+                .forEach(slots::add);
 
         if (!instanzen.isEmpty() || !compositeInstanzen.isEmpty()) {
             laeuft = true;
@@ -276,24 +283,27 @@ public final class WebServerManager {
                     .filter(e -> e.port() == port)
                     .findFirst()
                     .ifPresent(e -> {
-                        if (!globalGeaendert && e.zoom() == instanz.getKonfiguration().zoom()) {
-                            return;
-                        }
                         var panelModelle = letzteCompositeModelle.get(port);
                         var panelTitel = letzteCompositeTitel.get(port);
                         if (panelModelle == null || panelModelle.isEmpty()) {
                             return;
                         }
-                        var alleInitPanels = new ArrayList<CompositePanelNachricht>();
+                        // Neue Panel-Einstellungen aus GlobalProperties mit alten Resolvern zusammenführen
                         var konfig = instanz.getKonfiguration();
+                        var alleInitPanels = new ArrayList<CompositePanelNachricht>();
+                        var neuePanelKonfigs = new ArrayList<PanelKonfiguration>();
                         for (int i = 0; i < konfig.panels().size(); i++) {
+                            var altePanelKonfig = konfig.panels().get(i);
                             var vollModell = panelModelle.get(i);
-                            var panelKonfig = konfig.panels().get(i);
+                            int pZoom = i < e.panels().size() ? e.panels().get(i).zoom() : altePanelKonfig.zoom();
+                            boolean pZentriert = i < e.panels().size() ? e.panels().get(i).zentriert() : altePanelKonfig.zentriert();
+                            boolean pBlattnameAnzeigen = i < e.panels().size() ? e.panels().get(i).blattnameAnzeigen() : altePanelKonfig.blattnameAnzeigen();
+                            neuePanelKonfigs.add(new PanelKonfiguration(altePanelKonfig.resolver(), pZoom, pZentriert, pBlattnameAnzeigen));
                             if (vollModell != null) {
                                 alleInitPanels.add(CompositePanelNachricht.init(
                                         i, vollModell,
                                         panelTitel != null ? panelTitel.getOrDefault(i, "") : "",
-                                        panelKonfig.zoom(), panelKonfig.zentriert()));
+                                        pZoom, pZentriert, pBlattnameAnzeigen));
                             }
                         }
                         if (!alleInitPanels.isEmpty()) {
@@ -301,7 +311,7 @@ public final class WebServerManager {
                             String neuesJson = GSON.toJson(CompositeSseNachricht.init(
                                     version, alleInitPanels, konfig.wurzel(), e.zoom()));
                             instanz.setKonfiguration(
-                                    new CompositeViewKonfiguration(port, e.zoom(), konfig.wurzel(), konfig.panels()),
+                                    new CompositeViewKonfiguration(port, e.zoom(), konfig.wurzel(), neuePanelKonfigs),
                                     neuesJson);
                         }
                     });
@@ -421,15 +431,15 @@ public final class WebServerManager {
             boolean irgendeineAenderung = false;
             boolean erstesRendering = false;
 
+            String erstesNichtGefundenesPanel = null;
             for (int i = 0; i < konfig.panels().size(); i++) {
                 var panelKonfig = konfig.panels().get(i);
                 var sheetOpt = panelKonfig.resolver().resolve(ws);
                 if (sheetOpt.isEmpty()) {
-                    sendeCompositeHinweis(instanz,
-                            I18n.get("webserver.hinweis.sheet.nicht.gefunden.titel"),
-                            I18n.get("webserver.hinweis.sheet.nicht.gefunden.text",
-                                    panelKonfig.resolver().getAnzeigeName()));
-                    return;
+                    if (erstesNichtGefundenesPanel == null) {
+                        erstesNichtGefundenesPanel = panelKonfig.resolver().getAnzeigeName();
+                    }
+                    continue;
                 }
                 var sheet = sheetOpt.get();
                 String neuerTitel = baueSeitenTitel(panelKonfig.resolver(), sheet);
@@ -460,10 +470,15 @@ public final class WebServerManager {
                 // Beim ersten Rendering (altesModell == null) vollständiges Modell senden,
                 // sonst nur Diff wenn nötig
                 TabelleModel zuSendendesModell = (altesModell == null) ? neuesModell : diffModell;
-                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom(), panelKonfig.zentriert()));
+                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom(), panelKonfig.zentriert(), panelKonfig.blattnameAnzeigen()));
             }
 
             if (!irgendeineAenderung) {
+                if (erstesNichtGefundenesPanel != null) {
+                    sendeCompositeHinweis(instanz,
+                            I18n.get("webserver.hinweis.sheet.nicht.gefunden.titel"),
+                            I18n.get("webserver.hinweis.sheet.nicht.gefunden.text", erstesNichtGefundenesPanel));
+                }
                 return;
             }
 
@@ -475,7 +490,7 @@ public final class WebServerManager {
                 var vollModell = panelModelle.get(i);
                 var panelKonfig = konfig.panels().get(i);
                 if (vollModell != null) {
-                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom(), panelKonfig.zentriert()));
+                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom(), panelKonfig.zentriert(), panelKonfig.blattnameAnzeigen()));
                 }
             }
             CompositeSseNachricht initNachricht = CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom());
@@ -556,7 +571,7 @@ public final class WebServerManager {
         }
         var instanz = slots.get(slot);
         return (instanz != null && instanz.laeuft())
-                ? buildUrl(instanz.getKonfiguration().port())
+                ? buildUrl(instanz.getPort())
                 : null;
     }
 
@@ -578,8 +593,8 @@ public final class WebServerManager {
         if (instanz == null || !instanz.laeuft()) {
             return null;
         }
-        var url = buildUrl(instanz.getKonfiguration().port());
-        var name = instanz.getKonfiguration().resolver().getAnzeigeName();
+        var url = buildUrl(instanz.getPort());
+        var name = instanz.getAnzeigeName();
         return name + " – " + url;
     }
 

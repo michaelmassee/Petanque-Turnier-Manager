@@ -14,6 +14,7 @@ public record CompositePanelNachricht(
         int panelId,
         int zoom,
         boolean zentriert,
+        boolean blattnameAnzeigen,
         String seitenTitel,
         Integer zeilen,
         Integer spalten,
@@ -32,9 +33,9 @@ public record CompositePanelNachricht(
     /**
      * Erstellt eine vollständige Panel-Nachricht (init) aus einem TabelleModel.
      */
-    static CompositePanelNachricht init(int panelId, TabelleModel modell, String seitenTitel, int zoom, boolean zentriert) {
+    static CompositePanelNachricht init(int panelId, TabelleModel modell, String seitenTitel, int zoom, boolean zentriert, boolean blattnameAnzeigen) {
         return new CompositePanelNachricht(
-                panelId, zoom, zentriert, seitenTitel,
+                panelId, zoom, zentriert, blattnameAnzeigen, seitenTitel,
                 modell.getZeilen(), modell.getSpalten(),
                 modell.getGitter(),
                 new ArrayList<>(modell.getZellen().values()),
@@ -47,9 +48,9 @@ public record CompositePanelNachricht(
     /**
      * Erstellt eine differenzielle Panel-Nachricht (diff) aus einem DiffModel.
      */
-    static CompositePanelNachricht diff(int panelId, TabelleModel diffModell, String seitenTitel, int zoom, boolean zentriert) {
+    static CompositePanelNachricht diff(int panelId, TabelleModel diffModell, String seitenTitel, int zoom, boolean zentriert, boolean blattnameAnzeigen) {
         return new CompositePanelNachricht(
-                panelId, zoom, zentriert, seitenTitel,
+                panelId, zoom, zentriert, blattnameAnzeigen, seitenTitel,
                 diffModell.getZeilen(), diffModell.getSpalten(),
                 diffModell.getGitter(),
                 new ArrayList<>(diffModell.getZellen().values()),

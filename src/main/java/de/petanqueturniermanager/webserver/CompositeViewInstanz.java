@@ -16,6 +16,8 @@ import org.apache.logging.log4j.Logger;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.petanqueturniermanager.helper.i18n.I18n;
+
 /**
  * Kapselt einen HTTP-Server für einen Composite View (mehrere Panels auf einer Seite).
  * <p>
@@ -26,7 +28,7 @@ import com.sun.net.httpserver.HttpServer;
  *   <li>{@code GET /events} – SSE-Stream mit {@link CompositeSseNachricht}s</li>
  * </ul>
  */
-public class CompositeViewInstanz implements SseElternInstanz {
+public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
 
     private static final Logger logger = LogManager.getLogger(CompositeViewInstanz.class);
 
@@ -103,6 +105,16 @@ public class CompositeViewInstanz implements SseElternInstanz {
         sseVerbindungen.remove(verbindung);
         logger.debug("SSE-Verbindung auf Port {} entfernt, aktiv: {}",
                 konfiguration.port(), sseVerbindungen.size());
+    }
+
+    @Override
+    public int getPort() {
+        return konfiguration.port();
+    }
+
+    @Override
+    public String getAnzeigeName() {
+        return I18n.get("webserver.compositeview.anzeigename");
     }
 
     public CompositeViewKonfiguration getKonfiguration() {

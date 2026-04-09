@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -212,12 +213,24 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private void fuegeZeileHinzu() {
         try {
             leseZeilenDatenAusControls();
-            var detailDialog = new CompositeViewDetailDialog(xContext, null, berechneNaechstenFreienPort(), komboBoxItems);
+            var tempIdx = new int[]{-1};
+            Consumer<CompositeViewEintragRoh> callback = e -> {
+                if (tempIdx[0] == -1) {
+                    eintraege.add(e);
+                    tempIdx[0] = eintraege.size() - 1;
+                } else {
+                    eintraege.set(tempIdx[0], e);
+                }
+                speichernUndAktualisieren();
+            };
+            var detailDialog = new CompositeViewDetailDialog(
+                    xContext, null, berechneNaechstenFreienPort(), komboBoxItems, callback);
             var neuerEintrag = detailDialog.zeigen();
-            if (neuerEintrag != null) {
+            if (neuerEintrag != null && tempIdx[0] == -1) {
+                // OK ohne vorheriges Anwenden: normaler Add-Pfad
                 eintraege.add(neuerEintrag);
-                aktualisiereZeilenArea();
             }
+            aktualisiereZeilenArea();
         } catch (com.sun.star.uno.Exception e) {
             logger.error("Fehler beim Hinzufügen eines Composite Views: {}", e.getMessage(), e);
         }
@@ -227,15 +240,25 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         try {
             leseZeilenDatenAusControls();
             var eintrag = eintraege.get(idx);
-            var detailDialog = new CompositeViewDetailDialog(xContext, eintrag, eintrag.port(), komboBoxItems);
+            Consumer<CompositeViewEintragRoh> callback = geaendert -> {
+                eintraege.set(idx, geaendert);
+                speichernUndAktualisieren();
+            };
+            var detailDialog = new CompositeViewDetailDialog(
+                    xContext, eintrag, eintrag.port(), komboBoxItems, callback);
             var geaenderterEintrag = detailDialog.zeigen();
             if (geaenderterEintrag != null) {
-                eintraege.set(idx, geaenderterEintrag);
-                aktualisiereZeilenArea();
+                eintraege.set(idx, geaenderterEintrag); // idempotent falls Callback schon gesetzt hat
             }
+            aktualisiereZeilenArea();
         } catch (com.sun.star.uno.Exception e) {
             logger.error("Fehler beim Bearbeiten des Composite Views: {}", e.getMessage(), e);
         }
+    }
+
+    private void speichernUndAktualisieren() {
+        GlobalProperties.get().speichernCompositeViews(eintraege);
+        WebServerManager.get().konfigurationGeaendert();
     }
 
     private void loescheZeile(int idx) {

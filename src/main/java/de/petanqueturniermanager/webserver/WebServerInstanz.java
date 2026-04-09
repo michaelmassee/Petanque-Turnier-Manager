@@ -33,7 +33,7 @@ import com.sun.net.httpserver.HttpServer;
  * Bei jeder neuen SSE-Verbindung wird sofort der gecachte Init-State gesendet,
  * sodass Browser nach einem Reconnect sofort den vollständigen Tabellenzustand erhalten.
  */
-public class WebServerInstanz implements SseElternInstanz {
+public class WebServerInstanz implements SseElternInstanz, WebServerSlot {
 
     private static final Logger logger = LogManager.getLogger(WebServerInstanz.class);
 
@@ -126,6 +126,16 @@ public class WebServerInstanz implements SseElternInstanz {
         sseVerbindungen.remove(verbindung);
         logger.debug("SSE-Verbindung auf Port {} entfernt, aktiv: {}",
                 konfiguration.port(), sseVerbindungen.size());
+    }
+
+    @Override
+    public int getPort() {
+        return konfiguration.port();
+    }
+
+    @Override
+    public String getAnzeigeName() {
+        return konfiguration.resolver().getAnzeigeName();
     }
 
     public PortKonfiguration getKonfiguration() {

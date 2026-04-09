@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,6 +64,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private static final int TRENN_Y1 = 22;
     private static final int AKTIONS_BTN_Y_OFFSET = 18;
     private static final int FOOTER_Y = 312;
+    private static final int UEBERNEHMEN_X = 155;
+    private static final int UEBERNEHMEN_W = 75;
     private static final int OK_X = 235;
     private static final int OK_W = 50;
     private static final int ABBRECHEN_X = 290;
@@ -85,6 +88,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final CompositeViewEintragRoh initialerEintrag;
     private final int initialerPort;
     private final String[] komboBoxItems;
+    /** Wird bei „Übernehmen" und „OK" mit dem validierten Eintrag aufgerufen. */
+    private final Consumer<CompositeViewEintragRoh> anwendenCallback;
 
     /** Wurzelknoten des aktuellen Split-Baums. */
     private SplitKnoten wurzel;
@@ -94,6 +99,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<Integer> panelZooms = new ArrayList<>();
     /** Zentriert-Flag pro Panel (Index = Panel-ID). */
     private final List<Boolean> panelZentriert = new ArrayList<>();
+    /** Blattname-Anzeigen-Flag pro Panel (Index = Panel-ID). */
+    private final List<Boolean> panelBlattnameAnzeigen = new ArrayList<>();
     /** Index des aktuell ausgewählten Panels (-1 = keines). */
     private int ausgewaehlterPanelIndex = 0;
 
@@ -111,11 +118,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             XComponentContext xContext,
             CompositeViewEintragRoh initialerEintrag,
             int initialerPort,
-            String[] komboBoxItems) {
+            String[] komboBoxItems,
+            Consumer<CompositeViewEintragRoh> anwendenCallback) {
         super(xContext);
         this.initialerEintrag = initialerEintrag;
         this.initialerPort = initialerPort;
         this.komboBoxItems = komboBoxItems;
+        this.anwendenCallback = anwendenCallback;
     }
 
     /**
@@ -162,6 +171,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelSheets.clear();
         panelZooms.clear();
         panelZentriert.clear();
+        panelBlattnameAnzeigen.clear();
 
         if (initialerEintrag != null && !initialerEintrag.panels().isEmpty()) {
             // Bestehenden Eintrag laden
@@ -181,6 +191,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 panelSheets.add(p.sheetConfig());
                 panelZooms.add(p.zoom());
                 panelZentriert.add(p.zentriert());
+                panelBlattnameAnzeigen.add(p.blattnameAnzeigen());
             }
         } else {
             // Neuer Eintrag: ein Panel, leerer Baum
@@ -188,6 +199,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
             panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
             panelZentriert.add(Boolean.FALSE);
+            panelBlattnameAnzeigen.add(Boolean.FALSE);
         }
         ausgewaehlterPanelIndex = 0;
     }
@@ -203,9 +215,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         fuegeEditEin("txtZoom", String.valueOf(zoom), 108, KOPF_Y, 30, ZEILE_H);
         fuegeCheckBoxEin("cbAktiv", I18n.get("webserver.konfig.tabelle.kopf.aktiv"), 150, KOPF_Y, 60, ZEILE_H, aktiv == 1);
 
-        // OK/Abbrechen
+        // Übernehmen / OK / Abbrechen
+        fuegeButtonEin("btnUebernehmen", I18n.get("webserver.composite.dialog.detail.uebernehmen"),
+                UEBERNEHMEN_X, FOOTER_Y, UEBERNEHMEN_W, ZEILE_H, (short) PushButtonType.STANDARD_value);
         fuegeButtonEin("btnOk", I18n.get("dialog.ok"), OK_X, FOOTER_Y, OK_W, ZEILE_H, (short) PushButtonType.STANDARD_value);
         fuegeButtonEin("btnAbbrechen", I18n.get("dialog.abbrechen"), ABBRECHEN_X, FOOTER_Y, ABBRECHEN_W, ZEILE_H, (short) PushButtonType.CANCEL_value);
+        registriereActionListenerStatisch("btnUebernehmen", this::beimUebernehmenKlick);
         registriereActionListenerStatisch("btnOk", this::beimOkKlick);
     }
 
@@ -245,8 +260,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
         fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 258, konfFelderY, 80, ZEILE_H, aktuellZentriert);
 
+        int konfFelderY2 = konfFelderY + ZEILE_H;
+        boolean aktuellBlattnameAnzeigen = ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(ausgewaehlterPanelIndex);
+        fuegeCheckBoxEinDyn("cbPanelBlattnameAnzeigen", I18n.get("webserver.composite.konfig.panel.blattname.label"), 5, konfFelderY2, 150, ZEILE_H, aktuellBlattnameAnzeigen);
+
         // ---- Layout-Vorschau ----
-        int vorschauLabelY = konfFelderY + ZEILE_H + VORSCHAU_LABEL_ABSTAND;
+        int vorschauLabelY = konfFelderY2 + ZEILE_H + VORSCHAU_LABEL_ABSTAND;
         fuegeFixedTextEinDyn("lblVorschau", I18n.get("webserver.composite.konfig.bereich.vorschau"), 5, vorschauLabelY, 200, ZEILE_H);
 
         int vorschauY = vorschauLabelY + ZEILE_H;
@@ -271,6 +290,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
         panelZentriert.add(Boolean.FALSE);
+        panelBlattnameAnzeigen.add(Boolean.FALSE);
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.horizontal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -283,6 +303,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
         panelZentriert.add(Boolean.FALSE);
+        panelBlattnameAnzeigen.add(Boolean.FALSE);
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.vertikal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -298,6 +319,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelSheets.remove(zuLoeschenderIndex);
         panelZooms.remove(zuLoeschenderIndex);
         panelZentriert.remove(zuLoeschenderIndex);
+        panelBlattnameAnzeigen.remove(zuLoeschenderIndex);
         wurzel = renumeriereNachLoeschen(wurzel, zuLoeschenderIndex);
         ausgewaehlterPanelIndex = Math.min(ausgewaehlterPanelIndex, panelSheets.size() - 1);
         aktualisiereUndFange();
@@ -311,12 +333,31 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         }
     }
 
-    // ---- OK-Klick ----
+    // ---- Übernehmen / OK-Klick ----
+
+    private void beimUebernehmenKlick() {
+        speicherePanelKonfiguration();
+        try {
+            var eintrag = validiereUndBaue();
+            if (anwendenCallback != null) {
+                anwendenCallback.accept(eintrag);
+            }
+        } catch (UngueltigeEingabeException e) {
+            MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("webserver.composite.konfig.fehler.titel"))
+                    .message(e.getMessage())
+                    .show();
+        }
+        // Dialog bleibt offen
+    }
 
     private void beimOkKlick() {
         speicherePanelKonfiguration();
         try {
             ergebnis = validiereUndBaue();
+            if (anwendenCallback != null) {
+                anwendenCallback.accept(ergebnis);
+            }
             xDialog.endExecute();
         } catch (UngueltigeEingabeException e) {
             MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
@@ -330,6 +371,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         XControl sheetCtrl = xcc.getControl("cbPanelSheet");
         XControl zoomCtrl = xcc.getControl("txtPanelZoom");
         XControl zentriertCtrl = xcc.getControl("cbPanelZentriert");
+        XControl blattnameCtrl = xcc.getControl("cbPanelBlattnameAnzeigen");
         if (sheetCtrl != null && ausgewaehlterPanelIndex < panelSheets.size()) {
             panelSheets.set(ausgewaehlterPanelIndex,
                     Lo.qi(XTextComponent.class, sheetCtrl).getText().trim());
@@ -342,6 +384,9 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         }
         if (zentriertCtrl != null && ausgewaehlterPanelIndex < panelZentriert.size()) {
             panelZentriert.set(ausgewaehlterPanelIndex, Lo.qi(XCheckBox.class, zentriertCtrl).getState() == 1);
+        }
+        if (blattnameCtrl != null && ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size()) {
+            panelBlattnameAnzeigen.set(ausgewaehlterPanelIndex, Lo.qi(XCheckBox.class, blattnameCtrl).getState() == 1);
         }
     }
 
@@ -386,7 +431,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         for (int i = 0; i < panelSheets.size(); i++) {
             int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
             boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
-            panels.add(new PanelEintragRoh(panelSheets.get(i), pZoom, pZentriert));
+            boolean pBlattnameAnzeigen = i < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(i);
+            panels.add(new PanelEintragRoh(panelSheets.get(i), pZoom, pZentriert, pBlattnameAnzeigen));
         }
 
         // Layout serialisieren

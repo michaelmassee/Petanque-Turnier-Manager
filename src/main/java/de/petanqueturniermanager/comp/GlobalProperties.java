@@ -52,6 +52,7 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX = "_sheet";
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX = "_zoom";
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX = "_zentriert";
+	private static final String WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX = "_blattname";
 
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
 
@@ -76,7 +77,7 @@ public class GlobalProperties {
 	/**
 	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
 	 */
-	public record PanelEintragRoh(String sheetConfig, int zoom, boolean zentriert) {}
+	public record PanelEintragRoh(String sheetConfig, int zoom, boolean zentriert, boolean blattnameAnzeigen) {}
 
 	/**
 	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
@@ -329,7 +330,8 @@ public class GlobalProperties {
 						int panelZoom = parseZoom(propMap.get(
 								WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
 						boolean panelZentriert = getBoolean(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
-						panels.add(new PanelEintragRoh(sheetConfig, panelZoom, panelZentriert));
+						boolean panelBlattnameAnzeigen = getBoolean(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
+						panels.add(new PanelEintragRoh(sheetConfig, panelZoom, panelZentriert, panelBlattnameAnzeigen));
 					}
 					if (!panels.isEmpty()) {
 						eintraege.add(new CompositeViewEintragRoh(port, aktiv, zoom, layoutJson, panels));
@@ -368,7 +370,7 @@ public class GlobalProperties {
 						logger.warn("Resolver null für Panel-Config '{}'", p.sheetConfig());
 						continue;
 					}
-					panels.add(new PanelKonfiguration(resolver, p.zoom(), p.zentriert()));
+					panels.add(new PanelKonfiguration(resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen()));
 				}
 				if (!panels.isEmpty()) {
 					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.zoom(), wurzel, panels));
@@ -397,6 +399,7 @@ public class GlobalProperties {
 					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
 					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
 					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
+					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
 				}
 			}
 			propMap.remove(WEBSERVER_COMPOSITE_PORTS_PROP);
@@ -420,6 +423,8 @@ public class GlobalProperties {
 							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
 						if (panel.zentriert())
 							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX, "true");
+						if (panel.blattnameAnzeigen())
+							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX, "true");
 					}
 				}
 				propMap.put(WEBSERVER_COMPOSITE_PORTS_PROP, ports.toString());
