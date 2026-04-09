@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pétanque Timer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      transition: background 0.5s ease;
+      user-select: none;
+    }
+
+    body.zustand-laeuft   { background: #001a00; }
+    body.zustand-pausiert { background: #1a1a00; }
+    body.zustand-beendet  { background: #1a0000; animation: blinken 1s infinite; }
+    body.zustand-inaktiv  { background: #000; }
+
+    @keyframes blinken {
+      0%, 100% { background: #1a0000; }
+      50%       { background: #4d0000; }
+    }
+
+    #bezeichnung {
+      font-size: clamp(1rem, 3vw, 2.5rem);
+      color: #aaa;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 0.5em;
+      min-height: 1.2em;
+    }
+
+    #timer {
+      font-size: clamp(4rem, 20vw, 20rem);
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      line-height: 1;
+      transition: color 0.3s ease;
+    }
+
+    body.zustand-laeuft   #timer { color: #00ff44; }
+    body.zustand-pausiert #timer { color: #ffee00; }
+    body.zustand-beendet  #timer { color: #ff2222; }
+    body.zustand-inaktiv  #timer { color: #555; }
+
+    #status {
+      font-size: clamp(0.8rem, 2.5vw, 2rem);
+      color: #888;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-top: 0.5em;
+      min-height: 1.5em;
+    }
+
+    body.zustand-beendet #status { color: #ff4444; font-size: clamp(1rem, 3vw, 2.5rem); }
+
+    #verbindung {
+      position: fixed;
+      bottom: 0.5em;
+      right: 0.8em;
+      font-size: 0.7rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body class="zustand-inaktiv">
+  <div id="bezeichnung"></div>
+  <div id="timer">--:--</div>
+  <div id="status">Bereit</div>
+  <div id="verbindung">⬤</div>
+
+  <script>
+    const timerEl       = document.getElementById('timer');
+    const statusEl      = document.getElementById('status');
+    const bezeichnungEl = document.getElementById('bezeichnung');
+    const verbindungEl  = document.getElementById('verbindung');
+
+    let beepGespielt = false;
+    let esQuelle = null;
+
+    function verbinde() {
+      if (esQuelle) {
+        esQuelle.close();
+      }
+      esQuelle = new EventSource('/events');
+
+      esQuelle.onopen = () => {
+        verbindungEl.style.color = '#006600';
+        verbindungEl.title = 'Verbunden';
+      };
+
+      esQuelle.onmessage = (event) => {
+        try {
+          const d = JSON.parse(event.data);
+          aktualisiereAnzeige(d);
+        } catch (e) {
+          console.error('JSON-Fehler:', e);
+        }
+      };
+
+      esQuelle.onerror = () => {
+        verbindungEl.style.color = '#660000';
+        verbindungEl.title = 'Verbindung unterbrochen – reconnecting...';
+      };
+    }
+
+    function aktualisiereAnzeige(d) {
+      timerEl.textContent = d.anzeige || '--:--';
+      statusEl.textContent = d.statusText || '';
+      bezeichnungEl.textContent = d.bezeichnung || '';
+
+      const zustand = (d.zustand || 'INAKTIV').toLowerCase();
+      document.body.className = 'zustand-' + zustand;
+
+      if (zustand === 'beendet') {
+        if (!beepGespielt) {
+          beepGespielt = true;
+          spieleBeep();
+        }
+      } else {
+        beepGespielt = false;
+      }
+    }
+
+    function spieleBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        for (let i = 0; i < 3; i++) {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'square';
+          osc.frequency.value = 880;
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.4);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.4 + 0.35);
+          osc.start(ctx.currentTime + i * 0.4);
+          osc.stop(ctx.currentTime + i * 0.4 + 0.35);
+        }
+      } catch (e) {
+        console.log('Audio nicht verfügbar:', e);
+      }
+    }
+
+    verbinde();
+  </script>
+</body>
+</html>

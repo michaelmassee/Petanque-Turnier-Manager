@@ -26,11 +26,14 @@ import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.timer.TimerListener;
+import de.petanqueturniermanager.timer.TimerState;
+import de.petanqueturniermanager.timer.TimerZustand;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-public class ProcessBox {
+public class ProcessBox implements TimerListener {
     private static final Logger logger = LogManager.getLogger(ProcessBox.class);
 
     private static final int ANZAHLSPALTEN = 1;
@@ -56,6 +59,9 @@ public class ProcessBox {
     private JLabel statusLabel;
     private JLabel infoLabel;
     private JLabel neueVersionLabel;
+    private JPanel timerZeile;
+    private JLabel timerUhrLabel;
+    private JLabel timerBezeichnungLabel;
 
     private ImageIcon imageIconReady;
     private ImageIcon imageIconError;
@@ -170,6 +176,8 @@ public class ProcessBox {
         initLog();
         // Neue-Version-Hinweiszeile (nur sichtbar wenn neue Version verfügbar)
         initNeueVersionZeile();
+        // Timer-Zeile (immer sichtbar)
+        initTimerZeile();
         // Footer: Status, Info, Log, Stop
         initSpieltagUndSpielrundInfo();
 
@@ -196,6 +204,60 @@ public class ProcessBox {
         gbc.weightx = 1.0;
         gbc.insets = new Insets(2, 5, 2, 5);
         frame.add(neueVersionLabel, gbc);
+    }
+
+    private void initTimerZeile() {
+        timerZeile = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                int w = getWidth();
+                int h = getHeight();
+                Color color1 = new Color(0x1a1a2e);
+                Color color2 = new Color(0x16213e);
+                GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, w, h);
+            }
+        };
+        timerZeile.setBorder(BorderFactory.createRaisedBevelBorder());
+
+        var gbc = new GridBagConstraints();
+        gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.insets = new Insets(0, 5, 0, 5);
+        frame.add(timerZeile, gbc);
+
+        var gbcPanel = new GridBagConstraints();
+        gbcPanel.gridy = 0;
+        gbcPanel.gridx = 0;
+        gbcPanel.insets = new Insets(2, 8, 2, 5);
+        gbcPanel.anchor = GridBagConstraints.WEST;
+
+        var titelLabel = new JLabel(I18n.get("timer.processbox.zeile.label") + ":");
+        titelLabel.setForeground(new Color(0x888888));
+        titelLabel.setFont(titelLabel.getFont().deriveFont(Font.PLAIN, 11f));
+        timerZeile.add(titelLabel, gbcPanel);
+        gbcPanel.gridx++;
+
+        timerUhrLabel = new JLabel("--:--");
+        timerUhrLabel.setForeground(new Color(0x555555));
+        timerUhrLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
+        gbcPanel.insets = new Insets(2, 5, 2, 10);
+        timerZeile.add(timerUhrLabel, gbcPanel);
+        gbcPanel.gridx++;
+
+        timerBezeichnungLabel = new JLabel("");
+        timerBezeichnungLabel.setForeground(new Color(0x888888));
+        timerBezeichnungLabel.setFont(timerBezeichnungLabel.getFont().deriveFont(Font.ITALIC, 11f));
+        gbcPanel.insets = new Insets(2, 0, 2, 5);
+        gbcPanel.weightx = 1.0;
+        gbcPanel.fill = GridBagConstraints.HORIZONTAL;
+        timerZeile.add(timerBezeichnungLabel, gbcPanel);
     }
 
     private void aktualisiereNeueVersionLabel() {
@@ -272,7 +334,7 @@ public class ProcessBox {
         panel.setBorder(raisedbevel);
         {
             GridBagConstraints gridBagConstraintsFrame = new GridBagConstraints();
-            gridBagConstraintsFrame.gridy = 2; // zeile
+            gridBagConstraintsFrame.gridy = 3; // zeile (gridy=2 ist Timer-Zeile)
             gridBagConstraintsFrame.gridx = 0; // spalte
             gridBagConstraintsFrame.fill = GridBagConstraints.HORIZONTAL;
             gridBagConstraintsFrame.weightx = 0.5;
@@ -522,6 +584,35 @@ public class ProcessBox {
             }
         });
         return this;
+    }
+
+    // ── TimerListener ──────────────────────────────────────────────────────────
+
+    /**
+     * Aktualisiert die Timer-Zeile in der ProcessBox.
+     * Wird von {@link de.petanqueturniermanager.timer.TimerManager} bei jedem Tick aufgerufen.
+     */
+    @Override
+    public void onChange(TimerState state) {
+        if (disposed || headlessMode || timerUhrLabel == null) return;
+        if (state.zustand() == TimerZustand.BEENDET) {
+            java.awt.Toolkit.getDefaultToolkit().beep();
+        }
+        SwingUtilities.invokeLater(() -> {
+            if (disposed) return;
+            timerUhrLabel.setText(state.anzeige());
+            timerBezeichnungLabel.setText(state.bezeichnung() != null ? state.bezeichnung() : "");
+            Color farbe = switch (state.zustand()) {
+                case LAEUFT   -> new Color(0x00cc44);
+                case PAUSIERT -> new Color(0xddcc00);
+                case BEENDET  -> new Color(0xff3333);
+                case INAKTIV  -> new Color(0x555555);
+            };
+            timerUhrLabel.setForeground(farbe);
+            if (timerZeile != null) {
+                timerZeile.repaint();
+            }
+        });
     }
 
     /**

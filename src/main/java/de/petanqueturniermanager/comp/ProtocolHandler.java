@@ -31,6 +31,8 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
+import de.petanqueturniermanager.timer.TimerDialog;
+import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.webserver.WebserverKonfigDialog;
@@ -247,6 +249,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_WEBSERVER_URL_8  = "webserver_url_8";
 	public static final String CMD_WEBSERVER_URL_9  = "webserver_url_9";
 	public static final String CMD_WEBSERVER_URL_10 = "webserver_url_10";
+	// Timer
+	public static final String CMD_TIMER_STARTEN_DIALOG   = "timer_starten_dialog";
+	public static final String CMD_TIMER_PAUSE_FORTSETZEN = "timer_pause_fortsetzen";
+	public static final String CMD_TIMER_STOPPEN          = "timer_stoppen";
+	public static final String CMD_TIMER_PLUS_MINUTE      = "timer_plus_minute";
+	public static final String CMD_TIMER_MINUS_MINUTE     = "timer_minus_minute";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -368,6 +376,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
 		try {
+			// Timer-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
+			if (behandleTimerBefehl(command)) {
+				return;
+			}
 			// Webserver-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
 			if (behandleWebserverBefehl(command)) {
 				return;
@@ -701,6 +713,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	}
 
 	/**
+	 * Behandelt Timer-Befehle direkt (ohne SheetRunner-Thread).
+	 * Gibt true zurück wenn der Befehl behandelt wurde.
+	 */
+	private boolean behandleTimerBefehl(String command) throws com.sun.star.uno.Exception {
+		switch (command) {
+			case CMD_TIMER_STARTEN_DIALOG   -> new TimerDialog(xContext).zeigen();
+			case CMD_TIMER_PAUSE_FORTSETZEN -> TimerManager.get().pauseOderFortsetzen();
+			case CMD_TIMER_STOPPEN          -> TimerManager.get().stoppen();
+			case CMD_TIMER_PLUS_MINUTE      -> TimerManager.get().zeitAnpassen(+60);
+			case CMD_TIMER_MINUS_MINUTE     -> TimerManager.get().zeitAnpassen(-60);
+			default -> { return false; }
+		}
+		return true;
+	}
+
+	/**
 	 * Behandelt Webserver-Befehle direkt (ohne SheetRunner-Thread).
 	 * Gibt true zurück wenn der Befehl behandelt wurde.
 	 */
@@ -1021,6 +1049,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI             -> true;
 			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
+			// Timer – immer aktiviert
+			case CMD_TIMER_STARTEN_DIALOG                   -> true;
+			case CMD_TIMER_PAUSE_FORTSETZEN,
+				 CMD_TIMER_STOPPEN,
+				 CMD_TIMER_PLUS_MINUTE,
+				 CMD_TIMER_MINUS_MINUTE                     -> true;
 			default -> false;
 			};
 		} catch (Exception e) {

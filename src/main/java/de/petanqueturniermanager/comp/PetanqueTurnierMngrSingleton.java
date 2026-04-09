@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
@@ -78,6 +79,8 @@ public class PetanqueTurnierMngrSingleton {
 
 		globalEventListener(context);
 		ProcessBox.init(context); // der muss zuerst
+		TimerManager.init(context);
+		TimerManager.get().addListener(ProcessBox.from());
 		I18n.init(context);
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
@@ -156,6 +159,7 @@ public class PetanqueTurnierMngrSingleton {
 
 	// ---------------------------------------------------------------------------------------------
 	public static void dispose() {
+		TimerManager.dispose();
 		WebServerManager.get().stoppen();
 		if (globalEventListener != null) {
 			globalEventListener.disposing(null);

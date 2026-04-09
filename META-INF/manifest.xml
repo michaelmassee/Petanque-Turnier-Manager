@@ -48,6 +48,9 @@
         manifest:full-path="registry/org/openoffice/Office/Addons_X2_Webserver.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_X3_Timer.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Y1_Testdaten.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
@@ -64,6 +67,12 @@
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_Z3_SpieltagToolbar.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_Z4_TimerToolbar.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/UI/CalcWindowState.xcu"/>
     <!-- Sidebar deaktiviert – XCU-Einträge auskommentiert damit kein Deck/Panel in LO erscheint
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"

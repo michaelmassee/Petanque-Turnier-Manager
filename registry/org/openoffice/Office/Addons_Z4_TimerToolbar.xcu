@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons"
+                    xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <node oor:name="AddonUI">
+
+        <node oor:name="OfficeToolBar">
+            <node oor:name="de.petanqueturniermanager.toolbar.timer" oor:op="replace">
+
+                <prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+                    <value xml:lang="de">PétTurnMngr Timer</value>
+                    <value xml:lang="en">PétTurnMngr Timer</value>
+                    <value xml:lang="es">PétTurnMngr Temporizador</value>
+                    <value xml:lang="fr">PétTurnMngr Minuterie</value>
+                    <value xml:lang="nl">PétTurnMngr Timer</value>
+                </prop>
+
+                <prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+                    <value xml:lang="de">PétTurnMngr Timer</value>
+                    <value xml:lang="en">PétTurnMngr Timer</value>
+                    <value xml:lang="es">PétTurnMngr Temporizador</value>
+                    <value xml:lang="fr">PétTurnMngr Minuterie</value>
+                    <value xml:lang="nl">PétTurnMngr Timer</value>
+                </prop>
+
+                <prop oor:name="Context" oor:type="xs:string">
+                    <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                </prop>
+
+                <!-- ****************************************************************** -->
+                <!-- m1: Timer starten -->
+                <node oor:name="m1" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:timer_starten_dialog</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Timer starten...</value>
+                        <value xml:lang="en">Start Timer...</value>
+                        <value xml:lang="es">Iniciar temporizador...</value>
+                        <value xml:lang="fr">Démarrer la minuterie...</value>
+                        <value xml:lang="nl">Timer starten...</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- m2: Pause / Fortsetzen -->
+                <node oor:name="m2" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:timer_pause_fortsetzen</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Pause / Fortsetzen</value>
+                        <value xml:lang="en">Pause / Resume</value>
+                        <value xml:lang="es">Pausar / Reanudar</value>
+                        <value xml:lang="fr">Pause / Reprendre</value>
+                        <value xml:lang="nl">Pauzeren / Hervatten</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- m3: Timer stoppen -->
+                <node oor:name="m3" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:timer_stoppen</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Timer stoppen</value>
+                        <value xml:lang="en">Stop Timer</value>
+                        <value xml:lang="es">Detener temporizador</value>
+                        <value xml:lang="fr">Arrêter la minuterie</value>
+                        <value xml:lang="nl">Timer stoppen</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- m4: Separator -->
+                <node oor:name="m4" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>private:separator</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- m5: +1 Minute -->
+                <node oor:name="m5" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:timer_plus_minute</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">+1 Minute</value>
+                        <value xml:lang="en">+1 Minute</value>
+                        <value xml:lang="es">+1 Minuto</value>
+                        <value xml:lang="fr">+1 Minute</value>
+                        <value xml:lang="nl">+1 Minuut</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- m6: -1 Minute -->
+                <node oor:name="m6" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:timer_minus_minute</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">-1 Minute</value>
+                        <value xml:lang="en">-1 Minute</value>
+                        <value xml:lang="es">-1 Minuto</value>
+                        <value xml:lang="fr">-1 Minute</value>
+                        <value xml:lang="nl">-1 Minuut</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+            </node>
+        </node>
+
+    </node>
+</oor:component-data>
