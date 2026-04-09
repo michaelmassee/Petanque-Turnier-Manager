@@ -3,6 +3,8 @@ package de.petanqueturniermanager.timer;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import de.petanqueturniermanager.webserver.WebServerManager;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -43,8 +45,6 @@ public class TimerManager {
     private volatile long restNanos;
     private volatile String bezeichnung = "";
     private volatile ScheduledFuture<?> tickTask;
-    private volatile TimerWebServerInstanz webServerInstanz;
-    private volatile int letzterPort = TimerEinstellungen.DEFAULT_PORT;
 
     private TimerManager(XComponentContext xContext) {
         this.xContext = xContext;
@@ -95,9 +95,6 @@ public class TimerManager {
             if (tm != null) {
                 tm.stoppen();
                 tm.executor.shutdownNow();
-                if (tm.webServerInstanz != null) {
-                    tm.webServerInstanz.stoppen();
-                }
                 instanz = null;
                 logger.debug("TimerManager disposed");
             }
@@ -137,8 +134,15 @@ public class TimerManager {
         }
         stoppeTickTask();
         this.bezeichnung = bezeichnung != null ? bezeichnung : "";
-        this.letzterPort = port;
-        startWebServerWennNoetig(port);
+        try {
+            WebServerManager.get().timerServerBesorgen(port);
+        } catch (IOException e) {
+            logger.error("Timer-Webserver konnte nicht gestartet werden auf Port {}: {}", port, e.getMessage(), e);
+            MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("timer.dialog.titel"))
+                    .message(I18n.get("timer.fehler.webserver.port.belegt", port))
+                    .show();
+        }
 
         endNanos = System.nanoTime() + dauerSekunden * 1_000_000_000L;
         zustand = TimerZustand.LAEUFT;
@@ -222,28 +226,6 @@ public class TimerManager {
     }
 
     // ── Hilfsmethoden ─────────────────────────────────────────────────────────
-
-    private void startWebServerWennNoetig(int port) {
-        if (webServerInstanz != null && webServerInstanz.getPort() == port && webServerInstanz.laeuft()) {
-            return;
-        }
-        if (webServerInstanz != null) {
-            webServerInstanz.stoppen();
-        }
-        try {
-            webServerInstanz = new TimerWebServerInstanz(port);
-            webServerInstanz.starten();
-            addListener(webServerInstanz);
-            logger.info("Timer-Webserver gestartet auf Port {}", port);
-        } catch (IOException e) {
-            logger.error("Timer-Webserver konnte nicht gestartet werden auf Port {}: {}", port, e.getMessage(), e);
-            webServerInstanz = null;
-            MessageBox.from(xContext, MessageBoxTypeEnum.ERROR_OK)
-                    .caption(I18n.get("timer.dialog.titel"))
-                    .message(I18n.get("timer.fehler.webserver.port.belegt", port))
-                    .show();
-        }
-    }
 
     private void stoppeTickTask() {
         var task = tickTask;

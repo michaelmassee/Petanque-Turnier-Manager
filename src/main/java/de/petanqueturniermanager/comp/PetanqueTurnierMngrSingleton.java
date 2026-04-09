@@ -78,10 +78,11 @@ public class PetanqueTurnierMngrSingleton {
 		}
 
 		globalEventListener(context);
-		ProcessBox.init(context); // der muss zuerst
+		I18n.init(context); // muss vor ProcessBox, da ProcessBox I18n-Texte beim Aufbau verwendet
+		ProcessBox.init(context);
 		TimerManager.init(context);
 		TimerManager.get().addListener(ProcessBox.from());
-		I18n.init(context);
+		TimerManager.get().addListener(WebServerManager.get());
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
 		if (GlobalProperties.get().isWebserverAktiv()) {

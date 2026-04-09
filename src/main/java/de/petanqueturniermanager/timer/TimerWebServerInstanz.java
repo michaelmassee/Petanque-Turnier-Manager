@@ -30,8 +30,8 @@ import de.petanqueturniermanager.webserver.SseElternInstanz;
  *   <li>{@code GET /events} → Server-Sent-Events mit {@link TimerSseNachricht} als JSON</li>
  * </ul>
  * <p>
- * Implementiert {@link TimerListener} und registriert sich beim {@link TimerManager}.
- * Bei jedem Tick wird die SSE-Nachricht an alle verbundenen Browser-Clients gesendet.
+ * Implementiert {@link TimerListener} – Zustandsänderungen werden vom {@link de.petanqueturniermanager.webserver.WebServerManager}
+ * delegiert, der einmalig als Listener registriert ist.
  */
 public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
 
@@ -109,6 +109,9 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
 
     @Override
     public void onChange(TimerState state) {
+        if (!laeuft) {
+            return;
+        }
         var json = zuStateJson(state);
         cachedInitJson = json;
         sseVerbindungen.forEach(v -> v.senden(json));

@@ -29,6 +29,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.timer.TimerListener;
+import de.petanqueturniermanager.timer.TimerState;
+import de.petanqueturniermanager.timer.TimerWebServerInstanz;
 
 /**
  * Singleton-Verwaltung aller Webserver-Instanzen.
@@ -46,7 +49,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
  *   <li>{@code typ="hinweis"} – Hinweismeldung, wenn das Sheet noch nicht verfügbar ist</li>
  * </ul>
  */
-public final class WebServerManager {
+public final class WebServerManager implements TimerListener {
 
     private static final Logger logger = LogManager.getLogger(WebServerManager.class);
     private static final Gson GSON = new GsonBuilder()
@@ -87,6 +90,7 @@ public final class WebServerManager {
     private XSpreadsheetDocument registriertesDocument = null;
     private boolean laeuft = false;
     private boolean letzterSheetnamenAnzeigen = false;
+    private TimerWebServerInstanz timerInstanz;
 
     private WebServerManager() {
     }
@@ -184,9 +188,44 @@ public final class WebServerManager {
     }
 
     /**
+     * Startet den Timer-Webserver auf dem angegebenen Port (oder gibt die laufende Instanz zurück).
+     * Wird von {@link de.petanqueturniermanager.timer.TimerManager} beim Timer-Start aufgerufen.
+     *
+     * @param port TCP-Port für den Timer-Server
+     * @throws IOException wenn der Port nicht gebunden werden kann
+     */
+    public synchronized void timerServerBesorgen(int port) throws IOException {
+        if (timerInstanz != null && timerInstanz.getPort() == port && timerInstanz.laeuft()) {
+            return;
+        }
+        if (timerInstanz != null) {
+            timerInstanz.stoppen();
+            timerInstanz = null;
+        }
+        timerInstanz = new TimerWebServerInstanz(port);
+        timerInstanz.starten();
+        logger.info("Timer-Webserver gestartet auf Port {}", port);
+    }
+
+    /**
+     * Empfängt Timer-Zustandsänderungen und leitet sie an den laufenden Timer-Webserver weiter.
+     * Registriert einmalig in {@code PetanqueTurnierMngrSingleton.init()}.
+     */
+    @Override
+    public synchronized void onChange(TimerState state) {
+        if (timerInstanz != null && timerInstanz.laeuft()) {
+            timerInstanz.onChange(state);
+        }
+    }
+
+    /**
      * Stoppt alle laufenden Webserver-Instanzen und schließt alle SSE-Verbindungen.
      */
     public synchronized void stoppen() {
+        if (timerInstanz != null) {
+            timerInstanz.stoppen();
+            timerInstanz = null;
+        }
         if (!laeuft) {
             return;
         }

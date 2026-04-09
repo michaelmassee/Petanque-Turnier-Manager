@@ -48,12 +48,14 @@ public class TimerDialog extends AbstractUnoDialog {
     private static final int ZEILE1_Y  = 10;
     private static final int ZEILE2_Y  = 30;
     private static final int ZEILE3_Y  = 50;
-    private static final int BTN_PLUS_X  = 90;
-    private static final int BTN_MINUS_X = 120;
-    private static final int BTN_W      = 28;
-    private static final int BTN_PM_Y   = ZEILE1_Y - 1;
-    private static final int BTN_H      = 14;
-    private static final int FOOTER_Y   = 108;
+    private static final int DAUER_FIELD_W  = 55;
+    private static final int BTN_PM_W       = 45;
+    private static final int BTN_PM_GAP     = 5;
+    private static final int BTN_MINUS_X    = FIELD_X + DAUER_FIELD_W + BTN_PM_GAP;
+    private static final int BTN_PLUS_X     = BTN_MINUS_X + BTN_PM_W + BTN_PM_GAP;
+    private static final int BTN_PM_Y       = ZEILE1_Y - 1;
+    private static final int BTN_H          = 14;
+    private static final int FOOTER_Y       = 108;
     private static final int BTN_START_X    = 90;
     private static final int BTN_ABBRUCH_X  = 165;
     private static final int BTN_ACTION_W   = 70;
@@ -106,11 +108,11 @@ public class TimerDialog extends AbstractUnoDialog {
 
         // ── Zeile 1: Dauer ──────────────────────────────────────────────────────
         fuegeLabel("lblDauer", I18n.get("timer.dialog.dauer.label"), LBL_X, ZEILE1_Y, LBL_W, CTRL_H);
-        fuegeEdit(CTRL_DAUER, TimerEinstellungen.letzteDauer(), FIELD_X, ZEILE1_Y, 55, CTRL_H);
+        fuegeEdit(CTRL_DAUER, TimerEinstellungen.letzteDauer(), FIELD_X, ZEILE1_Y, DAUER_FIELD_W, CTRL_H);
 
         // +/- Buttons direkt neben dem Dauer-Feld
-        fuegeButton("btnMinus", "-1 min", BTN_MINUS_X + 58, BTN_PM_Y, BTN_W, BTN_H, (short) 0);
-        fuegeButton("btnPlus",  "+1 min", BTN_PLUS_X  + 90, BTN_PM_Y, BTN_W, BTN_H, (short) 0);
+        fuegeButton("btnMinus", "-1 min", BTN_MINUS_X, BTN_PM_Y, BTN_PM_W, BTN_H, (short) 0);
+        fuegeButton("btnPlus",  "+1 min", BTN_PLUS_X,  BTN_PM_Y, BTN_PM_W, BTN_H, (short) 0);
 
         registriereButtonAktion("btnMinus", () -> passeZeitAn(-60));
         registriereButtonAktion("btnPlus",  () -> passeZeitAn(+60));
