@@ -121,13 +121,27 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
         return konfiguration;
     }
 
-    /** Aktualisiert die Konfiguration und pusht sofort den neuen gecachten Zustand. */
-    public synchronized void setKonfiguration(CompositeViewKonfiguration neueKonfiguration, String neuesInitJson) {
+    /**
+     * Aktualisiert die Konfiguration, speichert das gecachte Init-JSON und pusht separat.
+     *
+     * @param neueKonfiguration neue Panel-Konfiguration
+     * @param neuesCachedJson   wird als cachedInitJson gespeichert (für reconnectende Clients); {@code null} = unveränderter Cache
+     * @param pushJson          wird sofort an alle offenen SSE-Verbindungen gesendet; {@code null} = kein Push
+     */
+    public synchronized void setKonfiguration(CompositeViewKonfiguration neueKonfiguration,
+            String neuesCachedJson, String pushJson) {
         this.konfiguration = neueKonfiguration;
-        if (neuesInitJson != null) {
-            setCachedInitJson(neuesInitJson);
-            sseNachrichtPushen(neuesInitJson);
+        if (neuesCachedJson != null) {
+            setCachedInitJson(neuesCachedJson);
         }
+        if (pushJson != null) {
+            sseNachrichtPushen(pushJson);
+        }
+    }
+
+    /** Aktualisiert die Konfiguration und pusht sofort denselben Zustand als Cache und Live-Push. */
+    public synchronized void setKonfiguration(CompositeViewKonfiguration neueKonfiguration, String neuesInitJson) {
+        setKonfiguration(neueKonfiguration, neuesInitJson, neuesInitJson);
     }
 
     // ── HTTP-Handler ────────────────────────────────────────────────────────────

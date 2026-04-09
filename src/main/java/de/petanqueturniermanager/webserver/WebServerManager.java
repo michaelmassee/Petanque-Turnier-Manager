@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -285,35 +286,83 @@ public final class WebServerManager {
                     .ifPresent(e -> {
                         var panelModelle = letzteCompositeModelle.get(port);
                         var panelTitel = letzteCompositeTitel.get(port);
-                        if (panelModelle == null || panelModelle.isEmpty()) {
+                        if (panelModelle == null) {
                             return;
                         }
-                        // Neue Panel-Einstellungen aus GlobalProperties mit alten Resolvern zusammenführen
                         var konfig = instanz.getKonfiguration();
+                        int neueAnzahl = e.panels().size();
+                        int alteAnzahl = konfig.panels().size();
+
+                        // Neue Wurzel aus layoutJson parsen
+                        SplitKnoten neueWurzel = konfig.wurzel();
+                        try {
+                            var parsedWurzel = GSON.fromJson(e.layoutJson(), SplitKnoten.class);
+                            if (parsedWurzel != null) {
+                                neueWurzel = parsedWurzel;
+                            }
+                        } catch (Exception ex) {
+                            logger.warn("Ungültiger Layout-JSON bei konfigurationGeaendert für Port {}", port, ex);
+                        }
+
+                        // Alte sheetConfig → alten Index mappen, um Resolver und Modelle
+                        // korrekt auf neue Positionen zu übertragen (auch nach Löschung/Umnummerierung).
+                        var altSheetConfigZuIndex = new HashMap<String, Integer>();
+                        for (int i = 0; i < alteAnzahl; i++) {
+                            altSheetConfigZuIndex.put(konfig.panels().get(i).sheetConfig(), i);
+                        }
+
+                        // Neue Panel-Einstellungen mit sheetConfig-basiertem Matching aufbauen.
+                        // Für bekannte Panels (gleiche sheetConfig): alten Resolver + Modell behalten.
+                        // Für neue Panels: Resolver aus sheetConfig erstellen, kein Modell-Cache.
                         var alleInitPanels = new ArrayList<CompositePanelNachricht>();
                         var neuePanelKonfigs = new ArrayList<PanelKonfiguration>();
-                        for (int i = 0; i < konfig.panels().size(); i++) {
-                            var altePanelKonfig = konfig.panels().get(i);
-                            var vollModell = panelModelle.get(i);
-                            int pZoom = i < e.panels().size() ? e.panels().get(i).zoom() : altePanelKonfig.zoom();
-                            boolean pZentriert = i < e.panels().size() ? e.panels().get(i).zentriert() : altePanelKonfig.zentriert();
-                            boolean pBlattnameAnzeigen = i < e.panels().size() ? e.panels().get(i).blattnameAnzeigen() : altePanelKonfig.blattnameAnzeigen();
-                            neuePanelKonfigs.add(new PanelKonfiguration(altePanelKonfig.resolver(), pZoom, pZentriert, pBlattnameAnzeigen));
+                        var neuePanelModelle = new ConcurrentHashMap<Integer, TabelleModel>();
+                        var neuePanelTitel = new ConcurrentHashMap<Integer, String>();
+                        for (int i = 0; i < neueAnzahl; i++) {
+                            var neuerPanelEintrag = e.panels().get(i);
+                            var altIndex = altSheetConfigZuIndex.get(neuerPanelEintrag.sheetConfig());
+                            SheetResolver resolver = altIndex != null
+                                    ? konfig.panels().get(altIndex).resolver()
+                                    : SheetResolverFactory.erstellen(neuerPanelEintrag.sheetConfig());
+                            neuePanelKonfigs.add(new PanelKonfiguration(
+                                    neuerPanelEintrag.sheetConfig(), resolver,
+                                    neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen()));
+                            var vollModell = altIndex != null ? panelModelle.get(altIndex) : null;
                             if (vollModell != null) {
+                                neuePanelModelle.put(i, vollModell);
+                                // altIndex != null ist hier garantiert (vollModell != null impliziert altIndex != null)
+                                String titel = panelTitel != null ? panelTitel.getOrDefault(altIndex, "") : "";
+                                neuePanelTitel.put(i, titel);
                                 alleInitPanels.add(CompositePanelNachricht.init(
-                                        i, vollModell,
-                                        panelTitel != null ? panelTitel.getOrDefault(i, "") : "",
-                                        pZoom, pZentriert, pBlattnameAnzeigen));
+                                        i, vollModell, titel,
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen()));
                             }
                         }
+
+                        // Cache durch korrekt re-indizierte Maps ersetzen
+                        panelModelle.clear();
+                        panelModelle.putAll(neuePanelModelle);
+                        if (panelTitel != null) {
+                            panelTitel.clear();
+                            panelTitel.putAll(neuePanelTitel);
+                        }
+
+                        String cachedJson = null;
+                        String pushJson = null;
                         if (!alleInitPanels.isEmpty()) {
                             int version = compositeVersionen.get(port).incrementAndGet();
-                            String neuesJson = GSON.toJson(CompositeSseNachricht.init(
-                                    version, alleInitPanels, konfig.wurzel(), e.zoom()));
-                            instanz.setKonfiguration(
-                                    new CompositeViewKonfiguration(port, e.zoom(), konfig.wurzel(), neuePanelKonfigs),
-                                    neuesJson);
+                            cachedJson = GSON.toJson(CompositeSseNachricht.init(
+                                    version, alleInitPanels, neueWurzel, e.zoom()));
+                            // Sind nicht alle Panels im Cache (geänderte sheetConfig), würde ein
+                            // composite_init die fehlenden Panels im Browser löschen → diff pushen,
+                            // damit bestehende Panel-Zustände erhalten bleiben.
+                            pushJson = alleInitPanels.size() < neueAnzahl
+                                    ? GSON.toJson(CompositeSseNachricht.diff(version, alleInitPanels, neueWurzel, e.zoom()))
+                                    : cachedJson;
                         }
+                        instanz.setKonfiguration(
+                                new CompositeViewKonfiguration(port, e.zoom(), neueWurzel, neuePanelKonfigs),
+                                cachedJson, pushJson);
                     });
         }
     }

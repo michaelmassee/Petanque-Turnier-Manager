@@ -21,7 +21,7 @@ export default function SplitPaneComposite({ knoten, panels }) {
   if (knoten.panel !== undefined) {
     const table = panels[knoten.panel];
     return (
-      <div style={{ height: '100%', overflow: 'auto' }}>
+      <div style={{ height: '100%', width: '100%', overflow: 'auto' }}>
         <Panel table={table} sheetnamenAnzeigen={table?.blattnameAnzeigen ?? false} />
       </div>
     );

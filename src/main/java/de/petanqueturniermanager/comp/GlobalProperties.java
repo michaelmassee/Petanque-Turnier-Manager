@@ -370,7 +370,7 @@ public class GlobalProperties {
 						logger.warn("Resolver null für Panel-Config '{}'", p.sheetConfig());
 						continue;
 					}
-					panels.add(new PanelKonfiguration(resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen()));
+					panels.add(new PanelKonfiguration(p.sheetConfig(), resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen()));
 				}
 				if (!panels.isEmpty()) {
 					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.zoom(), wurzel, panels));
