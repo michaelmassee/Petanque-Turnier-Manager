@@ -71,42 +71,36 @@
             </node>
         </node>
 
+        <node oor:name="Images">
 
-    <node oor:name="Images">
-    <node oor:name="de.petanqueturniermanager.toolbar.spieltag" oor:op="replace">
-
-        <node oor:name="de.petanqueturniermanager.toolbar.naechster_spieltag" oor:op="replace">
-            <prop oor:name="URL" oor:type="xs:string">
-                <value>ptm:toolbar_naechster_spieltag</value>
-            </prop>
-            <node oor:name="UserDefinedImages">
-                <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-naechster-spieltag.png</value>
+            <node oor:name="de.petanqueturniermanager.toolbar.naechster_spieltag" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_naechster_spieltag</value>
                 </prop>
-                <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-naechster-spieltag.png</value>
-                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-naechster-spieltag.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-naechster-spieltag.png</value>
+                    </prop>
+                </node>
             </node>
-        </node>
 
-        <node oor:name="de.petanqueturniermanager.toolbar.gesamtrangliste" oor:op="replace">
-            <prop oor:name="URL" oor:type="xs:string">
-                <value>ptm:toolbar_gesamtrangliste</value>
-            </prop>
-            <node oor:name="UserDefinedImages">
-                <prop oor:name="ImageSmallURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-gesamtrangliste.png</value>
+            <node oor:name="de.petanqueturniermanager.toolbar.gesamtrangliste" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_gesamtrangliste</value>
                 </prop>
-                <prop oor:name="ImageBigURL" oor:type="xs:string">
-                    <value>%origin%/images/toolbar-gesamtrangliste.png</value>
-                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-gesamtrangliste.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-gesamtrangliste.png</value>
+                    </prop>
+                </node>
             </node>
+
         </node>
-
-    </node>
-    </node>
-
-
-
     </node>
 </oor:component-data>
