@@ -7,9 +7,11 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -84,6 +86,8 @@ public final class WebServerManager implements TimerListener {
     private final Map<Integer, Map<Integer, String>> letzteCompositeTitel = new ConcurrentHashMap<>();
     /** Monoton steigende Version pro Composite-Port (port → AtomicInteger). */
     private final Map<Integer, AtomicInteger> compositeVersionen = new ConcurrentHashMap<>();
+    /** Letzte URL pro Composite-Port und Panel-ID (port → panelId → url). Diff-Cache für URL-Panels. */
+    private final Map<Integer, Map<Integer, String>> letzteCompositeUrls = new ConcurrentHashMap<>();
 
     /** Dokument, das den WebServer gestartet hat – nur dieses darf ihn wieder stoppen. */
     private XSpreadsheetDocument ownerDocument = null;
@@ -153,6 +157,7 @@ public final class WebServerManager implements TimerListener {
                 compositeVersionen.put(konfig.port(), new AtomicInteger(0));
                 letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
                 letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
+                letzteCompositeUrls.put(konfig.port(), new ConcurrentHashMap<>());
                 logger.info("Composite-View-Server gestartet auf Port {}", konfig.port());
                 safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
             } catch (IOException e) {
@@ -245,6 +250,7 @@ public final class WebServerManager implements TimerListener {
         letzteCompositeModelle.clear();
         letzteCompositeTitel.clear();
         compositeVersionen.clear();
+        letzteCompositeUrls.clear();
         laeuft = false;
         letzterSheetnamenAnzeigen = false;
         ownerDocument = null;
@@ -320,7 +326,7 @@ public final class WebServerManager implements TimerListener {
         for (var instanz : compositeInstanzen) {
             int port = instanz.getKonfiguration().port();
             compositeEintraege.stream()
-                    .filter(e -> e.port() == port)
+                    .filter(e -> e.port() == port && e.aktiv())
                     .findFirst()
                     .ifPresent(e -> {
                         var panelModelle = letzteCompositeModelle.get(port);
@@ -357,15 +363,25 @@ public final class WebServerManager implements TimerListener {
                         var neuePanelKonfigs = new ArrayList<PanelKonfiguration>();
                         var neuePanelModelle = new ConcurrentHashMap<Integer, TabelleModel>();
                         var neuePanelTitel = new ConcurrentHashMap<Integer, String>();
+                        var neueUrlCache = letzteCompositeUrls.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
                         for (int i = 0; i < neueAnzahl; i++) {
                             var neuerPanelEintrag = e.panels().get(i);
+                            if (neuerPanelEintrag.typ() == PanelTyp.URL) {
+                                neuePanelKonfigs.add(new PanelKonfiguration(
+                                        PanelTyp.URL, "", null,
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen(),
+                                        neuerPanelEintrag.externeUrl()));
+                                neueUrlCache.put(i, neuerPanelEintrag.externeUrl());
+                                alleInitPanels.add(CompositePanelNachricht.url(i, neuerPanelEintrag.externeUrl()));
+                                continue;
+                            }
                             var altIndex = altSheetConfigZuIndex.get(neuerPanelEintrag.sheetConfig());
                             SheetResolver resolver = altIndex != null
                                     ? konfig.panels().get(altIndex).resolver()
                                     : SheetResolverFactory.erstellen(neuerPanelEintrag.sheetConfig());
                             neuePanelKonfigs.add(new PanelKonfiguration(
-                                    neuerPanelEintrag.sheetConfig(), resolver,
-                                    neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen()));
+                                    PanelTyp.BLATT, neuerPanelEintrag.sheetConfig(), resolver,
+                                    neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen(), ""));
                             var vollModell = altIndex != null ? panelModelle.get(altIndex) : null;
                             if (vollModell != null) {
                                 neuePanelModelle.put(i, vollModell);
@@ -403,6 +419,81 @@ public final class WebServerManager implements TimerListener {
                                 new CompositeViewKonfiguration(port, e.zoom(), neueWurzel, neuePanelKonfigs),
                                 cachedJson, pushJson);
                     });
+        }
+
+        reconciliereCompositeInstanzen(compositeEintraege);
+    }
+
+    /**
+     * Gleicht die laufenden Composite-View-Instanzen mit den aktuellen GlobalProperties ab:
+     * stoppt Instanzen für entfernte/deaktivierte Einträge und startet neue für hinzugekommene/
+     * reaktivierte Einträge. Aktualisiert danach die Slots-Liste.
+     */
+    private void reconciliereCompositeInstanzen(List<CompositeViewEintragRoh> compositeEintraege) {
+        Set<Integer> aktivePorte = new HashSet<>();
+        for (var e : compositeEintraege) {
+            if (e.aktiv()) {
+                aktivePorte.add(e.port());
+            }
+        }
+        Set<Integer> laufendePorte = new HashSet<>();
+        for (var instanz : compositeInstanzen) {
+            laufendePorte.add(instanz.getKonfiguration().port());
+        }
+
+        // Instanzen stoppen, deren Port nicht mehr aktiv konfiguriert ist
+        var zuStoppen = new ArrayList<CompositeViewInstanz>();
+        for (var instanz : compositeInstanzen) {
+            if (!aktivePorte.contains(instanz.getKonfiguration().port())) {
+                zuStoppen.add(instanz);
+            }
+        }
+        for (var instanz : zuStoppen) {
+            int port = instanz.getKonfiguration().port();
+            instanz.stoppen();
+            compositeInstanzen.remove(instanz);
+            letzteCompositeModelle.remove(port);
+            letzteCompositeTitel.remove(port);
+            compositeVersionen.remove(port);
+            letzteCompositeUrls.remove(port);
+            logger.info("Composite-View-Server auf Port {} gestoppt (konfigurationGeaendert)", port);
+            safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt.port", port));
+        }
+
+        // Neue Instanzen starten für aktive Einträge ohne laufende Instanz
+        for (var konfig : GlobalProperties.get().getCompositeViewKonfigurationen()) {
+            if (!laufendePorte.contains(konfig.port())) {
+                try {
+                    var instanz = new CompositeViewInstanz(konfig);
+                    instanz.starten();
+                    instanz.setCachedInitJson(GSON.toJson(CompositeSseNachricht.hinweis(
+                            I18n.get("webserver.hinweis.kein.dokument.titel"),
+                            I18n.get("webserver.hinweis.kein.dokument.text"))));
+                    compositeInstanzen.add(instanz);
+                    compositeVersionen.put(konfig.port(), new AtomicInteger(0));
+                    letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
+                    letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
+                    letzteCompositeUrls.put(konfig.port(), new ConcurrentHashMap<>());
+                    logger.info("Composite-View-Server auf Port {} gestartet (konfigurationGeaendert)", konfig.port());
+                    safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
+                } catch (IOException e) {
+                    logger.error("Fehler beim Starten des Composite-View-Servers auf Port {}: {}", konfig.port(), e.getMessage(), e);
+                    safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", konfig.port(), e.getMessage()));
+                }
+            }
+        }
+
+        // Slots nach Änderungen neu aufbauen
+        if (!zuStoppen.isEmpty() || aktivePorte.stream().anyMatch(p -> !laufendePorte.contains(p))) {
+            slots.clear();
+            var alleInstanzen = new ArrayList<WebServerSlot>(instanzen.size() + compositeInstanzen.size());
+            alleInstanzen.addAll(instanzen);
+            alleInstanzen.addAll(compositeInstanzen);
+            alleInstanzen.stream()
+                    .filter(WebServerSlot::laeuft)
+                    .sorted(Comparator.comparingInt(WebServerSlot::getPort))
+                    .limit(MAX_URL_SLOTS)
+                    .forEach(slots::add);
         }
     }
 
@@ -519,9 +610,23 @@ public final class WebServerManager implements TimerListener {
             boolean irgendeineAenderung = false;
             boolean erstesRendering = false;
 
+            var urlCache = letzteCompositeUrls.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
             String erstesNichtGefundenesPanel = null;
             for (int i = 0; i < konfig.panels().size(); i++) {
                 var panelKonfig = konfig.panels().get(i);
+
+                // URL-Panel: kein Sheet-Lookup, nur Diff auf URL-Änderung
+                if (panelKonfig.typ() == PanelTyp.URL) {
+                    String letzteUrl = urlCache.get(i);
+                    if (!java.util.Objects.equals(letzteUrl, panelKonfig.externeUrl())) {
+                        panelNachrichten.add(CompositePanelNachricht.url(i, panelKonfig.externeUrl()));
+                        urlCache.put(i, panelKonfig.externeUrl());
+                        irgendeineAenderung = true;
+                        erstesRendering = erstesRendering || letzteUrl == null;
+                    }
+                    continue;
+                }
+
                 var sheetOpt = panelKonfig.resolver().resolve(ws);
                 if (sheetOpt.isEmpty()) {
                     if (erstesNichtGefundenesPanel == null) {
@@ -575,8 +680,15 @@ public final class WebServerManager implements TimerListener {
             // Init-Cache mit vollem State aller Panels befüllen
             var alleInitPanels = new ArrayList<CompositePanelNachricht>();
             for (int i = 0; i < konfig.panels().size(); i++) {
-                var vollModell = panelModelle.get(i);
                 var panelKonfig = konfig.panels().get(i);
+                if (panelKonfig.typ() == PanelTyp.URL) {
+                    String cachedUrl = urlCache.get(i);
+                    if (cachedUrl != null) {
+                        alleInitPanels.add(CompositePanelNachricht.url(i, cachedUrl));
+                    }
+                    continue;
+                }
+                var vollModell = panelModelle.get(i);
                 if (vollModell != null) {
                     alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom(), panelKonfig.zentriert(), panelKonfig.blattnameAnzeigen()));
                 }
