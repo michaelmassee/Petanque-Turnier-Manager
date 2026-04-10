@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.webserver;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -18,6 +20,7 @@ import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
@@ -101,6 +104,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<Boolean> panelZentriert = new ArrayList<>();
     /** Blattname-Anzeigen-Flag pro Panel (Index = Panel-ID). */
     private final List<Boolean> panelBlattnameAnzeigen = new ArrayList<>();
+    /** Anzeigemodus pro Panel (Index = Panel-ID): BLATT oder URL. */
+    private final List<PanelTyp> panelTypen = new ArrayList<>();
+    /**
+     * Externe URL pro Panel (Index = Panel-ID).
+     * Wert bleibt erhalten, auch wenn der Modus auf BLATT umgestellt wird (UX: kein Datenverlust).
+     */
+    private final List<String> panelUrls = new ArrayList<>();
     /** Index des aktuell ausgewählten Panels (-1 = keines). */
     private int ausgewaehlterPanelIndex = 0;
 
@@ -172,6 +182,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelZooms.clear();
         panelZentriert.clear();
         panelBlattnameAnzeigen.clear();
+        panelTypen.clear();
+        panelUrls.clear();
 
         if (initialerEintrag != null && !initialerEintrag.panels().isEmpty()) {
             // Bestehenden Eintrag laden
@@ -192,6 +204,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 panelZooms.add(p.zoom());
                 panelZentriert.add(p.zentriert());
                 panelBlattnameAnzeigen.add(p.blattnameAnzeigen());
+                panelTypen.add(p.typ() != null ? p.typ() : PanelTyp.BLATT);
+                panelUrls.add(p.externeUrl() != null ? p.externeUrl() : "");
             }
         } else {
             // Neuer Eintrag: ein Panel, leerer Baum
@@ -200,6 +214,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
             panelZentriert.add(Boolean.FALSE);
             panelBlattnameAnzeigen.add(Boolean.FALSE);
+            panelTypen.add(PanelTyp.BLATT);
+            panelUrls.add("");
         }
         ausgewaehlterPanelIndex = 0;
     }
@@ -248,21 +264,51 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int konfY = aktionY + AKTIONS_BTN_Y_OFFSET;
         fuegeFixedTextEinDyn("lblPanelKonfig", I18n.get("webserver.composite.konfig.bereich.panel"), 5, konfY, 200, ZEILE_H);
 
-        int konfFelderY = konfY + ZEILE_H;
-        String aktuellesSheet = ausgewaehlterPanelIndex < panelSheets.size() ? panelSheets.get(ausgewaehlterPanelIndex) : "";
-        fuegeFixedTextEinDyn("lblPanelSheet", I18n.get("webserver.composite.konfig.panel.sheet.label"), 5, konfFelderY, 25, ZEILE_H);
-        fuegeComboBoxEinDyn("cbPanelSheet", ladeComboBoxItems(), 33, konfFelderY, 150, ZEILE_H, aktuellesSheet);
+        // ---- Modus-Auswahl: Blatt / URL / Timer ----
+        int modusY = konfY + ZEILE_H;
+        PanelTyp aktuellerTyp = ausgewaehlterPanelIndex < panelTypen.size() ? panelTypen.get(ausgewaehlterPanelIndex) : PanelTyp.BLATT;
+        boolean istUrlModus   = aktuellerTyp == PanelTyp.URL;
+        boolean istTimerModus = aktuellerTyp == PanelTyp.TIMER;
+        fuegeRadioButtonEinDyn("rbBlatt", I18n.get("webserver.composite.konfig.panel.modus.blatt"), 5,   modusY, 70, ZEILE_H, !istUrlModus && !istTimerModus);
+        fuegeRadioButtonEinDyn("rbUrl",   I18n.get("webserver.composite.konfig.panel.modus.url"),   80,  modusY, 90, ZEILE_H, istUrlModus);
+        fuegeRadioButtonEinDyn("rbTimer", I18n.get("webserver.composite.konfig.panel.modus.timer"), 175, modusY, 60, ZEILE_H, istTimerModus);
+        registriereActionListenerDyn("rbBlatt", () -> wechslePanelModus(PanelTyp.BLATT));
+        registriereActionListenerDyn("rbUrl",   () -> wechslePanelModus(PanelTyp.URL));
+        registriereActionListenerDyn("rbTimer", () -> wechslePanelModus(PanelTyp.TIMER));
 
-        int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
-        fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 190, konfFelderY, 25, ZEILE_H);
-        fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 218, konfFelderY, 35, ZEILE_H);
-
-        boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
-        fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 258, konfFelderY, 80, ZEILE_H, aktuellZentriert);
-
+        int konfFelderY = modusY + ZEILE_H;
         int konfFelderY2 = konfFelderY + ZEILE_H;
-        boolean aktuellBlattnameAnzeigen = ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(ausgewaehlterPanelIndex);
-        fuegeCheckBoxEinDyn("cbPanelBlattnameAnzeigen", I18n.get("webserver.composite.konfig.panel.blattname.label"), 5, konfFelderY2, 150, ZEILE_H, aktuellBlattnameAnzeigen);
+
+        if (istTimerModus) {
+            // ---- Timer-Modus ----
+            int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
+            fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 5, konfFelderY, 25, ZEILE_H);
+            fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 33, konfFelderY, 35, ZEILE_H);
+            boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
+            fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 75, konfFelderY, 80, ZEILE_H, aktuellZentriert);
+            fuegeFixedTextEinDyn("lblTimerHinweis", I18n.get("webserver.composite.konfig.panel.timer.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
+        } else if (istUrlModus) {
+            // ---- URL-Modus ----
+            String aktuelleUrl = ausgewaehlterPanelIndex < panelUrls.size() ? panelUrls.get(ausgewaehlterPanelIndex) : "";
+            fuegeFixedTextEinDyn("lblPanelUrl", I18n.get("webserver.composite.konfig.panel.url.label"), 5, konfFelderY, 20, ZEILE_H);
+            fuegeEditEinDyn("tfUrl", aktuelleUrl, 28, konfFelderY, 380, ZEILE_H);
+            fuegeFixedTextEinDyn("lblUrlHinweis", I18n.get("webserver.composite.konfig.panel.url.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
+        } else {
+            // ---- Blatt-Modus ----
+            String aktuellesSheet = ausgewaehlterPanelIndex < panelSheets.size() ? panelSheets.get(ausgewaehlterPanelIndex) : "";
+            fuegeFixedTextEinDyn("lblPanelSheet", I18n.get("webserver.composite.konfig.panel.sheet.label"), 5, konfFelderY, 25, ZEILE_H);
+            fuegeComboBoxEinDyn("cbPanelSheet", ladeComboBoxItems(), 33, konfFelderY, 150, ZEILE_H, aktuellesSheet);
+
+            int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
+            fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 190, konfFelderY, 25, ZEILE_H);
+            fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 218, konfFelderY, 35, ZEILE_H);
+
+            boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
+            fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 258, konfFelderY, 80, ZEILE_H, aktuellZentriert);
+
+            boolean aktuellBlattnameAnzeigen = ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(ausgewaehlterPanelIndex);
+            fuegeCheckBoxEinDyn("cbPanelBlattnameAnzeigen", I18n.get("webserver.composite.konfig.panel.blattname.label"), 5, konfFelderY2, 150, ZEILE_H, aktuellBlattnameAnzeigen);
+        }
 
         // ---- Layout-Vorschau ----
         int vorschauLabelY = konfFelderY2 + ZEILE_H + VORSCHAU_LABEL_ABSTAND;
@@ -291,6 +337,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
         panelZentriert.add(Boolean.FALSE);
         panelBlattnameAnzeigen.add(Boolean.FALSE);
+        panelTypen.add(PanelTyp.BLATT);
+        panelUrls.add("");
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.horizontal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -304,6 +352,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
         panelZentriert.add(Boolean.FALSE);
         panelBlattnameAnzeigen.add(Boolean.FALSE);
+        panelTypen.add(PanelTyp.BLATT);
+        panelUrls.add("");
         wurzel = ersetzeBlatt(wurzel, ausgewaehlterPanelIndex,
                 SplitTeilung.vertikal(new SplitBlatt(ausgewaehlterPanelIndex), new SplitBlatt(neuerPanelIndex)));
         ausgewaehlterPanelIndex = neuerPanelIndex;
@@ -320,6 +370,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         panelZooms.remove(zuLoeschenderIndex);
         panelZentriert.remove(zuLoeschenderIndex);
         panelBlattnameAnzeigen.remove(zuLoeschenderIndex);
+        panelTypen.remove(zuLoeschenderIndex);
+        panelUrls.remove(zuLoeschenderIndex);
         wurzel = renumeriereNachLoeschen(wurzel, zuLoeschenderIndex);
         ausgewaehlterPanelIndex = Math.min(ausgewaehlterPanelIndex, panelSheets.size() - 1);
         aktualisiereUndFange();
@@ -368,6 +420,24 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     private void speicherePanelKonfiguration() {
+        if (ausgewaehlterPanelIndex < 0) return;
+
+        // Modus aus RadioButtons lesen und speichern (Priorität: Timer > URL > Blatt)
+        if (ausgewaehlterPanelIndex < panelTypen.size()) {
+            XControl rbTimerCtrl = xcc.getControl("rbTimer");
+            XControl rbUrlCtrl   = xcc.getControl("rbUrl");
+            boolean istTimer = rbTimerCtrl != null && Lo.qi(XRadioButton.class, rbTimerCtrl).getState();
+            boolean istUrl   = !istTimer && rbUrlCtrl != null && Lo.qi(XRadioButton.class, rbUrlCtrl).getState();
+            panelTypen.set(ausgewaehlterPanelIndex, istTimer ? PanelTyp.TIMER : istUrl ? PanelTyp.URL : PanelTyp.BLATT);
+        }
+
+        // URL-Feld lesen und speichern (unabhängig vom Modus – Wert bleibt beim Moduswechsel erhalten)
+        XControl tfUrlCtrl = xcc.getControl("tfUrl");
+        if (tfUrlCtrl != null && ausgewaehlterPanelIndex < panelUrls.size()) {
+            panelUrls.set(ausgewaehlterPanelIndex, Lo.qi(XTextComponent.class, tfUrlCtrl).getText().trim());
+        }
+
+        // Blatt-Felder lesen und speichern
         XControl sheetCtrl = xcc.getControl("cbPanelSheet");
         XControl zoomCtrl = xcc.getControl("txtPanelZoom");
         XControl zentriertCtrl = xcc.getControl("cbPanelZentriert");
@@ -388,6 +458,15 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         if (blattnameCtrl != null && ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size()) {
             panelBlattnameAnzeigen.set(ausgewaehlterPanelIndex, Lo.qi(XCheckBox.class, blattnameCtrl).getState() == 1);
         }
+    }
+
+    /** Speichert den aktuellen Panel-Zustand und wechselt den Modus, dann baut die Felder neu auf. */
+    private void wechslePanelModus(PanelTyp neuerTyp) {
+        speicherePanelKonfiguration();
+        if (ausgewaehlterPanelIndex < panelTypen.size()) {
+            panelTypen.set(ausgewaehlterPanelIndex, neuerTyp);
+        }
+        aktualisiereUndFange();
     }
 
     private CompositeViewEintragRoh validiereUndBaue() throws UngueltigeEingabeException {
@@ -429,10 +508,24 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         }
         List<PanelEintragRoh> panels = new ArrayList<>();
         for (int i = 0; i < panelSheets.size(); i++) {
-            int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
-            boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
-            boolean pBlattnameAnzeigen = i < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(i);
-            panels.add(new PanelEintragRoh(panelSheets.get(i), pZoom, pZentriert, pBlattnameAnzeigen));
+            PanelTyp panelTyp = i < panelTypen.size() ? panelTypen.get(i) : PanelTyp.BLATT;
+            if (panelTyp == PanelTyp.TIMER) {
+                int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
+                boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
+                panels.add(new PanelEintragRoh(PanelTyp.TIMER, "", pZoom, pZentriert, false, ""));
+            } else if (panelTyp == PanelTyp.URL) {
+                String url = i < panelUrls.size() ? panelUrls.get(i) : "";
+                String urlFehler = validiereUrl(url);
+                if (urlFehler != null) {
+                    throw new UngueltigeEingabeException(urlFehler);
+                }
+                panels.add(new PanelEintragRoh(PanelTyp.URL, "", GlobalProperties.DEFAULT_ZOOM, false, false, url));
+            } else {
+                int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
+                boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
+                boolean pBlattnameAnzeigen = i < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(i);
+                panels.add(new PanelEintragRoh(PanelTyp.BLATT, panelSheets.get(i), pZoom, pZentriert, pBlattnameAnzeigen, ""));
+            }
         }
 
         // Layout serialisieren
@@ -501,6 +594,27 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     renumeriereNachLoeschen(teilung.links(), geloeschtIndex),
                     renumeriereNachLoeschen(teilung.rechts(), geloeschtIndex));
         };
+    }
+
+    /**
+     * Prüft ob die URL gültig ist: nicht leer, Schema muss http oder https sein.
+     *
+     * @return Fehlermeldung oder {@code null} wenn die URL gültig ist
+     */
+    private static String validiereUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return I18n.get("webserver.composite.konfig.panel.url.fehler.leer");
+        }
+        try {
+            var uri = new URI(url);
+            var schema = uri.getScheme();
+            if (!"http".equalsIgnoreCase(schema) && !"https".equalsIgnoreCase(schema)) {
+                return I18n.get("webserver.composite.konfig.panel.url.fehler.schema");
+            }
+        } catch (URISyntaxException e) {
+            return I18n.get("webserver.composite.konfig.panel.url.fehler.ungueltig");
+        }
+        return null;
     }
 
     // ---- ComboBox-Items ----
@@ -610,6 +724,20 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         dynamischeControlNamen.add(name);
     }
 
+    private void fuegeRadioButtonEinDyn(String name, String label, int x, int y, int w, int h, boolean selected)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label",     label);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width",     w);
+        props.setPropertyValue("Height",    h);
+        props.setPropertyValue("State",     (short) (selected ? 1 : 0));
+        cont.insertByName(name, model);
+        dynamischeControlNamen.add(name);
+    }
+
     private void fuegeComboBoxEinDyn(String name, String[] items, int x, int y, int w, int h, String selected)
             throws com.sun.star.uno.Exception {
         var model = xMSF.createInstance("com.sun.star.awt.UnoControlComboBoxModel");
@@ -665,17 +793,33 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         h = Math.max(h, VORSCHAU_MIN_GROESSE);
         switch (knoten) {
             case SplitBlatt blatt -> {
-                String sheetName = blatt.panel() < panelSheets.size() ? panelSheets.get(blatt.panel()) : "?";
-                String kurzName = sheetName != null && sheetName.length() > 20
-                        ? sheetName.substring(0, 18) + "…"
-                        : sheetName;
-                int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
-                boolean pZentriert = blatt.panel() < panelZentriert.size() && panelZentriert.get(blatt.panel());
-                String suffix = " [" + pZoom + "%" + (pZentriert ? " Z" : "") + "]";
+                PanelTyp panelTyp = blatt.panel() < panelTypen.size() ? panelTypen.get(blatt.panel()) : PanelTyp.BLATT;
+                String tooltip;
+                String kurzName;
+                String suffix;
+                if (panelTyp == PanelTyp.URL) {
+                    String url = blatt.panel() < panelUrls.size() ? panelUrls.get(blatt.panel()) : "";
+                    tooltip = url;
+                    kurzName = url != null && url.length() > 22 ? url.substring(0, 20) + "…" : url;
+                    suffix = " [URL]";
+                } else if (panelTyp == PanelTyp.TIMER) {
+                    kurzName = I18n.get("webserver.composite.konfig.panel.modus.timer");
+                    tooltip = kurzName;
+                    int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
+                    boolean pZentriert = blatt.panel() < panelZentriert.size() && panelZentriert.get(blatt.panel());
+                    suffix = " [" + pZoom + "%" + (pZentriert ? " Z" : "") + "]";
+                } else {
+                    String sheetName = blatt.panel() < panelSheets.size() ? panelSheets.get(blatt.panel()) : "?";
+                    tooltip = sheetName;
+                    kurzName = sheetName != null && sheetName.length() > 20 ? sheetName.substring(0, 18) + "…" : sheetName;
+                    int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
+                    boolean pZentriert = blatt.panel() < panelZentriert.size() && panelZentriert.get(blatt.panel());
+                    suffix = " [" + pZoom + "%" + (pZentriert ? " Z" : "") + "]";
+                }
                 String label = "P" + blatt.panel() + ": " + kurzName + suffix;
                 boolean istAktiv = blatt.panel() == ausgewaehlterPanelIndex;
                 String ctlName = "vorschauBox_" + zaehler.getAndIncrement();
-                fuegeVorschauButtonEinDyn(ctlName, label, x, y, w, h, istAktiv, sheetName);
+                fuegeVorschauButtonEinDyn(ctlName, label, x, y, w, h, istAktiv, tooltip);
                 final int panelId = blatt.panel();
                 registriereActionListenerDyn(ctlName, () -> waehlePanel(panelId));
             }

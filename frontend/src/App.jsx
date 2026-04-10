@@ -34,6 +34,9 @@ function panelAusNachricht(msg) {
   return {
     panelId: msg.panelId,
     externeUrl: msg.externeUrl ?? null,
+    timerAnzeige: msg.timerAnzeige ?? null,
+    timerZustand: msg.timerZustand ?? null,
+    timerBezeichnung: msg.timerBezeichnung ?? null,
     zoom: msg.zoom ?? 100,
     zentrieren: msg.zentriert ?? false,
     blattnameAnzeigen: msg.blattnameAnzeigen ?? false,
@@ -62,6 +65,9 @@ function panelDiffAusNachricht(msg, vorher) {
   return {
     panelId: msg.panelId,
     externeUrl: msg.externeUrl ?? vorher?.externeUrl ?? null,
+    timerAnzeige: msg.timerAnzeige ?? vorher?.timerAnzeige ?? null,
+    timerZustand: msg.timerZustand ?? vorher?.timerZustand ?? null,
+    timerBezeichnung: msg.timerBezeichnung ?? vorher?.timerBezeichnung ?? null,
     zoom: msg.zoom ?? vorher?.zoom ?? 100,
     zentrieren: msg.zentriert ?? vorher?.zentrieren ?? false,
     blattnameAnzeigen: msg.blattnameAnzeigen ?? vorher?.blattnameAnzeigen ?? false,

@@ -88,6 +88,9 @@ public final class WebServerManager implements TimerListener {
     private final Map<Integer, AtomicInteger> compositeVersionen = new ConcurrentHashMap<>();
     /** Letzte URL pro Composite-Port und Panel-ID (port → panelId → url). Diff-Cache für URL-Panels. */
     private final Map<Integer, Map<Integer, String>> letzteCompositeUrls = new ConcurrentHashMap<>();
+    /** Initialisierte TIMER-Panels pro Composite-Port (port → Set<panelId>). ConcurrentHashMap erlaubt keine null-Werte,
+     * daher können TIMER-Panels nicht in letzteCompositeModelle als null-Marker gespeichert werden. */
+    private final Map<Integer, Set<Integer>> initialisiertePanels = new ConcurrentHashMap<>();
 
     /** Dokument, das den WebServer gestartet hat – nur dieses darf ihn wieder stoppen. */
     private XSpreadsheetDocument ownerDocument = null;
@@ -95,6 +98,7 @@ public final class WebServerManager implements TimerListener {
     private boolean laeuft = false;
     private boolean letzterSheetnamenAnzeigen = false;
     private TimerWebServerInstanz timerInstanz;
+    private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
     private WebServerManager() {
     }
@@ -158,6 +162,7 @@ public final class WebServerManager implements TimerListener {
                 letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
                 letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
                 letzteCompositeUrls.put(konfig.port(), new ConcurrentHashMap<>());
+                initialisiertePanels.put(konfig.port(), ConcurrentHashMap.newKeySet());
                 logger.info("Composite-View-Server gestartet auf Port {}", konfig.port());
                 safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
             } catch (IOException e) {
@@ -213,14 +218,42 @@ public final class WebServerManager implements TimerListener {
     }
 
     /**
-     * Empfängt Timer-Zustandsänderungen und leitet sie an den laufenden Timer-Webserver weiter.
+     * Empfängt Timer-Zustandsänderungen und leitet sie an den laufenden Timer-Webserver
+     * sowie an alle Composite-Instanzen mit TIMER-Panels weiter.
      * Registriert einmalig in {@code PetanqueTurnierMngrSingleton.init()}.
      */
     @Override
     public synchronized void onChange(TimerState state) {
+        letzterTimerZustand = state;
         if (timerInstanz != null && timerInstanz.laeuft()) {
             timerInstanz.onChange(state);
         }
+        for (var instanz : compositeInstanzen) {
+            if (!instanz.hatTimerPanels()) {
+                continue;
+            }
+            sendeTimerUpdateAnComposite(instanz, state);
+        }
+    }
+
+    /**
+     * Pusht den aktuellen Timer-Zustand als diff-Nachricht an alle TIMER-Panels
+     * der gegebenen Composite-Instanz.
+     */
+    private void sendeTimerUpdateAnComposite(CompositeViewInstanz instanz, TimerState state) {
+        var panelNachrichten = new ArrayList<CompositePanelNachricht>();
+        var konfig = instanz.getKonfiguration();
+        for (int i = 0; i < konfig.panels().size(); i++) {
+            if (konfig.panels().get(i).typ() == PanelTyp.TIMER) {
+                var panelKonfig = konfig.panels().get(i);
+                panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.zentriert(), state));
+            }
+        }
+        if (panelNachrichten.isEmpty()) {
+            return;
+        }
+        int version = compositeVersionen.getOrDefault(konfig.port(), new AtomicInteger(0)).incrementAndGet();
+        instanz.sseNachrichtPushen(GSON.toJson(CompositeSseNachricht.diff(version, panelNachrichten, konfig.wurzel(), konfig.zoom())));
     }
 
     /**
@@ -251,6 +284,7 @@ public final class WebServerManager implements TimerListener {
         letzteCompositeTitel.clear();
         compositeVersionen.clear();
         letzteCompositeUrls.clear();
+        initialisiertePanels.clear();
         laeuft = false;
         letzterSheetnamenAnzeigen = false;
         ownerDocument = null;
@@ -366,6 +400,13 @@ public final class WebServerManager implements TimerListener {
                         var neueUrlCache = letzteCompositeUrls.computeIfAbsent(port, p -> new ConcurrentHashMap<>());
                         for (int i = 0; i < neueAnzahl; i++) {
                             var neuerPanelEintrag = e.panels().get(i);
+                            if (neuerPanelEintrag.typ() == PanelTyp.TIMER) {
+                                neuePanelKonfigs.add(new PanelKonfiguration(
+                                        PanelTyp.TIMER, "", null,
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), false, ""));
+                                alleInitPanels.add(CompositePanelNachricht.timer(i, neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), letzterTimerZustand));
+                                continue;
+                            }
                             if (neuerPanelEintrag.typ() == PanelTyp.URL) {
                                 neuePanelKonfigs.add(new PanelKonfiguration(
                                         PanelTyp.URL, "", null,
@@ -397,6 +438,7 @@ public final class WebServerManager implements TimerListener {
                         // Cache durch korrekt re-indizierte Maps ersetzen
                         panelModelle.clear();
                         panelModelle.putAll(neuePanelModelle);
+                        initialisiertePanels.computeIfPresent(port, (p, s) -> { s.clear(); return s; });
                         if (panelTitel != null) {
                             panelTitel.clear();
                             panelTitel.putAll(neuePanelTitel);
@@ -456,6 +498,7 @@ public final class WebServerManager implements TimerListener {
             letzteCompositeTitel.remove(port);
             compositeVersionen.remove(port);
             letzteCompositeUrls.remove(port);
+            initialisiertePanels.remove(port);
             logger.info("Composite-View-Server auf Port {} gestoppt (konfigurationGeaendert)", port);
             safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt.port", port));
         }
@@ -466,14 +509,14 @@ public final class WebServerManager implements TimerListener {
                 try {
                     var instanz = new CompositeViewInstanz(konfig);
                     instanz.starten();
-                    instanz.setCachedInitJson(GSON.toJson(CompositeSseNachricht.hinweis(
-                            I18n.get("webserver.hinweis.kein.dokument.titel"),
-                            I18n.get("webserver.hinweis.kein.dokument.text"))));
-                    compositeInstanzen.add(instanz);
-                    compositeVersionen.put(konfig.port(), new AtomicInteger(0));
+                    var versionZaehler = new AtomicInteger(0);
+                    compositeVersionen.put(konfig.port(), versionZaehler);
                     letzteCompositeModelle.put(konfig.port(), new ConcurrentHashMap<>());
                     letzteCompositeTitel.put(konfig.port(), new ConcurrentHashMap<>());
                     letzteCompositeUrls.put(konfig.port(), new ConcurrentHashMap<>());
+                    initialisiertePanels.put(konfig.port(), ConcurrentHashMap.newKeySet());
+                    initialisiereNeueCompositeInstanz(instanz, konfig, versionZaehler);
+                    compositeInstanzen.add(instanz);
                     logger.info("Composite-View-Server auf Port {} gestartet (konfigurationGeaendert)", konfig.port());
                     safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
                 } catch (IOException e) {
@@ -495,6 +538,40 @@ public final class WebServerManager implements TimerListener {
                     .limit(MAX_URL_SLOTS)
                     .forEach(slots::add);
         }
+    }
+
+    /**
+     * Setzt den initialen SSE-Cache für eine neu gestartete Composite-Instanz.
+     * <p>
+     * Panels ohne Sheet-Zugriff (TIMER, URL) können sofort initialisiert werden.
+     * BLATT-Panels ohne gecachtes Modell werden erst beim nächsten Rendering befüllt;
+     * bis dahin bleibt der Hinweis-Cache für diese Instanz erhalten.
+     */
+    private void initialisiereNeueCompositeInstanz(
+            CompositeViewInstanz instanz,
+            CompositeViewKonfiguration konfig,
+            AtomicInteger versionZaehler) {
+        var alleInitPanels = new ArrayList<CompositePanelNachricht>();
+        for (int i = 0; i < konfig.panels().size(); i++) {
+            var panelKonfig = konfig.panels().get(i);
+            if (panelKonfig.typ() == PanelTyp.TIMER) {
+                alleInitPanels.add(CompositePanelNachricht.timer(
+                        i, panelKonfig.zoom(), panelKonfig.zentriert(), letzterTimerZustand));
+            } else if (panelKonfig.typ() == PanelTyp.URL) {
+                alleInitPanels.add(CompositePanelNachricht.url(i, panelKonfig.externeUrl()));
+                letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
+            }
+        }
+        if (alleInitPanels.isEmpty() || alleInitPanels.size() < konfig.panels().size()) {
+            // Nicht alle Panels können ohne Sheet initialisiert werden → vorerst Hinweis
+            instanz.setCachedInitJson(GSON.toJson(CompositeSseNachricht.hinweis(
+                    I18n.get("webserver.hinweis.kein.dokument.titel"),
+                    I18n.get("webserver.hinweis.kein.dokument.text"))));
+            return;
+        }
+        int version = versionZaehler.incrementAndGet();
+        instanz.setCachedInitJson(GSON.toJson(
+                CompositeSseNachricht.init(version, alleInitPanels, konfig.wurzel(), konfig.zoom())));
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
@@ -615,6 +692,19 @@ public final class WebServerManager implements TimerListener {
             for (int i = 0; i < konfig.panels().size(); i++) {
                 var panelKonfig = konfig.panels().get(i);
 
+                // TIMER-Panel: kein Sheet-Lookup, Timer-Zustand aus letzterTimerZustand
+                if (panelKonfig.typ() == PanelTyp.TIMER) {
+                    panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.zentriert(), letzterTimerZustand));
+                    // irgendeineAenderung nur beim ersten Rendering setzen – laufende Timer-Updates
+                    // kommen über onChange() direkt als diff-Push ohne Sheet-Refresh
+                    var timerPanels = initialisiertePanels.computeIfAbsent(port, p -> ConcurrentHashMap.newKeySet());
+                    if (timerPanels.add(i)) {
+                        irgendeineAenderung = true;
+                        erstesRendering = true;
+                    }
+                    continue;
+                }
+
                 // URL-Panel: kein Sheet-Lookup, nur Diff auf URL-Änderung
                 if (panelKonfig.typ() == PanelTyp.URL) {
                     String letzteUrl = urlCache.get(i);
@@ -681,6 +771,10 @@ public final class WebServerManager implements TimerListener {
             var alleInitPanels = new ArrayList<CompositePanelNachricht>();
             for (int i = 0; i < konfig.panels().size(); i++) {
                 var panelKonfig = konfig.panels().get(i);
+                if (panelKonfig.typ() == PanelTyp.TIMER) {
+                    alleInitPanels.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.zentriert(), letzterTimerZustand));
+                    continue;
+                }
                 if (panelKonfig.typ() == PanelTyp.URL) {
                     String cachedUrl = urlCache.get(i);
                     if (cachedUrl != null) {

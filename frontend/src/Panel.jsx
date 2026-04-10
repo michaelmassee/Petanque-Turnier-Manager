@@ -17,6 +17,27 @@ export default function Panel({ table, sheetnamenAnzeigen }) {
     return null;
   }
 
+  if (table.timerAnzeige != null) {
+    const zustand = (table.timerZustand ?? 'INAKTIV').toLowerCase();
+    const GUELTIGE_ZUSTAENDE = ['inaktiv', 'laeuft', 'pausiert', 'beendet'];
+    const cls = GUELTIGE_ZUSTAENDE.includes(zustand)
+      ? `timer-zustand-${zustand}`
+      : 'timer-zustand-inaktiv';
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+        <div className={`timer-panel ${cls}`} style={{
+          transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
+          transformOrigin: table.zentrieren ? 'top center' : 'top left',
+        }}>
+          {table.timerBezeichnung && (
+            <div className="timer-bezeichnung">{table.timerBezeichnung}</div>
+          )}
+          <div className="timer-anzeige">{table.timerAnzeige ?? '--:--'}</div>
+        </div>
+      </div>
+    );
+  }
+
   if (table.externeUrl) {
     if (iframeFehler) {
       return (

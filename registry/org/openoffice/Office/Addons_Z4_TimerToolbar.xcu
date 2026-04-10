@@ -142,5 +142,84 @@
             </node>
         </node>
 
+    <!-- Icons für Toolbar-Schaltflächen: Command-URL → Bilddatei -->
+    <!-- ImageIdentifier in OfficeToolBar-Items funktioniert in modernen LO-Versionen nicht. -->
+    <!-- Icons müssen in einem separaten Images-Node definiert werden. -->
+    <!-- %origin% zeigt auf das Verzeichnis dieser XCU-Datei (registry/org/openoffice/Office/). -->
+    <node oor:name="Images">
+        <node oor:name="de.petanqueturniermanager.toolbar.timer.start" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+                <value>ptm:timer_starten_dialog</value>
+            </prop>
+            <node oor:name="UserDefinedImages">
+                <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-start.png</value>
+                </prop>
+                <prop oor:name="ImageBigURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-start.png</value>
+                </prop>
+            </node>
+        </node>
+
+        <node oor:name="de.petanqueturniermanager.toolbar.timer.pause" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+                <value>ptm:timer_pause_fortsetzen</value>
+            </prop>
+            <node oor:name="UserDefinedImages">
+                <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-pause.png</value>
+                </prop>
+                <prop oor:name="ImageBigURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-pause.png</value>
+                </prop>
+            </node>
+        </node>
+
+        <node oor:name="de.petanqueturniermanager.toolbar.timer.stop" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+                <value>ptm:timer_stoppen</value>
+            </prop>
+            <node oor:name="UserDefinedImages">
+                <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-stop.png</value>
+                </prop>
+                <prop oor:name="ImageBigURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-stop.png</value>
+                </prop>
+            </node>
+        </node>
+
+
+        <node oor:name="de.petanqueturniermanager.toolbar.timer.plus1" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+                <value>ptm:timer_plus_minute</value>
+            </prop>
+            <node oor:name="UserDefinedImages">
+                <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-plus1.png</value>
+                </prop>
+                <prop oor:name="ImageBigURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-plus1.png</value>
+                </prop>
+            </node>
+        </node>
+
+
+        <node oor:name="de.petanqueturniermanager.toolbar.timer.minus1" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+                <value>ptm:timer_minus_minute</value>
+            </prop>
+            <node oor:name="UserDefinedImages">
+                <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-minus1.png</value>
+                </prop>
+                <prop oor:name="ImageBigURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-minus1.png</value>
+                </prop>
+            </node>
+        </node>
+
+
+    </node>
     </node>
 </oor:component-data>

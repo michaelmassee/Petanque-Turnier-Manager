@@ -121,6 +121,11 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
         return konfiguration;
     }
 
+    /** Gibt {@code true} zurück, wenn diese Instanz mindestens ein TIMER-Panel enthält. */
+    public boolean hatTimerPanels() {
+        return konfiguration.panels().stream().anyMatch(p -> p.typ() == PanelTyp.TIMER);
+    }
+
     /**
      * Aktualisiert die Konfiguration, speichert das gecachte Init-JSON und pusht separat.
      *

@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import de.petanqueturniermanager.timer.TimerState;
+
 /**
  * SSE-Daten für ein einzelnes Panel in einem Composite View.
  * <p>
- * Enthält den vollständigen oder differenziellen Tabellenzustand eines Panels.
+ * Enthält den vollständigen oder differenziellen Tabellenzustand eines Panels,
+ * oder – bei URL-Panels – die externe URL für die iframe-Anzeige,
+ * oder – bei TIMER-Panels – den aktuellen Timer-Zustand.
  * Null-Felder werden von Gson nicht serialisiert.
  */
 public record CompositePanelNachricht(
@@ -28,7 +32,11 @@ public record CompositePanelNachricht(
         String fusszeileLinks,
         String fusszeileMitte,
         String fusszeileRechts,
-        int kopfZeilenAnzahl) {
+        int kopfZeilenAnzahl,
+        String externeUrl,
+        String timerAnzeige,
+        String timerZustand,
+        String timerBezeichnung) {
 
     /**
      * Erstellt eine vollständige Panel-Nachricht (init) aus einem TabelleModel.
@@ -42,7 +50,8 @@ public record CompositePanelNachricht(
                 modell.getSpaltenBreiten(), modell.getZeilenHoehen(),
                 modell.getKopfzeileLinks(), modell.getKopfzeileMitte(), modell.getKopfzeileRechts(),
                 modell.getFusszeileLinks(), modell.getFusszeileMitte(), modell.getFusszeileRechts(),
-                modell.getKopfZeilenAnzahl());
+                modell.getKopfZeilenAnzahl(),
+                null, null, null, null);
     }
 
     /**
@@ -57,6 +66,38 @@ public record CompositePanelNachricht(
                 diffModell.getSpaltenBreiten(), diffModell.getZeilenHoehen(),
                 diffModell.getKopfzeileLinks(), diffModell.getKopfzeileMitte(), diffModell.getKopfzeileRechts(),
                 diffModell.getFusszeileLinks(), diffModell.getFusszeileMitte(), diffModell.getFusszeileRechts(),
-                diffModell.getKopfZeilenAnzahl());
+                diffModell.getKopfZeilenAnzahl(),
+                null, null, null, null);
+    }
+
+    /**
+     * Erstellt eine URL-Panel-Nachricht: das Panel zeigt einen iframe mit der übergebenen URL.
+     *
+     * @param panelId    Panel-Index
+     * @param externeUrl die anzuzeigende URL (validiert: nur http/https)
+     */
+    static CompositePanelNachricht url(int panelId, String externeUrl) {
+        return new CompositePanelNachricht(
+                panelId, 100, false, false, "",
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, 0,
+                externeUrl, null, null, null);
+    }
+
+    /**
+     * Erstellt eine TIMER-Panel-Nachricht mit dem aktuellen Timer-Zustand.
+     *
+     * @param panelId  Panel-Index
+     * @param zoom     Zoom-Faktor in %
+     * @param zentriert ob der Inhalt horizontal zentriert wird
+     * @param state    aktueller Timer-Zustand
+     */
+    static CompositePanelNachricht timer(int panelId, int zoom, boolean zentriert, TimerState state) {
+        return new CompositePanelNachricht(
+                panelId, zoom, zentriert, false, "",
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, 0,
+                null,
+                state.anzeige(), state.zustand().name(), state.bezeichnung());
     }
 }

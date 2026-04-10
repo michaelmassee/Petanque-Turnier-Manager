@@ -17,6 +17,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
+import de.petanqueturniermanager.webserver.PanelTyp;
 import de.petanqueturniermanager.webserver.PortKonfiguration;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.SplitKnoten;
@@ -53,6 +54,8 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX = "_zoom";
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX = "_zentriert";
 	private static final String WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX = "_blattname";
+	private static final String WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX = "_typ";
+	private static final String WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX = "_url";
 
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
 
@@ -81,8 +84,21 @@ public class GlobalProperties {
 
 	/**
 	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
+	 *
+	 * @param typ               Anzeigemodus: {@link PanelTyp#BLATT} oder {@link PanelTyp#URL}
+	 * @param sheetConfig       Sheet-Konfigurations-String (nur relevant wenn typ == BLATT)
+	 * @param zoom              Zoom-Faktor in %
+	 * @param zentriert         ob der Inhalt horizontal zentriert dargestellt wird
+	 * @param blattnameAnzeigen ob der Blattname als Kopfzeile angezeigt wird
+	 * @param externeUrl        externe URL (nur relevant wenn typ == URL)
 	 */
-	public record PanelEintragRoh(String sheetConfig, int zoom, boolean zentriert, boolean blattnameAnzeigen) {}
+	public record PanelEintragRoh(
+			PanelTyp typ,
+			String sheetConfig,
+			int zoom,
+			boolean zentriert,
+			boolean blattnameAnzeigen,
+			String externeUrl) {}
 
 	/**
 	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
@@ -329,14 +345,16 @@ public class GlobalProperties {
 
 					List<PanelEintragRoh> panels = new ArrayList<>();
 					for (int i = 0; i < panelCount; i++) {
-						String sheetConfig = propMap.getOrDefault(
-								WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, "").trim();
-						if (sheetConfig.isEmpty()) continue;
-						int panelZoom = parseZoom(propMap.get(
-								WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
-						boolean panelZentriert = getBoolean(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
-						boolean panelBlattnameAnzeigen = getBoolean(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
-						panels.add(new PanelEintragRoh(sheetConfig, panelZoom, panelZentriert, panelBlattnameAnzeigen));
+						String panelPrefix = WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
+						PanelTyp panelTyp = parsePanelTyp(propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX));
+						String sheetConfig = propMap.getOrDefault(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, "").trim();
+						String externeUrl = propMap.getOrDefault(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, "").trim();
+						if (panelTyp == PanelTyp.BLATT && sheetConfig.isEmpty()) continue;
+						if (panelTyp == PanelTyp.URL && externeUrl.isEmpty()) continue;
+						int panelZoom = parseZoom(propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
+						boolean panelZentriert = getBoolean(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
+						boolean panelBlattnameAnzeigen = getBoolean(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
+						panels.add(new PanelEintragRoh(panelTyp, sheetConfig, panelZoom, panelZentriert, panelBlattnameAnzeigen, externeUrl));
 					}
 					if (!panels.isEmpty()) {
 						eintraege.add(new CompositeViewEintragRoh(port, aktiv, zoom, layoutJson, panels));
@@ -370,12 +388,20 @@ public class GlobalProperties {
 				}
 				List<PanelKonfiguration> panels = new ArrayList<>();
 				for (var p : eintrag.panels()) {
+					if (p.typ() == PanelTyp.TIMER) {
+						panels.add(new PanelKonfiguration(PanelTyp.TIMER, "", null, p.zoom(), p.zentriert(), false, ""));
+						continue;
+					}
+					if (p.typ() == PanelTyp.URL) {
+						panels.add(new PanelKonfiguration(PanelTyp.URL, "", null, p.zoom(), p.zentriert(), p.blattnameAnzeigen(), p.externeUrl()));
+						continue;
+					}
 					var resolver = SheetResolverFactory.erstellen(p.sheetConfig());
 					if (resolver == null) {
 						logger.warn("Resolver null für Panel-Config '{}'", p.sheetConfig());
 						continue;
 					}
-					panels.add(new PanelKonfiguration(p.sheetConfig(), resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen()));
+					panels.add(new PanelKonfiguration(PanelTyp.BLATT, p.sheetConfig(), resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen(), ""));
 				}
 				if (!panels.isEmpty()) {
 					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.zoom(), wurzel, panels));
@@ -401,10 +427,13 @@ public class GlobalProperties {
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX);
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX);
 				for (int i = 0; i < alt.panels().size(); i++) {
-					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
-					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
-					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
-					propMap.remove(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
+					String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX);
 				}
 			}
 			propMap.remove(WEBSERVER_COMPOSITE_PORTS_PROP);
@@ -423,13 +452,19 @@ public class GlobalProperties {
 					propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_COUNT_SUFFIX, String.valueOf(eintrag.panels().size()));
 					for (int i = 0; i < eintrag.panels().size(); i++) {
 						var panel = eintrag.panels().get(i);
-						propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());
+						String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
+						propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX, panel.typ().name());
+						if (panel.typ() == PanelTyp.URL) {
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX, panel.externeUrl());
+						} else {
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX, panel.sheetConfig());
+						}
 						if (panel.zoom() != DEFAULT_ZOOM)
-							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
 						if (panel.zentriert())
-							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX, "true");
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX, "true");
 						if (panel.blattnameAnzeigen())
-							propMap.put(prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX, "true");
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX, "true");
 					}
 				}
 				propMap.put(WEBSERVER_COMPOSITE_PORTS_PROP, ports.toString());
@@ -535,6 +570,16 @@ public class GlobalProperties {
 	private static void setBooleanProp(String key, boolean value) {
 		if (value) propMap.put(key, "true");
 		else propMap.remove(key);
+	}
+
+	private static PanelTyp parsePanelTyp(String value) {
+		if (value == null || value.isBlank()) return PanelTyp.BLATT;
+		try {
+			return PanelTyp.valueOf(value.trim().toUpperCase());
+		} catch (IllegalArgumentException e) {
+			logger.warn("Unbekannter PanelTyp '{}', verwende BLATT", value.trim());
+			return PanelTyp.BLATT;
+		}
 	}
 
 	private static int parseZoom(String value) {
