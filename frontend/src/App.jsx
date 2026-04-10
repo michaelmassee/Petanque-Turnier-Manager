@@ -33,6 +33,7 @@ function panelAusNachricht(msg) {
   }
   return {
     panelId: msg.panelId,
+    externeUrl: msg.externeUrl ?? null,
     zoom: msg.zoom ?? 100,
     zentrieren: msg.zentriert ?? false,
     blattnameAnzeigen: msg.blattnameAnzeigen ?? false,
@@ -60,6 +61,7 @@ function panelDiffAusNachricht(msg, vorher) {
   }
   return {
     panelId: msg.panelId,
+    externeUrl: msg.externeUrl ?? vorher?.externeUrl ?? null,
     zoom: msg.zoom ?? vorher?.zoom ?? 100,
     zentrieren: msg.zentriert ?? vorher?.zentrieren ?? false,
     blattnameAnzeigen: msg.blattnameAnzeigen ?? vorher?.blattnameAnzeigen ?? false,

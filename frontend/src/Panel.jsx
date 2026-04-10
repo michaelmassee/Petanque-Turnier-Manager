@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Cell from './Cell';
 
 // 1/100 mm → Pixel (gerundet, verhindert Sub-Pixel-Layout-Drift)
@@ -10,7 +11,37 @@ const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
  * @param {boolean} props.sheetnamenAnzeigen - ob Blattnamen in der Kopfzeile angezeigt werden
  */
 export default function Panel({ table, sheetnamenAnzeigen }) {
-  if (!table || table.zeilen === 0) {
+  const [iframeFehler, setIframeFehler] = useState(false);
+
+  if (!table) {
+    return null;
+  }
+
+  if (table.externeUrl) {
+    if (iframeFehler) {
+      return (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '100%', height: '100%', padding: '16px', boxSizing: 'border-box',
+          color: '#c0392b', flexDirection: 'column', gap: '8px',
+        }}>
+          <div style={{ fontWeight: 'bold' }}>Fehler beim Laden der URL</div>
+          <div style={{ fontSize: '0.85em', wordBreak: 'break-all' }}>{table.externeUrl}</div>
+        </div>
+      );
+    }
+    return (
+      <iframe
+        src={table.externeUrl}
+        style={{ width: '100%', height: '100%', border: 'none' }}
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        title={table.externeUrl}
+        onError={() => setIframeFehler(true)}
+      />
+    );
+  }
+
+  if (table.zeilen === 0) {
     return null;
   }
 
