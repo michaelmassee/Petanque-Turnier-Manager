@@ -7,6 +7,7 @@
             <node oor:name="de.petanqueturniermanager.toolbar.timer" oor:op="replace">
 
                 <prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr Timer</value>
                     <value xml:lang="de">PétTurnMngr Timer</value>
                     <value xml:lang="en">PétTurnMngr Timer</value>
                     <value xml:lang="es">PétTurnMngr Temporizador</value>
@@ -15,6 +16,7 @@
                 </prop>
 
                 <prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr Timer</value>
                     <value xml:lang="de">PétTurnMngr Timer</value>
                     <value xml:lang="en">PétTurnMngr Timer</value>
                     <value xml:lang="es">PétTurnMngr Temporizador</value>

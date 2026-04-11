@@ -7,6 +7,7 @@
             <node oor:name="de.petanqueturniermanager.toolbar.spieltag" oor:op="replace">
 
                 <prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr Spieltag</value>
                     <value xml:lang="de">PétTurnMngr Spieltag</value>
                     <value xml:lang="en">PétTurnMngr Competition Day</value>
                     <value xml:lang="es">PétTurnMngr Jornada</value>
@@ -15,6 +16,7 @@
                 </prop>
 
                 <prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr Spieltag</value>
                     <value xml:lang="de">PétTurnMngr Spieltag</value>
                     <value xml:lang="en">PétTurnMngr Competition Day</value>
                     <value xml:lang="es">PétTurnMngr Jornada</value>

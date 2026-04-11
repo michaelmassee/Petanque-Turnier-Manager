@@ -8,6 +8,7 @@
             <node oor:name="de.petanqueturniermanager.toolbar" oor:op="replace">
 
                 <prop oor:name="Title" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr Symbolleiste</value>
                     <value xml:lang="de">PétTurnMngr Symbolleiste</value>
                     <value xml:lang="en">PétTurnMngr Toolbar</value>
                     <value xml:lang="es">Barra PétTurnMngr</value>
@@ -16,6 +17,7 @@
                 </prop>
 
                 <prop oor:name="Label" oor:type="xs:string" oor:localized="true">
+                    <value>PétTurnMngr Symbolleiste</value>
                     <value xml:lang="de">PétTurnMngr Symbolleiste</value>
                     <value xml:lang="en">PétTurnMngr Toolbar</value>
                     <value xml:lang="es">Barra PétTurnMngr</value>

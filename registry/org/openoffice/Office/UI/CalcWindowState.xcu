@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oor:component-data
+    xmlns:oor="http://openoffice.org/2001/registry"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    oor:name="CalcWindowState"
+    oor:package="org.openoffice.Office.UI">
+
+    <node oor:name="UIElements">
+        <node oor:name="States">
+            <node oor:name="private:resource/toolbar/addon_de.petanqueturniermanager.toolbar" oor:op="replace">
+                <prop oor:name="UIName" oor:type="xs:string">
+                    <value xml:lang="en-US">PétTurnMngr Toolbar</value>
+                    <value xml:lang="de">PétTurnMngr Symbolleiste</value>
+                    <value xml:lang="es">Barra PétTurnMngr</value>
+                    <value xml:lang="fr">Barre PétTurnMngr</value>
+                    <value xml:lang="nl">PétTurnMngr Werkbalk</value>
+                </prop>
+                <prop oor:name="Visible" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+                <prop oor:name="Docked" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+                <prop oor:name="ContextSensitive" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+            </node>
+            <node oor:name="private:resource/toolbar/addon_de.petanqueturniermanager.toolbar.spieltag" oor:op="replace">
+                <prop oor:name="UIName" oor:type="xs:string">
+                    <value xml:lang="en-US">PétTurnMngr Competition Day</value>
+                    <value xml:lang="de">PétTurnMngr Spieltag</value>
+                    <value xml:lang="es">PétTurnMngr Jornada</value>
+                    <value xml:lang="fr">PétTurnMngr Journée</value>
+                    <value xml:lang="nl">PétTurnMngr Speeldag</value>
+                </prop>
+                <prop oor:name="Visible" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+                <prop oor:name="Docked" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+                <prop oor:name="ContextSensitive" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+            </node>
+            <node oor:name="private:resource/toolbar/addon_de.petanqueturniermanager.toolbar.timer" oor:op="replace">
+                <prop oor:name="UIName" oor:type="xs:string">
+                    <value xml:lang="en-US">PétTurnMngr Timer</value>
+                    <value xml:lang="de">PétTurnMngr Timer</value>
+                    <value xml:lang="es">PétTurnMngr Temporizador</value>
+                    <value xml:lang="fr">PétTurnMngr Minuterie</value>
+                    <value xml:lang="nl">PétTurnMngr Timer</value>
+                </prop>
+                <prop oor:name="Visible" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+                <prop oor:name="Docked" oor:type="xs:boolean">
+                    <value>true</value>
+                </prop>
+                <prop oor:name="ContextSensitive" oor:type="xs:boolean">
+                    <value>false</value>
+                </prop>
+            </node>
+        </node>
+    </node>
+
+</oor:component-data>
