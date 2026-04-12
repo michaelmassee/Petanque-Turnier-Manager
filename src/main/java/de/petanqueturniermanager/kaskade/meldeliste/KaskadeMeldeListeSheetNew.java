@@ -89,8 +89,8 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner implements ISheet, Me
         return delegate.getAktivSpalte();
     }
 
-    public int getRanglisteSpalte() throws GenerateException {
-        return delegate.getRanglisteSpalte();
+    public int getSetzPositionSpalte() throws GenerateException {
+        return delegate.getSetzPositionSpalte();
     }
 
     public int getErsteDatenZeile() {
@@ -101,8 +101,8 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner implements ISheet, Me
         return delegate.getAktiveMeldungen();
     }
 
-    public TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
-        return delegate.getMeldungenSortiertNachRangliste();
+    public TeamMeldungen getMeldungenSortiertNachSetzposition() throws GenerateException {
+        return delegate.getMeldungenSortiertNachSetzposition();
     }
 
     // ---------------------------------------------------------------

@@ -47,7 +47,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Delegate für die Kaskaden-KO-Meldeliste.<br>
- * Spaltenstruktur: Nr | [Teamname] | Spieler-Blöcke (Vorname+Nachname[+Vereinsname]) | RNG | Aktiv<br>
+ * Spaltenstruktur: Nr | [Teamname] | Spieler-Blöcke (Vorname+Nachname[+Vereinsname]) | SP | Aktiv<br>
  * 3 Header-Zeilen analog K.-O.-Meldeliste.
  */
 class KaskadeListeDelegate implements MeldeListeKonstanten {
@@ -70,7 +70,7 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
     private static final int NAME_SPALTE_WIDTH = 3000;
     private static final int TEAMNAME_SPALTE_WIDTH = 3000;
     private static final int VEREINSNAME_SPALTE_WIDTH = 2500;
-    private static final int RNG_SPALTE_WIDTH = 800;
+    private static final int SP_SPALTE_WIDTH = 800;
     private static final int AKTIV_SPALTE_WIDTH = 700;
 
     private final ISheet sheet;
@@ -127,20 +127,20 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         return getVornameSpalte(spielerIdx) + 2;
     }
 
-    /** Letzte Spieler-Datenspalte (0-basiert, ohne RNG). */
+    /** Letzte Spieler-Datenspalte (0-basiert, ohne SP). */
     int getLetzteDataSpalte() throws GenerateException {
         Formation f = konfigurationSheet.getMeldeListeFormation();
         return getErsterSpielerOffset() + f.getAnzSpieler() * getSpaltenProSpieler() - 1;
     }
 
-    /** RNG-Spalte (Rangliste/Setzreihenfolge) – direkt nach der letzten Spieler-Spalte. */
-    int getRanglisteSpalte() throws GenerateException {
+    /** Setzposition-Spalte (SP) – direkt nach der letzten Spieler-Spalte. */
+    int getSetzPositionSpalte() throws GenerateException {
         return getLetzteDataSpalte() + 1;
     }
 
-    /** Aktiv/Inaktiv-Spalte – direkt nach der RNG-Spalte. */
+    /** Aktiv/Inaktiv-Spalte – direkt nach der SP-Spalte. */
     int getAktivSpalte() throws GenerateException {
-        return getRanglisteSpalte() + 1;
+        return getSetzPositionSpalte() + 1;
     }
 
     // ---------------------------------------------------------------
@@ -290,18 +290,18 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
             }
         }
 
-        ColumnProperties colPropRng = ColumnProperties.from().setWidth(RNG_SPALTE_WIDTH)
+        ColumnProperties colPropSp = ColumnProperties.from().setWidth(SP_SPALTE_WIDTH)
                 .setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER)
                 .margin(MeldeListeKonstanten.CELL_MARGIN);
         sheet.getSheetHelper().setStringValueInCell(
-                StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getRanglisteSpalte(), ZWEITE_HEADER_ZEILE),
-                        I18n.get("column.header.rng"))
-                        .addColumnProperties(colPropRng)
+                StringCellValue.from(sheet.getXSpreadSheet(), Position.from(getSetzPositionSpalte(), ZWEITE_HEADER_ZEILE),
+                        I18n.get("column.header.setzposition"))
+                        .addColumnProperties(colPropSp)
                         .setCellBackColor(headerColor)
                         .setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder())
                         .setVertJustify(CellVertJustify2.CENTER)
                         .setCharWeight(FontWeight.BOLD)
-                        .setComment(I18n.get("ko.meldeliste.comment.setzreihenfolge"))
+                        .setComment(I18n.get("kaskade.meldeliste.comment.setzposition"))
                         .setRotate90()
                         .setEndPosMergeZeilePlus(1)
                         .setShrinkToFit(true));
@@ -385,22 +385,22 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
                             BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
         }
 
-        RangePosition rngRange = RangePosition.from(getRanglisteSpalte(), ERSTE_DATEN_ZEILE,
-                getRanglisteSpalte(), letzteDatenZeile);
-        RangeHelper.from(sheet, rngRange).setRangeProperties(
+        RangePosition spRange = RangePosition.from(getSetzPositionSpalte(), ERSTE_DATEN_ZEILE,
+                getSetzPositionSpalte(), letzteDatenZeile);
+        RangeHelper.from(sheet, spRange).setRangeProperties(
                 RangeProperties.from().setBorder(
                         BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
         int vornameSpalteNr = getVornameSpalte(0) + 1;
         String vornameRef = "INDIRECT(ADDRESS(ROW();" + vornameSpalteNr + "))";
-        String kondRngLeer = "AND(" + vornameRef + "<>\"\";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<=0)";
-        String kondDoppeltRng = "AND(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ">0;COUNTIF("
-                + Position.from(getRanglisteSpalte(), 0).getSpalteAddressWith$() + ";"
+        String kondSpLeer = "AND(" + vornameRef + "<>\"\";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<=0)";
+        String kondDoppeltSp = "AND(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ">0;COUNTIF("
+                + Position.from(getSetzPositionSpalte(), 0).getSpalteAddressWith$() + ";"
                 + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1)";
-        ConditionalFormatHelper.from(sheet, rngRange).clear()
+        ConditionalFormatHelper.from(sheet, spRange).clear()
                 .formulaIsText().styleIsFehler().applyAndDoReset()
-                .formula1(kondRngLeer).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
-                .formula1(kondDoppeltRng).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+                .formula1(kondSpLeer).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+                .formula1(kondDoppeltSp).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
                 .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
                 .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 
@@ -463,17 +463,18 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
     }
 
     /**
-     * Liefert alle aktiven Teams, aufsteigend nach Rang (RNG) sortiert.
+     * Liefert alle aktiven Teams, absteigend nach Setzposition (SP) sortiert.
+     * Höhere SP = besser gesetzt = kommt zuerst in der Liste.
      */
-    TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
+    TeamMeldungen getMeldungenSortiertNachSetzposition() throws GenerateException {
         sheet.processBoxinfo("processbox.ko.meldeliste.sortieren");
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int vornameSpalte = getVornameSpalte(0);
-        int rngSpalte = getRanglisteSpalte();
+        int spSpalte = getSetzPositionSpalte();
         int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
 
-        record TeamZeile(int nr, int rng) {}
+        record TeamZeile(int nr, int sp) {}
         List<TeamZeile> alleTeams = new ArrayList<>();
 
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
@@ -489,11 +490,11 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
             if (aktiv != AKTIV_WERT_NIMMT_TEIL) {
                 continue;
             }
-            int rng = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(rngSpalte, zeile));
-            alleTeams.add(new TeamZeile(nr, rng));
+            int sp = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(spSpalte, zeile));
+            alleTeams.add(new TeamZeile(nr, sp));
         }
 
-        alleTeams.sort(Comparator.comparingInt(TeamZeile::rng));
+        alleTeams.sort(Comparator.comparingInt(TeamZeile::sp).reversed());
 
         TeamMeldungen meldungen = new TeamMeldungen();
         for (TeamZeile t : alleTeams) {
@@ -503,19 +504,19 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
     }
 
     /**
-     * Prüft ob alle aktiven Teams einen gültigen, eindeutigen Rang haben.
+     * Prüft ob alle aktiven Teams eine gültige, eindeutige Setzposition haben.
      *
      * @return null wenn OK, sonst eine Fehlermeldung.
      */
-    String validiereRangSpalte() throws GenerateException {
+    String validiereSetzpositionSpalte() throws GenerateException {
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int vornameSpalte = getVornameSpalte(0);
-        int rngSpalte = getRanglisteSpalte();
+        int spSpalte = getSetzPositionSpalte();
         int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
 
         java.util.Set<Integer> bereitsVergeben = new java.util.HashSet<>();
-        int anzOhneRang = 0;
+        int anzOhneSp = 0;
         int anzDuplikat = 0;
 
         for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
@@ -527,21 +528,21 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
             if (aktiv != AKTIV_WERT_NIMMT_TEIL) {
                 continue;
             }
-            int rng = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(rngSpalte, zeile));
-            if (rng <= 0) {
-                anzOhneRang++;
-            } else if (!bereitsVergeben.add(rng)) {
+            int sp = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(spSpalte, zeile));
+            if (sp <= 0) {
+                anzOhneSp++;
+            } else if (!bereitsVergeben.add(sp)) {
                 anzDuplikat++;
             }
         }
 
-        if (anzOhneRang > 0) {
-            return "Die Rang-Spalte ist nicht vollständig befüllt (" + anzOhneRang
-                    + " Team(s) ohne Rang).\nBitte alle aktiven Teams mit einer eindeutigen Rangnummer versehen.";
+        if (anzOhneSp > 0) {
+            return "Die Setzposition-Spalte ist nicht vollständig befüllt (" + anzOhneSp
+                    + " Team(s) ohne Setzposition).\nBitte alle aktiven Teams mit einer eindeutigen Setzposition versehen.";
         }
         if (anzDuplikat > 0) {
-            return "Die Rang-Spalte enthält " + anzDuplikat
-                    + " doppelte Rangnummer(n).\nBitte eindeutige Rangnummern vergeben.";
+            return "Die Setzposition-Spalte enthält " + anzDuplikat
+                    + " doppelte Setzposition(en).\nBitte eindeutige Setzpositionen vergeben.";
         }
         return null;
     }

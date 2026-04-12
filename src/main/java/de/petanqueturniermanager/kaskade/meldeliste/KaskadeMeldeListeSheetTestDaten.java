@@ -130,9 +130,9 @@ public class KaskadeMeldeListeSheetTestDaten extends SheetRunner implements IShe
                     NumberCellValue.from(xSheet, Position.from(delegate.getAktivSpalte(), zeile),
                             KaskadeListeDelegate.AKTIV_WERT_NIMMT_TEIL));
 
-            // RNG-Wert setzen: Team i erhält Rang i+1 (1-basiert)
+            // Setzposition setzen: Team i erhält SP = anzTeams - i (höchste SP = bestes Team)
             getSheetHelper().setNumberValueInCell(
-                    NumberCellValue.from(xSheet, Position.from(delegate.getRanglisteSpalte(), zeile), i + 1));
+                    NumberCellValue.from(xSheet, Position.from(delegate.getSetzPositionSpalte(), zeile), anzTeams - i));
         }
     }
 

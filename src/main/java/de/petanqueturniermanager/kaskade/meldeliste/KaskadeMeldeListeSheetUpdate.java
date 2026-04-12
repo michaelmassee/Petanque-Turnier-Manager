@@ -91,8 +91,8 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
         return delegate.getAktivSpalte();
     }
 
-    public int getRanglisteSpalte() throws GenerateException {
-        return delegate.getRanglisteSpalte();
+    public int getSetzPositionSpalte() throws GenerateException {
+        return delegate.getSetzPositionSpalte();
     }
 
     public int getErsteDatenZeile() {
@@ -103,8 +103,8 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
         return delegate.getAktiveMeldungen();
     }
 
-    public TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
-        return delegate.getMeldungenSortiertNachRangliste();
+    public TeamMeldungen getMeldungenSortiertNachSetzposition() throws GenerateException {
+        return delegate.getMeldungenSortiertNachSetzposition();
     }
 
     public int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
@@ -131,8 +131,8 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
      *
      * @return null wenn OK, sonst eine Fehlermeldung.
      */
-    public String validiereRangSpalte() throws GenerateException {
-        return delegate.validiereRangSpalte();
+    public String validiereSetzpositionSpalte() throws GenerateException {
+        return delegate.validiereSetzpositionSpalte();
     }
 
     private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
@@ -221,8 +221,8 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
         }
         RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
                 delegate.getAktivSpalte(), letzteZeile);
-        SortHelper.from(this, range).spalteToSort(delegate.getRanglisteSpalte())
-                .aufSteigendSortieren(true).doSort();
+        SortHelper.from(this, range).spalteToSort(delegate.getSetzPositionSpalte())
+                .abSteigendSortieren().doSort();
     }
 
 }
