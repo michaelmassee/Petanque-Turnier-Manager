@@ -254,10 +254,8 @@
 
 
                 <node oor:name="m14" oor:op="replace">
-                    <prop oor:name="CommandURL"><value>.uno:Open</value></prop>
-
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>.uno:Open</value>
+                        <value>ptm:toolbar_oeffnen</value>
                     </prop>
                     <prop oor:name="Title">
                         <value xml:lang="de">Öffnen</value>
@@ -475,6 +473,20 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-webserver-stoppen.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.oeffnen" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_oeffnen</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-oeffnen.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-oeffnen.png</value>
                     </prop>
                 </node>
             </node>

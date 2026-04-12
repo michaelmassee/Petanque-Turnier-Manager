@@ -276,6 +276,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_VORRUNDEN_RANGLISTE   = "toolbar_vorrunden_rangliste";
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
+	public static final String CMD_TOOLBAR_OEFFNEN               = "toolbar_oeffnen";
 	public static final String CMD_TOOLBAR_NAECHSTER_SPIELTAG    = "toolbar_naechster_spieltag";
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	// Turnier Modus
@@ -687,6 +688,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI:
 				new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
 				break;
+			case CMD_TOOLBAR_OEFFNEN:
+				ws.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
+				break;
 			case CMD_TOOLBAR_WEITER:
 				ToolbarAktionDispatcher.weiter(ws);
 				break;
@@ -1045,8 +1049,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
-			// Neues Turnier in neuer Datei – immer aktiviert (unabhängig vom aktuellen Dokument)
-			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI             -> true;
+			// Neues Turnier in neuer Datei / Öffnen – immer aktiviert (unabhängig vom aktuellen Dokument)
+			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
+				 CMD_TOOLBAR_OEFFNEN                        -> true;
 			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
 			// Timer – immer aktiviert
