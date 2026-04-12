@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 7 – Supermêlée (Premium-Version)
+# 🏆 Kapitel 7 – Supermêlée
 
 Das **Supermêlée‑System** ist eines der dynamischsten und sozialsten Turnierformate im Boule-/Pétanque‑Sport. Es eignet sich perfekt für Vereinsabende, offene Turniere, Ranglistensysteme und Großveranstaltungen mit wechselnden Teams. Dieses Kapitel erklärt das System maximal detailliert – inklusive vollständiger Algorithmik, Teamformel‑Logik, Wertungen, komplexer Beispiele und ASCII‑Diagrammen.
 
@@ -197,7 +196,3 @@ Das Supermêlée ist:
 - sozial und abwechslungsreich
 - fair in der Einzelwertung
 - ideal für Mannschaftsmischung und Vereinsabende
-
----
-# Nächstes Kapitel
-➡ **Kapitel 8: Vergleich aller Systeme (Premium)**.

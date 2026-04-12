@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 6 – Kaskaden‑KO‑System (Premium-Version)
+# 🏆 Kapitel 6 – Kaskaden‑KO‑System
 
 Das **Kaskaden‑KO‑System** ist eine erweiterte und hochflexible Turnierform, die in vielen Boule‑Vereinen und größeren Turnierserien genutzt wird. Es basiert auf der Logik bekannter ABCD‑KO‑Systeme, erweitert diese aber beliebig um weitere Ebenen (E, F, G, H …). Ziel ist es, ein Teilnehmerfeld *schrittweise zu filtern*, ohne dass jemand früh ausscheidet, und dennoch am Ende klare Sieger pro Leistungsebene zu erhalten.
 
@@ -250,6 +249,3 @@ Das Kaskaden‑KO‑System ist:
 - planbar und fair
 - ideal für mittlere und große Turniere
 
----
-# Nächstes Kapitel
-➡ Kapitel 7: **Supermêlée (Premium)**.

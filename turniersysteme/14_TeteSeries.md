@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 16 – Tête‑Series (Premium‑Version)
+# 🏆 Kapitel 16 – Tête‑Series
 
 Die **Tête‑Series** ist ein Turniersystem, das vollständig auf der Einzel-Disziplin des Pétanque basiert: dem **Tête‑à‑tête**. Dabei spielt jede Spielerin / jeder Spieler **mehrere Einzelpartien** in Serienform, ähnlich einem Schweizer Rundensystem – jedoch speziell für die Tête‑à‑tête‑Disziplin optimiert.
 
@@ -160,5 +159,3 @@ Die **Tête‑Series** sind das ideale System für **Einzel‑Turniere**, **Rang
 
 Besonders im Training und Nachwuchsbereich bieten Tête‑Series einen unschätzbaren Wert – sie sind das **maßgebliche System**, wenn es um die individuelle Stärke eines Spielers geht.
 
----
-# Ende von Kapitel 16 – Tête‑Series

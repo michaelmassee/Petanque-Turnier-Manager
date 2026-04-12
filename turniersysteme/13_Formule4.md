@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 15 – Formule 4 (Premium-Version)
+# 🏆 Kapitel 15 – Formule 4
 
 Das **Formule‑4‑System** ist ein kompaktes, schnelles und sehr weit verbreitetes Rundensystem im französischen und teilweise deutschen Pétanque‑Breitensport. Der Name leitet sich direkt vom Kernprinzip ab:
 
@@ -182,5 +181,3 @@ Formule 4 steht für **Komfort & Geschwindigkeit**, nicht für absolute Präzis
 **Formule 4** ist das **ideale Kurz‑Turniersystem**: schnell, planbar, unkompliziert.
 Es erlaubt hochwertige Spiele, ohne die Komplexität des Schweizer Systems – und ist deshalb in vielen Vereinen die erste Wahl für regelmäßige Events.
 
----
-# Ende von Kapitel 15 – Formule 4

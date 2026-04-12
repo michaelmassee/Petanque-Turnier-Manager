@@ -230,6 +230,3 @@ Formule‑X ist:
 - perfekt geeignet für Ranglistenerstellung.
 
 Nicht ideal, wenn ein **klassisches KO‑Finale** oder ein aufsteigendes Dramaturgiemodell gewünscht ist.
-
----
-# Ende Kapitel X – Formule‑X.

@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 18 – Arena‑Pétanque (Premium‑Version)
+# 🏆 Kapitel 18 – Arena‑Pétanque
 
 Arena‑Pétanque ist ein **modernes, publikumsorientiertes Event‑Format**, das Elemente des traditionellen Pétanque mit Show‑Sport, Zeitdruck und Fernseh‑Tauglichkeit kombiniert. Es entstand aus der Idee, Pétanque spannender, schneller und visuell attraktiver zu präsentieren – vergleichbar mit Arena‑Snooker, Speed‑Darts oder Beach‑Volleyball.
 
@@ -160,5 +159,3 @@ Es macht Boule zu einer **Atmosphären‑Sportart**, die Emotionen, Show und spo
 
 Arena‑Pétanque ist kein Ersatz für klassisches Pétanque, sondern eine **ergänzende Bühne**, die ein neues Publikum begeistert.
 
----
-# Ende von Kapitel 18 – Arena‑Pétanque

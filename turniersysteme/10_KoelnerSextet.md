@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 12 – Das Kölner Sextet (Premium-Version)
+# 🏆 Kapitel 12 – Das Kölner Sextet
 
 Das **Kölner Sextet** ist eines der außergewöhnlichsten, traditionsreichsten und beliebtesten Boule‑Turniersysteme Deutschlands. Seit **1989** wird es jährlich an Fronleichnam im Kölner Friedenspark ausgetragen und basiert auf einem einzigartigen Konzept: **Teams aus sechs Spieler*innen**, die jeweils **sechs Spiele** absolvieren – **3× Triplette, 2× Doublette und 1× Tête‑à‑tête**. Dieses System wurde vom Kölner Boule-Urgestein *Hartmut Zänder* entwickelt. citeturn43search71
 
@@ -189,5 +188,3 @@ in einem einzigen Großevent verbindet.
 
 Es ist europaweit nahezu einzigartig und bleibt eines der ganz großen Boule‑Erlebnisse.
 
----
-# Ende von Kapitel 12 – Das Kölner Sextet

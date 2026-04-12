@@ -1,5 +1,4 @@
-
-# 🏆 Kapitel 13 – Dänisches System (Premium-Version)
+# 🏆 Kapitel 13 – Dänisches System
 
 Das **Dänische System** ist ein selten verwendetes, aber sehr interessantes Rundenturniersystem im Pétanque-Sport. Es ähnelt stark dem Schweizer System, unterscheidet sich jedoch in einigen entscheidenden Punkten – insbesondere darin, dass **mehrfaches Aufeinandertreffen derselben Teams erlaubt ist** und dass die Paarungslogik einfacher strukturiert ist. 
 
@@ -193,5 +192,3 @@ Es ist ideal für Turniere, bei denen:
 - **keine KO‑Phase** gewünscht ist,
 - **einfacher administrativer Aufwand** im Vordergrund steht.
 
----
-# Ende von Kapitel 13 – Dänisches System
