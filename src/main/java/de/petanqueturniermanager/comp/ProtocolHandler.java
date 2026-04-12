@@ -53,6 +53,10 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeTeilnehmerSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
@@ -219,6 +223,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KO_TESTDATEN_8_TEAMS = "ko_testdaten_8_teams";
 	public static final String CMD_KO_TESTDATEN_16_TEAMS = "ko_testdaten_16_teams";
 	public static final String CMD_KO_TESTDATEN_CADRAGE = "ko_testdaten_cadrage";
+	// Kaskaden-KO
+	public static final String CMD_KASKADE_START              = "kaskade_start";
+	public static final String CMD_KASKADE_UPDATE_MELDELISTE  = "kaskade_update_meldeliste";
+	public static final String CMD_KASKADE_TEILNEHMER         = "kaskade_teilnehmer";
+	public static final String CMD_KASKADE_TESTDATEN_MELDELISTE = "kaskade_testdaten_meldeliste";
 	// Teilnehmer
 	public static final String CMD_SCHWEIZER_TEILNEHMER = "schweizer_teilnehmer";
 	public static final String CMD_JGJ_TEILNEHMER       = "jgj_teilnehmer";
@@ -609,6 +618,20 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KoTurnierTestDaten(ws, 10).start();
 				break;
 			// ------------------------------
+			// Kaskaden-KO
+			case CMD_KASKADE_START:
+				new KaskadeMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_KASKADE_UPDATE_MELDELISTE:
+				new KaskadeMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_KASKADE_TEILNEHMER:
+				new KaskadeTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_KASKADE_TESTDATEN_MELDELISTE:
+				new KaskadeMeldeListeSheetTestDaten(ws, 34).start();
+				break;
+			// ------------------------------
 			// Poule A/B
 			case CMD_POULE_START:
 				new PouleMeldeListeSheetNew(ws).start();
@@ -973,6 +996,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
 				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
+			// Kaskaden-KO
+			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
+			case CMD_KASKADE_UPDATE_MELDELISTE,
+				 CMD_KASKADE_TEILNEHMER                    -> ts == TurnierSystem.KASKADE;
+			case CMD_KASKADE_TESTDATEN_MELDELISTE           -> ts == TurnierSystem.KEIN || ts == TurnierSystem.KASKADE;
 			// Poule A/B
 			case CMD_POULE_START                            -> ts == TurnierSystem.KEIN;
 			case CMD_POULE_NEUE_MELDELISTE,
