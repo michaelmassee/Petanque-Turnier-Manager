@@ -30,6 +30,7 @@ public final class SheetNamen {
     public static final String KEY_ENDRANGLISTE                     = "sheet.name.endrangliste";
     public static final String KEY_SUPERMELEE_TEAMS                 = "sheet.name.supermelee.teams";
     public static final String KEY_KO_KONFIGURATION                 = "sheet.name.ko.konfiguration";
+    public static final String KEY_KASKADE_KONFIGURATION            = "sheet.name.kaskade.konfiguration";
     public static final String KEY_KO_RUNDE                        = "sheet.name.ko.runde";
     public static final String KEY_CADRAGE                          = "sheet.name.cadrage";
     public static final String KEY_VORRUNDEN_ERGEBNISSE             = "sheet.name.vorrunden.ergebnisse";
@@ -78,6 +79,7 @@ public final class SheetNamen {
     public static final String LEGACY_ENDRANGLISTE                  = "Endrangliste";
     public static final String LEGACY_SUPERMELEE_TEAMS              = "Superm\u00e9l\u00e9e Teams";
     public static final String LEGACY_KO_KONFIGURATION              = "KO Konfiguration";
+    public static final String LEGACY_KASKADE_KONFIGURATION         = "Kaskaden Konfiguration";
     public static final String LEGACY_KO_RUNDE                     = "KO Runde";
     public static final String LEGACY_CADRAGE                       = "Cadrage";
     public static final String LEGACY_VORRUNDEN_ERGEBNISSE          = "Ergebnisse aus Vorrunden";
@@ -127,6 +129,10 @@ public final class SheetNamen {
 
     public static String koKonfiguration() {
         return getOderFallback(KEY_KO_KONFIGURATION, LEGACY_KO_KONFIGURATION);
+    }
+
+    public static String kaskadeKonfiguration() {
+        return getOderFallback(KEY_KASKADE_KONFIGURATION, LEGACY_KASKADE_KONFIGURATION);
     }
 
     public static String koRunde() {

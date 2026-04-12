@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpalte;
+import de.petanqueturniermanager.kaskade.konfiguration.KaskadePropertiesSpalte;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
@@ -49,6 +50,8 @@ public class KonfigurationSingleton {
 					return KoPropertiesSpalte.KONFIG_PROPERTIES;
 				case POULE:
 					return PoulePropertiesSpalte.KONFIG_PROPERTIES;
+				case KASKADE:
+					return KaskadePropertiesSpalte.KONFIG_PROPERTIES;
 				default:
 					logger.error("TurnierSystem ungültig " + turnierSystem.getBezeichnung());
 					break;

@@ -91,6 +91,10 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_KO_MELDELISTE = "__PTM_KO_MELDELISTE__";
     public static final String SCHLUESSEL_KO_TURNIERBAUM_PREFIX = "__PTM_KO_TURNIERBAUM_";
 
+    // ── Konstanten: Kaskaden-KO ──────────────────────────────────────────────
+
+    public static final String SCHLUESSEL_KASKADE_MELDELISTE = "__PTM_KASKADE_MELDELISTE__";
+
     // ── Konstanten: Maastrichter ─────────────────────────────────────────────
     public static final String SCHLUESSEL_MAASTRICHTER_MELDELISTE = "__PTM_MAASTRICHTER_MELDELISTE__";
     public static final String SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX = "__PTM_MAASTRICHTER_VORRUNDE_";

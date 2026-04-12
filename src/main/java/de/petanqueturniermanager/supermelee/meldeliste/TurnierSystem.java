@@ -12,7 +12,8 @@ public enum TurnierSystem {
 	SUPERMELEE(1, "enum.turniersystem.supermelee"), LIGA(2, "enum.turniersystem.liga"),
 	MAASTRICHTER(3, "enum.turniersystem.maastrichter"), SCHWEIZER(4, "enum.turniersystem.schweizer"),
 	JGJ(5, "enum.turniersystem.jgj"), KO(6, "enum.turniersystem.ko"),
-	POULE(7, "enum.turniersystem.poule");
+	POULE(7, "enum.turniersystem.poule"),
+	KASKADE(8, "enum.turniersystem.kaskade");
 
 	private final String i18nKey;
 	private final int id;
