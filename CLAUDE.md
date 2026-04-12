@@ -6,6 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Petanque-Turnier-Manager is a **LibreOffice Calc Extension** (.oxt) for managing Petanque/Boule tournaments. It is written in Java and uses the LibreOffice UNO component model. The codebase and comments are primarily in German.
 
+## LibreOffice Source Reference
+
+The complete LibreOffice / LibreOffice Calc source code is available locally at **`/home/michael/devel/projects_massee/libreoffice`**.
+
+```bash
+git clone https://gerrit.libreoffice.org/core libreoffice
+```
+
+Use this reference to:
+- Understand how LO processes XCU configuration files (e.g. `framework/source/fwe/classes/addonsoptions.cxx`)
+- Look up internal UNO API behaviour (e.g. toolbar icon loading in `framework/source/uielement/toolbarmanager.cxx`)
+- Investigate Calc-specific internals under `sc/`
+- Verify how Add-on menus, toolbars and images are handled by the framework (`framework/`)
+
+When debugging LO extension behaviour, **always check the LO source first** before guessing — the source is authoritative.
+
 ## Code Quality & Refactoring Rules
 
 - **Strict Clean Code:** All code modifications and additions MUST strictly adhere to Clean Code principles. No exceptions.
