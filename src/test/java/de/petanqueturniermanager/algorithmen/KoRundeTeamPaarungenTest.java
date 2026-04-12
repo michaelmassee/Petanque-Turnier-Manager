@@ -48,7 +48,7 @@ public class KoRundeTeamPaarungenTest {
 	@Test
 	public void testZweiTeams_normalPaarung() {
 		var rangliste = ranglisteVon(1, 2);
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 
 		assertThat(spielrunde.size()).isEqualTo(1);
 		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 2);
@@ -58,7 +58,7 @@ public class KoRundeTeamPaarungenTest {
 	public void testVierTeams_normalPaarung() {
 		// 1 vs 4, 2 vs 3
 		var rangliste = ranglisteVon(1, 2, 3, 4);
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 
 		assertThat(spielrunde.size()).isEqualTo(2);
 		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 4);
@@ -69,7 +69,7 @@ public class KoRundeTeamPaarungenTest {
 	public void testSechsTeams_normalPaarung() {
 		// 1 vs 6, 2 vs 5, 3 vs 4
 		var rangliste = ranglisteVon(1, 2, 3, 4, 5, 6);
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 
 		assertThat(spielrunde.size()).isEqualTo(3);
 		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 6);
@@ -81,7 +81,7 @@ public class KoRundeTeamPaarungenTest {
 	public void testAchtTeams_normalPaarung() {
 		// 1 vs 8, 2 vs 7, 3 vs 6, 4 vs 5
 		var rangliste = ranglisteVon(1, 2, 3, 4, 5, 6, 7, 8);
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 
 		assertThat(spielrunde.size()).isEqualTo(4);
 		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 8);
@@ -94,7 +94,7 @@ public class KoRundeTeamPaarungenTest {
 	public void testNormalfall_keineDoppeltePaarung() {
 		var rangliste = ranglisteVon(1, 2, 3, 4);
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		paarungen.generatSpielRunde();
+		paarungen.generiereSpielrunde();
 
 		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isFalse();
 		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEmpty();
@@ -110,7 +110,7 @@ public class KoRundeTeamPaarungenTest {
 		var rangliste = ranglisteVon(1, 2, 3, 4);
 		rangliste.get(0).addGegner(rangliste.get(3)); // 1 vs 4
 
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 
 		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 3);
 		assertPaarung(spielrunde.getTeamPaarungen().get(1), 2, 4);
@@ -126,7 +126,7 @@ public class KoRundeTeamPaarungenTest {
 		var rangliste = ranglisteVon(1, 2, 3, 4);
 		rangliste.get(1).addGegner(rangliste.get(2)); // 2 vs 3
 
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 		ImmutableList<TeamPaarung> teamPaarungen = spielrunde.getTeamPaarungen();
 
 		assertPaarung(teamPaarungen.get(0), 1, 3);
@@ -144,7 +144,7 @@ public class KoRundeTeamPaarungenTest {
 		team2.addGegner(rangliste.get(3)); // 2 vs 4
 		team2.addGegner(rangliste.get(4)); // 2 vs 5
 
-		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generatSpielRunde();
+		FormeSpielrunde spielrunde = new KoRundeTeamPaarungen(rangliste).generiereSpielrunde();
 		ImmutableList<TeamPaarung> paarungen = spielrunde.getTeamPaarungen();
 
 		assertThat(spielrunde.size()).isEqualTo(3);
@@ -169,7 +169,7 @@ public class KoRundeTeamPaarungenTest {
 		team2.addGegner(team3);
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		FormeSpielrunde spielrunde = paarungen.generatSpielRunde();
+		FormeSpielrunde spielrunde = paarungen.generiereSpielrunde();
 
 		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isTrue();
 		assertPaarung(spielrunde.getTeamPaarungen().get(0), 1, 4);
@@ -184,7 +184,7 @@ public class KoRundeTeamPaarungenTest {
 		rangliste.get(1).addGegner(rangliste.get(2)); // 2 vs 3
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		paarungen.generatSpielRunde();
+		paarungen.generiereSpielrunde();
 
 		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("2:3");
 	}
@@ -198,7 +198,7 @@ public class KoRundeTeamPaarungenTest {
 		t2.addGegner(t3); t2.addGegner(t4);
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		paarungen.generatSpielRunde();
+		paarungen.generiereSpielrunde();
 
 		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("1:4 2:3");
 	}
@@ -211,11 +211,11 @@ public class KoRundeTeamPaarungenTest {
 		rangliste.get(1).addGegner(rangliste.get(2)); // 2 vs 3
 
 		var paarungen = new KoRundeTeamPaarungen(rangliste);
-		paarungen.generatSpielRunde();
+		paarungen.generiereSpielrunde();
 		assertThat(paarungen.isDoppelteGespieltePaarungenVorhanden()).isTrue();
 
 		// Zweiter Aufruf mit gleichen Daten → Doppel immer noch vorhanden, aber String wird neu aufgebaut
-		paarungen.generatSpielRunde();
+		paarungen.generiereSpielrunde();
 		assertThat(paarungen.getDoppelteGespieltePaarungen()).isEqualTo("2:3");
 	}
 

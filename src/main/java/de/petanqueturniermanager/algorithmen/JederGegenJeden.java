@@ -58,7 +58,7 @@ public class JederGegenJeden {
 
 		int anzRndn = anzRunden();
 		int letzteMeldungNr = letzteMeldungNr();
-		int anzPaarungren = anzPaarungen();
+		int anzPaarungen = anzPaarungen();
 
 		for (int rundenCntr = 1; rundenCntr <= anzRndn; rundenCntr++) {
 
@@ -75,7 +75,7 @@ public class JederGegenJeden {
 			}
 
 			// restliche paarungen
-			for (int teamPaarungcntr = 1; teamPaarungcntr < anzPaarungren; teamPaarungcntr++) {
+			for (int teamPaarungcntr = 1; teamPaarungcntr < anzPaarungen; teamPaarungcntr++) {
 				int moduloA = (rundenCntr + teamPaarungcntr) % anzRndn;
 				int idxMeldungA = (moduloA < 1) ? anzRndn + moduloA : moduloA;
 				int moduloB = (rundenCntr - teamPaarungcntr) % anzRndn;
@@ -115,56 +115,3 @@ public class JederGegenJeden {
 	}
 
 }
-
-// @formatter:off
-/**
-
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-function mathGenerateRundePlan (pTeams as Integer, pSpieleMatrix)
-'---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Dim anzRunden as Integer
-Dim rundenCntr as Integer
-Dim spielCntr as Integer
-
-Dim teamA as Integer
-Dim teamB as Integer
-
-anzRunden = pTeams -1
-
-	for rundenCntr = 1 to anzRunden
-
-		' erste spiel ist einfach nach schema F
-		pSpieleMatrix (rundenCntr,(pTeams /2),1) = rundenCntr
-		pSpieleMatrix (rundenCntr,(pTeams /2),2) = pTeams
-
-		for spielCntr = 1 to ((pTeams /2) -1)
-
-	       teamA = (rundenCntr + spielCntr) Mod anzRunden
-	       if teamA < 1 then
-	       	teamA =  anzRunden + teamA
-	       end if
-
-	       teamB = (rundenCntr - spielCntr) Mod anzRunden
-	       if teamB < 1 then
-	       	teamB =  anzRunden + teamB
-	       end if
-
-
-	       if teamB > teamA then
-		       pSpieleMatrix (rundenCntr,spielCntr,1) = teamA
-			   pSpieleMatrix (rundenCntr,spielCntr,2) = teamB
-		   else
-		       pSpieleMatrix (rundenCntr,spielCntr,1) = teamB
-			   pSpieleMatrix (rundenCntr,spielCntr,2) = teamA
-		   end if
-
-		next spielCntr
-
-	next rundenCntr
-
-End function
- *
- **/
-
-//@formatter:on

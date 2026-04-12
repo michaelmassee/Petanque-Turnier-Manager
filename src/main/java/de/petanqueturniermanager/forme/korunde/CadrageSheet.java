@@ -115,7 +115,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 				TeamRangliste cadrageRangliste = gruppeAusRanglist.ranglisteVonLetzte(anzCadrageTeams);
 				vorrunden.vorRundenEinlesen(cadrageRangliste);
 				KoRundeTeamPaarungen teamPaarungen = new KoRundeTeamPaarungen(cadrageRangliste);
-				FormeSpielrunde spielRunde = teamPaarungen.generatSpielRunde();
+				FormeSpielrunde spielRunde = teamPaarungen.generiereSpielrunde();
 				// Paarungen
 				getSheetHelper().setActiveSheet(getXSpreadSheet());
 				spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getXSpreadSheet(), teamPaarungen, spielRunde);

@@ -19,22 +19,22 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 public class CadrageRechner {
 
-	private final int gesanzTeams;
+	private final int gesamtTeams;
 
-	public CadrageRechner(int gesanzTeams) {
-		checkArgument(gesanzTeams > 2);
-		this.gesanzTeams = gesanzTeams;
+	public CadrageRechner(int gesamtTeams) {
+		checkArgument(gesamtTeams >= 2, "gesamtTeams muss mindestens 2 sein, war: %s", gesamtTeams);
+		this.gesamtTeams = gesamtTeams;
 	}
 
 	/**
 	 * die anzahl der Teams die Cadrage spielen muessen.<br>
-	 * Formel: (gesanzTeams - zielAnzahlTeams) * 2<br>
-	 * Ergibt 0 wenn gesanzTeams bereits eine Zweierpotenz ist (keine Cadrage noetig).
+	 * Formel: (gesamtTeams - zielAnzahlTeams) * 2<br>
+	 * Ergibt 0 wenn gesamtTeams bereits eine Zweierpotenz ist (keine Cadrage noetig).
 	 *
 	 * @return Anzahl Cadrage-Teams (gerade Zahl oder 0)
 	 */
 	public int anzTeams() {
-		return (gesanzTeams - zielAnzahlTeams()) * 2;
+		return (gesamtTeams - zielAnzahlTeams()) * 2;
 	}
 
 	/**
@@ -48,12 +48,12 @@ public class CadrageRechner {
 	}
 
 	/**
-	 * Groesste Zweierpotenz &lt;= gesanzTeams – das ist die Zielgroesse des Feldes nach der Cadrage.<br>
+	 * Groesste Zweierpotenz &lt;= gesamtTeams – das ist die Zielgroesse des Feldes nach der Cadrage.<br>
 	 * Verwendet Integer.highestOneBit(), das ohne Schleife und ohne hartcodierte Obergrenze arbeitet.
 	 *
 	 * @return Ziel-Teamanzahl (Zweierpotenz)
 	 */
 	public int zielAnzahlTeams() {
-		return Integer.highestOneBit(gesanzTeams);
+		return Integer.highestOneBit(gesamtTeams);
 	}
 }

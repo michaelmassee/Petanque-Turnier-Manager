@@ -75,7 +75,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 			}
 			vorrunden.vorRundenEinlesen(gruppeAusRanglist); // gegner eintragen
 			KoRundeTeamPaarungen teamPaarungen = new KoRundeTeamPaarungen(gruppeAusRanglist);
-			FormeSpielrunde spielRunde = teamPaarungen.generatSpielRunde();
+			FormeSpielrunde spielRunde = teamPaarungen.generiereSpielrunde();
 			getSheetHelper().setActiveSheet(getXSpreadSheet());
 			spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getXSpreadSheet(), teamPaarungen, spielRunde);
 		}

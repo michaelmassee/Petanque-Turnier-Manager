@@ -10,7 +10,16 @@ public class CadrageRechnerTest {
 	@Test
 	public void testKonstruktor_zuWenigeTeams_wirftIllegalArgumentException() {
 		assertThatThrownBy(() -> new CadrageRechner(1)).isInstanceOf(IllegalArgumentException.class);
-		assertThatThrownBy(() -> new CadrageRechner(2)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new CadrageRechner(0)).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	public void testGrenzfall_zweiTeams_keineCadrage() {
+		// 2 ist eine Zweierpotenz → keine Cadrage nötig
+		var rechner = new CadrageRechner(2);
+		assertThat(rechner.zielAnzahlTeams()).isEqualTo(2);
+		assertThat(rechner.anzTeams()).isEqualTo(0);
+		assertThat(rechner.anzFreilose()).isEqualTo(2);
 	}
 
 	// ---------------------------------------------------------------
@@ -123,7 +132,7 @@ public class CadrageRechnerTest {
 
 	@Test
 	public void testAnzFreilose_plusCadrageGewinnerGleichZielAnzahl() {
-		for (int anzTeams = 3; anzTeams <= 130; anzTeams++) {
+		for (int anzTeams = 2; anzTeams <= 130; anzTeams++) {
 			var rechner = new CadrageRechner(anzTeams);
 			int cadrageGewinner = rechner.anzTeams() / 2;
 			assertThat(rechner.anzFreilose() + cadrageGewinner)
@@ -134,7 +143,7 @@ public class CadrageRechnerTest {
 
 	@Test
 	public void testAnzTeams_ergebnisIstImmerGerade() {
-		for (int anzTeams = 3; anzTeams <= 130; anzTeams++) {
+		for (int anzTeams = 2; anzTeams <= 130; anzTeams++) {
 			assertThat(new CadrageRechner(anzTeams).anzTeams() % 2)
 					.as("anzTeams() muss gerade sein fuer %d Teams", anzTeams)
 					.isEqualTo(0);

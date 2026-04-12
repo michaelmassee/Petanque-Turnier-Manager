@@ -46,7 +46,7 @@ public class KoRundeTeamPaarungen {
 		this.teamRangListe = teamRangListe;
 	}
 
-	public FormeSpielrunde generatSpielRunde() {
+	public FormeSpielrunde generiereSpielrunde() {
 		FormeSpielrunde formeSpielrunde = new FormeSpielrunde(1);
 		doppelteGespieltePaarungenVorhanden = false;
 		doppelteGespieltePaarungen.clear();
