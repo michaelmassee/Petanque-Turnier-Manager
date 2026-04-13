@@ -68,6 +68,10 @@ public final class SheetNamen {
     public static final String KEY_TEILNEHMER_MUSTER                = "sheet.name.teilnehmer.muster";
     /** Poule-Spielplan: {0} = Gruppennummer. Beispiel: "Poule 1 Spielplan" */
     public static final String KEY_POULE_SPIELPLAN_MUSTER           = "sheet.name.poule.spielplan.muster";
+    /** Kaskaden-Runde: {0} = Rundennummer. Beispiel: "1. Kaskaden-Runde" */
+    public static final String KEY_KASKADE_RUNDE_MUSTER             = "sheet.name.kaskade.runde.muster";
+    /** Kaskaden-Feld: {0} = Bezeichner. Beispiel: "Kaskade A-Feld" */
+    public static final String KEY_KASKADE_FELD_MUSTER              = "sheet.name.kaskade.feld.muster";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -97,6 +101,9 @@ public final class SheetNamen {
     public static final String LEGACY_POULE_TEILNEHMER               = "Poule Teilnehmer";
     public static final String LEGACY_POULE_SPIELPLAN_PRAEFIX        = "Spielplan";
     public static final String LEGACY_POULE_VORRUNDEN_RANGLISTE      = "Poule Vorrunden-Rangliste";
+    public static final String LEGACY_KASKADE_RUNDE_PRAEFIX          = "Kaskaden-Runde";
+    public static final String LEGACY_KASKADE_FELD_PRAEFIX           = "Kaskade";
+    public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
 
     private SheetNamen() {
     }
@@ -327,6 +334,29 @@ public final class SheetNamen {
     public static String pouleSpielplan(int pouleNr) {
         var muster = getOderFallback(KEY_POULE_SPIELPLAN_MUSTER, "Poule {0} " + LEGACY_POULE_SPIELPLAN_PRAEFIX);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{pouleNr});
+    }
+
+    /**
+     * Kaskaden-KO-Runde: z.B. "1. Kaskaden-Runde".
+     *
+     * @param rundeNr Nummer der Kaskadenrunde
+     * @return lokalisierter Tabellenname
+     */
+    public static String kaskadenRunde(int rundeNr) {
+        var muster = getOderFallback(KEY_KASKADE_RUNDE_MUSTER, "{0}. " + LEGACY_KASKADE_RUNDE_PRAEFIX);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{rundeNr});
+    }
+
+    /**
+     * Kaskaden-KO-Feld: z.B. "Kaskade A-Feld".
+     *
+     * @param bezeichner Feldbezeichner, z.B. "A", "B"
+     * @return lokalisierter Tabellenname
+     */
+    public static String kaskadenFeld(String bezeichner) {
+        var muster = getOderFallback(KEY_KASKADE_FELD_MUSTER,
+                LEGACY_KASKADE_FELD_PRAEFIX + " {0}-" + LEGACY_KASKADE_FELD_SUFFIX);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{bezeichner});
     }
 
     // ── Hilfsmethode ─────────────────────────────────────────────────────────

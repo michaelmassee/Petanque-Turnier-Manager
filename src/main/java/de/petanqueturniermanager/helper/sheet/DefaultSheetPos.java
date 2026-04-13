@@ -42,4 +42,7 @@ public class DefaultSheetPos {
 	public static final short POULE_RANGLISTE = 3; // Poule Vorrunden-Rangliste
 	public static final short POULE_KO        = 4; // Poule KO-Bracket-Blätter (A-Finale, B-Finale)
 
+	public static final short KASKADE_WORK   = 2; // Kaskaden-KO Rundenplan-Sheets
+	public static final short KASKADE_FELDER = 4; // Kaskaden-KO KO-Feld-Sheets (A/B/C/D)
+
 }

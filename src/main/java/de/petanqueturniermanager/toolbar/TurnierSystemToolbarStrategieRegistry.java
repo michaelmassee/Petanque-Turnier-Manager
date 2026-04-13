@@ -7,6 +7,7 @@ import java.util.Map;
 
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.toolbar.strategie.JGJToolbarStrategie;
+import de.petanqueturniermanager.toolbar.strategie.KaskadeToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.KoToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.LigaToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.MaastrichterToolbarStrategie;
@@ -30,7 +31,8 @@ public final class TurnierSystemToolbarStrategieRegistry {
             TurnierSystem.POULE,        new PouleToolbarStrategie(),
             TurnierSystem.LIGA,         new LigaToolbarStrategie(),
             TurnierSystem.JGJ,          new JGJToolbarStrategie(),
-            TurnierSystem.KO,           new KoToolbarStrategie()
+            TurnierSystem.KO,           new KoToolbarStrategie(),
+            TurnierSystem.KASKADE,      new KaskadeToolbarStrategie()
     );
 
     private TurnierSystemToolbarStrategieRegistry() {

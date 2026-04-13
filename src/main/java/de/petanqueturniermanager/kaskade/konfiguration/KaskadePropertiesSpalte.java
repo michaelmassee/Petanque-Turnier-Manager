@@ -33,7 +33,9 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME   = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 
-    public static final String KONFIG_PROP_ANZAHL_KASKADEN = "Kaskaden Anzahl";
+    public static final String KONFIG_PROP_ANZAHL_KASKADEN        = "Kaskaden Anzahl";
+    public static final String KONFIG_PROP_AKTIVE_KASKADENRUNDE   = "Aktive Kaskadenrunde";
+    public static final String KONFIG_PROP_KO_FELDER_ERSTELLT     = "KO-Felder erstellt";
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -62,6 +64,12 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
                 .setDefaultVal(2)
                 .setDescription("config.desc.kaskade.anzahl.kaskaden")
                 .inSideBar());
+
+        // Interne Zustandseigenschaften – nicht in der Sidebar sichtbar
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_AKTIVE_KASKADENRUNDE)
+                .setDefaultVal(0));
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KO_FELDER_ERSTELLT)
+                .setDefaultVal("N"));
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, "Tab-Farbe Kaskaden-KO")
                 .setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
@@ -122,6 +130,15 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
     }
 
+    private static final String KONFIG_PROP_KASKADEN_TAB_FARBE = "Tab-Farbe Kaskaden-KO";
+
+    /**
+     * Konfigurierbare Tab-Farbe für die Kaskaden-KO KO-Feld-Sheets.
+     */
+    public int getKaskadenTabFarbe() {
+        return readIntProperty(KONFIG_PROP_KASKADEN_TAB_FARBE);
+    }
+
     /**
      * Anzahl Kaskaden-Runden vor dem KO-Modus (Default 2 = ABCD-System).
      * Wert 2 erzeugt A/B/C/D-Felder, Wert 3 erzeugt A/B/C/D/E/F/G/H-Felder.
@@ -133,5 +150,28 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     public void setAnzahlKaskaden(int anzahl) {
         writeIntProperty(KONFIG_PROP_ANZAHL_KASKADEN, Math.max(2, anzahl));
+    }
+
+    /**
+     * Nummer der zuletzt erstellten Kaskadenrunde (0 = noch keine Runde erstellt).
+     */
+    public int getAktiveKaskadenRunde() {
+        int val = readIntProperty(KONFIG_PROP_AKTIVE_KASKADENRUNDE);
+        return val >= 0 ? val : 0;
+    }
+
+    public void setAktiveKaskadenRunde(int rundeNr) {
+        writeIntProperty(KONFIG_PROP_AKTIVE_KASKADENRUNDE, Math.max(0, rundeNr));
+    }
+
+    /**
+     * {@code true} wenn die KO-Feld-Sheets bereits angelegt wurden.
+     */
+    public boolean isKoFelderErstellt() {
+        return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_KO_FELDER_ERSTELLT));
+    }
+
+    public void setKoFelderErstellt(boolean erstellt) {
+        setStringProperty(KONFIG_PROP_KO_FELDER_ERSTELLT, erstellt ? "J" : "N");
     }
 }

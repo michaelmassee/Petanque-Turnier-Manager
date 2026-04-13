@@ -145,6 +145,27 @@ public final class SheetResolverFactory {
                 new MetadatenSheetResolver(
                         SheetMetadataHelper.schluesselPouleKo("B"),
                         I18n.get("webserver.resolver.poule.ko.b")));
+        RESOLVER_MAP.put("KASKADE_RUNDE", () ->
+                new MetadatenPrefixSheetResolver(
+                        SheetMetadataHelper.SCHLUESSEL_KASKADE_RUNDE_PREFIX,
+                        SheetMetadataHelper.SCHLUESSEL_SUFFIX,
+                        I18n.get("webserver.resolver.kaskade.runde")));
+        RESOLVER_MAP.put("KASKADE_FELD_A", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselKaskadenFeld("A"),
+                        I18n.get("webserver.resolver.kaskade.feld.a")));
+        RESOLVER_MAP.put("KASKADE_FELD_B", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselKaskadenFeld("B"),
+                        I18n.get("webserver.resolver.kaskade.feld.b")));
+        RESOLVER_MAP.put("KASKADE_FELD_C", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselKaskadenFeld("C"),
+                        I18n.get("webserver.resolver.kaskade.feld.c")));
+        RESOLVER_MAP.put("KASKADE_FELD_D", () ->
+                new MetadatenSheetResolver(
+                        SheetMetadataHelper.schluesselKaskadenFeld("D"),
+                        I18n.get("webserver.resolver.kaskade.feld.d")));
     }
 
     /**
