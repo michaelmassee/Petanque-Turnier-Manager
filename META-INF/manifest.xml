@@ -37,9 +37,11 @@
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_A8_Poule.xcu"/>
+    <!-- Kaskadenmodus deaktiviert – XCU-Eintrag auskommentiert damit kein Menüpunkt in LO erscheint
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_A9_Kaskaden.xcu"/>
+    -->
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/ProtocolHandler.xcu"/>
