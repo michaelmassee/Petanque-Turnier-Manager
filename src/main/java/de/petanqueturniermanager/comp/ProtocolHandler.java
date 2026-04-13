@@ -1074,7 +1074,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER,
 				 CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
-				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN;
+				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
 			// Neues Turnier in neuer Datei / Öffnen – immer aktiviert (unabhängig vom aktuellen Dokument)
