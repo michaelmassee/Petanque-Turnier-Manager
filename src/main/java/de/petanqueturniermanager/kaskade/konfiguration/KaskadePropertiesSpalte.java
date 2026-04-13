@@ -33,9 +33,11 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME   = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 
-    public static final String KONFIG_PROP_ANZAHL_KASKADEN        = "Kaskaden Anzahl";
-    public static final String KONFIG_PROP_AKTIVE_KASKADENRUNDE   = "Aktive Kaskadenrunde";
-    public static final String KONFIG_PROP_KO_FELDER_ERSTELLT     = "KO-Felder erstellt";
+    public static final String KONFIG_PROP_ANZAHL_KASKADEN          = "Kaskaden Anzahl";
+    public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS   = "Freispiel Punkte +";
+    public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS  = "Freispiel Punkte -";
+    public static final String KONFIG_PROP_AKTIVE_KASKADENRUNDE    = "Aktive Kaskadenrunde";
+    public static final String KONFIG_PROP_KO_FELDER_ERSTELLT      = "KO-Felder erstellt";
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -60,16 +62,23 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
                 .setDefaultVal("N").setDescription("config.desc.ko.vereinsname"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZAHL_KASKADEN)
-                .setDefaultVal(2)
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ANZAHL_KASKADEN)
+                .setDefaultVal("2")
                 .setDescription("config.desc.kaskade.anzahl.kaskaden")
-                .inSideBar());
+                .inSideBar())
+                .addAuswahl("2", "ACBD")
+                .addAuswahl("3", "ACBDEFGH"));
 
-        // Interne Zustandseigenschaften – nicht in der Sidebar sichtbar
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+                .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+                .setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
+
+        // Interne Zustandseigenschaften – weder in der Sidebar noch im Optionsdialog sichtbar
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_AKTIVE_KASKADENRUNDE)
-                .setDefaultVal(0));
+                .setDefaultVal(0).intern());
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KO_FELDER_ERSTELLT)
-                .setDefaultVal("N"));
+                .setDefaultVal("N").intern());
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, "Tab-Farbe Kaskaden-KO")
                 .setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
@@ -144,12 +153,16 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
      * Wert 2 erzeugt A/B/C/D-Felder, Wert 3 erzeugt A/B/C/D/E/F/G/H-Felder.
      */
     public int getAnzahlKaskaden() {
-        int val = readIntProperty(KONFIG_PROP_ANZAHL_KASKADEN);
-        return val >= 2 ? val : 2;
+        try {
+            int val = Integer.parseInt(readStringProperty(KONFIG_PROP_ANZAHL_KASKADEN));
+            return val >= 2 ? val : 2;
+        } catch (NumberFormatException e) {
+            return 2;
+        }
     }
 
     public void setAnzahlKaskaden(int anzahl) {
-        writeIntProperty(KONFIG_PROP_ANZAHL_KASKADEN, Math.max(2, anzahl));
+        setStringProperty(KONFIG_PROP_ANZAHL_KASKADEN, String.valueOf(Math.max(2, anzahl)));
     }
 
     /**
@@ -162,6 +175,14 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
 
     public void setAktiveKaskadenRunde(int rundeNr) {
         writeIntProperty(KONFIG_PROP_AKTIVE_KASKADENRUNDE, Math.max(0, rundeNr));
+    }
+
+    public int getFreispielPunktePlus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+    }
+
+    public int getFreispielPunkteMinus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
     }
 
     /**

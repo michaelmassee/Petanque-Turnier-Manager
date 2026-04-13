@@ -149,10 +149,21 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
 
     @Override
     protected void doRun() throws GenerateException {
+        vollstaendigAktualisieren();
+    }
+
+    /**
+     * Bereinigt, vergibt Nummern, setzt Aktiv-Standard, prüft auf Duplikate,
+     * sortiert und aktualisiert das Sheet vollständig.
+     * Wird von {@link #doRun()} und von Spielrunde-Sheets vor dem Erstellen der ersten Runde aufgerufen.
+     *
+     * @return {@code true} wenn das Sheet gefunden und aktualisiert wurde, {@code false} wenn kein Sheet vorhanden
+     */
+    public boolean vollstaendigAktualisieren() throws GenerateException {
         XSpreadsheet xSheet = getXSpreadSheet();
         if (xSheet == null) {
             logger.warn("Kaskaden-KO Meldeliste nicht gefunden");
-            return;
+            return false;
         }
         stringsBesinigen(xSheet);
         teamnummernVergeben(xSheet);
@@ -160,6 +171,7 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
         pruefeAufDoppelteTeamNr(xSheet);
         nachNrSortieren(xSheet);
         upDateSheet();
+        return true;
     }
 
     private void aktivDefaultSetzen(XSpreadsheet xSheet) throws GenerateException {

@@ -17,6 +17,7 @@ public class ConfigProperty<V> {
 	private boolean inSideBar; // uebergang properties nach sidebar
 	private boolean inSideBarInfoPanel; // obere Panel, read only felder
 	private boolean tabFarbe; // Tab-Farben-Dialog
+	private boolean intern; // interner Zustand – nicht in Dialogen anzeigen
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
@@ -24,6 +25,7 @@ public class ConfigProperty<V> {
 		inSideBar = false;
 		inSideBarInfoPanel = false;
 		tabFarbe = false;
+		intern = false;
 	}
 
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
@@ -104,6 +106,19 @@ public class ConfigProperty<V> {
 
 	public final boolean isTabFarbe() {
 		return tabFarbe;
+	}
+
+	/**
+	 * Markiert diese Property als internen Zustandswert, der nicht in
+	 * Konfigurationsdialogen angezeigt werden soll.
+	 */
+	public ConfigProperty<V> intern() {
+		this.intern = true;
+		return this;
+	}
+
+	public final boolean isIntern() {
+		return intern;
 	}
 
 }

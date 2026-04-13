@@ -102,6 +102,14 @@ public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet {
         return propertiesSpalte.getAnzahlKaskaden();
     }
 
+    public int getFreispielPunktePlus() {
+        return propertiesSpalte.getFreispielPunktePlus();
+    }
+
+    public int getFreispielPunkteMinus() {
+        return propertiesSpalte.getFreispielPunkteMinus();
+    }
+
     public void setAnzahlKaskaden(int anzahl) {
         propertiesSpalte.setAnzahlKaskaden(anzahl);
     }

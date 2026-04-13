@@ -634,7 +634,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KaskadeTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_KASKADE_TESTDATEN_MELDELISTE:
-				new KaskadeMeldeListeSheetTestDaten(ws, 34).start();
+				new KaskadeMeldeListeSheetTestDaten(ws, 73).start();
 				break;
 			case CMD_KASKADE_NAECHSTE_RUNDE:
 				new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
