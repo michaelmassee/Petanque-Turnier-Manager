@@ -33,6 +33,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.timer.TimerDialog;
 import de.petanqueturniermanager.timer.TimerManager;
+import de.petanqueturniermanager.timer.TimerZustand;
 import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.webserver.WebserverKonfigDialog;
@@ -1082,12 +1083,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TOOLBAR_OEFFNEN                        -> true;
 			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
-			// Timer – immer aktiviert
-			case CMD_TIMER_STARTEN_DIALOG                   -> true;
+			// Timer – zustandsabhängig
+			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
 				 CMD_TIMER_STOPPEN,
 				 CMD_TIMER_PLUS_MINUTE,
-				 CMD_TIMER_MINUS_MINUTE                     -> true;
+				 CMD_TIMER_MINUS_MINUTE                     -> timerLaeuftOderPausiert();
 			default -> false;
 			};
 		} catch (Exception e) {
@@ -1152,7 +1153,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	private static void notifyAllListeners() {
+	private static boolean timerInaktivOderBeendet() {
+		var zustand = TimerManager.get().getZustand();
+		return zustand == TimerZustand.INAKTIV || zustand == TimerZustand.BEENDET;
+	}
+
+	private static boolean timerLaeuftOderPausiert() {
+		var zustand = TimerManager.get().getZustand();
+		return zustand == TimerZustand.LAEUFT || zustand == TimerZustand.PAUSIERT;
+	}
+
+	static void notifyAllListeners() {
 		Map<String, List<StatusEntry>> snapshot;
 		synchronized (STATUS_LISTENERS) {
 			snapshot = new HashMap<>(STATUS_LISTENERS);

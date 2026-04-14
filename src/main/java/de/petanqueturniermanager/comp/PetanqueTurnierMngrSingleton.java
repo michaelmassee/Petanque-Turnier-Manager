@@ -24,6 +24,7 @@ import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.toolbar.TimerToolbarSteuerung;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
@@ -83,6 +84,8 @@ public class PetanqueTurnierMngrSingleton {
 		TimerManager.init(context);
 		TimerManager.get().addListener(ProcessBox.from());
 		TimerManager.get().addListener(WebServerManager.get());
+		TimerManager.get().addListener(new TimerToolbarSteuerung(context));
+		TimerManager.get().addListener(state -> ProtocolHandler.notifyAllListeners());
 		TerminateListener.addThisListenerOnce(context);
 		new NewReleaseChecker().runUpdateCache();
 		if (GlobalProperties.get().isWebserverAktiv()) {
