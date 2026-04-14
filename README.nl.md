@@ -52,6 +52,7 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 * **Maastrichts Systeem:** Combineert het Zwitsers Systeem met knock-out finalerondes. Teams worden in meerdere voorronden (2–5) volgens het Zwitserse algoritme gekoppeld. Daarna worden de teams op basis van hun aantal overwinningen ingedeeld in prestatiegroepen (A, B, C, D) – elke groep speelt zijn eigen knock-out finale. Resultaat: vier toernooiwinnaars, eerlijke groepsindeling en spannende finales.
 
 * **Poule-A/B-systeem:** Klassieke modus met groepsfase (Poules) volgens het principe van dubbele eliminatie (light), gevolgd door een verdeling in A-toernooi (hoofdtoernooi) en B-toernooi (troosttoernooi).
+* **Cascaderend Knock-out Systeem (Uitgebreid ABCD-systeem):** Breidt het klassieke ABCD-knock-outsysteem uit met zoveel extra niveaus als gewenst (E, F, G, H …). In plaats van vroeg uitgeschakeld te worden, zakken verliezende teams stap voor stap door naar lagere troosttoernooien. Na een configureerbaar minimum aantal rondes schakelt elk niveau over naar zuiver knock-outformaat – met een eigen cadrage indien nodig. Geschikt voor middelgrote tot grote toernooien (vanaf 16 teams).
 
 ---
 

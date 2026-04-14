@@ -62,6 +62,8 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
 
 * **Poule-A/B-System:**
   Klassischer Modus mit Gruppenphase (Poules) im Double-Elimination-Light-Verfahren und anschließender Aufteilung in A-Turnier (Hauptturnier) und B-Turnier (Consolante).
+* **Kaskaden-KO-System (Erweitertes ABCD-System):**
+  Erweitert das klassische ABCD-KO-System um beliebig viele Ebenen (E, F, G, H …). Anstatt früh auszuscheiden, kaskadieren unterlegene Teams schrittweise in tieferliegende Consolante-Turniere. Nach einer konfigurierbaren Mindestanzahl von Runden wechselt jede Ebene in den reinen K.-o.-Modus – mit eigener Cadrage falls nötig. Geeignet für mittlere bis große Turniere (ab 16 Teams).
 
 ---
 

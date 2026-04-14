@@ -54,6 +54,7 @@ L'extension propose déjà un large choix de modes de tournoi éprouvés, adapt�
 * **Système de Maastricht :** Combine le Système Suisse avec des phases finales à élimination directe. Les équipes sont appariées selon l'algorithme suisse sur plusieurs tours préliminaires (2–5). Ensuite, les équipes sont réparties en groupes de niveau (A, B, C, D) selon leur nombre de victoires – chaque groupe dispute sa propre finale en élimination directe. Résultat : quatre vainqueurs de tournoi, une répartition équitable et des finales palpitantes.
 
 * **Système Poule A/B :** Mode classique avec phase de groupes (Poules) selon le principe de la double élimination légère, suivi d'une répartition en Concours A (tableau principal) et Concours B (consolante).
+* **Système KO en cascade (Système ABCD étendu) :** Étend le système KO classique ABCD avec autant de niveaux supplémentaires que souhaité (E, F, G, H …). Au lieu d'être éliminées tôt, les équipes perdantes sont cascadées progressivement vers des consolantes de niveau inférieur. Après un nombre minimum de tours configurable, chaque niveau bascule en élimination directe – avec un cadrage propre si nécessaire. Adapté aux tournois de taille moyenne à grande (dès 16 équipes).
 
 ---
 

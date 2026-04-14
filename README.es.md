@@ -51,6 +51,7 @@ El mayor punto de venta único de este gestor de torneos es su base: **LibreOffi
 * **Sistema de Maastricht:** Combina el Sistema Suizo con rondas finales de eliminación directa. Los equipos se emparejan según el algoritmo suizo en varias rondas preliminares (2–5). Después, los equipos se dividen en grupos de nivel (A, B, C, D) según su número de victorias – cada grupo disputa su propia final en formato knockout. Resultado: cuatro ganadores del torneo, una distribución justa y finales emocionantes.
 
 * **Sistema Poule A/B:** Modo clásico con fase de grupos (Poules) según el principio de doble eliminación ligera, seguido de una división en Torneo A (cuadro principal) y Torneo B (consolación).
+* **Sistema de KO en Cascada (Sistema ABCD Extendido):** Amplía el sistema clásico ABCD de eliminación directa con tantos niveles adicionales como se desee (E, F, G, H …). En lugar de ser eliminados temprano, los equipos perdedores descienden progresivamente hacia consolaciones de nivel inferior. Tras un número mínimo configurable de rondas, cada nivel pasa al formato de eliminación directa pura, con cadrage propio si es necesario. Adecuado para torneos medianos y grandes (desde 16 equipos).
 
 ---
 

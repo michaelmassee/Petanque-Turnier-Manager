@@ -61,6 +61,8 @@ The extension already offers a wide selection of proven tournament modes suitabl
 
 * **Poule A/B System:**
   Classic mode with a group phase (Poules) using a Double-Elimination-Light format, followed by division into the A-tournament (main bracket) and B-tournament (consolation bracket).
+* **Cascading Knockout System (Extended ABCD System):**
+  Extends the classic ABCD knockout system with any number of additional levels (E, F, G, H …). Instead of early elimination, losing teams cascade step by step into lower consolation brackets. After a configurable minimum number of rounds, each level switches to pure knockout format – with its own cadrage if needed. Suitable for medium to large tournaments (16+ teams).
 
 ---
 
