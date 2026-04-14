@@ -33,7 +33,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 	// html export
 	public static final String KONFIG_PROP_NAME_GRUPPE = "Gruppenname";
-	public static final String KONFIG_PROP_LOGO_URL = "Liga-Logo Url"; // (png)";
 	public static final String KONFIG_PROP_PDF_IMG_URL = "Pdf-Img Url"; // (png)";
 	public static final String KONFIG_PROP_DOWNLOAD_URL = "Download Url"; // fuer den Download von Spielpläne";
 
@@ -61,9 +60,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_NAME_GRUPPE).setDefaultVal("")
 				.setDescription("config.desc.liga.gruppenname").inSideBar());
-
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_LOGO_URL).setDefaultVal("")
-				.setDescription("config.desc.liga.logo.url"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_PDF_IMG_URL)
 				.setDefaultVal("pdf-download.png").setDescription("config.desc.liga.pdf.img.url"));
@@ -139,11 +135,6 @@ public class LigaPropertiesSpalte extends BasePropertiesSpalte implements ILigaP
 	@Override
 	public String getBaseDownloadUrl() {
 		return readStringProperty(KONFIG_PROP_DOWNLOAD_URL);
-	}
-
-	@Override
-	public String getLigaLogoUr() {
-		return readStringProperty(KONFIG_PROP_LOGO_URL);
 	}
 
 	@Override

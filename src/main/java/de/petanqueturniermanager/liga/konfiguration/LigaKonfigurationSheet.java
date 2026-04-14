@@ -104,11 +104,6 @@ public class LigaKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
-	public String getLigaLogoUr() {
-		return propertiesSpalte.getLigaLogoUr();
-	}
-
-	@Override
 	public String getPdfImageUr() {
 		return propertiesSpalte.getPdfImageUr();
 	}

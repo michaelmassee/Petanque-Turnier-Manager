@@ -53,6 +53,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_FUSSZEILE_LINKS = "Fußzeile links";
 	public static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 
+	public static final String KONFIG_PROP_TURNIERLOGO_URL = "Turnierlogo Url";
+
 	public static final String KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE = "Teilnehmerliste Anzahl je Spalte";
 	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
 
@@ -76,6 +78,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 				.setDescription("config.desc.footer.links").inSideBar());
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
 				.setDescription("config.desc.footer.mitte").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_TURNIERLOGO_URL)
+				.setDefaultVal("").setDescription("config.desc.turnierlogo.url").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -264,6 +269,16 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public Integer getMaxAnzTeilnehmerInSpalte() {
 		return readIntProperty(KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE);
+	}
+
+	@Override
+	public String getTurnierlogoUrl() {
+		var val = readStringProperty(KONFIG_PROP_TURNIERLOGO_URL);
+		if (val.isEmpty()) {
+			// Migration: alten Liga-spezifischen Schlüssel übernehmen
+			val = readStringProperty("Liga-Logo Url");
+		}
+		return val;
 	}
 
 	@Override

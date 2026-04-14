@@ -207,6 +207,11 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	}
 
 	@Override
+	public final String getTurnierlogoUrl() {
+		return getPropertiesSpalte().getTurnierlogoUrl();
+	}
+
+	@Override
 	public final int getMeldelisteTabFarbe() {
 		return getPropertiesSpalte().getMeldelisteTabFarbe();
 	}

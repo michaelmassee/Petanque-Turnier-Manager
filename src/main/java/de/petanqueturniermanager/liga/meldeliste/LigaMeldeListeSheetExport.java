@@ -188,11 +188,11 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 				processBox().info("Download URL Verzeichnis: " + baseDownloadUrl);
 			}
 
-			String ligaLogoUr = StringUtils.strip(delegate.getKonfigurationSheet().getLigaLogoUr());
-			if (StringUtils.isEmpty(ligaLogoUr)) {
-				processBox().info("Warnung: Liga-Logo fehlt in der Turnierkonfiguration");
+			String turnierlogoUrl = StringUtils.strip(delegate.getKonfigurationSheet().getTurnierlogoUrl());
+			if (StringUtils.isEmpty(turnierlogoUrl)) {
+				processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
 			} else {
-				processBox().info("Liga-Logo: " + ligaLogoUr);
+				processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
 			}
 
 			String pdfImgUr = StringUtils.strip(delegate.getKonfigurationSheet().getPdfImageUr());
@@ -213,7 +213,7 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
 			name = StringUtils.replace(name, ".html", ".clean.html");
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
-			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(ligaLogoUr)
+			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(turnierlogoUrl)
 					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)
 					.pdfImageUrl(pdfImgUr).pdfDownloadBaseUrl(baseDownloadUrl).cleanUp();
 
