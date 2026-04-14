@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.helper.print.TurnierLogoHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -65,6 +66,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 		// sicher gehen das änderungen ankommen
 		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter().setFooterCenter(getFusszeileMitte())
 				.setFooterLeft(getFusszeileLinks()).create();
+		TurnierLogoHelper.logoInAllenSheetsAktualisieren(getWorkingSpreadsheet(), getTurnierlogoUrl());
 	}
 
 	private void updateTurnierSystemInDocument() {
