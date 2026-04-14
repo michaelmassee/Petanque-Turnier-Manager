@@ -94,11 +94,39 @@ public class KaskadeKonfigurationSheet extends BaseKonfigurationSheet {
         propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
     }
 
+    public int getKaskadenTabFarbe() {
+        return propertiesSpalte.getKaskadenTabFarbe();
+    }
+
     public int getAnzahlKaskaden() {
         return propertiesSpalte.getAnzahlKaskaden();
     }
 
+    public int getFreispielPunktePlus() {
+        return propertiesSpalte.getFreispielPunktePlus();
+    }
+
+    public int getFreispielPunkteMinus() {
+        return propertiesSpalte.getFreispielPunkteMinus();
+    }
+
     public void setAnzahlKaskaden(int anzahl) {
         propertiesSpalte.setAnzahlKaskaden(anzahl);
+    }
+
+    public int getAktiveKaskadenRunde() {
+        return propertiesSpalte.getAktiveKaskadenRunde();
+    }
+
+    public void setAktiveKaskadenRunde(int rundeNr) {
+        propertiesSpalte.setAktiveKaskadenRunde(rundeNr);
+    }
+
+    public boolean isKoFelderErstellt() {
+        return propertiesSpalte.isKoFelderErstellt();
+    }
+
+    public void setKoFelderErstellt(boolean erstellt) {
+        propertiesSpalte.setKoFelderErstellt(erstellt);
     }
 }

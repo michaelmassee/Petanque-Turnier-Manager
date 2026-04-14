@@ -93,7 +93,10 @@ public class SheetMetadataHelper {
 
     // ── Konstanten: Kaskaden-KO ──────────────────────────────────────────────
 
-    public static final String SCHLUESSEL_KASKADE_MELDELISTE = "__PTM_KASKADE_MELDELISTE__";
+    public static final String SCHLUESSEL_KASKADE_MELDELISTE        = "__PTM_KASKADE_MELDELISTE__";
+    public static final String SCHLUESSEL_KASKADE_RUNDE_PREFIX      = "__PTM_KASKADE_RUNDE_";
+    public static final String SCHLUESSEL_KASKADE_FELD_PREFIX       = "__PTM_KASKADE_FELD_";
+    public static final String SCHLUESSEL_KASKADE_GRUPPENRANGLISTE  = "__PTM_KASKADE_GRUPPENRANGLISTE__";
 
     // ── Konstanten: Maastrichter ─────────────────────────────────────────────
     public static final String SCHLUESSEL_MAASTRICHTER_MELDELISTE = "__PTM_MAASTRICHTER_MELDELISTE__";
@@ -166,6 +169,14 @@ public class SheetMetadataHelper {
 
     public static String schluesselPouleKo(String buchstabe) {
         return SCHLUESSEL_POULE_KO_PREFIX + buchstabe + SCHLUESSEL_SUFFIX;
+    }
+
+    public static String schluesselKaskadenRunde(int rundeNr) {
+        return SCHLUESSEL_KASKADE_RUNDE_PREFIX + rundeNr + SCHLUESSEL_SUFFIX;
+    }
+
+    public static String schluesselKaskadenFeld(String bezeichner) {
+        return SCHLUESSEL_KASKADE_FELD_PREFIX + bezeichner + SCHLUESSEL_SUFFIX;
     }
 
     // ── Schreiben ────────────────────────────────────────────────────────────

@@ -91,6 +91,66 @@
 								</prop>
 							</node>
 
+							<node oor:name="A9A5" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A9A6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Next Cascade Round</value>
+									<value xml:lang="de">Neue Kaskadenrunde</value>
+									<value xml:lang="es">Nueva ronda en cascada</value>
+									<value xml:lang="fr">Nouveau tour en cascade</value>
+									<value xml:lang="nl">Nieuwe cascaderonde</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:kaskade_naechste_runde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A9A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Rebuild Current Round</value>
+									<value xml:lang="de">Aktuelle Runde neu erstellen</value>
+									<value xml:lang="es">Recrear ronda actual</value>
+									<value xml:lang="fr">Recréer le tour actuel</value>
+									<value xml:lang="nl">Huidige ronde opnieuw maken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:kaskade_aktuelle_runde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A9A8" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A9A9" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Create KO Fields</value>
+									<value xml:lang="de">KO-Felder erstellen</value>
+									<value xml:lang="es">Crear campos KO</value>
+									<value xml:lang="fr">Créer les champs KO</value>
+									<value xml:lang="nl">KO-velden aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:kaskade_ko_felder</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

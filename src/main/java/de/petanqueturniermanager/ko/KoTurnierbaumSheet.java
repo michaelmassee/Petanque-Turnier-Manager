@@ -592,6 +592,20 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (spielUmPlatz3 && numRunden >= 2) {
 			schreibePlatz3Match(xSheet, numRunden, bracketGroesse);
 		}
+
+		// Optimale Spaltenbreite und Zeilenhöhe setzen
+		int letzteZeile;
+		if (spielUmPlatz3 && numRunden >= 2) {
+			// platz3TeamBZeile = letzteZeileHauptbaum + 3 (Header) + 2 (TeamB-Zeile)
+			letzteZeile = teamBZeile(1, anzMatchesR1 - 1) + 5;
+		} else {
+			letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
+		}
+		// Im NAME-Modus ist siegerNameSpalte versteckt (Breite 0) – nicht anfassen
+		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
+				? siegerSpalte(numRunden)
+				: siegerNameSpalte(numRunden);
+		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, HEADER_ZEILE_TITEL, letzteZeile, 0, letzteSpalte);
 	}
 
 	/**

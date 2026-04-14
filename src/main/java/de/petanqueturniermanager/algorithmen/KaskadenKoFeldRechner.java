@@ -63,6 +63,7 @@ public class KaskadenKoFeldRechner {
 
     /**
      * Berechnet die Feldaufteilung für das Kaskaden-KO-System.
+     * Freilos-Teams gehen in die Verlierer-Gruppe (klassisches Verhalten).
      *
      * @param gesamtTeams    Gesamtanzahl Teams (muss &gt;= 2 sein)
      * @param kaskadenStufen Anzahl Kaskaden-Runden (1 bis 3)
@@ -72,6 +73,22 @@ public class KaskadenKoFeldRechner {
      *                                  {@code kaskadenStufen} außerhalb von 1..3
      */
     public static List<KaskadenKoFeldInfo> berechne(int gesamtTeams, int kaskadenStufen) {
+        return berechne(gesamtTeams, kaskadenStufen, false);
+    }
+
+    /**
+     * Berechnet die Feldaufteilung für das Kaskaden-KO-System.
+     *
+     * @param gesamtTeams      Gesamtanzahl Teams (muss &gt;= 2 sein)
+     * @param kaskadenStufen   Anzahl Kaskaden-Runden (1 bis 3)
+     * @param freispielGewonnen {@code true} wenn das Freilos als Sieg gewertet wird
+     *                         (Freilos-Team → Sieger-Gruppe); {@code false} für Verlierer-Gruppe
+     * @return unveränderliche Liste der Felder in alphabetischer Reihenfolge
+     *         (Index 0 = bestes Feld A, letzter Index = schwächstes Feld)
+     * @throws IllegalArgumentException wenn {@code gesamtTeams < 2} oder
+     *                                  {@code kaskadenStufen} außerhalb von 1..3
+     */
+    public static List<KaskadenKoFeldInfo> berechne(int gesamtTeams, int kaskadenStufen, boolean freispielGewonnen) {
         checkArgument(gesamtTeams >= 2, "gesamtTeams muss mindestens 2 sein, war: %s", gesamtTeams);
         checkArgument(kaskadenStufen >= 1 && kaskadenStufen <= 3,
                 "kaskadenStufen muss zwischen 1 und 3 liegen, war: %s", kaskadenStufen);
@@ -80,7 +97,7 @@ public class KaskadenKoFeldRechner {
         feldListe.add(new FeldKnoten("", gesamtTeams));
 
         for (int stufe = 0; stufe < kaskadenStufen; stufe++) {
-            feldListe = spalteFelderAuf(feldListe);
+            feldListe = spalteFelderAuf(feldListe, freispielGewonnen);
         }
 
         return erstelleFeldInfos(feldListe);
@@ -91,12 +108,17 @@ public class KaskadenKoFeldRechner {
      * einen Verlierer-Knoten direkt hintereinander (Interleaved-Reihenfolge).<br>
      * Da die Pfade lexikografisch aufgebaut werden (S &lt; V), ist das Ergebnis
      * automatisch in der gewünschten Leistungsreihenfolge sortiert.
+     * <p>
+     * Bei ungerader Teamanzahl gilt:<br>
+     * – {@code freispielGewonnen=true}: Sieger bekommt {@code ceil(n/2)}, Verlierer {@code floor(n/2)}<br>
+     * – {@code freispielGewonnen=false}: Sieger bekommt {@code floor(n/2)}, Verlierer {@code ceil(n/2)}
      */
-    private static List<FeldKnoten> spalteFelderAuf(List<FeldKnoten> felder) {
+    private static List<FeldKnoten> spalteFelderAuf(List<FeldKnoten> felder, boolean freispielGewonnen) {
         var neueFelder = new ArrayList<FeldKnoten>(felder.size() * 2);
         for (var feld : felder) {
-            int sieger = feld.anzTeams() / 2;
-            int verlierer = feld.anzTeams() - sieger;
+            int n         = feld.anzTeams();
+            int sieger    = freispielGewonnen ? (n + 1) / 2 : n / 2;
+            int verlierer = n - sieger;
             neueFelder.add(new FeldKnoten(feld.pfad() + "S", sieger));
             neueFelder.add(new FeldKnoten(feld.pfad() + "V", verlierer));
         }

@@ -802,6 +802,77 @@ public class SheetHelper {
 		return setColumnProperty(sheet, spalte, "Width", Integer.valueOf(width));
 	}
 
+	/** Standard-Marge für optimale Spaltenbreite: 0,2 cm (200 × 1/100 mm). */
+	public static final int OPTIMALE_BREITE_MARGE = 200;
+
+	/** Standard-Marge für optimale Zeilenhöhe: 0,1 cm (100 × 1/100 mm). */
+	public static final int OPTIMALE_HOEHE_MARGE = 100;
+
+	/**
+	 * Setzt die Spalte auf optimale Breite und addiert anschließend die angegebene Marge.
+	 *
+	 * @param sheet  das Sheet
+	 * @param spalte Spaltenindex (0-basiert)
+	 * @param marge  zusätzliche Breite in 1/100 mm (z. B. 200 = 2 mm = 0,2 cm)
+	 */
+	public void setOptimaleBreitePlusMarge(XSpreadsheet sheet, int spalte, int marge) {
+		checkNotNull(sheet);
+		var xPropSet = getColumnPropertySet(sheet, spalte);
+		if (xPropSet == null) {
+			return;
+		}
+		setProperty(xPropSet, "OptimalWidth", Boolean.TRUE);
+		try {
+			int breite = (int) xPropSet.getPropertyValue("Width");
+			setProperty(xPropSet, "Width", Integer.valueOf(breite + marge));
+		} catch (UnknownPropertyException | WrappedTargetException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Setzt die Zeile auf optimale Höhe und addiert anschließend die angegebene Marge.
+	 *
+	 * @param sheet das Sheet
+	 * @param zeile Zeilenindex (0-basiert)
+	 * @param marge zusätzliche Höhe in 1/100 mm (z. B. 100 = 1 mm = 0,1 cm)
+	 */
+	public void setOptimaleHoehePlusMarge(XSpreadsheet sheet, int zeile, int marge) {
+		checkNotNull(sheet);
+		var xPropSet = getRowPropertySet(sheet, zeile);
+		if (xPropSet == null) {
+			return;
+		}
+		setProperty(xPropSet, "OptimalHeight", Boolean.TRUE);
+		try {
+			int hoehe = (int) xPropSet.getPropertyValue("Height");
+			setProperty(xPropSet, "Height", Integer.valueOf(hoehe + marge));
+		} catch (UnknownPropertyException | WrappedTargetException e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Setzt alle Spalten im Bereich [ersteSpalte..letzteSpalte] auf optimale Breite + Standard-Marge
+	 * und alle Zeilen im Bereich [ersteZeile..letzteZeile] auf optimale Höhe + Standard-Marge.
+	 *
+	 * @param sheet        das Sheet
+	 * @param ersteZeile   erste Zeile (0-basiert, inklusiv)
+	 * @param letzteZeile  letzte Zeile (0-basiert, inklusiv)
+	 * @param ersteSpalte  erste Spalte (0-basiert, inklusiv)
+	 * @param letzteSpalte letzte Spalte (0-basiert, inklusiv)
+	 */
+	public void setOptimaleBreiteUndHoeheAlles(XSpreadsheet sheet,
+			int ersteZeile, int letzteZeile, int ersteSpalte, int letzteSpalte) {
+		checkNotNull(sheet);
+		for (int spalte = ersteSpalte; spalte <= letzteSpalte; spalte++) {
+			setOptimaleBreitePlusMarge(sheet, spalte, OPTIMALE_BREITE_MARGE);
+		}
+		for (int zeile = ersteZeile; zeile <= letzteZeile; zeile++) {
+			setOptimaleHoehePlusMarge(sheet, zeile, OPTIMALE_HOEHE_MARGE);
+		}
+	}
+
 	public XCell getCell(XSpreadsheet xSheet, Position pos) {
 		checkNotNull(xSheet);
 		checkNotNull(pos);

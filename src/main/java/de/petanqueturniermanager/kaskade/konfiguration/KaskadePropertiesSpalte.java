@@ -23,7 +23,7 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
     static {
-        ADDBaseProp(KONFIG_PROPERTIES, false);
+        ADDBaseProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";
@@ -33,7 +33,11 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME   = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
 
-    public static final String KONFIG_PROP_ANZAHL_KASKADEN = "Kaskaden Anzahl";
+    public static final String KONFIG_PROP_ANZAHL_KASKADEN          = "Kaskaden Anzahl";
+    public static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS   = "Freispiel Punkte +";
+    public static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS  = "Freispiel Punkte -";
+    public static final String KONFIG_PROP_AKTIVE_KASKADENRUNDE    = "Aktive Kaskadenrunde";
+    public static final String KONFIG_PROP_KO_FELDER_ERSTELLT      = "KO-Felder erstellt";
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -58,10 +62,23 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
                 .setDefaultVal("N").setDescription("config.desc.ko.vereinsname"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
-        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZAHL_KASKADEN)
-                .setDefaultVal(2)
+        KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_ANZAHL_KASKADEN)
+                .setDefaultVal("2")
                 .setDescription("config.desc.kaskade.anzahl.kaskaden")
-                .inSideBar());
+                .inSideBar())
+                .addAuswahl("2", "ACBD")
+                .addAuswahl("3", "ACBDEFGH"));
+
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+                .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+                .setDefaultVal(7).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
+
+        // Interne Zustandseigenschaften – weder in der Sidebar noch im Optionsdialog sichtbar
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_AKTIVE_KASKADENRUNDE)
+                .setDefaultVal(0).intern());
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_KO_FELDER_ERSTELLT)
+                .setDefaultVal("N").intern());
 
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, "Tab-Farbe Kaskaden-KO")
                 .setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
@@ -122,16 +139,60 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
     }
 
+    private static final String KONFIG_PROP_KASKADEN_TAB_FARBE = "Tab-Farbe Kaskaden-KO";
+
+    /**
+     * Konfigurierbare Tab-Farbe für die Kaskaden-KO KO-Feld-Sheets.
+     */
+    public int getKaskadenTabFarbe() {
+        return readIntProperty(KONFIG_PROP_KASKADEN_TAB_FARBE);
+    }
+
     /**
      * Anzahl Kaskaden-Runden vor dem KO-Modus (Default 2 = ABCD-System).
      * Wert 2 erzeugt A/B/C/D-Felder, Wert 3 erzeugt A/B/C/D/E/F/G/H-Felder.
      */
     public int getAnzahlKaskaden() {
-        int val = readIntProperty(KONFIG_PROP_ANZAHL_KASKADEN);
-        return val >= 2 ? val : 2;
+        try {
+            int val = Integer.parseInt(readStringProperty(KONFIG_PROP_ANZAHL_KASKADEN));
+            return val >= 2 ? val : 2;
+        } catch (NumberFormatException e) {
+            return 2;
+        }
     }
 
     public void setAnzahlKaskaden(int anzahl) {
-        writeIntProperty(KONFIG_PROP_ANZAHL_KASKADEN, Math.max(2, anzahl));
+        setStringProperty(KONFIG_PROP_ANZAHL_KASKADEN, String.valueOf(Math.max(2, anzahl)));
+    }
+
+    /**
+     * Nummer der zuletzt erstellten Kaskadenrunde (0 = noch keine Runde erstellt).
+     */
+    public int getAktiveKaskadenRunde() {
+        int val = readIntProperty(KONFIG_PROP_AKTIVE_KASKADENRUNDE);
+        return val >= 0 ? val : 0;
+    }
+
+    public void setAktiveKaskadenRunde(int rundeNr) {
+        writeIntProperty(KONFIG_PROP_AKTIVE_KASKADENRUNDE, Math.max(0, rundeNr));
+    }
+
+    public int getFreispielPunktePlus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+    }
+
+    public int getFreispielPunkteMinus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
+    }
+
+    /**
+     * {@code true} wenn die KO-Feld-Sheets bereits angelegt wurden.
+     */
+    public boolean isKoFelderErstellt() {
+        return "J".equalsIgnoreCase(readStringProperty(KONFIG_PROP_KO_FELDER_ERSTELLT));
+    }
+
+    public void setKoFelderErstellt(boolean erstellt) {
+        setStringProperty(KONFIG_PROP_KO_FELDER_ERSTELLT, erstellt ? "J" : "N");
     }
 }

@@ -158,6 +158,72 @@ public class KaskadenKoRundenPlanerTest {
     }
 
     // ---------------------------------------------------------------
+    // freispielGewonnen=true: Freilos-Team → Sieger-Gruppe
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testBerechne_34Teams_2Kaskaden_freispielGewonnen() {
+        var plan = KaskadenKoRundenPlaner.berechne(34, 2, true);
+
+        // Runde 1: 34 Teams, 17 Paare, 0 Freilose – unverändert
+        var r1 = plan.kaskadeRunden().get(0);
+        assertGruppenRunde(r1.gruppenRunden().get(0), "", 34, 17, 0);
+
+        // Runde 2: freispielGewonnen=true → S bekommt ceil(17/2)=9, V bekommt floor(17/2)=8
+        var r2 = plan.kaskadeRunden().get(1);
+        assertThat(r2.gruppenRunden()).hasSize(2);
+        assertGruppenRunde(r2.gruppenRunden().get(0), "S", 17, 8, 1);
+        assertGruppenRunde(r2.gruppenRunden().get(1), "V", 17, 8, 1);
+
+        // Endfelder: 34 ist gerade → Stufe 1 unverändert (S=17, V=17).
+        // Stufe 2 mit freispielGewonnen: ceil(17/2)=9 → Sieger, floor(17/2)=8 → Verlierer
+        assertThat(plan.felder()).hasSize(4);
+        assertThat(plan.felder().get(0).bezeichner()).isEqualTo("A");
+        assertThat(plan.felder().get(0).gesamtTeams()).isEqualTo(9);  // SS: ceil(17/2)=9
+        assertThat(plan.felder().get(1).bezeichner()).isEqualTo("B");
+        assertThat(plan.felder().get(1).gesamtTeams()).isEqualTo(8);  // SV: floor(17/2)=8
+        assertThat(plan.felder().get(2).bezeichner()).isEqualTo("C");
+        assertThat(plan.felder().get(2).gesamtTeams()).isEqualTo(9);  // VS: ceil(17/2)=9
+        assertThat(plan.felder().get(3).bezeichner()).isEqualTo("D");
+        assertThat(plan.felder().get(3).gesamtTeams()).isEqualTo(8);  // VV: floor(17/2)=8
+
+        assertInvariantenAlleRunden(plan);
+    }
+
+    @Test
+    public void testBerechne_geradeTeams_freispielGewonnenKeinEinfluss() {
+        // Bei gerader Teamanzahl gibt es kein Freilos → freispielGewonnen hat keinen Einfluss
+        var planOhne = KaskadenKoRundenPlaner.berechne(16, 2, false);
+        var planMit  = KaskadenKoRundenPlaner.berechne(16, 2, true);
+
+        for (int r = 0; r < planOhne.kaskadeRunden().size(); r++) {
+            var rundeOhne = planOhne.kaskadeRunden().get(r);
+            var rundeMit  = planMit.kaskadeRunden().get(r);
+            for (int g = 0; g < rundeOhne.gruppenRunden().size(); g++) {
+                assertThat(rundeMit.gruppenRunden().get(g).anzTeams())
+                        .as("anzTeams Runde %d Gruppe %d", r + 1, g)
+                        .isEqualTo(rundeOhne.gruppenRunden().get(g).anzTeams());
+            }
+        }
+    }
+
+    @Test
+    public void testBerechne_felderKonsistenzMitFreispielGewonnen() {
+        // Endfelder im Plan müssen mit KaskadenKoFeldRechner.berechne(n,k,true) übereinstimmen
+        for (int k = 1; k <= 3; k++) {
+            for (int n = 2; n <= 30; n++) {
+                var plan     = KaskadenKoRundenPlaner.berechne(n, k, true);
+                var erwartet = KaskadenKoFeldRechner.berechne(n, k, true);
+                for (int i = 0; i < erwartet.size(); i++) {
+                    assertThat(plan.felder().get(i).gesamtTeams())
+                            .as("gesamtTeams[%d] n=%d k=%d freispielGewonnen=true", i, n, k)
+                            .isEqualTo(erwartet.get(i).gesamtTeams());
+                }
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------
     // Felder-Konsistenz
     // ---------------------------------------------------------------
 

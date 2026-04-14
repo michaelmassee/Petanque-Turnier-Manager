@@ -131,7 +131,7 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
      *
      * @return null wenn OK, sonst eine Fehlermeldung.
      */
-    public String validiereSetzpositionSpalte() throws GenerateException {
+    public String validiereSetzpositionSpalte() {
         return delegate.validiereSetzpositionSpalte();
     }
 
@@ -149,17 +149,29 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
 
     @Override
     protected void doRun() throws GenerateException {
+        vollstaendigAktualisieren();
+    }
+
+    /**
+     * Bereinigt, vergibt Nummern, setzt Aktiv-Standard, prüft auf Duplikate,
+     * sortiert und aktualisiert das Sheet vollständig.
+     * Wird von {@link #doRun()} und von Spielrunde-Sheets vor dem Erstellen der ersten Runde aufgerufen.
+     *
+     * @return {@code true} wenn das Sheet gefunden und aktualisiert wurde, {@code false} wenn kein Sheet vorhanden
+     */
+    public boolean vollstaendigAktualisieren() throws GenerateException {
         XSpreadsheet xSheet = getXSpreadSheet();
         if (xSheet == null) {
             logger.warn("Kaskaden-KO Meldeliste nicht gefunden");
-            return;
+            return false;
         }
         stringsBesinigen(xSheet);
         teamnummernVergeben(xSheet);
         aktivDefaultSetzen(xSheet);
         pruefeAufDoppelteTeamNr(xSheet);
-        nachRangSortieren(xSheet);
+        nachNrSortieren(xSheet);
         upDateSheet();
+        return true;
     }
 
     private void aktivDefaultSetzen(XSpreadsheet xSheet) throws GenerateException {
@@ -214,15 +226,14 @@ public class KaskadeMeldeListeSheetUpdate extends SheetRunner implements ISheet,
         }
     }
 
-    private void nachRangSortieren(XSpreadsheet xSheet) throws GenerateException {
+    private void nachNrSortieren(XSpreadsheet xSheet) throws GenerateException {
         int letzteZeile = delegate.letzteZeileMitDaten(xSheet);
         if (letzteZeile < ERSTE_DATEN_ZEILE) {
             return;
         }
         RangePosition range = RangePosition.from(getNrSpalte(), ERSTE_DATEN_ZEILE,
                 delegate.getAktivSpalte(), letzteZeile);
-        SortHelper.from(this, range).spalteToSort(delegate.getSetzPositionSpalte())
-                .abSteigendSortieren().doSort();
+        SortHelper.from(this, range).spalteToSort(getNrSpalte()).aufSteigendSortieren(true).doSort();
     }
 
 }

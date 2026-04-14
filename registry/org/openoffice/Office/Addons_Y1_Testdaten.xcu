@@ -391,7 +391,7 @@
 								</prop>
 							</node>
 
-							<!--
+
 							<node oor:name="D1" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
@@ -400,11 +400,11 @@
 
 							<node oor:name="D2" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Cascading KO, Entry List (34 Teams)</value>
-									<value xml:lang="de">Kaskaden-KO, Meldeliste (34 Teams)</value>
-									<value xml:lang="es">KO en cascada, lista de inscripciones (34 equipos)</value>
-									<value xml:lang="fr">KO en cascade, liste d'inscriptions (34 équipes)</value>
-									<value xml:lang="nl">Cascade-KO, deelnemerslijst (34 teams)</value>
+									<value xml:lang="en">Cascading KO, Entry List (73 Teams)</value>
+									<value xml:lang="de">Kaskaden-KO, Meldeliste (73 Teams)</value>
+									<value xml:lang="es">KO en cascada, lista de inscripciones (73 equipos)</value>
+									<value xml:lang="fr">KO en cascade, liste d'inscriptions (73 équipes)</value>
+									<value xml:lang="nl">Cascade-KO, deelnemerslijst (73 teams)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:kaskade_testdaten_meldeliste</value>
@@ -413,7 +413,23 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							-->
+
+							<node oor:name="D3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Cascading KO, Complete Tournament (97 Teams, Cascade A–H)</value>
+									<value xml:lang="de">Kaskaden-KO, komplettes Turnier (97 Teams, Kaskade A–H)</value>
+									<value xml:lang="es">KO en cascada, torneo completo (97 equipos, cascada A–H)</value>
+									<value xml:lang="fr">KO en cascade, tournoi complet (97 équipes, cascade A–H)</value>
+									<value xml:lang="nl">Cascade-KO, compleet toernooi (97 teams, cascade A–H)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:kaskade_testdaten_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>

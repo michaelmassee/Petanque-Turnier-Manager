@@ -60,6 +60,7 @@ public class KaskadenKoRundenPlaner {
 
     /**
      * Berechnet den Rundenplan mit sequenzieller Paarungsstrategie.
+     * Freilos-Teams gehen in die Verlierer-Gruppe (klassisches Verhalten).
      *
      * @param gesamtTeams    Gesamtanzahl Teams (muss &ge; 2 sein)
      * @param kaskadenStufen Anzahl Kaskadenrunden (muss &ge; 1 sein)
@@ -68,11 +69,27 @@ public class KaskadenKoRundenPlaner {
      *                                  {@code kaskadenStufen < 1}
      */
     public static KaskadenKoRundenPlan berechne(int gesamtTeams, int kaskadenStufen) {
-        return berechne(gesamtTeams, kaskadenStufen, SEQUENZIELL);
+        return berechne(gesamtTeams, kaskadenStufen, SEQUENZIELL, false);
+    }
+
+    /**
+     * Berechnet den Rundenplan mit sequenzieller Paarungsstrategie.
+     *
+     * @param gesamtTeams       Gesamtanzahl Teams (muss &ge; 2 sein)
+     * @param kaskadenStufen    Anzahl Kaskadenrunden (muss &ge; 1 sein)
+     * @param freispielGewonnen {@code true} wenn das Freilos als Sieg gewertet wird
+     *                          (Freilos-Team → Sieger-Gruppe); {@code false} für Verlierer-Gruppe
+     * @return vollständiger Rundenplan
+     * @throws IllegalArgumentException wenn {@code gesamtTeams < 2} oder
+     *                                  {@code kaskadenStufen < 1}
+     */
+    public static KaskadenKoRundenPlan berechne(int gesamtTeams, int kaskadenStufen, boolean freispielGewonnen) {
+        return berechne(gesamtTeams, kaskadenStufen, SEQUENZIELL, freispielGewonnen);
     }
 
     /**
      * Berechnet den Rundenplan mit der angegebenen Paarungsstrategie.
+     * Freilos-Teams gehen in die Verlierer-Gruppe (klassisches Verhalten).
      *
      * @param gesamtTeams    Gesamtanzahl Teams (muss &ge; 2 sein)
      * @param kaskadenStufen Anzahl Kaskadenrunden (muss &ge; 1 sein)
@@ -84,6 +101,24 @@ public class KaskadenKoRundenPlaner {
      */
     public static KaskadenKoRundenPlan berechne(
             int gesamtTeams, int kaskadenStufen, KaskadenKoPaarungsStrategie strategie) {
+        return berechne(gesamtTeams, kaskadenStufen, strategie, false);
+    }
+
+    /**
+     * Berechnet den Rundenplan mit der angegebenen Paarungsstrategie.
+     *
+     * @param gesamtTeams       Gesamtanzahl Teams (muss &ge; 2 sein)
+     * @param kaskadenStufen    Anzahl Kaskadenrunden (muss &ge; 1 sein)
+     * @param strategie         Paarungsstrategie; darf nicht {@code null} sein
+     * @param freispielGewonnen {@code true} wenn das Freilos als Sieg gewertet wird
+     *                          (Freilos-Team → Sieger-Gruppe); {@code false} für Verlierer-Gruppe
+     * @return vollständiger Rundenplan
+     * @throws IllegalArgumentException wenn {@code gesamtTeams < 2} oder
+     *                                  {@code kaskadenStufen < 1}
+     * @throws IllegalStateException    wenn die Strategie eine falsche Paaranzahl liefert
+     */
+    public static KaskadenKoRundenPlan berechne(
+            int gesamtTeams, int kaskadenStufen, KaskadenKoPaarungsStrategie strategie, boolean freispielGewonnen) {
 
         checkArgument(gesamtTeams >= 2, "gesamtTeams muss mindestens 2 sein, war: %s", gesamtTeams);
         checkArgument(kaskadenStufen >= 1, "kaskadenStufen muss mindestens 1 sein, war: %s", kaskadenStufen);
@@ -94,23 +129,25 @@ public class KaskadenKoRundenPlaner {
         var runden = new ArrayList<KaskadenKoRunde>(kaskadenStufen);
 
         for (int rundenNr = 1; rundenNr <= kaskadenStufen; rundenNr++) {
-            var gruppenRunden = new ArrayList<KaskadenKoGruppenRunde>(aktuelleGruppen.size());
+            var gruppenRunden   = new ArrayList<KaskadenKoGruppenRunde>(aktuelleGruppen.size());
             var naechsteGruppen = new ArrayList<GruppeKnoten>(aktuelleGruppen.size() * 2);
 
             for (var gruppe : aktuelleGruppen) {
                 var gruppenRunde = erstelleGruppenRunde(gruppe, rundenNr, strategie);
                 gruppenRunden.add(gruppenRunde);
 
-                int m = gruppe.anzTeams();
-                naechsteGruppen.add(new GruppeKnoten(gruppe.pfad() + "S", m / 2));
-                naechsteGruppen.add(new GruppeKnoten(gruppe.pfad() + "V", m - m / 2));
+                int m             = gruppe.anzTeams();
+                int siegerTeams   = freispielGewonnen ? (m + 1) / 2 : m / 2;
+                int verliererTeams = m - siegerTeams;
+                naechsteGruppen.add(new GruppeKnoten(gruppe.pfad() + "S", siegerTeams));
+                naechsteGruppen.add(new GruppeKnoten(gruppe.pfad() + "V", verliererTeams));
             }
 
             runden.add(new KaskadenKoRunde(rundenNr, Collections.unmodifiableList(gruppenRunden)));
             aktuelleGruppen = naechsteGruppen;
         }
 
-        var felder = KaskadenKoFeldRechner.berechne(gesamtTeams, kaskadenStufen);
+        var felder = KaskadenKoFeldRechner.berechne(gesamtTeams, kaskadenStufen, freispielGewonnen);
         return new KaskadenKoRundenPlan(
                 gesamtTeams,
                 kaskadenStufen,

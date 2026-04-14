@@ -391,16 +391,10 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
                 RangeProperties.from().setBorder(
                         BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
 
-        int vornameSpalteNr = getVornameSpalte(0) + 1;
-        String vornameRef = "INDIRECT(ADDRESS(ROW();" + vornameSpalteNr + "))";
-        String kondSpLeer = "AND(" + vornameRef + "<>\"\";" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + "<=0)";
-        String kondDoppeltSp = "AND(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ">0;COUNTIF("
-                + Position.from(getSetzPositionSpalte(), 0).getSpalteAddressWith$() + ";"
-                + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1)";
+        // SP ist optional (leer oder 0 = kein Setzstatus). Gleiche SP-Werte sind erlaubt und beabsichtigt:
+        // Teams mit identischer SP werden in Runde 1 nicht gegeneinander ausgelost.
         ConditionalFormatHelper.from(sheet, spRange).clear()
                 .formulaIsText().styleIsFehler().applyAndDoReset()
-                .formula1(kondSpLeer).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
-                .formula1(kondDoppeltSp).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
                 .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
                 .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
 
@@ -441,6 +435,7 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
         sheet.processBoxinfo("processbox.ko.meldeliste.einlesen");
         XSpreadsheet xSheet = sheet.getXSpreadSheet();
         int vornameSpalte = getVornameSpalte(0);
+        int spSpalte = getSetzPositionSpalte();
         int aktivSpalte = getAktivSpalte();
         int letzteZeile = letzteZeileMitDaten(xSheet);
 
@@ -456,15 +451,20 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
             }
             int aktiv = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
             if (aktiv == AKTIV_WERT_NIMMT_TEIL) {
-                meldungen.addTeamWennNichtVorhanden(Team.from(nr));
+                int setzPos = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(spSpalte, zeile));
+                meldungen.addTeamWennNichtVorhanden(Team.from(nr).setSetzPos(setzPos));
             }
         }
         return meldungen;
     }
 
     /**
-     * Liefert alle aktiven Teams, absteigend nach Setzposition (SP) sortiert.
-     * Höhere SP = besser gesetzt = kommt zuerst in der Liste.
+     * Liefert alle aktiven Teams in einer Reihenfolge, bei der Teams mit gleicher SP
+     * nicht aufeinandertreffen (Schweizer-Semantik: gleiche SP = nicht in Runde 1 gegeneinander).
+     * <p>
+     * Teams mit identischer SP werden nach dem Round-Robin-Verfahren über die Positionen
+     * verteilt, sodass keine zwei gleich-SP-Teams in einem sequenziellen Spielpaar (1-2, 3-4, …)
+     * landen. SP = 0 (leer) bedeutet kein Setzstatus.
      */
     TeamMeldungen getMeldungenSortiertNachSetzposition() throws GenerateException {
         sheet.processBoxinfo("processbox.ko.meldeliste.sortieren");
@@ -494,56 +494,52 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
             alleTeams.add(new TeamZeile(nr, sp));
         }
 
-        alleTeams.sort(Comparator.comparingInt(TeamZeile::sp).reversed());
+        // Gruppen nach SP-Wert: SP > 0 = eigene Gruppe, SP = 0 = ungesetzte Teams
+        Map<Integer, List<TeamZeile>> setzGruppen = new LinkedHashMap<>();
+        List<TeamZeile> ungesetzte = new ArrayList<>();
+        for (TeamZeile t : alleTeams) {
+            if (t.sp() > 0) {
+                setzGruppen.computeIfAbsent(t.sp(), k -> new ArrayList<>()).add(t);
+            } else {
+                ungesetzte.add(t);
+            }
+        }
+        // Innerhalb jeder Gruppe nach Teamnummer sortieren (deterministisch)
+        setzGruppen.values().forEach(gruppe -> gruppe.sort(Comparator.comparingInt(TeamZeile::nr)));
+        ungesetzte.sort(Comparator.comparingInt(TeamZeile::nr));
+
+        // Round-Robin über alle Gruppen: gleiche SP landen nie in benachbarten Positionen
+        List<List<TeamZeile>> eimer = new ArrayList<>(setzGruppen.values());
+        eimer.add(ungesetzte);
+
+        List<TeamZeile> ergebnis = new ArrayList<>(alleTeams.size());
+        boolean nochElemente = true;
+        while (nochElemente) {
+            nochElemente = false;
+            for (var eimer1 : eimer) {
+                if (!eimer1.isEmpty()) {
+                    ergebnis.add(eimer1.remove(0));
+                    nochElemente = true;
+                }
+            }
+        }
 
         TeamMeldungen meldungen = new TeamMeldungen();
-        for (TeamZeile t : alleTeams) {
-            meldungen.addTeamWennNichtVorhanden(Team.from(t.nr()));
+        for (TeamZeile t : ergebnis) {
+            meldungen.addTeamWennNichtVorhanden(Team.from(t.nr()).setSetzPos(t.sp()));
         }
         return meldungen;
     }
 
     /**
-     * Prüft ob alle aktiven Teams eine gültige, eindeutige Setzposition haben.
+     * Prüft die SP-Spalte auf Gültigkeit.
+     * SP ist optional (leer/0 = kein Setzstatus). Gleiche SP-Werte bei mehreren Teams sind
+     * ausdrücklich erlaubt: Teams mit identischer SP werden in Runde 1 nicht gegeneinander ausgelost.
      *
-     * @return null wenn OK, sonst eine Fehlermeldung.
+     * @return null (keine Fehler möglich)
      */
-    String validiereSetzpositionSpalte() throws GenerateException {
-        XSpreadsheet xSheet = sheet.getXSpreadSheet();
-        int vornameSpalte = getVornameSpalte(0);
-        int spSpalte = getSetzPositionSpalte();
-        int aktivSpalte = getAktivSpalte();
-        int letzteZeile = letzteZeileMitDaten(xSheet);
-
-        java.util.Set<Integer> bereitsVergeben = new java.util.HashSet<>();
-        int anzOhneSp = 0;
-        int anzDuplikat = 0;
-
-        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
-            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-            if (vorname == null || vorname.isEmpty()) {
-                continue;
-            }
-            int aktiv = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(aktivSpalte, zeile));
-            if (aktiv != AKTIV_WERT_NIMMT_TEIL) {
-                continue;
-            }
-            int sp = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(spSpalte, zeile));
-            if (sp <= 0) {
-                anzOhneSp++;
-            } else if (!bereitsVergeben.add(sp)) {
-                anzDuplikat++;
-            }
-        }
-
-        if (anzOhneSp > 0) {
-            return "Die Setzposition-Spalte ist nicht vollständig befüllt (" + anzOhneSp
-                    + " Team(s) ohne Setzposition).\nBitte alle aktiven Teams mit einer eindeutigen Setzposition versehen.";
-        }
-        if (anzDuplikat > 0) {
-            return "Die Setzposition-Spalte enthält " + anzDuplikat
-                    + " doppelte Setzposition(en).\nBitte eindeutige Setzpositionen vergeben.";
-        }
+    @SuppressWarnings("SameReturnValue")
+    String validiereSetzpositionSpalte() {
         return null;
     }
 

@@ -68,16 +68,25 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	 *
 	 */
 	private void koRundeErstellen() throws GenerateException {
+		int anzGruppen = 0;
+		int maxPaarungen = 0;
 		for (int grpCntr = 0; grpCntr < 10; grpCntr++) {
 			TeamRangliste gruppeAusRanglist = ranglisten.gruppeAusRanglisteEinlesen(grpCntr, CadrageSheet.RANGLISTE_NACH_CADRAGE_SHEET);
 			if (gruppeAusRanglist.isEmpty()) {
-				break; // fertig keine weitere gruppen
+				break;
 			}
-			vorrunden.vorRundenEinlesen(gruppeAusRanglist); // gegner eintragen
+			vorrunden.vorRundenEinlesen(gruppeAusRanglist);
 			KoRundeTeamPaarungen teamPaarungen = new KoRundeTeamPaarungen(gruppeAusRanglist);
 			FormeSpielrunde spielRunde = teamPaarungen.generiereSpielrunde();
 			getSheetHelper().setActiveSheet(getXSpreadSheet());
 			spielRundeInSheet.erstelleSpielRundeInSheet(grpCntr, getXSpreadSheet(), teamPaarungen, spielRunde);
+			anzGruppen = grpCntr + 1;
+			maxPaarungen = Math.max(maxPaarungen, spielRunde.getTeamPaarungen().size());
+		}
+		if (anzGruppen > 0) {
+			int letzteSpalte = anzGruppen * 2 - 1;
+			int letzteZeile  = SpielRundeInSheet.ERSTEZEILE + maxPaarungen - 1;
+			getSheetHelper().setOptimaleBreiteUndHoeheAlles(getXSpreadSheet(), 0, letzteZeile, 0, letzteSpalte);
 		}
 	}
 
