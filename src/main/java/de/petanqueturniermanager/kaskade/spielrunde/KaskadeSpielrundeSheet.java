@@ -11,12 +11,8 @@ import static de.petanqueturniermanager.helper.cellvalue.properties.ICommonPrope
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
@@ -25,11 +21,9 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.KaskadenKoGruppenRunde;
 import de.petanqueturniermanager.algorithmen.KaskadenKoRunde;
 import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlan;
 import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlaner;
-import de.petanqueturniermanager.algorithmen.KaskadenKoSpielPaar;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -66,14 +60,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * <p>
  * Zustandssteuerung via {@link KaskadeKonfigurationSheet}:
  * <ul>
- *   <li>Wenn alle Kaskadenrunden abgeschlossen sind → delegiert an {@link KaskadeKoFeldSheet}</li>
+ *   <li>Wenn alle Kaskadenrunden abgeschlossen sind → delegiert an {@link KaskadeGruppenRanglisteSheet} und {@link KaskadeKoFeldSheet}</li>
  *   <li>Wenn KO-Felder bereits erstellt → Hinweis ausgeben</li>
  *   <li>Sonst → nächste Kaskadenrunde erstellen</li>
  * </ul>
  */
 public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
-
-    private static final Logger LOGGER = LogManager.getLogger(KaskadeSpielrundeSheet.class);
 
     public static final int GRUPPE_SPALTE     = 0;
     public static final int SPIEL_NR_SPALTE   = 1;
@@ -145,7 +137,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         if (aktiveRunde >= anzahlKaskaden) {
             processBoxinfo("kaskade.spielrunde.alle.kaskaden.abgeschlossen", anzahlKaskaden);
-            processBoxinfo("processbox.kaskade.ko.felder.erstellen");
+            // KaskadeKoFeldSheet erstellt zuerst intern die Gruppenrangliste, dann alle KO-Felder
             new KaskadeKoFeldSheet(getWorkingSpreadsheet()).doRun();
             konfigurationSheet.setKoFelderErstellt(true);
             return;
@@ -181,7 +173,9 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             return;
         }
 
-        var plan  = KaskadenKoRundenPlaner.berechne(meldungenNachSP.size(), anzahlKaskaden);
+        boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
+                > konfigurationSheet.getFreispielPunkteMinus();
+        var plan  = KaskadenKoRundenPlaner.berechne(meldungenNachSP.size(), anzahlKaskaden, freispielGewonnen);
         var runde = plan.kaskadeRunden().get(naechsteRundeNr - 1);
 
         aktuelleRundeNr = naechsteRundeNr;
@@ -276,7 +270,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             Collections.shuffle(auslosung);
             return Map.of("", auslosung.stream().map(Team::getNr).toList());
         }
-        return teamPositionenBerechnen(rundenNr, plan);
+        return new KaskadeRundenErgebnisLeser(getWorkingSpreadsheet()).ladeZwischenPositionen(rundenNr, plan);
     }
 
     /**
@@ -294,111 +288,6 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
         }
         var label = pfad.isEmpty() ? String.valueOf(position) : pfad + "-" + position;
         return new CellData(label);
-    }
-
-    /**
-     * Berechnet die Teampositionen für Runde {@code naechsteRundeNr} aus den
-     * Ergebnissen aller vorherigen Runden.
-     * <p>
-     * Iteriert von Runde 1 bis {@code naechsteRundeNr - 1}: liest jeweils das
-     * Sheet der Runde, ermittelt Sieger (→ S-Gruppe) und Verlierer (→ V-Gruppe)
-     * und baut so die Positions-Map der nächsten Runde auf.
-     *
-     * @return Map {@code pfad → geordnete Teamnummern-Liste (0-basierter Index = Position − 1)}
-     */
-    private Map<String, List<Integer>> teamPositionenBerechnen(int naechsteRundeNr, KaskadenKoRundenPlan plan)
-            throws GenerateException {
-        Map<String, List<Integer>> aktuelleMap = new HashMap<>();
-
-        for (int rundenNr = 1; rundenNr < naechsteRundeNr; rundenNr++) {
-            var rundenInfo  = plan.kaskadeRunden().get(rundenNr - 1);
-            var sheetDaten  = leseRundenSheetDaten(rundenNr);
-            var naechsteMap = new HashMap<String, List<Integer>>();
-            int zeilenOffset = 0;
-
-            for (var gruppe : rundenInfo.gruppenRunden()) {
-                var pfad         = gruppe.pfad();
-                var teamsInGruppe = (rundenNr == 1)
-                        ? leseTeamNrsAusGruppe(sheetDaten, zeilenOffset, gruppe)
-                        : aktuelleMap.getOrDefault(pfad, Collections.emptyList());
-
-                var sieger    = new ArrayList<Integer>();
-                var verlierer = new ArrayList<Integer>();
-
-                for (int i = 0; i < gruppe.spielPaare().size(); i++) {
-                    var spiel = gruppe.spielPaare().get(i);
-                    int teamA = spiel.positionA() <= teamsInGruppe.size()
-                            ? teamsInGruppe.get(spiel.positionA() - 1) : 0;
-                    int teamB = spiel.positionB() <= teamsInGruppe.size()
-                            ? teamsInGruppe.get(spiel.positionB() - 1) : 0;
-
-                    var row  = sheetDaten.get(zeilenOffset + i);
-                    int ergA = row.size() > 2 ? row.get(2).getIntVal(0) : 0;
-                    int ergB = row.size() > 3 ? row.get(3).getIntVal(0) : 0;
-
-                    if (ergA >= ergB) {
-                        sieger.add(teamA);
-                        verlierer.add(teamB);
-                    } else {
-                        sieger.add(teamB);
-                        verlierer.add(teamA);
-                    }
-                }
-
-                if (gruppe.anzFreilose() > 0) {
-                    int freilosPos = gruppe.anzTeams() - 1;
-                    verlierer.add(freilosPos < teamsInGruppe.size() ? teamsInGruppe.get(freilosPos) : 0);
-                }
-
-                naechsteMap.put(pfad + "S", Collections.unmodifiableList(sieger));
-                naechsteMap.put(pfad + "V", Collections.unmodifiableList(verlierer));
-                zeilenOffset += gruppe.spielPaare().size() + gruppe.anzFreilose();
-            }
-
-            aktuelleMap = naechsteMap;
-        }
-
-        return aktuelleMap;
-    }
-
-    /**
-     * Liest das Daten-Array (TEAM_A bis ERG_TEAM_B) aus dem Sheet der angegebenen Kaskadenrunde.
-     * <p>
-     * Spalten-Indizes im Ergebnis: 0 = Team A, 1 = Team B, 2 = Erg. A, 3 = Erg. B
-     */
-    private RangeData leseRundenSheetDaten(int rundenNr) throws GenerateException {
-        var xDoc  = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-        var sheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-                SheetMetadataHelper.schluesselKaskadenRunde(rundenNr),
-                SheetNamen.kaskadenRunde(rundenNr));
-        if (sheet == null) {
-            return new RangeData();
-        }
-        var readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE,
-                ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE + 999);
-        return RangeHelper.from(sheet, xDoc, readRange).getDataFromRange();
-    }
-
-    /**
-     * Liest aus dem Sheet-Daten-Array die Teamnummern einer Gruppe in Runde 1 aus.
-     * <p>
-     * Gibt eine Liste zurück, bei der Index {@code position − 1} die Teamnummer enthält.
-     * Sequentielles Paarungsschema: Zeile i enthält Team A (pos 2i+1) und Team B (pos 2i+2);
-     * die letzte Zeile enthält bei Freilos nur Team A (letzte Position).
-     */
-    private List<Integer> leseTeamNrsAusGruppe(RangeData sheetDaten, int zeilenOffset,
-            KaskadenKoGruppenRunde gruppe) {
-        var teams = new ArrayList<Integer>(gruppe.anzTeams());
-        for (int i = 0; i < gruppe.spielPaare().size(); i++) {
-            var row = sheetDaten.get(zeilenOffset + i);
-            teams.add(row.size() > 0 ? row.get(0).getIntVal(0) : 0);  // Team A
-            teams.add(row.size() > 1 ? row.get(1).getIntVal(0) : 0);  // Team B
-        }
-        if (gruppe.anzFreilose() > 0) {
-            var freilosRow = sheetDaten.get(zeilenOffset + gruppe.spielPaare().size());
-            teams.add(freilosRow.size() > 0 ? freilosRow.get(0).getIntVal(0) : 0);  // Freilos-Team
-        }
-        return teams;
     }
 
     /**
@@ -441,13 +330,6 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
                 .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder());
         getSheetHelper().setStringValueInCell(headerValue);
 
-        getSheetHelper().setColumnWidth(sheet, GRUPPE_SPALTE,     1400);
-        getSheetHelper().setColumnWidth(sheet, SPIEL_NR_SPALTE,    700);
-        getSheetHelper().setColumnWidth(sheet, TEAM_A_SPALTE,     2500);
-        getSheetHelper().setColumnWidth(sheet, TEAM_B_SPALTE,     2500);
-        getSheetHelper().setColumnWidth(sheet, ERG_TEAM_A_SPALTE, 1500);
-        getSheetHelper().setColumnWidth(sheet, ERG_TEAM_B_SPALTE, 1500);
-        getSheetHelper().setColumnWidth(sheet, FEHLER_SPALTE,     1800);
     }
 
     private void datenFormatieren(KaskadenKoRunde runde) throws GenerateException {
@@ -484,11 +366,11 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         fehlerSpalteFormatieren(letzteZeile);
         gruppentrennlinienSetzen(runde);
+        getSheetHelper().setOptimaleBreiteUndHoeheAlles(sheet, HEADER_ZEILE, letzteZeile, GRUPPE_SPALTE, FEHLER_SPALTE);
     }
 
     private void fehlerSpalteFormatieren(int letzteZeile) throws GenerateException {
         var sheet = getXSpreadSheet();
-        getSheetHelper().setColumnWidth(sheet, FEHLER_SPALTE, 1800);
 
         var ergA  = Position.from(ERG_TEAM_A_SPALTE, ERSTE_DATEN_ZEILE).getAddress();
         var ergB  = Position.from(ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE).getAddress();
@@ -595,6 +477,17 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             }
         }
         return true;
+    }
+
+    /**
+     * Öffentlicher Einstiegspunkt für Testdaten-Generatoren: führt die nächste
+     * Kaskadenrunde aus (oder die KO-Feld-Erstellung wenn alle Runden abgeschlossen sind).
+     * Entspricht einem direkten {@code doRun()}-Aufruf ohne SheetRunner-Rahmen.
+     *
+     * @throws GenerateException bei Fehlern beim Erstellen der Sheets
+     */
+    public void naechsteRunde() throws GenerateException {
+        doRun();
     }
 
     public boolean isForceOk() {

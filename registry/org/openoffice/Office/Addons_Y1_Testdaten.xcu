@@ -414,6 +414,22 @@
 								</prop>
 							</node>
 
+							<node oor:name="D3" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Cascading KO, Complete Tournament (97 Teams, Cascade A–H)</value>
+									<value xml:lang="de">Kaskaden-KO, komplettes Turnier (97 Teams, Kaskade A–H)</value>
+									<value xml:lang="es">KO en cascada, torneo completo (97 equipos, cascada A–H)</value>
+									<value xml:lang="fr">KO en cascade, tournoi complet (97 équipes, cascade A–H)</value>
+									<value xml:lang="nl">Cascade-KO, compleet toernooi (97 teams, cascade A–H)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:kaskade_testdaten_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>

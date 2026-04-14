@@ -25,6 +25,8 @@ import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
+import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SupermeleeTurnierTestDaten;
@@ -260,7 +262,26 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
                                 SheetMetadataHelper.schluesselPouleKo("A"),
                                 SheetMetadataHelper.schluesselPouleKo("B")),
-                        "Poule37TeamsTurnierTestDaten.java")
+                        "Poule37TeamsTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Kaskaden-KO – nur Meldeliste (97 Teams)",
+                        ws -> new KaskadeMeldeListeSheetTestDaten(ws, 97).erstelleMeldelisteWithTestdaten(),
+                        List.of(SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE),
+                        "KaskadeMeldeListeSheetTestDaten.java"),
+
+                new Eintrag(
+                        "Kaskaden-KO – Komplettes Turnier (97 Teams, Kaskade bis H)",
+                        ws -> new KaskadeTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE,
+                                SheetMetadataHelper.schluesselKaskadenRunde(1),
+                                SheetMetadataHelper.schluesselKaskadenRunde(2),
+                                SheetMetadataHelper.schluesselKaskadenRunde(3),
+                                SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
+                                SheetMetadataHelper.schluesselKaskadenFeld("A"),
+                                SheetMetadataHelper.schluesselKaskadenFeld("H")),
+                        "KaskadeTurnierTestDaten.java")
         );
     }
 }

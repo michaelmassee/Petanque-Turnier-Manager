@@ -72,6 +72,8 @@ public final class SheetNamen {
     public static final String KEY_KASKADE_RUNDE_MUSTER             = "sheet.name.kaskade.runde.muster";
     /** Kaskaden-Feld: {0} = Bezeichner. Beispiel: "Kaskade A-Feld" */
     public static final String KEY_KASKADE_FELD_MUSTER              = "sheet.name.kaskade.feld.muster";
+    /** Kaskaden-Gruppenrangliste: Übersicht aller Felder nach Kaskadenrunden */
+    public static final String KEY_KASKADE_GRUPPENRANGLISTE         = "sheet.name.kaskade.gruppenrangliste";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -104,6 +106,7 @@ public final class SheetNamen {
     public static final String LEGACY_KASKADE_RUNDE_PRAEFIX          = "Kaskaden-Runde";
     public static final String LEGACY_KASKADE_FELD_PRAEFIX           = "Kaskade";
     public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
+    public static final String LEGACY_KASKADE_GRUPPENRANGLISTE       = "Kaskaden-Gruppenrangliste";
 
     private SheetNamen() {
     }
@@ -357,6 +360,15 @@ public final class SheetNamen {
         var muster = getOderFallback(KEY_KASKADE_FELD_MUSTER,
                 LEGACY_KASKADE_FELD_PRAEFIX + " {0}-" + LEGACY_KASKADE_FELD_SUFFIX);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{bezeichner});
+    }
+
+    /**
+     * Kaskaden-Gruppenrangliste: Übersicht aller Felder nach den Kaskadenrunden.
+     *
+     * @return lokalisierter Tabellenname
+     */
+    public static String kaskadeGruppenrangliste() {
+        return getOderFallback(KEY_KASKADE_GRUPPENRANGLISTE, LEGACY_KASKADE_GRUPPENRANGLISTE);
     }
 
     // ── Hilfsmethode ─────────────────────────────────────────────────────────

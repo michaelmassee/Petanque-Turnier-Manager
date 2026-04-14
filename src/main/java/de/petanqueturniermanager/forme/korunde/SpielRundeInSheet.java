@@ -23,7 +23,7 @@ import de.petanqueturniermanager.model.TeamPaarung;
 public class SpielRundeInSheet {
 
 	private static final int HEADERZEILE = 0; // = A
-	private static final int ERSTEZEILE = 1; // = B
+	static final int ERSTEZEILE = 1; // = B
 
 	private final WeakRefHelper<SheetRunner> parentSheet;
 
