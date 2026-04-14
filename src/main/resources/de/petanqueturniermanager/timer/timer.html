@@ -7,8 +7,10 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root { --bg-custom: #000000; }
+
     body {
-      background: #000;
+      background: var(--bg-custom);
       color: #fff;
       font-family: 'Courier New', Courier, monospace;
       display: flex;
@@ -21,14 +23,9 @@
       user-select: none;
     }
 
-    body.zustand-laeuft   { background: #001a00; }
-    body.zustand-pausiert { background: #1a1a00; }
-    body.zustand-beendet  { background: #1a0000; animation: blinken 1s infinite; }
-    body.zustand-inaktiv  { background: #000; }
-
     @keyframes blinken {
-      0%, 100% { background: #1a0000; }
-      50%       { background: #4d0000; }
+      0%, 100% { color: #ff2222; }
+      50%       { color: #ff8888; }
     }
 
     #bezeichnung {
@@ -50,7 +47,7 @@
 
     body.zustand-laeuft   #timer { color: #00ff44; }
     body.zustand-pausiert #timer { color: #ffee00; }
-    body.zustand-beendet  #timer { color: #ff2222; }
+    body.zustand-beendet  #timer { color: #ff2222; animation: blinken 1s infinite; }
     body.zustand-inaktiv  #timer { color: #555; }
 
     #status {
@@ -118,6 +115,10 @@
       timerEl.textContent = d.anzeige || '--:--';
       statusEl.textContent = d.statusText || '';
       bezeichnungEl.textContent = d.bezeichnung || '';
+
+      if (d.hintergrundFarbe) {
+        document.documentElement.style.setProperty('--bg-custom', d.hintergrundFarbe);
+      }
 
       const zustand = (d.zustand || 'INAKTIV').toLowerCase();
       document.body.className = 'zustand-' + zustand;

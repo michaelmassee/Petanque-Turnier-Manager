@@ -9,7 +9,8 @@ import de.petanqueturniermanager.helper.i18n.I18n;
  */
 public class TimerEinstellungen {
 
-    static final int DEFAULT_PORT = 8085;
+    static final int DEFAULT_PORT             = 8085;
+    static final int DEFAULT_HINTERGRUNDFARBE = 0x000000;
 
     private TimerEinstellungen() {
     }
@@ -30,14 +31,20 @@ public class TimerEinstellungen {
         return GlobalProperties.get().getTimerLetzteBezeichnung();
     }
 
+    /** Liefert die zuletzt gespeicherte Hintergrundfarbe als RGB-Integer (Default: Schwarz). */
+    public static int letzteHintergrundFarbe() {
+        return GlobalProperties.get().getTimerHintergrundFarbe(DEFAULT_HINTERGRUNDFARBE);
+    }
+
     /**
      * Speichert die zuletzt verwendeten Timer-Einstellungen dauerhaft.
      *
-     * @param dauer       Dauer als "MM:SS"
-     * @param port        Webserver-Port
-     * @param bezeichnung optionaler Rundenname
+     * @param dauer            Dauer als "MM:SS"
+     * @param port             Webserver-Port
+     * @param bezeichnung      optionaler Rundenname
+     * @param hintergrundFarbe Hintergrundfarbe als RGB-Integer
      */
-    public static void speichern(String dauer, int port, String bezeichnung) {
-        GlobalProperties.get().speichernTimerEinstellungen(dauer, port, bezeichnung);
+    public static void speichern(String dauer, int port, String bezeichnung, int hintergrundFarbe) {
+        GlobalProperties.get().speichernTimerEinstellungen(dauer, port, bezeichnung, hintergrundFarbe);
     }
 }

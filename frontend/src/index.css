@@ -13,33 +13,6 @@ body {
   min-height: 100vh;
 }
 
-/* ── react-split-pane ─────────────────────────────────────────────────────── */
-.SplitPane {
-  height: 100% !important;
-}
-
-.Resizer {
-  background: #888;
-  opacity: 0.2;
-  z-index: 1;
-  transition: opacity 0.2s ease;
-}
-
-.Resizer:hover {
-  opacity: 0.5;
-}
-
-.Resizer.vertical {
-  cursor: col-resize;
-  width: 5px;
-  margin: 0 -2px;
-}
-
-.Resizer.horizontal {
-  cursor: row-resize;
-  height: 5px;
-  margin: -2px 0;
-}
 
 table {
   border-collapse: collapse;
@@ -150,10 +123,10 @@ td {
   user-select: none;
 }
 
-.timer-zustand-laeuft   { color: #00ff44; background: #001a00; }
-.timer-zustand-pausiert { color: #ffee00; background: #1a1a00; }
-.timer-zustand-beendet  { color: #ff2222; background: #1a0000; animation: timer-blink 1s infinite; }
-.timer-zustand-inaktiv  { color: #555; background: #000; }
+.timer-zustand-laeuft   { color: #00ff44; }
+.timer-zustand-pausiert { color: #ffee00; }
+.timer-zustand-beendet  { color: #ff2222; animation: timer-blink 1s infinite; }
+.timer-zustand-inaktiv  { color: #555; }
 
 .timer-anzeige {
   font-size: clamp(3rem, 15vw, 12rem);

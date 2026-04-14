@@ -44,6 +44,7 @@ public class TimerManager {
     private volatile long endNanos;
     private volatile long restNanos;
     private volatile String bezeichnung = "";
+    private volatile String hintergrundFarbeHex = "#000000";
     private volatile ScheduledFuture<?> tickTask;
 
     private TimerManager(XComponentContext xContext) {
@@ -123,17 +124,19 @@ public class TimerManager {
     /**
      * Startet den Timer. Ein eventuell laufender Timer wird zuerst gestoppt.
      *
-     * @param dauerSekunden Gesamtdauer in Sekunden (muss &gt; 0 sein)
-     * @param bezeichnung   optionaler Rundenname (darf null sein)
-     * @param port          Webserver-Port für die Timer-Anzeige
+     * @param dauerSekunden    Gesamtdauer in Sekunden (muss &gt; 0 sein)
+     * @param bezeichnung      optionaler Rundenname (darf null sein)
+     * @param port             Webserver-Port für die Timer-Anzeige
+     * @param hintergrundFarbe Hintergrundfarbe als RGB-Integer (z.B. {@code 0x1a2b3c})
      */
-    public synchronized void starten(long dauerSekunden, String bezeichnung, int port) {
+    public synchronized void starten(long dauerSekunden, String bezeichnung, int port, int hintergrundFarbe) {
         if (dauerSekunden <= 0) {
             logger.warn("starten() mit ungültiger Dauer aufgerufen: {}", dauerSekunden);
             return;
         }
         stoppeTickTask();
         this.bezeichnung = bezeichnung != null ? bezeichnung : "";
+        this.hintergrundFarbeHex = "#" + String.format("%06x", hintergrundFarbe & 0xFFFFFF);
         try {
             WebServerManager.get().timerServerBesorgen(port);
         } catch (IOException e) {
@@ -195,7 +198,9 @@ public class TimerManager {
         stoppeTickTask();
         zustand = TimerZustand.INAKTIV;
         bezeichnung = "";
-        emittiere(TimerState.inaktiv());
+        // hintergrundFarbeHex wird bewusst nicht zurückgesetzt –
+        // die zuletzt gewählte Farbe bleibt im INAKTIV-Zustand sichtbar.
+        emittiere(new TimerState("--:--", 0, TimerZustand.INAKTIV, "", hintergrundFarbeHex));
         logger.debug("Timer gestoppt");
     }
 
@@ -222,7 +227,7 @@ public class TimerManager {
             }
         }
 
-        emittiere(new TimerState(formatiere(verbleibend), verbleibend, neuerZustand, bezeichnung));
+        emittiere(new TimerState(formatiere(verbleibend), verbleibend, neuerZustand, bezeichnung, hintergrundFarbeHex));
     }
 
     // ── Hilfsmethoden ─────────────────────────────────────────────────────────
@@ -249,7 +254,7 @@ public class TimerManager {
         long verbleibend = zustand == TimerZustand.PAUSIERT
                 ? restNanos / 1_000_000_000L
                 : Math.max(0, (endNanos - System.nanoTime()) / 1_000_000_000L);
-        return new TimerState(formatiere(verbleibend), verbleibend, zustand, bezeichnung);
+        return new TimerState(formatiere(verbleibend), verbleibend, zustand, bezeichnung, hintergrundFarbeHex);
     }
 
     /**

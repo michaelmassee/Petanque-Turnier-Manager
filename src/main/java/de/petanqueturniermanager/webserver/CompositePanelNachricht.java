@@ -36,7 +36,8 @@ public record CompositePanelNachricht(
         String externeUrl,
         String timerAnzeige,
         String timerZustand,
-        String timerBezeichnung) {
+        String timerBezeichnung,
+        String timerHintergrundFarbe) {
 
     /**
      * Erstellt eine vollständige Panel-Nachricht (init) aus einem TabelleModel.
@@ -51,7 +52,7 @@ public record CompositePanelNachricht(
                 modell.getKopfzeileLinks(), modell.getKopfzeileMitte(), modell.getKopfzeileRechts(),
                 modell.getFusszeileLinks(), modell.getFusszeileMitte(), modell.getFusszeileRechts(),
                 modell.getKopfZeilenAnzahl(),
-                null, null, null, null);
+                null, null, null, null, null);
     }
 
     /**
@@ -67,7 +68,7 @@ public record CompositePanelNachricht(
                 diffModell.getKopfzeileLinks(), diffModell.getKopfzeileMitte(), diffModell.getKopfzeileRechts(),
                 diffModell.getFusszeileLinks(), diffModell.getFusszeileMitte(), diffModell.getFusszeileRechts(),
                 diffModell.getKopfZeilenAnzahl(),
-                null, null, null, null);
+                null, null, null, null, null);
     }
 
     /**
@@ -81,16 +82,16 @@ public record CompositePanelNachricht(
                 panelId, 100, false, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
-                externeUrl, null, null, null);
+                externeUrl, null, null, null, null);
     }
 
     /**
      * Erstellt eine TIMER-Panel-Nachricht mit dem aktuellen Timer-Zustand.
      *
-     * @param panelId  Panel-Index
-     * @param zoom     Zoom-Faktor in %
+     * @param panelId   Panel-Index
+     * @param zoom      Zoom-Faktor in %
      * @param zentriert ob der Inhalt horizontal zentriert wird
-     * @param state    aktueller Timer-Zustand
+     * @param state     aktueller Timer-Zustand
      */
     static CompositePanelNachricht timer(int panelId, int zoom, boolean zentriert, TimerState state) {
         return new CompositePanelNachricht(
@@ -98,6 +99,6 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 null,
-                state.anzeige(), state.zustand().name(), state.bezeichnung());
+                state.anzeige(), state.zustand().name(), state.bezeichnung(), state.hintergrundFarbe());
     }
 }

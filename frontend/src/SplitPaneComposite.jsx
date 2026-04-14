@@ -1,4 +1,4 @@
-import SplitPane from 'react-split-pane';
+import { PanelGroup, Panel as ResizablePanel, PanelResizeHandle } from 'react-resizable-panels';
 import Panel from './Panel';
 
 /**
@@ -27,22 +27,33 @@ export default function SplitPaneComposite({ knoten, panels }) {
     );
   }
 
-  // Innerer Knoten: SplitPane
-  // "H" = horizontale Teilung → SplitPane split="vertical" (senkrechter Trennbalken)
-  // "V" = vertikale Teilung   → SplitPane split="horizontal" (waagrechter Trennbalken)
-  const split = knoten.richtung === 'H' ? 'vertical' : 'horizontal';
-  const defaultSize = `${knoten.groesse ?? 50}%`;
+  // Innerer Knoten: PanelGroup
+  // "H" = horizontale Teilung (links | rechts) → direction="horizontal"
+  // "V" = vertikale Teilung (oben / unten)     → direction="vertical"
+  const direction = knoten.richtung === 'H' ? 'horizontal' : 'vertical';
+  const linksGroesse = knoten.groesse ?? 50;
+  const rechtsGroesse = 100 - linksGroesse;
 
   return (
-    <SplitPane split={split} defaultSize={defaultSize} style={{ position: 'relative' }}>
-      <SplitPaneComposite
-        knoten={knoten.links}
-        panels={panels}
-      />
-      <SplitPaneComposite
-        knoten={knoten.rechts}
-        panels={panels}
-      />
-    </SplitPane>
+    <PanelGroup direction={direction} style={{ height: '100%' }}>
+      <ResizablePanel defaultSize={linksGroesse}>
+        <SplitPaneComposite
+          knoten={knoten.links}
+          panels={panels}
+        />
+      </ResizablePanel>
+      <PanelResizeHandle style={{
+        background: '#ccc',
+        width: direction === 'horizontal' ? '4px' : undefined,
+        height: direction === 'vertical' ? '4px' : undefined,
+        cursor: direction === 'horizontal' ? 'col-resize' : 'row-resize',
+      }} />
+      <ResizablePanel defaultSize={rechtsGroesse}>
+        <SplitPaneComposite
+          knoten={knoten.rechts}
+          panels={panels}
+        />
+      </ResizablePanel>
+    </PanelGroup>
   );
 }

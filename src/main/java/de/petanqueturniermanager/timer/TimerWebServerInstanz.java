@@ -187,7 +187,8 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
                 state.sekunden(),
                 state.zustand().name(),
                 statusText(state.zustand()),
-                state.bezeichnung());
+                state.bezeichnung(),
+                state.hintergrundFarbe());
         return GSON.toJson(nachricht);
     }
 

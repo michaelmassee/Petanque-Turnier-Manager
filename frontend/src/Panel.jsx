@@ -23,9 +23,13 @@ export default function Panel({ table, sheetnamenAnzeigen }) {
     const cls = GUELTIGE_ZUSTAENDE.includes(zustand)
       ? `timer-zustand-${zustand}`
       : 'timer-zustand-inaktiv';
+    const hintergrundStyle = table.timerHintergrundFarbe
+      ? { backgroundColor: table.timerHintergrundFarbe }
+      : {};
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
         <div className={`timer-panel ${cls}`} style={{
+          ...hintergrundStyle,
           transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
           transformOrigin: table.zentrieren ? 'top center' : 'top left',
         }}>

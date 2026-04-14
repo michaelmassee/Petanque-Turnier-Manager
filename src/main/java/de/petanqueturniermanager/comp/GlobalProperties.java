@@ -60,9 +60,10 @@ public class GlobalProperties {
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
 
 	// Timer
-	private static final String TIMER_DAUER_PROP       = "timer_letzte_dauer";
-	private static final String TIMER_PORT_PROP        = "timer_letzter_port";
-	private static final String TIMER_BEZEICHNUNG_PROP = "timer_letzte_bezeichnung";
+	private static final String TIMER_DAUER_PROP            = "timer_letzte_dauer";
+	private static final String TIMER_PORT_PROP             = "timer_letzter_port";
+	private static final String TIMER_BEZEICHNUNG_PROP      = "timer_letzte_bezeichnung";
+	private static final String TIMER_HINTERGRUNDFARBE_PROP = "timer_hintergrundfarbe";
 
 	public static final int DEFAULT_ZOOM = 100;
 
@@ -642,13 +643,30 @@ public class GlobalProperties {
 	}
 
 	/**
+	 * Liefert die zuletzt gespeicherte Timer-Hintergrundfarbe als RGB-Integer.
+	 *
+	 * @param defaultWert Rückgabewert wenn kein Wert gespeichert ist
+	 * @return Farbe als RGB-Integer (z.B. {@code 0x000000} für Schwarz)
+	 */
+	public int getTimerHintergrundFarbe(int defaultWert) {
+		try {
+			var val = propMap.get(TIMER_HINTERGRUNDFARBE_PROP);
+			if (val == null || val.isBlank()) return defaultWert;
+			return Integer.parseInt(val.trim(), 16);
+		} catch (NumberFormatException e) {
+			return defaultWert;
+		}
+	}
+
+	/**
 	 * Speichert die letzten Timer-Einstellungen dauerhaft.
 	 *
-	 * @param dauer       Dauer als "MM:SS"
-	 * @param port        Webserver-Port
-	 * @param bezeichnung optionaler Rundenname (darf null sein)
+	 * @param dauer            Dauer als "MM:SS"
+	 * @param port             Webserver-Port
+	 * @param bezeichnung      optionaler Rundenname (darf null sein)
+	 * @param hintergrundFarbe Hintergrundfarbe als RGB-Integer
 	 */
-	public void speichernTimerEinstellungen(String dauer, int port, String bezeichnung) {
+	public void speichernTimerEinstellungen(String dauer, int port, String bezeichnung, int hintergrundFarbe) {
 		if (dauer != null && !dauer.isBlank()) {
 			propMap.put(TIMER_DAUER_PROP, dauer.trim());
 		}
@@ -658,6 +676,7 @@ public class GlobalProperties {
 		} else {
 			propMap.remove(TIMER_BEZEICHNUNG_PROP);
 		}
+		propMap.put(TIMER_HINTERGRUNDFARBE_PROP, String.format("%06x", hintergrundFarbe & 0xFFFFFF));
 		speichernDatei();
 	}
 
