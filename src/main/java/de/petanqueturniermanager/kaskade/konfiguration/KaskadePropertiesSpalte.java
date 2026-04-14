@@ -23,7 +23,7 @@ public class KaskadePropertiesSpalte extends BasePropertiesSpalte {
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
     static {
-        ADDBaseProp(KONFIG_PROPERTIES, false);
+        ADDBaseProp(KONFIG_PROPERTIES);
     }
 
     private static final String KONFIG_PROP_KOPF_ZEILE_LINKS      = "Kopfzeile Links";
