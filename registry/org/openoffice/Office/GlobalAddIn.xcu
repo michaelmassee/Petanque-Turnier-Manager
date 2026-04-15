@@ -656,6 +656,78 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<node oor:name="ptmpouleanzgruppen" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.POULE.ANZ_GRUPPEN</value>
+						<value xml:lang="de">PTM.POULE.ANZ_GRUPPEN</value>
+						<value xml:lang="es">PTM.POULE.ANZ_GRUPPEN</value>
+						<value xml:lang="fr">PTM.POULE.ANZ_GRUPPEN</value>
+						<value xml:lang="nl">PTM.POULE.ANZ_GRUPPEN</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Poule: Gesamtanzahl der Gruppen (Vierer- + Dreiergruppen).</value>
+						<value xml:lang="en">Poule: Total number of groups (4-team + 3-team groups).</value>
+						<value xml:lang="es">Poule: Número total de grupos (grupos de 4 + grupos de 3).</value>
+						<value xml:lang="fr">Poule: Nombre total de groupes (groupes de 4 + groupes de 3).</value>
+						<value xml:lang="nl">Poule: Totaal aantal groepen (groepen van 4 + groepen van 3).</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzTeams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 3)</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmpouleanzvierergruppen" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.POULE.ANZ_VIERER_GRUPPEN</value>
+						<value xml:lang="de">PTM.POULE.ANZ_VIERER_GRUPPEN</value>
+						<value xml:lang="es">PTM.POULE.ANZ_VIERER_GRUPPEN</value>
+						<value xml:lang="fr">PTM.POULE.ANZ_VIERER_GRUPPEN</value>
+						<value xml:lang="nl">PTM.POULE.ANZ_VIERER_GRUPPEN</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Poule: Anzahl der 4er-Gruppen.</value>
+						<value xml:lang="en">Poule: Number of 4-team groups.</value>
+						<value xml:lang="es">Poule: Número de grupos de 4 equipos.</value>
+						<value xml:lang="fr">Poule: Nombre de groupes de 4 équipes.</value>
+						<value xml:lang="nl">Poule: Aantal groepen van 4 teams.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzTeams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 3)</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmpouleanzdreiergruppen" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.POULE.ANZ_DREIER_GRUPPEN</value>
+						<value xml:lang="de">PTM.POULE.ANZ_DREIER_GRUPPEN</value>
+						<value xml:lang="es">PTM.POULE.ANZ_DREIER_GRUPPEN</value>
+						<value xml:lang="fr">PTM.POULE.ANZ_DREIER_GRUPPEN</value>
+						<value xml:lang="nl">PTM.POULE.ANZ_DREIER_GRUPPEN</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="de">Poule: Anzahl der 3er-Gruppen.</value>
+						<value xml:lang="en">Poule: Number of 3-team groups.</value>
+						<value xml:lang="es">Poule: Número de grupos de 3 equipos.</value>
+						<value xml:lang="fr">Poule: Nombre de groupes de 3 équipes.</value>
+						<value xml:lang="nl">Poule: Aantal groepen van 3 teams.</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="anzTeams" oor:op="replace">
+							<prop oor:name="DisplayName"><value xml:lang="de">anzTeams</value></prop>
+							<prop oor:name="Description"><value xml:lang="de">Gesamtanzahl der Teams (mindestens 3)</value></prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 			</node>
 		</node>
 	</node>

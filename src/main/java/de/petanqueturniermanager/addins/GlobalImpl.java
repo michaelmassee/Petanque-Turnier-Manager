@@ -18,6 +18,7 @@ import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
+import de.petanqueturniermanager.algorithmen.PouleGruppenRechner;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -58,6 +59,10 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_SUPERMELEE_VALIDE_ANZ_SPIELER = "PTM.SUPERMELEE.VALIDE_ANZ_SPIELER";
 	public static final String PTM_SUPERMELEE_ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE = "PTM.SUPERMELEE.ANZ_TRIPLETTE_WENN_NUR_TRIPLETTE";
 	public static final String PTM_SUPERMELEE_ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE = "PTM.SUPERMELEE.ANZ_DOUBLETTE_WENN_NUR_DOUBLETTE";
+
+	public static final String PTM_POULE_ANZ_GRUPPEN        = "PTM.POULE.ANZ_GRUPPEN";
+	public static final String PTM_POULE_ANZ_VIERER_GRUPPEN = "PTM.POULE.ANZ_VIERER_GRUPPEN";
+	public static final String PTM_POULE_ANZ_DREIER_GRUPPEN = "PTM.POULE.ANZ_DREIER_GRUPPEN";
 
 	public static final String FORMAT_PTM_INT_PROPERTY(String propName) {
 		return PTM_INT_PROPERTY + "(\"" + propName + "\")";
@@ -308,6 +313,32 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	public int ptmcadrageanzfreilose(int anzTeams) {
 		return berechneCadrage(anzTeams, CadrageRechner::anzFreilose);
+	}
+
+	// ------------------- PTM.POULE.* Formeln -----------------
+
+	private int berechnePoule(int anzTeams, java.util.function.IntSupplier fn) {
+		if (anzTeams < 3) return 0;
+		try {
+			return fn.getAsInt();
+		} catch (IllegalArgumentException e) {
+			return 0;
+		}
+	}
+
+	@Override
+	public int ptmpouleanzgruppen(int anzTeams) {
+		return berechnePoule(anzTeams, () -> PouleGruppenRechner.anzGruppen(anzTeams));
+	}
+
+	@Override
+	public int ptmpouleanzvierergruppen(int anzTeams) {
+		return berechnePoule(anzTeams, () -> PouleGruppenRechner.anzVierTeamGruppen(anzTeams));
+	}
+
+	@Override
+	public int ptmpouleanzdreiergruppen(int anzTeams) {
+		return berechnePoule(anzTeams, () -> PouleGruppenRechner.anzDreiTeamGruppen(anzTeams));
 	}
 
 }

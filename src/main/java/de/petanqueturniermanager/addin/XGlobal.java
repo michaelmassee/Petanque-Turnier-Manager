@@ -38,6 +38,9 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmcadrageanzteams",                20, 0),
         new MethodTypeInfo("ptmcadragezielanz",                 21, 0),
         new MethodTypeInfo("ptmcadrageanzfreilose",             22, 0),
+        new MethodTypeInfo("ptmpouleanzgruppen",                23, 0),
+        new MethodTypeInfo("ptmpouleanzvierergruppen",          24, 0),
+        new MethodTypeInfo("ptmpouleanzdreiergruppen",          25, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -85,4 +88,10 @@ public interface XGlobal extends XInterface {
     int ptmcadragezielanz(int anzTeams);
 
     int ptmcadrageanzfreilose(int anzTeams);
+
+    int ptmpouleanzgruppen(int anzTeams);
+
+    int ptmpouleanzvierergruppen(int anzTeams);
+
+    int ptmpouleanzdreiergruppen(int anzTeams);
 }

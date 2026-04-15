@@ -36,6 +36,10 @@ module de { module petanqueturniermanager { module addin {
     long ptmcadrageanzteams    ([in] long anzTeams);
     long ptmcadragezielanz     ([in] long anzTeams);
     long ptmcadrageanzfreilose ([in] long anzTeams);
+    // Poule-Gruppenberechnung (PTM.POULE.*)
+    long ptmpouleanzgruppen       ([in] long anzTeams);
+    long ptmpouleanzvierergruppen ([in] long anzTeams);
+    long ptmpouleanzdreiergruppen ([in] long anzTeams);
   };
 
 }; }; };
