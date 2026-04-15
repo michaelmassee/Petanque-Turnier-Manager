@@ -7,11 +7,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.frame.FeatureStateEvent;
+import com.sun.star.frame.XDispatch;
+import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XLayoutManager;
 import com.sun.star.frame.XModel;
+import com.sun.star.frame.XStatusListener;
+import com.sun.star.lang.EventObject;
 import com.sun.star.ui.XUIElement;
+import com.sun.star.util.XURLTransformer;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -42,6 +49,7 @@ public class TurnierModus {
     private volatile boolean aktiv = false;
     private final List<String> gespeicherteElemente = new ArrayList<>();
     private final AtomicBoolean startupDurchgefuehrt = new AtomicBoolean(false);
+    private Boolean gespeicherteRechnerleiste = null;
 
     private TurnierModus() {
     }
@@ -119,6 +127,7 @@ public class TurnierModus {
 
     private void aktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
         gespeicherteElemente.clear();
+        gespeicherteRechnerleiste = leseRechnerleistenZustand(ws);
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 
         try {
@@ -141,9 +150,12 @@ public class TurnierModus {
             lm.unlock();
         }
 
-        // Rechnerleiste zuerst ausblenden – setPropertyValue("ShowFormulaBar") kann einen
-        // LO-internen Layout-Refresh auslösen, der Context-sensitive Toolbars neu bewertet.
-        blendeRechnerleiste(ws, false);
+        // Rechenleiste ausblenden – nur wenn sie aktuell sichtbar ist.
+        // Der Dispatch kann einen LO-internen Layout-Refresh auslösen, der
+        // Context-sensitive Toolbars neu bewertet.
+        if (Boolean.TRUE.equals(gespeicherteRechnerleiste)) {
+            setzeRechnerleiste(ws, false);
+        }
 
         // PTM-Toolbar nach dem Layout-Refresh einblenden.
         // Addon-Toolbars (addon_* URL) brauchen kein createElement – LO verwaltet sie via XCU.
@@ -181,19 +193,64 @@ public class TurnierModus {
             aktiv = false;
         }
 
-        // Rechnerleiste via ShowFormulaBar-Property wiederherstellen
-        blendeRechnerleiste(ws, true);
+        // Rechenleiste auf gespeicherten Zustand zurücksetzen (Standard: sichtbar)
+        setzeRechnerleiste(ws, gespeicherteRechnerleiste == null || gespeicherteRechnerleiste);
+        gespeicherteRechnerleiste = null;
     }
 
-    private void blendeRechnerleiste(WorkingSpreadsheet ws, boolean anzeigen) {
+    private boolean leseRechnerleistenZustand(WorkingSpreadsheet ws) {
         try {
             var xModel = Lo.qi(XModel.class, ws.getWorkingSpreadsheetDocument());
-            if (xModel == null) return;
-            var controller = xModel.getCurrentController();
-            if (controller == null) return;
-            var controllerProps = Lo.qi(XPropertySet.class, controller);
-            if (controllerProps == null) return;
-            controllerProps.setPropertyValue("ShowFormulaBar", anzeigen);
+            if (xModel == null) return true;
+            var xController = xModel.getCurrentController();
+            if (xController == null) return true;
+            var frame = xController.getFrame();
+            if (frame == null) return true;
+
+            var urlTransformer = Lo.qi(XURLTransformer.class,
+                    ws.getxContext().getServiceManager()
+                            .createInstanceWithContext("com.sun.star.util.URLTransformer", ws.getxContext()));
+            if (urlTransformer == null) return true;
+
+            var url = new com.sun.star.util.URL();
+            url.Complete = ".uno:InputLineVisible";
+            var urls = new com.sun.star.util.URL[]{url};
+            urlTransformer.parseStrict(urls);
+            var parsedUrl = urls[0];
+
+            var dispatchProvider = Lo.qi(XDispatchProvider.class, frame);
+            if (dispatchProvider == null) return true;
+            var dispatch = dispatchProvider.queryDispatch(parsedUrl, "_self", 0);
+            if (dispatch == null) return true;
+
+            // LO ruft statusChanged() synchron bei addStatusListener auf
+            final boolean[] zustand = {true};
+            var listener = new XStatusListener() {
+                @Override
+                public void statusChanged(FeatureStateEvent event) {
+                    if (event.State instanceof Boolean b) zustand[0] = b;
+                }
+
+                @Override
+                public void disposing(EventObject source) {
+                    // nichts zu tun
+                }
+            };
+            dispatch.addStatusListener(listener, parsedUrl);
+            dispatch.removeStatusListener(listener, parsedUrl);
+            return zustand[0];
+        } catch (Exception e) {
+            logger.warn("Konnte Rechnerleisten-Zustand nicht lesen: {}", e.getMessage());
+            return true;
+        }
+    }
+
+    private void setzeRechnerleiste(WorkingSpreadsheet ws, boolean anzeigen) {
+        try {
+            var pv = new PropertyValue();
+            pv.Name = "InputLineVisible";
+            pv.Value = Boolean.valueOf(anzeigen);
+            ws.executeDispatch(".uno:InputLineVisible", "_self", 0, new PropertyValue[]{pv});
         } catch (Exception e) {
             logger.warn("Konnte Rechnerleiste nicht {}: {}", anzeigen ? "einblenden" : "ausblenden", e.getMessage());
         }
