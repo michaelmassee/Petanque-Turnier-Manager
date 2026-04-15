@@ -36,6 +36,12 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
     private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
     private static final String STATIC_RESOURCE_PREFIX = "/de/petanqueturniermanager/webserver/static";
+    private static final String ENDPUNKT_LOGO = "/logo";
+    private static final String LOGO_DIV_TEMPLATE =
+            "<div id=\"ptm-logo\" style=\"position:fixed;top:10px;right:10px;z-index:9999;\">"
+            + "<img src=\"/logo\" alt=\"\" style=\"max-height:60px;max-width:150px;\""
+            + " onerror=\"this.parentElement.style.display='none'\"></div>"
+            + "</body>";
 
     private volatile CompositeViewKonfiguration konfiguration;
     private final HttpServer httpServer;
@@ -55,6 +61,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/events", this::handleEvents);
         httpServer.createContext("/debug/sse", this::handleDebugSse);
+        httpServer.createContext(ENDPUNKT_LOGO, this::handleLogo);
         httpServer.createContext("/", this::handleStatischOderRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "PTM-CompositeView-KeepAlive-" + konfiguration.port());
@@ -158,7 +165,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
         }
         String path = exchange.getRequestURI().getPath();
         if ("/".equals(path) || path.isEmpty()) {
-            serviereRessource(exchange, "/index.html", CONTENT_TYPE_HTML);
+            serviereIndexHtml(exchange);
         } else if (path.startsWith("/assets/")) {
             String dateiname = path.substring("/assets/".length());
             serviereRessource(exchange, "/assets/" + dateiname, ermittleContentType(dateiname));
@@ -167,6 +174,44 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
             serviereRessource(exchange, "/images/" + dateiname, ermittleContentType(dateiname));
         } else {
             exchange.sendResponseHeaders(404, -1);
+        }
+    }
+
+    private void handleLogo(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        LogoBildServieren.serviere(exchange, WebServerManager.get().getLogoUrl());
+    }
+
+    private void serviereIndexHtml(HttpExchange exchange) throws IOException {
+        String ressourcePfad = (STATIC_RESOURCE_PREFIX + "/index.html").replaceFirst("^/", "");
+        InputStream gefunden = getClass().getClassLoader().getResourceAsStream(ressourcePfad);
+        if (gefunden == null) {
+            gefunden = getClass().getResourceAsStream("/" + ressourcePfad);
+        }
+        if (gefunden == null) {
+            logger.warn("index.html nicht gefunden: {}", ressourcePfad);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        byte[] body;
+        try (InputStream in = gefunden) {
+            String html = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            String logoUrl = WebServerManager.get().getLogoUrl();
+            if (logoUrl != null && !logoUrl.isBlank()) {
+                html = html.replace("</body>", LOGO_DIV_TEMPLATE);
+            }
+            body = html.getBytes(StandardCharsets.UTF_8);
+        }
+        var headers = exchange.getResponseHeaders();
+        headers.set("Content-Type", CONTENT_TYPE_HTML);
+        headers.set("Cache-Control", "no-cache");
+        headers.set("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
         }
     }
 

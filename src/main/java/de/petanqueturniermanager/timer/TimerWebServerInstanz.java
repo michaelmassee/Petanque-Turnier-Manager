@@ -18,6 +18,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.webserver.LogoBildServieren;
 import de.petanqueturniermanager.webserver.SseVerbindung;
 import de.petanqueturniermanager.webserver.SseElternInstanz;
 
@@ -45,6 +46,8 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
 
     private static final Gson GSON = new Gson();
 
+    private static final String ENDPUNKT_TIMER_LOGO = "/timer-logo";
+
     private final int port;
     private final HttpServer httpServer;
     private final ScheduledExecutorService keepAliveExecutor;
@@ -52,6 +55,8 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
 
     private volatile String cachedInitJson;
     private volatile boolean laeuft = false;
+    private volatile TimerState letzterState = TimerState.inaktiv();
+    private volatile String logoUrl = "";
 
     /**
      * Erstellt eine neue Timer-Webserver-Instanz auf dem angegebenen Port.
@@ -64,6 +69,7 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
         httpServer = HttpServer.create(new InetSocketAddress(port), 10);
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/events", this::handleEvents);
+        httpServer.createContext(ENDPUNKT_TIMER_LOGO, this::handleTimerLogo);
         httpServer.createContext("/", this::handleRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "PTM-Timer-WebServer-KeepAlive-" + port);
@@ -112,9 +118,24 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
         if (!laeuft) {
             return;
         }
+        letzterState = state;
         var json = zuStateJson(state);
         cachedInitJson = json;
         sseVerbindungen.forEach(v -> v.senden(json));
+    }
+
+    /**
+     * Setzt die Logo-URL und pusht sofort ein aktualisiertes SSE-Event an alle verbundenen Clients.
+     *
+     * @param url gespeicherte Logo-URL (file://, http(s):// oder leer)
+     */
+    public void setLogoUrl(String url) {
+        this.logoUrl = url != null ? url : "";
+        if (laeuft) {
+            var json = zuStateJson(letzterState);
+            cachedInitJson = json;
+            sseVerbindungen.forEach(v -> v.senden(json));
+        }
     }
 
     // ── SseElternInstanz ───────────────────────────────────────────────────────
@@ -179,16 +200,26 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
         verbindung.sendeInitNachricht();
     }
 
+    private void handleTimerLogo(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        LogoBildServieren.serviere(exchange, logoUrl);
+    }
+
     // ── Hilfsmethoden ─────────────────────────────────────────────────────────
 
-    private static String zuStateJson(TimerState state) {
+    private String zuStateJson(TimerState state) {
+        var browserLogoUrl = LogoBildServieren.zuBrowserUrl(logoUrl, ENDPUNKT_TIMER_LOGO);
         var nachricht = new TimerSseNachricht(
                 state.anzeige(),
                 state.sekunden(),
                 state.zustand().name(),
                 statusText(state.zustand()),
                 state.bezeichnung(),
-                state.hintergrundFarbe());
+                state.hintergrundFarbe(),
+                browserLogoUrl);
         return GSON.toJson(nachricht);
     }
 

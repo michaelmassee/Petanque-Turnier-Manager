@@ -10,6 +10,7 @@ package de.petanqueturniermanager.timer;
  * @param statusText       lokalisierter Status-Text (z.B. "Läuft", "Pausiert", "Zeit abgelaufen!")
  * @param bezeichnung      optionaler Rundenname
  * @param hintergrundFarbe Hintergrundfarbe als Hex-String (z.B. "#1a2b3c")
+ * @param logoUrl          Browser-taugliche URL zum Turnierlogo, oder {@code null} wenn keines konfiguriert
  */
 public record TimerSseNachricht(
         String anzeige,
@@ -17,5 +18,6 @@ public record TimerSseNachricht(
         String zustand,
         String statusText,
         String bezeichnung,
-        String hintergrundFarbe) {
+        String hintergrundFarbe,
+        String logoUrl) {
 }

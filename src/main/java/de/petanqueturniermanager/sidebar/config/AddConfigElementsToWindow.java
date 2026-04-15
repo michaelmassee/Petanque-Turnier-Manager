@@ -5,6 +5,7 @@ package de.petanqueturniermanager.sidebar.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
@@ -39,6 +40,12 @@ public class AddConfigElementsToWindow {
 				AuswahlConfigSidebarElement auswahlConfigSidebarElement = new AuswahlConfigSidebarElement(
 						guiFactoryCreateParam, (AuswahlConfigProperty) configProperty, currentSpreadsheet);
 				layout.addLayout(auswahlConfigSidebarElement.getLayout(), 1);
+			} else if (BasePropertiesSpalte.KONFIG_PROP_TURNIERLOGO_URL.equals(configProperty.getKey())) {
+				// Textfeld mit zusätzlichem Datei-Auswahl-Button
+				@SuppressWarnings("unchecked")
+				DateiOderUrlConfigSidebarElement dateiOderUrlConfigSidebarElement = new DateiOderUrlConfigSidebarElement(
+						guiFactoryCreateParam, (ConfigProperty<String>) configProperty, currentSpreadsheet);
+				layout.addLayout(dateiOderUrlConfigSidebarElement.getLayout(), 1);
 			} else {
 				// create textfield mit btn
 				@SuppressWarnings("unchecked")

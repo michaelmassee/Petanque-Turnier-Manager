@@ -25,9 +25,11 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XModifyBroadcaster;
 
+import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.GlobalProperties.CompositeViewEintragRoh;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -100,11 +102,24 @@ public final class WebServerManager implements TimerListener {
     private TimerWebServerInstanz timerInstanz;
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
+    /** Gecachte Logo-URL aus den Dokumenteigenschaften (file:// oder http(s)://, oder leer). */
+    private volatile String logoUrl = "";
+
     private WebServerManager() {
     }
 
     public static WebServerManager get() {
         return INSTANCE;
+    }
+
+    /**
+     * Gibt die gecachte Logo-URL zurück, die zuletzt aus den Dokumenteigenschaften gelesen wurde.
+     * Kann von HTTP-Handler-Threads sicher gelesen werden (volatile).
+     *
+     * @return Logo-URL (file://, http(s):// oder leer, niemals null)
+     */
+    public String getLogoUrl() {
+        return logoUrl;
     }
 
     /**
@@ -576,11 +591,31 @@ public final class WebServerManager implements TimerListener {
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
         registriereModifyListenerFallsNoetig(ws);
+        aktualisiereLogoUrl(ws);
         for (var instanz : instanzen) {
             renderUndPushen(instanz, ws);
         }
         for (var instanz : compositeInstanzen) {
             renderUndPushenComposite(instanz, ws);
+        }
+    }
+
+    /**
+     * Liest die Logo-URL aus den Dokumenteigenschaften und aktualisiert den Cache.
+     * Wird im SheetRunner-Thread aufgerufen – UNO-Zugriff ist sicher.
+     */
+    private void aktualisiereLogoUrl(WorkingSpreadsheet ws) {
+        String neueLogoUrl = new DocumentPropertiesHelper(ws)
+                .getStringProperty(BasePropertiesSpalte.KONFIG_PROP_TURNIERLOGO_URL, "");
+        if (neueLogoUrl == null) {
+            neueLogoUrl = "";
+        }
+        if (!neueLogoUrl.equals(logoUrl)) {
+            logoUrl = neueLogoUrl;
+            if (timerInstanz != null) {
+                timerInstanz.setLogoUrl(logoUrl);
+            }
+            logger.debug("Logo-URL aktualisiert: {}", logoUrl.isEmpty() ? "(leer)" : logoUrl);
         }
     }
 

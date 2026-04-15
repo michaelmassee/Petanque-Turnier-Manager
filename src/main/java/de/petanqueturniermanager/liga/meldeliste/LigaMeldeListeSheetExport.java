@@ -33,6 +33,7 @@ import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.webserver.LogoBildServieren;
 
 /**
  * Exportiert die Tabellen nach pdf und erstelt eine html datei
@@ -193,6 +194,15 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 				processBox().info(I18n.get("export.warnung.turnierlogo.fehlt"));
 			} else {
 				processBox().info(I18n.get("export.info.turnierlogo", turnierlogoUrl));
+				if (LogoBildServieren.istDateiUrl(turnierlogoUrl)) {
+					File imagesOrdner = new File(
+							FilenameUtils.getFullPath(new File(htmlExportFileUri).getCanonicalPath()), "images");
+					String kopiertePfad = LogoBildServieren.kopiereInOrdner(turnierlogoUrl, imagesOrdner);
+					if (kopiertePfad != null) {
+						turnierlogoUrl = kopiertePfad;
+						processBox().info(I18n.get("export.info.turnierlogo.kopiert", kopiertePfad));
+					}
+				}
 			}
 
 			String pdfImgUr = StringUtils.strip(delegate.getKonfigurationSheet().getPdfImageUr());

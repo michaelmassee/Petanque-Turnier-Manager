@@ -54,7 +54,7 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 		return new HorizontalLayout();
 	}
 
-	private void setPropertyValue(String newVal) {
+	void setPropertyValue(String newVal) {
 		if (StringUtils.equals(getPropertyValue(), newVal)) {
 			return; // nichts zu tun
 		}
