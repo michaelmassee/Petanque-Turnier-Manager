@@ -36,7 +36,10 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
@@ -159,6 +162,10 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 		footer.zeilePlusEins().setValue(I18n.get("teilnehmer.footer.bahnen", teamRechner.getAnzBahnen()));
 		getSheetHelper().setStringValueInCell(footer);
 		printBereichDefinieren(footer.getPos(), letzteSpalte);
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
+					k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
 	}
 
 	private void headerSchreiben(int letzteSpalte) throws GenerateException {
