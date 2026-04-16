@@ -8,15 +8,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
-import com.sun.star.container.XNameAccess;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.XMultiServiceFactory;
-import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
 
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public class CellStyleHelper {
 
@@ -38,31 +37,39 @@ public class CellStyleHelper {
 		checkNotNull(sheet);
 		checkNotNull(cellStyleDef);
 
-		String styleName = cellStyleDef.getName();
+		var styleName = cellStyleDef.getName();
+		var currentSpreadsheetDocument = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 
 		try {
-			XSpreadsheetDocument currentSpreadsheetDocument = sheet.getWorkingSpreadsheet()
-					.getWorkingSpreadsheetDocument();
+			var xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
+			var xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
+			var aCellStylesObj = xFamiliesNA.getByName("CellStyles");
+			var xCellStylesNA = Lo.qi(XNameContainer.class, aCellStylesObj);
 
-			XStyleFamiliesSupplier xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
-			XNameAccess xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
-			Object aCellStylesObj = xFamiliesNA.getByName("CellStyles");
-			XNameContainer xCellStylesNA = Lo.qi(XNameContainer.class, aCellStylesObj);
-
-			Object aCellStyle = null;
+			Object aCellStyle;
 			try {
 				aCellStyle = xCellStylesNA.getByName(styleName);
 			} catch (NoSuchElementException e) {
 				// create a new cell style
-				XMultiServiceFactory xDocServiceManager = Lo.qi(XMultiServiceFactory.class, currentSpreadsheetDocument);
+				var xDocServiceManager = Lo.qi(XMultiServiceFactory.class, currentSpreadsheetDocument);
 				aCellStyle = xDocServiceManager.createInstance("com.sun.star.style.CellStyle");
 				xCellStylesNA.insertByName(styleName, aCellStyle);
 			}
 
 			// modify properties of the (new) style
-			XPropertySet xPropSet = Lo.qi(XPropertySet.class, aCellStyle);
-			for (String propKey : cellStyleDef.getCellProperties().keySet()) {
+			var xPropSet = Lo.qi(XPropertySet.class, aCellStyle);
+			for (var propKey : cellStyleDef.getCellProperties().keySet()) {
 				xPropSet.setPropertyValue(propKey, cellStyleDef.getCellProperties().get(propKey));
+			}
+		} catch (RuntimeException e) {
+			if (SheetHelper.istIrgendeinSheetGeschuetzt(currentSpreadsheetDocument)) {
+				sheet.getLogger().warn(
+						"Zellstil '{}' konnte nicht gesetzt werden – LO-Einschränkung: " +
+						"Zellstile können nicht geändert werden, solange ein Sheet im Dokument " +
+						"tab-geschützt ist. (sc/source/ui/unoobj/styleuno.cxx)",
+						styleName);
+			} else {
+				sheet.getLogger().error(e.getMessage(), e);
 			}
 		} catch (Exception e) {
 			sheet.getLogger().error(e.getMessage(), e);

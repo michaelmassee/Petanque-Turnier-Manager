@@ -46,6 +46,7 @@ import com.sun.star.uno.Any;
 import com.sun.star.uno.Exception;
 import com.sun.star.uno.XComponentContext;
 import com.sun.star.util.XMergeable;
+import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -159,6 +160,21 @@ public class SheetHelper {
 	public int getAnzSheets() {
 		XSpreadsheets sheets = getSheets();
 		return sheets.getElementNames().length;
+	}
+
+	public static boolean istIrgendeinSheetGeschuetzt(XSpreadsheetDocument doc) {
+		var sheets = doc.getSheets();
+		for (var name : sheets.getElementNames()) {
+			try {
+				var xSheet = Lo.qi(XSpreadsheet.class, sheets.getByName(name));
+				if (Lo.qi(XProtectable.class, xSheet).isProtected()) {
+					return true;
+				}
+			} catch (NoSuchElementException | WrappedTargetException e) {
+				// Sheet nicht zugreifbar – überspringen
+			}
+		}
+		return false;
 	}
 
 	/**
