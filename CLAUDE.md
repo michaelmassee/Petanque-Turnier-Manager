@@ -135,6 +135,20 @@ Das `sidebar/`-Package wurde neu geschrieben (2026-03), funktioniert aber in Lib
 - Bei Änderungen an globalen Komponenten (`NewReleaseChecker`, Events, etc.): **kein** Code in `sidebar/` einbeziehen.
 - Sidebar erst wieder aktivieren (Factory in `.components` einkommentieren) wenn `createUIElement()` nachweislich aufgerufen wird.
 
+
+### Zellstile (CellStyles) und Sheet-Schutz – kritische LO-Einschränkung
+
+**LO-Quellcode** (`sc/source/ui/unoobj/styleuno.cxx`, `ScStyleObj::setPropertyValue_Impl`):
+```cpp
+//  cell styles cannot be modified if any sheet is protected
+if ( eFamily == SfxStyleFamily::Para && lcl_AnyTabProtected( pDocShell->GetDocument() ) )
+    throw uno::RuntimeException();
+```
+
+**Regel**: `CellStyleHelper.apply()` (= `setPropertyValue` auf einem Zellstil) wirft `RuntimeException` sobald **irgendein** Sheet im Dokument tab-geschützt ist. Das ist eine **absichtliche LO-Einschränkung**, kein Bug.
+
+
+
 ## RanglisteRefreshListener – Architekturregeln
 
 ### Problem: Race Condition bei forceCreate()
