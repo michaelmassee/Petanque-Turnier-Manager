@@ -233,6 +233,7 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 
 	@Override
 	protected void doRun() throws GenerateException {
+		getTurnierSheet().protect(false);
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
 		upDateSheet();
 		pruefeUndFragObAlleAktivieren();

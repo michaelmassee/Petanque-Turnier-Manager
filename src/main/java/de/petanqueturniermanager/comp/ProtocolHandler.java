@@ -25,8 +25,10 @@ import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.util.URL;
+import com.sun.star.util.XProtectable;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -44,6 +46,7 @@ import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -109,6 +112,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
+import de.petanqueturniermanager.supermelee.blattschutz.BlattSchutzToggle;
 import de.petanqueturniermanager.supermelee.SupermeleeTeamPaarungenSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet_Sort;
@@ -299,6 +303,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	// Turnier Modus
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
+	// Blattschutz
+	public static final String CMD_BLATTSCHUTZ_UMSCHALTEN        = "blattschutz_umschalten";
 	private final XComponentContext xContext;
 
 	public ProtocolHandler(XComponentContext xContext) {
@@ -827,6 +833,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				TurnierModus.get().umschalten(ws);
 				notifyAllListeners();
 			}
+			case CMD_BLATTSCHUTZ_UMSCHALTEN -> new BlattSchutzToggle(new WorkingSpreadsheet(xContext)).start();
 			default -> { return false; }
 		}
 		return true;
@@ -933,7 +940,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		var aktivesDokument = holeAktivesDokument();
 		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
 				.add(new StatusEntry(listener, url, aktivesDokument));
-		postStatus(listener, url, isEnabled(command, aktivesDokument));
+		postStatus(listener, url, isEnabled(command, aktivesDokument), aktivesDokument);
 	}
 
 	@Override
@@ -1108,8 +1115,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// Neues Turnier in neuer Datei / Öffnen – immer aktiviert (unabhängig vom aktuellen Dokument)
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
 				 CMD_TOOLBAR_OEFFNEN                        -> true;
-			// Turnier Modus – immer aktiviert
-			case CMD_TURNIER_MODUS                          -> true;
+			// Turnier Modus / Blattschutz – immer aktiviert
+			case CMD_TURNIER_MODUS,
+				 CMD_BLATTSCHUTZ_UMSCHALTEN                 -> true;
 			// Timer – zustandsabhängig
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
@@ -1199,7 +1207,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
 				// Dokument pro Listener übergeben: Owner-abhängige Befehle (WS stoppen/URLs)
 				// werden für jedes Dokument individuell ausgewertet
-				postStatus(e.listener, e.url, isEnabled(entry.getKey(), e.document));
+				postStatus(e.listener, e.url, isEnabled(entry.getKey(), e.document), e.document);
 			}
 		}
 		// Spieltag-Toolbar je nach aktivem Turniersystem ein-/ausblenden
@@ -1209,13 +1217,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	private static void postStatus(XStatusListener listener, URL url, boolean enabled) {
+	private static void postStatus(XStatusListener listener, URL url, boolean enabled, XSpreadsheetDocument document) {
 		try {
 			FeatureStateEvent event = new FeatureStateEvent();
 			event.FeatureURL = url;
 			event.IsEnabled = enabled;
 			event.Requery = false;
-			setzeUrlSlotState(event, url.Path);
+			setzeUrlSlotState(event, url.Path, document);
 			listener.statusChanged(event);
 		} catch (Exception e) {
 			logger.warn("Fehler beim Benachrichtigen des Status-Listeners: {}", e.getMessage());
@@ -1225,8 +1233,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	/**
 	 * Setzt FeatureStateEvent.State für URL-Slot-Befehle dynamisch auf "[SheetName] – [URL]".
 	 * Platzhalter "—" wenn kein Port aktiv – verhindert Geister-Einträge im Menü.
+	 * <p>
+	 * Boolean-Zustände (Checkboxen) werden für Toggle-Menüpunkte gesetzt.
 	 */
-	private static void setzeUrlSlotState(FeatureStateEvent event, String command) {
+	private static void setzeUrlSlotState(FeatureStateEvent event, String command, XSpreadsheetDocument document) {
 		int slot = switch (command) {
 			case CMD_WEBSERVER_URL_1  -> 0;
 			case CMD_WEBSERVER_URL_2  -> 1;
@@ -1246,6 +1256,36 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 		if (CMD_TURNIER_MODUS.equals(command)) {
 			event.State = TurnierModus.get().istAktiv();
+		}
+		if (CMD_BLATTSCHUTZ_UMSCHALTEN.equals(command)) {
+			event.State = alleSheetGeschuetzt(document);
+		}
+	}
+
+	/**
+	 * Prüft ob alle Sheets des angegebenen Dokuments geschützt sind.
+	 *
+	 * @param document das zu prüfende Dokument, darf {@code null} sein
+	 * @return {@code true} wenn alle Sheets geschützt sind, sonst {@code false}
+	 */
+	private static boolean alleSheetGeschuetzt(XSpreadsheetDocument document) {
+		if (document == null) {
+			return false;
+		}
+		try {
+			var sheets = document.getSheets();
+			var namen = sheets.getElementNames();
+			for (var name : namen) {
+				var sheet = Lo.qi(XSpreadsheet.class, sheets.getByName(name));
+				var protectable = Lo.qi(XProtectable.class, sheet);
+				if (protectable != null && !protectable.isProtected()) {
+					return false;
+				}
+			}
+			return true;
+		} catch (Exception e) {
+			logger.warn("Blattschutz-Status nicht lesbar: {}", e.getMessage());
+			return false;
 		}
 	}
 

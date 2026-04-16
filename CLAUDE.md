@@ -189,6 +189,29 @@ Jedes neue Turniersystem, das einen `RanglisteRefreshListener` bekommt, benötig
 - **ALWAYS use `UnoRuntime.queryInterface()`**: `XSpreadsheetDocument doc = UnoRuntime.queryInterface(XSpreadsheetDocument.class, obj);`
 - **Helper Usage:** Whenever possible, use the abstractions in `de.petanqueturniermanager.helper.Lo` instead of writing raw UNO boilerplate.
 
+### Zellstile (CellStyles) und Sheet-Schutz – kritische LO-Einschränkung
+
+**LO-Quellcode** (`sc/source/ui/unoobj/styleuno.cxx`, `ScStyleObj::setPropertyValue_Impl`):
+```cpp
+//  cell styles cannot be modified if any sheet is protected
+if ( eFamily == SfxStyleFamily::Para && lcl_AnyTabProtected( pDocShell->GetDocument() ) )
+    throw uno::RuntimeException();
+```
+
+**Regel**: `CellStyleHelper.apply()` (= `setPropertyValue` auf einem Zellstil) wirft `RuntimeException` sobald **irgendein** Sheet im Dokument tab-geschützt ist. Das ist eine **absichtliche LO-Einschränkung**, kein Bug.
+
+**Architektur-Muster** (implementiert in `SupermeleeListeDelegate`):
+
+1. **`CellStyleHelper.apply()`** – nur in garantiert **ungeschütztem** Kontext verwenden (z.B. Dokumentneuaufbau via `createMeldelisteWithParams()`). Erstellt den Style und setzt Properties (create or update).
+
+2. **`CellStyleHelper.ensureCreated()`** – sicherer Fallback im laufenden Betrieb. Prüft ob Style existiert: falls ja → sofortiger Return (kein `setPropertyValue`). Falls nein + Sheet geschützt → einmalige Warnung + Return. Kein Crash.
+
+3. **`ConditionalFormatHelper.style(AbstractCellStyleDef)`** und **`styleIsFehler()`** verwenden `ensureCreated()` (nicht `apply()`), da sie auch im Update-Pfad (potenziell geschützte Sheets) aufgerufen werden.
+
+4. **`SupermeleeListeDelegate.alleStylesInitialisieren()`** – zentraler Initialisierungspunkt. Ruft `apply()` für alle benötigten Styles auf. Wird **ausschliesslich** in `MeldeListeSheet_New.createMeldelisteWithParams()` aufgerufen (garantiert ungeschützt, nach `removeAllSheetsExclude()`). Enthält `IllegalStateException`-Defensivprüfung.
+
+**Faustregel**: Styles NIEMALS im normalen Update-Pfad erstellen/modifizieren.
+
 ### Calc-Formeln in `SheetHelper.setFormulaInCell()` – immer englische ODF-Funktionsnamen
 
 `SheetHelper.setFormulaInCell()` ruft intern `xCell.setFormula()` auf – das ist die **ODF-Formelsprache**, die **sprachunabhängig** und immer englisch ist. Das gilt für **alle Locales** (Deutsch, Französisch, Niederländisch, Spanisch, …) – lokalisierte Funktionsnamen führen in jeder Spracheinstellung zu `#NAME?`.

@@ -28,6 +28,9 @@ public interface ICommonProperties {
 	String ROTATEANGLE = "RotateAngle";
 	String IS_CELLBACKGROUND_TRANSPARENT = "IsCellBackgroundTransparent";
 
+	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1CellProtection.html
+	String CELL_PROTECTION = "CellProtection";
+
 	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1NumberFormatter.html
 	// https://wiki.openoffice.org/wiki/Documentation/DevGuide/OfficeDev/Number_Formats
 	String NUMBERFORMAT = "NumberFormat";

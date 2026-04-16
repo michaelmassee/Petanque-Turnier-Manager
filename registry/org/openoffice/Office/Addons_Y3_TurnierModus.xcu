@@ -41,7 +41,23 @@
 					</node>
 
 					<!-- ****************************************************************** -->
+					<node oor:name="Y9" oor:op="replace">
+						<prop oor:name="Title">
+							<value xml:lang="de">Blattschutz umschalten</value>
+							<value xml:lang="en">Toggle Sheet Protection</value>
+							<value xml:lang="es">Alternar protección de hoja</value>
+							<value xml:lang="fr">Basculer la protection de feuille</value>
+							<value xml:lang="nl">Bladbeveiliging omschakelen</value>
+						</prop>
+						<prop oor:name="URL">
+							<value>ptm:blattschutz_umschalten</value>
+						</prop>
+						<prop oor:name="Target" oor:type="xs:string">
+							<value>_self</value>
+						</prop>
+					</node>
 
+					<!-- ****************************************************************** -->
 
 				</node>
 			</node>

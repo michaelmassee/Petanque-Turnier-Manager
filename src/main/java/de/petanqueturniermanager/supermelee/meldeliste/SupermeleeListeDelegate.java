@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
+import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -26,6 +27,12 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellstyle.AbstractCellStyleDef;
+import de.petanqueturniermanager.helper.cellstyle.BlattschutzEditierbarGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.BlattschutzEditierbarUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
+import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
+import de.petanqueturniermanager.supermelee.blattschutz.BlattSchutzToggle;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
@@ -34,6 +41,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.model.Spieler;
@@ -124,6 +132,33 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	void doSort(int spalteNr, boolean isAscending) throws GenerateException {
 		meldeListeHelper.doSort(spalteNr, isAscending);
+	}
+
+	/**
+	 * Erstellt alle für die Supermelee-Meldeliste benötigten Zellstile via {@code apply()}.
+	 * <p>
+	 * Soll ausschliesslich in {@code createMeldelisteWithParams()} aufgerufen werden
+	 * (garantiert ungeschützter Dokumentzustand). Wird das Dokument dennoch im geschützten
+	 * Zustand aufgerufen (z.B. TestDaten mit noch geschütztem Teams-Sheet), wird eine Warnung
+	 * geloggt und die Methode kehrt zurück – die Styles werden dann lazily über
+	 * {@code CellStyleHelper.ensureCreated()} in {@code ConditionalFormatHelper.style()} erstellt.
+	 */
+	void alleStylesInitialisieren() throws GenerateException {
+		var doc = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		var sheets = doc.getSheets();
+		if (BlattSchutzToggle.irgendeinSheetGeschuetzt(sheets, sheets.getElementNames())) {
+			sheet.getLogger().warn(
+					"alleStylesInitialisieren() im geschützten Dokumentzustand aufgerufen – "
+							+ "Styles werden lazily über ensureCreated() erstellt.");
+			return;
+		}
+		var styles = List.<AbstractCellStyleDef>of(
+				new FehlerStyle(),
+				new BlattschutzEditierbarGeradeStyle(),
+				new BlattschutzEditierbarUnGeradeStyle());
+		for (var style : styles) {
+			CellStyleHelper.from(sheet, style).apply();
+		}
 	}
 
 	void upDateSheet() throws GenerateException {
@@ -252,6 +287,63 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 		meldeListeHelper.insertFormulaSpieltageSpaltenGeradeUngradeFarbe(letzteDatenZeile, letzteSpielTagSpalte(),
 				sheet, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+
+		zellenSchutzUndHighlightFormatieren(letzteDatenZeile);
+	}
+
+	/**
+	 * Setzt die Zell-Protection für den editierbaren Datenbereich (IsLocked=false)
+	 * und kennzeichnet editierbare Datenzeilen (Namen, Setzposition, Spieltage) via
+	 * bedingter Formatierung mit einem grünen Zebramuster – der Header bleibt unverändert.
+	 * <p>
+	 * Durch den Einsatz bedingter Formatierung anstelle direkter {@code CellBackColor}-Änderungen
+	 * bleibt die direkte Hintergrundfarbe (normale Zebra-Farbe) erhalten. Der {@link
+	 * de.petanqueturniermanager.webserver.TabellenMapper} liest ausschließlich {@code CellBackColor}
+	 * (direkte Eigenschaft), sodass der HTML-View die normale Tabellenfarbe anzeigt statt der
+	 * Blattschutz-Hervorhebung.
+	 */
+	private void zellenSchutzUndHighlightFormatieren(int letzteDatenZeile) throws GenerateException {
+		var xSheet = sheet.getXSpreadSheet();
+
+		var editierbar = new CellProtection();
+		editierbar.IsLocked = false;
+
+		int ersteNamenSpalte = meldungenSpalte.getErsteMeldungNameSpalte();
+		var editierbareRange = RangePosition.from(ersteNamenSpalte, ERSTE_DATEN_ZEILE,
+				letzteSpielTagSpalte(), letzteDatenZeile);
+
+		sheet.getSheetHelper().setPropertiesInRange(xSheet, editierbareRange,
+				CellProperties.from().setCellProtection(editierbar));
+
+		// Grüne Hervorhebung nur via bedingter Formatierung setzen (kein direktes CellBackColor).
+		// So bleibt die direkte Farbe (Zebra) erhalten → TabellenMapper/HTML-View zeigt Zebra-Farbe.
+		var geradeStyle = new BlattschutzEditierbarGeradeStyle();
+		var ungeradeStyle = new BlattschutzEditierbarUnGeradeStyle();
+
+		fuegeBlattschutzHighlightHinzu(letzteDatenZeile, ersteNamenSpalte,
+				meldungenSpalte.getLetzteMeldungNameSpalte(), geradeStyle, ungeradeStyle);
+
+		int setzposSpalte = meldeListeHelper.setzPositionSpalte();
+		fuegeBlattschutzHighlightHinzu(letzteDatenZeile, setzposSpalte, setzposSpalte,
+				geradeStyle, ungeradeStyle);
+
+		int ersteSpieltagSpalte = meldeListeHelper.ersteSpieltagSpalte();
+		fuegeBlattschutzHighlightHinzu(letzteDatenZeile, ersteSpieltagSpalte,
+				letzteSpielTagSpalte(), geradeStyle, ungeradeStyle);
+	}
+
+	/**
+	 * Fügt die Blattschutz-Hervorhebung (grüne bedingte Formatierung) für einen Spaltenbereich hinzu.
+	 * Bestehende bedingte Formatierungen (z.B. Fehlermarkierungen) bleiben erhalten,
+	 * da keine {@code clear()}-Operation durchgeführt wird.
+	 */
+	private void fuegeBlattschutzHighlightHinzu(int letzteDatenZeile, int ersteSpalte, int letzteSpalte,
+			BlattschutzEditierbarGeradeStyle geradeStyle, BlattschutzEditierbarUnGeradeStyle ungeradeStyle)
+			throws GenerateException {
+		var bereich = RangePosition.from(ersteSpalte, ERSTE_DATEN_ZEILE, letzteSpalte, letzteDatenZeile);
+		ConditionalFormatHelper.from(sheet, bereich)
+				.formulaIsEvenRow().style(geradeStyle).applyAndDoReset()
+				.formulaIsOddRow().style(ungeradeStyle).applyAndDoReset();
 	}
 
 	/** Liefert den Header-Text für den gegebenen Spieltag, z.B. "Spieltag 1". */
