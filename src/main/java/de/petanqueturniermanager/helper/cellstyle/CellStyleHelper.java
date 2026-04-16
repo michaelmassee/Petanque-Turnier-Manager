@@ -8,10 +8,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.XMultiServiceFactory;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
 
@@ -21,11 +25,23 @@ import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public class CellStyleHelper {
 
+	private static final Logger logger = LogManager.getLogger(CellStyleHelper.class);
+
 	private final AbstractCellStyleDef cellStyleDef;
+	/** Gesetzt wenn über {@link #from(ISheet, AbstractCellStyleDef)} erzeugt. */
 	private final ISheet sheet;
+	/** Gesetzt wenn über {@link #from(XSpreadsheetDocument, AbstractCellStyleDef)} erzeugt. */
+	private final XSpreadsheetDocument spreadsheetDocument;
 
 	private CellStyleHelper(ISheet sheet, AbstractCellStyleDef cellStyleDef) {
 		this.sheet = sheet;
+		this.spreadsheetDocument = null;
+		this.cellStyleDef = cellStyleDef;
+	}
+
+	private CellStyleHelper(XSpreadsheetDocument spreadsheetDocument, AbstractCellStyleDef cellStyleDef) {
+		this.sheet = null;
+		this.spreadsheetDocument = spreadsheetDocument;
 		this.cellStyleDef = cellStyleDef;
 	}
 
@@ -35,12 +51,37 @@ public class CellStyleHelper {
 		return new CellStyleHelper(sheet, cellStyleDef);
 	}
 
+	/**
+	 * Erstellt einen CellStyleHelper direkt über das Dokument – für Kontexte ohne {@link ISheet}
+	 * (z. B. {@code BlattschutzManager}).
+	 */
+	public static CellStyleHelper from(XSpreadsheetDocument doc, AbstractCellStyleDef cellStyleDef) {
+		checkNotNull(doc);
+		checkNotNull(cellStyleDef);
+		return new CellStyleHelper(doc, cellStyleDef);
+	}
+
 	public CellStyleHelper apply() {
-		checkNotNull(sheet);
 		checkNotNull(cellStyleDef);
 
+		var currentSpreadsheetDocument = holeSpreadsheetDocument();
+		checkNotNull(currentSpreadsheetDocument);
+		applyAufDokument(currentSpreadsheetDocument);
+		return this;
+	}
+
+	// -------------------------------------------------------------------------
+
+	private XSpreadsheetDocument holeSpreadsheetDocument() {
+		if (spreadsheetDocument != null) {
+			return spreadsheetDocument;
+		}
+		checkNotNull(sheet);
+		return sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+	}
+
+	private void applyAufDokument(XSpreadsheetDocument currentSpreadsheetDocument) {
 		var styleName = cellStyleDef.getName();
-		var currentSpreadsheetDocument = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 
 		try {
 			var xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
@@ -71,18 +112,24 @@ public class CellStyleHelper {
 			}
 		} catch (RuntimeException e) {
 			if (SheetHelper.istIrgendeinSheetGeschuetzt(currentSpreadsheetDocument)) {
-				sheet.getLogger().warn(
+				getLogger().warn(
 						"Zellstil '{}' konnte nicht gesetzt werden – LO-Einschränkung: " +
 						"Zellstile können nicht geändert werden, solange ein Sheet im Dokument " +
 						"tab-geschützt ist. (sc/source/ui/unoobj/styleuno.cxx)",
 						styleName);
 			} else {
-				sheet.getLogger().error(e.getMessage(), e);
+				getLogger().error(e.getMessage(), e);
 			}
 		} catch (Exception e) {
-			sheet.getLogger().error(e.getMessage(), e);
+			getLogger().error(e.getMessage(), e);
 		}
-		return this;
+	}
+
+	private Logger getLogger() {
+		if (sheet != null) {
+			return sheet.getLogger();
+		}
+		return logger;
 	}
 
 }

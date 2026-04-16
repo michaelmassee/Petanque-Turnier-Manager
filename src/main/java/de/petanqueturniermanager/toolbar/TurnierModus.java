@@ -27,6 +27,8 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -118,6 +120,24 @@ public class TurnierModus {
 
     // -------------------------------------------------------------------------
 
+    private void schuetzeBlattschutzFuerAktivesTournierSystem(WorkingSpreadsheet ws) {
+        try {
+            var ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            BlattschutzRegistry.fuer(ts).ifPresent(k -> BlattschutzManager.get().schuetzen(k, ws));
+        } catch (Exception e) {
+            logger.warn("Blattschutz konnte nicht aktiviert werden: {}", e.getMessage(), e);
+        }
+    }
+
+    private void entsperreBlattschutzFuerAktivesTournierSystem(WorkingSpreadsheet ws) {
+        try {
+            var ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+            BlattschutzRegistry.fuer(ts).ifPresent(k -> BlattschutzManager.get().entsperren(k, ws));
+        } catch (Exception e) {
+            logger.warn("Blattschutz konnte nicht entfernt werden: {}", e.getMessage(), e);
+        }
+    }
+
     private void zeigeFehlermeldung(WorkingSpreadsheet ws) {
         MessageBox.from(ws, MessageBoxTypeEnum.ERROR_OK)
                 .caption(I18n.get("turnier.modus"))
@@ -166,9 +186,11 @@ public class TurnierModus {
         ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(ws.getxContext());
 
         aktiv = true;
+        schuetzeBlattschutzFuerAktivesTournierSystem(ws);
     }
 
     private void deaktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {
+        entsperreBlattschutzFuerAktivesTournierSystem(ws);
         var zuRestaurieren = gespeicherteElemente.isEmpty() ? STANDARD_ELEMENTE : gespeicherteElemente;
         String ptmUrl = ToolbarAnzeigenListener.TOOLBAR_RESOURCE_URL;
 

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
+import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
@@ -181,6 +182,13 @@ public abstract class CommonProperties<T> extends HashMap<String, Object> implem
 
 	public T rightMargin(int margin) {
 		return put(RIGHT_MARGIN, Integer.valueOf(margin));
+	}
+
+	/**
+	 * Setzt den Zellschutz – {@code IsLocked=false} erlaubt Bearbeitung trotz Sheet-Schutz.
+	 */
+	public T setCellProtection(CellProtection cellProtection) {
+		return put(CELL_PROTECTION, cellProtection);
 	}
 
 	public T margin(int margin) {

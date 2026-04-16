@@ -148,6 +148,53 @@ if ( eFamily == SfxStyleFamily::Para && lcl_AnyTabProtected( pDocShell->GetDocum
 **Regel**: `CellStyleHelper.apply()` (= `setPropertyValue` auf einem Zellstil) wirft `RuntimeException` sobald **irgendein** Sheet im Dokument tab-geschützt ist. Das ist eine **absichtliche LO-Einschränkung**, kein Bug.
 
 
+## Blattschutz im Turnier-Modus – Architektur
+
+Beim Aktivieren der Turnieransicht (`TurnierModus`) werden die Sheets des aktiven Turniersystems
+tab-geschützt; editierbare Zellen (Name, SP, Spieltage, Ergebnisse) bleiben über
+`CellProtection.IsLocked = false` bedienbar. Beim Deaktivieren werden die Sheets entsperrt.
+
+### Zentrale Klassen
+
+| Klasse | Paket | Zweck |
+|---|---|---|
+| `IBlattschutzKonfiguration` | `helper/sheet/blattschutz/` | Interface – eine Impl. pro Turniersystem |
+| `SheetSchutzInfo` | `helper/sheet/blattschutz/` | Record: Sheet + editierbare Bereiche |
+| `BlattschutzManager` | `helper/sheet/blattschutz/` | Singleton-Orchestrator |
+| `BlattschutzRegistry` | `helper/sheet/blattschutz/` | Registry (Open/Closed Principle) |
+| `SupermeleeBlattschutzKonfiguration` | `supermelee/blattschutz/` | Supermelee-Implementierung |
+
+`TurnierModus.aktivierenIntern()` / `deaktivierenIntern()` delegieren per Registry –
+kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.register()` eintragen.
+
+### Pflicht-Reihenfolge beim Sperren (kritisch!)
+
+1. `zelleStylesAktualisieren(ws)` – **vor** jedem `protect()`, sonst LO-RuntimeException
+2. Sheet ggf. entsperren (`entsperreSheetFallsNoetig`) – Idempotenz
+3. Editierbare Bereiche mit `CellProtection.IsLocked = false` freigeben
+4. `XProtectable.protect("")`
+
+### UNO-Hinweis: `CellProtection`
+
+- Klasse: `com.sun.star.util.CellProtection` (nicht `sheet`!)
+- Editierbar-Flag: **`IsLocked`** (nicht `IsProtected`)
+- Immer **alten Wert lesen**, neues Objekt schreiben, alle Flags (`IsHidden`, `IsFormulaHidden`, `IsPrintHidden`) übernehmen
+
+### Neues Turniersystem anschließen
+
+1. `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` in `foo/blattschutz/` anlegen
+   – Vorbild: `supermelee/blattschutz/SupermeleeBlattschutzKonfiguration.java`
+2. In `BlattschutzRegistry` static-Block: `REGISTRY.put(TurnierSystem.FOO, FooBlattschutzKonfiguration.get())`
+3. Editierbare Bereiche per `SheetMetadataHelper.findeSheet()` + `getSchluesselMitPrefix()` ermitteln
+4. Zeilengrenzen: `MeldungenSpalte.MAX_ANZ_MELDUNGEN = 999` – keine Magic Numbers
+
+### `CellStyleHelper` – Überladung ohne ISheet
+
+```java
+// Für Kontexte ohne ISheet (z. B. BlattschutzManager):
+CellStyleHelper.from(XSpreadsheetDocument doc, AbstractCellStyleDef def).apply();
+```
+
 
 ## RanglisteRefreshListener – Architekturregeln
 

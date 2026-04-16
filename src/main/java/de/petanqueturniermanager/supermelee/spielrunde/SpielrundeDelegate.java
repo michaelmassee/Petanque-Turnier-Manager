@@ -23,6 +23,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
+import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.SuperMeleePaarungenV2;
@@ -52,6 +53,8 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -63,6 +66,8 @@ import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
@@ -696,5 +701,17 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		spielrundeHelper.formatiereErgebnissRange(sheet, ergbenissRange, ERSTE_SPALTE_ERGEBNISSE);
 		// Editierbare Felder (Ergebnis A + B) farblich hervorheben
 		EditierbaresZelleFormatHelper.anwenden(sheet, ergbenissRange);
+
+		// Editierbare Zellen: IsLocked=false setzen damit Sheet-Schutz sie nicht sperrt
+		var editierbar = new CellProtection();
+		editierbar.IsLocked = false;
+		sheet.getSheetHelper().setPropertiesInRange(xsheet, ergbenissRange,
+				CellProperties.from().setCellProtection(editierbar));
+
+		// Wenn Turnier-Modus aktiv: Blattschutz neu anwenden damit Ergebnis-Felder korrekt freigegeben werden
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
+					k -> BlattschutzManager.get().schuetzen(k, sheet.getWorkingSpreadsheet()));
+		}
 	}
 }
