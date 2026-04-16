@@ -6,6 +6,8 @@ package de.petanqueturniermanager.helper.cellstyle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Objects;
+
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.container.XNameContainer;
@@ -59,7 +61,13 @@ public class CellStyleHelper {
 			// modify properties of the (new) style
 			var xPropSet = Lo.qi(XPropertySet.class, aCellStyle);
 			for (var propKey : cellStyleDef.getCellProperties().keySet()) {
-				xPropSet.setPropertyValue(propKey, cellStyleDef.getCellProperties().get(propKey));
+				if (xPropSet.getPropertySetInfo().hasPropertyByName(propKey)) {
+					var neuerWert = cellStyleDef.getCellProperties().get(propKey);
+					var aktuellerWert = xPropSet.getPropertyValue(propKey);
+					if (!Objects.equals(neuerWert, aktuellerWert)) {
+						xPropSet.setPropertyValue(propKey, neuerWert);
+					}
+				}
 			}
 		} catch (RuntimeException e) {
 			if (SheetHelper.istIrgendeinSheetGeschuetzt(currentSpreadsheetDocument)) {
