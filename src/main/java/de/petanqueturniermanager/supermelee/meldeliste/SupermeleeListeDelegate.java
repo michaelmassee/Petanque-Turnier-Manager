@@ -34,6 +34,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.model.Spieler;
@@ -252,6 +253,19 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 				meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
 		meldeListeHelper.insertFormulaSpieltageSpaltenGeradeUngradeFarbe(letzteDatenZeile, letzteSpielTagSpalte(),
 				sheet, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+
+		// Editierbare Felder (Name, SP, Spieltag) farblich hervorheben
+		var nameSpalteRange = RangePosition.from(meldungenSpalte.getErsteMeldungNameSpalte(), ERSTE_DATEN_ZEILE,
+				meldungenSpalte.getLetzteMeldungNameSpalte(), letzteDatenZeile);
+		EditierbaresZelleFormatHelper.anwenden(sheet, nameSpalteRange);
+
+		int spSpalte = meldeListeHelper.setzPositionSpalte();
+		var spRange = RangePosition.from(spSpalte, ERSTE_DATEN_ZEILE, spSpalte, letzteDatenZeile);
+		EditierbaresZelleFormatHelper.anwenden(sheet, spRange);
+
+		var spieltagRange = RangePosition.from(meldeListeHelper.ersteSpieltagSpalte(), ERSTE_DATEN_ZEILE,
+				letzteSpielTagSpalte(), letzteDatenZeile);
+		EditierbaresZelleFormatHelper.anwenden(sheet, spieltagRange);
 	}
 
 	/** Liefert den Header-Text für den gegebenen Spieltag, z.B. "Spieltag 1". */

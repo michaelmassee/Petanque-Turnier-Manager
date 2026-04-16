@@ -26,6 +26,9 @@ public enum CellStyleDefName {
 	StreichSpieltagHintergrundFarbeUnGerade,
 	//---------------------------------------
 	NichtGespieltHintergrundFarbeGerade,
-	NichtGespieltHintergrundFarbeUnGerade
+	NichtGespieltHintergrundFarbeUnGerade,
+	//---------------------------------------
+	EditierbareZelleHintergrundFarbeGerade,
+	EditierbareZelleHintergrundFarbeUnGerade
 	// @formatter:on
 }

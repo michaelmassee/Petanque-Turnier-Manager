@@ -48,6 +48,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -693,5 +694,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		sheet.getSheetHelper().setPropertyInRange(xsheet, ergbenissRange, CHAR_WEIGHT, FontWeight.BOLD);
 
 		spielrundeHelper.formatiereErgebnissRange(sheet, ergbenissRange, ERSTE_SPALTE_ERGEBNISSE);
+		// Editierbare Felder (Ergebnis A + B) farblich hervorheben
+		EditierbaresZelleFormatHelper.anwenden(sheet, ergbenissRange);
 	}
 }
