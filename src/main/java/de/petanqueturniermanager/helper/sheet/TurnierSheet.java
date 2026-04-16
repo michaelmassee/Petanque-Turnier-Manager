@@ -100,31 +100,29 @@ public class TurnierSheet {
 		return this;
 	}
 
+	//
+
 	/**
-	 * Blattschutz ein- oder ausschalten.<br>
-	 * Kein Passwort (leerer String). Wenn das Sheet nicht protectable ist (z.B. View-Proxy), wird
-	 * eine Warnung geloggt und die Methode kehrt ohne Fehler zurück.
+	 * Keine änderungen mehr erlaubt wenn protect = true<br>
+	 * <br>
+	 * 16.04.2019 <br>
+	 * BUG ? lo = 6.2.2 ? Style lassen sich nicht mehr ändern wenn irgendein sheet is protected
 	 *
-	 * @param protect true = Schutz aktivieren, false = Schutz aufheben
+	 * @param protect true/false
 	 */
-	public TurnierSheet protect(boolean protect) {
-		XProtectable xProtectable = queryInterfaceXSpreadsheet(XProtectable.class);
-		if (xProtectable == null) {
-			logger.warn("Sheet ist nicht protectable – Blattschutz nicht gesetzt");
-			return this;
-		}
-		if (protect) {
-			xProtectable.protect("");
-		} else {
-			xProtectable.unprotect("");
-		}
-		logger.debug("Blattschutz gesetzt: {}", protect);
+	TurnierSheet protect(boolean protect) {
+		// XProtectable xProtectable = Lo.qi(XProtectable.class, xSpreadsheet);
+		// if (protect) {
+		// xProtectable.protect("");
+		// } else {
+		// xProtectable.unprotect("");
+		// }
 		return this;
 	}
 
 	public boolean isProtected() {
 		XProtectable xProtectable = queryInterfaceXSpreadsheet(XProtectable.class);
-		return xProtectable != null && xProtectable.isProtected();
+		return xProtectable.isProtected();
 	}
 
 	/**

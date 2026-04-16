@@ -166,8 +166,6 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 			setSpielTag(spielTag1);
 			getKonfigurationSheet().setAktiveSpieltag(spielTag1);
 			getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(1));
-			// Zellstile initialisieren (vor upDateSheet, im garantiert ungeschützten Zustand)
-			delegate.alleStylesInitialisieren();
 			upDateSheet();
 		}
 	}

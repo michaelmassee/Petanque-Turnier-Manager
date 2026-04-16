@@ -143,13 +143,14 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper styleIsFehler() {
 		FehlerStyle fehlerStyle = new FehlerStyle();
-		CellStyleHelper.from(getISheet(), fehlerStyle).ensureCreated();
+		CellStyleHelper.from(getISheet(), fehlerStyle).apply();
 		styleName = fehlerStyle.getName();
 		return this;
 	}
 
 	public ConditionalFormatHelper style(AbstractCellStyleDef cellStyleDef) {
-		CellStyleHelper.from(getISheet(), cellStyleDef).ensureCreated();
+		// add/update Style
+		CellStyleHelper.from(getISheet(), cellStyleDef).apply();
 		styleName = cellStyleDef.getName();
 		return this;
 	}
