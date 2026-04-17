@@ -302,15 +302,23 @@ public class SheetHelper {
 		checkNotNull(pos);
 		checkNotNull(formula);
 
+		if (formula.isBlank()) {
+			logger.warn("setFormulaInCell: leere Formel bei {}", pos);
+			return null;
+		}
+		if (formula.contains(",")) {
+			logger.warn("setFormulaInCell: Formel enthält ',' – Semikolon ';' als Trenner verwenden! Formel: {}", formula);
+		}
+
 		XCell xCell = null;
 		try {
 			xCell = sheet.getCellByPosition(pos.getSpalte(), pos.getZeile());
 
-			// Deutsch nach Enlisch
+			// Deutsch nach Englisch
 			// http://www.ooowiki.de/DeutschEnglischCalcFunktionen.html
 			formula = StringUtils.replaceEach(formula.trim(), FORMULA_GERMAN_SEARCH_LIST,
 					FORMULA_ENGLISH_REPLACEMENT_LIST);
-			xCell.setFormula(StringUtils.prependIfMissing(formula, "="));
+			xCell.setFormula(formula.startsWith("=") ? formula : "=" + formula);
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}
