@@ -159,7 +159,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	}
 
 	@Override
-	public long ptmbooleanproperty(String propname) {
+	public int ptmbooleanproperty(String propname) {
 		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
 		if (hlpr != null) {
 			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
@@ -167,11 +167,11 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
 				boolean propVal = hlpr.getBooleanProperty(propname, false);
 				logger.debug("BooleanProperty [{}] = {}", propname, propVal);
-				return propVal ? 1L : 0L;
+				return propVal ? 1 : 0;
 			}
 		}
 		logger.warn("BooleanProperty fallback used: {}", propname);
-		return 0L;
+		return 0;
 	}
 
 	@Override

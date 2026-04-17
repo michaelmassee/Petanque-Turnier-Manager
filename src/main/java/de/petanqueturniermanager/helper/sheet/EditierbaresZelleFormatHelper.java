@@ -5,6 +5,7 @@
 package de.petanqueturniermanager.helper.sheet;
 
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.EditierbareZelleHintergrundFarbeUnGeradeStyle;
@@ -48,6 +49,7 @@ public class EditierbaresZelleFormatHelper {
 	 * @throws GenerateException bei UNO-API-Fehlern
 	 */
 	public static void anwenden(ISheet sheet, RangePosition range) throws GenerateException {
+		new DocumentPropertiesHelper(sheet.getWorkingSpreadsheet()).initBooleanPropertyIfAbsent(PROPERTY_KEY, true);
 		var geradeStyle = new EditierbareZelleHintergrundFarbeGeradeStyle(EDITIERBAR_GERADE_FARBE);
 		var ungeradeStyle = new EditierbareZelleHintergrundFarbeUnGeradeStyle(EDITIERBAR_UNGERADE_FARBE);
 		ConditionalFormatHelper.from(sheet, range).append()

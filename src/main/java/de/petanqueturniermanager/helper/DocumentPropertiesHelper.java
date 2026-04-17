@@ -256,6 +256,13 @@ public class DocumentPropertiesHelper {
 		setStringProperty(propName, StringTools.booleanToString(newVal));
 	}
 
+	public void initBooleanPropertyIfAbsent(String propName, boolean defaultVal) {
+		boolean absent = currentPropListe.keySet().stream().noneMatch(key -> key.equalsIgnoreCase(propName));
+		if (absent) {
+			setBooleanProperty(propName, defaultVal);
+		}
+	}
+
 	public boolean getTurnierModusAusDocument() {
 		return getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIER_MODUS, false);
 	}

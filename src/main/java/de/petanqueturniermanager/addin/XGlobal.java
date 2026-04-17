@@ -96,5 +96,5 @@ public interface XGlobal extends XInterface {
 
     int ptmpouleanzdreiergruppen(int anzTeams);
 
-    long ptmbooleanproperty(String propname);
+    int ptmbooleanproperty(String propname);
 }
