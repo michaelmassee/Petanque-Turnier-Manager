@@ -306,9 +306,6 @@ public class SheetHelper {
 			logger.warn("setFormulaInCell: leere Formel bei {}", pos);
 			return null;
 		}
-		if (formula.contains(",")) {
-			logger.warn("setFormulaInCell: Formel enthält ',' – Semikolon ';' als Trenner verwenden! Formel: {}", formula);
-		}
 
 		XCell xCell = null;
 		try {
