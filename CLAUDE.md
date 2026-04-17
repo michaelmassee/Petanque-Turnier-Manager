@@ -188,6 +188,42 @@ kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.registe
 3. Editierbare Bereiche per `SheetMetadataHelper.findeSheet()` + `getSchluesselMitPrefix()` ermitteln
 4. Zeilengrenzen: `MeldungenSpalte.MAX_ANZ_MELDUNGEN = 999` – keine Magic Numbers
 
+### Bedingte Formatierung (ConditionalFormat) und Sheet-Schutz – kritische LO-Einschränkung
+
+**LO-Quellcode** (`sc/source/ui/docshell/docfunc.cxx`, `ScDocFunc::ReplaceConditionalFormat`):
+```cpp
+void ScDocFunc::ReplaceConditionalFormat( sal_uLong nOldFormat, ... )
+{
+    if(rDoc.IsTabProtected(nTab))
+        return;   // lautlos – kein throw, keine Exception!
+    // ...
+}
+```
+
+**Regel**: `xPropSet.setPropertyValue("ConditionalFormat", xEntries)` auf einem Zellbereich ruft intern `ReplaceConditionalFormat` auf. Ist das Sheet tab-geschützt, kehrt diese Methode **ohne Fehler zurück** und erstellt **keine** neue CF-Regel.
+
+**Kritisch**: LO entfernt die bestehenden CF-Daten aus den Zellen **vor** dem `ReplaceConditionalFormat`-Aufruf (via `RemoveCondFormatData` + `DeleteArea`). Wenn `ReplaceConditionalFormat` dann lautlos abbricht, sind **alle CF-Regeln gelöscht und keine neuen erstellt** → alle bedingten Formatierungen verschwinden spurlos.
+
+**Vergleich mit der CellStyle-Einschränkung:**
+
+| Operation | Verhalten bei Sheet-Schutz |
+|---|---|
+| `CellStyleHelper.apply()` (Styles) | Wirft `RuntimeException` → von `applyAufDokument` gefangen → WARN |
+| `setPropertyValue("ConditionalFormat", ...)` | `return;` ohne Exception → lautlos, kein Log-Eintrag |
+
+**Konsequenz für alle `doRun()`-Methoden die `formatDaten()` aufrufen:**
+Ist TurnierModus aktiv (Sheets sind geschützt), MUSS vor jedem `upDateSheet()`-Aufruf der Blattschutz entfernt werden. `formatDaten()` ruft am Ende `schuetzen()` und stellt den Schutz selbst wieder her.
+
+```java
+// Pflichtmuster in doRun() / naechsteSpieltag() etc. wenn TurnierModus aktiv sein kann:
+if (TurnierModus.get().istAktiv()) {
+    BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
+            .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+}
+// ... clearRange(), upDateSheet() etc.
+// formatDaten() → schuetzen() stellt Schutz am Ende wieder her
+```
+
 ### `CellStyleHelper` – Überladung ohne ISheet
 
 ```java

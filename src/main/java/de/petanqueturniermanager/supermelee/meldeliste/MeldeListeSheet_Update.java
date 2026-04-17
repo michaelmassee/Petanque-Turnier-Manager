@@ -22,6 +22,9 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -234,6 +237,13 @@ public class MeldeListeSheet_Update extends SheetRunner implements IMeldeliste<S
 	@Override
 	protected void doRun() throws GenerateException {
 		setSpielTag(getKonfigurationSheet().getAktiveSpieltag());
+		// ReplaceConditionalFormat in LO kehrt lautlos zurück wenn Sheet tab-geschützt ist
+		// (sc/source/ui/docshell/docfunc.cxx) → CF wird gelöscht aber nicht neu angelegt.
+		// formatDaten() stellt den Schutz am Ende selbst wieder her.
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
+					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		}
 		upDateSheet();
 		pruefeUndFragObAlleAktivieren();
 	}

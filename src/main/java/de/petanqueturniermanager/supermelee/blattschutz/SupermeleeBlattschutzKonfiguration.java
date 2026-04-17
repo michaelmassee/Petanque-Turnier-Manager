@@ -12,6 +12,10 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheetDocument;
 
+import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellContentType;
+import com.sun.star.table.XCell;
+
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -97,7 +101,7 @@ public class SupermeleeBlattschutzKonfiguration implements IBlattschutzKonfigura
         for (var key : schluessel) {
             SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet ->
                     infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet,
-                            List.of(berechneSpielrundeErgebnisBereich()))));
+                            List.of(berechneSpielrundeErgebnisBereich(sheet)))));
         }
     }
 
@@ -161,12 +165,37 @@ public class SupermeleeBlattschutzKonfiguration implements IBlattschutzKonfigura
      * <p>
      * Ergebnis A = Spalte {@code ERSTE_SPALTE_ERGEBNISSE} (Index 7 = col H),
      * Ergebnis B = Spalte {@code ERSTE_SPALTE_ERGEBNISSE + 1} (Index 8 = col I).
+     * <p>
+     * Die letzte Zeile wird aus dem Sheet-Inhalt ermittelt, damit Zellen
+     * unterhalb der Tabelle nicht fälschlicherweise entsperrt werden.
      */
-    private RangePosition berechneSpielrundeErgebnisBereich() {
+    private RangePosition berechneSpielrundeErgebnisBereich(XSpreadsheet sheet) {
         return RangePosition.from(
                 SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE,
                 SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE,
                 SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE + 1,
-                MeldungenSpalte.MAX_ANZ_MELDUNGEN);
+                ermittleLetzteSpielrundeZeile(sheet));
+    }
+
+    /**
+     * Ermittelt die letzte Datenzeile der Spielrunde anhand der
+     * {@code PAARUNG_CNTR_SPALTE}, die in jeder Datenzeile eine Formel enthält.
+     * Leere Zellen (kein Inhalt) markieren das Ende der Tabelle.
+     */
+    private int ermittleLetzteSpielrundeZeile(XSpreadsheet sheet) {
+        int letzteZeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
+        try {
+            for (int zeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
+                    zeile <= MeldungenSpalte.MAX_ANZ_MELDUNGEN; zeile++) {
+                XCell xCell = sheet.getCellByPosition(SpielrundeSheetKonstanten.PAARUNG_CNTR_SPALTE, zeile);
+                if (CellContentType.EMPTY.equals(xCell.getType())) {
+                    break;
+                }
+                letzteZeile = zeile;
+            }
+        } catch (Exception e) {
+            logger.warn("Letzte Spielrunde-Zeile konnte nicht ermittelt werden: {}", e.getMessage(), e);
+        }
+        return letzteZeile;
     }
 }
