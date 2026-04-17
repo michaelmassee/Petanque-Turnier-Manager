@@ -41,6 +41,7 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmpouleanzgruppen",                23, 0),
         new MethodTypeInfo("ptmpouleanzvierergruppen",          24, 0),
         new MethodTypeInfo("ptmpouleanzdreiergruppen",          25, 0),
+        new MethodTypeInfo("ptmbooleanproperty",                26, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -94,4 +95,6 @@ public interface XGlobal extends XInterface {
     int ptmpouleanzvierergruppen(int anzTeams);
 
     int ptmpouleanzdreiergruppen(int anzTeams);
+
+    long ptmbooleanproperty(String propname);
 }

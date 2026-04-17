@@ -55,6 +55,7 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
 		docPropHelper.setBooleanProperty(configProperty.getKey(), newVal);
+		configProperty.invokeNachSpeichernAktion(workingSpreadsheet);
 	}
 
 	private boolean getPropertyValue() {

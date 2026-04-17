@@ -13,10 +13,11 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 /**
  * Zentrale Hilfsklasse für die visuelle Hervorhebung editierbarer Felder.
  * <p>
- * Editierbare Zellen erhalten ein Lachsorange-Zebra-Muster als bedingte Formatierung
- * (ISEVEN/ISODD), das sie klar von nicht-editierbaren Zellen (blaues Zebra) unterscheidet.
+ * Editierbare Zellen erhalten ein Lachsorange-Zebra-Muster als bedingte Formatierung.
+ * Die CF-Formel referenziert {@code PTM.ALG.BOOLEANPROPERTY("editierbareFelderHervorheben")}
+ * direkt, sodass Änderungen am Property sofort sichtbar werden (via {@code calculateAll()})
+ * ohne das Sheet komplett neu aufzubauen.
  * <p>
- * Die Farben sind fest verdrahtet und nicht konfigurierbar.
  * Bestehende bedingte Formatierungen (z. B. Fehlerprüfungen) werden mit {@code append()}
  * erhalten und haben wegen ihres niedrigeren Index höhere Priorität.
  */
@@ -28,13 +29,18 @@ public class EditierbaresZelleFormatHelper {
 	/** Hintergrundfarbe für ungerade Zeilen: helles Amber. */
 	public static final int EDITIERBAR_UNGERADE_FARBE = 0xFFE0B2;
 
+	/** Property-Key für "Editierbare Felder hervorheben" – kein Leerzeichen, kein Tippfehlerrisiko. */
+	public static final String PROPERTY_KEY = "editierbareFelderHervorheben";
+
 	private EditierbaresZelleFormatHelper() {
 		// Hilfsklasse – kein Instantiieren
 	}
 
 	/**
 	 * Wendet das Lachsorange-Zebra-Muster als bedingte Formatierung auf den angegebenen
-	 * Bereich an. Vorhandene bedingte Formatierungen (z. B. Fehlerprüfungen) bleiben erhalten
+	 * Bereich an. Die CF-Formel enthält {@code PTM.ALG.BOOLEANPROPERTY} als Bedingung,
+	 * sodass die Darstellung per Konfiguration ohne Sheet-Rebuild abschaltbar ist.
+	 * Vorhandene bedingte Formatierungen (z. B. Fehlerprüfungen) bleiben erhalten
 	 * und haben Vorrang, da sie mit niedrigerem Index zuerst geprüft werden.
 	 *
 	 * @param sheet Sheet, auf dem formatiert wird
@@ -45,7 +51,7 @@ public class EditierbaresZelleFormatHelper {
 		var geradeStyle = new EditierbareZelleHintergrundFarbeGeradeStyle(EDITIERBAR_GERADE_FARBE);
 		var ungeradeStyle = new EditierbareZelleHintergrundFarbeUnGeradeStyle(EDITIERBAR_UNGERADE_FARBE);
 		ConditionalFormatHelper.from(sheet, range).append()
-				.formulaIsEvenRow().style(geradeStyle).applyAndDoReset()
-				.formulaIsOddRow().style(ungeradeStyle).applyAndDoReset();
+				.formulaIsEvenRowAndBoolProp(PROPERTY_KEY).style(geradeStyle).applyAndDoReset()
+				.formulaIsOddRowAndBoolProp(PROPERTY_KEY).style(ungeradeStyle).applyAndDoReset();
 	}
 }

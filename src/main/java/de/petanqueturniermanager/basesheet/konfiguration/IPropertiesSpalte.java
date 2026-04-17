@@ -65,4 +65,8 @@ public interface IPropertiesSpalte {
 
 	String getTurnierlogoUrl();
 
+	default boolean isEditierbareFelder() {
+		return true;
+	}
+
 }

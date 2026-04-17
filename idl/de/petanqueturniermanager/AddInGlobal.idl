@@ -40,6 +40,8 @@ module de { module petanqueturniermanager { module addin {
     long ptmpouleanzgruppen       ([in] long anzTeams);
     long ptmpouleanzvierergruppen ([in] long anzTeams);
     long ptmpouleanzdreiergruppen ([in] long anzTeams);
+    // Boolean-Property (PTM.ALG.BOOLEANPROPERTY)
+    long ptmbooleanproperty ([in] string propname); // return 0 (false) or 1 (true)
   };
 
 }; }; };

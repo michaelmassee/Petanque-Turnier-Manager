@@ -43,6 +43,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	// Hinweis: Das "=" wird automatisch von setFormulaInCell() hinzugefügt
 	public static final String PTM_INT_PROPERTY = "PTM.ALG.INTPROPERTY";
 	public static final String PTM_STRING_PROPERTY = "PTM.ALG.STRINGPROPERTY";
+	public static final String PTM_BOOLEAN_PROPERTY = "PTM.ALG.BOOLEANPROPERTY";
 	public static final String PTM_DIREKTVERGLEICH = "PTM.ALG.DIREKTVERGLEICH";
 	public static final String PTM_TURNIERSYSTEM = "PTM.ALG.TURNIERSYSTEM";
 
@@ -70,6 +71,10 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 	public static final String FORMAT_PTM_STRING_PROPERTY(String propName) {
 		return PTM_STRING_PROPERTY + "(\"" + propName + "\")";
+	}
+
+	public static String FORMAT_PTM_BOOLEAN_PROPERTY(String propName) {
+		return PTM_BOOLEAN_PROPERTY + "(\"" + propName + "\")";
 	}
 
 	// wird nur einmal aufgerufen für alle sheets
@@ -131,7 +136,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
 				Integer propVal = hlpr.getIntProperty(propname, 0);
-				logger.debug("return:" + propname + "=" + propVal);
+				logger.debug("IntProperty [{}] = {}", propname, propVal);
 				return propVal;
 			}
 		}
@@ -146,11 +151,27 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
 				String propVal = hlpr.getStringProperty(propname, "Property '" + propname + "' fehlt.");
-				logger.debug("return:" + propname + "=" + propVal);
+				logger.debug("return:{} = {}", propname, propVal);
 				return propVal;
 			}
 		}
 		return "fehler";
+	}
+
+	@Override
+	public long ptmbooleanproperty(String propname) {
+		DocumentPropertiesHelper hlpr = getDocumentPropertiesHelper();
+		if (hlpr != null) {
+			TurnierSystem turnierSystemAusDocument = hlpr.getTurnierSystemAusDocument();
+
+			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
+				boolean propVal = hlpr.getBooleanProperty(propname, false);
+				logger.debug("BooleanProperty [{}] = {}", propname, propVal);
+				return propVal ? 1L : 0L;
+			}
+		}
+		logger.warn("BooleanProperty fallback used: {}", propname);
+		return 0L;
 	}
 
 	@Override

@@ -111,6 +111,44 @@
 					</prop>
 				</node>
 
+				<node oor:name="ptmbooleanproperty" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.ALG.BOOLEANPROPERTY</value>
+						<value xml:lang="de">PTM.ALG.BOOLEANPROPERTY</value>
+						<value xml:lang="es">PTM.ALG.BOOLEANPROPERTY</value>
+						<value xml:lang="fr">PTM.ALG.BOOLEANPROPERTY</value>
+						<value xml:lang="nl">PTM.ALG.BOOLEANPROPERTY</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager, get boolean value (0/1) of Property</value>
+						<value xml:lang="de">Petanque Turniermanager, Boolean-Wert (0/1) einer Property</value>
+						<value xml:lang="es">Petanque Turniermanager, Boolean-Wert (0/1) einer Property</value>
+						<value xml:lang="fr">Petanque Turniermanager, Boolean-Wert (0/1) einer Property</value>
+						<value xml:lang="nl">Petanque Turniermanager, Boolean-Wert (0/1) einer Property</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="propname" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">PTM PropertyName</value>
+								<value xml:lang="de">PTM Propertynamen</value>
+								<value xml:lang="es">PTM Propertynamen</value>
+								<value xml:lang="fr">PTM Propertynamen</value>
+								<value xml:lang="nl">PTM Propertynamen</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">Name of the PTM Property</value>
+								<value xml:lang="de">PTM Propertynamen</value>
+								<value xml:lang="es">PTM Propertynamen</value>
+								<value xml:lang="fr">PTM Propertynamen</value>
+								<value xml:lang="nl">PTM Propertynamen</value>
+							</prop>
+						</node>
+					</node>
+					<prop oor:name="Category">
+						<value>Add-In</value>
+					</prop>
+				</node>
+
 				<node oor:name="ptmdirektvergleich" oor:op="replace">
 					<prop oor:name="DisplayName">
 						<value xml:lang="en">PTM.ALG.DIRECTCOMPARISON</value>

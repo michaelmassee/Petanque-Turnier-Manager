@@ -15,10 +15,12 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -54,6 +56,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_FUSSZEILE_MITTE = "Fußzeile mitte";
 
 	public static final String KONFIG_PROP_TURNIERLOGO_URL = "Turnierlogo Url";
+	public static final String KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN = EditierbaresZelleFormatHelper.PROPERTY_KEY;
 
 	public static final String KONFIG_PROP_ANZ_TEILNEHMER_IN_SPALTE = "Teilnehmerliste Anzahl je Spalte";
 	private static final int DEFAULT_ANZ_TEILNEHMER_IN_SPALTE = 40;
@@ -81,6 +84,17 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_TURNIERLOGO_URL)
 				.setDefaultVal("").setDescription("config.desc.turnierlogo.url").inSideBar());
+
+		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN)
+				.setDefaultVal(true)
+				.setDescription("config.desc.editierbare.felder.hervorheben")
+				.inSideBar()
+				.mitNachSpeichernAktion(ws -> {
+					var calc = Lo.qi(com.sun.star.sheet.XCalculatable.class, ws.getWorkingSpreadsheetDocument());
+					if (calc != null) {
+						calc.calculateAll();
+					}
+				}));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_MELDELISTE_COLOR_BACK_GERADE)
 				.setDefaultVal(DEFAULT_GERADE_BACK_COLOR)
@@ -304,6 +318,12 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	@Override
 	public int getDirektvergleichTabFarbe() {
 		return readIntProperty(KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH);
+	}
+
+	@Override
+	public boolean isEditierbareFelder() {
+		var val = readBooleanProperty(KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN);
+		return val != null ? val : true;
 	}
 
 }

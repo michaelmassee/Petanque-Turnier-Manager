@@ -17,6 +17,7 @@ import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
 
+import de.petanqueturniermanager.addins.GlobalImpl;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
@@ -113,6 +114,18 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper formulaIsOddRow() {
 		formula1 = FORMULA_ISODD_ROW;
+		conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
+	public ConditionalFormatHelper formulaIsEvenRowAndBoolProp(String propKey) {
+		formula1 = "AND(" + FORMULA_ISEVEN_ROW + ";" + GlobalImpl.FORMAT_PTM_BOOLEAN_PROPERTY(propKey) + ")";
+		conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
+	public ConditionalFormatHelper formulaIsOddRowAndBoolProp(String propKey) {
+		formula1 = "AND(" + FORMULA_ISODD_ROW + ";" + GlobalImpl.FORMAT_PTM_BOOLEAN_PROPERTY(propKey) + ")";
 		conditionOperator = ConditionOperator.FORMULA;
 		return this;
 	}

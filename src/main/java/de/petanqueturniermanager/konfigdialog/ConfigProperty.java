@@ -6,6 +6,9 @@ package de.petanqueturniermanager.konfigdialog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.function.Consumer;
+
+import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 public class ConfigProperty<V> {
@@ -18,6 +21,7 @@ public class ConfigProperty<V> {
 	private boolean inSideBarInfoPanel; // obere Panel, read only felder
 	private boolean tabFarbe; // Tab-Farben-Dialog
 	private boolean intern; // interner Zustand – nicht in Dialogen anzeigen
+	private Consumer<WorkingSpreadsheet> nachSpeichernAktion;
 
 	protected ConfigProperty(ConfigPropertyType type, String key) {
 		this.type = checkNotNull(type);
@@ -28,22 +32,13 @@ public class ConfigProperty<V> {
 		intern = false;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <V> ConfigProperty<V> from(ConfigPropertyType type, String key) {
-		ConfigProperty<V> ret = null;
-		switch (type) {
-		case INTEGER:
-		case COLOR:
-			ret = (ConfigProperty<V>) new ConfigProperty<Integer>(type, key);
-			break;
-		case BOOLEAN:
-			ret = (ConfigProperty<V>) new ConfigProperty<Boolean>(type, key);
-			break;
-		default:
-			ret = (ConfigProperty<V>) new ConfigProperty<String>(type, key);
-			break;
-		}
-
-		return ret;
+		return switch (type) {
+			case INTEGER, COLOR -> (ConfigProperty<V>) new ConfigProperty<Integer>(type, key);
+			case BOOLEAN -> (ConfigProperty<V>) new ConfigProperty<Boolean>(type, key);
+			default -> (ConfigProperty<V>) new ConfigProperty<String>(type, key);
+		};
 	}
 
 	public String getKey() {
@@ -119,6 +114,17 @@ public class ConfigProperty<V> {
 
 	public final boolean isIntern() {
 		return intern;
+	}
+
+	public ConfigProperty<V> mitNachSpeichernAktion(Consumer<WorkingSpreadsheet> aktion) {
+		this.nachSpeichernAktion = aktion;
+		return this;
+	}
+
+	public void invokeNachSpeichernAktion(WorkingSpreadsheet ws) {
+		if (nachSpeichernAktion != null) {
+			nachSpeichernAktion.accept(ws);
+		}
 	}
 
 }
