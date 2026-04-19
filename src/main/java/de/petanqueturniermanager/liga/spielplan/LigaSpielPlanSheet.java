@@ -29,6 +29,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
@@ -37,12 +38,14 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.liga.konfiguration.LigaKonfigurationSheet;
 import de.petanqueturniermanager.liga.konfiguration.LigaPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetUpdate;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.SpielErgebnis;
@@ -65,12 +68,12 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final int ERSTE_SPIELTAG_HEADER_ZEILE = 0; // Zeile 0
 	public static final int ERSTE_SPIELTAG_DATEN_ZEILE = ERSTE_SPIELTAG_HEADER_ZEILE + 2; // Zeile 2
-	private static final int SPIEL_NR_SPALTE = 0; // Spalte A
+	public static final int SPIEL_NR_SPALTE = 0; // Spalte A
 	private static final int KW_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int WOCHENTAG_SPALTE = KW_SPALTE + 1;
-	private static final int DATUM_SPALTE = WOCHENTAG_SPALTE + 1;
+	public static final int DATUM_SPALTE = WOCHENTAG_SPALTE + 1;
 	private static final int UHRZEIT_SPALTE = DATUM_SPALTE + 1;
-	private static final int ORT_SPALTE = UHRZEIT_SPALTE + 1;
+	public static final int ORT_SPALTE = UHRZEIT_SPALTE + 1;
 	private static final int NAME_A_SPALTE = ORT_SPALTE + 1;
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
 	public static final int PUNKTE_A_SPALTE = NAME_B_SPALTE + 1;
@@ -124,8 +127,16 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.LIGA)
+					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		}
 		meldeListe.upDateSheet();
 		generate(meldeListe.getAlleMeldungen());
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.LIGA)
+					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
@@ -232,6 +243,11 @@ public class LigaSpielPlanSheet extends SheetRunner implements ISheet {
 		Integer spielPlanHintergrundFarbeUnGerade = getKonfigurationSheet().getSpielPlanHintergrundFarbeUnGerade();
 		RanglisteGeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(spielPlanHintergrundFarbeGerade)
 				.ungeradeFarbe(spielPlanHintergrundFarbeUnGerade).apply();
+
+		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
+				DATUM_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, ORT_SPALTE, letzteSpielZeile));
+		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
+				PUNKTE_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE, letzteSpielZeile));
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());

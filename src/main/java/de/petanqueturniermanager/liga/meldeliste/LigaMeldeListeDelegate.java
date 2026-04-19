@@ -16,9 +16,14 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.SpielrundeGespielt;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import com.sun.star.util.CellProtection;
+
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -125,6 +130,15 @@ class LigaMeldeListeDelegate implements MeldeListeKonstanten {
 
 		meldeListeHelper.insertFormulaFuerDoppelteNamenGeradeUngradeFarbe(SPIELER_NR_SPALTE + 1, SPIELER_NR_SPALTE + 1,
 				letzteDatenZeile, sheet, meldungenHintergrundFarbeGeradeStyle, meldungenHintergrundFarbeUnGeradeStyle);
+
+		var nameSpalteRange = RangePosition.from(SPIELER_NR_SPALTE + 1, ERSTE_DATEN_ZEILE,
+				SPIELER_NR_SPALTE + 1, letzteDatenZeile);
+		EditierbaresZelleFormatHelper.anwenden(sheet, nameSpalteRange);
+
+		var editierbar = new CellProtection();
+		editierbar.IsLocked = false;
+		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), nameSpalteRange,
+				CellProperties.from().setCellProtection(editierbar));
 	}
 
 	String formulaSverweisSpielernamen(String spielrNrAdresse) {
