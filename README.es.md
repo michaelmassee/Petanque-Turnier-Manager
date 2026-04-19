@@ -1,4 +1,4 @@
-<img align="right" src="https://github.com/michaelmassee/Petanque-Turnier-Manager/raw/master/doku/images/petanqueturniermanager-logo-256px.png" alt="Logo" height="120">
+<img align="right" src="images/petanqueturniermanager-logo-256px.png" alt="Logo" height="120">
 
 # Gestor de Torneos de Petanca
 
