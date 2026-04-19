@@ -36,7 +36,8 @@ public class BooleanConfigSidebarElement implements ConfigSidebarElement, XItemL
 			boolean readOnly) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription()).addListener(this)
+		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
+		labelPlusCheckBox = LabelPlusCheckBox.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText).addListener(this)
 				.setStat(getPropertyValue()).readOnly(readOnly);
 	}
 

@@ -41,8 +41,9 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 	public BackgrnColorConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam).labelText(configProperty.getKey())
-				.helpText(configProperty.getDescription()).addXActionListener(btnXActionListener).color(getPropertyValue());
+		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
+		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam).labelText(labelText)
+				.helpText(labelText).addXActionListener(btnXActionListener).color(getPropertyValue());
 	}
 
 	@Override

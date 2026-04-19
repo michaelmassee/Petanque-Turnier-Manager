@@ -42,7 +42,8 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);
-		labelPlusTextPlusTextareaBox = LabelPlusTextPlusTextareaBox.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription())
+		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
+		labelPlusTextPlusTextareaBox = LabelPlusTextPlusTextareaBox.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText)
 				.addXTextListener(this).addXActionListener(btnXActionListener).fieldText(getPropertyValue());
 	}
 

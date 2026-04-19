@@ -43,7 +43,8 @@ public class IntegerConfigSidebarElement implements ConfigSidebarElement, XTextL
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
 		textAreaDialog = new TextAreaDialog(workingSpreadsheet);
-		labelPlusNumericField = LabelPlusNumericField.from(guiFactoryCreateParam).labelText(configProperty.getKey()).helpText(configProperty.getDescription())
+		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
+		labelPlusNumericField = LabelPlusNumericField.from(guiFactoryCreateParam).labelText(labelText).helpText(labelText)
 				.addXTextListener(this).fieldVal(getPropertyValue()).readOnly(readOnly);
 	}
 

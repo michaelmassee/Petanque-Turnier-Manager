@@ -34,8 +34,9 @@ public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemL
 			AuswahlConfigProperty configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
-		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(configProperty.getKey())
-				.helpText(configProperty.getDescription()).addAuswahlItems(configProperty.getAuswahl())
+		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
+		labelPlusCombobox = LabelPlusCombobox.from(guiFactoryCreateParam).labelText(labelText)
+				.helpText(labelText).addAuswahlItems(configProperty.getAuswahl())
 				.addListener(this).select(getComboboxItemValue());
 	}
 
