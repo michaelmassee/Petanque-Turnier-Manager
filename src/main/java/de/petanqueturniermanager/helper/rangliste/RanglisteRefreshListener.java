@@ -182,7 +182,7 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 					boolean istAufRangliste = ranglisteMatch.test(xDoc, aktuellesSheet);
 					boolean warAufRangliste = vorherigesSheet != null && ranglisteMatch.test(xDoc, vorherigesSheet);
 
-					logger.debug("selectionChanged: istAufRangliste={}, warAufRangliste={}, isRunning={}, Thread='{}'",
+					logger.trace("selectionChanged: istAufRangliste={}, warAufRangliste={}, isRunning={}, Thread='{}'",
 							istAufRangliste, warAufRangliste, SheetRunner.isRunning(),
 							Thread.currentThread().getName());
 
@@ -192,7 +192,7 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 						// synchrones Ereignis das Flag nicht vorzeitig verbraucht und das
 						// asynchrone Ereignis danach unkontrolliert durchrutscht.
 						if (SheetRunner.consumeSelectionChangeSuppression()) {
-							logger.debug("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
+							logger.trace("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
 							return;
 						}
 						logger.warn("selectionChanged: REBUILD getriggert – Thread='{}', isRunning={}",

@@ -18,6 +18,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 
 import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
+import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Erstellung 04.07.2022 / Michael Massee<br>
@@ -172,7 +173,7 @@ public class LigaHtmlCleaner {
 		if (ranglisteClone != null) {
 			cleanUpTable(ranglisteClone);
 
-			String reihenfolge = "Reihenfolge zur Ermittlung der Platzierung: 1. Punkte +, 2. Spiele +, 3. Spielpunkte Δ, 4. Direktvergleich";
+			String reihenfolge = I18n.get("liga.rangliste.reihenfolge.platzierung");
 			Element reihenfolgeEL = ranglisteClone.selectFirst("tr:containsWholeText(" + reihenfolge + ")");
 			if (reihenfolgeEL != null) {
 				reihenfolgeEL.remove();
@@ -315,6 +316,21 @@ public class LigaHtmlCleaner {
 		return null;
 	}
 
+	private void leereZeilenEntfernen(Element table) {
+		for (Element zeile : table.select("tr")) {
+			boolean alleZellenLeer = zeile.select("td,th").stream().allMatch(this::istZelleLeer);
+			if (alleZellenLeer) {
+				zeile.remove();
+			}
+		}
+	}
+
+	private boolean istZelleLeer(Element zelle) {
+		Element zelleOhneBr = zelle.clone();
+		zelleOhneBr.select("br").remove();
+		return zelleOhneBr.text().isBlank();
+	}
+
 	private void cleanUpTable(Element table) {
 		// Tabellen reinigen
 		for (Element elComment : table.select("comment")) {
@@ -324,6 +340,7 @@ public class LigaHtmlCleaner {
 		for (Element elA : table.select("a")) {
 			elA.remove();
 		}
+		leereZeilenEntfernen(table);
 	}
 
 	private void addMetaTagsToHeader(Document ligaHtmlNew) {
