@@ -166,7 +166,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 
 			if (!StringUtils.isAllBlank(propname) && turnierSystemAusDocument != TurnierSystem.KEIN) {
 				boolean propVal = hlpr.getBooleanProperty(propname, false);
-				logger.debug("BooleanProperty [{}] = {}", propname, propVal);
+				logger.trace("BooleanProperty [{}] = {}", propname, propVal);
 				return propVal ? 1 : 0;
 			}
 		}
