@@ -12,8 +12,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.text.XText;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -26,6 +24,7 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
+import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 
@@ -36,7 +35,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrund
  * <ul>
  *   <li><b>Meldeliste:</b> Alle Spalten außer Nr (Spalte 0): Teamname, Spielernamen, SP, Aktiv</li>
  *   <li><b>Vorrunden:</b> Ergebnis A und B (bis zur letzten Datenzeile)</li>
- *   <li><b>Finalrunden:</b> Score-Spalten aller KO-Bracket-Runden (inkl. Cadrage)</li>
+ *   <li><b>Finalrunden:</b> Nur die konkreten Score-Zellen (aus {@code KoTurnierbaumSheet} gespeichert)</li>
  *   <li><b>Vorrunden-Rangliste:</b> vollständig gesperrt</li>
  * </ul>
  */
@@ -47,18 +46,6 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
 
     /** Erste Daten-Zeile der Maastrichter Meldeliste (3 Header-Zeilen). */
     private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 3;
-
-    /** Erste Daten-Zeile im KO-Bracket-Sheet (2 Header-Zeilen). */
-    private static final int FINALRUNDE_ERSTE_ZEILE = 2;
-
-    /** Großzügige Zeilengrenze für einen KO-Bracket-Sheet (64 Teams × 3 Zeilen + Puffer). */
-    private static final int FINALRUNDE_MAX_ZEILE = 250;
-
-    /** Score-Spalten-Überschrift in KO-Bracket-Sheets (muss mit schreibeSpaltenHeader() übereinstimmen). */
-    private static final String PKT_HEADER = "Pkt";
-
-    /** Maximale Spaltenzahl beim Scan der Finalrunde-Header-Zeile. */
-    private static final int FINALRUNDE_SCAN_BREITE = 64;
 
     private MaastrichterBlattschutzKonfiguration() {
     }
@@ -130,9 +117,13 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
     private void sammleFinalrundenSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX);
-        for (var key : schluessel) {
-            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
-                var editierbareBereiche = ermittleScoreSpalten(sheet);
+        for (var finalrundeKey : schluessel) {
+            SheetMetadataHelper.findeSheet(xDoc, finalrundeKey).ifPresent(sheet -> {
+                var scoreKey = SheetMetadataHelper.scoreSchluessel(finalrundeKey);
+                var encoded = SheetMetadataHelper.leseScoreText(xDoc, scoreKey);
+                var editierbareBereiche = (encoded != null)
+                        ? KoTurnierbaumSheet.decodeScoreBereiche(encoded)
+                        : List.<RangePosition>of();
                 if (editierbareBereiche.isEmpty()) {
                     infos.add(SheetSchutzInfo.vollGesperrt(sheet));
                 } else {
@@ -169,26 +160,6 @@ public class MaastrichterBlattschutzKonfiguration implements IBlattschutzKonfigu
             logger.warn("Letzte Vorrunde-Zeile konnte nicht ermittelt werden: {}", e.getMessage(), e);
         }
         return letzteZeile;
-    }
-
-    /**
-     * Ermittelt die editierbaren Score-Spalten eines Finalrunde-Sheets (KO-Bracket).
-     * Score-Spalten sind durch die Überschrift "Pkt" in der Header-Zeile 1 erkennbar.
-     */
-    private List<RangePosition> ermittleScoreSpalten(XSpreadsheet sheet) {
-        var bereiche = new ArrayList<RangePosition>();
-        try {
-            for (int spalte = 0; spalte < FINALRUNDE_SCAN_BREITE; spalte++) {
-                var xText = UnoRuntime.queryInterface(XText.class, sheet.getCellByPosition(spalte, 1));
-                String header = (xText != null) ? xText.getString() : "";
-                if (PKT_HEADER.equals(header)) {
-                    bereiche.add(RangePosition.from(spalte, FINALRUNDE_ERSTE_ZEILE, spalte, FINALRUNDE_MAX_ZEILE));
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("Score-Spalten im Finalrunde-Sheet konnten nicht ermittelt werden: {}", e.getMessage(), e);
-        }
-        return bereiche;
     }
 
     /**

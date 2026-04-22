@@ -19,6 +19,8 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
+import com.sun.star.table.XCell;
+import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -161,6 +163,109 @@ public class SheetMetadataHelper {
 
     public static String schluesselKoTurnierbaum(String gruppenSuffix) {
         return SCHLUESSEL_KO_TURNIERBAUM_PREFIX + gruppenSuffix + SCHLUESSEL_SUFFIX;
+    }
+
+    /**
+     * Leitet den Dokument-Property-Schlüssel für Score-Positionen aus dem Bracket-Metadaten-Schlüssel ab.
+     * <p>
+     * Das Präfix {@code __PTM_} wird durch {@code __PTM_SCORE_} ersetzt, so dass der Score-Schlüssel
+     * eindeutig dem Bracket-Sheet zugeordnet bleibt und für alle Turniersysteme funktioniert.
+     * <p>
+     * Beispiele:
+     * <ul>
+     *   <li>{@code __PTM_KO_TURNIERBAUM_A__} → {@code __PTM_SCORE_KO_TURNIERBAUM_A__}</li>
+     *   <li>{@code __PTM_MAASTRICHTER_FINALRUNDE_A__} → {@code __PTM_SCORE_MAASTRICHTER_FINALRUNDE_A__}</li>
+     * </ul>
+     */
+    public static String scoreSchluessel(String bracketSchluessel) {
+        return bracketSchluessel.replace("__PTM_", "__PTM_SCORE_");
+    }
+
+    /**
+     * Legt einen Named Range an (oder aktualisiert ihn ohne remove+add), der auf eine
+     * bestimmte Zelle des Sheets zeigt. Wird für Score-Positions-Daten verwendet.
+     *
+     * @param xDoc          Spreadsheet-Dokument
+     * @param xSheet        Ziel-Sheet
+     * @param scoreSchluessel Named-Range-Schlüssel (z.B. {@code __PTM_SCORE_KO_TURNIERBAUM_A__})
+     * @param spalte        0-basierter Spaltenindex der Datenzelle
+     * @param zeile         0-basierter Zeilenindex der Datenzelle
+     */
+    public static void schreibeScoreZellenMetadaten(XSpreadsheetDocument xDoc,
+                                                     XSpreadsheet xSheet,
+                                                     String scoreSchluessel,
+                                                     int spalte, int zeile) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges == null) return;
+            String sheetName = Lo.qi(XNamed.class, xSheet).getName();
+            int sheetIdx = sheetIndex(xDoc, xSheet);
+            String escaped = sheetName.replace("'", "''");
+            String inhalt = "$'" + escaped + "'.$" + spaltenNummer2Buchstabe(spalte) + "$" + (zeile + 1);
+            CellAddress refAddr = new CellAddress();
+            refAddr.Sheet = (short) sheetIdx;
+            if (namedRanges.hasByName(scoreSchluessel)) {
+                XNamedRange existing = Lo.qi(XNamedRange.class, namedRanges.getByName(scoreSchluessel));
+                if (existing != null) {
+                    existing.setContent(inhalt);
+                    return;
+                }
+            }
+            namedRanges.addNewByName(scoreSchluessel, inhalt, refAddr, 0);
+        } catch (Throwable t) {
+            logger.error("Fehler beim Schreiben der Score-Zellen-Metadaten für '{}'", scoreSchluessel, t);
+        }
+    }
+
+    /**
+     * Liest den String-Inhalt der Zelle, auf die der Named Range mit {@code scoreSchluessel} zeigt.
+     * Gibt {@code null} zurück wenn der Named Range fehlt, die Referenz ungültig ist oder die Zelle leer ist.
+     *
+     * @param xDoc           Spreadsheet-Dokument
+     * @param scoreSchluessel Named-Range-Schlüssel (z.B. {@code __PTM_SCORE_KO_TURNIERBAUM_A__})
+     * @return Zelleninhalt oder {@code null}
+     */
+    public static String leseScoreText(XSpreadsheetDocument xDoc, String scoreSchluessel) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges == null || !namedRanges.hasByName(scoreSchluessel)) return null;
+            XNamedRange range = Lo.qi(XNamedRange.class, namedRanges.getByName(scoreSchluessel));
+            if (range == null) return null;
+            String content = range.getContent();
+            if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) return null;
+            XCellRangeReferrer referrer = Lo.qi(XCellRangeReferrer.class, range);
+            if (referrer == null) return null;
+            XCellRangeAddressable addrAble = Lo.qi(XCellRangeAddressable.class, referrer.getReferredCells());
+            if (addrAble == null) return null;
+            var addr = addrAble.getRangeAddress();
+            XIndexAccess sheets = Lo.qi(XIndexAccess.class, xDoc.getSheets());
+            if (sheets == null) return null;
+            XSpreadsheet sheet = Lo.qi(XSpreadsheet.class, sheets.getByIndex(addr.Sheet));
+            if (sheet == null) return null;
+            XCell cell = sheet.getCellByPosition(addr.StartColumn, addr.StartRow);
+            XText text = Lo.qi(XText.class, cell);
+            if (text == null) return null;
+            String val = text.getString();
+            return (val == null || val.isBlank()) ? null : val;
+        } catch (Throwable t) {
+            logger.error("Fehler beim Lesen des Score-Texts für '{}'", scoreSchluessel, t);
+            return null;
+        }
+    }
+
+    /**
+     * Konvertiert einen 0-basierten Spaltenindex in die Buchstaben-Notation
+     * (0→A, 25→Z, 26→AA, …).
+     */
+    private static String spaltenNummer2Buchstabe(int spalte) {
+        var sb = new StringBuilder();
+        int n = spalte + 1;
+        while (n > 0) {
+            n--;
+            sb.insert(0, (char) ('A' + (n % 26)));
+            n /= 26;
+        }
+        return sb.toString();
     }
 
     public static String schluesselPouleSpielplan(int pouleNr) {

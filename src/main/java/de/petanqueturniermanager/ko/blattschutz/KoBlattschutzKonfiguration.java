@@ -10,10 +10,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
-import com.sun.star.text.XText;
-import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -26,6 +23,7 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo;
+import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 
 /**
@@ -34,7 +32,7 @@ import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
  * Editierbare Bereiche:
  * <ul>
  *   <li><b>Meldeliste:</b> Alle Spalten außer Nr (Spalte 0): Teamname, Spielernamen, RNG, Aktiv</li>
- *   <li><b>Turnierbaum-Sheets:</b> Score-Spalten aller Runden (inkl. Cadrage)</li>
+ *   <li><b>Turnierbaum-Sheets:</b> Nur die konkreten Score-Zellen (aus {@code KoTurnierbaumSheet} gespeichert)</li>
  * </ul>
  */
 public class KoBlattschutzKonfiguration implements IBlattschutzKonfiguration {
@@ -44,18 +42,6 @@ public class KoBlattschutzKonfiguration implements IBlattschutzKonfiguration {
 
     /** Erste Daten-Zeile der K.-O.-Meldeliste (3 Header-Zeilen: 0, 1, 2 → Daten ab 3). */
     private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 3;
-
-    /** Erste Daten-Zeile im Turnierbaum (2 Header-Zeilen: 0, 1 → Daten ab 2). */
-    private static final int TURNIERBAUM_ERSTE_ZEILE = 2;
-
-    /** Großzügige Zeilengrenze für einen KO-Bracket-Sheet (64 Teams × 3 Zeilen + Puffer). */
-    private static final int TURNIERBAUM_MAX_ZEILE = 250;
-
-    /** Text der Score-Spalten-Überschrift (Zeile 1) – muss mit schreibeSpaltenHeader() übereinstimmen. */
-    private static final String PKT_HEADER = "Pkt";
-
-    /** Maximale Spaltenzahl beim Scan der Turnierbaum-Header-Zeile (12 Runden × 4 + Cadrage + Sieger). */
-    private static final int TURNIERBAUM_SCAN_BREITE = 64;
 
     private KoBlattschutzKonfiguration() {
     }
@@ -78,19 +64,19 @@ public class KoBlattschutzKonfiguration implements IBlattschutzKonfiguration {
     @Override
     public List<SheetSchutzInfo> berechneSchutzInfos(WorkingSpreadsheet ws) {
         var xDoc = ws.getWorkingSpreadsheetDocument();
+        var konfigSheet = new KoKonfigurationSheet(ws);
         var infos = new ArrayList<SheetSchutzInfo>();
 
-        sammleMeldelisteSchutzInfo(xDoc, ws, infos);
+        sammleMeldelisteSchutzInfo(xDoc, konfigSheet, infos);
         sammleTurnierbaumSchutzInfos(xDoc, infos);
 
         return infos;
     }
 
-    private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, WorkingSpreadsheet ws,
+    private void sammleMeldelisteSchutzInfo(XSpreadsheetDocument xDoc, KoKonfigurationSheet konfigSheet,
             List<SheetSchutzInfo> infos) {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE).ifPresent(sheet -> {
             try {
-                var konfigSheet = new KoKonfigurationSheet(ws);
                 int aktivSpalte = berechneAktivSpalte(konfigSheet);
                 infos.add(SheetSchutzInfo.mitEditierbarenBereichen(sheet, List.of(
                         RangePosition.from(1, MELDELISTE_ERSTE_DATEN_ZEILE,
@@ -104,9 +90,13 @@ public class KoBlattschutzKonfiguration implements IBlattschutzKonfiguration {
     private void sammleTurnierbaumSchutzInfos(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         var schluessel = SheetMetadataHelper.getSchluesselMitPrefix(xDoc,
                 SheetMetadataHelper.SCHLUESSEL_KO_TURNIERBAUM_PREFIX);
-        for (var key : schluessel) {
-            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(sheet -> {
-                var editierbareBereiche = ermittleScoreSpalten(sheet);
+        for (var turnierbaumKey : schluessel) {
+            SheetMetadataHelper.findeSheet(xDoc, turnierbaumKey).ifPresent(sheet -> {
+                var scoreKey = SheetMetadataHelper.scoreSchluessel(turnierbaumKey);
+                var encoded = SheetMetadataHelper.leseScoreText(xDoc, scoreKey);
+                var editierbareBereiche = (encoded != null)
+                        ? KoTurnierbaumSheet.decodeScoreBereiche(encoded)
+                        : List.<RangePosition>of();
                 if (editierbareBereiche.isEmpty()) {
                     infos.add(SheetSchutzInfo.vollGesperrt(sheet));
                 } else {
@@ -114,26 +104,6 @@ public class KoBlattschutzKonfiguration implements IBlattschutzKonfiguration {
                 }
             });
         }
-    }
-
-    /**
-     * Ermittelt die editierbaren Score-Spalten eines Turnierbaum-Sheets.
-     * Score-Spalten sind durch die Überschrift "Pkt" in der Header-Zeile 1 erkennbar.
-     */
-    private List<RangePosition> ermittleScoreSpalten(XSpreadsheet sheet) {
-        var bereiche = new ArrayList<RangePosition>();
-        try {
-            for (int spalte = 0; spalte < TURNIERBAUM_SCAN_BREITE; spalte++) {
-                var xText = UnoRuntime.queryInterface(XText.class, sheet.getCellByPosition(spalte, 1));
-                String header = (xText != null) ? xText.getString() : "";
-                if (PKT_HEADER.equals(header)) {
-                    bereiche.add(RangePosition.from(spalte, TURNIERBAUM_ERSTE_ZEILE, spalte, TURNIERBAUM_MAX_ZEILE));
-                }
-            }
-        } catch (Exception e) {
-            logger.warn("Score-Spalten im Turnierbaum konnten nicht ermittelt werden: {}", e.getMessage(), e);
-        }
-        return bereiche;
     }
 
     /**

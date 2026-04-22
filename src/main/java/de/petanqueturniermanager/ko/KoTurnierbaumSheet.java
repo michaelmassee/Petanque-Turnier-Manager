@@ -3,8 +3,12 @@
  */
 package de.petanqueturniermanager.ko;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,8 +37,8 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
-import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
@@ -72,6 +76,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/** Erste Datenzeile (nach 2 Header-Zeilen). */
 	static final int ERSTE_ZEILE = 2;
+
+	/** Zeile der versteckten Score-Daten-Arbeitszelle (Spalten-Header-Zeile, nicht die Titel-Zeile). */
+	static final int SCORE_DATA_ZEILE = HEADER_ZEILE_SPALTEN;
+
+	/** Präfix in der Score-Daten-Arbeitszelle – macht den Inhalt beim Debuggen erkennbar. */
+	static final String SCORE_DATA_PREFIX = "PTM_EDIT:";
 
 	private static final int NR_COL_WIDTH = 700;
 	private static final int BAHN_COL_WIDTH = 900;
@@ -116,6 +126,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private int scoreOffset = 1;
 	private int connectorOffset = 2;
 	private int colGroupSize = 3;
+
+	/** Sammelt Score-Zell-Positionen während einer Bracket-Erstellung für den Blattschutz. */
+	private List<Position> aktuelleScorePositionen = null;
 
 	private final KoMeldeListeSheetUpdate meldeliste;
 
@@ -322,7 +335,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					.create();
 			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
 			TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig);
+			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig, metadatenSchluessel);
 		} finally {
 			this.aktuellerGruppenSheetName = null;
 		}
@@ -463,7 +476,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
 				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse, getKonfigurationSheet());
+				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse,
+						getKonfigurationSheet(), schluesselFuerGruppe(g, anzGruppen));
 			} finally {
 				this.aktuellerGruppenSheetName = null;
 			}
@@ -505,9 +519,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private void erstelleTurnierbaum(XSpreadsheet xSheet, TeamMeldungen meldungen, int numRunden,
-			int bracketGroesse, IKoBracketKonfiguration konfig) throws GenerateException {
+			int bracketGroesse, IKoBracketKonfiguration konfig, String metadatenSchluessel)
+			throws GenerateException {
 
 		sheet().processBoxinfo("processbox.ko.turnierbaum.erstellen");
+
+		this.aktuelleScorePositionen = new ArrayList<>();
 
 		this.spielbahn = konfig.getSpielbaumSpielbahn();
 		this.teamAnzeige = konfig.getSpielbaumTeamAnzeige();
@@ -627,25 +644,83 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			letzteZeile = teamBZeile(1, anzMatchesR1 - 1);
 		}
 
-		// Editierbar-Farbe für alle Score-Spalten (Cadrage + alle Runden)
-		anwendeScoreKolumnenCF(numRunden, letzteZeile);
-
 		// Im NAME-Modus ist siegerNameSpalte versteckt (Breite 0) – nicht anfassen
 		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
 				? siegerSpalte(numRunden)
 				: siegerNameSpalte(numRunden);
 		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, HEADER_ZEILE_TITEL, letzteZeile, 0, letzteSpalte);
+
+		speichereScoreBereiche(xSheet, numRunden, metadatenSchluessel, aktuelleScorePositionen);
+		aktuelleScorePositionen = null;
 	}
 
-	private void anwendeScoreKolumnenCF(int numRunden, int letzteZeile) throws GenerateException {
-		if (mitCadrage) {
-			EditierbaresZelleFormatHelper.anwenden(this,
-					RangePosition.from(cadrageScoreSpalte(), ERSTE_ZEILE, cadrageScoreSpalte(), letzteZeile));
+	/**
+	 * Kodiert die gesammelten Score-Positionen als kompakten String, schreibt ihn in eine
+	 * versteckte Arbeitszelle ({@code siegerNameSpalte + 2}, {@link #SCORE_DATA_ZEILE}) und
+	 * legt einen Named Range ({@code __PTM_SCORE_…}) darauf an.
+	 */
+	private void speichereScoreBereiche(XSpreadsheet xSheet, int numRunden,
+			String metadatenSchluessel, List<Position> positionen) throws GenerateException {
+		var encoded = SCORE_DATA_PREFIX + positionen.stream()
+				.map(p -> p.getSpalte() + "," + p.getZeile())
+				.collect(Collectors.joining("|"));
+		int dataSpalte = siegerNameSpalte(numRunden) + 2;
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(dataSpalte, SCORE_DATA_ZEILE), encoded));
+		var scoreKey = SheetMetadataHelper.scoreSchluessel(metadatenSchluessel);
+		SheetMetadataHelper.schreibeScoreZellenMetadaten(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), xSheet, scoreKey, dataSpalte, SCORE_DATA_ZEILE);
+	}
+
+	/**
+	 * Dekodiert gespeicherte Score-Positionen zurück zu {@link RangePosition}-Objekten.
+	 * Aufeinanderfolgende Zeilen in derselben Spalte werden zu einem Bereich zusammengefasst.
+	 * Gibt eine leere Liste zurück wenn {@code encoded} leer oder {@code null} ist.
+	 */
+	public static List<RangePosition> decodeScoreBereiche(String encoded) {
+		if (encoded == null || encoded.isBlank()) {
+			return List.of();
 		}
-		for (int r = 1; r <= numRunden; r++) {
-			EditierbaresZelleFormatHelper.anwenden(this,
-					RangePosition.from(scoreSpalte(r), ERSTE_ZEILE, scoreSpalte(r), letzteZeile));
+		String data = encoded.startsWith(SCORE_DATA_PREFIX)
+				? encoded.substring(SCORE_DATA_PREFIX.length())
+				: encoded; // Rückwärtskompatibilität: alte Daten ohne Präfix
+		if (data.isBlank()) {
+			return List.of();
 		}
+		var spalteZuZeilen = new TreeMap<Integer, TreeSet<Integer>>();
+		for (var token : data.split("\\|")) {
+			var parts = token.split(",");
+			if (parts.length != 2) continue;
+			try {
+				int spalte = Integer.parseInt(parts[0].trim());
+				int zeile = Integer.parseInt(parts[1].trim());
+				spalteZuZeilen.computeIfAbsent(spalte, k -> new TreeSet<>()).add(zeile);
+			} catch (NumberFormatException ignoriert) {
+				// Fehlerhafte Tokens überspringen
+			}
+		}
+		var bereiche = new ArrayList<RangePosition>();
+		for (var eintrag : spalteZuZeilen.entrySet()) {
+			int spalte = eintrag.getKey();
+			int startZeile = -1;
+			int letzteZeile = -1;
+			for (int zeile : eintrag.getValue()) {
+				if (startZeile == -1) {
+					startZeile = zeile;
+					letzteZeile = zeile;
+				} else if (zeile == letzteZeile + 1) {
+					letzteZeile = zeile;
+				} else {
+					bereiche.add(RangePosition.from(spalte, startZeile, spalte, letzteZeile));
+					startZeile = zeile;
+					letzteZeile = zeile;
+				}
+			}
+			if (startZeile != -1) {
+				bereiche.add(RangePosition.from(spalte, startZeile, spalte, letzteZeile));
+			}
+		}
+		return bereiche;
 	}
 
 	/**
@@ -741,6 +816,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
 					ColumnProperties.from().setWidth(0));
 		}
+
+		// Versteckte Arbeitsspalte für Score-Positions-Daten (Blattschutz)
+		getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden) + 2,
+				ColumnProperties.from().isVisible(false));
 	}
 
 	private void schreibeHeader(XSpreadsheet xSheet, int numRunden) throws GenerateException {
@@ -893,9 +972,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private void schreibeScoreZelle(XSpreadsheet xSheet, int runde, int zeile, boolean istTeamA)
 			throws GenerateException {
-		// Score-Zelle ist editierbar (leer, Benutzer trägt Ergebnis ein)
+		int spalte = scoreSpalte(runde);
+		if (aktuelleScorePositionen != null) {
+			aktuelleScorePositionen.add(Position.from(spalte, zeile));
+		}
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(scoreSpalte(runde), zeile), "")
+				StringCellValue.from(xSheet, Position.from(spalte, zeile), "")
 						.setCellBackColor(scoreFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));
@@ -1058,14 +1140,19 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		schreibeTeamZelleInSpalte(xSheet, cadrageTeamSpalte(), rowA, nrA, true);
 		schreibeTeamZelleInSpalte(xSheet, cadrageTeamSpalte(), rowB, nrB, false);
 
-		// Score-Zellen (editierbar)
+		// Score-Zellen (editierbar) – Positionen für Blattschutz registrieren
+		int cadrageScore = cadrageScoreSpalte();
+		if (aktuelleScorePositionen != null) {
+			aktuelleScorePositionen.add(Position.from(cadrageScore, rowA));
+			aktuelleScorePositionen.add(Position.from(cadrageScore, rowB));
+		}
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(cadrageScoreSpalte(), rowA), "")
+				StringCellValue.from(xSheet, Position.from(cadrageScore, rowA), "")
 						.setCellBackColor(scoreFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(cadrageScoreSpalte(), rowB), "")
+				StringCellValue.from(xSheet, Position.from(cadrageScore, rowB), "")
 						.setCellBackColor(scoreFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));

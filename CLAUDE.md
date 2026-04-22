@@ -188,6 +188,19 @@ kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.registe
 3. Editierbare Bereiche per `SheetMetadataHelper.findeSheet()` + `getSchluesselMitPrefix()` ermitteln
 4. Zeilengrenzen: `MeldungenSpalte.MAX_ANZ_MELDUNGEN = 999` – keine Magic Numbers
 
+### Named Ranges – Pflichtregeln für Schlüssel
+
+Named Ranges (`XNamedRanges`) sind dokumentweit – ein Schlüssel existiert genau einmal pro Dokument, unabhängig davon, auf welches Sheet er zeigt.
+
+**Zwingend für alle `__PTM_…__`-Schlüssel:**
+- **Eindeutig im Dokument** – kein Schlüssel darf doppelt vorkommen, auch nicht über verschiedene Turniersysteme hinweg
+- **Sprachunabhängig** – kein übersetzter String im Schlüssel; ausschließlich den `__PTM_<SYSTEM>_<TYP>[_SUFFIX]__`-Namespace verwenden
+- **Sheet-Namen-unabhängig** – der Schlüssel leitet sich vom internen Metadatenschlüssel ab, nicht vom angezeigten Sheet-Titel (`"KO-Turnierbaum A"`, `"KO-Tournoi A"` etc.)
+
+Der **Inhalt** des Named Range darf den Sheet-Namen enthalten (`$'SheetName'.$A$1`) – LibreOffice aktualisiert den Inhalt automatisch bei Umbenennung. Der **Schlüssel (Name)** muss jedoch stabil und locale-frei sein.
+
+Score-Positions-Schlüssel werden über `SheetMetadataHelper.scoreSchluessel(bracketSchluessel)` abgeleitet (`__PTM_` → `__PTM_SCORE_`) und erben damit automatisch die Eindeutigkeit des Bracket-Schlüssels.
+
 ### Bedingte Formatierung (ConditionalFormat) und Sheet-Schutz – kritische LO-Einschränkung
 
 **LO-Quellcode** (`sc/source/ui/docshell/docfunc.cxx`, `ScDocFunc::ReplaceConditionalFormat`):
