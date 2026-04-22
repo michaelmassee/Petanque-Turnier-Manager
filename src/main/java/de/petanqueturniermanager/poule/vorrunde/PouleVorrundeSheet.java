@@ -3,6 +3,8 @@
  */
 package de.petanqueturniermanager.poule.vorrunde;
 
+import java.util.ArrayList;
+
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -73,20 +75,30 @@ public class PouleVorrundeSheet extends AbstractPouleVorrundeSheet implements IS
         spaltenBreitenSetzen(xSheet);
 
         int aktuelleZeile = ERSTE_DATEN_ZEILE;
+        var trennzeilenNachBlock = new ArrayList<Integer>();
 
-        for (var poule : poules) {
+        for (int i = 0; i < poules.size(); i++) {
             SheetRunner.testDoCancelTask();
+            var poule = poules.get(i);
             if (poule.teams().size() == 4) {
                 schreibeViererPoule(xSheet, poule, aktuelleZeile, aktuelleZeile);
-                aktuelleZeile += VIERER_POULE_DATEN_ZEILEN + SPACER_ZEILEN;
+                aktuelleZeile += VIERER_POULE_ZEILEN;
             } else {
                 schreibeDreierPoule(xSheet, poule, aktuelleZeile, aktuelleZeile);
-                aktuelleZeile += DREIER_POULE_DATEN_ZEILEN + SPACER_ZEILEN;
+                aktuelleZeile += DREIER_POULE_ZEILEN;
+            }
+            if (i < poules.size() - 1) {
+                trennzeilenNachBlock.add(aktuelleZeile - 1);
             }
         }
 
-        int letzteDatenZeile = aktuelleZeile - SPACER_ZEILEN - 1;
+        int letzteDatenZeile = aktuelleZeile - 1;
         formatierungDurchfuehren(xSheet, letzteDatenZeile);
+
+        for (var trennzeile : trennzeilenNachBlock) {
+            schreibePouleBlockTrenner(xSheet, trennzeile);
+        }
+
         printBereichSetzen(xSheet, letzteDatenZeile);
 
         if (SheetRunner.isRunning()) {

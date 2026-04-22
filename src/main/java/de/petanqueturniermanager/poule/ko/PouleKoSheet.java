@@ -166,19 +166,19 @@ public class PouleKoSheet extends SheetRunner implements ISheet {
                 break;
             }
 
-            int pouleNrZellWert = row.get(0).getIntVal(0);
-            int teamANr = row.get(1).getIntVal(0);
-            int teamBNr = row.get(3).getIntVal(0);
-
-            if (teamANr == 0 && teamBNr == 0) {
-                aktuelleGruppe = null;
-                continue;
-            }
-
-            if (pouleNrZellWert > 0 || aktuelleGruppe == null) {
+            // Neue Gruppe: SPALTE_POULE_NR ist nur in der ersten Zeile des Merge-Blocks nicht leer.
+            String pouleNrStr = row.get(0).getStringVal();
+            if (pouleNrStr != null && !pouleNrStr.isEmpty()) {
                 aktuelleGruppe = new HashMap<>();
                 gruppenRoh.add(aktuelleGruppe);
             }
+
+            if (aktuelleGruppe == null) {
+                continue;
+            }
+
+            int teamANr = row.get(1).getIntVal(0);
+            int teamBNr = row.get(3).getIntVal(0);
 
             int ergA = row.get(5).getIntVal(0);
             int ergB = row.get(6).getIntVal(0);

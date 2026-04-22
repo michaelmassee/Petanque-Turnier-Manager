@@ -211,21 +211,19 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
             }
 
             // Spalten-Offsets: SPALTE_POULE_NR=0, TEAM_A_NR=1, TEAM_A_NAME=2, TEAM_B_NR=3, TEAM_B_NAME=4, ERG_A=5, ERG_B=6
-            int pouleNrZellWert = row.get(0).getIntVal(0);
-            int teamANr = row.get(1).getIntVal(0);
-            int teamBNr = row.get(3).getIntVal(0);
-
-            // Leerzeile (Spacer) zwischen Gruppen: beide TeamNr = 0
-            if (teamANr == 0 && teamBNr == 0) {
-                aktuelleGruppe = null;
-                continue;
-            }
-
-            // Neue Gruppe beginnt wenn pouleNrZellWert > 0 (merged cell, erste Zeile hat Wert)
-            if (pouleNrZellWert > 0 || aktuelleGruppe == null) {
+            // Neue Gruppe: SPALTE_POULE_NR ist nur in der ersten Zeile des Merge-Blocks nicht leer.
+            String pouleNrStr = row.get(0).getStringVal();
+            if (pouleNrStr != null && !pouleNrStr.isEmpty()) {
                 aktuelleGruppe = new HashMap<>();
                 gruppen.add(aktuelleGruppe);
             }
+
+            if (aktuelleGruppe == null) {
+                continue;
+            }
+
+            int teamANr = row.get(1).getIntVal(0);
+            int teamBNr = row.get(3).getIntVal(0);
 
             int ergA = row.get(5).getIntVal(0);
             int ergB = row.get(6).getIntVal(0);

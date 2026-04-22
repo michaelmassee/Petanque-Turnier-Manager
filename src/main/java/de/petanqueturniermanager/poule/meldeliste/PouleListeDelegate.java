@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
+import com.sun.star.util.CellProtection;
 import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
@@ -29,6 +30,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
@@ -328,6 +330,14 @@ class PouleListeDelegate implements MeldeListeKonstanten {
         sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
                 CellProperties.from().centerJustify().setBorder(
                         BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+
+        // Editierbare Felder hervorheben: Spalte 1 bis Aktiv
+        var editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile);
+        EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
+        var editierbar = new CellProtection();
+        editierbar.IsLocked = false;
+        sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), editierbareRange,
+                CellProperties.from().setCellProtection(editierbar));
     }
 
     void formatZeilenfarben() throws GenerateException {

@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
@@ -53,12 +54,11 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
 
     protected static final int VIERER_POULE_DATEN_ZEILEN = 5;
     protected static final int DREIER_POULE_DATEN_ZEILEN = 3;
-    protected static final int SPACER_ZEILEN = 1;
 
-    /** Gesamtzeilenanzahl pro 4er-Poule-Block (Datenzeilen + Trennzeile). */
-    public static final int VIERER_POULE_ZEILEN = VIERER_POULE_DATEN_ZEILEN + SPACER_ZEILEN;
-    /** Gesamtzeilenanzahl pro 3er-Poule-Block (Datenzeilen + Trennzeile). */
-    public static final int DREIER_POULE_ZEILEN = DREIER_POULE_DATEN_ZEILEN + SPACER_ZEILEN;
+    /** Gesamtzeilenanzahl pro 4er-Poule-Block. */
+    public static final int VIERER_POULE_ZEILEN = VIERER_POULE_DATEN_ZEILEN;
+    /** Gesamtzeilenanzahl pro 3er-Poule-Block. */
+    public static final int DREIER_POULE_ZEILEN = DREIER_POULE_DATEN_ZEILEN;
 
     private static final int BAHN_SPALTE_BREITE = 900;
     private static final int BESCHR_SPALTE_BREITE = 3000;
@@ -493,6 +493,18 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 new SpielrundeHintergrundFarbeGeradeStyle(geradeColor),
                 new SpielrundeHintergrundFarbeUnGeradeStyle(unGeradeColor));
         spielrundeHelper.formatiereErgebnissRange(this, ergebnissRange, SPALTE_ERG_A);
+        EditierbaresZelleFormatHelper.anwenden(this, ergebnissRange);
+    }
+
+    protected void schreibePouleBlockTrenner(XSpreadsheet xSheet, int letzteZeile) throws GenerateException {
+        var dickerRahmenUnten = BorderFactory.from().boldLn().forBottom().toBorder();
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_BAHN, letzteZeile, letzeSpalte(), letzteZeile),
+                CellProperties.from().setBorder(dickerRahmenUnten));
+        var dickerRahmenOben = BorderFactory.from().boldLn().forTop().toBorder();
+        getSheetHelper().setPropertiesInRange(xSheet,
+                RangePosition.from(SPALTE_BAHN, letzteZeile + 1, letzeSpalte(), letzteZeile + 1),
+                CellProperties.from().setBorder(dickerRahmenOben));
     }
 
     protected void printBereichSetzen(XSpreadsheet xSheet, int letzteDatenZeile) throws GenerateException {
