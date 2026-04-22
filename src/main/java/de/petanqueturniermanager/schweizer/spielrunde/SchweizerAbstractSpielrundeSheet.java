@@ -34,6 +34,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
@@ -447,6 +448,13 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 		getSheetHelper().setPropertyInRange(sheet, ergebnisRange, CHAR_WEIGHT, FontWeight.BOLD);
 
 		spielrundeHelper.formatiereErgebnissRange(this, ergebnisRange, ERG_TEAM_A_SPALTE);
+
+		// Editierbare Felder hervorheben: Ergebnis-Spalten A und B
+		if (datenEnd != null) {
+			RangePosition ergebnisEditierbarRange = RangePosition.from(
+					ERG_TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE, datenEnd.getZeile());
+			EditierbaresZelleFormatHelper.anwenden(this, ergebnisEditierbarRange);
+		}
 	}
 
 	/**

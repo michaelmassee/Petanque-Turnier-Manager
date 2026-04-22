@@ -4,10 +4,13 @@ import java.util.List;
 
 import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Erstellung 2026 / Michael Massee
@@ -20,13 +23,17 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 	}
 
 	protected SchweizerSpielrundeSheetUpdate(WorkingSpreadsheet workingSpreadsheet,
-			de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem ts, String sheetBaseName) {
+			TurnierSystem ts, String sheetBaseName) {
 		super(workingSpreadsheet, ts, sheetBaseName);
 	}
 
 	@Override
 	public void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		}
 
 		SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
 		processBoxinfo("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr());
@@ -35,6 +42,10 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 		TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
 		if (!canStart(aktiveMeldungen)) {
+			if (TurnierModus.get().istAktiv()) {
+				BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+			}
 			return;
 		}
 
@@ -47,6 +58,10 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 				: aktiveMeldungen;
 
 		neueSpielrunde(meldungenFuerAuslosung, aktuelleSpielrunde, ergebnisse);
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
 	}
 
 

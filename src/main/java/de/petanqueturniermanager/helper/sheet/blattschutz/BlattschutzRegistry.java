@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import de.petanqueturniermanager.jedergegenjeden.blattschutz.JGJBlattschutzKonfiguration;
 import de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration;
+import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
 import de.petanqueturniermanager.supermelee.blattschutz.SupermeleeBlattschutzKonfiguration;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -28,6 +29,7 @@ public class BlattschutzRegistry {
         REGISTRY.put(TurnierSystem.SUPERMELEE, SupermeleeBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.LIGA, LigaBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.JGJ, JGJBlattschutzKonfiguration.get());
+        REGISTRY.put(TurnierSystem.SCHWEIZER, SchweizerBlattschutzKonfiguration.get());
     }
 
     private BlattschutzRegistry() {

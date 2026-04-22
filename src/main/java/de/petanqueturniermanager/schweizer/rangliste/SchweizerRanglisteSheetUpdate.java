@@ -10,9 +10,12 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert die Schweizer Rangliste ohne das Sheet neu zu erstellen.
@@ -42,11 +45,17 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 
 	@Override
 	public void doRun() throws GenerateException {
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		}
+
 		XSpreadsheet sheet = getXSpreadSheet();
 		if (sheet == null) {
 			logger.debug("RanglisteUpdate: Sheet '{}' nicht vorhanden – vollständiger Erstaufbau",
 					getRanglistenSheetName());
 			erstelleNeuAufbauSheet().doRun();
+			// Schutz wird im rekursiven doRun() von SchweizerRanglisteSheet gesetzt
 			return;
 		}
 
@@ -57,11 +66,20 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 		if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
 			processBoxinfo("processbox.abbruch");
+			if (TurnierModus.get().istAktiv()) {
+				BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+			}
 			return;
 		}
 
 		loeSchalteDatenzeilen(sheet, aktiveMeldungen.size());
 		berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
+
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
 
 		// setActiveSheet nur wenn über SheetRunner.run() aufgerufen (isRunning=true).
 		if (SheetRunner.isRunning()) {

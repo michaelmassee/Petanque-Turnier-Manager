@@ -30,6 +30,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Team;
@@ -351,6 +352,11 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 				getAktivSpalte(), letzteDatenZeile);
 		sheet.getSheetHelper().setPropertiesInRange(sheet.getXSpreadSheet(), aktivRange,
 				CellProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().boldLn().forTop().forLeft().toBorder()));
+
+		// Editierbare Felder hervorheben: Spalten 1..Aktiv (ohne Nr-Spalte 0)
+		int aktivSpalte = getAktivSpalte();
+		RangePosition editierbareRange = RangePosition.from(1, ERSTE_DATEN_ZEILE, aktivSpalte, letzteDatenZeile);
+		EditierbaresZelleFormatHelper.anwenden(sheet, editierbareRange);
 	}
 
 	void formatZeilenfarben() throws GenerateException {
