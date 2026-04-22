@@ -13,6 +13,9 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -28,6 +31,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
@@ -59,7 +63,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final int ERSTE_SPIELTAG_HEADER_ZEILE = 0; // Zeile 0
 	public static final int ERSTE_SPIELTAG_DATEN_ZEILE = ERSTE_SPIELTAG_HEADER_ZEILE + 2; // Zeile 2
-	private static final int SPIEL_NR_SPALTE = 0; // Spalte A
+	public static final int SPIEL_NR_SPALTE = 0; // Spalte A
 	private static final int NAME_A_SPALTE = SPIEL_NR_SPALTE + 1;
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
 	public static final int SPIELPNKT_A_SPALTE = NAME_B_SPALTE + 1;
@@ -111,8 +115,16 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.JGJ)
+					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		}
 		meldeListe.upDateSheet();
 		generate(meldeListe.getAlleMeldungen());
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.JGJ)
+					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
 	}
 
 	public void generate(TeamMeldungen meldungen) throws GenerateException {
@@ -363,6 +375,9 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		Integer spielPlanHintergrundFarbeUnGerade = getKonfigurationSheet().getSpielPlanHintergrundFarbeUnGerade();
 		RanglisteGeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(spielPlanHintergrundFarbeGerade)
 				.ungeradeFarbe(spielPlanHintergrundFarbeUnGerade).apply();
+
+		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
+				SPIELPNKT_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, SPIELPNKT_B_SPALTE, letzteSpielZeile));
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());
