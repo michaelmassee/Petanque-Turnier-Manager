@@ -493,7 +493,9 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
                 new SpielrundeHintergrundFarbeGeradeStyle(geradeColor),
                 new SpielrundeHintergrundFarbeUnGeradeStyle(unGeradeColor));
         spielrundeHelper.formatiereErgebnissRange(this, ergebnissRange, SPALTE_ERG_A);
-        EditierbaresZelleFormatHelper.anwenden(this, ergebnissRange);
+        if (!verknuepfeMitVorrunde()) {
+            EditierbaresZelleFormatHelper.anwenden(this, ergebnissRange);
+        }
     }
 
     protected void schreibePouleBlockTrenner(XSpreadsheet xSheet, int letzteZeile) throws GenerateException {
