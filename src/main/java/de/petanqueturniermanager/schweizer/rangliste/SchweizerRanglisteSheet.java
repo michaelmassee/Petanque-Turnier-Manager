@@ -165,12 +165,12 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	@Override
 	public void doRun() throws GenerateException {
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
 		}
 		doRunIntern();
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 		}
 	}

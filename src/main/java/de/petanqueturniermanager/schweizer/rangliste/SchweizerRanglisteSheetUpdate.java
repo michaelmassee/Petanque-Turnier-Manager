@@ -46,7 +46,7 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 	@Override
 	public void doRun() throws GenerateException {
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
 		}
 
@@ -67,7 +67,7 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 		if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
 			processBoxinfo("processbox.abbruch");
 			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+				BlattschutzRegistry.fuer(getTurnierSystem())
 						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 			}
 			return;
@@ -77,7 +77,7 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 		berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
 
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 		}
 

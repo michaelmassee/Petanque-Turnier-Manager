@@ -8,6 +8,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import de.petanqueturniermanager.jedergegenjeden.blattschutz.JGJBlattschutzKonfiguration;
+import de.petanqueturniermanager.ko.blattschutz.KoBlattschutzKonfiguration;
+import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschutzKonfiguration;
 import de.petanqueturniermanager.liga.blattschutz.LigaBlattschutzKonfiguration;
 import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
 import de.petanqueturniermanager.supermelee.blattschutz.SupermeleeBlattschutzKonfiguration;
@@ -30,6 +32,8 @@ public class BlattschutzRegistry {
         REGISTRY.put(TurnierSystem.LIGA, LigaBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.JGJ, JGJBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.SCHWEIZER, SchweizerBlattschutzKonfiguration.get());
+        REGISTRY.put(TurnierSystem.KO, KoBlattschutzKonfiguration.get());
+        REGISTRY.put(TurnierSystem.MAASTRICHTER, MaastrichterBlattschutzKonfiguration.get());
     }
 
     private BlattschutzRegistry() {

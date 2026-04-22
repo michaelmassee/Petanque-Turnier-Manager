@@ -31,7 +31,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 	public void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
 		}
 
@@ -43,7 +43,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 
 		if (!canStart(aktiveMeldungen)) {
 			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+				BlattschutzRegistry.fuer(getTurnierSystem())
 						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 			}
 			return;
@@ -59,7 +59,7 @@ public class SchweizerSpielrundeSheetUpdate extends SchweizerAbstractSpielrundeS
 
 		neueSpielrunde(meldungenFuerAuslosung, aktuelleSpielrunde, ergebnisse);
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 		}
 	}

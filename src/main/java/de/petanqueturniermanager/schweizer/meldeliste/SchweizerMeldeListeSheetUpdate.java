@@ -181,14 +181,14 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 	@Override
 	protected void doRun() throws GenerateException {
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
 		}
 		if (vollstaendigAktualisieren()) {
 			pruefeUndFragObAlleAktivieren();
 		}
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 		}
 	}

@@ -43,12 +43,12 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		processBoxinfo("processbox.naechste.spielrunde", getSpielRundeNr().getNr());
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
 		}
 		naechsteSpielrundeEinfuegen();
 		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SCHWEIZER)
+			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 		}
 	}

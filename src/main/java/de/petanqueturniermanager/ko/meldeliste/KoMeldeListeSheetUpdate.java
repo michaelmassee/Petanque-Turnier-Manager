@@ -20,9 +20,12 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert die K.-O.-Meldeliste:
@@ -149,9 +152,17 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 
 	@Override
 	protected void doRun() throws GenerateException {
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.KO)
+					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		}
 		XSpreadsheet xSheet = getXSpreadSheet();
 		if (xSheet == null) {
 			logger.warn("K.-O. Meldeliste nicht gefunden");
+			if (TurnierModus.get().istAktiv()) {
+				BlattschutzRegistry.fuer(TurnierSystem.KO)
+						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+			}
 			return;
 		}
 		stringsBesinigen(xSheet);
@@ -160,6 +171,10 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 		pruefeAufDoppelteTeamNr(xSheet);
 		nachRangSortieren(xSheet);
 		upDateSheet();
+		if (TurnierModus.get().istAktiv()) {
+			BlattschutzRegistry.fuer(TurnierSystem.KO)
+					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
 	}
 
 	/**

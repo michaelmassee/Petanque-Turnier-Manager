@@ -31,6 +31,7 @@ import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGer
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -444,6 +445,9 @@ class KoListeDelegate implements MeldeListeKonstanten {
 				.styleIsFehler().applyAndDoReset()
 				.formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
 				.formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+
+		int aktivSpalte = getAktivSpalte();
+		EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, aktivSpalte, letzteDatenZeile));
 	}
 
 	private void formatZeilenfarben() throws GenerateException {
