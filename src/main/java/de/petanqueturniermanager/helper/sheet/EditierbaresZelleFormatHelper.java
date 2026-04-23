@@ -56,4 +56,18 @@ public class EditierbaresZelleFormatHelper {
 				.formulaIsEvenRowAndBoolProp(PROPERTY_KEY).style(geradeStyle).applyAndDoReset()
 				.formulaIsOddRowAndBoolProp(PROPERTY_KEY).style(ungeradeStyle).applyAndDoReset();
 	}
+
+	/**
+	 * Wendet die editierbare Zellenfarbe auf eine einzelne Zelle an, basierend auf der Team-Position.
+	 * Team A erhält die hellere Farbe (GERADE), Team B die dunklere (UNGERADE) – unabhängig von der
+	 * absoluten Zeilennummer. Das vermeidet das Hell/Dunkel-Invertierungsproblem bei KO-Brackets.
+	 */
+	public static void anwendenFuerTeam(ISheet sheet, RangePosition range, boolean istTeamA) throws GenerateException {
+		new DocumentPropertiesHelper(sheet.getWorkingSpreadsheet()).initBooleanPropertyIfAbsent(PROPERTY_KEY, true);
+		var style = istTeamA
+				? new EditierbareZelleHintergrundFarbeGeradeStyle(EDITIERBAR_GERADE_FARBE)
+				: new EditierbareZelleHintergrundFarbeUnGeradeStyle(EDITIERBAR_UNGERADE_FARBE);
+		ConditionalFormatHelper.from(sheet, range).append()
+				.formulaBoolProp(PROPERTY_KEY).style(style).applyAndDoReset();
+	}
 }

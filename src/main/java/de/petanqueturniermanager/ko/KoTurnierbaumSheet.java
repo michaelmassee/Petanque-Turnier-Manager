@@ -26,6 +26,8 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import com.sun.star.sheet.ConditionOperator;
+
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -38,7 +40,9 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
@@ -94,7 +98,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private int headerFarbe       = 0x2544DD;
 	private int teamAFarbe        = 0xDCEEFA;
 	private int teamBFarbe        = 0xF0F7FF;
-	private int scoreFarbe        = 0xFFFDE7;
 	private int siegerFarbe       = 0xFFD700;
 	private int bahnFarbe         = 0xEEEEEE;
 	private int drittePlatzFarbe  = 0xCD7F32;
@@ -532,7 +535,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		this.headerFarbe      = konfig.getTurnierbaumHeaderFarbe();
 		this.teamAFarbe       = konfig.getTurnierbaumTeamAFarbe();
 		this.teamBFarbe       = konfig.getTurnierbaumTeamBFarbe();
-		this.scoreFarbe       = konfig.getTurnierbaumScoreFarbe();
 		this.siegerFarbe      = konfig.getTurnierbaumSiegerFarbe();
 		this.bahnFarbe        = konfig.getTurnierbaumBahnFarbe();
 		this.drittePlatzFarbe = konfig.getTurnierbaumDrittePlatzFarbe();
@@ -670,6 +672,48 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		var scoreKey = SheetMetadataHelper.scoreSchluessel(metadatenSchluessel);
 		SheetMetadataHelper.schreibeScoreZellenMetadaten(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), xSheet, scoreKey, dataSpalte, SCORE_DATA_ZEILE);
+		formatiereScoreZellen(positionen);
+	}
+
+	/**
+	 * Wendet bedingte Formatierung auf alle Score-Zellen-Paare an.
+	 * <p>
+	 * Pro Paar (Team-A-Zeile, Team-B-Zeile):
+	 * <ol>
+	 *   <li>Fehler-Style bei Wert außerhalb 0–13</li>
+	 *   <li>Fehler-Style bei Texteingabe</li>
+	 *   <li>Fehler-Style bei Gleichstand (beide Zellen eines Paars erhalten denselben Wert)</li>
+	 *   <li>Orange-Zebra-Hervorhebung editierbarer Felder (togglebar per BOOLEANPROPERTY)</li>
+	 * </ol>
+	 * Die Positionen stammen aus denselben Daten, die via
+	 * {@link SheetMetadataHelper#schreibeScoreZellenMetadaten} gespeichert wurden.
+	 */
+	private void formatiereScoreZellen(List<Position> positionen) throws GenerateException {
+		for (int i = 0; i + 1 < positionen.size(); i += 2) {
+			var posA = positionen.get(i);
+			var posB = positionen.get(i + 1);
+
+			String addrA = posA.getAddressWith$();
+			String addrB = posB.getAddressWith$();
+			String gleichstandFormel = "AND(ISNUMBER(" + addrA + ");ISNUMBER(" + addrB + ");" + addrA + "=" + addrB + ")";
+
+			var rangeA = RangePosition.from(posA);
+			var rangeB = RangePosition.from(posB);
+
+			// Fehlerprüfungen einzeln pro Zelle – vermeidet Einfärben von Lückenzeilen zwischen den Paaren
+			ConditionalFormatHelper.from(this, rangeA).clear()
+					.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+					.formulaIsText().styleIsFehler().applyAndDoReset()
+					.formula1(gleichstandFormel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
+			ConditionalFormatHelper.from(this, rangeB).clear()
+					.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+					.formulaIsText().styleIsFehler().applyAndDoReset()
+					.formula1(gleichstandFormel).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
+
+			// Editierbar-Hervorhebung pro Zelle, basierend auf Team-A/B-Position (nicht Zeilen-Parität)
+			EditierbaresZelleFormatHelper.anwendenFuerTeam(this, rangeA, true);
+			EditierbaresZelleFormatHelper.anwendenFuerTeam(this, rangeB, false);
+		}
 	}
 
 	/**
@@ -910,7 +954,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	private void schreibeTeamZelleR1(XSpreadsheet xSheet, int zeile, int nr, boolean istTeamA)
 			throws GenerateException {
-		int farbe = istTeamA ? teamAFarbe : teamBFarbe;
+		int farbe = istTeamA ? teamBFarbe : teamAFarbe;
 		if (nr <= 0) {
 			// Freilos – immer als Text
 			getSheetHelper().setStringValueInCell(
@@ -976,9 +1020,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (aktuelleScorePositionen != null) {
 			aktuelleScorePositionen.add(Position.from(spalte, zeile));
 		}
+		int hintergrundFarbe = istTeamA
+				? EditierbaresZelleFormatHelper.EDITIERBAR_GERADE_FARBE
+				: EditierbaresZelleFormatHelper.EDITIERBAR_UNGERADE_FARBE;
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(xSheet, Position.from(spalte, zeile), "")
-						.setCellBackColor(scoreFarbe)
+						.setCellBackColor(hintergrundFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));
 	}
@@ -1013,7 +1060,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		getSheetHelper().setFormulaInCell(
 				StringCellValue.from(xSheet, Position.from(teamSpalte(runde), targetRow), formel)
-						.setCellBackColor(istTeamA ? teamAFarbe : teamBFarbe)
+						.setCellBackColor(istTeamA ? teamBFarbe : teamAFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(justify));
 	}
@@ -1148,12 +1195,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(xSheet, Position.from(cadrageScore, rowA), "")
-						.setCellBackColor(scoreFarbe)
+						.setCellBackColor(EditierbaresZelleFormatHelper.EDITIERBAR_GERADE_FARBE)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));
 		getSheetHelper().setStringValueInCell(
 				StringCellValue.from(xSheet, Position.from(cadrageScore, rowB), "")
-						.setCellBackColor(scoreFarbe)
+						.setCellBackColor(EditierbaresZelleFormatHelper.EDITIERBAR_UNGERADE_FARBE)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(CellHoriJustify.CENTER));
 
@@ -1177,7 +1224,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	private void schreibeTeamZelleInSpalte(XSpreadsheet xSheet, int spalte, int zeile, int nr,
 			boolean istTeamA) throws GenerateException {
-		int farbe = istTeamA ? teamAFarbe : teamBFarbe;
+		int farbe = istTeamA ? teamBFarbe : teamAFarbe;
 		if (nr <= 0) {
 			getSheetHelper().setStringValueInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), "Freilos")
@@ -1224,8 +1271,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				+ "\"\")";
 
 		int targetRow = istSlotA ? rowA : rowB;
-		boolean istTeamA = istSlotA;
-		int farbe = istTeamA ? teamAFarbe : teamBFarbe;
+		int farbe = istSlotA ? teamBFarbe : teamAFarbe;
 		CellHoriJustify justify = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
 				? CellHoriJustify.LEFT : CellHoriJustify.CENTER;
 
@@ -1320,7 +1366,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		getSheetHelper().setFormulaInCell(
 				StringCellValue.from(xSheet, Position.from(teamSpalte(runde), targetRow), formel)
-						.setCellBackColor(istTeamA ? teamAFarbe : teamBFarbe)
+						.setCellBackColor(istTeamA ? teamBFarbe : teamAFarbe)
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.setHoriJustify(justify));
 	}

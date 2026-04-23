@@ -130,6 +130,12 @@ public class ConditionalFormatHelper extends BaseHelper {
 		return this;
 	}
 
+	public ConditionalFormatHelper formulaBoolProp(String propKey) {
+		formula1 = GlobalImpl.FORMAT_PTM_BOOLEAN_PROPERTY(propKey);
+		conditionOperator = ConditionOperator.FORMULA;
+		return this;
+	}
+
 	/**
 	 * set ConditionOperator nach FORMULA
 	 */
