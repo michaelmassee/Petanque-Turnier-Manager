@@ -8,19 +8,7 @@ Petanque-Turnier-Manager is a **LibreOffice Calc Extension** (.oxt) for managing
 
 ## LibreOffice Source Reference
 
-The complete LibreOffice / LibreOffice Calc source code is available locally at **`/home/michael/devel/projects_massee/libreoffice`**.
-
-```bash
-git clone https://gerrit.libreoffice.org/core libreoffice
-```
-
-Use this reference to:
-- Understand how LO processes XCU configuration files (e.g. `framework/source/fwe/classes/addonsoptions.cxx`)
-- Look up internal UNO API behaviour (e.g. toolbar icon loading in `framework/source/uielement/toolbarmanager.cxx`)
-- Investigate Calc-specific internals under `sc/`
-- Verify how Add-on menus, toolbars and images are handled by the framework (`framework/`)
-
-When debugging LO extension behaviour, **always check the LO source first** before guessing — the source is authoritative.
+LO source: **`/home/michael/devel/projects_massee/libreoffice`** — always check first before guessing. Key areas: `sc/` (Calc internals), `framework/` (menus/toolbars/Add-on), `framework/source/fwe/classes/addonsoptions.cxx` (XCU processing), `framework/source/uielement/toolbarmanager.cxx` (toolbar icons).
 
 ## Code Quality & Refactoring Rules
 
@@ -118,181 +106,57 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 See `BUILD_ISSUES.md` for details on:
 1. IDL-to-Java interface generation not automated in Gradle
 
-## Sidebar – DEAKTIVIERT (buggy, funktioniert nicht)
+## Sidebar – DEAKTIVIERT (buggy in LO 25.8)
 
-Das `sidebar/`-Package wurde neu geschrieben (2026-03), funktioniert aber in LibreOffice **noch nicht korrekt** und ist deshalb deaktiviert:
+Factory-Eintrag in `.components` auskommentiert. `createUIElement()` wird nicht aufgerufen (`UIElementFactoryManager.xcu` greift nicht in LO 25.8). `SidebarUITest` ist `@Disabled`.
 
-- `PetanqueTurnierManager.components` → Factory-Eintrag auskommentiert → LibreOffice lädt die Sidebar nicht
-- `registry/org/openoffice/Office/UI/UIElementFactoryManager.xcu` und `Sidebar.xcu` sind vorhanden, werden aber von LibreOffice 25.8 nicht korrekt verarbeitet → Panel-Inhalt wird nicht angezeigt
-- `SidebarUITest` ist mit `@Disabled` markiert
-
-**Bekannte Symptome:** Deck-Icon erscheint, Panel-Überschrift erscheint, aber kein Inhalt im Panel.
-
-**Offene Ursache:** Die Factory-Registrierung via `UIElementFactoryManager.xcu` scheint in LO 25.8 nicht zu greifen. `createUIElement()` wird nicht aufgerufen.
-
-**Regeln:**
-- **Keine neuen Features in `sidebar/`** bis das grundlegende Problem gelöst ist.
-- Bei Änderungen an globalen Komponenten (`NewReleaseChecker`, Events, etc.): **kein** Code in `sidebar/` einbeziehen.
-- Sidebar erst wieder aktivieren (Factory in `.components` einkommentieren) wenn `createUIElement()` nachweislich aufgerufen wird.
+**Regeln:** Keine neuen Features in `sidebar/`. Keine globalen Komponenten (`NewReleaseChecker`, Events etc.) einbeziehen. Erst reaktivieren wenn `createUIElement()` nachweislich aufgerufen wird.
 
 
 ### Zellstile (CellStyles) und Sheet-Schutz – kritische LO-Einschränkung
 
-**LO-Quellcode** (`sc/source/ui/unoobj/styleuno.cxx`, `ScStyleObj::setPropertyValue_Impl`):
-```cpp
-//  cell styles cannot be modified if any sheet is protected
-if ( eFamily == SfxStyleFamily::Para && lcl_AnyTabProtected( pDocShell->GetDocument() ) )
-    throw uno::RuntimeException();
-```
-
-**Regel**: `CellStyleHelper.apply()` (= `setPropertyValue` auf einem Zellstil) wirft `RuntimeException` sobald **irgendein** Sheet im Dokument tab-geschützt ist. Das ist eine **absichtliche LO-Einschränkung**, kein Bug.
+**Regel**: `CellStyleHelper.apply()` wirft `RuntimeException` sobald **irgendein** Sheet tab-geschützt ist (LO: `sc/source/ui/unoobj/styleuno.cxx` `ScStyleObj::setPropertyValue_Impl`). Absichtliche LO-Einschränkung, kein Bug.
 
 
-## Blattschutz im Turnier-Modus – Architektur
+## Blattschutz im Turnier-Modus
+Details und Implementierungsmuster: `turniersysteme/BLATTSCHUTZ.md`
 
-Beim Aktivieren der Turnieransicht (`TurnierModus`) werden die Sheets des aktiven Turniersystems
-tab-geschützt; editierbare Zellen (Name, SP, Spieltage, Ergebnisse) bleiben über
-`CellProtection.IsLocked = false` bedienbar. Beim Deaktivieren werden die Sheets entsperrt.
-
-### Zentrale Klassen
-
-| Klasse | Paket | Zweck |
-|---|---|---|
-| `IBlattschutzKonfiguration` | `helper/sheet/blattschutz/` | Interface – eine Impl. pro Turniersystem |
-| `SheetSchutzInfo` | `helper/sheet/blattschutz/` | Record: Sheet + editierbare Bereiche |
-| `BlattschutzManager` | `helper/sheet/blattschutz/` | Singleton-Orchestrator |
-| `BlattschutzRegistry` | `helper/sheet/blattschutz/` | Registry (Open/Closed Principle) |
-| `SupermeleeBlattschutzKonfiguration` | `supermelee/blattschutz/` | Supermelee-Implementierung |
-
-`TurnierModus.aktivierenIntern()` / `deaktivierenIntern()` delegieren per Registry –
-kein `if (SUPERMELEE)` nötig, neue Systeme nur per `BlattschutzRegistry.register()` eintragen.
-
-### Pflicht-Reihenfolge beim Sperren (kritisch!)
-
-1. `zelleStylesAktualisieren(ws)` – **vor** jedem `protect()`, sonst LO-RuntimeException
-2. Sheet ggf. entsperren (`entsperreSheetFallsNoetig`) – Idempotenz
-3. Editierbare Bereiche mit `CellProtection.IsLocked = false` freigeben
-4. `XProtectable.protect("")`
-
-### UNO-Hinweis: `CellProtection`
-
-- Klasse: `com.sun.star.util.CellProtection` (nicht `sheet`!)
-- Editierbar-Flag: **`IsLocked`** (nicht `IsProtected`)
-- Immer **alten Wert lesen**, neues Objekt schreiben, alle Flags (`IsHidden`, `IsFormulaHidden`, `IsPrintHidden`) übernehmen
-
-### Neues Turniersystem anschließen
-
-1. `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` in `foo/blattschutz/` anlegen
-   – Vorbild: `supermelee/blattschutz/SupermeleeBlattschutzKonfiguration.java`
-2. In `BlattschutzRegistry` static-Block: `REGISTRY.put(TurnierSystem.FOO, FooBlattschutzKonfiguration.get())`
-3. Editierbare Bereiche per `SheetMetadataHelper.findeSheet()` + `getSchluesselMitPrefix()` ermitteln
-4. Zeilengrenzen: `MeldungenSpalte.MAX_ANZ_MELDUNGEN = 999` – keine Magic Numbers
-
-### Named Ranges – Pflichtregeln für Schlüssel
-
-Named Ranges (`XNamedRanges`) sind dokumentweit – ein Schlüssel existiert genau einmal pro Dokument, unabhängig davon, auf welches Sheet er zeigt.
-
-**Zwingend für alle `__PTM_…__`-Schlüssel:**
-- **Eindeutig im Dokument** – kein Schlüssel darf doppelt vorkommen, auch nicht über verschiedene Turniersysteme hinweg
-- **Sprachunabhängig** – kein übersetzter String im Schlüssel; ausschließlich den `__PTM_<SYSTEM>_<TYP>[_SUFFIX]__`-Namespace verwenden
-- **Sheet-Namen-unabhängig** – der Schlüssel leitet sich vom internen Metadatenschlüssel ab, nicht vom angezeigten Sheet-Titel (`"KO-Turnierbaum A"`, `"KO-Tournoi A"` etc.)
-
-Der **Inhalt** des Named Range darf den Sheet-Namen enthalten (`$'SheetName'.$A$1`) – LibreOffice aktualisiert den Inhalt automatisch bei Umbenennung. Der **Schlüssel (Name)** muss jedoch stabil und locale-frei sein.
-
-Score-Positions-Schlüssel werden über `SheetMetadataHelper.scoreSchluessel(bracketSchluessel)` abgeleitet (`__PTM_` → `__PTM_SCORE_`) und erben damit automatisch die Eindeutigkeit des Bracket-Schlüssels.
-
-### Bedingte Formatierung (ConditionalFormat) und Sheet-Schutz – kritische LO-Einschränkung
-
-**LO-Quellcode** (`sc/source/ui/docshell/docfunc.cxx`, `ScDocFunc::ReplaceConditionalFormat`):
-```cpp
-void ScDocFunc::ReplaceConditionalFormat( sal_uLong nOldFormat, ... )
-{
-    if(rDoc.IsTabProtected(nTab))
-        return;   // lautlos – kein throw, keine Exception!
-    // ...
-}
-```
-
-**Regel**: `xPropSet.setPropertyValue("ConditionalFormat", xEntries)` auf einem Zellbereich ruft intern `ReplaceConditionalFormat` auf. Ist das Sheet tab-geschützt, kehrt diese Methode **ohne Fehler zurück** und erstellt **keine** neue CF-Regel.
-
-**Kritisch**: LO entfernt die bestehenden CF-Daten aus den Zellen **vor** dem `ReplaceConditionalFormat`-Aufruf (via `RemoveCondFormatData` + `DeleteArea`). Wenn `ReplaceConditionalFormat` dann lautlos abbricht, sind **alle CF-Regeln gelöscht und keine neuen erstellt** → alle bedingten Formatierungen verschwinden spurlos.
-
-**Vergleich mit der CellStyle-Einschränkung:**
-
-| Operation | Verhalten bei Sheet-Schutz |
-|---|---|
-| `CellStyleHelper.apply()` (Styles) | Wirft `RuntimeException` → von `applyAufDokument` gefangen → WARN |
-| `setPropertyValue("ConditionalFormat", ...)` | `return;` ohne Exception → lautlos, kein Log-Eintrag |
-
-**Konsequenz für alle `doRun()`-Methoden die `formatDaten()` aufrufen:**
-Ist TurnierModus aktiv (Sheets sind geschützt), MUSS vor jedem `upDateSheet()`-Aufruf der Blattschutz entfernt werden. `formatDaten()` ruft am Ende `schuetzen()` und stellt den Schutz selbst wieder her.
-
-```java
-// Pflichtmuster in doRun() / naechsteSpieltag() etc. wenn TurnierModus aktiv sein kann:
-if (TurnierModus.get().istAktiv()) {
-    BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-            .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-}
-// ... clearRange(), upDateSheet() etc.
-// formatDaten() → schuetzen() stellt Schutz am Ende wieder her
-```
-
-### `CellStyleHelper` – Überladung ohne ISheet
-
-```java
-// Für Kontexte ohne ISheet (z. B. BlattschutzManager):
-CellStyleHelper.from(XSpreadsheetDocument doc, AbstractCellStyleDef def).apply();
-```
-
+**Kritische Regeln:**
+- `zelleStylesAktualisieren(ws)` **vor** jedem `protect()` – sonst LO-RuntimeException
+- `setPropertyValue("ConditionalFormat", ...)` bei aktivem Sheet-Schutz: **lautlos** gelöscht → vor `upDateSheet()` entsperren
+- `CellProtection.IsLocked = false` (nicht IsProtected) für editierbare Bereiche; Klasse `com.sun.star.util.CellProtection`
+- Neues System: `FooBlattschutzKonfiguration implements IBlattschutzKonfiguration` + `BlattschutzRegistry.register()`
+- `CellStyleHelper.from(XSpreadsheetDocument, AbstractCellStyleDef).apply()` für Kontexte ohne ISheet
 
 ## RanglisteRefreshListener – Architekturregeln
+Details und Muster: `turniersysteme/RANGLISTE_LISTENER.md`
 
-### Problem: Race Condition bei forceCreate()
-
-`NewSheet.forceCreate().create()` **löscht** das bestehende Sheet und legt es neu an. Das triggert LibreOffice-interne Events (u.a. `selectionChanged`). Wenn der `RanglisteRefreshListener` dabei das Rangliste-Sheet als aktiv erkennt **und** `SheetRunner.isRunning() == false` ist (was bei direkten `doRun()`-Aufrufen immer der Fall ist, da diese den `SheetRunnerKoordinator` umgehen), startet der Listener sofort einen zweiten parallelen Thread → beide Threads schreiben gleichzeitig auf dasselbe Sheet → Datenverlust/Korruption.
-
-### Regel: Listener müssen `*SheetUpdate`-Klassen verwenden
-
-**NIEMALS** eine `*RanglisteSheet`-Klasse (Vollaufbau) direkt im `RanglisteRefreshListener` registrieren.
-**IMMER** eine `*RanglisteSheetUpdate`-Klasse (nur Datenbereich) verwenden.
-
-| Listener-Registrierung in `PetanqueTurnierMngrSingleton` | Klasse |
-|---|---|
-| Schweizer Rangliste | `SchweizerRanglisteSheetUpdate` |
-| Maastrichter Vorrunden-Rangliste | `MaastrichterVorrundenRanglisteSheetUpdate` |
-
-### Muster für neue Turniersysteme
-
-Jedes neue Turniersystem, das einen `RanglisteRefreshListener` bekommt, benötigt eine `*SheetUpdate`-Klasse:
-
-1. `FooRanglisteSheet` – vollständiger Aufbau (Menüaktion, Erstaufbau): verwendet `NewSheet.forceCreate()`
-2. `FooRanglisteSheetUpdate extends FooRanglisteSheet` – Update-Pfad (Listener):
-   - Überschreibt `doRun()`: **kein** `forceCreate`, kein Sheet-Event, keine Race Condition
-   - Prüft ob Sheet existiert; falls nicht → Fallback auf `FooRanglisteSheet.doRun()` (Erstaufbau)
-   - Schreibt nur den Datenbereich neu via `berechnungUndSchreiben()` (shared protected method)
-   - Löscht überzählige Zeilen wenn Teamanzahl gesunken ist (`loeSchalteDatenzeilen`)
-   - Registrierung in `PetanqueTurnierMngrSingleton` via `RanglisteRefreshListener.fuerSchluessel(..., (ws, ignored) -> new FooRanglisteSheetUpdate(ws))`
-
-### `setActiveSheet()` – nur im SheetRunner-Kontext
-
-`getSheetHelper().setActiveSheet(sheet)` **nur aufrufen wenn `SheetRunner.isRunning() == true`** (d.h. der Aufruf kommt vom Menü über `SheetRunner.run()`). Bei direktem `doRun()`-Aufruf (Listener, Test) darf `setActiveSheet` **nicht** aufgerufen werden – das würde erneut `selectionChanged` feuern.
+**Kritische Regeln:**
+- **NIEMALS** `*RanglisteSheet` direkt im Listener registrieren → Race Condition mit `forceCreate()`
+- **IMMER** `*RanglisteSheetUpdate`-Klasse verwenden (nur Datenbereich, kein `forceCreate`)
+- `setActiveSheet()` nur wenn `SheetRunner.isRunning() == true`
 
 ## Business Logic & Rules
-- **Schweizer System:** The complete ruleset for the Swiss tournament system in Petanque (including Buchholz, Feinbuchholz, Point Difference, and pairings) is documented in `turniersysteme/03_Schweizer.md`.
-- **Supermelee System:** The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/07_Supermelee.md`.
-- **KO System:**  The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/05_KO.md`.
-- **Maastrichter System:**  The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/04_Maastrichter.md`.
-- **Kaskaden oder Erweitertes A-B-C-D System:**  The complete ruleset for the tournament system in Petanque is documented in `turniersysteme/06_Kaskaden-KO.md`.
-- **Arena-Pétanque:** Documented in `turniersysteme/16_ArenaPetanque.md`.
-- **Crazy-Mêlée:** Documented in `turniersysteme/15_CrazyMelee.md`.
-- **Dänisches System:** Documented in `turniersysteme/11_DaenischesSystem.md`.
-- **Formule 4:** Documented in `turniersysteme/13_Formule4.md`.
-- **Kölner Sextet:** Documented in `turniersysteme/10_KoelnerSextet.md`.
-- **Monrad-System:** Documented in `turniersysteme/12_MonradSystem.md`.
-- **Tête-Series:** Documented in `turniersysteme/14_TeteSeries.md`.
-- **Trip-Tête / Trio-System:** Documented in `turniersysteme/09_TripTete.md`.
-- **Poule-AB:** Documented in `turniersysteme/02_Poule-AB.md`.
-- **Formule_X:** Documented in `turniersysteme/08_Formule_X.md`.
+
+Regeln für jedes Turniersystem sind in `turniersysteme/` dokumentiert:
+
+| System | Datei |
+|---|---|
+| Schweizer System | `03_Schweizer.md` |
+| Supermelee | `07_Supermelee.md` |
+| KO | `05_KO.md` |
+| Maastrichter | `04_Maastrichter.md` |
+| Kaskaden / A-B-C-D | `06_Kaskaden-KO.md` |
+| Arena-Pétanque | `16_ArenaPetanque.md` |
+| Crazy-Mêlée | `15_CrazyMelee.md` |
+| Dänisches System | `11_DaenischesSystem.md` |
+| Formule 4 | `13_Formule4.md` |
+| Kölner Sextet | `10_KoelnerSextet.md` |
+| Monrad-System | `12_MonradSystem.md` |
+| Tête-Series | `14_TeteSeries.md` |
+| Trip-Tête / Trio | `09_TripTete.md` |
+| Poule-AB | `02_Poule-AB.md` |
+| Formule_X | `08_Formule_X.md` |
 
 ### UNO API Strict Rules
 - **NEVER use standard Java casts** for UNO interfaces (e.g., `(XSpreadsheetDocument) doc` is forbidden).
