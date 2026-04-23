@@ -81,9 +81,10 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
     public static final int ZWEITE_HEADER_ZEILE = 1;
     public static final int ERSTE_DATEN_ZEILE   = ZWEITE_HEADER_ZEILE + 1;
 
-    private static final int CHARHEIGHT_NR       = 18;
-    private static final int CHARHEIGHT_TEAM     = 28;
-    private static final int CHARHEIGHT_ERGEBNIS = 28;
+    private static final int CHARHEIGHT_NR              = 18;
+    private static final int CHARHEIGHT_TEAM            = 28;
+    private static final int CHARHEIGHT_ERGEBNIS        = 28;
+    private static final int TEAM_ERGEBNIS_SPALTE_WIDTH = 2500; // 2,5 cm in 1/100 mm
 
     private final KaskadeKonfigurationSheet konfigurationSheet;
     private final KaskadeMeldeListeSheetUpdate meldeListe;
@@ -349,7 +350,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
                 .setVertJustify(CellVertJustify2.CENTER)
                 .centerHoriJustify()
                 .setCellBackColor(headerFarbe)
-                .setBorder(spaltenborderBold);
+                .setBorder(BorderFactory.from().allThin().boldLn().forBottom().doubleLn().forRight().toBorder());
         getSheetHelper().setStringValueInCell(nrValue);
 
         var teamAValue = StringCellValue.from(sheet, Position.from(TEAM_A_SPALTE, ZWEITE_HEADER_ZEILE))
@@ -365,7 +366,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
                 .setVertJustify(CellVertJustify2.CENTER)
                 .centerHoriJustify()
                 .setCellBackColor(headerFarbe)
-                .setBorder(spaltenborderBold);
+                .setBorder(BorderFactory.from().allThin().boldLn().forBottom().forRight().toBorder());
         getSheetHelper().setStringValueInCell(teamBValue);
 
         var ergebnisValue = StringCellValue.from(sheet, Position.from(ERG_TEAM_A_SPALTE, ZWEITE_HEADER_ZEILE))
@@ -394,6 +395,12 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         var nrRange = RangePosition.from(SPIEL_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIEL_NR_SPALTE, letzteZeile);
         getSheetHelper().setPropertyInRange(sheet, nrRange, CHAR_HEIGHT, CHARHEIGHT_NR);
+        getSheetHelper().setPropertyInRange(sheet, nrRange, TABLE_BORDER2,
+                BorderFactory.from().allThin().doubleLn().forRight().toBorder());
+
+        var teamBRange = RangePosition.from(TEAM_B_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE, letzteZeile);
+        getSheetHelper().setPropertyInRange(sheet, teamBRange, TABLE_BORDER2,
+                BorderFactory.from().allThin().boldLn().forRight().toBorder());
 
         var teamRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE, letzteZeile);
         getSheetHelper().setPropertyInRange(sheet, teamRange, CHAR_HEIGHT, CHARHEIGHT_TEAM);
@@ -414,6 +421,10 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
         fehlerSpalteFormatieren(letzteZeile);
         gruppentrennlinienSetzen(runde);
         getSheetHelper().setOptimaleBreiteUndHoeheAlles(sheet, HEADER_ZEILE, letzteZeile, GRUPPE_SPALTE, FEHLER_SPALTE);
+        getSheetHelper().setColumnWidth(sheet, TEAM_A_SPALTE,     TEAM_ERGEBNIS_SPALTE_WIDTH);
+        getSheetHelper().setColumnWidth(sheet, TEAM_B_SPALTE,     TEAM_ERGEBNIS_SPALTE_WIDTH);
+        getSheetHelper().setColumnWidth(sheet, ERG_TEAM_A_SPALTE, TEAM_ERGEBNIS_SPALTE_WIDTH);
+        getSheetHelper().setColumnWidth(sheet, ERG_TEAM_B_SPALTE, TEAM_ERGEBNIS_SPALTE_WIDTH);
     }
 
     private void fehlerSpalteFormatieren(int letzteZeile) throws GenerateException {
