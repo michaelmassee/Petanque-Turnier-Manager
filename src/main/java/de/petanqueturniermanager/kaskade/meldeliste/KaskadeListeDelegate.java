@@ -36,6 +36,7 @@ import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadePropertiesSpalte;
@@ -412,6 +413,8 @@ class KaskadeListeDelegate implements MeldeListeKonstanten {
                 .styleIsFehler().applyAndDoReset()
                 .formulaIsEvenRow().style(farbeGerade).applyAndDoReset()
                 .formulaIsOddRow().style(farbeUngerade).applyAndDoReset();
+
+        EditierbaresZelleFormatHelper.anwenden(sheet, RangePosition.from(1, ERSTE_DATEN_ZEILE, getAktivSpalte(), letzteDatenZeile));
     }
 
     private void formatZeilenfarben() throws GenerateException {

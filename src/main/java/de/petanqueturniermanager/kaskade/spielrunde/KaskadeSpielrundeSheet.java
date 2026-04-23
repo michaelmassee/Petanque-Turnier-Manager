@@ -44,6 +44,7 @@ import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -363,6 +364,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
                 BasePropertiesSpalte.DEFAULT_UNGERADE_BACK_COLOR);
 
         spielrundeHelper.formatiereErgebnissRange(this, ergRange, ERG_TEAM_A_SPALTE);
+        EditierbaresZelleFormatHelper.anwenden(this, ergRange);
 
         fehlerSpalteFormatieren(letzteZeile);
         gruppentrennlinienSetzen(runde);
