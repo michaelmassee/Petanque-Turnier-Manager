@@ -27,7 +27,6 @@ public interface IKoBracketKonfiguration {
 	default int getTurnierbaumHeaderFarbe()      { return 0x2544DD; }
 	default int getTurnierbaumTeamAFarbe()       { return 0xDCEEFA; }
 	default int getTurnierbaumTeamBFarbe()       { return 0xF0F7FF; }
-	default int getTurnierbaumScoreFarbe()       { return 0xFFFDE7; }
 	default int getTurnierbaumSiegerFarbe()      { return 0xFFD700; }
 	default int getTurnierbaumBahnFarbe()        { return 0xEEEEEE; }
 	default int getTurnierbaumDrittePlatzFarbe() { return 0xCD7F32; }

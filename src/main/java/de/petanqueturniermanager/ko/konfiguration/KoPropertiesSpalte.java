@@ -32,7 +32,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_HEADER       = "Turnierbaum Header Farbe";
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A       = "Turnierbaum Team A Farbe";
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B       = "Turnierbaum Team B Farbe";
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_SCORE        = "Turnierbaum Score Farbe";
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER       = "Turnierbaum Sieger Farbe";
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_BAHN         = "Turnierbaum Bahn Farbe";
 	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ = "Turnierbaum 3. Platz Farbe";
@@ -103,8 +102,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B)
 				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b").inSideBar());
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SCORE)
-				.setDefaultVal(0xFFFDE7).setDescription("config.desc.ko.turnierbaum.score").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER)
 				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger").inSideBar());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_BAHN)
@@ -281,7 +278,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public int getTurnierbaumHeaderFarbe()      { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_HEADER); }
 	public int getTurnierbaumTeamAFarbe()       { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A); }
 	public int getTurnierbaumTeamBFarbe()       { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B); }
-	public int getTurnierbaumScoreFarbe()       { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_SCORE); }
 	public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
 	public int getTurnierbaumBahnFarbe()        { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
 	public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
