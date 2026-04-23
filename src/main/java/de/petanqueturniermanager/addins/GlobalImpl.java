@@ -170,7 +170,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 				return propVal ? 1 : 0;
 			}
 		}
-		logger.warn("BooleanProperty fallback used: {}", propname);
+		logger.trace("BooleanProperty fallback used (TurnierSystem noch nicht gesetzt): {}", propname);
 		return 0;
 	}
 

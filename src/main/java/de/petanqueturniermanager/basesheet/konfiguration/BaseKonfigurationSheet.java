@@ -21,6 +21,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
@@ -70,6 +71,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 	private void updateTurnierSystemInDocument() {
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(getWorkingSpreadsheet());
 		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM, getTurnierSystem().getId());
+		docPropHelper.initBooleanPropertyIfAbsent(EditierbaresZelleFormatHelper.PROPERTY_KEY, true);
 	}
 
 	private void validateSpielSystem() throws GenerateException {
