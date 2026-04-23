@@ -45,6 +45,7 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -76,8 +77,9 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
     public static final int ERG_TEAM_B_SPALTE = 5;
     public static final int FEHLER_SPALTE     = 6;
 
-    public static final int HEADER_ZEILE      = 0;
-    public static final int ERSTE_DATEN_ZEILE = HEADER_ZEILE + 1;
+    public static final int HEADER_ZEILE        = 0;
+    public static final int ZWEITE_HEADER_ZEILE = 1;
+    public static final int ERSTE_DATEN_ZEILE   = ZWEITE_HEADER_ZEILE + 1;
 
     private static final int CHARHEIGHT_NR       = 18;
     private static final int CHARHEIGHT_TEAM     = 28;
@@ -199,6 +201,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
 
         spielrundeEintragen(runde, naechsteRundeNr == 1, plan, meldungenNachSP);
         headerFormatieren(naechsteRundeNr);
+        SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
         datenFormatieren(runde);
         druckBereichSetzen();
 
@@ -321,16 +324,58 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
         var sheet       = getXSpreadSheet();
         var headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
 
-        var headerValue = StringCellValue.from(sheet, Position.from(GRUPPE_SPALTE, HEADER_ZEILE))
+        var titelValue = StringCellValue.from(sheet, Position.from(GRUPPE_SPALTE, HEADER_ZEILE))
                 .setValue(SheetNamen.kaskadenRunde(rundeNr))
                 .setVertJustify(CellVertJustify2.CENTER)
                 .centerHoriJustify()
                 .setCharHeight(14)
                 .setCellBackColor(headerFarbe)
                 .setEndPosMergeSpaltePlus(ERG_TEAM_B_SPALTE)
-                .setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder());
-        getSheetHelper().setStringValueInCell(headerValue);
+                .setBorder(BorderFactory.from().allThin().toBorder());
+        getSheetHelper().setStringValueInCell(titelValue);
 
+        var spaltenborderBold = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
+
+        var gruppeValue = StringCellValue.from(sheet, Position.from(GRUPPE_SPALTE, ZWEITE_HEADER_ZEILE))
+                .setValue(I18n.get("column.header.gruppe"))
+                .setVertJustify(CellVertJustify2.CENTER)
+                .centerHoriJustify()
+                .setCellBackColor(headerFarbe)
+                .setBorder(spaltenborderBold);
+        getSheetHelper().setStringValueInCell(gruppeValue);
+
+        var nrValue = StringCellValue.from(sheet, Position.from(SPIEL_NR_SPALTE, ZWEITE_HEADER_ZEILE))
+                .setValue(I18n.get("column.header.nr"))
+                .setVertJustify(CellVertJustify2.CENTER)
+                .centerHoriJustify()
+                .setCellBackColor(headerFarbe)
+                .setBorder(spaltenborderBold);
+        getSheetHelper().setStringValueInCell(nrValue);
+
+        var teamAValue = StringCellValue.from(sheet, Position.from(TEAM_A_SPALTE, ZWEITE_HEADER_ZEILE))
+                .setValue(I18n.get("column.header.team.a"))
+                .setVertJustify(CellVertJustify2.CENTER)
+                .centerHoriJustify()
+                .setCellBackColor(headerFarbe)
+                .setBorder(spaltenborderBold);
+        getSheetHelper().setStringValueInCell(teamAValue);
+
+        var teamBValue = StringCellValue.from(sheet, Position.from(TEAM_B_SPALTE, ZWEITE_HEADER_ZEILE))
+                .setValue(I18n.get("column.header.team.b"))
+                .setVertJustify(CellVertJustify2.CENTER)
+                .centerHoriJustify()
+                .setCellBackColor(headerFarbe)
+                .setBorder(spaltenborderBold);
+        getSheetHelper().setStringValueInCell(teamBValue);
+
+        var ergebnisValue = StringCellValue.from(sheet, Position.from(ERG_TEAM_A_SPALTE, ZWEITE_HEADER_ZEILE))
+                .setValue(I18n.get("column.header.ergebnis"))
+                .setVertJustify(CellVertJustify2.CENTER)
+                .centerHoriJustify()
+                .setCellBackColor(headerFarbe)
+                .setEndPosMergeSpalte(ERG_TEAM_B_SPALTE)
+                .setBorder(spaltenborderBold);
+        getSheetHelper().setStringValueInCell(ergebnisValue);
     }
 
     private void datenFormatieren(KaskadenKoRunde runde) throws GenerateException {
