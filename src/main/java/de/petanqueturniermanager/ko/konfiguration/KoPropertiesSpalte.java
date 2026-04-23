@@ -27,14 +27,14 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		ADDBaseProp(KONFIG_PROPERTIES, false);
 	}
 
-	private static final String KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM       = "Tab-Farbe KO-Turnierbaum";
+	public static final String KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM       = "Tab-Farbe KO-Turnierbaum";
 
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_HEADER       = "Turnierbaum Header Farbe";
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A       = "Turnierbaum Team A Farbe";
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B       = "Turnierbaum Team B Farbe";
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER       = "Turnierbaum Sieger Farbe";
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_BAHN         = "Turnierbaum Bahn Farbe";
-	private static final String KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ = "Turnierbaum 3. Platz Farbe";
+	public static final String KONFIG_PROP_TURNIERBAUM_COLOR_HEADER       = "Turnierbaum Header Farbe";
+	public static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A       = "Turnierbaum Team A Farbe";
+	public static final String KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B       = "Turnierbaum Team B Farbe";
+	public static final String KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER       = "Turnierbaum Sieger Farbe";
+	public static final String KONFIG_PROP_TURNIERBAUM_COLOR_BAHN         = "Turnierbaum Bahn Farbe";
+	public static final String KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ = "Turnierbaum 3. Platz Farbe";
 
 	private static final String KONFIG_PROP_KOPF_ZEILE_LINKS = "Kopfzeile Links";
 	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
@@ -155,6 +155,28 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDescription(
 						"Mindestanzahl Teams im Rest für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …).\r\nRest < diesem Wert wird in die letzte Gruppe gefaltet.")
 				.inSideBar());
+	}
+
+	/**
+	 * Fügt die KO-Bracket-Farbproperties (Tab-Farbe, Header, Team A/B, Sieger, Bahn, 3. Platz)
+	 * zur angegebenen Liste hinzu. Ermöglicht Wiederverwendung in anderen Turniersystemen.
+	 */
+	public static void addKoBracketColorProperties(List<ConfigProperty<?>> props) {
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM)
+				.setDefaultVal(SheetTabFarben.KO_TURNIERBAUM)
+				.setDescription("config.desc.tab.farbe.ko.turnierbaum").tabFarbe());
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_HEADER)
+				.setDefaultVal(0x2544DD).setDescription("config.desc.ko.turnierbaum.header").inSideBar());
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A)
+				.setDefaultVal(0xDCEEFA).setDescription("config.desc.ko.turnierbaum.team.a").inSideBar());
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B)
+				.setDefaultVal(0xF0F7FF).setDescription("config.desc.ko.turnierbaum.team.b").inSideBar());
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER)
+				.setDefaultVal(0xFFD700).setDescription("config.desc.ko.turnierbaum.sieger").inSideBar());
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_BAHN)
+				.setDefaultVal(0xEEEEEE).setDescription("config.desc.ko.turnierbaum.bahn").inSideBar());
+		props.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ)
+				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz").inSideBar());
 	}
 
 	KoPropertiesSpalte(ISheet sheet) {

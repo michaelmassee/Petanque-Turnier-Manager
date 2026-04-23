@@ -92,7 +92,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private static final int NAME_COL_WIDTH = 3000;
 	private static final int SCORE_COL_WIDTH = 900;
 	private static final int CONNECTOR_COL_WIDTH = 400;
-	private static final int SIEGER_NAME_COL_WIDTH = 3200;
+
+	/** Breite der Sieger-Nr-Spalte (vorletzte Spalte im Turnierbaum, NR-Modus). */
+	static final int SIEGER_NR_COL_WIDTH = 1500;
+	/** Breite der Sieger-Name-Spalte (letzte sichtbare Spalte im Turnierbaum). */
+	static final int SIEGER_NAME_COL_WIDTH = 5000;
 
 	// Farben – aus Konfiguration gelesen (Standardwerte als Fallback)
 	private int headerFarbe       = 0x2544DD;
@@ -118,7 +122,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// Cadrage-State
 	private boolean mitCadrage = false;
 	private int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
-	private int anzCadrageMatches = 0;
 	private int anzFreilose = 0;
 	private int gesanzTeamsIntern = 0;
 
@@ -559,12 +562,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (gesanzTeamsIntern > bracketGroesse) {
 			var rechner = new CadrageRechner(gesanzTeamsIntern);
 			this.mitCadrage = true;
-			this.anzCadrageMatches = rechner.anzTeams() / 2;
 			this.anzFreilose = rechner.anzFreilose();
 			this.cadrageSpaltOffset = colGroupSize;
 		} else {
 			this.mitCadrage = false;
-			this.anzCadrageMatches = 0;
 			this.anzFreilose = bracketGroesse;
 			this.cadrageSpaltOffset = 0;
 		}
@@ -738,7 +739,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			try {
 				int spalte = Integer.parseInt(parts[0].trim());
 				int zeile = Integer.parseInt(parts[1].trim());
-				spalteZuZeilen.computeIfAbsent(spalte, k -> new TreeSet<>()).add(zeile);
+				spalteZuZeilen.computeIfAbsent(spalte, _ -> new TreeSet<>()).add(zeile);
 			} catch (NumberFormatException ignoriert) {
 				// Fehlerhafte Tokens überspringen
 			}
@@ -848,7 +849,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		// NAME-Modus: siegerSpalte = Name (breit), siegerNameSpalte = versteckt
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			getSheetHelper().setColumnProperties(xSheet, siegerSpalte(numRunden),
-					ColumnProperties.from().setWidth(NR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+					ColumnProperties.from().setWidth(SIEGER_NR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 			getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
 					ColumnProperties.from().setWidth(SIEGER_NAME_COL_WIDTH).setHoriJustify(CellHoriJustify.LEFT)

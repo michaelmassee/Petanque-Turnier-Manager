@@ -51,4 +51,12 @@ public class PouleKoConfigAdapter implements IKoBracketKonfiguration {
     public boolean isSpielbaumSpielUmPlatz3() {
         return false;
     }
+
+    @Override public int getKoTurnierbaumTabFarbe()       { return konfigurationSheet.getKoTurnierbaumTabFarbe(); }
+    @Override public int getTurnierbaumHeaderFarbe()      { return konfigurationSheet.getTurnierbaumHeaderFarbe(); }
+    @Override public int getTurnierbaumTeamAFarbe()       { return konfigurationSheet.getTurnierbaumTeamAFarbe(); }
+    @Override public int getTurnierbaumTeamBFarbe()       { return konfigurationSheet.getTurnierbaumTeamBFarbe(); }
+    @Override public int getTurnierbaumSiegerFarbe()      { return konfigurationSheet.getTurnierbaumSiegerFarbe(); }
+    @Override public int getTurnierbaumBahnFarbe()        { return konfigurationSheet.getTurnierbaumBahnFarbe(); }
+    @Override public int getTurnierbaumDrittePlatzFarbe() { return konfigurationSheet.getTurnierbaumDrittePlatzFarbe(); }
 }

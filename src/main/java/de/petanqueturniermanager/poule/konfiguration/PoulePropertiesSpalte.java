@@ -10,6 +10,7 @@ import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
@@ -59,6 +60,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
         KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_POULE_VORRUNDEN_RANGL)
                 .setDefaultVal(SheetTabFarben.POULE_VORRUNDEN_RANGLISTE)
                 .setDescription("config.desc.tab.farbe.poule.vorrunden.rangliste").tabFarbe());
+        KoPropertiesSpalte.addKoBracketColorProperties(KONFIG_PROPERTIES);
     }
 
     protected PoulePropertiesSpalte(ISheet sheet) {
@@ -121,5 +123,13 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
     public int getPouleVorrundenRanglisteTabFarbe() {
         return readIntProperty(KONFIG_PROP_TAB_COLOR_POULE_VORRUNDEN_RANGL);
     }
+
+    public int getKoTurnierbaumTabFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM); }
+    public int getTurnierbaumHeaderFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_HEADER); }
+    public int getTurnierbaumTeamAFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A); }
+    public int getTurnierbaumTeamBFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B); }
+    public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
+    public int getTurnierbaumBahnFarbe()        { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
+    public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
 
 }

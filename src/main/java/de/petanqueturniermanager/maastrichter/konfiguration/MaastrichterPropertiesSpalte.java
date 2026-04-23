@@ -32,13 +32,14 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 				.setDefaultVal(3).setDescription("Anzahl Vorrunden im Schweizer System (2-5)").inSideBar());
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_GRUPPEN_MODUS)
-				.setDefaultVal(MaastrichterGruppenModus.NACH_GROESSE.name())
+				.setDefaultVal(MaastrichterGruppenModus.NACH_SIEGEN.name())
 				.setDescription("Wie Teams in Finalgruppen eingeteilt werden"))
-				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Viertel-Aufteilung nach Rang (Standard)")
-				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (Alternative bei gro\u00dfer Teilnehmerzahl)")
+				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (Standard)")
+				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Viertel-Aufteilung nach Rang (Alternative)")
 				.inSideBar());
 		// KO-Bracket-Properties wiederverwenden (keine Duplikation)
 		KoPropertiesSpalte.addKoBracketProperties(KONFIG_PROPERTIES);
+		KoPropertiesSpalte.addKoBracketColorProperties(KONFIG_PROPERTIES);
 	}
 
 	MaastrichterPropertiesSpalte(ISheet sheet) {
@@ -122,5 +123,13 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	public void setMaastrichterGruppenModus(MaastrichterGruppenModus modus) {
 		setStringProperty(KONFIG_PROP_GRUPPEN_MODUS, modus.name());
 	}
+
+	public int getKoTurnierbaumTabFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TAB_COLOR_KO_TURNIERBAUM); }
+	public int getTurnierbaumHeaderFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_HEADER); }
+	public int getTurnierbaumTeamAFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_A); }
+	public int getTurnierbaumTeamBFarbe()       { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_TEAM_B); }
+	public int getTurnierbaumSiegerFarbe()      { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_SIEGER); }
+	public int getTurnierbaumBahnFarbe()        { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_BAHN); }
+	public int getTurnierbaumDrittePlatzFarbe() { return readIntProperty(KoPropertiesSpalte.KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ); }
 
 }

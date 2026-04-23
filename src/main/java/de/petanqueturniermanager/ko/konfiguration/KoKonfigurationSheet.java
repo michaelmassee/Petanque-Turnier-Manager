@@ -135,13 +135,11 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 		propertiesSpalte.setMinRestGroesse(minRestGroesse);
 	}
 
-	@Override
-	public int getKoTurnierbaumTabFarbe()       { return propertiesSpalte.getKoTurnierbaumTabFarbe(); }
-
-	public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
-	public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }
-	public int getTurnierbaumTeamBFarbe()       { return propertiesSpalte.getTurnierbaumTeamBFarbe(); }
-	public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
-	public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
-	public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
+	@Override public int getKoTurnierbaumTabFarbe()       { return propertiesSpalte.getKoTurnierbaumTabFarbe(); }
+	@Override public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
+	@Override public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }
+	@Override public int getTurnierbaumTeamBFarbe()       { return propertiesSpalte.getTurnierbaumTeamBFarbe(); }
+	@Override public int getTurnierbaumSiegerFarbe()      { return propertiesSpalte.getTurnierbaumSiegerFarbe(); }
+	@Override public int getTurnierbaumBahnFarbe()        { return propertiesSpalte.getTurnierbaumBahnFarbe(); }
+	@Override public int getTurnierbaumDrittePlatzFarbe() { return propertiesSpalte.getTurnierbaumDrittePlatzFarbe(); }
 }

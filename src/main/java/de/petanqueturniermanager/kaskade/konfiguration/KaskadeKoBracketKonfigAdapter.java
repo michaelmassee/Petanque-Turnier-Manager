@@ -48,8 +48,11 @@ public class KaskadeKoBracketKonfigAdapter implements IKoBracketKonfiguration {
         return false;
     }
 
-    @Override
-    public int getKoTurnierbaumTabFarbe() {
-        return konfiguration.getKaskadenTabFarbe();
-    }
+    @Override public int getKoTurnierbaumTabFarbe()       { return konfiguration.getKoTurnierbaumTabFarbe(); }
+    @Override public int getTurnierbaumHeaderFarbe()      { return konfiguration.getTurnierbaumHeaderFarbe(); }
+    @Override public int getTurnierbaumTeamAFarbe()       { return konfiguration.getTurnierbaumTeamAFarbe(); }
+    @Override public int getTurnierbaumTeamBFarbe()       { return konfiguration.getTurnierbaumTeamBFarbe(); }
+    @Override public int getTurnierbaumSiegerFarbe()      { return konfiguration.getTurnierbaumSiegerFarbe(); }
+    @Override public int getTurnierbaumBahnFarbe()        { return konfiguration.getTurnierbaumBahnFarbe(); }
+    @Override public int getTurnierbaumDrittePlatzFarbe() { return konfiguration.getTurnierbaumDrittePlatzFarbe(); }
 }
