@@ -23,6 +23,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
+import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -93,8 +94,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private static final int SCORE_COL_WIDTH = 900;
 	private static final int CONNECTOR_COL_WIDTH = 400;
 
-	/** Breite der Sieger-Nr-Spalte (vorletzte Spalte im Turnierbaum, NR-Modus). */
-	static final int SIEGER_NR_COL_WIDTH = 1500;
 	/** Breite der Sieger-Name-Spalte (letzte sichtbare Spalte im Turnierbaum). */
 	static final int SIEGER_NAME_COL_WIDTH = 5000;
 
@@ -652,6 +651,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				? siegerSpalte(numRunden)
 				: siegerNameSpalte(numRunden);
 		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, HEADER_ZEILE_TITEL, letzteZeile, 0, letzteSpalte);
+		formatieresSiegerSpalten(xSheet, numRunden);
 
 		speichereScoreBereiche(xSheet, numRunden, metadatenSchluessel, aktuelleScorePositionen);
 		aktuelleScorePositionen = null;
@@ -844,12 +844,23 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setVertJustify(CellVertJustify2.CENTER));
 		}
 
-		// Sieger-Spalten:
-		// NR-Modus:   siegerSpalte = Nr (schmal), siegerNameSpalte = Name via SVERWEIS (breit)
-		// NAME-Modus: siegerSpalte = Name (breit), siegerNameSpalte = versteckt
+		formatieresSiegerSpalten(xSheet, numRunden);
+
+		// Versteckte Arbeitsspalte für Score-Positions-Daten (Blattschutz)
+		getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden) + 2,
+				ColumnProperties.from().isVisible(false));
+	}
+
+	/**
+	 * Setzt die Breiten beider Sieger-Spalten einheitlich für alle KO-Turnierbaum-Sheets.
+	 * <p>
+	 * NR-Modus: siegerSpalte = {@link MeldungenSpalte#DEFAULT_SPALTE_NUMBER_WIDTH}, siegerNameSpalte = {@link #SIEGER_NAME_COL_WIDTH}.<br>
+	 * NAME-Modus: siegerSpalte = {@link #SIEGER_NAME_COL_WIDTH}, siegerNameSpalte = versteckt (Breite 0).
+	 */
+	void formatieresSiegerSpalten(XSpreadsheet xSheet, int numRunden) throws GenerateException {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			getSheetHelper().setColumnProperties(xSheet, siegerSpalte(numRunden),
-					ColumnProperties.from().setWidth(SIEGER_NR_COL_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+					ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
 							.setVertJustify(CellVertJustify2.CENTER));
 			getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
 					ColumnProperties.from().setWidth(SIEGER_NAME_COL_WIDTH).setHoriJustify(CellHoriJustify.LEFT)
@@ -861,10 +872,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden),
 					ColumnProperties.from().setWidth(0));
 		}
-
-		// Versteckte Arbeitsspalte für Score-Positions-Daten (Blattschutz)
-		getSheetHelper().setColumnProperties(xSheet, siegerNameSpalte(numRunden) + 2,
-				ColumnProperties.from().isVisible(false));
 	}
 
 	private void schreibeHeader(XSpreadsheet xSheet, int numRunden) throws GenerateException {
