@@ -84,6 +84,10 @@ public abstract class SheetRunner extends Thread {
 		koordinator.addZustandsListener(listener);
 	}
 
+	public static void removeStateChangeListener(Runnable listener) {
+		koordinator.removeZustandsListener(listener);
+	}
+
 	/**
 	 * Startet den SheetRunner asynchron als Thread und schließt dabei die Race-Condition,
 	 * die zwischen {@code Thread.start()} und dem eigentlichen {@code run()}-Einstieg entsteht:

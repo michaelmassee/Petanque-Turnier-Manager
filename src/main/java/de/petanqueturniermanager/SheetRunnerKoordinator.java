@@ -73,6 +73,11 @@ class SheetRunnerKoordinator {
         zustandsListener.add(listener);
     }
 
+    /** Entfernt einen zuvor registrierten Zustandslistener. */
+    void removeZustandsListener(Runnable listener) {
+        zustandsListener.remove(listener);
+    }
+
     /**
      * Atomares getAndSet auf dem Lauf-Flag.
      *

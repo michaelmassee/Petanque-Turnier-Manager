@@ -21,6 +21,7 @@ import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.info.InfoSidebarPanel;
+import de.petanqueturniermanager.sidebar.sheets.SheetListeSidebarPanel;
 
 /**
  * Factory für Sidebar-Panels.
@@ -77,12 +78,28 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 
 		try {
 			if (xParentWindow != null && xSidebar != null) {
+				if (sResourceURL.length() <= URL_PREFIX.length()) {
+					logger.error("createUIElement: URL zu kurz: {}", sResourceURL);
+					throw new NoSuchElementException(sResourceURL, this);
+				}
 				WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
-				logger.debug("Neues InfoSidebarPanel");
-				return new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+				String panelId = sResourceURL.substring(URL_PREFIX.length() + 1);
+				logger.debug("createUIElement: panelId={}", panelId);
+				return switch (panelId) {
+					case "InfoPanel" ->
+						new InfoSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+					case "SheetListePanel" ->
+						new SheetListeSidebarPanel(currentSpreadsheet, xParentWindow, sResourceURL, xSidebar);
+					default -> {
+						logger.error("createUIElement: Unbekannte panelId '{}'", panelId);
+						throw new NoSuchElementException(sResourceURL, this);
+					}
+				};
 			} else {
 				logger.error("createUIElement: ParentWindow={}, Sidebar={}", xParentWindow, xSidebar);
 			}
+		} catch (NoSuchElementException e) {
+			throw e;
 		} catch (Exception e) {
 			logger.error("Fehler beim Erstellen des Panels '{}': {}", sResourceURL, e.getMessage(), e);
 		}

@@ -16,17 +16,21 @@ import com.sun.star.ui.XSidebar;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.timer.TimerState;
 
 /**
- * Zeigt die installierte Plugin-Version und den aktuellen Turnier-Timer.
+ * Zeigt die installierte Plugin-Version, das aktuelle Turniersystem und den Turnier-Timer.
  *
  * @author Michael Massee
  */
@@ -35,6 +39,8 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     private static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
     private XFixedText versionLabel;
+    private XFixedText turnierSystemLabel;
+    private XFixedText turnierSchrittLabel;
     private volatile XFixedText timerLabel;
 
     public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
@@ -50,6 +56,22 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         }
         versionLabel = Lo.qi(XFixedText.class, versionControl);
         getLayout().addLayout(new ControlLayout(versionControl), 1);
+
+        XControl turnierSystemControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
+                turnierSystemAnzeige(),
+                new Rectangle(0, 0, 200, 20), null);
+        if (turnierSystemControl != null) {
+            turnierSystemLabel = Lo.qi(XFixedText.class, turnierSystemControl);
+            getLayout().addLayout(new ControlLayout(turnierSystemControl), 1);
+        }
+
+        XControl turnierSchrittControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
+                turnierSchrittAnzeige(),
+                new Rectangle(0, 0, 200, 20), null);
+        if (turnierSchrittControl != null) {
+            turnierSchrittLabel = Lo.qi(XFixedText.class, turnierSchrittControl);
+            getLayout().addLayout(new ControlLayout(turnierSchrittControl), 1);
+        }
 
         XControl timerControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
                 timerAnzeige(TimerManager.get().getAktuellerZustand()),
@@ -77,13 +99,30 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     @Override
     protected void felderAktualisieren(ITurnierEvent eventObj) {
-        // Version und Timer ändern sich unabhängig vom Turnier-Event
+        var label = turnierSystemLabel;
+        if (label != null) {
+            try {
+                label.setText(turnierSystemAnzeige());
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren des Turniersystem-Labels", e);
+            }
+        }
+        var schrittLabel = turnierSchrittLabel;
+        if (schrittLabel != null) {
+            try {
+                schrittLabel.setText(turnierSchrittAnzeige());
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren des TurnierSchritt-Labels", e);
+            }
+        }
     }
 
     @Override
     protected void onDisposing(EventObject event) {
         timerLabel = null;
         versionLabel = null;
+        turnierSystemLabel = null;
+        turnierSchrittLabel = null;
         try {
             TimerManager.get().removeListener(this);
         } catch (Exception e) {
@@ -94,6 +133,32 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     String getPluginVersion() {
         var version = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext()).getVersionNummer();
         return version != null ? version : "–";
+    }
+
+    String turnierSystemAnzeige() {
+        var system = getTurnierSystemAusDocument();
+        var bezeichnung = (system != null) ? system.getBezeichnung() : "";
+        return I18n.get("sidebar.info.turniersystem", bezeichnung);
+    }
+
+    String turnierSchrittAnzeige() {
+        var system = getTurnierSystemAusDocument();
+        if (system == null) {
+            return "";
+        }
+        var docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
+        return switch (system) {
+            case SUPERMELEE -> {
+                int spieltag = docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 1);
+                int runde = docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 1);
+                yield I18n.get("sidebar.info.supermelee.schritt", spieltag, runde);
+            }
+            case SCHWEIZER -> {
+                int runde = docPropHelper.getIntProperty(SchweizerPropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 1);
+                yield I18n.get("sidebar.info.spielrunde", runde);
+            }
+            default -> "";
+        };
     }
 
     private String timerAnzeige(TimerState state) {
