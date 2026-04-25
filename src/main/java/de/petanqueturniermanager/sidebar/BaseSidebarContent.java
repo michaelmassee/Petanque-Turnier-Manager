@@ -208,8 +208,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
 		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
-			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument,
-					xSpreadsheetView);
+			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument);
 			felderAktualisieren(new OnProperiesChangedEvent(currentSpreadsheet.getWorkingSpreadsheetDocument()));
 		}
 	}
@@ -239,7 +238,8 @@ public abstract class BaseSidebarContent extends ComponentBase
 		if (istBereinigt) {
 			return;
 		}
-		if (!getCurrentSpreadsheet().getWorkingSpreadsheetDocument().equals(eventObj.getWorkingSpreadsheetDocument())) {
+		var doc = getCurrentSpreadsheet().getWorkingSpreadsheetDocument();
+		if (doc == null || !doc.equals(eventObj.getWorkingSpreadsheetDocument())) {
 			return;
 		}
 		logger.debug("onPropertiesChanged");

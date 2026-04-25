@@ -8,10 +8,14 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.XServiceInfo;
+import com.sun.star.lang.XSingleComponentFactory;
+import com.sun.star.registry.XRegistryKey;
 import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XUIElement;
 import com.sun.star.ui.XUIElementFactory;
 import com.sun.star.uno.XComponentContext;
+
+import com.sun.star.lib.uno.helper.Factory;
 
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -33,10 +37,21 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	private static final String[] SERVICE_NAMES = { SERVICE_NAME };
 	public static final String URL_PREFIX = "private:resource/toolpanel/PetanqueTurnierManagerPanelFactory";
 
+	public static XSingleComponentFactory __getComponentFactory(String sImplementationName) {
+		if (sImplementationName.equals(IMPLEMENTATION_NAME)) {
+			return Factory.createComponentFactory(PetanqueTurnierManagerPanelFactory.class, SERVICE_NAMES);
+		}
+		return null;
+	}
+
+	public static boolean __writeRegistryServiceInfo(XRegistryKey xRegistryKey) {
+		return Factory.writeRegistryServiceInfo(IMPLEMENTATION_NAME, SERVICE_NAMES, xRegistryKey);
+	}
+
 	private final XComponentContext xContext;
 
 	public PetanqueTurnierManagerPanelFactory(final XComponentContext xContext) {
-		logger.debug("PetanqueTurnierManagerPanelFactory constructor");
+		logger.info("PetanqueTurnierManagerPanelFactory konstruiert");
 		this.xContext = xContext;
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
@@ -44,7 +59,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 	@Override
 	public XUIElement createUIElement(final String sResourceURL, final PropertyValue[] aArgumentList)
 			throws NoSuchElementException, IllegalArgumentException {
-		logger.debug("createUIElement {}", sResourceURL);
+		logger.info("createUIElement: {}", sResourceURL);
 
 		if (!sResourceURL.startsWith(URL_PREFIX)) {
 			throw new NoSuchElementException(sResourceURL, this);

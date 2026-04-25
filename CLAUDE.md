@@ -73,7 +73,7 @@ Each tournament system typically has sheet classes for: Meldeliste (entry list),
 - **`algorithmen/`** — Core algorithms: SchweizerSystem, SuperMeleePaarungen, Direktvergleich, CadrageRechner
 - **`addin/`** — Generated Java interface (`XGlobal`) from IDL; **`addins/`** contains the implementations (`GlobalImpl`, `AbstractAddInImpl`)
 - **`konfigdialog/`** — Configuration UI dialogs
-- **`sidebar/`** — Sidebar info panels (**DEAKTIVIERT** – buggy, muss komplett überarbeitet werden, siehe unten)
+- **`sidebar/`** — Sidebar info panels (zeigt Plugin-Version als Label)
 
 ### Menu Configuration
 
@@ -106,11 +106,11 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 See `BUILD_ISSUES.md` for details on:
 1. IDL-to-Java interface generation not automated in Gradle
 
-## Sidebar – DEAKTIVIERT (buggy in LO 25.8)
+## Sidebar
 
-Factory-Eintrag in `.components` auskommentiert. `createUIElement()` wird nicht aufgerufen (`UIElementFactoryManager.xcu` greift nicht in LO 25.8). `SidebarUITest` ist `@Disabled`.
+Factory-Eintrag in `.components` aktiv. `InfoSidebarContent` zeigt nur die installierte Plugin-Version als einzelnes Label (via `ExtensionsHelper.getVersionNummer()`). `SidebarUITest` ist aktiv – setzt `reinstallExtension` voraus.
 
-**Regeln:** Keine neuen Features in `sidebar/`. Keine globalen Komponenten (`NewReleaseChecker`, Events etc.) einbeziehen. Erst reaktivieren wenn `createUIElement()` nachweislich aufgerufen wird.
+**Regeln:** Keine globalen Komponenten (`NewReleaseChecker` o.ä.) in der Sidebar verwenden. Sidebar-Inhalt minimal halten.
 
 
 ### Zellstile (CellStyles) und Sheet-Schutz – kritische LO-Einschränkung

@@ -11,15 +11,15 @@ import com.sun.star.lang.EventObject;
 import com.sun.star.ui.XSidebar;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * Zeigt das aktive Turniersystem als einzelnes Label.
+ * Zeigt die installierte Plugin-Version als einzelnes Label.
  *
  * @author Michael Massee
  */
@@ -33,8 +33,11 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 	@Override
 	protected void felderHinzufuegen() {
-		XControl labelControl = GuiFactory.createLabel(getGuiFactoryCreateParam(), getTurnierSystemBezeichnung(),
+		XControl labelControl = GuiFactory.createLabel(getGuiFactoryCreateParam(), getPluginVersion(),
 				new Rectangle(0, 0, 200, 20), null);
+		if (labelControl == null) {
+			return;
+		}
 		label = Lo.qi(XFixedText.class, labelControl);
 		getLayout().addLayout(new ControlLayout(labelControl), 1);
 		requestLayout();
@@ -42,9 +45,7 @@ public class InfoSidebarContent extends BaseSidebarContent {
 
 	@Override
 	protected void felderAktualisieren(ITurnierEvent eventObj) {
-		if (label != null) {
-			label.setText(getTurnierSystemBezeichnung());
-		}
+		// Version ändert sich zur Laufzeit nicht
 	}
 
 	@Override
@@ -52,11 +53,8 @@ public class InfoSidebarContent extends BaseSidebarContent {
 		label = null;
 	}
 
-	String getTurnierSystemBezeichnung() {
-		TurnierSystem ts = getTurnierSystemAusDocument();
-		if (ts == null || ts == TurnierSystem.KEIN) {
-			return "–";
-		}
-		return ts.getBezeichnung();
+	String getPluginVersion() {
+		String version = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext()).getVersionNummer();
+		return version != null ? version : "–";
 	}
 }

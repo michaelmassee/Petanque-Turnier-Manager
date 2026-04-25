@@ -39,7 +39,8 @@ public class WorkingSpreadsheet {
 		this.xContext = checkNotNull(xContext);
 		workingSpreadsheetDocument = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
 		workingSpreadsheetView = DocumentHelper.getCurrentSpreadsheetView(xContext);
-		xController = DocumentHelper.getXModel(xContext).getCurrentController();
+		var xModel = DocumentHelper.getXModel(xContext);
+		xController = xModel != null ? xModel.getCurrentController() : null;
 	}
 
 	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument) {

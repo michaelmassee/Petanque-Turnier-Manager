@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -15,20 +14,14 @@ import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XToolPanel;
 
 import de.petanqueturniermanager.BaseCalcUITest;
-import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.sidebar.PetanqueTurnierManagerPanelFactory;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * UITests für die Sidebar: Factory-Registrierung, Panel-Erstellung und Label-Inhalt.
+ * UITests für die Sidebar: Factory-Registrierung, Panel-Erstellung und Versionsanzeige.
  * <p>
- * DEAKTIVIERT – Sidebar funktioniert in LibreOffice noch nicht korrekt
- * (Factory-Registrierung via UIElementFactoryManager.xcu wird ignoriert,
- * Panel-Inhalt wird nicht angezeigt). Erst wieder aktivieren wenn die
- * Sidebar-Integration vollständig funktioniert.
+ * Voraussetzung: Extension muss via {@code ./gradlew reinstallExtension} installiert sein.
  */
-@Disabled("Sidebar buggy – Panel-Inhalt wird in LibreOffice nicht angezeigt")
 @DisplayName("Sidebar")
 public class SidebarUITest extends BaseCalcUITest {
 
@@ -92,25 +85,12 @@ public class SidebarUITest extends BaseCalcUITest {
 	}
 
 	@Test
-	@DisplayName("InfoPanel: kein Turniersystem → Label zeigt '–'")
-	void infoPanelLabel_OhneTurniersystem_ZeigtStrich() {
+	@DisplayName("InfoPanel: Label zeigt installierte Versionsnummer")
+	void infoPanelLabel_ZeigtVersion() {
 		InfoSidebarPanel p = neuesPanel();
 		InfoSidebarContent content = (InfoSidebarContent) p.getRealInterface();
 
-		assertThat(content.getTurnierSystemBezeichnung()).isEqualTo("–");
-	}
-
-	@Test
-	@DisplayName("InfoPanel: nach Turniersystem-Zuweisung zeigt Label den Systemnamen")
-	void infoPanelLabel_MitTurniersystem_ZeigtBezeichnung() {
-		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
-				TurnierSystem.SUPERMELEE.getId());
-
-		InfoSidebarPanel p = neuesPanel();
-		InfoSidebarContent content = (InfoSidebarContent) p.getRealInterface();
-
-		assertThat(content.getTurnierSystemBezeichnung())
-				.isEqualTo(TurnierSystem.SUPERMELEE.getBezeichnung());
+		assertThat(content.getPluginVersion()).isNotEmpty();
 	}
 
 	@Test
