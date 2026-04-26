@@ -16,29 +16,31 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
 import com.sun.star.lang.EventObject;
-import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.ui.LayoutSize;
 import com.sun.star.ui.XSidebar;
-
-import com.sun.star.beans.XPropertySet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
+import de.petanqueturniermanager.sidebar.layout.FuellendeControlLayout;
+import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten;
+import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.GruppenKopf;
+import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.SpieltagKopf;
 
 /**
- * Listet alle PTM-verwalteten Tabellenblätter in Dokumentreihenfolge auf.
- * Klick auf einen Eintrag aktiviert das entsprechende Sheet.
+ * Listet alle PTM-verwalteten Tabellenblätter als kollapsierbaren Baum nach Turniersystem.
+ * Klick auf einen Gruppen-Header klappt die Gruppe auf/zu.
+ * Klick auf ein Blatt aktiviert das entsprechende Sheet.
  *
  * @author Michael Massee
  */
@@ -48,10 +50,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
 
     private static final int ZEILEN_HOEHE = 22;
     private static final int MIN_HOEHE = 60;
-    private static final int MAX_HOEHE = 320;
 
     private XListBox sheetListBox;
-    private List<XSpreadsheet> aktuelleSheets = new ArrayList<>();
+    private List<BlattBaumEintrag> baumEintraege;
+    private Set<SheetGruppe> kollabierteGruppen;
+    private Set<Integer> kollabierteSpielTage;
+    private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
     private final Runnable prozessZustandListener = this::listBoxAktivierungAktualisieren;
 
@@ -65,6 +69,20 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
 
     @Override
     protected void felderHinzufuegen() {
+        // Lazy-Init: felderHinzufuegen() wird bereits aus super() aufgerufen,
+        // bevor die Feld-Initialisierer dieser Klasse gelaufen sind.
+        if (organisierer == null) {
+            organisierer = new SheetBaumOrganisierer();
+        }
+        if (kollabierteGruppen == null) {
+            kollabierteGruppen = new HashSet<>();
+        }
+        if (kollabierteSpielTage == null) {
+            kollabierteSpielTage = new HashSet<>();
+        }
+        if (baumEintraege == null) {
+            baumEintraege = new ArrayList<>();
+        }
         var xDoc = dokumentOderNull();
         if (xDoc == null) {
             sheetListeAufbauenLeer();
@@ -72,9 +90,9 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             return;
         }
 
-        aktuelleSheets = new ArrayList<>(ptmSheetsSortiertNachPosition(xDoc));
+        baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage);
 
-        if (aktuelleSheets.isEmpty()) {
+        if (baumEintraege.isEmpty()) {
             sheetListeAufbauenLeer();
         } else {
             sheetListeAufbauenMitEintraegen();
@@ -94,13 +112,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void sheetListeAufbauenMitEintraegen() {
-        int hoehe = Math.max(MIN_HOEHE, Math.min(aktuelleSheets.size() * ZEILEN_HOEHE, MAX_HOEHE));
         Map<String, Object> props = new HashMap<>();
         props.put(GuiFactory.V_SCROLL, true);
         XControl ctrl = GuiFactory.createListBox(
                 getGuiFactoryCreateParam(),
                 itemListener,
-                new Rectangle(0, 0, 200, hoehe),
+                new Rectangle(0, 0, 200, MIN_HOEHE),
                 props);
         if (ctrl == null) {
             logger.error("SheetListePanel: createListBox lieferte null");
@@ -108,31 +125,38 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             return;
         }
         sheetListBox = Lo.qi(XListBox.class, ctrl);
-        getLayout().addLayout(new ControlLayout(ctrl), 1);
+        getLayout().addLayout(new FuellendeControlLayout(ctrl, MIN_HOEHE), 1);
         listBoxBefuellen();
         auswahlWiederherstellen();
         listBoxAktivierungAktualisieren();
     }
 
+    @Override
+    public LayoutSize getHeightForWidth(int breite) {
+        int bevorzugt = baumEintraege == null || baumEintraege.isEmpty()
+                ? MIN_HOEHE
+                : Math.max(MIN_HOEHE, baumEintraege.size() * ZEILEN_HOEHE);
+        return new LayoutSize(MIN_HOEHE, -1, bevorzugt);
+    }
+
     private void listBoxBefuellen() {
         sheetListBox.removeItems((short) 0, sheetListBox.getItemCount());
-        for (int i = 0; i < aktuelleSheets.size(); i++) {
-            var named = Lo.qi(XNamed.class, aktuelleSheets.get(i));
-            if (named != null) {
-                sheetListBox.addItem(named.getName(), (short) i);
-            }
+        for (int i = 0; i < baumEintraege.size(); i++) {
+            sheetListBox.addItem(baumEintraege.get(i).anzeigeText(), (short) i);
         }
     }
 
     private void auswahlWiederherstellen() {
-        if (gespeichertesSheet == null) {
+        if (gespeichertesSheet == null || sheetListBox == null) {
             return;
         }
-        for (int i = 0; i < aktuelleSheets.size(); i++) {
-            var named = Lo.qi(XNamed.class, aktuelleSheets.get(i));
-            if (named != null && gespeichertesSheet.equals(named.getName())) {
-                sheetListBox.selectItemPos((short) i, true);
-                return;
+        for (int i = 0; i < baumEintraege.size(); i++) {
+            if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
+                var named = Lo.qi(XNamed.class, knoten.sheet());
+                if (named != null && gespeichertesSheet.equals(named.getName())) {
+                    sheetListBox.selectItemPos((short) i, true);
+                    return;
+                }
             }
         }
     }
@@ -153,10 +177,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             return;
         }
         short sel = lb.getSelectedItemPos();
-        if (sel >= 0 && sel < aktuelleSheets.size()) {
-            var named = Lo.qi(XNamed.class, aktuelleSheets.get(sel));
-            if (named != null) {
-                gespeichertesSheet = named.getName();
+        if (sel >= 0 && sel < baumEintraege.size()) {
+            if (baumEintraege.get(sel) instanceof BlattKnoten knoten) {
+                var named = Lo.qi(XNamed.class, knoten.sheet());
+                if (named != null) {
+                    gespeichertesSheet = named.getName();
+                }
             }
         }
     }
@@ -166,8 +192,14 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private final XItemListener itemListener = new XItemListener() {
         @Override
         public void itemStateChanged(ItemEvent e) {
-            if (e.Selected >= 0) {
-                sheetOeffnen();
+            int idx = e.Selected;
+            if (idx < 0 || idx >= baumEintraege.size()) {
+                return;
+            }
+            switch (baumEintraege.get(idx)) {
+                case GruppenKopf kopf -> gruppeToggle(kopf.gruppe());
+                case SpieltagKopf kopf -> spieltagToggle(kopf.spieltagNr());
+                case BlattKnoten knoten -> sheetAktivieren(knoten);
             }
         }
 
@@ -176,6 +208,28 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             // intentional no-op
         }
     };
+
+    private void spieltagToggle(int spieltagNr) {
+        auswahlMerken();
+        if (kollabierteSpielTage.contains(spieltagNr)) {
+            kollabierteSpielTage.remove(spieltagNr);
+        } else {
+            kollabierteSpielTage.add(spieltagNr);
+        }
+        allesFelderEntfernenUndNeuFenster();
+        felderHinzufuegen();
+    }
+
+    private void gruppeToggle(SheetGruppe gruppe) {
+        auswahlMerken();
+        if (kollabierteGruppen.contains(gruppe)) {
+            kollabierteGruppen.remove(gruppe);
+        } else {
+            kollabierteGruppen.add(gruppe);
+        }
+        allesFelderEntfernenUndNeuFenster();
+        felderHinzufuegen();
+    }
 
     private void listBoxAktivierungAktualisieren() {
         var lb = sheetListBox;
@@ -193,21 +247,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
     }
 
-    private void sheetOeffnen() {
-        var lb = sheetListBox;
-        if (lb == null) {
-            return;
-        }
-        short idx = lb.getSelectedItemPos();
-        if (idx < 0 || idx >= aktuelleSheets.size()) {
-            logger.debug("sheetOeffnen: ungültiger Index {}", idx);
-            return;
-        }
+    private void sheetAktivieren(BlattKnoten knoten) {
         try {
-            TurnierSheet.from(aktuelleSheets.get(idx), getCurrentSpreadsheet()).setActiv();
-            logger.debug("sheetOeffnen: Sheet-Index {} aktiviert", idx);
+            TurnierSheet.from(knoten.sheet(), getCurrentSpreadsheet()).setActiv();
+            logger.debug("sheetAktivieren: Sheet '{}' aktiviert", knoten.metadatenSchluessel());
         } catch (Exception e) {
-            logger.error("Fehler beim Aktivieren des Sheets an Index {}", idx, e);
+            logger.error("Fehler beim Aktivieren des Sheets '{}'", knoten.metadatenSchluessel(), e);
         }
     }
 
@@ -217,7 +262,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     protected void onDisposing(EventObject event) {
         SheetRunner.removeStateChangeListener(prozessZustandListener);
         sheetListBox = null;
-        aktuelleSheets.clear();
+        baumEintraege.clear();
         gespeichertesSheet = null;
     }
 
@@ -226,48 +271,5 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private XSpreadsheetDocument dokumentOderNull() {
         var ws = getCurrentSpreadsheet();
         return ws != null ? ws.getWorkingSpreadsheetDocument() : null;
-    }
-
-    /**
-     * Liefert alle PTM-verwalteten Sheets in Dokumentreihenfolge.
-     * Identifikation über Named Ranges mit Prefix {@code __PTM_} (Score-Keys ausgeschlossen).
-     */
-    private List<XSpreadsheet> ptmSheetsSortiertNachPosition(XSpreadsheetDocument xDoc) {
-        String[] allKeys = SheetMetadataHelper.getSchluesselMitPrefix(xDoc, "__PTM_");
-
-        Set<String> ptmNamen = new HashSet<>();
-        for (String key : allKeys) {
-            if (key.startsWith("__PTM_SCORE_")) {
-                continue;
-            }
-            SheetMetadataHelper.findeSheet(xDoc, key).ifPresent(s -> {
-                var named = Lo.qi(XNamed.class, s);
-                if (named != null) {
-                    ptmNamen.add(named.getName());
-                }
-            });
-        }
-
-        if (ptmNamen.isEmpty()) {
-            logger.debug("ptmSheetsSortiertNachPosition: keine PTM-Sheets gefunden");
-            return List.of();
-        }
-
-        var helper = new SheetHelper(getCurrentSpreadsheet());
-        int anz = helper.getAnzSheets();
-        var ergebnis = new ArrayList<XSpreadsheet>(ptmNamen.size());
-        for (int i = 0; i < anz; i++) {
-            XSpreadsheet s = helper.getSheetByIdx(i);
-            if (s == null) {
-                continue;
-            }
-            var named = Lo.qi(XNamed.class, s);
-            if (named != null && ptmNamen.contains(named.getName())) {
-                ergebnis.add(s);
-            }
-        }
-
-        logger.debug("ptmSheetsSortiertNachPosition: {} Sheets gefunden", ergebnis.size());
-        return ergebnis;
     }
 }

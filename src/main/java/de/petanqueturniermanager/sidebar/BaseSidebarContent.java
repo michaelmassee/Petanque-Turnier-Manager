@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.accessibility.XAccessible;
+import com.sun.star.awt.PosSize;
 import com.sun.star.awt.Rectangle;
 import com.sun.star.awt.WindowEvent;
 import com.sun.star.awt.XToolkit;
@@ -117,12 +118,16 @@ public abstract class BaseSidebarContent extends ComponentBase
 	}
 
 	/**
-	 * Ruft {@code xSidebar.requestLayout()} direkt auf (kein Thread, kein Sleep).
+	 * Ruft {@code xSidebar.requestLayout()} auf und erzwingt anschließend sofort
+	 * ein {@code doLayout()}, damit die Breite auch dann korrekt gesetzt wird,
+	 * wenn LO keinen {@code windowResized}-Event feuert (z.B. bei Rebuild ohne
+	 * Höhenänderung).
 	 */
 	protected void requestLayout() {
 		if (xSidebar != null) {
 			xSidebar.requestLayout();
 		}
+		doLayout();
 	}
 
 	/**
@@ -253,6 +258,12 @@ public abstract class BaseSidebarContent extends ComponentBase
 		try {
 			Rectangle posSizeParent = new Rectangle(0, 0, getParentWindow().getPosSize().Width,
 					getParentWindow().getPosSize().Height);
+			if (posSizeParent.Width <= 0) {
+				return;
+			}
+			if (window != null) {
+				window.setPosSize(0, 0, posSizeParent.Width, posSizeParent.Height, PosSize.POSSIZE);
+			}
 			if (getLayout() != null) {
 				getLayout().layout(posSizeParent);
 			}
