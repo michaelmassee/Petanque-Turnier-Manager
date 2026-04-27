@@ -78,8 +78,9 @@ public class SheetBaumOrganisierer {
             var gruppeOpt = SheetGruppe.fuerSchluessel(schluessel);
             var gruppe = gruppeOpt.orElse(SheetGruppe.ALLGEMEIN);
             SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet -> {
-                // Supermelee/Liga-Knoten: keine Einrückung (erscheinen auf oberster Ebene)
-                var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA) ? "" : "  ";
+                // Supermelee/Liga/Schweizer-Knoten: keine Einrückung (erscheinen auf oberster Ebene)
+                var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA
+                        || gruppe == SheetGruppe.SCHWEIZER) ? "" : "  ";
                 var knoten = knoten(sheet, schluessel, einrueckung);
                 if (knoten != null) {
                     gruppenMap.computeIfAbsent(gruppe, g -> new ArrayList<>()).add(knoten);
@@ -105,7 +106,7 @@ public class SheetBaumOrganisierer {
             Set<Integer> kollabierteSpielTage,
             Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
-        // Wird true, wenn POULE-Einträge die ALLGEMEIN-Gruppe (Teilnehmer) bereits integriert haben
+        // Gruppen, deren ALLGEMEIN-Teilnehmer bereits integriert wurden (Schweizer, Poule)
         var verbrauchteGruppen = new HashSet<SheetGruppe>();
         for (var gruppe : SheetGruppe.values()) {
             if (verbrauchteGruppen.contains(gruppe)) {
@@ -119,6 +120,10 @@ public class SheetBaumOrganisierer {
                 ergebnis.addAll(supermeleeEintraege(knoten, kollabierteSpielTage));
             } else if (gruppe == SheetGruppe.LIGA) {
                 ergebnis.addAll(ligaEintraege(knoten));
+            } else if (gruppe == SheetGruppe.SCHWEIZER) {
+                var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
+                ergebnis.addAll(schweizerEintraege(knoten, allgemeinKnoten));
+                verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else if (gruppe == SheetGruppe.POULE) {
                 var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
                 ergebnis.addAll(pouleEintraege(knoten, allgemeinKnoten, kollabierteUnterGruppen));
@@ -187,6 +192,35 @@ public class SheetBaumOrganisierer {
      */
     private List<BlattBaumEintrag> ligaEintraege(List<BlattKnoten> knoten) {
         return new ArrayList<>(knoten);
+    }
+
+    /**
+     * Baut die flache Eintrags-Liste für Schweizer-Blätter auf (ohne Gruppen-Header):
+     * Meldeliste → Teilnehmerliste → Spielrunden 1..n → Rangliste.
+     */
+    private List<BlattBaumEintrag> schweizerEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        allgemeinKnoten.stream()
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        return ergebnis;
     }
 
     /**
