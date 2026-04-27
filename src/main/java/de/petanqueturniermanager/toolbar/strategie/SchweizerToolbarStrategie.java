@@ -6,7 +6,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
-import de.petanqueturniermanager.supermelee.meldeliste.TeilnehmerSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.TeilnehmerSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
