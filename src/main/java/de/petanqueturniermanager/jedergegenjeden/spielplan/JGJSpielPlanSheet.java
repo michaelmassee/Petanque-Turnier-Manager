@@ -71,8 +71,8 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
 
-	private static final String NR_HINRUNDE_PREFIX = "HR-";
-	private static final String NR_RUECKRUNDE_PREFIX = "RR-";
+	static final String NR_HINRUNDE_PREFIX = "HR-";
+	static final String NR_RUECKRUNDE_PREFIX = "RR-";
 
 	// Arbeitsspalten
 	public static final int TEAM_A_NR_SPALTE = 14; // Zeile 0

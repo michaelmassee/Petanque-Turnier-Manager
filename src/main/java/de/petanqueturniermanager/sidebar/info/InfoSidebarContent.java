@@ -20,6 +20,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
 import de.petanqueturniermanager.liga.spielplan.LigaStatusLeser;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
@@ -186,6 +187,18 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                     yield I18n.get("sidebar.info.liga.beendet");
                 }
                 yield I18n.get("sidebar.info.liga.schritt",
+                        status.hrGespielt(), status.hrGesamt(),
+                        status.rrGespielt(), status.rrGesamt());
+            }
+            case JGJ -> {
+                var status = JGJStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.spielplanVorhanden()) {
+                    yield I18n.get("sidebar.info.jgj.meldungen.erfassen");
+                }
+                if (status.alleGespielt()) {
+                    yield I18n.get("sidebar.info.jgj.beendet");
+                }
+                yield I18n.get("sidebar.info.jgj.schritt",
                         status.hrGespielt(), status.hrGesamt(),
                         status.rrGespielt(), status.rrGesamt());
             }
