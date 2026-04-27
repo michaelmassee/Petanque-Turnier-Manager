@@ -70,8 +70,8 @@ public class SheetBaumOrganisierer {
             var gruppeOpt = SheetGruppe.fuerSchluessel(schluessel);
             var gruppe = gruppeOpt.orElse(SheetGruppe.ALLGEMEIN);
             SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet -> {
-                // Supermelee-Knoten: keine Einrückung (Spieltag-Struktur bestimmt Einrückung)
-                var einrueckung = gruppe == SheetGruppe.SUPERMELEE ? "" : "  ";
+                // Supermelee/Liga-Knoten: keine Einrückung (erscheinen auf oberster Ebene)
+                var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA) ? "" : "  ";
                 var knoten = knoten(sheet, schluessel, einrueckung);
                 if (knoten != null) {
                     gruppenMap.computeIfAbsent(gruppe, g -> new ArrayList<>()).add(knoten);
@@ -102,8 +102,11 @@ public class SheetBaumOrganisierer {
                 continue;
             }
             if (gruppe == SheetGruppe.SUPERMELEE) {
-                // Kein GruppenKopf für SUPERMELEE – Spieltage erscheinen direkt auf oberster Ebene
+                // Kein GruppenKopf – Spieltage erscheinen direkt auf oberster Ebene
                 ergebnis.addAll(supermeleeEintraege(knoten, kollabierteSpielTage));
+            } else if (gruppe == SheetGruppe.LIGA) {
+                // Kein GruppenKopf – Liga-Sheets direkt auf oberster Ebene
+                ergebnis.addAll(ligaEintraege(knoten));
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
                 ergebnis.add(new GruppenKopf(gruppe, expandiert));
@@ -160,6 +163,14 @@ public class SheetBaumOrganisierer {
                 .ifPresent(ergebnis::add);
 
         return ergebnis;
+    }
+
+    /**
+     * Baut die flache Eintrags-Liste für Liga-Blätter auf: direkt auf oberster Ebene, ohne Gruppen-Header.
+     * Die Reihenfolge entspricht der Sortierung in {@link SheetGruppe#LIGA}.
+     */
+    private List<BlattBaumEintrag> ligaEintraege(List<BlattKnoten> knoten) {
+        return new ArrayList<>(knoten);
     }
 
     /** Gibt den reinen Blattnamen ohne Einrückung zurück. */

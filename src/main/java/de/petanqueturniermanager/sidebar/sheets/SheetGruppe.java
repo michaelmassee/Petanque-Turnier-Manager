@@ -38,8 +38,8 @@ public enum SheetGruppe {
     LIGA("enum.turniersystem.liga", List.of(
             "__PTM_LIGA_MELDELISTE__",
             "__PTM_LIGA_SPIELPLAN__",
-            "__PTM_LIGA_RANGLISTE__",
-            "__PTM_LIGA_DIREKTVERGLEICH__"
+            "__PTM_LIGA_DIREKTVERGLEICH__",
+            "__PTM_LIGA_RANGLISTE__"
     )),
 
     KO("enum.turniersystem.ko", List.of(

@@ -26,9 +26,13 @@ import com.sun.star.ui.XSidebar;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
@@ -57,7 +61,13 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private Set<Integer> kollabierteSpielTage;
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
-    private final Runnable prozessZustandListener = this::listBoxAktivierungAktualisieren;
+    private final Runnable prozessZustandListener = () -> {
+        if (SheetRunner.isRunning()) {
+            listBoxAktivierungAktualisieren();
+        } else {
+            listeNeuAufbauen();
+        }
+    };
 
     public SheetListeSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
             XSidebar xSidebar) {
@@ -90,6 +100,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             return;
         }
 
+        heileVeralteteLigaMetadaten(xDoc);
         baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage);
 
         if (baumEintraege.isEmpty()) {
@@ -165,6 +176,10 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
 
     @Override
     protected void felderAktualisieren(ITurnierEvent event) {
+        listeNeuAufbauen();
+    }
+
+    private void listeNeuAufbauen() {
         auswahlMerken();
         allesFelderEntfernenUndNeuFenster();
         felderHinzufuegen();
@@ -271,5 +286,24 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private XSpreadsheetDocument dokumentOderNull() {
         var ws = getCurrentSpreadsheet();
         return ws != null ? ws.getWorkingSpreadsheetDocument() : null;
+    }
+
+    /**
+     * Heilt fehlende PTM-Metadaten für Liga-Sheets in älteren Dokumenten ohne Named Ranges.
+     * Wird aufgerufen bevor der Blatt-Baum aufgebaut wird, damit der Baum die Sheets findet.
+     */
+    private void heileVeralteteLigaMetadaten(XSpreadsheetDocument xDoc) {
+        var ws = getCurrentSpreadsheet();
+        if (ws == null) {
+            return;
+        }
+        var system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        if (system != TurnierSystem.LIGA) {
+            return;
+        }
+        SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE, SheetNamen.LEGACY_MELDELISTE);
+        SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, SheetNamen.LEGACY_SPIELPLAN);
+        SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.LEGACY_DIREKTVERGLEICH);
+        SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.LEGACY_RANGLISTE);
     }
 }

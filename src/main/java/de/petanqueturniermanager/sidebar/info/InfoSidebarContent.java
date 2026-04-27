@@ -15,10 +15,12 @@ import com.sun.star.ui.XSidebar;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.liga.spielplan.LigaStatusLeser;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
@@ -42,9 +44,11 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     private XFixedText turnierSystemLabel;
     private XFixedText turnierSchrittLabel;
     private volatile XFixedText timerLabel;
+    private final Runnable runnerZustandListener = this::runnerZustandAktualisieren;
 
     public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
         super(workingSpreadsheet, parentWindow, xSidebar);
+        SheetRunner.addStateChangeListener(runnerZustandListener);
     }
 
     @Override
@@ -128,6 +132,22 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         } catch (Exception e) {
             logger.error("Fehler beim Entfernen des TimerListeners", e);
         }
+        SheetRunner.removeStateChangeListener(runnerZustandListener);
+    }
+
+    private void runnerZustandAktualisieren() {
+        if (SheetRunner.isRunning()) {
+            return;
+        }
+        var label = turnierSchrittLabel;
+        if (label == null) {
+            return;
+        }
+        try {
+            label.setText(turnierSchrittAnzeige());
+        } catch (Exception e) {
+            logger.error("Fehler beim Aktualisieren des TurnierSchritt-Labels nach Runner-Stop", e);
+        }
     }
 
     String getPluginVersion() {
@@ -156,6 +176,18 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             case SCHWEIZER -> {
                 int runde = docPropHelper.getIntProperty(SchweizerPropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 1);
                 yield I18n.get("sidebar.info.spielrunde", runde);
+            }
+            case LIGA -> {
+                var status = LigaStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.spielplanVorhanden()) {
+                    yield I18n.get("sidebar.info.liga.meldungen.erfassen");
+                }
+                if (status.alleGespielt()) {
+                    yield I18n.get("sidebar.info.liga.beendet");
+                }
+                yield I18n.get("sidebar.info.liga.schritt",
+                        status.hrGespielt(), status.hrGesamt(),
+                        status.rrGespielt(), status.rrGesamt());
             }
             default -> "";
         };
