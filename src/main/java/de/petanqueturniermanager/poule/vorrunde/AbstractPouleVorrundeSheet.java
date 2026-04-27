@@ -42,7 +42,7 @@ public abstract class AbstractPouleVorrundeSheet extends SheetRunner implements 
     public static final int ERSTE_DATEN_ZEILE = 2;
 
     protected static final int SPALTE_BAHN      = 0;
-    protected static final int SPALTE_BESCHR    = 1;
+    public static final int SPALTE_BESCHR       = 1;
     public static final int SPALTE_POULE_NR     = 2;
     public static final int SPALTE_TEAM_A_NR    = 3;
     protected static final int SPALTE_TEAM_A_NAME = 4;

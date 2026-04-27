@@ -2,6 +2,7 @@ package de.petanqueturniermanager.sidebar.sheets;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,10 +17,12 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.GruppenKopf;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.SpieltagKopf;
+import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.UnterGruppenKopf;
 
 /**
  * Baut die Baum-Struktur der Sidebar-Blätterliste auf.
@@ -30,6 +33,9 @@ import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.SpieltagKopf;
 public class SheetBaumOrganisierer {
 
     private static final Logger logger = LogManager.getLogger(SheetBaumOrganisierer.class);
+
+    static final String POULE_VORRUNDE_GRUPPE_ID = "POULE_VORRUNDE";
+    static final String POULE_KO_GRUPPE_ID = "POULE_KO";
 
     private static final String SUPERMELEE_MELDELISTE_SCHLUESSEL = "__PTM_SUPERMELEE_MELDELISTE__";
     private static final String SUPERMELEE_ENDRANGLISTE_SCHLUESSEL = "__PTM_SUPERMELEE_ENDRANGLISTE__";
@@ -45,16 +51,18 @@ public class SheetBaumOrganisierer {
     /**
      * Erzeugt die vollständige Eintrags-Liste für die ListBox.
      *
-     * @param xDoc                  Spreadsheet-Dokument
-     * @param kollabiert            Menge der aktuell kollabierten Turniersystem-Gruppen
-     * @param kollabierteSpielTage  Menge der aktuell kollabierten Spieltag-Nummern (nur Supermelee)
+     * @param xDoc                      Spreadsheet-Dokument
+     * @param kollabiert                Menge der aktuell kollabierten Turniersystem-Gruppen
+     * @param kollabierteSpielTage      Menge der aktuell kollabierten Spieltag-Nummern (nur Supermelee)
+     * @param kollabierteUnterGruppen   Menge der aktuell kollabierten Untergruppen-IDs (z.B. Poule)
      * @return geordnete Liste aus Gruppen-/Spieltag-Köpfen und BlattKnoten
      */
     public List<BlattBaumEintrag> baumAufbauen(XSpreadsheetDocument xDoc,
             Set<SheetGruppe> kollabiert,
-            Set<Integer> kollabierteSpielTage) {
+            Set<Integer> kollabierteSpielTage,
+            Set<String> kollabierteUnterGruppen) {
         var gruppenMap = schluesselNachGruppenSortieren(xDoc);
-        return eintraegeMitKopfAufbauen(gruppenMap, kollabiert, kollabierteSpielTage);
+        return eintraegeMitKopfAufbauen(gruppenMap, kollabiert, kollabierteSpielTage, kollabierteUnterGruppen);
     }
 
     // ── Interne Methoden ─────────────────────────────────────────────────────
@@ -94,19 +102,27 @@ public class SheetBaumOrganisierer {
     private List<BlattBaumEintrag> eintraegeMitKopfAufbauen(
             Map<SheetGruppe, List<BlattKnoten>> gruppenMap,
             Set<SheetGruppe> kollabiert,
-            Set<Integer> kollabierteSpielTage) {
+            Set<Integer> kollabierteSpielTage,
+            Set<String> kollabierteUnterGruppen) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
+        // Wird true, wenn POULE-Einträge die ALLGEMEIN-Gruppe (Teilnehmer) bereits integriert haben
+        var verbrauchteGruppen = new HashSet<SheetGruppe>();
         for (var gruppe : SheetGruppe.values()) {
+            if (verbrauchteGruppen.contains(gruppe)) {
+                continue;
+            }
             var knoten = gruppenMap.get(gruppe);
             if (knoten == null || knoten.isEmpty()) {
                 continue;
             }
             if (gruppe == SheetGruppe.SUPERMELEE) {
-                // Kein GruppenKopf – Spieltage erscheinen direkt auf oberster Ebene
                 ergebnis.addAll(supermeleeEintraege(knoten, kollabierteSpielTage));
             } else if (gruppe == SheetGruppe.LIGA) {
-                // Kein GruppenKopf – Liga-Sheets direkt auf oberster Ebene
                 ergebnis.addAll(ligaEintraege(knoten));
+            } else if (gruppe == SheetGruppe.POULE) {
+                var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
+                ergebnis.addAll(pouleEintraege(knoten, allgemeinKnoten, kollabierteUnterGruppen));
+                verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
                 ergebnis.add(new GruppenKopf(gruppe, expandiert));
@@ -171,6 +187,70 @@ public class SheetBaumOrganisierer {
      */
     private List<BlattBaumEintrag> ligaEintraege(List<BlattKnoten> knoten) {
         return new ArrayList<>(knoten);
+    }
+
+    /**
+     * Baut die Eintrags-Liste für Poule-A/B-Blätter auf:
+     * <ol>
+     *   <li>Meldeliste (oberste Ebene)</li>
+     *   <li>Teilnehmer aus ALLGEMEIN (oberste Ebene)</li>
+     *   <li>Vorrunde-Untergruppe: Vorrunde-Sheet, Spielpläne, Vorrunden-Rangliste</li>
+     *   <li>KO-Runde-Untergruppe: A-Finale, B-Finale</li>
+     * </ol>
+     */
+    private List<BlattBaumEintrag> pouleEintraege(
+            List<BlattKnoten> pouleKnoten,
+            List<BlattKnoten> allgemeinKnoten,
+            Set<String> kollabierteUnterGruppen) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        // Meldeliste an erster Stelle ohne Einrückung
+        pouleKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        // Teilnehmer aus ALLGEMEIN direkt danach
+        allgemeinKnoten.stream()
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        // Vorrunde-Untergruppe
+        var vorrundeKnoten = pouleKnoten.stream()
+                .filter(k -> !SheetMetadataHelper.SCHLUESSEL_POULE_MELDELISTE.equals(k.metadatenSchluessel())
+                        && !k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_POULE_KO_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!vorrundeKnoten.isEmpty()) {
+            var vorrundeExpandiert = !kollabierteUnterGruppen.contains(POULE_VORRUNDE_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    POULE_VORRUNDE_GRUPPE_ID,
+                    I18n.get("sidebar.sheets.poule.vorrunde.gruppe"),
+                    vorrundeExpandiert));
+            if (vorrundeExpandiert) {
+                ergebnis.addAll(vorrundeKnoten);
+            }
+        }
+
+        // KO-Runde-Untergruppe
+        var koKnoten = pouleKnoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_POULE_KO_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!koKnoten.isEmpty()) {
+            var koExpandiert = !kollabierteUnterGruppen.contains(POULE_KO_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    POULE_KO_GRUPPE_ID,
+                    I18n.get("sidebar.sheets.poule.ko.gruppe"),
+                    koExpandiert));
+            if (koExpandiert) {
+                ergebnis.addAll(koKnoten);
+            }
+        }
+
+        return ergebnis;
     }
 
     /** Gibt den reinen Blattnamen ohne Einrückung zurück. */

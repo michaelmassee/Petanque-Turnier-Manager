@@ -40,6 +40,7 @@ import de.petanqueturniermanager.sidebar.layout.FuellendeControlLayout;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.BlattKnoten;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.GruppenKopf;
 import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.SpieltagKopf;
+import de.petanqueturniermanager.sidebar.sheets.BlattBaumEintrag.UnterGruppenKopf;
 
 /**
  * Listet alle PTM-verwalteten Tabellenblätter als kollapsierbaren Baum nach Turniersystem.
@@ -59,6 +60,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private List<BlattBaumEintrag> baumEintraege;
     private Set<SheetGruppe> kollabierteGruppen;
     private Set<Integer> kollabierteSpielTage;
+    private Set<String> kollabierteUnterGruppen;
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
     private final Runnable prozessZustandListener = () -> {
@@ -90,6 +92,9 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         if (kollabierteSpielTage == null) {
             kollabierteSpielTage = new HashSet<>();
         }
+        if (kollabierteUnterGruppen == null) {
+            kollabierteUnterGruppen = new HashSet<>();
+        }
         if (baumEintraege == null) {
             baumEintraege = new ArrayList<>();
         }
@@ -101,7 +106,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
 
         heileVeralteteLigaMetadaten(xDoc);
-        baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage);
+        baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage, kollabierteUnterGruppen);
 
         if (baumEintraege.isEmpty()) {
             sheetListeAufbauenLeer();
@@ -214,6 +219,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             switch (baumEintraege.get(idx)) {
                 case GruppenKopf kopf -> gruppeToggle(kopf.gruppe());
                 case SpieltagKopf kopf -> spieltagToggle(kopf.spieltagNr());
+                case UnterGruppenKopf kopf -> unterGruppeToggle(kopf.id());
                 case BlattKnoten knoten -> sheetAktivieren(knoten);
             }
         }
@@ -230,6 +236,17 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             kollabierteSpielTage.remove(spieltagNr);
         } else {
             kollabierteSpielTage.add(spieltagNr);
+        }
+        allesFelderEntfernenUndNeuFenster();
+        felderHinzufuegen();
+    }
+
+    private void unterGruppeToggle(String id) {
+        auswahlMerken();
+        if (kollabierteUnterGruppen.contains(id)) {
+            kollabierteUnterGruppen.remove(id);
+        } else {
+            kollabierteUnterGruppen.add(id);
         }
         allesFelderEntfernenUndNeuFenster();
         felderHinzufuegen();

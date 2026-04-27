@@ -6,10 +6,12 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Eintrag in der Baum-Darstellung der Blätterliste.
- * Entweder ein kollabierbarer Gruppen-Kopf, ein Spieltag-Header oder ein einzelnes Blatt.
+ * Entweder ein kollabierbarer Gruppen-Kopf, ein Spieltag-Header, ein Untergruppen-Header
+ * oder ein einzelnes Blatt.
  */
 public sealed interface BlattBaumEintrag
-        permits BlattBaumEintrag.GruppenKopf, BlattBaumEintrag.SpieltagKopf, BlattBaumEintrag.BlattKnoten {
+        permits BlattBaumEintrag.GruppenKopf, BlattBaumEintrag.SpieltagKopf,
+                BlattBaumEintrag.UnterGruppenKopf, BlattBaumEintrag.BlattKnoten {
 
     /** Text der in der ListBox angezeigt wird. */
     String anzeigeText();
@@ -29,6 +31,15 @@ public sealed interface BlattBaumEintrag
         @Override
         public String anzeigeText() {
             return (expandiert ? "▼ " : "▶ ") + I18n.get("sidebar.sheets.spieltag.nr", spieltagNr);
+        }
+    }
+
+    /** Untergruppen-Header innerhalb eines Turniersystems (z.B. Vorrunde, KO-Runde). */
+    record UnterGruppenKopf(String id, String bezeichnung, boolean expandiert) implements BlattBaumEintrag {
+
+        @Override
+        public String anzeigeText() {
+            return (expandiert ? "▼ " : "▶ ") + bezeichnung;
         }
     }
 

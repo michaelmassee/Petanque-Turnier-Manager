@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
 import de.petanqueturniermanager.liga.spielplan.LigaStatusLeser;
+import de.petanqueturniermanager.poule.PouleStatusLeser;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
@@ -181,7 +182,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             case LIGA -> {
                 var status = LigaStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
                 if (!status.spielplanVorhanden()) {
-                    yield I18n.get("sidebar.info.liga.meldungen.erfassen");
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
                 }
                 if (status.alleGespielt()) {
                     yield I18n.get("sidebar.info.liga.beendet");
@@ -193,7 +194,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             case JGJ -> {
                 var status = JGJStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
                 if (!status.spielplanVorhanden()) {
-                    yield I18n.get("sidebar.info.jgj.meldungen.erfassen");
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
                 }
                 if (status.alleGespielt()) {
                     yield I18n.get("sidebar.info.jgj.beendet");
@@ -201,6 +202,20 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                 yield I18n.get("sidebar.info.jgj.schritt",
                         status.hrGespielt(), status.hrGesamt(),
                         status.rrGespielt(), status.rrGesamt());
+            }
+            case POULE -> {
+                var status = PouleStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.vorrundeVorhanden()) {
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
+                }
+                if (status.beendet()) {
+                    yield I18n.get("sidebar.info.poule.beendet");
+                }
+                if (status.koVorhanden()) {
+                    yield I18n.get("sidebar.info.poule.ko.runde");
+                }
+                yield I18n.get("sidebar.info.poule.vorrunde",
+                        status.vorrundeGespielt(), status.vorrundeGesamt());
             }
             default -> "";
         };
