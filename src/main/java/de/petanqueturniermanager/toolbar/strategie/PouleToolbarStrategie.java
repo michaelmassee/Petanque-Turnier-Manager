@@ -38,6 +38,11 @@ public class PouleToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
+    public boolean hatAbschlussphase() {
+        return true;
+    }
+
+    @Override
     public void abschluss(WorkingSpreadsheet ws) throws Exception {
         new PouleKoSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }

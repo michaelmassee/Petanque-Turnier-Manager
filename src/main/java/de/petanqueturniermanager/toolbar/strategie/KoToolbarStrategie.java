@@ -38,6 +38,11 @@ public class KoToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
+    public boolean hatAbschlussphase() {
+        return true;
+    }
+
+    @Override
     public void abschluss(WorkingSpreadsheet ws) throws Exception {
         new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }

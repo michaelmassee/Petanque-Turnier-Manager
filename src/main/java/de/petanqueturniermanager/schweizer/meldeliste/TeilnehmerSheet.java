@@ -25,12 +25,16 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Bereinigte Teilnehmerliste für das Schweizer Turniersystem – als Aushang und Webseite.
@@ -74,8 +78,16 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
     @Override
     protected void doRun() throws GenerateException {
+        if (TurnierModus.get().istAktiv()) {
+            BlattschutzRegistry.fuer(getTurnierSystem())
+                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+        }
         meldeliste.upDateSheet();
         generate();
+        if (TurnierModus.get().istAktiv()) {
+            BlattschutzRegistry.fuer(getTurnierSystem())
+                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+        }
     }
 
     public void generate() throws GenerateException {
@@ -144,6 +156,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);
         printBereichDefinieren(footer.getPos(), letzteSpalte);
+        SheetFreeze.from(getTurnierSheet()).anzZeilen(ERSTE_DATEN_ZEILE).doFreeze();
     }
 
     private void headerSchreiben(int letzteSpalte) throws GenerateException {
@@ -152,15 +165,16 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
         for (int block = 0; block < anzahlBloecke; block++) {
             int nrSpalte = block * ANZAHL_SPALTEN + TEAM_NR_SPALTE;
             int nameSpalte = nrSpalte + 1;
+            var headerBorder = BorderFactory.from().allThin().boldLn().forBottom().toBorder();
             getSheetHelper().setStringValueInCell(StringCellValue
                     .from(getXSpreadSheet(), Position.from(nrSpalte, 0), I18n.get("column.header.nr"))
-                    .setBorder(BorderFactory.from().allThin().toBorder())
+                    .setBorder(headerBorder)
                     .setCellBackColor(headerFarbe)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setShrinkToFit(true));
             getSheetHelper().setStringValueInCell(StringCellValue
                     .from(getXSpreadSheet(), Position.from(nameSpalte, 0), I18n.get("column.header.name"))
-                    .setBorder(BorderFactory.from().allThin().toBorder())
+                    .setBorder(headerBorder)
                     .setCellBackColor(headerFarbe)
                     .setHoriJustify(CellHoriJustify.CENTER)
                     .setShrinkToFit(true));

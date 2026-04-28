@@ -38,8 +38,18 @@ public class KaskadeToolbarStrategie implements ITurnierSystemToolbarStrategie {
     }
 
     @Override
+    public boolean hatNeuAuslosen() {
+        return true;
+    }
+
+    @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new KaskadeAktuelleRundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatAbschlussphase() {
+        return true;
     }
 
     @Override

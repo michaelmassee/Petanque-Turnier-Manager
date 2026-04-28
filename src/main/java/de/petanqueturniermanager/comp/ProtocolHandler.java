@@ -142,6 +142,7 @@ import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.toolbar.TurnierSystemAuswahlDialog;
 import de.petanqueturniermanager.toolbar.TurnierSystemNeueDateiAuswahlDialog;
+import de.petanqueturniermanager.toolbar.TurnierSystemToolbarStrategieRegistry;
 
 /**
  * UNO ProtocolHandler für das benutzerdefinierte Protokoll "ptm:".
@@ -1163,8 +1164,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
-			case CMD_TOOLBAR_NEU_AUSLOSEN,
-				 CMD_TOOLBAR_ABSCHLUSS                      -> ts != TurnierSystem.KEIN;
+			case CMD_TOOLBAR_NEU_AUSLOSEN -> ts != TurnierSystem.KEIN
+					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatNeuAuslosen();
+			case CMD_TOOLBAR_ABSCHLUSS    -> ts != TurnierSystem.KEIN
+					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatAbschlussphase();
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
 			// Neues Turnier in neuer Datei / Öffnen – immer aktiviert (unabhängig vom aktuellen Dokument)

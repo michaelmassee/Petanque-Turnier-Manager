@@ -33,6 +33,11 @@ public class SchweizerToolbarStrategie implements ITurnierSystemToolbarStrategie
     }
 
     @Override
+    public boolean hatNeuAuslosen() {
+        return true;
+    }
+
+    @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new SchweizerSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }

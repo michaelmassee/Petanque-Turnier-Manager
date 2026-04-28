@@ -35,6 +35,11 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     }
 
     @Override
+    public boolean hatNeuAuslosen() {
+        return true;
+    }
+
+    @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new SpielrundeSheet_Update(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }

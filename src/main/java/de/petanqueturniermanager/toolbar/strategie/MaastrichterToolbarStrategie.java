@@ -32,8 +32,18 @@ public class MaastrichterToolbarStrategie implements ITurnierSystemToolbarStrate
     }
 
     @Override
+    public boolean hatNeuAuslosen() {
+        return true;
+    }
+
+    @Override
     public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
         new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public boolean hatAbschlussphase() {
+        return true;
     }
 
     @Override

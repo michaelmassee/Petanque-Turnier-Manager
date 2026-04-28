@@ -40,6 +40,16 @@ public interface ITurnierSystemToolbarStrategie {
      */
     void abschluss(WorkingSpreadsheet ws) throws Exception;
 
+    /** Gibt zurück, ob dieses Turniersystem eine Abschlussphase unterstützt. */
+    default boolean hatAbschlussphase() {
+        return false;
+    }
+
+    /** Gibt zurück, ob dieses Turniersystem eine "Neu auslosen"-Aktion unterstützt. */
+    default boolean hatNeuAuslosen() {
+        return false;
+    }
+
     /**
      * Wechselt zum nächsten Spieltag. Nur relevant für Systeme mit mehreren Spieltagen.
      * Standard-Implementierung wirft {@link UnsupportedOperationException}.

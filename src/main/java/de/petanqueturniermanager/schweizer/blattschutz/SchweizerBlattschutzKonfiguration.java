@@ -105,6 +105,8 @@ public class SchweizerBlattschutzKonfiguration implements IBlattschutzKonfigurat
     private void sammleVollGesperrteSheets(XSpreadsheetDocument xDoc, List<SheetSchutzInfo> infos) {
         SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE)
                 .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
+                .ifPresent(sheet -> infos.add(SheetSchutzInfo.vollGesperrt(sheet)));
     }
 
     /**
