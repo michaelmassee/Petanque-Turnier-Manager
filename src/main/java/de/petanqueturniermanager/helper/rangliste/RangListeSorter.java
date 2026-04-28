@@ -157,7 +157,7 @@ public class RangListeSorter {
 				.isVisible(isVisible);
 		StringCellValue validateHeader = StringCellValue
 				.from(sheet, Position.from(validateSpalte(), ersteDatenZiele - 1)).addColumnProperties(columnProperties)
-				.setValue("Err"); // Überschrift Validate Spalte
+				.setValue("");
 
 		if (isVisible) {
 			validateHeader.setComment(I18n.get("rangliste.comment.validate.spalte"));

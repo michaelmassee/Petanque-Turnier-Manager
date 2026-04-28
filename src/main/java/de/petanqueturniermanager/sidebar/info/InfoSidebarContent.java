@@ -20,6 +20,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.formulex.FormuleXStatusLeser;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
 import de.petanqueturniermanager.kaskade.KaskadeStatusLeser;
 import de.petanqueturniermanager.ko.KoStatusLeser;
@@ -259,6 +260,18 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                     yield I18n.get("sidebar.info.turnier.beendet");
                 }
                 yield I18n.get("sidebar.info.ko.laeuft");
+            }
+            case FORMULEX -> {
+                var status = FormuleXStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.spielrundeVorhanden()) {
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
+                }
+                if (status.beendet()) {
+                    yield I18n.get("sidebar.info.turnier.beendet");
+                }
+                yield I18n.get("sidebar.info.formulex.schritt",
+                        status.aktuelleRundeNr(), status.anzahlRunden(),
+                        status.rundeGespielt(), status.rundeGesamt());
             }
             default -> "";
         };

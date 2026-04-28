@@ -1,4 +1,4 @@
-# 🏆 Kapitel 15 – Formule 4
+# 🏆 Kapitel 13 – Formule 4
 
 Das **Formule‑4‑System** ist ein kompaktes, schnelles und sehr weit verbreitetes Rundensystem im französischen und teilweise deutschen Pétanque‑Breitensport. Der Name leitet sich direkt vom Kernprinzip ab:
 
