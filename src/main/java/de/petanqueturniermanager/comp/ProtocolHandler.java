@@ -312,6 +312,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_TEILNEHMER            = "toolbar_teilnehmer";
 	public static final String CMD_TOOLBAR_NEU_IN_NEUER_DATEI    = "toolbar_neu_in_neuer_datei";
 	public static final String CMD_TOOLBAR_OEFFNEN               = "toolbar_oeffnen";
+	public static final String CMD_TOOLBAR_NEU_AUSLOSEN          = "toolbar_neu_auslosen";
+	public static final String CMD_TOOLBAR_ABSCHLUSS             = "toolbar_abschluss";
 	public static final String CMD_TOOLBAR_NAECHSTER_SPIELTAG    = "toolbar_naechster_spieltag";
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
 	// Turnier Modus
@@ -784,6 +786,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_WEITER:
 				ToolbarAktionDispatcher.weiter(ws);
 				break;
+			case CMD_TOOLBAR_NEU_AUSLOSEN:
+				ToolbarAktionDispatcher.neuAuslosen(ws);
+				break;
+			case CMD_TOOLBAR_ABSCHLUSS:
+				ToolbarAktionDispatcher.abschluss(ws);
+				break;
 			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE:
 				ToolbarAktionDispatcher.vorrundenRangliste(ws);
 				break;
@@ -1152,9 +1160,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_ABBRUCH                                -> true;
 			// Symbolleiste
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
-			case CMD_TOOLBAR_WEITER,
-				 CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
+			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;
+			case CMD_TOOLBAR_VORRUNDEN_RANGLISTE,
 				 CMD_TOOLBAR_TEILNEHMER                     -> ts != TurnierSystem.KEIN && ts != TurnierSystem.LIGA;
+			case CMD_TOOLBAR_NEU_AUSLOSEN,
+				 CMD_TOOLBAR_ABSCHLUSS                      -> ts != TurnierSystem.KEIN;
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
 			// Neues Turnier in neuer Datei / Öffnen – immer aktiviert (unabhängig vom aktuellen Dokument)

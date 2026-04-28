@@ -150,7 +150,6 @@ Regeln für jedes Turniersystem sind in `turniersysteme/` dokumentiert:
 | Arena-Pétanque | `16_ArenaPetanque.md` |
 | Crazy-Mêlée | `15_CrazyMelee.md` |
 | Dänisches System | `11_DaenischesSystem.md` |
-| Formule 4 | `13_Formule4.md` |
 | Kölner Sextet | `10_KoelnerSextet.md` |
 | Monrad-System | `12_MonradSystem.md` |
 | Tête-Series | `14_TeteSeries.md` |

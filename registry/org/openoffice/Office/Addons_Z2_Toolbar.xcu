@@ -80,8 +80,50 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 4: Vorrunden Rangliste -->
+                <!-- Schaltfläche 4: Neu Auslosen -->
                 <node oor:name="m4" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_neu_auslosen</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Neu Auslosen</value>
+                        <value xml:lang="en">Re-Draw</value>
+                        <value xml:lang="es">Nuevo sorteo</value>
+                        <value xml:lang="fr">Nouveau tirage</value>
+                        <value xml:lang="nl">Nieuw loten</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 5: Abschlussphase -->
+                <node oor:name="m5" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:toolbar_abschluss</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Abschlussphase</value>
+                        <value xml:lang="en">Final Phase</value>
+                        <value xml:lang="es">Fase final</value>
+                        <value xml:lang="fr">Phase finale</value>
+                        <value xml:lang="nl">Slotfase</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche 6: Vorrunden Rangliste -->
+                <node oor:name="m6" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_vorrunden_rangliste</value>
                     </prop>
@@ -101,8 +143,8 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 5: Teilnehmer -->
-                <node oor:name="m5" oor:op="replace">
+                <!-- Schaltfläche 7: Teilnehmer -->
+                <node oor:name="m7" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_teilnehmer</value>
                     </prop>
@@ -122,8 +164,8 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 6: Turnier Konfiguration -->
-                <node oor:name="m6" oor:op="replace">
+                <!-- Schaltfläche 8: Turnier Konfiguration -->
+                <node oor:name="m8" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:konfiguration_turnier</value>
                     </prop>
@@ -144,15 +186,15 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m7" oor:op="replace">
+                <node oor:name="m9" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 8: Turnier Modus (Kiosk-Toggle) -->
-                <node oor:name="m8" oor:op="replace">
+                <!-- Schaltfläche 10: Turnier Modus (Kiosk-Toggle) -->
+                <node oor:name="m10" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:turnier_modus</value>
                     </prop>
@@ -173,15 +215,15 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m9" oor:op="replace">
+                <node oor:name="m11" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 10: Webserver starten -->
-                <node oor:name="m10" oor:op="replace">
+                <!-- Schaltfläche 12: Webserver starten -->
+                <node oor:name="m12" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:webserver_starten</value>
                     </prop>
@@ -201,8 +243,8 @@
                 </node>
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 11: Webserver stoppen -->
-                <node oor:name="m11" oor:op="replace">
+                <!-- Schaltfläche 13: Webserver stoppen -->
+                <node oor:name="m13" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:webserver_stoppen</value>
                     </prop>
@@ -224,7 +266,7 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Trennlinie -->
-                <node oor:name="m12" oor:op="replace">
+                <node oor:name="m14" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>private:separator</value>
                     </prop>
@@ -232,8 +274,8 @@
 
 
                 <!-- ****************************************************************** -->
-                <!-- Schaltfläche 13: Neues Turnier in neuer Datei -->
-                <node oor:name="m13" oor:op="replace">
+                <!-- Schaltfläche 15: Neues Turnier in neuer Datei -->
+                <node oor:name="m15" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_neu_in_neuer_datei</value>
                     </prop>
@@ -253,7 +295,7 @@
                 </node>
 
 
-                <node oor:name="m14" oor:op="replace">
+                <node oor:name="m16" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>ptm:toolbar_oeffnen</value>
                     </prop>
@@ -270,7 +312,7 @@
 
 
                 </node>
-                <node oor:name="m15" oor:op="replace">
+                <node oor:name="m17" oor:op="replace">
                     <prop oor:name="CommandURL"><value>.uno:Save</value></prop>
 
                     <prop oor:name="URL" oor:type="xs:string">
@@ -287,7 +329,7 @@
                         <value>_self</value>
                     </prop>
                 </node>
-                <node oor:name="m16" oor:op="replace">
+                <node oor:name="m18" oor:op="replace">
 
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>.uno:Print</value>
@@ -305,7 +347,7 @@
 
 
                 </node>
-                <node oor:name="m17" oor:op="replace">
+                <node oor:name="m19" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>.uno:PrintPreview</value>
                     </prop>
@@ -321,7 +363,7 @@
                     </prop>
 
                 </node>
-                <node oor:name="m18" oor:op="replace">
+                <node oor:name="m20" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>.uno:ExportToPDF</value>
                     </prop>
@@ -339,7 +381,7 @@
 
                 <!-- ****************************************************************** -->
                 <!-- Druckbereich festlegen -->
-                <node oor:name="m19" oor:op="replace">
+                <node oor:name="m21" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
                         <value>.uno:DefinePrintArea</value>
                     </prop>
@@ -389,6 +431,34 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-weiter.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.neu_auslosen" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_neu_auslosen</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-neu-auslosen.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-neu-auslosen.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.abschluss" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_abschluss</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-abschluss.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-abschluss.png</value>
                     </prop>
                 </node>
             </node>

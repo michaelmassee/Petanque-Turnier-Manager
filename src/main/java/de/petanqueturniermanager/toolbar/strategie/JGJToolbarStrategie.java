@@ -5,6 +5,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TeilnehmerSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
@@ -19,7 +20,7 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        fallback.weiter(ws);
+        new JGJSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override
@@ -30,5 +31,15 @@ public class JGJToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
+        fallback.neuAuslosen(ws);
+    }
+
+    @Override
+    public void abschluss(WorkingSpreadsheet ws) throws Exception {
+        fallback.abschluss(ws);
     }
 }

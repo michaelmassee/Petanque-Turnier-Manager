@@ -8,6 +8,7 @@ import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TeilnehmerSheet;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
@@ -15,6 +16,8 @@ import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
  * Toolbar-Strategie für das Supermêlée-Turniersystem.
  */
 public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategie {
+
+    private final NichtVerfuegbarToolbarStrategie fallback = new NichtVerfuegbarToolbarStrategie();
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
@@ -29,6 +32,16 @@ public class SupermeleeToolbarStrategie implements ITurnierSystemToolbarStrategi
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
+        new SpielrundeSheet_Update(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public void abschluss(WorkingSpreadsheet ws) throws Exception {
+        fallback.abschluss(ws);
     }
 
     @Override

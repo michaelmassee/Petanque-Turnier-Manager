@@ -28,6 +28,19 @@ public interface ITurnierSystemToolbarStrategie {
     void teilnehmer(WorkingSpreadsheet ws) throws Exception;
 
     /**
+     * Löst die aktuelle Spielrunde neu aus. Nur für rundenbasierte Systeme implementiert;
+     * alle anderen Systeme delegieren an {@link de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrategie}.
+     */
+    void neuAuslosen(WorkingSpreadsheet ws) throws Exception;
+
+    /**
+     * Startet die Abschlussphase (KO-Runde, Finalrunde, Turnierbaum).
+     * Nur für Systeme mit KO-Abschluss implementiert;
+     * alle anderen Systeme delegieren an {@link de.petanqueturniermanager.toolbar.strategie.NichtVerfuegbarToolbarStrategie}.
+     */
+    void abschluss(WorkingSpreadsheet ws) throws Exception;
+
+    /**
      * Wechselt zum nächsten Spieltag. Nur relevant für Systeme mit mehreren Spieltagen.
      * Standard-Implementierung wirft {@link UnsupportedOperationException}.
      */

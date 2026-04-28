@@ -42,6 +42,22 @@ public final class ToolbarAktionDispatcher {
     }
 
     /**
+     * Löst die aktuelle Spielrunde des aktiven Turniersystems neu aus.
+     */
+    public static void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).neuAuslosen(ws);
+    }
+
+    /**
+     * Startet die Abschlussphase des aktiven Turniersystems.
+     */
+    public static void abschluss(WorkingSpreadsheet ws) throws Exception {
+        TurnierSystem system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        TurnierSystemToolbarStrategieRegistry.get(system).abschluss(ws);
+    }
+
+    /**
      * Wechselt zum nächsten Spieltag des aktiven Turniersystems.
      */
     public static void naechsterSpieltag(WorkingSpreadsheet ws) throws Exception {

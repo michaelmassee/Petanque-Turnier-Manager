@@ -5,6 +5,7 @@ package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
+import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -17,7 +18,7 @@ public class LigaToolbarStrategie implements ITurnierSystemToolbarStrategie {
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        fallback.weiter(ws);
+        new LigaSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override
@@ -28,5 +29,15 @@ public class LigaToolbarStrategie implements ITurnierSystemToolbarStrategie {
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         fallback.teilnehmer(ws);
+    }
+
+    @Override
+    public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
+        fallback.neuAuslosen(ws);
+    }
+
+    @Override
+    public void abschluss(WorkingSpreadsheet ws) throws Exception {
+        fallback.abschluss(ws);
     }
 }

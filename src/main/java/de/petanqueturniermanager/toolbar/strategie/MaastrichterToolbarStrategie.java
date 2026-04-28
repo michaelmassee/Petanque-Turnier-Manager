@@ -4,9 +4,11 @@
 package de.petanqueturniermanager.toolbar.strategie;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterTeilnehmerSheet;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheet;
 import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetNaechste;
+import de.petanqueturniermanager.maastrichter.spielrunde.MaastrichterSpielrundeSheetUpdate;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -27,5 +29,15 @@ public class MaastrichterToolbarStrategie implements ITurnierSystemToolbarStrate
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
         new MaastrichterTeilnehmerSheet(ws).testTurnierVorhanden().start();
+    }
+
+    @Override
+    public void neuAuslosen(WorkingSpreadsheet ws) throws Exception {
+        new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+    }
+
+    @Override
+    public void abschluss(WorkingSpreadsheet ws) throws Exception {
+        new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 }
