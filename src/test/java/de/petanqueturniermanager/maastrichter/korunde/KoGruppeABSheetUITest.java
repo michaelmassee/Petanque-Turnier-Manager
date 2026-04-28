@@ -1,4 +1,4 @@
-package de.petanqueturniermanager.forme.korunde;
+package de.petanqueturniermanager.maastrichter.korunde;
 
 import java.io.IOException;
 

@@ -1,7 +1,7 @@
 /**
  * Erstellung 27.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.forme.korunde;
+package de.petanqueturniermanager.maastrichter.korunde;
 
 import org.apache.commons.lang3.StringUtils;
 

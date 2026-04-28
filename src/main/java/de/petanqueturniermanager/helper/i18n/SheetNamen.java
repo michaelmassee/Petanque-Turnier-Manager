@@ -176,7 +176,7 @@ public final class SheetNamen {
      * Temporäres Rechenhilfsblatt für Vorrunden-Paarungsdaten: z.B. "VorRunden".
      *
      * @return lokalisierter Tabellenname
-     * @see de.petanqueturniermanager.forme.korunde.Vorrunden
+     * @see de.petanqueturniermanager.maastrichter.korunde.Vorrunden
      */
     public static String vorrundenHilfsblatt() {
         return getOderFallback(KEY_VORRUNDEN_HILFSBLATT, LEGACY_VORRUNDEN_HILFSBLATT);

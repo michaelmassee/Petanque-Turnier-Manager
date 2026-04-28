@@ -158,7 +158,7 @@ public class MeldeListeSheet_New extends SheetRunner implements IMeldeliste<Spie
 	 */
 	public void createMeldelisteWithParams(SuperMeleeMode mode) throws GenerateException {
 		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.MELDELISTE).tabColor(SHEET_COLOR).hideGrid().setActiv()
+				.pos(DefaultSheetPos.MELDELISTE).tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).hideGrid().setActiv()
 				.setDocVersionWhenNew().create();
 		if (neuesSheet.isDidCreate()) {
 			getKonfigurationSheet().setSuperMeleeMode(mode);

@@ -1,14 +1,14 @@
 /**
  * Erstellung 21.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.forme.korunde;
+package de.petanqueturniermanager.maastrichter.korunde;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.KoRundeTeamPaarungen;
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -18,7 +18,6 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.TeamRangliste;
-import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -29,6 +28,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_KO_GRUPPE;
 
+	private final MaastrichterKonfigurationSheet konfigurationSheet;
 	private final Vorrunden vorrunden;
 	private final Ranglisten ranglisten;
 	private final SpielRundeInSheet spielRundeInSheet;
@@ -39,6 +39,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	 */
 	public KoGruppeABSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "KO Gruppe AB");
+		konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);
@@ -58,7 +59,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	@Override
 	protected void doRun() throws GenerateException {
 		NewSheet.from(this, SheetNamen.koRunde(), METADATA_SCHLUESSEL)
-				.tabColor(SheetTabFarben.TEILNEHMER).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+				.tabColor(konfigurationSheet.getTeilnehmerTabFarbe()).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		koRundeErstellen();
 		getSheetHelper().setActiveSheet(getXSpreadSheet());
 	}
@@ -91,8 +92,7 @@ public class KoGruppeABSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected IKonfigurationSheet getKonfigurationSheet() {
-		// TODO Auto-generated method stub
-		return null;
+	protected MaastrichterKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 }

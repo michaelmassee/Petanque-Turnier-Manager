@@ -174,7 +174,7 @@ public class SchweizerMeldeListeSheetNew extends SheetRunner implements ISheet, 
 	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 			SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
 		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).setDocVersionWhenNew().create();
+				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();
 		if (neuesSheet.isDidCreate()) {
 			getKonfigurationSheet().setMeldeListeFormation(formation);
 			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);

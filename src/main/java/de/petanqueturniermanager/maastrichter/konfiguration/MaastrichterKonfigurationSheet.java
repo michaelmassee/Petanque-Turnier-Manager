@@ -102,6 +102,7 @@ public class MaastrichterKonfigurationSheet extends SchweizerKonfigurationSheet 
 		getPropertiesSpalte().setMaastrichterGruppenModus(modus);
 	}
 
+	public int getCadrageTabFarbe()               { return getPropertiesSpalte().getCadrageTabFarbe(); }
 	@Override public int getKoTurnierbaumTabFarbe()       { return getPropertiesSpalte().getKoTurnierbaumTabFarbe(); }
 	@Override public int getTurnierbaumHeaderFarbe()      { return getPropertiesSpalte().getTurnierbaumHeaderFarbe(); }
 	@Override public int getTurnierbaumTeamAFarbe()       { return getPropertiesSpalte().getTurnierbaumTeamAFarbe(); }

@@ -1,9 +1,8 @@
-package de.petanqueturniermanager.forme.korunde;
+package de.petanqueturniermanager.maastrichter.korunde;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -12,7 +11,7 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -23,8 +22,11 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 
 	private static final String METADATA_SCHLUESSEL = SheetMetadataHelper.SCHLUESSEL_FORME_VORRUNDEN;
 
+	private final MaastrichterKonfigurationSheet konfigurationSheet;
+
 	public VorrundenSheet(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem) {
 		super(workingSpreadsheet, spielSystem);
+		konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
 	}
 
 	@Override
@@ -39,14 +41,14 @@ public class VorrundenSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected IKonfigurationSheet getKonfigurationSheet() {
-		return null;
+	protected MaastrichterKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 	@Override
 	protected void doRun() throws GenerateException {
 		NewSheet.from(this, SheetNamen.vorrundenErgebnisse(), METADATA_SCHLUESSEL)
-				.pos(DefaultSheetPos.MELDELISTE).tabColor(SheetTabFarben.TEILNEHMER).hideGrid().setActiv().create();
+				.pos(DefaultSheetPos.MELDELISTE).tabColor(konfigurationSheet.getTeilnehmerTabFarbe()).hideGrid().setActiv().create();
 	}
 
 }

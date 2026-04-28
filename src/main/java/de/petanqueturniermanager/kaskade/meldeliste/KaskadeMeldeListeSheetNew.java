@@ -124,7 +124,7 @@ public class KaskadeMeldeListeSheetNew extends SheetRunner implements ISheet, Me
                 formation, teamnameAnzeigen, vereinsnameAnzeigen, anzahlKaskaden);
 
         var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
-                .pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(SHEET_COLOR).setDocVersionWhenNew().create();
+                .pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();
         if (neuesSheet.isDidCreate()) {
             getKonfigurationSheet().setMeldeListeFormation(formation);
             getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);

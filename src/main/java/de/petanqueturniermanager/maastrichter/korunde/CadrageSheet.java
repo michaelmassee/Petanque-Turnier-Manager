@@ -1,15 +1,15 @@
 /**
  * Erstellung 21.05.2019 / Michael Massee
  */
-package de.petanqueturniermanager.forme.korunde;
+package de.petanqueturniermanager.maastrichter.korunde;
 
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.KoRundeTeamPaarungen;
-import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -23,7 +23,6 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -40,12 +39,11 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	private final Vorrunden vorrunden;
 	private final Ranglisten ranglisten;
 	private final SpielRundeInSheet spielRundeInSheet;
+	private final MaastrichterKonfigurationSheet konfigurationSheet;
 
-	/**
-	 * @param workingSpreadsheet
-	 */
 	public CadrageSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Cadrage");
+		konfigurationSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
 		vorrunden = new Vorrunden(this);
 		ranglisten = new Ranglisten(this);
 		spielRundeInSheet = new SpielRundeInSheet(this);
@@ -66,7 +64,7 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	protected void doRun() throws GenerateException {
 		vorrunden.getSheet(); // erstellen leer wenn nicht vorhanden
 		NewSheet.from(this, SheetNamen.cadrage(), METADATA_SCHLUESSEL)
-				.tabColor(SheetTabFarben.FORME_CADRAGE).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
+				.tabColor(konfigurationSheet.getCadrageTabFarbe()).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create();
 		cadrageErstellen();
 		rangListeNachCadrageErstellen();
 	}
@@ -124,9 +122,8 @@ public class CadrageSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
-	protected IKonfigurationSheet getKonfigurationSheet() {
-		// TODO Auto-generated method stub
-		return null;
+	protected MaastrichterKonfigurationSheet getKonfigurationSheet() {
+		return konfigurationSheet;
 	}
 
 }

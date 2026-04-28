@@ -596,7 +596,8 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 
 		// wenn hier dann neu erstellen
 		if (!NewSheet.from(this, getSheetName(getSpielRundeNr()), getSpielrundeSchluessel(getSpielRundeNr().getNr()))
-				.pos(DefaultSheetPos.SCHWEIZER_WORK).setForceCreate(force).setActiv().hideGrid().create().isDidCreate()) {
+				.pos(DefaultSheetPos.SCHWEIZER_WORK).setForceCreate(force).setActiv().hideGrid()
+				.tabColor(getKonfigurationSheet().getSpielrundeTabFarbe()).create().isDidCreate()) {
 			ProcessBox.from().info(I18n.get("schweizer.spielrunde.abbruch"));
 			return false;
 		}
