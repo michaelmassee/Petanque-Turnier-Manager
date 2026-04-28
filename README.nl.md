@@ -53,6 +53,7 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 
 * **Poule-A/B-systeem:** Klassieke modus met groepsfase (Poules) volgens het principe van dubbele eliminatie (light), gevolgd door een verdeling in A-toernooi (hoofdtoernooi) en B-toernooi (troosttoernooi).
 * **Cascaderend Knock-out Systeem (Uitgebreid ABCD-systeem):** Breidt het klassieke ABCD-knock-outsysteem uit met zoveel extra niveaus als gewenst (E, F, G, H …). In plaats van vroeg uitgeschakeld te worden, zakken verliezende teams stap voor stap door naar lagere troosttoernooien. Na een configureerbaar minimum aantal rondes schakelt elk niveau over naar zuiver knock-outformaat – met een eigen cadrage indien nodig. Geschikt voor middelgrote tot grote toernooien (vanaf 16 teams).
+* **Formule X:** Modern rondesysteem uit de Franse pétanque – ideaal voor grote velden en toernooien met tijdlimiet. Alle teams spelen evenveel rondes; niemand valt af. De rangschikking wordt bepaald door een duidelijke cumulatieve score (overwinningsbonus + eigen punten + puntenverschil) – zonder Buchholz. Ronde 1 wordt vrij geloot; vanaf ronde 2 worden koppels bepaald op basis van de ranglijst: 1e vs. 2e, 3e vs. 4e, enz.
 
 ---
 
@@ -73,7 +74,7 @@ Terwijl het toernooi bezig is, kunnen alle sheets in een browser worden bekeken 
 * React-frontend met **Server-Sent Events (SSE)** – directe updates zonder herladen van de pagina
 * Tot **10 URL's tegelijkertijd** configureerbaar
 * Zoom, centrering en kopteksten/voetteksten instelbaar per poort
-* Alle toernooisystemen ondersteund: Supermêlée, Zwitsers systeem, Iedereen tegen iedereen, K.-O., Maastrichts systeem
+* Alle toernooisystemen ondersteund: Supermêlée, Zwitsers systeem, Iedereen tegen iedereen, K.-O., Maastrichts systeem, Formule X
 
 ---
 

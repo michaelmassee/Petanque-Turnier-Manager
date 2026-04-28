@@ -59,11 +59,12 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
   Für klassische Finalrunden und reine K.-o.-Turniere. Ein Sieg bedeutet Weiterkommen, eine Niederlage das sofortige Ausscheiden. Die Paarungen folgen dem Überkreuz-System (1 vs. Letzter, 2 vs. Vorletzter …), sodass Top-Teams erst spät aufeinandertreffen. Bei Teilnehmerzahlen, die keine Zweierpotenz ergeben, wird automatisch eine Cadrage (Vorrunde) berechnet.
 * **Maastrichter System:**
   Kombiniert das Schweizer System mit K.-o.-Finalrunden. In mehreren Vorrunden (2–5) werden die Teams nach dem Schweizer Algorithmus ausgeglichen gepaart. Anschließend werden die Teams nach Siegen in Leistungsklassen (A, B, C, D) eingeteilt – jede Klasse trägt ihr eigenes K.-o.-Finale aus. Ergebnis: vier Turniersieger, faire Gruppenaufteilung, spannende Finalrunden.
-
 * **Poule-A/B-System:**
   Klassischer Modus mit Gruppenphase (Poules) im Double-Elimination-Light-Verfahren und anschließender Aufteilung in A-Turnier (Hauptturnier) und B-Turnier (Consolante).
 * **Kaskaden-KO-System (Erweitertes ABCD-System):**
   Erweitert das klassische ABCD-KO-System um beliebig viele Ebenen (E, F, G, H …). Anstatt früh auszuscheiden, kaskadieren unterlegene Teams schrittweise in tieferliegende Consolante-Turniere. Nach einer konfigurierbaren Mindestanzahl von Runden wechselt jede Ebene in den reinen K.-o.-Modus – mit eigener Cadrage falls nötig. Geeignet für mittlere bis große Turniere (ab 16 Teams).
+* **Formule X:**
+  Modernes Rundensystem aus dem französischen Pétanque-Turnierbetrieb – ideal für große Teilnehmerfelder und Turniere mit Zeitlimit. Alle Teams spielen gleich viele Runden, niemand scheidet aus. Die Rangliste entsteht durch eine klare Summenwertung (Siegaufschlag + eigene Punkte + Differenzpunkte) – ganz ohne Buchholz. Runde 1 wird frei gelost, danach werden jeweils Platz 1 vs. 2, 3 vs. 4 usw. gepaart.
 
 ---
 
@@ -84,7 +85,7 @@ Während das Turnier läuft, können alle Sheets per Browser auf **Fernseher, La
 * React-Frontend mit **Server-Sent Events (SSE)** – sofortige Aktualisierung ohne Seitenreload
 * Bis zu **10 URLs gleichzeitig** konfigurierbar
 * Zoom, Zentrierung und Kopf-/Fußzeilen pro Port einstellbar
-* Alle Turniersysteme unterstützt: Supermêlée, Schweizer System, Jeder-gegen-Jeden, K.-O., Maastrichter System
+* Alle Turniersysteme unterstützt: Supermêlée, Schweizer System, Jeder-gegen-Jeden, K.-O., Maastrichter System, Formule X
 
 ---
 

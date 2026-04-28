@@ -63,6 +63,8 @@ The extension already offers a wide selection of proven tournament modes suitabl
   Classic mode with a group phase (Poules) using a Double-Elimination-Light format, followed by division into the A-tournament (main bracket) and B-tournament (consolation bracket).
 * **Cascading Knockout System (Extended ABCD System):**
   Extends the classic ABCD knockout system with any number of additional levels (E, F, G, H …). Instead of early elimination, losing teams cascade step by step into lower consolation brackets. After a configurable minimum number of rounds, each level switches to pure knockout format – with its own cadrage if needed. Suitable for medium to large tournaments (16+ teams).
+* **Formule X:**
+  A modern points-based round system from French pétanque – ideal for large fields and time-limited tournaments. All teams play the same number of rounds; no one is eliminated. The ranking is determined by a clear cumulative score (win bonus + own points + point difference) – no Buchholz needed. Round 1 is drawn randomly; from Round 2 onwards, pairings follow the ranking: Rank 1 vs. 2, Rank 3 vs. 4, etc.
 
 ---
 
@@ -83,7 +85,7 @@ While the tournament is running, all sheets can be viewed in a browser on **TVs,
 * React frontend with **Server-Sent Events (SSE)** – instant updates without page reload
 * Up to **10 URLs simultaneously** configurable
 * Zoom, centering and headers/footers configurable per port
-* All tournament systems supported: Supermêlée, Swiss System, Round Robin, Knockout, Maastricht System
+* All tournament systems supported: Supermêlée, Swiss System, Round Robin, Knockout, Maastricht System, Formule X
 
 ---
 

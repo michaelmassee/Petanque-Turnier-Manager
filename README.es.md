@@ -52,6 +52,7 @@ El mayor punto de venta único de este gestor de torneos es su base: **LibreOffi
 
 * **Sistema Poule A/B:** Modo clásico con fase de grupos (Poules) según el principio de doble eliminación ligera, seguido de una división en Torneo A (cuadro principal) y Torneo B (consolación).
 * **Sistema de KO en Cascada (Sistema ABCD Extendido):** Amplía el sistema clásico ABCD de eliminación directa con tantos niveles adicionales como se desee (E, F, G, H …). En lugar de ser eliminados temprano, los equipos perdedores descienden progresivamente hacia consolaciones de nivel inferior. Tras un número mínimo configurable de rondas, cada nivel pasa al formato de eliminación directa pura, con cadrage propio si es necesario. Adecuado para torneos medianos y grandes (desde 16 equipos).
+* **Formule X:** Sistema moderno de rondas del pétanque francés – ideal para campos grandes y torneos con límite de tiempo. Todos los equipos juegan el mismo número de rondas, nadie queda eliminado. La clasificación se obtiene mediante una puntuación acumulada clara (bono de victoria + puntos propios + diferencia de puntos) – sin necesidad de Buchholz. La 1.ª ronda se sortea libremente; a partir de la 2.ª, los emparejamientos siguen la clasificación: 1.º vs. 2.º, 3.º vs. 4.º, etc.
 
 ---
 
@@ -72,7 +73,7 @@ Mientras se desarrolla el torneo, todas las hojas se pueden ver en un navegador 
 * Interfaz React con **Server-Sent Events (SSE)** – actualizaciones instantáneas sin recargar la página
 * Hasta **10 URLs simultáneas** configurables
 * Zoom, centrado y encabezados/pies de página configurables por puerto
-* Todos los sistemas de torneo compatibles: Supermêlée, Sistema suizo, Todos contra todos, K.-O., Sistema de Maastricht
+* Todos los sistemas de torneo compatibles: Supermêlée, Sistema suizo, Todos contra todos, K.-O., Sistema de Maastricht, Formule X
 
 ---
 

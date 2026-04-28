@@ -55,6 +55,7 @@ L'extension propose déjà un large choix de modes de tournoi éprouvés, adapt�
 
 * **Système Poule A/B :** Mode classique avec phase de groupes (Poules) selon le principe de la double élimination légère, suivi d'une répartition en Concours A (tableau principal) et Concours B (consolante).
 * **Système KO en cascade (Système ABCD étendu) :** Étend le système KO classique ABCD avec autant de niveaux supplémentaires que souhaité (E, F, G, H …). Au lieu d'être éliminées tôt, les équipes perdantes sont cascadées progressivement vers des consolantes de niveau inférieur. Après un nombre minimum de tours configurable, chaque niveau bascule en élimination directe – avec un cadrage propre si nécessaire. Adapté aux tournois de taille moyenne à grande (dès 16 équipes).
+* **Formule X :** Système de ronde moderne issu du pétanque français – idéal pour les grands plateaux et les tournois à durée limitée. Toutes les équipes jouent le même nombre de rondes, personne n'est éliminé. Le classement repose sur un score cumulé clair (bonus victoire + points propres + différence de points) – sans Buchholz. La 1re ronde est tirée au sort ; à partir de la 2e, les appariements suivent le classement : 1er vs 2e, 3e vs 4e, etc.
 
 ---
 
@@ -75,7 +76,7 @@ Pendant le déroulement du tournoi, toutes les feuilles peuvent être affichées
 * Interface React avec **Server-Sent Events (SSE)** – mises à jour instantanées sans rechargement de page
 * Jusqu'à **10 URLs simultanées** configurables
 * Zoom, centrage et en-têtes/pieds de page configurables par port
-* Tous les systèmes de tournoi pris en charge : Supermêlée, Système suisse, Chacun contre chacun, K.-O., Système maastrichtois
+* Tous les systèmes de tournoi pris en charge : Supermêlée, Système suisse, Chacun contre chacun, K.-O., Système maastrichtois, Formule X
 
 ---
 
