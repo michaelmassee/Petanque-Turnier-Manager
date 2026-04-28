@@ -60,7 +60,7 @@ import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpda
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste;
-import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetTestDaten;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXTurnierTestDaten;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetUpdate;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
@@ -667,7 +667,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new FormuleXMeldeListeSheetTestDaten(ws, 17).start();
 				break;
 			case CMD_FORMULEX_TESTDATEN_TURNIER:
-				new FormuleXSpielrundeSheetTestDaten(ws).start();
+				new FormuleXTurnierTestDaten(ws).start();
 				break;
 			// ------------------------------
 			// Kaskaden-KO

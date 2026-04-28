@@ -143,6 +143,10 @@ public class SheetMetadataHelper {
         return SCHLUESSEL_SCHWEIZER_SPIELRUNDE_PREFIX + rundeNr + SCHLUESSEL_SUFFIX;
     }
 
+    public static String schluesselFormuleXSpielrunde(int rundeNr) {
+        return SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX + rundeNr;
+    }
+
     public static String schluesselMaastrichterVorrunde(int rundeNr) {
         return SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX + rundeNr + SCHLUESSEL_SUFFIX;
     }

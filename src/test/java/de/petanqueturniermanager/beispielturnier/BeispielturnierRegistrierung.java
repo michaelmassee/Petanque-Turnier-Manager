@@ -27,6 +27,7 @@ import de.petanqueturniermanager.schweizer.spielrunde.Schweizer19TeamsTurnierTes
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXTurnierTestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SupermeleeTurnierTestDaten;
@@ -281,7 +282,18 @@ public final class BeispielturnierRegistrierung {
                                 SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
                                 SheetMetadataHelper.schluesselKaskadenFeld("A"),
                                 SheetMetadataHelper.schluesselKaskadenFeld("H")),
-                        "KaskadeTurnierTestDaten.java")
+                        "KaskadeTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Formule X – Komplettes Turnier (39 Teams, 5 Spielrunden, Rangliste)",
+                        ws -> new FormuleXTurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE,
+                                SheetMetadataHelper.schluesselFormuleXSpielrunde(1),
+                                SheetMetadataHelper.schluesselFormuleXSpielrunde(5),
+                                SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
+                                SheetMetadataHelper.SCHLUESSEL_TEILNEHMER),
+                        "FormuleXTurnierTestDaten.java")
         );
     }
 }

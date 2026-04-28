@@ -454,11 +454,11 @@
 
 							<node oor:name="D6" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Formule X, Tournament (16 Teams, 1 Round)</value>
-									<value xml:lang="de">Formule X, Turnier (16 Teams, 1 Spielrunde)</value>
-									<value xml:lang="es">Formule X, torneo (16 equipos, 1 ronda)</value>
-									<value xml:lang="fr">Formule X, tournoi (16 équipes, 1 tour)</value>
-									<value xml:lang="nl">Formule X, toernooi (16 teams, 1 ronde)</value>
+									<value xml:lang="en">Formule X, Complete Tournament (39 Teams, 5 Rounds + Ranking)</value>
+									<value xml:lang="de">Formule X, Komplettes Turnier (39 Teams, 5 Spielrunden + Rangliste)</value>
+									<value xml:lang="es">Formule X, torneo completo (39 equipos, 5 rondas + clasificación)</value>
+									<value xml:lang="fr">Formule X, tournoi complet (39 équipes, 5 tours + classement)</value>
+									<value xml:lang="nl">Formule X, compleet toernooi (39 teams, 5 ronden + ranglijst)</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:formulex_testdaten_turnier</value>

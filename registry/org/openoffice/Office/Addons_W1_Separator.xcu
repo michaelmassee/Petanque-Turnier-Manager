@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-data oor:package="org.openoffice.Office" oor:name="Addons" xmlns:oor="http://openoffice.org/2001/registry" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<node oor:name="AddonUI">
+
+		<node oor:name="OfficeMenuBar">
+			<node oor:name="de.petanqueturniermanager.menubar" oor:op="fuse">
+				<prop oor:name="Title" oor:type="xs:string">
+					<value xml:lang="de">PétTurnMngr</value>
+					<value xml:lang="en">PétTurnMngr</value>
+					<value xml:lang="es">PétTurnMngr</value>
+					<value xml:lang="fr">PétTurnMngr</value>
+					<value xml:lang="nl">PétTurnMngr</value>
+				</prop>
+				<prop oor:name="Context" oor:type="xs:string">
+					<value>com.sun.star.sheet.SpreadsheetDocument</value>
+				</prop>
+				<node oor:name="Submenu">
+					<!-- ****************************************************************** -->
+					<!-- Trennlinie zwischen Turniersystemen und Konfiguration -->
+					<node oor:name="W1" oor:op="replace">
+						<prop oor:name="URL" oor:type="xs:string">
+							<value>private:separator</value>
+						</prop>
+					</node>
+					<!-- ****************************************************************** -->
+
+				</node>
+			</node>
+		</node>
+
+	</node>
+</oor:component-data>

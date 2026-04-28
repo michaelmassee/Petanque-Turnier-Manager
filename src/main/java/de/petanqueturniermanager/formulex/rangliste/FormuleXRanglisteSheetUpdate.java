@@ -37,7 +37,7 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
     }
 
     @Override
-    protected void doRun() throws GenerateException {
+    public void doRun() throws GenerateException {
         if (TurnierModus.get().istAktiv()) {
             BlattschutzRegistry.fuer(getTurnierSystem())
                     .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
