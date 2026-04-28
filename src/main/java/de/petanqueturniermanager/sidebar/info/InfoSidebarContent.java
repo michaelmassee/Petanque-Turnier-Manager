@@ -31,6 +31,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpal
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
+import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.timer.TimerListener;
@@ -75,12 +76,22 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             getLayout().addLayout(new ControlLayout(turnierSystemControl), 1);
         }
 
+        var schrittBildUrl = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext())
+                .getImageUrlDir() + "sidebar-fortschritt.png";
+        XControl schrittIconControl = GuiFactory.createBildControl(
+                getGuiFactoryCreateParam(), schrittBildUrl, new Rectangle(0, 0, 20, 20), null);
+
         XControl turnierSchrittControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
                 turnierSchrittAnzeige(),
                 new Rectangle(0, 0, 200, 20), null);
         if (turnierSchrittControl != null) {
             turnierSchrittLabel = Lo.qi(XFixedText.class, turnierSchrittControl);
-            getLayout().addLayout(new ControlLayout(turnierSchrittControl), 1);
+            var schrittZeile = new HorizontalLayout();
+            if (schrittIconControl != null) {
+                schrittZeile.addLayout(new ControlLayout(schrittIconControl, 20), 0);
+            }
+            schrittZeile.addLayout(new ControlLayout(turnierSchrittControl), 1);
+            getLayout().addLayout(schrittZeile, 1);
         }
 
         XControl timerControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
