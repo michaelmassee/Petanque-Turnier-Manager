@@ -82,9 +82,9 @@ public class SheetBaumOrganisierer {
             var gruppeOpt = SheetGruppe.fuerSchluessel(schluessel);
             var gruppe = gruppeOpt.orElse(SheetGruppe.ALLGEMEIN);
             SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet -> {
-                // Supermelee/Liga/Schweizer-Knoten: keine Einrückung (erscheinen auf oberster Ebene)
+                // Diese Gruppen erscheinen auf oberster Ebene (keine Einrückung)
                 var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA
-                        || gruppe == SheetGruppe.SCHWEIZER) ? "" : "  ";
+                        || gruppe == SheetGruppe.SCHWEIZER || gruppe == SheetGruppe.KO) ? "" : "  ";
                 var knoten = knoten(sheet, schluessel, einrueckung);
                 if (knoten != null) {
                     gruppenMap.computeIfAbsent(gruppe, g -> new ArrayList<>()).add(knoten);
@@ -135,6 +135,10 @@ public class SheetBaumOrganisierer {
             } else if (gruppe == SheetGruppe.MAASTRICHTER) {
                 var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
                 ergebnis.addAll(maastrichterEintraege(knoten, allgemeinKnoten, kollabierteUnterGruppen));
+                verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
+            } else if (gruppe == SheetGruppe.KO) {
+                var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
+                ergebnis.addAll(koEintraege(knoten, allgemeinKnoten));
                 verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else if (gruppe == SheetGruppe.KASKADE) {
                 ergebnis.addAll(kaskadeEintraege(knoten, kollabierteUnterGruppen));
@@ -202,6 +206,30 @@ public class SheetBaumOrganisierer {
      */
     private List<BlattBaumEintrag> ligaEintraege(List<BlattKnoten> knoten) {
         return new ArrayList<>(knoten);
+    }
+
+    /**
+     * Baut die flache Eintrags-Liste für KO-Blätter auf (ohne Gruppen-Header):
+     * Meldeliste → Teilnehmer (aus ALLGEMEIN) → KO-Turnierbäume A, B, C …
+     */
+    private List<BlattBaumEintrag> koEintraege(List<BlattKnoten> koKnoten, List<BlattKnoten> allgemeinKnoten) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        koKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KO_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        allgemeinKnoten.stream()
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        koKnoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_KO_TURNIERBAUM_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        return ergebnis;
     }
 
     /**

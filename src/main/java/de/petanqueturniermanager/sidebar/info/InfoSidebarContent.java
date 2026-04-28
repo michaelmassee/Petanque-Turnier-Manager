@@ -22,6 +22,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
 import de.petanqueturniermanager.kaskade.KaskadeStatusLeser;
+import de.petanqueturniermanager.ko.KoStatusLeser;
 import de.petanqueturniermanager.liga.spielplan.LigaStatusLeser;
 import de.petanqueturniermanager.maastrichter.MaastrichterStatusLeser;
 import de.petanqueturniermanager.poule.PouleStatusLeser;
@@ -248,6 +249,16 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                 yield I18n.get("sidebar.info.kaskade.runde",
                         status.aktuelleRundeNr(),
                         status.rundeGespielt(), status.rundeGesamt());
+            }
+            case KO -> {
+                var status = KoStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.turnierbaumVorhanden()) {
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
+                }
+                if (status.beendet()) {
+                    yield I18n.get("sidebar.info.turnier.beendet");
+                }
+                yield I18n.get("sidebar.info.ko.laeuft");
             }
             default -> "";
         };
