@@ -548,6 +548,23 @@ public class SheetMetadataHelper {
     // ── Hilfsmethoden ────────────────────────────────────────────────────────
 
     /**
+     * Löscht einen einzelnen PTM-Metadaten-Schlüssel (Named Range) aus dem Dokument,
+     * falls er vorhanden ist. Kein Fehler wenn der Schlüssel nicht existiert.
+     */
+    public static void loescheSchluessel(XSpreadsheetDocument xDoc, String schluessel) {
+        try {
+            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+            if (namedRanges == null || !namedRanges.hasByName(schluessel)) {
+                return;
+            }
+            namedRanges.removeByName(schluessel);
+            logger.debug("Metadaten-Schlüssel '{}' gelöscht.", schluessel);
+        } catch (Throwable t) {
+            logger.error("Fehler beim Löschen des Metadaten-Schlüssels '{}'", schluessel, t);
+        }
+    }
+
+    /**
      * Sucht nach allen PTM-Metadaten (Named Ranges), die ins Leere zeigen (#REF!)
      * und löscht diese ersatzlos aus dem Dokument.
      * Dies bereinigt das Dokument nach manuellen oder programmatischen Sheet-Löschungen.

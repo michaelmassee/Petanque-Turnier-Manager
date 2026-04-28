@@ -21,7 +21,9 @@ import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
+import de.petanqueturniermanager.kaskade.KaskadeStatusLeser;
 import de.petanqueturniermanager.liga.spielplan.LigaStatusLeser;
+import de.petanqueturniermanager.maastrichter.MaastrichterStatusLeser;
 import de.petanqueturniermanager.poule.PouleStatusLeser;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
@@ -185,7 +187,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                     yield I18n.get("sidebar.info.meldungen.erfassen");
                 }
                 if (status.alleGespielt()) {
-                    yield I18n.get("sidebar.info.liga.beendet");
+                    yield I18n.get("sidebar.info.turnier.beendet");
                 }
                 yield I18n.get("sidebar.info.liga.schritt",
                         status.hrGespielt(), status.hrGesamt(),
@@ -197,7 +199,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                     yield I18n.get("sidebar.info.meldungen.erfassen");
                 }
                 if (status.alleGespielt()) {
-                    yield I18n.get("sidebar.info.jgj.beendet");
+                    yield I18n.get("sidebar.info.turnier.beendet");
                 }
                 yield I18n.get("sidebar.info.jgj.schritt",
                         status.hrGespielt(), status.hrGesamt(),
@@ -209,13 +211,43 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                     yield I18n.get("sidebar.info.meldungen.erfassen");
                 }
                 if (status.beendet()) {
-                    yield I18n.get("sidebar.info.poule.beendet");
+                    yield I18n.get("sidebar.info.turnier.beendet");
                 }
                 if (status.koVorhanden()) {
-                    yield I18n.get("sidebar.info.poule.ko.runde");
+                    yield I18n.get("sidebar.poule.ko");
                 }
                 yield I18n.get("sidebar.info.poule.vorrunde",
                         status.vorrundeGespielt(), status.vorrundeGesamt());
+            }
+            case MAASTRICHTER -> {
+                var status = MaastrichterStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.vorrundeVorhanden()) {
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
+                }
+                if (status.beendet()) {
+                    yield I18n.get("sidebar.info.turnier.beendet");
+                }
+                if (status.finalrundeVorhanden()) {
+                    yield I18n.get("sidebar.maastrichter.finalrunde");
+                }
+                yield I18n.get("sidebar.info.maastrichter.vorrunde",
+                        status.aktuelleVorrundeNr(),
+                        status.vorrundeGespielt(), status.vorrundeGesamt());
+            }
+            case KASKADE -> {
+                var status = KaskadeStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
+                if (!status.rundeVorhanden()) {
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
+                }
+                if (status.beendet()) {
+                    yield I18n.get("sidebar.info.turnier.beendet");
+                }
+                if (status.koPhaseVorhanden()) {
+                    yield I18n.get("sidebar.kaskade.ko.felder");
+                }
+                yield I18n.get("sidebar.info.kaskade.runde",
+                        status.aktuelleRundeNr(),
+                        status.rundeGespielt(), status.rundeGesamt());
             }
             default -> "";
         };

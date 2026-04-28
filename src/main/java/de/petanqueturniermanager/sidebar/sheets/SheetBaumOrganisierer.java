@@ -36,6 +36,10 @@ public class SheetBaumOrganisierer {
 
     static final String POULE_VORRUNDE_GRUPPE_ID = "POULE_VORRUNDE";
     static final String POULE_KO_GRUPPE_ID = "POULE_KO";
+    static final String MAASTRICHTER_VORRUNDE_GRUPPE_ID = "MAASTRICHTER_VORRUNDE";
+    static final String MAASTRICHTER_FINALRUNDE_GRUPPE_ID = "MAASTRICHTER_FINALRUNDE";
+    static final String KASKADE_RUNDEN_GRUPPE_ID = "KASKADE_RUNDEN";
+    static final String KASKADE_KO_GRUPPE_ID = "KASKADE_KO";
 
     private static final String SUPERMELEE_MELDELISTE_SCHLUESSEL = "__PTM_SUPERMELEE_MELDELISTE__";
     private static final String SUPERMELEE_ENDRANGLISTE_SCHLUESSEL = "__PTM_SUPERMELEE_ENDRANGLISTE__";
@@ -128,6 +132,12 @@ public class SheetBaumOrganisierer {
                 var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
                 ergebnis.addAll(pouleEintraege(knoten, allgemeinKnoten, kollabierteUnterGruppen));
                 verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
+            } else if (gruppe == SheetGruppe.MAASTRICHTER) {
+                var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
+                ergebnis.addAll(maastrichterEintraege(knoten, allgemeinKnoten, kollabierteUnterGruppen));
+                verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
+            } else if (gruppe == SheetGruppe.KASKADE) {
+                ergebnis.addAll(kaskadeEintraege(knoten, kollabierteUnterGruppen));
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
                 ergebnis.add(new GruppenKopf(gruppe, expandiert));
@@ -277,7 +287,125 @@ public class SheetBaumOrganisierer {
             var koExpandiert = !kollabierteUnterGruppen.contains(POULE_KO_GRUPPE_ID);
             ergebnis.add(new UnterGruppenKopf(
                     POULE_KO_GRUPPE_ID,
-                    I18n.get("sidebar.sheets.poule.ko.gruppe"),
+                    I18n.get("sidebar.poule.ko"),
+                    koExpandiert));
+            if (koExpandiert) {
+                ergebnis.addAll(koKnoten);
+            }
+        }
+
+        return ergebnis;
+    }
+
+    /**
+     * Baut die Eintrags-Liste für Maastrichter-Blätter auf:
+     * <ol>
+     *   <li>Meldeliste (oberste Ebene)</li>
+     *   <li>Teilnehmer aus ALLGEMEIN (oberste Ebene)</li>
+     *   <li>Vorrunde-Untergruppe: nummerierte Vorrunden + Vorrunden-Rangliste</li>
+     *   <li>Finalrunde-Untergruppe: A/B/C/D</li>
+     * </ol>
+     */
+    private List<BlattBaumEintrag> maastrichterEintraege(
+            List<BlattKnoten> maastrichterKnoten,
+            List<BlattKnoten> allgemeinKnoten,
+            Set<String> kollabierteUnterGruppen) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        maastrichterKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        allgemeinKnoten.stream()
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        var vorrundeKnoten = maastrichterKnoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!vorrundeKnoten.isEmpty()) {
+            var vorrundeExpandiert = !kollabierteUnterGruppen.contains(MAASTRICHTER_VORRUNDE_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    MAASTRICHTER_VORRUNDE_GRUPPE_ID,
+                    I18n.get("sidebar.sheets.poule.vorrunde.gruppe"),
+                    vorrundeExpandiert));
+            if (vorrundeExpandiert) {
+                ergebnis.addAll(vorrundeKnoten);
+            }
+        }
+
+        var finalrundeKnoten = maastrichterKnoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_FINALRUNDE_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!finalrundeKnoten.isEmpty()) {
+            var finalrundeExpandiert = !kollabierteUnterGruppen.contains(MAASTRICHTER_FINALRUNDE_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    MAASTRICHTER_FINALRUNDE_GRUPPE_ID,
+                    I18n.get("sidebar.maastrichter.finalrunde"),
+                    finalrundeExpandiert));
+            if (finalrundeExpandiert) {
+                ergebnis.addAll(finalrundeKnoten);
+            }
+        }
+
+        return ergebnis;
+    }
+
+    /**
+     * Baut die Eintrags-Liste für Kaskaden-KO-Blätter auf:
+     * <ol>
+     *   <li>Meldeliste (oberste Ebene)</li>
+     *   <li>Kaskaden-Runden-Untergruppe</li>
+     *   <li>Gruppenrangliste (oberste Ebene)</li>
+     *   <li>KO-Felder-Untergruppe</li>
+     * </ol>
+     */
+    private List<BlattBaumEintrag> kaskadeEintraege(
+            List<BlattKnoten> kaskadeKnoten,
+            Set<String> kollabierteUnterGruppen) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        kaskadeKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        var rundenKnoten = kaskadeKnoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_KASKADE_RUNDE_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!rundenKnoten.isEmpty()) {
+            var rundenExpandiert = !kollabierteUnterGruppen.contains(KASKADE_RUNDEN_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    KASKADE_RUNDEN_GRUPPE_ID,
+                    I18n.get("sidebar.kaskade.kaskadenrunde"),
+                    rundenExpandiert));
+            if (rundenExpandiert) {
+                ergebnis.addAll(rundenKnoten);
+            }
+        }
+
+        kaskadeKnoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        var koKnoten = kaskadeKnoten.stream()
+                .filter(k -> k.metadatenSchluessel().startsWith(SheetMetadataHelper.SCHLUESSEL_KASKADE_FELD_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), "  " + blattName(k), k.metadatenSchluessel()))
+                .toList();
+
+        if (!koKnoten.isEmpty()) {
+            var koExpandiert = !kollabierteUnterGruppen.contains(KASKADE_KO_GRUPPE_ID);
+            ergebnis.add(new UnterGruppenKopf(
+                    KASKADE_KO_GRUPPE_ID,
+                    I18n.get("sidebar.kaskade.ko.felder"),
                     koExpandiert));
             if (koExpandiert) {
                 ergebnis.addAll(koKnoten);

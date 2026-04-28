@@ -105,7 +105,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             return;
         }
 
-        heileVeralteteLigaMetadaten(xDoc);
+        heileVeralteteMetadaten(xDoc);
         baumEintraege = organisierer.baumAufbauen(xDoc, kollabierteGruppen, kollabierteSpielTage, kollabierteUnterGruppen);
 
         if (baumEintraege.isEmpty()) {
@@ -306,21 +306,38 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     /**
-     * Heilt fehlende PTM-Metadaten für Liga-Sheets in älteren Dokumenten ohne Named Ranges.
-     * Wird aufgerufen bevor der Blatt-Baum aufgebaut wird, damit der Baum die Sheets findet.
+     * Heilt veraltete PTM-Metadaten in Dokumenten, die mit älteren Plugin-Versionen erstellt wurden.
+     * Wird aufgerufen bevor der Blatt-Baum aufgebaut wird, damit der Baum die Sheets korrekt findet.
      */
-    private void heileVeralteteLigaMetadaten(XSpreadsheetDocument xDoc) {
+    private void heileVeralteteMetadaten(XSpreadsheetDocument xDoc) {
         var ws = getCurrentSpreadsheet();
         if (ws == null) {
             return;
         }
         var system = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
-        if (system != TurnierSystem.LIGA) {
-            return;
+        switch (system) {
+            case LIGA -> heileLigaMetadaten(xDoc);
+            case MAASTRICHTER -> heileMaastrichterMetadaten(xDoc);
+            default -> { /* keine Migration nötig */ }
         }
+    }
+
+    private void heileLigaMetadaten(XSpreadsheetDocument xDoc) {
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_MELDELISTE, SheetNamen.LEGACY_MELDELISTE);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_SPIELPLAN, SheetNamen.LEGACY_SPIELPLAN);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_DIREKTVERGLEICH, SheetNamen.LEGACY_DIREKTVERGLEICH);
         SheetMetadataHelper.findeSheetUndHeile(xDoc, SheetMetadataHelper.SCHLUESSEL_LIGA_RANGLISTE, SheetNamen.LEGACY_RANGLISTE);
+    }
+
+    /**
+     * Entfernt veraltete Schweizer-Spielrunden-Schlüssel aus Maastrichter-Dokumenten.
+     * Ältere Plugin-Versionen speicherten die Maastrichter-Vorrunden unter dem Schweizer-Schlüssel.
+     * Die neuen Maastrichter-Schlüssel wurden bereits bei der ersten Aktion gespeichert;
+     * die alten Schweizer-Schlüssel müssen manuell entfernt werden.
+     */
+    private void heileMaastrichterMetadaten(XSpreadsheetDocument xDoc) {
+        for (int n = 1; n <= 10; n++) {
+            SheetMetadataHelper.loescheSchluessel(xDoc, SheetMetadataHelper.schluesselSchweizerSpielrunde(n));
+        }
     }
 }
