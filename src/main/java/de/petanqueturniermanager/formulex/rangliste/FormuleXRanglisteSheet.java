@@ -164,11 +164,12 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         LOGGER.debug("berechnungUndSchreiben – {} Spielrunden, Thread='{}'",
                 bisSpielrunde, Thread.currentThread().getName());
 
-        List<FormuleXErgebnis> akkumuliert = leseAlleRunden(aktiveMeldungen, bisSpielrunde);
-        List<FormuleXErgebnis> sortiert = new FormuleX().sortiereNachWertung(akkumuliert, bisSpielrunde);
+        var akkumulierung = leseAlleRunden(aktiveMeldungen, bisSpielrunde);
+        List<FormuleXErgebnis> sortiert = new FormuleX().sortiereNachWertung(akkumulierung.ergebnisse(),
+                bisSpielrunde);
 
         Map<Integer, String> teamNrZuName = leseTeamnamen(meldeliste);
-        insertDatenAlsWerte(sheet, sortiert, bisSpielrunde, teamNrZuName);
+        insertDatenAlsWerte(sheet, sortiert, bisSpielrunde, teamNrZuName, akkumulierung.siegeMap());
 
         if (!sortiert.isEmpty()) {
             new RangListeSpalte(PLATZ_SPALTE, this).upDateRanglisteSpalte();
@@ -199,7 +200,9 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         getxCalculatable().calculateAll();
     }
 
-    private List<FormuleXErgebnis> leseAlleRunden(TeamMeldungen aktiveMeldungen, int bisSpielrunde)
+    private record RanglisteAccumulation(List<FormuleXErgebnis> ergebnisse, Map<Integer, Integer> siegeMap) {}
+
+    private RanglisteAccumulation leseAlleRunden(TeamMeldungen aktiveMeldungen, int bisSpielrunde)
             throws GenerateException {
         Map<Integer, int[]> statsMap = new HashMap<>(); // teamNr → [0]=eigenePunkte, [1]=kassiert, [2]=siege
         Map<Integer, Boolean> freilosMap = new HashMap<>();
@@ -223,12 +226,14 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         }
 
         List<FormuleXErgebnis> ergebnisse = new ArrayList<>();
+        Map<Integer, Integer> siegeMap = new HashMap<>();
         for (Team team : aktiveMeldungen.teams()) {
             int[] stats = statsMap.getOrDefault(team.getNr(), new int[3]);
             boolean hatteFreilos = freilosMap.getOrDefault(team.getNr(), false);
             ergebnisse.add(new FormuleXErgebnis(team.getNr(), stats[0], stats[1], List.of(), hatteFreilos));
+            siegeMap.put(team.getNr(), stats[2]);
         }
-        return ergebnisse;
+        return new RanglisteAccumulation(ergebnisse, siegeMap);
     }
 
     private void leseRundeEin(XSpreadsheet rundeSheet, TeamMeldungen aktiveMeldungen,
@@ -257,6 +262,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
             int nrB = row.get(1).getIntVal(0);
             if (nrB <= 0) {
                 freilosMap.put(nrA, true);
+                statsMap.computeIfAbsent(nrA, k -> new int[3])[2]++; // Freilos zählt als Sieg (Doku 4.2)
                 continue;
             }
             if (aktiveMeldungen.getTeam(nrB) == null) {
@@ -417,7 +423,8 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
     }
 
     private void insertDatenAlsWerte(XSpreadsheet sheet, List<FormuleXErgebnis> sortiert,
-            int bisSpielrunde, Map<Integer, String> teamNrZuName) throws GenerateException {
+            int bisSpielrunde, Map<Integer, String> teamNrZuName,
+            Map<Integer, Integer> siegeMap) throws GenerateException {
         if (sortiert.isEmpty()) {
             return;
         }
@@ -439,8 +446,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
         for (FormuleXErgebnis erg : sortiert) {
             RowData row = block2.addNewRow();
             row.newInt(formuleX.berechneWertung(erg, bisSpielrunde));
-            int siege = erg.istSieger() ? 1 : (erg.hatteFreilos() ? 1 : 0);
-            row.newInt(siege);
+            row.newInt(siegeMap.getOrDefault(erg.teamNr(), 0));
             row.newInt(erg.eigenePunkte());
             row.newInt(erg.punktedifferenz());
         }

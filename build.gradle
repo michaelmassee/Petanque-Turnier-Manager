@@ -330,9 +330,10 @@ tasks.register('beispielturnierTests', Test) {
     systemProperty 'beispielturnier.locale', project.hasProperty('locale') ? project.locale : 'de'
     systemProperty 'junit.jupiter.execution.timeout.default', '5 m'
     useJUnitPlatform()
-    // Nur Tests im beispielturnier-Package ausführen
+    // Nur Tests im beispielturnier-Package und formulex-Rangliste ausführen
     filter {
         includeTestsMatching 'de.petanqueturniermanager.beispielturnier.*'
+        includeTestsMatching 'de.petanqueturniermanager.formulex.rangliste.*'
     }
     testLogging {
         events 'passed', 'failed', 'skipped'
