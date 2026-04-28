@@ -54,6 +54,14 @@ import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetNew;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.ko.meldeliste.KoMeldeListeSheetUpdate;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetTestDaten;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
+import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetNaechste;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetTestDaten;
+import de.petanqueturniermanager.formulex.spielrunde.FormuleXSpielrundeSheetUpdate;
 import de.petanqueturniermanager.kaskade.KaskadeTurnierTestDaten;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetTestDaten;
@@ -228,6 +236,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KO_TESTDATEN_8_TEAMS = "ko_testdaten_8_teams";
 	public static final String CMD_KO_TESTDATEN_16_TEAMS = "ko_testdaten_16_teams";
 	public static final String CMD_KO_TESTDATEN_CADRAGE = "ko_testdaten_cadrage";
+	// Formule X
+	public static final String CMD_FORMULEX_START                   = "formulex_start";
+	public static final String CMD_FORMULEX_UPDATE_MELDELISTE        = "formulex_update_meldeliste";
+	public static final String CMD_FORMULEX_TEILNEHMER               = "formulex_teilnehmer";
+	public static final String CMD_FORMULEX_NAECHSTE_SPIELRUNDE      = "formulex_naechste_spielrunde";
+	public static final String CMD_FORMULEX_AKTUELLE_SPIELRUNDE      = "formulex_aktuelle_spielrunde";
+	public static final String CMD_FORMULEX_RANGLISTE                = "formulex_rangliste";
+	public static final String CMD_FORMULEX_TESTDATEN_MELDELISTE     = "formulex_testdaten_meldeliste";
+	public static final String CMD_FORMULEX_TESTDATEN_TURNIER        = "formulex_testdaten_turnier";
 	// Kaskaden-KO
 	public static final String CMD_KASKADE_START              = "kaskade_start";
 	public static final String CMD_KASKADE_UPDATE_MELDELISTE  = "kaskade_update_meldeliste";
@@ -627,6 +644,32 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KoTurnierTestDaten(ws, 10).start();
 				break;
 			// ------------------------------
+			// Formule X
+			case CMD_FORMULEX_START:
+				new FormuleXMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_FORMULEX_UPDATE_MELDELISTE:
+				new FormuleXMeldeListeSheetUpdate(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_FORMULEX_TEILNEHMER:
+				new FormuleXTeilnehmerSheet(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_FORMULEX_NAECHSTE_SPIELRUNDE:
+				new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE:
+				new FormuleXSpielrundeSheetUpdate(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_FORMULEX_RANGLISTE:
+				new FormuleXRanglisteSheet(ws).testTurnierVorhanden().start();
+				break;
+			case CMD_FORMULEX_TESTDATEN_MELDELISTE:
+				new FormuleXMeldeListeSheetTestDaten(ws, 17).start();
+				break;
+			case CMD_FORMULEX_TESTDATEN_TURNIER:
+				new FormuleXSpielrundeSheetTestDaten(ws).start();
+				break;
+			// ------------------------------
 			// Kaskaden-KO
 			case CMD_KASKADE_START:
 				new KaskadeMeldeListeSheetNew(ws).start();
@@ -1020,6 +1063,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KO_START                               -> ts == TurnierSystem.KEIN;
 			case CMD_KO_UPDATE_MELDELISTE,
 				 CMD_KO_TURNIERBAUM, CMD_KO_TEILNEHMER     -> ts == TurnierSystem.KO;
+			// Formule X
+			case CMD_FORMULEX_START                         -> ts == TurnierSystem.KEIN;
+			case CMD_FORMULEX_UPDATE_MELDELISTE,
+				 CMD_FORMULEX_TEILNEHMER,
+				 CMD_FORMULEX_NAECHSTE_SPIELRUNDE,
+				 CMD_FORMULEX_RANGLISTE                     -> ts == TurnierSystem.FORMULEX;
+			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE           -> ts == TurnierSystem.FORMULEX && hatFormuleXSpielrunde(ws);
+			case CMD_FORMULEX_TESTDATEN_MELDELISTE,
+				 CMD_FORMULEX_TESTDATEN_TURNIER             -> ts == TurnierSystem.KEIN || ts == TurnierSystem.FORMULEX;
 			// Kaskaden-KO
 			case CMD_KASKADE_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_KASKADE_UPDATE_MELDELISTE,
@@ -1175,6 +1227,19 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			String legacyName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
 			return doc.getSheets().hasByName(SheetNamen.spielrunde(1))
 					|| doc.getSheets().hasByName(legacyName);
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	private static boolean hatFormuleXSpielrunde(WorkingSpreadsheet ws) {
+		try {
+			var doc = ws.getWorkingSpreadsheetDocument();
+			if (doc == null) {
+				return false;
+			}
+			return doc.getSheets().hasByName(SheetNamen.formulexSpielrunde(1))
+					|| doc.getSheets().hasByName("1. Spielrunde");
 		} catch (Exception e) {
 			return false;
 		}

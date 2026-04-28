@@ -430,6 +430,44 @@
 								</prop>
 							</node>
 
+							<node oor:name="D4" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="D5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Formule X, Entry List (17 Teams)</value>
+									<value xml:lang="de">Formule X, Meldeliste (17 Teams)</value>
+									<value xml:lang="es">Formule X, lista de inscripciones (17 equipos)</value>
+									<value xml:lang="fr">Formule X, liste d'inscriptions (17 équipes)</value>
+									<value xml:lang="nl">Formule X, deelnemerslijst (17 teams)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:formulex_testdaten_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="D6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Formule X, Tournament (16 Teams, 1 Round)</value>
+									<value xml:lang="de">Formule X, Turnier (16 Teams, 1 Spielrunde)</value>
+									<value xml:lang="es">Formule X, torneo (16 equipos, 1 ronda)</value>
+									<value xml:lang="fr">Formule X, tournoi (16 équipes, 1 tour)</value>
+									<value xml:lang="nl">Formule X, toernooi (16 teams, 1 ronde)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:formulex_testdaten_turnier</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
 						</node>
 					</node>
 				</node>
