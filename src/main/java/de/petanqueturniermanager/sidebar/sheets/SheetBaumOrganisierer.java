@@ -84,7 +84,8 @@ public class SheetBaumOrganisierer {
             SheetMetadataHelper.findeSheet(xDoc, schluessel).ifPresent(sheet -> {
                 // Diese Gruppen erscheinen auf oberster Ebene (keine Einrückung)
                 var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA
-                        || gruppe == SheetGruppe.SCHWEIZER || gruppe == SheetGruppe.KO) ? "" : "  ";
+                        || gruppe == SheetGruppe.SCHWEIZER || gruppe == SheetGruppe.KO
+                        || gruppe == SheetGruppe.FORMULEX) ? "" : "  ";
                 var knoten = knoten(sheet, schluessel, einrueckung);
                 if (knoten != null) {
                     gruppenMap.computeIfAbsent(gruppe, g -> new ArrayList<>()).add(knoten);
@@ -143,7 +144,9 @@ public class SheetBaumOrganisierer {
             } else if (gruppe == SheetGruppe.KASKADE) {
                 ergebnis.addAll(kaskadeEintraege(knoten, kollabierteUnterGruppen));
             } else if (gruppe == SheetGruppe.FORMULEX) {
-                ergebnis.addAll(formulexEintraege(knoten));
+                var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
+                ergebnis.addAll(formulexEintraege(knoten, allgemeinKnoten));
+                verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
                 ergebnis.add(new GruppenKopf(gruppe, expandiert));
@@ -265,13 +268,17 @@ public class SheetBaumOrganisierer {
 
     /**
      * Baut die flache Eintrags-Liste für Formule X-Blätter auf (ohne Gruppen-Header):
-     * Meldeliste → Spielrunden 1..n → Rangliste.
+     * Meldeliste → Teilnehmer → Spielrunden 1..n → Rangliste.
      */
-    private List<BlattBaumEintrag> formulexEintraege(List<BlattKnoten> knoten) {
+    private List<BlattBaumEintrag> formulexEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten) {
         var ergebnis = new ArrayList<BlattBaumEintrag>();
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        allgemeinKnoten.stream()
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 

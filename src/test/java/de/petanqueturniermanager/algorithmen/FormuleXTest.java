@@ -314,6 +314,141 @@ public class FormuleXTest {
 	}
 
 	// ========================================================================
+	// Tests: Wertungsberechnung – weitere Edge Cases
+	// ========================================================================
+
+	@Test
+	public void testUnentschieden_istVerlierer() {
+		// 5:5 → kein Sieg → nur eigene Punkte
+		FormuleXErgebnis ergebnis = new FormuleXErgebnis(1, 5, 5, List.of(2), false);
+		assertThat(ergebnis.istSieger()).isFalse();
+		assertThat(formuleX.berechneWertung(ergebnis, 4)).isEqualTo(5);
+	}
+
+	@Test
+	public void testFreilosIgnoriertPunkte() {
+		// Freilos: immer 126, egal welche Punkte gesetzt sind
+		FormuleXErgebnis ergebnis = new FormuleXErgebnis(1, 13, 0, List.of(), true);
+		assertThat(formuleX.berechneWertung(ergebnis, 4)).isEqualTo(126);
+	}
+
+	@Test
+	public void testSiegaufschlagGrenzwertVierZuFuenf() {
+		assertThat(formuleX.getSiegaufschlag(4)).isEqualTo(100);
+		assertThat(formuleX.getSiegaufschlag(5)).isEqualTo(200);
+	}
+
+	@Test
+	public void testSiegaufschlagGrenzwertAchtZuNeun() {
+		assertThat(formuleX.getSiegaufschlag(8)).isEqualTo(200);
+		assertThat(formuleX.getSiegaufschlag(9)).isEqualTo(300);
+	}
+
+	@Test
+	public void testSiegaufschlagUeberZwoelf() {
+		// Mehr als 12 Runden → immer 300
+		assertThat(formuleX.getSiegaufschlag(13)).isEqualTo(300);
+		assertThat(formuleX.getSiegaufschlag(20)).isEqualTo(300);
+	}
+
+	// ========================================================================
+	// Tests: Erste Runde – weitere Edge Cases
+	// ========================================================================
+
+	@Test
+	public void testErsteRundeZweiTeams() {
+		// Minimalfall: 2 Teams → 1 Paarung, kein Freilos
+		TeamMeldungen meldungen = new TeamMeldungen();
+		meldungen.addTeamWennNichtVorhanden(Team.from(1));
+		meldungen.addTeamWennNichtVorhanden(Team.from(2));
+
+		List<TeamPaarung> ersteRunde = formuleX.ersteRunde(meldungen.teams());
+
+		assertThat(ersteRunde).hasSize(1);
+		assertThat(ersteRunde.get(0).isFreilos()).isFalse();
+	}
+
+	// ========================================================================
+	// Tests: Weitere Runde – weitere Edge Cases
+	// ========================================================================
+
+	@Test
+	public void testWeitereRundeZweiTeams() {
+		// Minimalfall: 2 Teams ohne Rematch → 1 Paarung
+		List<FormuleXErgebnis> rangliste = List.of(
+				new FormuleXErgebnis(1, 13, 7, List.of(), false), // 119
+				new FormuleXErgebnis(2, 10, 4, List.of(), false)  // 116
+		);
+
+		List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
+
+		assertThat(paarungen).hasSize(1);
+		assertThat(paarungen.get(0).getA().getNr()).isEqualTo(1);
+		assertThat(paarungen.get(0).getB().getNr()).isEqualTo(2);
+	}
+
+	@Test
+	public void testWeitereRundeZweiTeamsRematchWirdAkzeptiert() {
+		// Kein Swap möglich bei 2 Teams → Rematch wird als Fail-Safe akzeptiert
+		List<FormuleXErgebnis> rangliste = List.of(
+				new FormuleXErgebnis(1, 13, 7, List.of(2), false), // schon gegen 2
+				new FormuleXErgebnis(2, 10, 4, List.of(1), false)  // schon gegen 1
+		);
+
+		List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
+
+		assertThat(paarungen).hasSize(1);
+		assertThat(paarungen.get(0).getA().getNr()).isEqualTo(1);
+		assertThat(paarungen.get(0).getB().getNr()).isEqualTo(2);
+	}
+
+	// ========================================================================
+	// Tests: Swap-Strategie – zweiter Pfad (A,D) und (C,B)
+	// ========================================================================
+
+	@Test
+	public void testSwapZweiterPfadAD_CB() {
+		// Team 1 vs 2: Rematch → Swap wird versucht
+		// Team 1 vs 3: gespielt → erster Swap-Pfad (A,C)+(B,D) schlägt fehl
+		// Team 1 vs 4: nicht gespielt, Team 3 vs 2: nicht gespielt
+		// → zweiter Swap-Pfad (A,D)+(C,B) greift: (1,4) und (3,2)
+		List<FormuleXErgebnis> rangliste = List.of(
+				new FormuleXErgebnis(1, 13, 7, List.of(2, 3), false), // Rang 1: gegen 2+3
+				new FormuleXErgebnis(2, 10, 4, List.of(1), false),    // Rang 2: gegen 1
+				new FormuleXErgebnis(3, 9, 5, List.of(1), false),     // Rang 3: gegen 1
+				new FormuleXErgebnis(4, 8, 6, List.of(), false)       // Rang 4: niemanden
+		);
+
+		List<TeamPaarung> paarungen = formuleX.weitereRunde(rangliste);
+
+		assertThat(paarungen).hasSize(2);
+		assertThat(paarungen.get(0).getA().getNr()).isEqualTo(1);
+		assertThat(paarungen.get(0).getB().getNr()).isEqualTo(4);
+		assertThat(paarungen.get(1).getA().getNr()).isEqualTo(3);
+		assertThat(paarungen.get(1).getB().getNr()).isEqualTo(2);
+	}
+
+	// ========================================================================
+	// Tests: BYE – weitere Edge Cases
+	// ========================================================================
+
+	@Test
+	public void testFindeByeTeamNurLetzterHatBYE() {
+		// Letztes Team hatte BYE → vorletztes bekommt BYE
+		List<FormuleXErgebnis> rangliste = List.of(
+				new FormuleXErgebnis(1, 13, 7, List.of(), false),
+				new FormuleXErgebnis(2, 10, 4, List.of(), false),
+				new FormuleXErgebnis(3, 9, 5, List.of(), false),
+				new FormuleXErgebnis(4, 8, 6, List.of(), true)  // hatte BYE
+		);
+		List<Team> teams = rangliste.stream().map(e -> Team.from(e.teamNr())).toList();
+
+		Team byeTeam = formuleX.findeByeTeam(rangliste, teams);
+
+		assertThat(byeTeam.getNr()).isEqualTo(3);
+	}
+
+	// ========================================================================
 	// Tests: Edge Cases
 	// ========================================================================
 
@@ -386,6 +521,23 @@ public class FormuleXTest {
 	}
 
 	@Test
+	public void testFlattenTeampaarungenLeereEingabe() {
+		List<Team> teams = formuleX.flattenTeampaarungen(List.of());
+
+		assertThat(teams).isEmpty();
+	}
+
+	@Test
+	public void testFlattenTeampaarungenNurFreilos() {
+		// Nur Freilos → leere Liste (Freilos-Paarungen werden übersprungen)
+		List<TeamPaarung> paarungen = List.of(new TeamPaarung(1));
+
+		List<Team> teams = formuleX.flattenTeampaarungen(paarungen);
+
+		assertThat(teams).isEmpty();
+	}
+
+	@Test
 	public void testHatGegeneinanderGespielt() {
 		Map<Integer, FormuleXErgebnis> ergebnisMap = Map.of(
 				1, new FormuleXErgebnis(1, 13, 7, List.of(2, 3), false),
@@ -396,5 +548,25 @@ public class FormuleXTest {
 		assertThat(formuleX.hatGegeneinanderGespielt(Team.from(1), Team.from(2), ergebnisMap)).isTrue();
 		assertThat(formuleX.hatGegeneinanderGespielt(Team.from(1), Team.from(3), ergebnisMap)).isTrue();
 		assertThat(formuleX.hatGegeneinanderGespielt(Team.from(2), Team.from(3), ergebnisMap)).isFalse();
+	}
+
+	@Test
+	public void testHatGegeneinanderGespieltTeamNichtInMap() {
+		// Team A nicht in der Map → false (kein Spiel bekannt)
+		Map<Integer, FormuleXErgebnis> ergebnisMap = Map.of(
+				2, new FormuleXErgebnis(2, 10, 4, List.of(3), false)
+		);
+
+		assertThat(formuleX.hatGegeneinanderGespielt(Team.from(1), Team.from(2), ergebnisMap)).isFalse();
+	}
+
+	@Test
+	public void testHatGegeneinanderGespieltLeereGegnerliste() {
+		// Team A in Map, aber ohne bisherige Gegner → false
+		Map<Integer, FormuleXErgebnis> ergebnisMap = Map.of(
+				1, new FormuleXErgebnis(1, 13, 7, List.of(), false)
+		);
+
+		assertThat(formuleX.hatGegeneinanderGespielt(Team.from(1), Team.from(2), ergebnisMap)).isFalse();
 	}
 }

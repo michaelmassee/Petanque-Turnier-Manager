@@ -16,6 +16,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
 import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
@@ -107,6 +108,10 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				TurnierSystem.POULE,
 				(ws, ignored) -> new PouleVorrundenRanglisteSheetUpdate(ws)));
+		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
+				TurnierSystem.FORMULEX,
+				(ws, ignored) -> new FormuleXRanglisteSheetUpdate(ws)));
 		/**
 		 * TODO erst dann aktivieren wenn die ranglisten auf das minimum entschlakt sind, auuser die validerungen alle formal raus
 		 * TODO nicht nur die Spieltage sonder auch die Endrangliste
