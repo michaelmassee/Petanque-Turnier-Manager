@@ -317,6 +317,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TOOLBAR_ABSCHLUSS             = "toolbar_abschluss";
 	public static final String CMD_TOOLBAR_NAECHSTER_SPIELTAG    = "toolbar_naechster_spieltag";
 	public static final String CMD_TOOLBAR_GESAMTRANGLISTE       = "toolbar_gesamtrangliste";
+	public static final String CMD_TOOLBAR_DRUCKEN               = "toolbar_drucken";
+	public static final String CMD_TOOLBAR_DRUCKVORSCHAU         = "toolbar_druckvorschau";
 	// Turnier Modus
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
@@ -784,6 +786,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TOOLBAR_OEFFNEN:
 				ws.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
 				break;
+			case CMD_TOOLBAR_DRUCKEN:
+				ws.executeDispatch(".uno:Print", "_self", 0, new PropertyValue[0]);
+				break;
+			case CMD_TOOLBAR_DRUCKVORSCHAU:
+				ws.executeDispatch(".uno:PrintPreview", "_self", 0, new PropertyValue[0]);
+				break;
 			case CMD_TOOLBAR_WEITER:
 				ToolbarAktionDispatcher.weiter(ws);
 				break;
@@ -1170,9 +1178,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					&& TurnierSystemToolbarStrategieRegistry.get(ts).hatAbschlussphase();
 			case CMD_TOOLBAR_NAECHSTER_SPIELTAG,
 				 CMD_TOOLBAR_GESAMTRANGLISTE                -> ts.hatMehrereSpielTage();
-			// Neues Turnier in neuer Datei / Öffnen – immer aktiviert (unabhängig vom aktuellen Dokument)
+			// Neues Turnier in neuer Datei / Öffnen / Drucken – immer aktiviert (unabhängig vom aktuellen Dokument)
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI,
-				 CMD_TOOLBAR_OEFFNEN                        -> true;
+				 CMD_TOOLBAR_OEFFNEN,
+				 CMD_TOOLBAR_DRUCKEN,
+				 CMD_TOOLBAR_DRUCKVORSCHAU                  -> true;
 			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
 			// Timer – zustandsabhängig

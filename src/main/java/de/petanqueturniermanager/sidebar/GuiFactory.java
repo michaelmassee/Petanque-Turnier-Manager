@@ -275,6 +275,23 @@ public class GuiFactory {
 		return createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlFixedLine", props, size);
 	}
 
+	/**
+	 * Erzeugt ein nicht-interaktives Bild-Control.<br>
+	 * properties: https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1awt_1_1UnoControlImageControlModel.html
+	 *
+	 * @return Ein ImageControl-Element.
+	 */
+	public static XControl createBildControl(GuiFactoryCreateParam guiFactoryCreateParam, String imageUrl,
+			Rectangle size, Map<String, Object> props) {
+		if (props == null) {
+			props = new HashMap<>();
+		}
+		props.putIfAbsent(IMAGE_URL, imageUrl);
+		props.putIfAbsent("ScaleMode", (short) 1); // 1 = isotropic
+		props.putIfAbsent(BORDER, (short) 0);
+		return createControl(guiFactoryCreateParam, "com.sun.star.awt.UnoControlImageControl", props, size);
+	}
+
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBoxModel.html
 	// https://www.openoffice.org/api/docs/common/ref/com/sun/star/awt/UnoControlListBox.html
 	public static XControl createListBox(GuiFactoryCreateParam guiFactoryCreateParam, XItemListener listener,

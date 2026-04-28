@@ -330,9 +330,8 @@
                     </prop>
                 </node>
                 <node oor:name="m18" oor:op="replace">
-
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>.uno:Print</value>
+                        <value>ptm:toolbar_drucken</value>
                     </prop>
                     <prop oor:name="Title">
                         <value xml:lang="de">Drucken</value>
@@ -344,12 +343,10 @@
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
                     </prop>
-
-
                 </node>
                 <node oor:name="m19" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>.uno:PrintPreview</value>
+                        <value>ptm:toolbar_druckvorschau</value>
                     </prop>
                     <prop oor:name="Title">
                         <value xml:lang="de">Druckvorschau</value>
@@ -361,7 +358,6 @@
                     <prop oor:name="Target" oor:type="xs:string">
                         <value>_self</value>
                     </prop>
-
                 </node>
                 <node oor:name="m20" oor:op="replace">
                     <prop oor:name="URL" oor:type="xs:string">
@@ -571,6 +567,34 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-neu-in-neuer-datei.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.drucken" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_drucken</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-drucken.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-drucken.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.druckvorschau" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:toolbar_druckvorschau</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-druckvorschau.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-druckvorschau.png</value>
                     </prop>
                 </node>
             </node>
