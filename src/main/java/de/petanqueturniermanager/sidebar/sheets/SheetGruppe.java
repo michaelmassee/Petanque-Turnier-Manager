@@ -54,6 +54,12 @@ public enum SheetGruppe {
             "__PTM_KASKADE_GRUPPENRANGLISTE__"
     )),
 
+    FORMULEX("enum.turniersystem.formulex", List.of(
+            "__PTM_FORMULEX_MELDELISTE__",
+            "__PTM_FORMULEX_SPIELRUNDE_",
+            "__PTM_FORMULEX_RANGLISTE__"
+    )),
+
     MAASTRICHTER("enum.turniersystem.maastrichter", List.of(
             "__PTM_MAASTRICHTER_MELDELISTE__",
             "__PTM_MAASTRICHTER_VORRUNDE_",

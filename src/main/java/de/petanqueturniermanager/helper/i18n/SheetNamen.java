@@ -31,6 +31,8 @@ public final class SheetNamen {
     public static final String KEY_SUPERMELEE_TEAMS                 = "sheet.name.supermelee.teams";
     public static final String KEY_KO_KONFIGURATION                 = "sheet.name.ko.konfiguration";
     public static final String KEY_KASKADE_KONFIGURATION            = "sheet.name.kaskade.konfiguration";
+    public static final String KEY_FORMULEX_KONFIGURATION           = "sheet.name.formulex.konfiguration";
+    public static final String KEY_FORMULEX_RANGLISTE               = "sheet.name.formulex.rangliste";
     public static final String KEY_KO_RUNDE                        = "sheet.name.ko.runde";
     public static final String KEY_CADRAGE                          = "sheet.name.cadrage";
     public static final String KEY_VORRUNDEN_ERGEBNISSE             = "sheet.name.vorrunden.ergebnisse";
@@ -74,6 +76,8 @@ public final class SheetNamen {
     public static final String KEY_KASKADE_FELD_MUSTER              = "sheet.name.kaskade.feld.muster";
     /** Kaskaden-Gruppenrangliste: Übersicht aller Felder nach Kaskadenrunden */
     public static final String KEY_KASKADE_GRUPPENRANGLISTE         = "sheet.name.kaskade.gruppenrangliste";
+    /** Formule X Spielrunde: {0} = Rundennummer. Beispiel: "1. Spielrunde" */
+    public static final String KEY_FORMULEX_SPIELRUNDE_MUSTER       = "sheet.name.formulex.spielrunde.muster";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -103,6 +107,9 @@ public final class SheetNamen {
     public static final String LEGACY_POULE_TEILNEHMER               = "Poule Teilnehmer";
     public static final String LEGACY_POULE_SPIELPLAN_PRAEFIX        = "Spielplan";
     public static final String LEGACY_POULE_VORRUNDEN_RANGLISTE      = "Poule Vorrunden-Rangliste";
+    public static final String LEGACY_FORMULEX_KONFIGURATION        = "Formule X Konfiguration";
+    public static final String LEGACY_FORMULEX_SPIELRUNDE_PRAEFIX   = "Spielrunde";
+    public static final String LEGACY_FORMULEX_RANGLISTE            = "Formule X Rangliste";
     public static final String LEGACY_KASKADE_RUNDE_PRAEFIX          = "Kaskaden-Runde";
     public static final String LEGACY_KASKADE_FELD_PRAEFIX           = "Kaskade";
     public static final String LEGACY_KASKADE_FELD_SUFFIX            = "Feld";
@@ -143,6 +150,14 @@ public final class SheetNamen {
 
     public static String kaskadeKonfiguration() {
         return getOderFallback(KEY_KASKADE_KONFIGURATION, LEGACY_KASKADE_KONFIGURATION);
+    }
+
+    public static String formulexKonfiguration() {
+        return getOderFallback(KEY_FORMULEX_KONFIGURATION, LEGACY_FORMULEX_KONFIGURATION);
+    }
+
+    public static String formulexRangliste() {
+        return getOderFallback(KEY_FORMULEX_RANGLISTE, LEGACY_FORMULEX_RANGLISTE);
     }
 
     public static String koRunde() {
@@ -369,6 +384,17 @@ public final class SheetNamen {
      */
     public static String kaskadeGruppenrangliste() {
         return getOderFallback(KEY_KASKADE_GRUPPENRANGLISTE, LEGACY_KASKADE_GRUPPENRANGLISTE);
+    }
+
+    /**
+     * Formule X Spielrunde: z.B. "1. Spielrunde".
+     *
+     * @param rundeNr Nummer der Spielrunde
+     * @return lokalisierter Tabellenname
+     */
+    public static String formulexSpielrunde(int rundeNr) {
+        var muster = getOderFallback(KEY_FORMULEX_SPIELRUNDE_MUSTER, "{0}. " + LEGACY_FORMULEX_SPIELRUNDE_PRAEFIX);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{rundeNr});
     }
 
     // ── Hilfsmethode ─────────────────────────────────────────────────────────

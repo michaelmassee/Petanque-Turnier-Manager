@@ -7,6 +7,7 @@ package de.petanqueturniermanager.helper.sheet.blattschutz;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import de.petanqueturniermanager.formulex.blattschutz.FormuleXBlattschutzKonfiguration;
 import de.petanqueturniermanager.jedergegenjeden.blattschutz.JGJBlattschutzKonfiguration;
 import de.petanqueturniermanager.kaskade.blattschutz.KaskadeBlattschutzKonfiguration;
 import de.petanqueturniermanager.ko.blattschutz.KoBlattschutzKonfiguration;
@@ -38,6 +39,7 @@ public class BlattschutzRegistry {
         REGISTRY.put(TurnierSystem.MAASTRICHTER, MaastrichterBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.POULE, PouleBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.KASKADE, KaskadeBlattschutzKonfiguration.get());
+        REGISTRY.put(TurnierSystem.FORMULEX, FormuleXBlattschutzKonfiguration.get());
     }
 
     private BlattschutzRegistry() {

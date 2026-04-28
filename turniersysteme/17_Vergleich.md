@@ -213,8 +213,29 @@ Bewertung: ⭐⭐⭐⭐⭐ = sehr hoch, ⭐ = gering
 - Kölner Sextet
 - Trip‑Tête
 
+## 9. Ländervergleich: Beliebtheit der Systeme
+
+| System             | Häufigstes Land       | Warum dort beliebt                          |
+| ------------------ | --------------------- | ------------------------------------------- |
+| 1. Poule A/B       | Frankreich            | Faire Gruppen + KO ptank                    |
+| 2. Schweizer       | Deutschland, Schweiz  | Großfelder, fair petanque-turnier           |
+| 3. Maastrichter    | Niederlande/Belgien   | Hybrid für Regionales                       |
+| 4. KO-System       | Deutschland           | Spannung, einfach ptank                     |
+| 5. Kaskaden-KO     | International         | Trostspiele                                 |
+| 6. Supermêlée      | Frankreich (Events)   | Sozial, Spaß                                |
+| 7. Formule 4       | Frankreich            | Schnell, zeitlich flexibel petanque-turnier |
+| 8. Formule X       | Frankreich            | Punktgenau bei großen Turnieren             |
+| 9. Dänisches       | Skandinavien          | Ranglisten-fokussiert                       |
+| 10. Monrad         | Schweden              | Einfaches Rundensystem svenskboule          |
+| 11. Trip-Tête      | Deutschland           | Team-Spaßformat                             |
+| 12. Tête-Series    | Frankreich            | Klassisch Einzel                            |
+| 13. Kölner Sextet  | Deutschland           | Lokal-Spezialität                           |
+| 14. Arena-Pétanque | International (Shows) | Zuschauer-Format                            |
+| 15. Crazy-Mêlée    | Deutschland/Events    | Party-Modus ptank                           |
+
+
 ---
-## 9. Zusammenfassung
+## 10. Zusammenfassung
 
 - **Fairste Systeme:** Schweizer, Maastrichter, Kaskaden‑KO
 - **Einfachste Systeme:** KO, Formule 4, Crazy‑Mêlée
@@ -222,4 +243,3 @@ Bewertung: ⭐⭐⭐⭐⭐ = sehr hoch, ⭐ = gering
 - **Professionellste Systeme:** Schweizer, Maastrichter, Formule X
 - **Für große Felder:** Schweizer, Kaskaden, Maastrichter, Formule X
 
-# Ende Kapitel 8 – Erweiterter Vergleich

@@ -1,6 +1,6 @@
 # Kapitel 08 – Formule X
 
-Das **Formule‑X‑System** ist ein modernes, praxisorientiertes Rundensystem aus dem französischen Pétanque‑Turnierbetrieb. Es wurde entwickelt, um **große Teilnehmerfelder**, **zeitbegrenzte Spiele** und **viele garantierte Partien pro Team** effizient zu organisieren. Die folgende Premium-Darstellung basiert vollständig auf verifizierten Quellen, insbesondere:
+Das **Formule‑X‑System** ist ein modernes, praxisorientiertes Rundensystem aus dem französischen Pétanque‑Turnierbetrieb. Es wurde entwickelt, um **große Teilnehmerfelder**, **zeitbegrenzte Spiele** und **viele garantierte Partien pro Team** effizient zu organisieren. Verifizierten Quellen:
 - den offiziellen Beschreibungen auf petanque-turnier.de citeturn37search57,
 - der technischen Erläuterung des TV Dreieichenhain citeturn37search58,
 - sowie Erfahrungsberichten aus Vereinen und Verbänden.

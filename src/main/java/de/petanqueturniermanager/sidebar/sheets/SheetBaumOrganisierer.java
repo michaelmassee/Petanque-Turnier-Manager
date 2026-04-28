@@ -142,6 +142,8 @@ public class SheetBaumOrganisierer {
                 verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else if (gruppe == SheetGruppe.KASKADE) {
                 ergebnis.addAll(kaskadeEintraege(knoten, kollabierteUnterGruppen));
+            } else if (gruppe == SheetGruppe.FORMULEX) {
+                ergebnis.addAll(formulexEintraege(knoten));
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
                 ergebnis.add(new GruppenKopf(gruppe, expandiert));
@@ -255,6 +257,32 @@ public class SheetBaumOrganisierer {
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        return ergebnis;
+    }
+
+    /**
+     * Baut die flache Eintrags-Liste für Formule X-Blätter auf (ohne Gruppen-Header):
+     * Meldeliste → Spielrunden 1..n → Rangliste.
+     */
+    private List<BlattBaumEintrag> formulexEintraege(List<BlattKnoten> knoten) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> k.metadatenSchluessel()
+                        .startsWith(SheetMetadataHelper.SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 

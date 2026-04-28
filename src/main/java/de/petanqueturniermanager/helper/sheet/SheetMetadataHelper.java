@@ -113,6 +113,12 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE   = "__PTM_POULE_VORRUNDEN_RANGLISTE__";
     public static final String SCHLUESSEL_POULE_KO_PREFIX             = "__PTM_POULE_KO_";
 
+    // ── Konstanten: Formule X ────────────────────────────────────────────────
+
+    public static final String SCHLUESSEL_FORMULEX_MELDELISTE        = "__PTM_FORMULEX_MELDELISTE__";
+    public static final String SCHLUESSEL_FORMULEX_SPIELRUNDE_PREFIX = "__PTM_FORMULEX_SPIELRUNDE_";
+    public static final String SCHLUESSEL_FORMULEX_RANGLISTE         = "__PTM_FORMULEX_RANGLISTE__";
+
     // ── Konstanten: Forme / KO-Runden ────────────────────────────────────────
 
     public static final String SCHLUESSEL_FORME_VORRUNDEN = "__PTM_FORME_VORRUNDEN__";

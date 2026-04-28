@@ -27,6 +27,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetNew;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_New;
 import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetNew;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
@@ -59,7 +60,8 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
         TurnierSystem.LIGA,
         TurnierSystem.JGJ,
         TurnierSystem.KO,
-        TurnierSystem.KASKADE
+        TurnierSystem.KASKADE,
+        TurnierSystem.FORMULEX
     };
 
     private WorkingSpreadsheet ws;
@@ -171,6 +173,7 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
             case JGJ          -> new JGJMeldeListeSheet_New(zielWs).start();
             case KO           -> new KoMeldeListeSheetNew(zielWs).start();
             case KASKADE      -> new KaskadeMeldeListeSheetNew(zielWs).start();
+            case FORMULEX     -> new FormuleXMeldeListeSheetNew(zielWs).start();
             default           -> logger.warn("Unbekanntes Turniersystem für Start-Aktion: {}", system);
         }
     }
