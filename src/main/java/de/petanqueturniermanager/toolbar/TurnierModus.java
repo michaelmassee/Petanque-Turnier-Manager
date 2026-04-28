@@ -22,6 +22,7 @@ import com.sun.star.util.XURLTransformer;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -187,6 +188,7 @@ public class TurnierModus {
 
         aktiv = true;
         schuetzeBlattschutzFuerAktivesTournierSystem(ws);
+        SidebarAnzeigenListener.zeigePtmSidebar(ws);
     }
 
     private void deaktivierenIntern(XLayoutManager lm, WorkingSpreadsheet ws) {

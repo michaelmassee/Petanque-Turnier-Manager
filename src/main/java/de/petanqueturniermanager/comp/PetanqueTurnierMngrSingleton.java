@@ -24,6 +24,7 @@ import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 import de.petanqueturniermanager.toolbar.TimerToolbarSteuerung;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
@@ -92,6 +93,7 @@ public class PetanqueTurnierMngrSingleton {
 			WebServerManager.get().starten(context);
 		}
 		addGlobalEventListener(new ToolbarAnzeigenListener());
+		addGlobalEventListener(new SidebarAnzeigenListener());
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
