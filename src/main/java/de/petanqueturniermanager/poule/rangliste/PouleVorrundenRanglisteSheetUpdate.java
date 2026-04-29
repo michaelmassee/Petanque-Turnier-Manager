@@ -53,7 +53,7 @@ public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteS
         XSpreadsheet xSheet = getXSpreadSheet();
         berechnungUndSchreiben(vorrundeSheet, xSheet);
 
-        if (SheetRunner.isRunning()) {
+        if (SheetRunner.isRunning() && !SheetRunner.isHintergrundbetrieb()) {
             getSheetHelper().setActiveSheet(xSheet);
             SheetRunner.unterdrückeNaechstesSelectionChange();
         }

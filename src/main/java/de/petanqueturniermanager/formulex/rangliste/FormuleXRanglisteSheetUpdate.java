@@ -71,7 +71,7 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
                     .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
         }
 
-        if (SheetRunner.isRunning()) {
+        if (SheetRunner.isRunning() && !SheetRunner.isHintergrundbetrieb()) {
             getSheetHelper().setActiveSheet(sheet);
             SheetRunner.unterdrückeNaechstesSelectionChange();
         }

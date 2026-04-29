@@ -93,6 +93,11 @@ class SheetRunnerKoordinator {
         this.aktuellerRunner = runner;
     }
 
+    /** Gibt den aktuell aktiven Runner zurück, oder {@code null} wenn keiner läuft. */
+    SheetRunner getRunner() {
+        return aktuellerRunner;
+    }
+
     /** Setzt das Lauf-Flag direkt. */
     void setLaeuft(boolean wert) {
         laeuft.set(wert);

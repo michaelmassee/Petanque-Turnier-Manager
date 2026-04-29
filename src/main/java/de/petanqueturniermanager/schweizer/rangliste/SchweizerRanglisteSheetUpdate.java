@@ -80,8 +80,11 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
 		}
 
-		// setActiveSheet nur wenn über SheetRunner.run() aufgerufen (isRunning=true).
-		if (SheetRunner.isRunning()) {
+		// setActiveSheet nur wenn über SheetRunner.run() aufgerufen (isRunning=true),
+		// aber NICHT im Hintergrundmodus (Listener-ausgelöst): der User ist bereits auf
+		// dem Rangliste-Tab, ein setActiveSheet() aus dem Background-Thread würde einen
+		// sichtbaren Rücksprung zum vorherigen Tab auslösen.
+		if (SheetRunner.isRunning() && !SheetRunner.isHintergrundbetrieb()) {
 			getSheetHelper().setActiveSheet(sheet);
 			SheetRunner.unterdrückeNaechstesSelectionChange();
 		}

@@ -9,6 +9,7 @@ import java.util.function.BiPredicate;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.container.XNamed;
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.EventObject;
 import com.sun.star.sheet.XSpreadsheet;
@@ -55,6 +56,8 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 	/** Bereits registrierte Dokumente – verhindert Doppelregistrierung der Listener. */
 	private final Set<XSpreadsheetDocument> registriert =
 			Collections.newSetFromMap(new WeakHashMap<>());
+
+	private final RanglisteDirtyFlagTracker dirtyFlagTracker = new RanglisteDirtyFlagTracker();
 
 	// ── Factory-Methoden ────────────────────────────────────────────────────
 
@@ -143,6 +146,7 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 			}
 
 			registriereSelectionChangeListener(xModel, xDoc);
+			dirtyFlagTracker.registriereUndBeobachte(xDoc);
 
 		} catch (Throwable t) {
 			logger.error("Fehler beim Registrieren der Listener", t);
@@ -161,7 +165,13 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 		if (selSupplier == null) return;
 
 		selSupplier.addSelectionChangeListener(new XSelectionChangeListener() {
-			private XSpreadsheet letztesSheet = null;
+			// Sheet-Name als String cachen: UNO-Proxy-Objekte sind niemals ==,
+			// daher ist String-Vergleich die einzig korrekte und schnelle Variante.
+			private String letzterSheetName = null;
+			// Rangliste-Status des zuletzt aktiven Sheets mitcachen, damit beim
+			// Tab-Wechsel nur ein einziger ranglisteMatch-Aufruf (für das neue Sheet)
+			// nötig ist – statt bisher zwei UNO-teure Aufrufe pro Ereignis.
+			private boolean letzterWarRangliste = false;
 
 			@Override
 			public void selectionChanged(EventObject e) {
@@ -172,21 +182,25 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 					XSpreadsheet aktuellesSheet = view.getActiveSheet();
 					if (aktuellesSheet == null) return;
 
-					XSpreadsheet vorherigesSheet = letztesSheet;
-					letztesSheet = aktuellesSheet;
+					XNamed named = Lo.qi(XNamed.class, aktuellesSheet);
+					if (named == null) return;
+					String aktuellerSheetName = named.getName();
 
-					// Kein Sheet-Wechsel (Klick innerhalb desselben Sheets) → nichts zu tun
-					if (aktuellesSheet == vorherigesSheet) return;
+					// Kein Sheet-Wechsel (Klick innerhalb desselben Sheets) → sofort raus
+					if (aktuellerSheetName.equals(letzterSheetName)) return;
 
-					// Rebuild nur wenn User ZUR Rangliste gewechselt hat (nicht von ihr weg)
+					boolean vorherigerWarRangliste = letzterWarRangliste;
 					boolean istAufRangliste = ranglisteMatch.test(xDoc, aktuellesSheet);
-					boolean warAufRangliste = vorherigesSheet != null && ranglisteMatch.test(xDoc, vorherigesSheet);
+
+					letzterSheetName = aktuellerSheetName;
+					letzterWarRangliste = istAufRangliste;
 
 					logger.trace("selectionChanged: istAufRangliste={}, warAufRangliste={}, isRunning={}, Thread='{}'",
-							istAufRangliste, warAufRangliste, SheetRunner.isRunning(),
+							istAufRangliste, vorherigerWarRangliste, SheetRunner.isRunning(),
 							Thread.currentThread().getName());
 
-					if (istAufRangliste && !warAufRangliste && !SheetRunner.isRunning()
+					// Rebuild nur wenn User ZUR Rangliste gewechselt hat (nicht von ihr weg)
+					if (istAufRangliste && !vorherigerWarRangliste && !SheetRunner.isRunning()
 							&& istPassendesDokument(xDoc)) {
 						// Flag erst hier konsumieren (wenn isRunning()==false), damit ein
 						// synchrones Ereignis das Flag nicht vorzeitig verbraucht und das
@@ -195,9 +209,13 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 							logger.trace("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
 							return;
 						}
+						if (!dirtyFlagTracker.isDirtyUndConsume(xDoc)) {
+							logger.trace("selectionChanged: Rangliste aktuell – Update übersprungen");
+							return;
+						}
 						logger.warn("selectionChanged: REBUILD getriggert – Thread='{}', isRunning={}",
 								Thread.currentThread().getName(), SheetRunner.isRunning());
-						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
+						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).startImHintergrund();
 					}
 				} catch (Throwable t) {
 					logger.error("Fehler im SelectionChangeListener", t);
@@ -236,9 +254,13 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 				logger.debug("onFocus: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
 				return;
 			}
+			if (!dirtyFlagTracker.isDirtyUndConsume(xDoc)) {
+				logger.trace("onFocus: Rangliste aktuell – Update übersprungen");
+				return;
+			}
 
 			logger.debug("OnFocus mit Rangliste aktiv → automatischer Neuaufbau");
-			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
+			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).startImHintergrund();
 
 		} catch (Throwable t) {
 			logger.error("Fehler beim OnFocus-Ranglisten-Refresh", t);

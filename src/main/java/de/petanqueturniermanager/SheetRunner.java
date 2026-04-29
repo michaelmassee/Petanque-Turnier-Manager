@@ -39,12 +39,19 @@ public abstract class SheetRunner extends Thread {
 	static SheetRunnerKoordinator koordinator = new SheetRunnerKoordinator();
 
 	/**
-	 * Gesetzt von {@link #start()}, um anzuzeigen dass der Koordinator bereits
-	 * vor dem Thread-Start vorgemerkt wurde. Verhindert die Race-Condition zwischen
-	 * {@code Thread.start()} und dem eigentlichen {@code run()}-Aufruf, in der
-	 * {@code isRunning()} fälschlicherweise {@code false} zurückgibt.
+	 * Gesetzt von {@link #start()} und {@link #startImHintergrund()}, um anzuzeigen
+	 * dass der Koordinator bereits vor dem Thread-Start vorgemerkt wurde.
+	 * Verhindert die Race-Condition zwischen {@code Thread.start()} und dem
+	 * eigentlichen {@code run()}-Aufruf, in der {@code isRunning()} fälschlicherweise
+	 * {@code false} zurückgibt.
 	 */
 	private volatile boolean koordinatorVorgekoppelt = false;
+
+	/**
+	 * Gesetzt von {@link #startImHintergrund()}: Rebuild läuft im Hintergrund-Thread,
+	 * kein ProcessBox-Fenster anzeigen.
+	 */
+	private volatile boolean imHintergrundGestartet = false;
 
 	private String logPrefix = null;
 
@@ -89,14 +96,12 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	/**
-	 * Startet den SheetRunner asynchron als Thread und schließt dabei die Race-Condition,
-	 * die zwischen {@code Thread.start()} und dem eigentlichen {@code run()}-Einstieg entsteht:
-	 * In diesem Zeitfenster sah {@code isRunning()} fälschlicherweise {@code false}, was
-	 * dazu führen konnte, dass der {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}
-	 * parallel einen zweiten Runner startete und damit das Prozess-Fenster zweimal öffnete.
+	 * Startet den SheetRunner asynchron als Thread (für Menü-Aktionen).
 	 * <p>
-	 * Durch {@link #koordinatorVorgekoppelt} erkennt {@link #run()}, dass der Koordinator
-	 * bereits gesetzt wurde, und überspringt die erneute Prüfung.
+	 * Schließt die Race-Condition zwischen {@code Thread.start()} und dem
+	 * eigentlichen {@code run()}-Einstieg: Durch {@link #koordinatorVorgekoppelt}
+	 * erkennt {@link #run()}, dass der Koordinator bereits gesetzt wurde.
+	 * Zeigt eine Warnung wenn bereits ein Runner aktiv ist.
 	 */
 	@Override
 	public final synchronized void start() {
@@ -110,6 +115,22 @@ public abstract class SheetRunner extends Thread {
 		}
 	}
 
+	/**
+	 * Startet den SheetRunner asynchron im Hintergrund-Thread (für Listener-ausgelöste Refreshs).
+	 * <p>
+	 * Wie {@link #start()}, aber ohne ProcessBox-Fenster und ohne Warn-Dialog wenn bereits
+	 * ein Runner aktiv ist (stilles Überspringen). Dadurch blockiert der aufrufende
+	 * UNO-Event-Thread nicht, und Tab-Wechsel bleiben flüssig.
+	 */
+	public final synchronized void startImHintergrund() {
+		if (!koordinator.getAndSetLaeuft(true)) {
+			koordinatorVorgekoppelt = true;
+			imHintergrundGestartet = true;
+			super.start();
+		}
+		// bereits läuft → still überspringen, kein MessageBox
+	}
+
 	@Override
 	public final void run() {
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
@@ -119,8 +140,9 @@ public abstract class SheetRunner extends Thread {
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
 
+			var zeigeProcessBox = koordinatorVorgekoppelt && !imHintergrundGestartet;
 			try {
-				if (koordinatorVorgekoppelt) {
+				if (zeigeProcessBox) {
 					processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
 				}
 				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()) {
@@ -139,7 +161,7 @@ public abstract class SheetRunner extends Thread {
 				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 				koordinator.setRunner(null);
 				koordinator.benachrichtigeListener(); // Menü reaktivieren
-				if (koordinatorVorgekoppelt || isFehler) {
+				if (zeigeProcessBox || isFehler) {
 					// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
 					if (isFehler) {
 						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
@@ -147,7 +169,7 @@ public abstract class SheetRunner extends Thread {
 						processBox().visible().info(I18n.get("processbox.fertig.status")).ready();
 					}
 				} else {
-					// Listener-ausgelöst, kein Fehler: nur in ProcessBox loggen, Fenster NICHT aufpoppen
+					// Listener-ausgelöst oder Hintergrund-Refresh, kein Fehler: nur in ProcessBox loggen, Fenster NICHT aufpoppen
 					processBox().info(I18n.get("processbox.fertig.status"));
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
@@ -271,6 +293,19 @@ public abstract class SheetRunner extends Thread {
 
 	public static boolean isRunning() {
 		return koordinator.isRunning();
+	}
+
+	/**
+	 * {@code true} wenn der laufende Runner per {@link #startImHintergrund()} gestartet wurde.
+	 * <p>
+	 * Update-Klassen nutzen dieses Flag um {@code setActiveSheet()} zu überspringen:
+	 * Im Hintergrundmodus ist der User bereits auf dem Rangliste-Tab – ein nachträgliches
+	 * {@code setActiveSheet()} aus dem Background-Thread würde einen sichtbaren Rücksprung
+	 * zum vorherigen Tab auslösen.
+	 */
+	public static boolean isHintergrundbetrieb() {
+		var runner = koordinator.getRunner();
+		return runner != null && runner.imHintergrundGestartet;
 	}
 
 	/**
