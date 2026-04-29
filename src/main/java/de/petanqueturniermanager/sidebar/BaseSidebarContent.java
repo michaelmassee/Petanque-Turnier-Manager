@@ -214,8 +214,19 @@ public abstract class BaseSidebarContent extends ComponentBase
 		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
 			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument);
+			onSpreadsheetGewechselt(currentSpreadsheet);
 			felderAktualisieren(new OnProperiesChangedEvent(currentSpreadsheet.getWorkingSpreadsheetDocument()));
 		}
+	}
+
+	/**
+	 * Wird aufgerufen nachdem {@code currentSpreadsheet} auf ein neues Dokument
+	 * aktualisiert wurde (beim Laden oder Neuerstellung eines Dokuments).
+	 * Unterklassen können diesen Hook überschreiben, um Listener auf das neue
+	 * Dokument umzuhängen.
+	 */
+	protected void onSpreadsheetGewechselt(WorkingSpreadsheet neuesSpreadsheet) {
+		// Standard: keine Aktion
 	}
 
 	// ----- XToolPanel -----

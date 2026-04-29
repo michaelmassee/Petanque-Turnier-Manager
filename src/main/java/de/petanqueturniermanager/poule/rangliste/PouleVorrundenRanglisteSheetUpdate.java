@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -51,5 +52,10 @@ public class PouleVorrundenRanglisteSheetUpdate extends PouleVorrundenRanglisteS
 
         XSpreadsheet xSheet = getXSpreadSheet();
         berechnungUndSchreiben(vorrundeSheet, xSheet);
+
+        if (SheetRunner.isRunning()) {
+            getSheetHelper().setActiveSheet(xSheet);
+            SheetRunner.unterdrückeNaechstesSelectionChange();
+        }
     }
 }

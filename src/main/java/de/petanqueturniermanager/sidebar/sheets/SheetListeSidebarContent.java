@@ -18,10 +18,13 @@ import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.EventObject;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.ui.LayoutSize;
 import com.sun.star.ui.XSidebar;
+import com.sun.star.view.XSelectionChangeListener;
+import com.sun.star.view.XSelectionSupplier;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -63,6 +66,41 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private Set<String> kollabierteUnterGruppen;
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
+    private String letzteAktiveSheetName = null;
+    private XSelectionSupplier selectionSupplier = null;
+
+    private final XSelectionChangeListener tabWechselListener = new XSelectionChangeListener() {
+        @Override
+        public void selectionChanged(EventObject event) {
+            if (SheetRunner.isRunning() || sheetListBox == null) {
+                return;
+            }
+            var ws = getCurrentSpreadsheet();
+            if (ws == null) {
+                return;
+            }
+            var aktuellesSheet = ws.getWorkingSpreadsheetView().getActiveSheet();
+            if (aktuellesSheet == null) {
+                return;
+            }
+            var named = Lo.qi(XNamed.class, aktuellesSheet);
+            if (named == null) {
+                return;
+            }
+            var sheetName = named.getName();
+            if (sheetName.equals(letzteAktiveSheetName)) {
+                return;
+            }
+            letzteAktiveSheetName = sheetName;
+            sidebarAuswahlSynchronisieren(sheetName);
+        }
+
+        @Override
+        public void disposing(EventObject event) {
+            selectionSupplier = null;
+        }
+    };
+
     private final Runnable prozessZustandListener = () -> {
         if (SheetRunner.isRunning()) {
             listBoxAktivierungAktualisieren();
@@ -75,6 +113,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             XSidebar xSidebar) {
         super(workingSpreadsheet, parentWindow, xSidebar);
         SheetRunner.addStateChangeListener(prozessZustandListener);
+        tabWechselListenerRegistrieren(workingSpreadsheet);
     }
 
     // ── Aufbau ──────────────────────────────────────────────────────────────
@@ -185,6 +224,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void listeNeuAufbauen() {
+        letzteAktiveSheetName = null;
         auswahlMerken();
         allesFelderEntfernenUndNeuFenster();
         felderHinzufuegen();
@@ -288,11 +328,61 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
     }
 
+    // ── Tab-Synchronisierung ─────────────────────────────────────────────────
+
+    @Override
+    protected void onSpreadsheetGewechselt(WorkingSpreadsheet neuesSpreadsheet) {
+        tabWechselListenerRegistrieren(neuesSpreadsheet);
+    }
+
+    private void tabWechselListenerRegistrieren(WorkingSpreadsheet ws) {
+        tabWechselListenerAbmelden();
+        if (ws == null) {
+            return;
+        }
+        var model = Lo.qi(XModel.class, ws.getWorkingSpreadsheetDocument());
+        if (model == null) {
+            return;
+        }
+        selectionSupplier = Lo.qi(XSelectionSupplier.class, model.getCurrentController());
+        if (selectionSupplier != null) {
+            selectionSupplier.addSelectionChangeListener(tabWechselListener);
+        }
+    }
+
+    private void tabWechselListenerAbmelden() {
+        if (selectionSupplier != null) {
+            try {
+                selectionSupplier.removeSelectionChangeListener(tabWechselListener);
+            } catch (Exception e) {
+                logger.warn("Fehler beim Abmelden des TabWechselListeners", e);
+            }
+            selectionSupplier = null;
+        }
+    }
+
+    private void sidebarAuswahlSynchronisieren(String sheetName) {
+        if (sheetListBox == null) {
+            return;
+        }
+        for (int i = 0; i < baumEintraege.size(); i++) {
+            if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
+                var named = Lo.qi(XNamed.class, knoten.sheet());
+                if (named != null && sheetName.equals(named.getName())) {
+                    sheetListBox.selectItemPos((short) i, true);
+                    return;
+                }
+            }
+        }
+        sheetListBox.selectItemPos((short) -1, false);
+    }
+
     // ── Cleanup ──────────────────────────────────────────────────────────────
 
     @Override
     protected void onDisposing(EventObject event) {
         SheetRunner.removeStateChangeListener(prozessZustandListener);
+        tabWechselListenerAbmelden();
         sheetListBox = null;
         baumEintraege.clear();
         gespeichertesSheet = null;

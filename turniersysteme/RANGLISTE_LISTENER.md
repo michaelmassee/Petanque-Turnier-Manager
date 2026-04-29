@@ -13,6 +13,8 @@
 |---|---|
 | Schweizer Rangliste | `SchweizerRanglisteSheetUpdate` |
 | Maastrichter Vorrunden-Rangliste | `MaastrichterVorrundenRanglisteSheetUpdate` |
+| Formule X Rangliste | `FormuleXRanglisteSheetUpdate` |
+| Poule Vorrunden-Rangliste | `PouleVorrundenRanglisteSheetUpdate` |
 
 ## Muster für neue Turniersysteme
 
@@ -23,7 +25,7 @@ Jedes neue Turniersystem, das einen `RanglisteRefreshListener` bekommt, benötig
    - Überschreibt `doRun()`: **kein** `forceCreate`, kein Sheet-Event, keine Race Condition
    - Prüft ob Sheet existiert; falls nicht → Fallback auf `FooRanglisteSheet.doRun()` (Erstaufbau)
    - Schreibt nur den Datenbereich neu via `berechnungUndSchreiben()` (shared protected method)
-   - Löscht überzählige Zeilen wenn Teamanzahl gesunken ist (`loeSchalteDatenzeilen`)
+   - Löscht überzählige Zeilen wenn Teamanzahl gesunken ist (via `RanglisteUpdateHelper.loescheDatenzeilen()`)
    - Registrierung in `PetanqueTurnierMngrSingleton` via `RanglisteRefreshListener.fuerSchluessel(..., (ws, ignored) -> new FooRanglisteSheetUpdate(ws))`
 
 ## `setActiveSheet()` – nur im SheetRunner-Kontext

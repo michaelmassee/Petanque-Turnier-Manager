@@ -8,8 +8,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -73,7 +72,7 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 			return;
 		}
 
-		loeSchalteDatenzeilen(sheet, aktiveMeldungen.size());
+		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveMeldungen.size());
 		berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
 
 		if (TurnierModus.get().istAktiv()) {
@@ -97,19 +96,4 @@ public class SchweizerRanglisteSheetUpdate extends SchweizerRanglisteSheet {
 		return new SchweizerRanglisteSheet(getWorkingSpreadsheet());
 	}
 
-	/**
-	 * Löscht veraltete Datenzeilen wenn sich die Teamanzahl verringert hat.
-	 * Bei gleichbleibender oder größerer Teamanzahl passiert nichts, da
-	 * {@code insertDatenAlsWerte} die vorhandenen Zellen überschreibt.
-	 */
-	private void loeSchalteDatenzeilen(XSpreadsheet sheet, int neueTeamAnzahl) throws GenerateException {
-		int bisherigeLetzte = sucheLetzteZeileMitSpielerNummer();
-		int neueLetzte = ERSTE_DATEN_ZEILE + neueTeamAnzahl - 1;
-		if (bisherigeLetzte > neueLetzte) {
-			RangeHelper.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-					RangePosition.from(TEAM_NR_SPALTE, neueLetzte + 1, VALIDATE_SPALTE, bisherigeLetzte))
-					.clearRange();
-			logger.debug("loeSchalteDatenzeilen: Zeilen {}-{} gelöscht", neueLetzte + 1, bisherigeLetzte);
-		}
-	}
 }

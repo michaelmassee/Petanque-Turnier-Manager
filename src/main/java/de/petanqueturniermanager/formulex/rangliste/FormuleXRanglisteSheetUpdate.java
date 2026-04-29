@@ -12,8 +12,7 @@ import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
@@ -64,7 +63,7 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
             return;
         }
 
-        loescheDatenzeilen(sheet, aktiveMeldungen.size());
+        RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveMeldungen.size());
         berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
 
         if (TurnierModus.get().istAktiv()) {
@@ -79,14 +78,4 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
         LOGGER.debug("RanglisteUpdate ENDE – Thread='{}'", Thread.currentThread().getName());
     }
 
-    private void loescheDatenzeilen(XSpreadsheet sheet, int neueTeamAnzahl) throws GenerateException {
-        int bisherigeLetzte = sucheLetzteZeileMitSpielerNummer();
-        int neueLetzte = ERSTE_DATEN_ZEILE + neueTeamAnzahl - 1;
-        if (bisherigeLetzte > neueLetzte) {
-            RangeHelper.from(sheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
-                    RangePosition.from(TEAM_NR_SPALTE, neueLetzte + 1, VALIDATE_SPALTE, bisherigeLetzte))
-                    .clearRange();
-            LOGGER.debug("loescheDatenzeilen: Zeilen {}-{} gelöscht", neueLetzte + 1, bisherigeLetzte);
-        }
-    }
 }
