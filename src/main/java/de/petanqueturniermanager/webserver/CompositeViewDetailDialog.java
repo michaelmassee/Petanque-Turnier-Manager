@@ -4,8 +4,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -620,13 +622,20 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     // ---- ComboBox-Items ----
 
     private String[] ladeComboBoxItems() {
-        var items = new LinkedHashSet<String>();
+        List<String> geoeffnet = new ArrayList<>();
         XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
         if (doc != null) {
-            items.addAll(Arrays.asList(doc.getSheets().getElementNames()));
+            geoeffnet.addAll(Arrays.asList(doc.getSheets().getElementNames()));
+            geoeffnet.sort(null);
         }
-        items.addAll(Arrays.asList(komboBoxItems));
-        return items.toArray(String[]::new);
+        Set<String> geoeffnetSet = new HashSet<>(geoeffnet);
+        List<String> festeIds = Arrays.stream(komboBoxItems)
+                .filter(t -> !geoeffnetSet.contains(t))
+                .sorted()
+                .collect(Collectors.toList());
+        var result = new ArrayList<>(geoeffnet);
+        result.addAll(festeIds);
+        return result.toArray(String[]::new);
     }
 
     // ---- Control-Hilfsmethoden: statische Controls (kein Tracking) ----
@@ -749,6 +758,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         props.setPropertyValue("StringItemList", items);
         props.setPropertyValue("Text",           selected != null ? selected : "");
         props.setPropertyValue("Dropdown",       Boolean.TRUE);
+        props.setPropertyValue("LineCount",      (short) 20);
         cont.insertByName(name, model);
         dynamischeControlNamen.add(name);
     }

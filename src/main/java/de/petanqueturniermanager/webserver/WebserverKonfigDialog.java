@@ -3,9 +3,9 @@ package de.petanqueturniermanager.webserver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -354,13 +354,20 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 	// ---- Hilfsmethoden: ComboBox-Items + Port-Berechnung ----
 
 	private String[] ladeComboBoxItems() {
-		var items = new LinkedHashSet<String>();
+		List<String> geoeffnet = new ArrayList<>();
 		XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(xContext);
 		if (doc != null) {
-			items.addAll(Arrays.asList(doc.getSheets().getElementNames()));
+			geoeffnet.addAll(Arrays.asList(doc.getSheets().getElementNames()));
+			geoeffnet.sort(null);
 		}
-		items.addAll(Arrays.asList(SHEET_TYPEN));
-		return items.toArray(String[]::new);
+		Set<String> geoeffnetSet = new HashSet<>(geoeffnet);
+		List<String> festeIds = Arrays.stream(SHEET_TYPEN)
+				.filter(t -> !geoeffnetSet.contains(t))
+				.sorted()
+				.collect(Collectors.toList());
+		var result = new ArrayList<>(geoeffnet);
+		result.addAll(festeIds);
+		return result.toArray(String[]::new);
 	}
 
 	private int berechneNaechstenFreienPort() {
@@ -431,6 +438,7 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 		props.setPropertyValue("StringItemList", items);
 		props.setPropertyValue("Text",           selected != null ? selected : "");
 		props.setPropertyValue("Dropdown",       Boolean.TRUE);
+		props.setPropertyValue("LineCount",      (short) 20);
 		cont.insertByName(name, model);
 		dynamischeControlNamen.add(name);
 	}
