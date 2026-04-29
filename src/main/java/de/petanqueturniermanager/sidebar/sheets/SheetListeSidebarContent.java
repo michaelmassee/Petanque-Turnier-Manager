@@ -68,6 +68,13 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private String gespeichertesSheet = null;
     private String letzteAktiveSheetName = null;
     private XSelectionSupplier selectionSupplier = null;
+    /**
+     * Wird auf {@code true} gesetzt während programmatischer ListBox-Aktualisierungen
+     * (z.B. {@code auswahlWiederherstellen()} nach {@code listeNeuAufbauen()}). Verhindert,
+     * dass das dadurch ausgelöste {@code itemStateChanged} ein {@code setActiveSheet()}
+     * triggert und so den vom User gewählten Tab überschreibt.
+     */
+    private boolean unterdrueckeItemListener = false;
 
     private final XSelectionChangeListener tabWechselListener = new XSelectionChangeListener() {
         @Override
@@ -209,7 +216,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
                 var named = Lo.qi(XNamed.class, knoten.sheet());
                 if (named != null && gespeichertesSheet.equals(named.getName())) {
-                    sheetListBox.selectItemPos((short) i, true);
+                    unterdrueckeItemListener = true;
+                    try {
+                        sheetListBox.selectItemPos((short) i, true);
+                    } finally {
+                        unterdrueckeItemListener = false;
+                    }
                     return;
                 }
             }
@@ -252,6 +264,12 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private final XItemListener itemListener = new XItemListener() {
         @Override
         public void itemStateChanged(ItemEvent e) {
+            if (unterdrueckeItemListener) {
+                // Programmatischer selectItemPos-Aufruf (z.B. aus auswahlWiederherstellen
+                // nach listeNeuAufbauen) – kein Sheet-Wechsel auslösen, sonst überschreibt
+                // die Sidebar den vom User per Tab-Klick aktivierten Tab.
+                return;
+            }
             int idx = e.Selected;
             if (idx < 0 || idx >= baumEintraege.size()) {
                 return;
@@ -369,12 +387,22 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
                 var named = Lo.qi(XNamed.class, knoten.sheet());
                 if (named != null && sheetName.equals(named.getName())) {
-                    sheetListBox.selectItemPos((short) i, true);
+                    unterdrueckeItemListener = true;
+                    try {
+                        sheetListBox.selectItemPos((short) i, true);
+                    } finally {
+                        unterdrueckeItemListener = false;
+                    }
                     return;
                 }
             }
         }
-        sheetListBox.selectItemPos((short) -1, false);
+        unterdrueckeItemListener = true;
+        try {
+            sheetListBox.selectItemPos((short) -1, false);
+        } finally {
+            unterdrueckeItemListener = false;
+        }
     }
 
     // ── Cleanup ──────────────────────────────────────────────────────────────

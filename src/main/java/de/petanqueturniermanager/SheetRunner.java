@@ -46,6 +46,14 @@ public abstract class SheetRunner extends Thread {
 	 */
 	private volatile boolean koordinatorVorgekoppelt = false;
 
+	/**
+	 * Gesetzt von {@link #startSilent()}: Listener-/Hintergrund-Lauf ohne ProcessBox-Popup
+	 * und ohne Busy-MessageBox bei Kollision. Verhalten in {@link #run()} entspricht
+	 * dem Listener-Pfad, aber mit asynchroner Ausführung (geschlossene Race über
+	 * vorab gesetztes {@code Laeuft}-Flag).
+	 */
+	private volatile boolean silentBackground = false;
+
 	private String logPrefix = null;
 
 	protected String getLogPrefix() {
@@ -110,6 +118,24 @@ public abstract class SheetRunner extends Thread {
 		}
 	}
 
+	/**
+	 * Startet den Runner asynchron im Hintergrund ohne sichtbare ProcessBox-Animation
+	 * und ohne Busy-MessageBox bei Kollision. Vorgesehen für Listener-getriggerte
+	 * Refreshes (z.B. Tab-Wechsel zur Rangliste): Der aufrufende UI-Event-Handler
+	 * kehrt sofort zurück, sodass LO den Tab-Wechsel ungestört abschließen kann.
+	 * <p>
+	 * Wie {@link #start()} setzt diese Methode den {@code Laeuft}-Flag synchron vor dem
+	 * Thread-Start und schließt damit das Race-Fenster für Doppel-Trigger. Wenn der
+	 * Koordinator bereits läuft, wird stillschweigend nichts getan (kein Popup).
+	 */
+	public final synchronized void startSilent() {
+		if (!koordinator.getAndSetLaeuft(true)) {
+			koordinatorVorgekoppelt = true;
+			silentBackground = true;
+			super.start();
+		}
+	}
+
 	@Override
 	public final void run() {
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
@@ -120,7 +146,7 @@ public abstract class SheetRunner extends Thread {
 			boolean isFehler = false;
 
 			try {
-				if (koordinatorVorgekoppelt) {
+				if (koordinatorVorgekoppelt && !silentBackground) {
 					processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
 				}
 				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()) {
@@ -139,7 +165,7 @@ public abstract class SheetRunner extends Thread {
 				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 				koordinator.setRunner(null);
 				koordinator.benachrichtigeListener(); // Menü reaktivieren
-				if (koordinatorVorgekoppelt || isFehler) {
+				if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
 					// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
 					if (isFehler) {
 						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
@@ -147,7 +173,7 @@ public abstract class SheetRunner extends Thread {
 						processBox().visible().info(I18n.get("processbox.fertig.status")).ready();
 					}
 				} else {
-					// Listener-ausgelöst, kein Fehler: nur in ProcessBox loggen, Fenster NICHT aufpoppen
+					// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
 					processBox().info(I18n.get("processbox.fertig.status"));
 				}
 				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde

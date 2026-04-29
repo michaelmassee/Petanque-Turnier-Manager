@@ -195,9 +195,12 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 							logger.trace("selectionChanged: Unterdrückt – ausgelöst durch setActiveSheet() des Runners");
 							return;
 						}
-						logger.warn("selectionChanged: REBUILD getriggert – Thread='{}', isRunning={}",
-								Thread.currentThread().getName(), SheetRunner.isRunning());
-						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
+						logger.debug("selectionChanged: REBUILD getriggert (asynchron) – Thread='{}'",
+								Thread.currentThread().getName());
+						// Asynchron starten, damit der selectionChanged-Handler sofort zurückkehrt
+						// und LO den Tab-Wechsel ungestört abschließen kann. startSilent() schließt
+						// die Race wie start(), unterdrückt aber die ProcessBox.
+						runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).startSilent();
 					}
 				} catch (Throwable t) {
 					logger.error("Fehler im SelectionChangeListener", t);
@@ -237,8 +240,8 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 				return;
 			}
 
-			logger.debug("OnFocus mit Rangliste aktiv → automatischer Neuaufbau");
-			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).run();
+			logger.debug("OnFocus mit Rangliste aktiv → automatischer Neuaufbau (asynchron)");
+			runnerFactory.apply(new WorkingSpreadsheet(xContext, xDoc), aktuellesSheet).startSilent();
 
 		} catch (Throwable t) {
 			logger.error("Fehler beim OnFocus-Ranglisten-Refresh", t);

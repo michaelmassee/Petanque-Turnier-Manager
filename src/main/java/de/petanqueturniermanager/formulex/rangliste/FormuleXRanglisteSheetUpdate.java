@@ -8,7 +8,6 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
@@ -71,10 +70,10 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
                     .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
         }
 
-        if (SheetRunner.isRunning()) {
-            getSheetHelper().setActiveSheet(sheet);
-            SheetRunner.unterdrückeNaechstesSelectionChange();
-        }
+        // Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf der
+        // Rangliste; ein zusätzliches setActiveSheet aus dem selectionChanged-Handler heraus
+        // kollidiert mit LO-internem Tab-Klick-Handling und revertiert den Tab-Wechsel.
+        // Bei programmatischen Aufrufen übernimmt der aufrufende Parent-Runner die Aktivierung.
         LOGGER.debug("RanglisteUpdate ENDE – Thread='{}'", Thread.currentThread().getName());
     }
 
