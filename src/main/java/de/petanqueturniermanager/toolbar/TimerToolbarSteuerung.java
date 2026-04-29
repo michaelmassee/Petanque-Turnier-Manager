@@ -41,6 +41,10 @@ public final class TimerToolbarSteuerung implements TimerListener {
         this.xContext = xContext;
     }
 
+    public static void anzeigenInAllenFrames(XComponentContext xContext) {
+        new TimerToolbarSteuerung(xContext).zeigeToolbarInAllenFrames();
+    }
+
     @Override
     public void onChange(TimerState state) {
         if (state.zustand() == TimerZustand.LAEUFT) {

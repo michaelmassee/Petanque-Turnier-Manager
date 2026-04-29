@@ -165,7 +165,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 						SheetMetadataHelper.schluesselSupermeleeSpielrunde(sheet.getSpielTag().getNr(),
 								sheet.getSpielRundeNr().getNr()))
 				.pos(DefaultSheetPos.SUPERMELEE_WORK).spielTagPageStyle(sheet.getSpielTag()).setForceCreate(force)
-				.setActiv().hideGrid().create();
+				.setActiv().hideGrid().tabColor(konfigurationSheet.getSpielrundeTabFarbe()).create();
 		if (!neuesSheet.isDidCreate()) {
 			ProcessBox.from().info("Abbruch vom Benutzer, Spielrunde wurde nicht erstellt");
 			return false;

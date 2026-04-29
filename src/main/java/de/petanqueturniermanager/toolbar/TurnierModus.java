@@ -185,6 +185,7 @@ public class TurnierModus {
 
         // Toolbar zusätzlich in allen Frames sicherstellen (belt-and-suspenders)
         ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(ws.getxContext());
+        TimerToolbarSteuerung.anzeigenInAllenFrames(ws.getxContext());
 
         aktiv = true;
         schuetzeBlattschutzFuerAktivesTournierSystem(ws);
