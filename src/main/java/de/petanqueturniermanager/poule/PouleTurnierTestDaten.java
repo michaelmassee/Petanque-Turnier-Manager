@@ -22,6 +22,7 @@ import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetUpdate;
 import de.petanqueturniermanager.poule.meldeliste.PouleTeilnehmerSheet;
+import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleSpielplaeneSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleSeedingService;
@@ -45,6 +46,7 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
     private final PouleVorrundeSheet vorrundeSheet;
     private final PouleSpielplaeneSheet spielplaeneSheet;
     private final PouleKonfigurationSheet konfigurationSheet;
+    private final PouleVorrundenRanglisteSheet ranglisteSheet;
 
     public PouleTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
         this(workingSpreadsheet, 16);
@@ -58,6 +60,7 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
         vorrundeSheet = new PouleVorrundeSheet(workingSpreadsheet);
         spielplaeneSheet = new PouleSpielplaeneSheet(workingSpreadsheet);
         konfigurationSheet = new PouleKonfigurationSheet(workingSpreadsheet);
+        ranglisteSheet = new PouleVorrundenRanglisteSheet(workingSpreadsheet);
     }
 
     @Override
@@ -108,7 +111,10 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
         // 6. Ergebnisse einfügen
         ergebnisseEinfuegen();
 
-        // 7. Seitenstile setzen
+        // 7. Rangliste erstellen
+        ranglisteSheet.doRun();
+
+        // 8. Seitenstile setzen
         konfigurationSheet.seitenstileAktualisieren();
     }
 
