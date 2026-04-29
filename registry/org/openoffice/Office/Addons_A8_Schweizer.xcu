@@ -19,8 +19,8 @@
 				</prop>
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
-					<!-- Jeder gegen Jeden -->
-					<node oor:name="A4" oor:op="fuse">
+					<!-- Schweizer -->
+					<node oor:name="A8" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value/>
 						</prop>
@@ -28,11 +28,11 @@
 							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="en">Round Robin</value>
-							<value xml:lang="de">Jeder gegen Jeden</value>
-							<value xml:lang="es">Todos contra todos</value>
-							<value xml:lang="fr">Toutes rondes</value>
-							<value xml:lang="nl">Iedereen tegen iedereen</value>
+							<value xml:lang="en">Schweizer</value>
+							<value xml:lang="de">Schweizer</value>
+							<value xml:lang="es">Sistema suizo</value>
+							<value xml:lang="fr">Suisse</value>
+							<value xml:lang="nl">Zwitsers</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
@@ -40,7 +40,7 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<node oor:name="A4A1" oor:op="replace">
+							<node oor:name="A8A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
@@ -49,36 +49,52 @@
 									<value xml:lang="nl">Start (nieuw toernooi)</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:jgj_neue_meldeliste</value>
+									<value>ptm:schweizer_start</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A2" oor:op="replace">
+							<node oor:name="A8A2" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A3" oor:op="replace">
+							<node oor:name="A8A3" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Refresh Entrylist</value>
-									<value xml:lang="de">Meldeliste aktualisieren</value>
-									<value xml:lang="es">Actualizar lista</value>
-									<value xml:lang="fr">Actualiser la liste</value>
-									<value xml:lang="nl">Lijst vernieuwen</value>
+									<value xml:lang="en">new Entrylist</value>
+									<value xml:lang="de">Neue Meldeliste</value>
+									<value xml:lang="es">Nueva lista de inscripciones</value>
+									<value xml:lang="fr">Nouvelle liste d'inscriptions</value>
+									<value xml:lang="nl">Nieuwe deelnemerslijst</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:jgj_update_meldeliste</value>
+									<value>ptm:schweizer_neue_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A4" oor:op="replace">
+							<node oor:name="A8A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Update Entrylist</value>
+									<value xml:lang="de">Meldeliste Aktualisieren</value>
+									<value xml:lang="es">Actualizar lista de inscripciones</value>
+									<value xml:lang="fr">Actualiser la liste d'inscriptions</value>
+									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_update_meldeliste</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+
+							<node oor:name="A8A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Participants</value>
 									<value xml:lang="de">Teilnehmer</value>
@@ -87,36 +103,54 @@
 									<value xml:lang="nl">Deelnemers</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:jgj_teilnehmer</value>
+									<value>ptm:schweizer_teilnehmer</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A5" oor:op="replace">
+							<node oor:name="A8A6" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A6" oor:op="replace">
+							<node oor:name="A8A7" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Gameplan</value>
-									<value xml:lang="de">Spielplan</value>
-									<value xml:lang="es">Calendario</value>
-									<value xml:lang="fr">Calendrier</value>
-									<value xml:lang="nl">Speelschema</value>
+									<value xml:lang="de">Neue Spielrunde</value>
+								<value xml:lang="en">New Round</value>
+									<value xml:lang="es">Nueva ronda</value>
+									<value xml:lang="fr">Nouveau tour</value>
+									<value xml:lang="nl">Nieuwe ronde</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:jgj_spielplan</value>
+									<value>ptm:schweizer_naechste_spielrunde</value>
 								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="A8A8" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spielrunde neu auslosen</value>
+								<value xml:lang="en">Re-draw Round</value>
+									<value xml:lang="es">Volver a sortear la ronda</value>
+									<value xml:lang="fr">Retirer la manche</value>
+									<value xml:lang="nl">Ronde opnieuw loten</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:schweizer_aktuelle_spielrunde</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
+							</node>
+
+							<node oor:name="A8A9" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A4A7" oor:op="replace">
+							<node oor:name="A8A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -125,44 +159,25 @@
 									<value xml:lang="nl">Ranglijst</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:jgj_rangliste</value>
+									<value>ptm:schweizer_rangliste</value>
 								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A4A8" oor:op="replace">
+							<node oor:name="A8A11" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
-									<value xml:lang="de">Rangliste sortieren</value>
+									<value xml:lang="de">Rangliste Sortieren</value>
 									<value xml:lang="es">Ordenar clasificación</value>
 									<value xml:lang="fr">Trier le classement</value>
 									<value xml:lang="nl">Ranglijst sorteren</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:jgj_rangliste_sortieren</value>
+									<value>ptm:schweizer_rangliste_sortieren</value>
 								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
+								<prop oor:name="Target" oor:type="xs:string"><value>_self</value></prop>
 							</node>
 
-							<node oor:name="A4A9" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Directcomparison</value>
-									<value xml:lang="de">Direktvergleich</value>
-									<value xml:lang="es">Comparación directa</value>
-									<value xml:lang="fr">Comparaison directe</value>
-									<value xml:lang="nl">Directe vergelijking</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:jgj_direktvergleich</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

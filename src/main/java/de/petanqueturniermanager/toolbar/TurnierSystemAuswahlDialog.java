@@ -53,15 +53,15 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
     private static final String CTL_BTN_ABBRECHEN = "btnAbbrechen";
 
     protected static final TurnierSystem[] AUSWAHL_SYSTEME = {
-        TurnierSystem.SUPERMELEE,
-        TurnierSystem.SCHWEIZER,
-        TurnierSystem.MAASTRICHTER,
-        TurnierSystem.POULE,
-        TurnierSystem.LIGA,
+        TurnierSystem.FORMULEX,
         TurnierSystem.JGJ,
         TurnierSystem.KO,
         TurnierSystem.KASKADE,
-        TurnierSystem.FORMULEX
+        TurnierSystem.LIGA,
+        TurnierSystem.MAASTRICHTER,
+        TurnierSystem.POULE,
+        TurnierSystem.SCHWEIZER,
+        TurnierSystem.SUPERMELEE
     };
 
     private WorkingSpreadsheet ws;

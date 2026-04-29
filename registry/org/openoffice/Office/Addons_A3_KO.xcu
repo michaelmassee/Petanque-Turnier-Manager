@@ -16,8 +16,8 @@
 				</prop>
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
-					<!-- Formule X -->
-					<node oor:name="B1" oor:op="fuse">
+					<!-- K.-O. -->
+					<node oor:name="A3" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value/>
 						</prop>
@@ -25,19 +25,19 @@
 							<value/>
 						</prop>
 						<prop oor:name="Title" oor:type="xs:string">
-							<value xml:lang="en">Formule X</value>
-							<value xml:lang="de">Formule X</value>
-							<value xml:lang="es">Formule X</value>
-							<value xml:lang="fr">Formule X</value>
-							<value xml:lang="nl">Formule X</value>
+							<value xml:lang="en">K.-O.</value>
+							<value xml:lang="de">K.-O.</value>
+							<value xml:lang="es">Eliminatoria</value>
+							<value xml:lang="fr">Élimination directe</value>
+							<value xml:lang="nl">K.O.</value>
 						</prop>
 						<prop oor:name="Target" oor:type="xs:string">
 							<value>_self</value>
 						</prop>
 						<node oor:name="Submenu">
-							<!-- name= bestimmt Reihenfolge im Menü -->
+							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<node oor:name="B1A1" oor:op="replace">
+							<node oor:name="A3A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
@@ -46,20 +46,20 @@
 									<value xml:lang="nl">Start (nieuw toernooi)</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:formulex_start</value>
+									<value>ptm:ko_start</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="B1A2" oor:op="replace">
+							<node oor:name="A3A2" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="B1A3" oor:op="replace">
+							<node oor:name="A3A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Update Entrylist</value>
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
@@ -68,14 +68,14 @@
 									<value xml:lang="nl">Deelnemerslijst bijwerken</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:formulex_update_meldeliste</value>
+									<value>ptm:ko_update_meldeliste</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="B1A4" oor:op="replace">
+							<node oor:name="A3A4" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Participants</value>
 									<value xml:lang="de">Teilnehmer</value>
@@ -84,67 +84,29 @@
 									<value xml:lang="nl">Deelnemers</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:formulex_teilnehmer</value>
+									<value>ptm:ko_teilnehmer</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
 								</prop>
 							</node>
 
-							<node oor:name="B1A5" oor:op="replace">
+							<node oor:name="A3A5" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="B1A6" oor:op="replace">
+							<node oor:name="A3A6" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="en">Next Round</value>
-									<value xml:lang="de">Nächste Spielrunde</value>
-									<value xml:lang="es">Siguiente ronda</value>
-									<value xml:lang="fr">Prochain tour</value>
-									<value xml:lang="nl">Volgende ronde</value>
+									<value xml:lang="en">Create Tournament Bracket</value>
+									<value xml:lang="de">Turnierbaum erstellen</value>
+									<value xml:lang="es">Crear árbol del torneo</value>
+									<value xml:lang="fr">Créer le tableau du tournoi</value>
+									<value xml:lang="nl">Toernooiboom aanmaken</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>ptm:formulex_naechste_spielrunde</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="B1A7" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Rebuild Current Round</value>
-									<value xml:lang="de">Aktuelle Spielrunde aktualisieren</value>
-									<value xml:lang="es">Actualizar ronda actual</value>
-									<value xml:lang="fr">Actualiser le tour actuel</value>
-									<value xml:lang="nl">Huidige ronde bijwerken</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:formulex_aktuelle_spielrunde</value>
-								</prop>
-								<prop oor:name="Target" oor:type="xs:string">
-									<value>_self</value>
-								</prop>
-							</node>
-
-							<node oor:name="B1A8" oor:op="replace">
-								<prop oor:name="URL" oor:type="xs:string">
-									<value>private:separator</value>
-								</prop>
-							</node>
-
-							<node oor:name="B1A9" oor:op="replace">
-								<prop oor:name="Title">
-									<value xml:lang="en">Ranking</value>
-									<value xml:lang="de">Rangliste</value>
-									<value xml:lang="es">Clasificación</value>
-									<value xml:lang="fr">Classement</value>
-									<value xml:lang="nl">Ranglijst</value>
-								</prop>
-								<prop oor:name="URL">
-									<value>ptm:formulex_rangliste</value>
+									<value>ptm:ko_turnierbaum</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>

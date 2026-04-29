@@ -20,7 +20,7 @@
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
 					<!-- Maastrichter -->
-					<node oor:name="A7" oor:op="fuse">
+					<node oor:name="A6" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value/>
 						</prop>
@@ -40,7 +40,7 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt Reihenfolge im Menü -->
 							<!-- ****************************************************************** -->
-							<node oor:name="A7A1" oor:op="replace">
+							<node oor:name="A6A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
@@ -56,13 +56,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A7A2" oor:op="replace">
+							<node oor:name="A6A2" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A7A3" oor:op="replace">
+							<node oor:name="A6A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Meldeliste Aktualisieren</value>
 									<value xml:lang="en">Update Entry List</value>
@@ -78,13 +78,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A7A4" oor:op="replace">
+							<node oor:name="A6A4" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A7A5" oor:op="replace">
+							<node oor:name="A6A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Neue Vorrunde</value>
 									<value xml:lang="en">New Preliminary Round</value>
@@ -100,7 +100,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A7A6" oor:op="replace">
+							<node oor:name="A6A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorrunde neu auslosen</value>
 									<value xml:lang="en">Re-draw Preliminary Round</value>
@@ -116,13 +116,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A7A7" oor:op="replace">
+							<node oor:name="A6A7" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A7A8" oor:op="replace">
+							<node oor:name="A6A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Vorrunden-Rangliste</value>
 									<value xml:lang="en">Preliminary Round Ranking</value>
@@ -138,13 +138,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A7A9" oor:op="replace">
+							<node oor:name="A6A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A7A10" oor:op="replace">
+							<node oor:name="A6A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Finalrunden erstellen</value>
 									<value xml:lang="en">Create Final Rounds</value>
@@ -160,13 +160,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A7A11" oor:op="replace">
+							<node oor:name="A6A11" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A7A12" oor:op="replace">
+							<node oor:name="A6A12" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Teilnehmerliste</value>
 									<value xml:lang="en">Participants List</value>
