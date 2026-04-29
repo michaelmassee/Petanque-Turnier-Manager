@@ -72,6 +72,10 @@ public class NewReleaseChecker {
 		return didUpdateCacheFile.get();
 	}
 
+	public static void removeCacheUpdateCallback(Runnable callback) {
+		cacheUpdateCallbacks.remove(callback);
+	}
+
 	/**
 	 * Löst alle registrierten Callbacks manuell aus – z.B. wenn sich
 	 * GlobalProperties geändert haben und die UI sofort aktualisiert werden soll.

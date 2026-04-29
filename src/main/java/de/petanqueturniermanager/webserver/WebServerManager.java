@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
@@ -100,7 +101,21 @@ public final class WebServerManager implements TimerListener {
     private TimerWebServerInstanz timerInstanz;
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
+    private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
+
     private WebServerManager() {
+    }
+
+    public void addStatusListener(Runnable listener) {
+        statusListener.add(listener);
+    }
+
+    public void removeStatusListener(Runnable listener) {
+        statusListener.remove(listener);
+    }
+
+    private void statusListenerBenachrichtigen() {
+        statusListener.forEach(Runnable::run);
     }
 
     public static WebServerManager get() {
@@ -186,6 +201,7 @@ public final class WebServerManager implements TimerListener {
             laeuft = true;
             ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
             logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
+            statusListenerBenachrichtigen();
             try {
                 sseRefreshSendenIntern(new WorkingSpreadsheet(ctx));
             } catch (Exception e) {
@@ -288,6 +304,7 @@ public final class WebServerManager implements TimerListener {
         laeuft = false;
         letzterSheetnamenAnzeigen = false;
         ownerDocument = null;
+        statusListenerBenachrichtigen();
         logger.info("Webserver gestoppt");
         safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestoppt"));
     }

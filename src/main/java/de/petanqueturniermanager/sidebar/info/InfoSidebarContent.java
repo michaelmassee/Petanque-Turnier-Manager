@@ -13,9 +13,13 @@ import com.sun.star.awt.XWindow;
 import com.sun.star.lang.EventObject;
 import com.sun.star.ui.XSidebar;
 
+import com.sun.star.beans.XPropertySet;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
+import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -47,15 +51,22 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     private static final Logger logger = LogManager.getLogger(InfoSidebarContent.class);
 
-    private XFixedText versionLabel;
+    private volatile XFixedText versionLabel;
     private XFixedText turnierSystemLabel;
     private XFixedText turnierSchrittLabel;
     private volatile XFixedText timerLabel;
+    private volatile XControl timerIconControl;
+    private volatile XControl webserverIconControl;
+    private volatile XFixedText webserverStatusLabel;
     private final Runnable runnerZustandListener = this::runnerZustandAktualisieren;
+    private final Runnable webserverStatusListener = this::webserverStatusAktualisieren;
+    private final Runnable versionUpdateCallback = this::versionLabelAktualisieren;
 
     public InfoSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
         super(workingSpreadsheet, parentWindow, xSidebar);
         SheetRunner.addStateChangeListener(runnerZustandListener);
+        WebServerManager.get().addStatusListener(webserverStatusListener);
+        NewReleaseChecker.addCacheUpdateCallback(versionUpdateCallback);
     }
 
     @Override
@@ -94,13 +105,44 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             getLayout().addLayout(schrittZeile, 1);
         }
 
+        var timerState = TimerManager.get().getAktuellerZustand();
+        var timerImageDir = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext()).getImageUrlDir();
+        XControl timerIconCtrl = GuiFactory.createBildControl(
+                getGuiFactoryCreateParam(), timerImageDir + timerIconDateiname(timerState),
+                new Rectangle(0, 0, 20, 20), null);
+        timerIconControl = timerIconCtrl;
+
         XControl timerControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
-                timerAnzeige(TimerManager.get().getAktuellerZustand()),
+                timerAnzeige(timerState),
                 new Rectangle(0, 0, 200, 20), null);
         if (timerControl != null) {
             timerLabel = Lo.qi(XFixedText.class, timerControl);
-            getLayout().addLayout(new ControlLayout(timerControl), 1);
+            var timerZeile = new HorizontalLayout();
+            if (timerIconCtrl != null) {
+                timerZeile.addLayout(new ControlLayout(timerIconCtrl, 20), 0);
+            }
+            timerZeile.addLayout(new ControlLayout(timerControl), 1);
+            getLayout().addLayout(timerZeile, 1);
             TimerManager.get().addListener(this);
+        }
+
+        var wsImageDir = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext()).getImageUrlDir();
+        XControl wsIconCtrl = GuiFactory.createBildControl(
+                getGuiFactoryCreateParam(), wsImageDir + webserverIconDateiname(),
+                new Rectangle(0, 0, 20, 20), null);
+        webserverIconControl = wsIconCtrl;
+
+        XControl wsStatusCtrl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
+                webserverStatusAnzeige(),
+                new Rectangle(0, 0, 200, 20), null);
+        if (wsStatusCtrl != null) {
+            webserverStatusLabel = Lo.qi(XFixedText.class, wsStatusCtrl);
+            var wsZeile = new HorizontalLayout();
+            if (wsIconCtrl != null) {
+                wsZeile.addLayout(new ControlLayout(wsIconCtrl, 20), 0);
+            }
+            wsZeile.addLayout(new ControlLayout(wsStatusCtrl), 1);
+            getLayout().addLayout(wsZeile, 1);
         }
 
         requestLayout();
@@ -114,6 +156,19 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                 label.setText(timerAnzeige(state));
             } catch (Exception e) {
                 logger.error("Fehler beim Aktualisieren des Timer-Labels", e);
+            }
+        }
+        var icon = timerIconControl;
+        if (icon != null) {
+            try {
+                var model = Lo.qi(XPropertySet.class, icon.getModel());
+                if (model != null) {
+                    var url = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext())
+                            .getImageUrlDir() + timerIconDateiname(state);
+                    model.setPropertyValue("ImageURL", url);
+                }
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren des Timer-Icons", e);
             }
         }
     }
@@ -141,15 +196,20 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     @Override
     protected void onDisposing(EventObject event) {
         timerLabel = null;
+        timerIconControl = null;
         versionLabel = null;
         turnierSystemLabel = null;
         turnierSchrittLabel = null;
+        webserverStatusLabel = null;
+        webserverIconControl = null;
         try {
             TimerManager.get().removeListener(this);
         } catch (Exception e) {
             logger.error("Fehler beim Entfernen des TimerListeners", e);
         }
         SheetRunner.removeStateChangeListener(runnerZustandListener);
+        WebServerManager.get().removeStatusListener(webserverStatusListener);
+        NewReleaseChecker.removeCacheUpdateCallback(versionUpdateCallback);
     }
 
     private void runnerZustandAktualisieren() {
@@ -168,8 +228,30 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     }
 
     String getPluginVersion() {
-        var version = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext()).getVersionNummer();
-        return version != null ? version : "–";
+        var context = getCurrentSpreadsheet().getxContext();
+        var installiert = ExtensionsHelper.from(context).getVersionNummer();
+        if (installiert == null) {
+            return "–";
+        }
+        var checker = new NewReleaseChecker();
+        if (checker.checkForNewRelease(context)) {
+            var neu = checker.latestVersionFromCacheFile();
+            if (neu != null) {
+                return I18n.get("sidebar.info.version.neu", installiert, neu);
+            }
+        }
+        return I18n.get("sidebar.info.version", installiert);
+    }
+
+    private void versionLabelAktualisieren() {
+        var label = versionLabel;
+        if (label != null) {
+            try {
+                label.setText(getPluginVersion());
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren des Versions-Labels", e);
+            }
+        }
     }
 
     String turnierSystemAnzeige() {
@@ -293,5 +375,49 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                 ? state.anzeige()
                 : state.anzeige() + " " + state.bezeichnung();
         return I18n.get("sidebar.info.timer", anzeige);
+    }
+
+    private String timerIconDateiname(TimerState state) {
+        return switch (state.zustand()) {
+            case LAEUFT -> "toolbar-timer-start.png";
+            case PAUSIERT -> "toolbar-timer-pause.png";
+            default -> "toolbar-timer-stop.png";
+        };
+    }
+
+    private String webserverStatusAnzeige() {
+        return WebServerManager.get().isLaeuft()
+                ? I18n.get("sidebar.info.webserver.aktiv")
+                : I18n.get("sidebar.info.webserver.gestoppt");
+    }
+
+    private String webserverIconDateiname() {
+        return WebServerManager.get().isLaeuft()
+                ? "toolbar-webserver-starten.png"
+                : "toolbar-webserver-stoppen.png";
+    }
+
+    private void webserverStatusAktualisieren() {
+        var label = webserverStatusLabel;
+        if (label != null) {
+            try {
+                label.setText(webserverStatusAnzeige());
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren des Webserver-Status-Labels", e);
+            }
+        }
+        var icon = webserverIconControl;
+        if (icon != null) {
+            try {
+                var model = Lo.qi(XPropertySet.class, icon.getModel());
+                if (model != null) {
+                    var url = ExtensionsHelper.from(getCurrentSpreadsheet().getxContext())
+                            .getImageUrlDir() + webserverIconDateiname();
+                    model.setPropertyValue("ImageURL", url);
+                }
+            } catch (Exception e) {
+                logger.error("Fehler beim Aktualisieren des Webserver-Icons", e);
+            }
+        }
     }
 }
