@@ -64,19 +64,19 @@ public class PouleVorrundenRanglisteSheet extends SheetRunner implements ISheet 
     private static final int FARBE_B_TURNIER = 0xFF6666;
 
     // Spalten der Rangliste
-    private static final int SPALTE_PLATZ   = 0;
-    private static final int SPALTE_GRUPPE  = 1;
-    private static final int SPALTE_NR      = 2;
-    private static final int SPALTE_NAME    = 3;
-    private static final int SPALTE_SIEGE   = 4;
-    private static final int SPALTE_NDLG    = 5;
-    private static final int SPALTE_PKT_PLUS  = 6;
-    private static final int SPALTE_PKT_MINUS = 7;
-    private static final int SPALTE_DIFF    = 8;
-    private static final int SPALTE_TURNIER = 9;
+    public static final int SPALTE_PLATZ   = 0;
+    public static final int SPALTE_GRUPPE  = 1;
+    public static final int SPALTE_NR      = 2;
+    public static final int SPALTE_NAME    = 3;
+    public static final int SPALTE_SIEGE   = 4;
+    public static final int SPALTE_NDLG      = 5;
+    public static final int SPALTE_PKT_PLUS  = 6;
+    public static final int SPALTE_PKT_MINUS = 7;
+    public static final int SPALTE_DIFF      = 8;
+    public static final int SPALTE_TURNIER   = 9;
     private static final int LETZTE_SPALTE  = SPALTE_TURNIER;
 
-    private static final int HEADER_ZEILEN  = 2;
+    public static final int HEADER_ZEILEN  = 2;
 
     // Spaltenbreiten
     private static final int BREITE_PLATZ   = 900;
