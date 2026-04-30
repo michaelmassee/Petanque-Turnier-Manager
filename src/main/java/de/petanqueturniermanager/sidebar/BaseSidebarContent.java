@@ -70,36 +70,38 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private boolean ausstehendInit = false;
 
 	/**
-	 * WICHTIG: Listener werden VOR {@link #felderHinzufuegen()} registriert, damit
-	 * das {@code requestLayout()} am Ende von {@code felderHinzufuegen()} korrekt
-	 * verarbeitet wird: LibreOffice → {@code getHeightForWidth} → Fenster-Resize →
-	 * {@code windowResized} → {@link #doLayout()}.
-	 * <p>
-	 * Wenn während FillToolbar (Druckvorschau-Exit) konstruiert wird, wird
-	 * {@code neuesBasisFenster()} auf {@code onViewCreated} verschoben — das verhindert
-	 * re-entrant GTK-Fenster-Erstellung im kritischen FillToolbar-Zustand von LO.
+	 * Wenn das Panel während FillToolbar (Druckvorschau-Exit) konstruiert wird:
+	 * <ul>
+	 * <li>GTK-Fenster-Erstellung wird auf {@code onViewCreated} verschoben (re-entrant-Guard)</li>
+	 * <li>Keine Registrierung im Delegator oder als {@link ITurnierEventListener} –
+	 *     kein Event darf ein uninitialisiertes Panel erreichen</li>
+	 * <li>{@link BaseSidebarPanel} registriert sich stattdessen im {@link SidebarPanelDelegator}
+	 *     und leitet {@code onViewCreated} hierher weiter, sobald der Controller bereit ist</li>
+	 * </ul>
+	 * Im Normalfall ({@code ausstehendInit == false}) werden {@code fensterAdapter},
+	 * Delegator und TurnierEventListener VOR {@link #felderHinzufuegen()} registriert,
+	 * damit das {@code requestLayout()} am Ende korrekt auf {@code windowResized → doLayout()} führt.
 	 */
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.xSidebar = checkNotNull(xSidebar);
 		this.parentWindow = checkNotNull(parentWindow);
 
+		this.parentWindow.addWindowListener(fensterAdapter);
+
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			ausstehendInit = true;
-			window = Lo.qi(XWindow.class, parentWindow); // Platzhalter: parentWindow ohne eigenes GTK-Kind-Fenster
+			window = Lo.qi(XWindow.class, parentWindow); // Platzhalter für getWindow() bis Initialisierung abgeschlossen
 		} else {
 			neuesBasisFenster();
-		}
-
-		// Listener VOR felderHinzufuegen registrieren, damit requestLayout() am Ende
-		// von felderHinzufuegen() korrekt auf windowResized → doLayout() führt
-		this.parentWindow.addWindowListener(fensterAdapter);
-		SidebarPanelDelegator.get().registrieren(this);
-		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
-
-		if (!ausstehendInit) {
+			registrieren();
 			felderHinzufuegen();
 		}
+	}
+
+	private void registrieren() {
+		SidebarPanelDelegator.get().registrieren(this);
+		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 	}
 
 	private void neuesBasisFenster() {
@@ -146,7 +148,8 @@ public abstract class BaseSidebarContent extends ComponentBase
 	/**
 	 * Räumt diesen Content auf: entfernt Fenster-Listener, Turnier-Event-Listener
 	 * und disposed das Kind-Fenster. Wird von {@link BaseSidebarPanel} aufgerufen,
-	 * wenn LibreOffice das Panel disposes.
+	 * wenn LibreOffice das Panel disposes. Defensiv: alle Abmeldungen sind no-ops,
+	 * falls die Registrierung nie stattgefunden hat.
 	 */
 	void bereinigen() {
 		if (istBereinigt) {
@@ -166,10 +169,18 @@ public abstract class BaseSidebarContent extends ComponentBase
 			logger.error("Fehler beim Entfernen des TurnierEventListeners", e);
 		}
 		if (parentWindow != null) {
-			parentWindow.removeWindowListener(fensterAdapter);
+			try {
+				parentWindow.removeWindowListener(fensterAdapter);
+			} catch (RuntimeException e) {
+				logger.error("Fehler beim Entfernen des FensterListeners", e);
+			}
 		}
 		layout = null;
-		onDisposing(null);
+		try {
+			onDisposing(null);
+		} catch (RuntimeException e) {
+			logger.error("Fehler in onDisposing", e);
+		}
 		setCurrentSpreadsheet(null);
 		setParentWindow(null);
 		if (guiFactoryCreateParam != null) {
@@ -178,7 +189,11 @@ public abstract class BaseSidebarContent extends ComponentBase
 		}
 		xSidebar = null;
 		if (window != null && !ausstehendInit) {
-			window.dispose();
+			try {
+				window.dispose();
+			} catch (RuntimeException e) {
+				logger.error("Fehler beim Dispose des Fensters", e);
+			}
 		}
 		window = null;
 		ausstehendInit = false;
@@ -209,6 +224,8 @@ public abstract class BaseSidebarContent extends ComponentBase
 	/**
 	 * Schließt die verzögerte Initialisierung ab, sobald der ScTabViewShell-Controller
 	 * aktiv ist (nach FillToolbar, also außerhalb des re-entrant-kritischen Fensters).
+	 * Wird von {@link BaseSidebarPanel#onViewCreated(Object)} direkt aufgerufen.
+	 * Erst hier wird der Content vollständig registriert.
 	 */
 	@Override
 	public void onViewCreated(Object source) {
@@ -226,6 +243,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		ausstehendInit = false;
 		window = null;
 		neuesBasisFenster();
+		registrieren();
 		felderHinzufuegen();
 	}
 

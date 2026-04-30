@@ -107,7 +107,7 @@ public class GlobalEventListener implements XEventListener {
 	 * @param source
 	 */
 	private void onNew(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onNew(source);
 			} catch (Throwable e) {
@@ -117,7 +117,7 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	private void onLoadFinished(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onLoadFinished(source);
 			} catch (Throwable e) {
@@ -127,7 +127,7 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	private void onLoad(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onLoad(source);
 			} catch (Throwable e) {
@@ -137,7 +137,7 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	private void onFocus(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onFocus(source);
 			} catch (Throwable e) {
@@ -147,12 +147,18 @@ public class GlobalEventListener implements XEventListener {
 	}
 
 	private void onUnfocus(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onUnfocus(source);
 			} catch (Throwable e) {
 				logger.error(e.getMessage(), e);
 			}
+		}
+	}
+
+	private List<IGlobalEventListener> snapshot() {
+		synchronized (listeners) {
+			return new ArrayList<>(listeners);
 		}
 	}
 
@@ -183,7 +189,7 @@ public class GlobalEventListener implements XEventListener {
 	 * Das Event kommt bei allen Dokumenten, egal ob sie neu erzeugt, geladen, sichtbar oder unsichtbar sind.
 	 */
 	private void onViewCreated(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onViewCreated(source);
 			} catch (Throwable e) {
@@ -197,7 +203,7 @@ public class GlobalEventListener implements XEventListener {
 	 * Beim Verlassen der Druckvorschau ist der Controller zu diesem Zeitpunkt bereits auf ScTabViewShell gewechselt.
 	 */
 	private void onViewClosed(Object source) {
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onViewClosed(source);
 			} catch (Throwable e) {
@@ -221,7 +227,7 @@ public class GlobalEventListener implements XEventListener {
 	 */
 	private void onUnload(Object source) {
 		DocumentPropertiesHelper.removeDocument(source);
-		for (IGlobalEventListener listner : listeners) {
+		for (IGlobalEventListener listner : snapshot()) {
 			try {
 				listner.onUnload(source);
 			} catch (Throwable e) {

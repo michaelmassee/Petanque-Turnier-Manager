@@ -1040,7 +1040,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void addStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.debug("addStatusListener: command={} thread={} druckvorschauAktiv={}",
+		logger.trace("addStatusListener: command={} thread={} druckvorschauAktiv={}",
 				command, Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 		var aktivesDokument = holeAktivesDokument();
 		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
@@ -1050,7 +1050,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
 			// den Frame-Zustand → SIGSEGV nach OnCopyToDone. Guard: erst nach OnViewCreated
 			// (dort ruft notifyAllListeners() alle neuen Controller korrekt auf).
-			logger.debug("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
+			logger.trace("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
 		postStatus(listener, url, isEnabled(command, aktivesDokument));
@@ -1059,7 +1059,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void removeStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.debug("removeStatusListener: command={} thread={}", command, Thread.currentThread().getName());
+		logger.trace("removeStatusListener: command={} thread={}", command, Thread.currentThread().getName());
 		List<StatusEntry> list = STATUS_LISTENERS.get(command);
 		if (list != null) {
 			list.removeIf(e -> e.listener == listener);

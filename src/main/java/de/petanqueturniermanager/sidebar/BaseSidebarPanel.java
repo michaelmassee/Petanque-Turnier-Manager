@@ -16,7 +16,9 @@ import com.sun.star.ui.UIElementType;
 import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XUIElement;
 
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 
 /**
  * Schlanker {@link XUIElement}-Wrapper. Hält ein {@link BaseSidebarContent}.
@@ -26,10 +28,16 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
  * das Kind-Fenster zu entfernen und Event-Listener abzumelden. Ohne diesen
  * Aufruf würden alte Panel-Instanzen und ihre Fenster sichtbar bleiben
  * (Verdopplungs-Bug).
+ * <p>
+ * Druckvorschau-Exit: Wenn das Panel während FillToolbar konstruiert wird,
+ * registriert sich dieser Wrapper (nicht der Content) im
+ * {@link SidebarPanelDelegator}, um {@code onViewCreated} zu empfangen.
+ * In {@code onViewCreated} schließt der Content seine Initialisierung ab und
+ * übernimmt die vollständige Registrierung; der Wrapper trägt sich danach aus.
  *
  * @author Michael Massee
  */
-public abstract class BaseSidebarPanel extends ComponentBase implements XUIElement {
+public abstract class BaseSidebarPanel extends ComponentBase implements XUIElement, IGlobalEventListener {
 
 	private static final Logger logger = LogManager.getLogger(BaseSidebarPanel.class);
 
@@ -40,6 +48,21 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 			XSidebar xSidebar) {
 		this.resourceUrl = checkNotNull(resourceUrl);
 		panel = neuesPanel(workingSpreadsheet, parentWindow, xSidebar);
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			SidebarPanelDelegator.get().registrieren(this);
+		}
+	}
+
+	/**
+	 * Schließt die verzögerte Initialisierung ab: leitet {@code onViewCreated} an
+	 * den Content weiter und trägt sich selbst aus dem Delegator aus.
+	 */
+	@Override
+	public void onViewCreated(Object source) {
+		if (panel != null) {
+			panel.onViewCreated(source);
+			SidebarPanelDelegator.get().entfernen(this);
+		}
 	}
 
 	/**
@@ -49,6 +72,7 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 	@Override
 	public void dispose() {
 		logger.debug("BaseSidebarPanel.dispose – bereinige panel");
+		SidebarPanelDelegator.get().entfernen(this);
 		if (panel != null) {
 			panel.bereinigen();
 			panel = null;

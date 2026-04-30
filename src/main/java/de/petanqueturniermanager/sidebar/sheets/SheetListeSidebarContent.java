@@ -412,7 +412,9 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         SheetRunner.removeStateChangeListener(prozessZustandListener);
         tabWechselListenerAbmelden();
         sheetListBox = null;
-        baumEintraege.clear();
+        if (baumEintraege != null) {
+            baumEintraege.clear();
+        }
         gespeichertesSheet = null;
     }
 
