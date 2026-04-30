@@ -1,7 +1,10 @@
 package de.petanqueturniermanager.supermelee.endrangliste;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,13 +21,16 @@ import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.RanglisteTestDaten;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
 /**
@@ -191,7 +197,61 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 	private RangeHelper endranglisteRangeValidateSpaltenSortByDay(XSpreadsheet endRangliste) {
 		RangePosition rangeKomplett = RangePosition.from("AF", 3, "AK", 22); // 20 Spieler
 		return RangeHelper.from(endRangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeKomplett);
+	}
 
+	/**
+	 * Nach der initialen Endranglisten-Erstellung wird ein Ergebnis in Spieltag 1 geändert.
+	 * Nach dem Neuaufbau der Spieltag-Rangliste und der Endrangliste muss die Änderung sichtbar sein.
+	 */
+	@Test
+	public void testNachtraeglicheErgebnisaenderung() throws GenerateException {
+		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+
+		for (int i = 1; i <= 2; i++) {
+			SpielTagNr spieltag = SpielTagNr.from(i);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag);
+			meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1));
+			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+			if (i == 1) {
+				// 2 Spieler entfernen, damit 18 aktive Spieler (passend zu spieltag1-JSON mit 3 Zeilen)
+				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, Position.from(3, 10)).setValue(""));
+				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, Position.from(3, 11)).setValue(""));
+			}
+			ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, spieltag);
+			spieltagRangliste.run();
+		}
+		endranglisteSheet.run();
+
+		int summeVorher = summiereEndRanglistePunktePlus();
+
+		// PlusPunkte der ersten Paarung in Spieltag 1, Runde 1 um 3 Punkte reduzieren
+		XSpreadsheet spielrundeSheet = sheetHlp.findByName(SpielrundeSheetKonstanten.sheetName(1, 1));
+		assertThat(spielrundeSheet).isNotNull();
+		RangePosition erstePlusZelle = RangePosition.from(
+				SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE,
+				SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE);
+		RangeHelper zelle = RangeHelper.from(spielrundeSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				erstePlusZelle);
+		int plusAlt = zelle.getDataFromRange().get(0).get(0).getIntVal(0);
+		zelle.setDataInRange(new RangeData(new Object[][]{{Math.max(0, plusAlt - 3)}}));
+
+		// Spieltag 1 Rangliste und Endrangliste neu erstellen
+		new SpieltagRanglisteSheet(wkingSpreadsheet, SpielTagNr.from(1)).run();
+		endranglisteSheet.run();
+
+		int summeNachher = summiereEndRanglistePunktePlus();
+		assertThat(summeNachher).isLessThan(summeVorher);
+	}
+
+	private int summiereEndRanglistePunktePlus() throws GenerateException {
+		int spalte = endranglisteSheet.getErsteSummeSpalte() + SuperMeleeSummenSpalten.PUNKTE_PLUS_OFFS;
+		int letzteZeile = endranglisteSheet.getLetzteMitDatenZeileInSpielerNrSpalte();
+		RangePosition range = RangePosition.from(spalte, EndranglisteSheet.ERSTE_DATEN_ZEILE, spalte, letzteZeile);
+		return RangeHelper.from(endranglisteSheet.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(),
+				range).getDataFromRange().stream()
+				.flatMap(List::stream)
+				.mapToInt(c -> c.getIntVal(0))
+				.sum();
 	}
 
 }
