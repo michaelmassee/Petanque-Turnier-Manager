@@ -141,6 +141,34 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 		// waitEnter();
 	}
 
+	/**
+	 * Spielrunde ohne eingetragene Ergebnisse → VLOOKUP für alle Spieler liefert ISNA
+	 * → alle aktiven Spieler erhalten "x" in der NichtGespielt-Spalte.
+	 */
+	@Test
+	public void testRanglisteMitNichtGespielterRundeMarkierung() throws GenerateException {
+		ranglisteTestDaten.erstelleTestSpielrunden(2, false);
+		new SpielrundeSheet_Naechste(wkingSpreadsheet).run(); // leere 3. Runde
+
+		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
+		ranglist.run();
+
+		assertThat(ranglist.getAnzahlRunden()).as("Rangliste muss 3 Runden kennen").isEqualTo(3);
+
+		int nichtGespieltSpalte = ranglist.nichtGespieltSpalteNr();
+		RangePosition nichtGespieltRange = RangePosition.from(
+				nichtGespieltSpalte, ranglist.getErsteDatenZiele(),
+				nichtGespieltSpalte, ranglist.sucheLetzteZeileMitSpielerNummer());
+		RangeData daten = RangeHelper.from(ranglist.getXSpreadSheet(),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument(), nichtGespieltRange).getDataFromRange();
+
+		assertThat(daten).isNotEmpty();
+		daten.forEach(row ->
+				assertThat(row.get(0).getStringVal())
+						.as("NichtGespielt-Markierung muss 'x' sein, da Runde 3 leer ist")
+						.isEqualTo("x"));
+	}
+
 	private void validateSpielTagErgebnisseEinlesen(SpieltagRanglisteSheet ranglist) throws GenerateException {
 		List<SpielerSpieltagErgebnis> ergebnisse = ranglist.spielTagErgebnisseEinlesen();
 		assertThat(ergebnisse).hasSize(23); // 23 aktive meldungen
