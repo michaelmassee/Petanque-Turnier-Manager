@@ -371,17 +371,25 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 				1000 + spielrundeSheetErsteDatenzeile);
 		String suchMatrixPlusPunkte = erstePos.getAddressWith$() + ":" + letztePosPlusPunkte.getAddressWith$();
 
+		// Ergebnisspalte für COUNTA-Check – leere Runde hat keine eingetragenen Ergebnisse
+		Position ersteErgPos = Position.from(SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, spielrundeSheetErsteDatenzeile);
+		Position letzteErgPos = Position.from(SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, 1000 + spielrundeSheetErsteDatenzeile);
+		String ergebnisseSpalteRange = ersteErgPos.getAddressWith$() + ":" + letzteErgPos.getAddressWith$();
+
 		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
 
-		List<String> isnaFormeln = new ArrayList<>();
+		List<String> nichtGespieltBedingungen = new ArrayList<>();
 		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
 			String formulaSheetName = "$'"
 					+ aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
-			isnaFormeln.add("ISNA(VLOOKUP(" + verweisAufSpalteSpielerNr + ";" + formulaSheetName
-					+ suchMatrixPlusPunkte + ";2;0))");
+			String isnaCheck = "ISNA(VLOOKUP(" + verweisAufSpalteSpielerNr + ";" + formulaSheetName
+					+ suchMatrixPlusPunkte + ";2;0))";
+			// COUNTA=0 erkennt Runden ohne eingetragene Ergebnisse (Spieler wurden zugeteilt, aber nichts eingetragen)
+			String keineErgebnisseCheck = "COUNTA(" + formulaSheetName + ergebnisseSpalteRange + ")=0";
+			nichtGespieltBedingungen.add("OR(" + isnaCheck + ";" + keineErgebnisseCheck + ")");
 		}
 
-		String nichtGespieltFormula = "IF(OR(" + isnaFormeln.stream().collect(Collectors.joining(";")) + ");\"x\";\"\")";
+		String nichtGespieltFormula = "IF(OR(" + nichtGespieltBedingungen.stream().collect(Collectors.joining(";")) + ");\"x\";\"\")";
 
 		int nichtGespieltSpalte = nichtGespieltSpalteNr();
 		StringCellValue cellValue = StringCellValue.from(sheet, Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE))
