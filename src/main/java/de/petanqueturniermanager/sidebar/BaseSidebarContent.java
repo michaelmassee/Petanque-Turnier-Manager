@@ -66,27 +66,40 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private GuiFactoryCreateParam guiFactoryCreateParam;
 	private Layout layout;
 	private boolean istBereinigt = false;
+	/** Gesetzt wenn GTK-Fenster-Erstellung während FillToolbar verschoben wurde. */
+	private boolean ausstehendInit = false;
 
 	/**
 	 * WICHTIG: Listener werden VOR {@link #felderHinzufuegen()} registriert, damit
 	 * das {@code requestLayout()} am Ende von {@code felderHinzufuegen()} korrekt
 	 * verarbeitet wird: LibreOffice → {@code getHeightForWidth} → Fenster-Resize →
 	 * {@code windowResized} → {@link #doLayout()}.
+	 * <p>
+	 * Wenn während FillToolbar (Druckvorschau-Exit) konstruiert wird, wird
+	 * {@code neuesBasisFenster()} auf {@code onViewCreated} verschoben — das verhindert
+	 * re-entrant GTK-Fenster-Erstellung im kritischen FillToolbar-Zustand von LO.
 	 */
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
 		this.xSidebar = checkNotNull(xSidebar);
 		this.parentWindow = checkNotNull(parentWindow);
 
-		neuesBasisFenster();
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			ausstehendInit = true;
+			window = Lo.qi(XWindow.class, parentWindow); // Platzhalter: parentWindow ohne eigenes GTK-Kind-Fenster
+		} else {
+			neuesBasisFenster();
+		}
 
 		// Listener VOR felderHinzufuegen registrieren, damit requestLayout() am Ende
 		// von felderHinzufuegen() korrekt auf windowResized → doLayout() führt
 		this.parentWindow.addWindowListener(fensterAdapter);
-		PetanqueTurnierMngrSingleton.addGlobalEventListener(this);
+		SidebarPanelDelegator.get().registrieren(this);
 		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 
-		felderHinzufuegen();
+		if (!ausstehendInit) {
+			felderHinzufuegen();
+		}
 	}
 
 	private void neuesBasisFenster() {
@@ -143,7 +156,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		logger.debug("BaseSidebarContent.bereinigen");
 
 		try {
-			PetanqueTurnierMngrSingleton.removeGlobalEventListener(this);
+			SidebarPanelDelegator.get().entfernen(this);
 		} catch (RuntimeException e) {
 			logger.error("Fehler beim Entfernen des GlobalEventListeners", e);
 		}
@@ -164,10 +177,11 @@ public abstract class BaseSidebarContent extends ComponentBase
 			guiFactoryCreateParam = null;
 		}
 		xSidebar = null;
-		if (window != null) {
+		if (window != null && !ausstehendInit) {
 			window.dispose();
-			window = null;
 		}
+		window = null;
+		ausstehendInit = false;
 	}
 
 	@Override
@@ -192,6 +206,29 @@ public abstract class BaseSidebarContent extends ComponentBase
 		// Felder sind bereits vorhanden – nichts zu tun
 	}
 
+	/**
+	 * Schließt die verzögerte Initialisierung ab, sobald der ScTabViewShell-Controller
+	 * aktiv ist (nach FillToolbar, also außerhalb des re-entrant-kritischen Fensters).
+	 */
+	@Override
+	public void onViewCreated(Object source) {
+		if (!ausstehendInit || istBereinigt) {
+			return;
+		}
+		var xModel = Lo.qi(XModel.class, source);
+		if (xModel == null) {
+			return;
+		}
+		if (Lo.qi(XSpreadsheetView.class, xModel.getCurrentController()) == null) {
+			return;
+		}
+		logger.debug("onViewCreated: verzögerte Initialisierung wird abgeschlossen");
+		ausstehendInit = false;
+		window = null;
+		neuesBasisFenster();
+		felderHinzufuegen();
+	}
+
 	@Override
 	public void onNew(Object source) {
 		aktualisiereSpreadsheetUndFelder(source);
@@ -203,7 +240,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	}
 
 	private void aktualisiereSpreadsheetUndFelder(Object source) {
-		if (istBereinigt) {
+		if (istBereinigt || ausstehendInit) {
 			return;
 		}
 		XModel xModel = Lo.qi(XModel.class, source);
@@ -251,7 +288,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 
 	@Override
 	public void onPropertiesChanged(ITurnierEvent eventObj) {
-		if (istBereinigt) {
+		if (istBereinigt || ausstehendInit) {
 			return;
 		}
 		var doc = getCurrentSpreadsheet().getWorkingSpreadsheetDocument();
@@ -263,7 +300,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	}
 
 	protected void doLayout() {
-		if (istBereinigt) {
+		if (istBereinigt || ausstehendInit) {
 			return;
 		}
 		try {

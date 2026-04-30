@@ -26,6 +26,7 @@ import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
+import de.petanqueturniermanager.sidebar.SidebarPanelDelegator;
 import de.petanqueturniermanager.toolbar.TimerToolbarSteuerung;
 import de.petanqueturniermanager.toolbar.ToolbarAnzeigenListener;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
@@ -49,6 +50,20 @@ public class PetanqueTurnierMngrSingleton {
 	private static XComponentContext sharedContext;
 
 	private static AtomicBoolean didRun = new AtomicBoolean(); // is volatile
+
+	/**
+	 * Wird auf {@code true} gesetzt wenn ein Druckvorschau-Controller aktiv ist.
+	 * Verhindert GTK-Fenster-Erstellung in der Sidebar während des FillToolbar-Übergangs.
+	 */
+	private static volatile boolean druckvorschauAktiv = false;
+
+	public static boolean isDruckvorschauAktiv() {
+		return druckvorschauAktiv;
+	}
+
+	public static void setDruckvorschauAktiv(boolean aktiv) {
+		druckvorschauAktiv = aktiv;
+	}
 
 	private PetanqueTurnierMngrSingleton() {
 	}
@@ -95,6 +110,7 @@ public class PetanqueTurnierMngrSingleton {
 		}
 		addGlobalEventListener(new ToolbarAnzeigenListener());
 		addGlobalEventListener(new SidebarAnzeigenListener());
+		addGlobalEventListener(SidebarPanelDelegator.get());
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,

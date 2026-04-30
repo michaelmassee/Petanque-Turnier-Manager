@@ -157,7 +157,14 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 	 * wechselt (nicht bei internen Klicks innerhalb der Rangliste).
 	 */
 	private void registriereSelectionChangeListener(XModel xModel, XSpreadsheetDocument xDoc) {
-		XSelectionSupplier selSupplier = Lo.qi(XSelectionSupplier.class, xModel.getCurrentController());
+		var controller = xModel.getCurrentController();
+		if (controller == null) return;
+		// Nur normale Calc-Ansicht registrieren – ScPreviewController (Druckvorschau) implementiert
+		// XSpreadsheetView nicht; Toolbar-Operationen auf dessen LayoutManager crashen LO.
+		boolean istSpreadsheetView = Lo.qi(XSpreadsheetView.class, controller) != null;
+		logger.debug("registriereSelectionChangeListener: controller-typ={}", istSpreadsheetView ? "ScTabViewShell" : "Druckvorschau/Sonstige");
+		if (!istSpreadsheetView) return;
+		XSelectionSupplier selSupplier = Lo.qi(XSelectionSupplier.class, controller);
 		if (selSupplier == null) return;
 
 		selSupplier.addSelectionChangeListener(new XSelectionChangeListener() {
@@ -166,7 +173,9 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 			@Override
 			public void selectionChanged(EventObject e) {
 				try {
-					XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
+					// e.Source ist der Controller der das Ereignis ausgelöst hat – stabiler als
+					// xModel.getCurrentController() während Controller-Übergängen (z.B. Druckvorschau-Exit)
+					XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, e.Source);
 					if (view == null) return;
 
 					XSpreadsheet aktuellesSheet = view.getActiveSheet();
@@ -226,7 +235,9 @@ public class RanglisteRefreshListener implements IGlobalEventListener {
 			XSpreadsheetDocument xDoc = Lo.qi(XSpreadsheetDocument.class, xModel);
 			if (xDoc == null) return;
 
-			XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
+			var aktuellerController = xModel.getCurrentController();
+			logger.debug("onFocus: controller-typ={}", Lo.qi(XSpreadsheetView.class, aktuellerController) != null ? "ScTabViewShell" : "Druckvorschau/Sonstige");
+			XSpreadsheetView view = Lo.qi(XSpreadsheetView.class, aktuellerController);
 			if (view == null) return;
 
 			XSpreadsheet aktuellesSheet = view.getActiveSheet();

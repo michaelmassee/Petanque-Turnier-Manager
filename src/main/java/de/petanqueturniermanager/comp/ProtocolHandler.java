@@ -20,12 +20,15 @@ import com.sun.star.frame.FeatureStateEvent;
 import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XStatusListener;
+import com.sun.star.frame.XModel;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
 import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
@@ -44,6 +47,7 @@ import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -328,9 +332,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		SHARED_CONTEXT = xContext;
 		PetanqueTurnierMngrSingleton.init(xContext);
 		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
-		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt)
-		ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
-		SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
+		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt).
+		// Guard: Konstruktor kann von LO's FillToolbar() aufgerufen werden während die Toolbar
+		// nach dem Druckvorschau-Exit neu aufgebaut wird. showElement()/requestElement() in
+		// diesem Moment erzeugen Re-Entranz in LO → SIGSEGV. Daher: überspringen wenn Preview aktiv.
+		if (!PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
+			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
+		} else {
+			logger.debug("ProtocolHandler Konstruktor: Druckvorschau aktiv – Toolbar-Initialisierung übersprungen");
+		}
 		if (REGISTERED.compareAndSet(false, true)) {
 			NewReleaseChecker.addCacheUpdateCallback(ProtocolHandler::notifyAllListeners);
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
@@ -377,6 +388,45 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 						logger.info("Owner-Dokument geschlossen – WebServer wird gestoppt");
 						WebServerManager.get().stoppen();
 						notifyAllListeners();
+					}
+				}
+
+				@Override
+				public void onViewClosed(Object source) {
+					// Druckvorschau-Übergang loggen: Controller bereits gewechselt wenn dieses Event feuert.
+					// DRUCKVORSCHAU_AKTIV wird hier NICHT zurückgesetzt – FillToolbar läuft noch.
+					// Der Reset erfolgt erst in onViewCreated, wenn der neue Controller vollständig aktiv ist.
+					try {
+						var xModel = Lo.qi(XModel.class, source);
+						if (xModel == null) return;
+						var controller = xModel.getCurrentController();
+						boolean jetzt = controller == null || Lo.qi(XSpreadsheetView.class, controller) == null;
+						logger.debug("onViewClosed: aktuellerController={} DRUCKVORSCHAU_AKTIV={}→bleibt",
+								jetzt ? "Druckvorschau" : "ScTabViewShell", PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
+					} catch (Exception e) {
+						logger.error("Fehler in onViewClosed beim Druckvorschau-Tracking", e);
+					}
+				}
+
+				@Override
+				public void onViewCreated(Object source) {
+					// Druckvorschau-Tracking: Controller-Typ des neuen Views bestimmen.
+					// ScPreviewController implementiert XSpreadsheetView nicht.
+					try {
+						var xModel = Lo.qi(XModel.class, source);
+						if (xModel == null) return;
+						var controller = xModel.getCurrentController();
+						boolean istDruckvorschau = controller == null
+								|| Lo.qi(XSpreadsheetView.class, controller) == null;
+						if (istDruckvorschau != PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+							PetanqueTurnierMngrSingleton.setDruckvorschauAktiv(istDruckvorschau);
+							logger.debug("onViewCreated: DRUCKVORSCHAU_AKTIV={}", istDruckvorschau);
+						}
+						if (!istDruckvorschau) {
+							notifyAllListeners();
+						}
+					} catch (Exception e) {
+						logger.error("Fehler in onViewCreated beim Druckvorschau-Tracking", e);
 					}
 				}
 			});
@@ -990,15 +1040,26 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void addStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
+		logger.debug("addStatusListener: command={} thread={} druckvorschauAktiv={}",
+				command, Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 		var aktivesDokument = holeAktivesDokument();
 		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
 				.add(new StatusEntry(listener, url, aktivesDokument));
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			// C++-Toolbar-Controller werden während FillToolbar (Druckvorschau-Exit) angelegt.
+			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
+			// den Frame-Zustand → SIGSEGV nach OnCopyToDone. Guard: erst nach OnViewCreated
+			// (dort ruft notifyAllListeners() alle neuen Controller korrekt auf).
+			logger.debug("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
+			return;
+		}
 		postStatus(listener, url, isEnabled(command, aktivesDokument));
 	}
 
 	@Override
 	public void removeStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
+		logger.debug("removeStatusListener: command={} thread={}", command, Thread.currentThread().getName());
 		List<StatusEntry> list = STATUS_LISTENERS.get(command);
 		if (list != null) {
 			list.removeIf(e -> e.listener == listener);
@@ -1279,6 +1340,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	}
 
 	static void notifyAllListeners() {
+		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
+			logger.debug("notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
+					Thread.currentThread().getName());
+			return;
+		}
 		Map<String, List<StatusEntry>> snapshot;
 		synchronized (STATUS_LISTENERS) {
 			snapshot = new HashMap<>(STATUS_LISTENERS);
@@ -1305,6 +1371,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			event.Requery = false;
 			setzeUrlSlotState(event, url.Path);
 			listener.statusChanged(event);
+		} catch (DisposedException e) {
+			// Listener wurde disposed (Toolbar-Abbau beim Controller-Wechsel) → bereinigen
+			logger.debug("postStatus: Listener disposed, wird entfernt");
+			STATUS_LISTENERS.values().forEach(list -> list.removeIf(entry -> entry.listener == listener));
 		} catch (Exception e) {
 			logger.warn("Fehler beim Benachrichtigen des Status-Listeners: {}", e.getMessage());
 		}

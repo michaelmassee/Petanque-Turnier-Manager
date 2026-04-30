@@ -12,6 +12,7 @@ import com.sun.star.frame.XFramesSupplier;
 import com.sun.star.frame.XLayoutManager;
 import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheetDocument;
+import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
@@ -122,6 +123,11 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
             return;
         }
         try {
+            // Druckvorschau-Frames überspringen: ScPreviewController implementiert XSpreadsheetView nicht
+            if (Lo.qi(XSpreadsheetView.class, xFrame.getController()) == null) {
+                logger.debug("zeigeToolbarInFrame '{}': Druckvorschau-Frame erkannt – übersprungen", xFrame.getName());
+                return;
+            }
             var xFrameProps = Lo.qi(XPropertySet.class, xFrame);
             if (xFrameProps == null) {
                 return;

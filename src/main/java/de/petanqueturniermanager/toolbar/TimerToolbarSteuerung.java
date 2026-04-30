@@ -10,6 +10,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XFramesSupplier;
 import com.sun.star.frame.XLayoutManager;
+import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.DocumentHelper;
@@ -89,6 +90,11 @@ public final class TimerToolbarSteuerung implements TimerListener {
             return;
         }
         try {
+            // Druckvorschau-Frames überspringen: ScPreviewController implementiert XSpreadsheetView nicht
+            if (Lo.qi(XSpreadsheetView.class, xFrame.getController()) == null) {
+                logger.debug("zeigeToolbarInFrame '{}': Druckvorschau-Frame erkannt – übersprungen", xFrame.getName());
+                return;
+            }
             var xFrameProps = Lo.qi(XPropertySet.class, xFrame);
             if (xFrameProps == null) {
                 return;

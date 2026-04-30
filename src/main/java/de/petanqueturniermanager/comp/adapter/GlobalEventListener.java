@@ -8,9 +8,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.document.XEventListener;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.EventObject;
+import com.sun.star.sheet.XSpreadsheetView;
 
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 
 public class GlobalEventListener implements XEventListener {
 
@@ -25,6 +28,7 @@ public class GlobalEventListener implements XEventListener {
 	private static final String ON_FOCUS = "OnFocus";
 	private static final String ON_LOAD_FINISHED = "OnLoadFinished";
 	private static final String ON_VIEW_CREATED = "OnViewCreated";
+	private static final String ON_VIEW_CLOSED  = "OnViewClosed";
 	private static final String ON_LOAD = "OnLoad";
 	// private static final String ON_LOAD_DONE = "OnLoadDone";
 
@@ -54,7 +58,9 @@ public class GlobalEventListener implements XEventListener {
 				return;
 			}
 			String event = docEvent.EventName;
-			logger.debug(event);
+			if (logger.isDebugEnabled()) {
+				logger.debug("{} [controller={}]", event, ermittleControllerTyp(docEvent.Source));
+			}
 
 			// https://wiki.openoffice.org/wiki/Documentation/DevGuide/WritingUNO/Jobs/List_of_Supported_Events
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1document_1_1Events.html
@@ -62,6 +68,8 @@ public class GlobalEventListener implements XEventListener {
 				onCreate(docEvent.Source);
 			} else if (ON_VIEW_CREATED.equals(event)) {
 				onViewCreated(docEvent.Source);
+			} else if (ON_VIEW_CLOSED.equals(event)) {
+				onViewClosed(docEvent.Source);
 			} else if (ON_UNLOAD.equals(event)) {
 				onUnload(docEvent.Source);
 			} else if (ON_SAVE.equals(event)) {
@@ -115,13 +123,9 @@ public class GlobalEventListener implements XEventListener {
 			} catch (Throwable e) {
 				logger.error(e.getMessage(), e);
 			}
-
 		}
 	}
 
-	/**
-	 * @param source
-	 */
 	private void onLoad(Object source) {
 		for (IGlobalEventListener listner : listeners) {
 			try {
@@ -129,7 +133,6 @@ public class GlobalEventListener implements XEventListener {
 			} catch (Throwable e) {
 				logger.error(e.getMessage(), e);
 			}
-
 		}
 	}
 
@@ -143,9 +146,6 @@ public class GlobalEventListener implements XEventListener {
 		}
 	}
 
-	/**
-	 * @param source
-	 */
 	private void onUnfocus(Object source) {
 		for (IGlobalEventListener listner : listeners) {
 			try {
@@ -183,12 +183,23 @@ public class GlobalEventListener implements XEventListener {
 	 * Das Event kommt bei allen Dokumenten, egal ob sie neu erzeugt, geladen, sichtbar oder unsichtbar sind.
 	 */
 	private void onViewCreated(Object source) {
-		// XModel compo = UNO.XModel(source);
-		// XTextDocument xTextDoc = UNO.XTextDocument(compo);
-
 		for (IGlobalEventListener listner : listeners) {
 			try {
 				listner.onViewCreated(source);
+			} catch (Throwable e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+	}
+
+	/**
+	 * OnViewClosed kommt, wenn ein View (z.B. Druckvorschau oder normale Tabellen-Ansicht) geschlossen wird.
+	 * Beim Verlassen der Druckvorschau ist der Controller zu diesem Zeitpunkt bereits auf ScTabViewShell gewechselt.
+	 */
+	private void onViewClosed(Object source) {
+		for (IGlobalEventListener listner : listeners) {
+			try {
+				listner.onViewClosed(source);
 			} catch (Throwable e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -209,7 +220,6 @@ public class GlobalEventListener implements XEventListener {
 	 *
 	 */
 	private void onUnload(Object source) {
-		// DocumentPropertiesHelper aufräumen
 		DocumentPropertiesHelper.removeDocument(source);
 		for (IGlobalEventListener listner : listeners) {
 			try {
@@ -217,9 +227,7 @@ public class GlobalEventListener implements XEventListener {
 			} catch (Throwable e) {
 				logger.error(e.getMessage(), e);
 			}
-
 		}
-
 	}
 
 	@Override
@@ -227,4 +235,17 @@ public class GlobalEventListener implements XEventListener {
 		listeners.clear();
 	}
 
+	/** Ermittelt den Controller-Typ für Debug-Logs (erkennt Druckvorschau vs. normale Tabellen-Ansicht). */
+	private static String ermittleControllerTyp(Object source) {
+		try {
+			var xModel = Lo.qi(XModel.class, source);
+			if (xModel == null) return "kein-XModel";
+			var ctrl = xModel.getCurrentController();
+			if (ctrl == null) return "kein-Controller";
+			return Lo.qi(XSpreadsheetView.class, ctrl) != null
+					? "ScTabViewShell" : "Druckvorschau/Sonstige";
+		} catch (Exception e) {
+			return "Fehler:" + e.getMessage();
+		}
+	}
 }

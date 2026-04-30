@@ -29,6 +29,9 @@ public interface IGlobalEventListener {
 	default void onViewCreated(@SuppressWarnings("unused") Object source) {
 	}
 
+	default void onViewClosed(@SuppressWarnings("unused") Object source) {
+	}
+
 	default void onLoadFinished(@SuppressWarnings("unused") Object source) {
 	}
 

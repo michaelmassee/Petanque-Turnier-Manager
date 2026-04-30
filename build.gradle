@@ -341,6 +341,117 @@ tasks.register('beispielturnierTests', Test) {
     }
 }
 
+// Druckvorschau-Crash-Reproduktion: startet LO mit sichtbarem Fenster (ohne --headless),
+// damit VCL-Toolbar-Controller aktiv sind und addStatusListener() aufgerufen wird.
+// Verwendung: ./gradlew druckvorschauNative
+tasks.register('druckvorschauNative', Test) {
+    group = 'LibreOffice'
+    description = 'Führt DruckvorschauUITest mit sichtbarem LO-Fenster durch (kein --headless). Benötigt Display.'
+    dependsOn 'reinstallExtension'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    outputs.upToDateWhen { false }
+    maxParallelForks = 1
+    // uitest.headless=false → OfficeStarter startet LO OHNE --headless
+    systemProperty 'uitest.headless', 'false'
+    systemProperty 'junit.jupiter.execution.timeout.default', '3 m'
+    useJUnitPlatform()
+    filter {
+        includeTestsMatching 'de.petanqueturniermanager.DruckvorschauUITest'
+    }
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+        showStandardStreams = true
+    }
+}
+
+// LO mit SAL_LOG (C++-Logging) für Crash-Diagnose starten.
+// Verwendung: ./gradlew loDebugLog
+// Analyse: build/lo-crash/sal.log öffnen, GLib-GObject-CRITICAL und Timing prüfen
+tasks.register('loDebugLog', Exec) {
+    group = 'LibreOffice'
+    description = 'Startet LibreOffice mit SAL_LOG (C++) für Crash-Diagnose. Druckvorschau manuell testen.'
+    dependsOn 'reinstallExtension'
+
+    def loLogDir = file("${buildDir}/lo-crash")
+    def salLogFile = file("${loLogDir}/sal.log")
+
+    // SAL_LOG-Format: +WARN = alle C++-Warnungen; +INFO.vcl.gtk = GTK/VCL-Widget-Lifecycle
+    environment 'SAL_LOG', '+WARN+INFO.vcl.gtk'
+
+    // LO starten; stderr in Datei + Terminal gleichzeitig
+    commandLine 'bash', '-c', """
+        mkdir -p '${loLogDir}'
+        '${libreOfficePath}/program/soffice' --calc 2>&1 | tee '${salLogFile}'
+    """
+
+    doFirst {
+        println "═══════════════════════════════════════════════════════"
+        println " SAL_LOG → ${salLogFile}"
+        println "═══════════════════════════════════════════════════════"
+    }
+}
+
+// LO mit XWayland (GDK_BACKEND=x11) starten – prüft ob der Druckvorschau-Crash
+// Wayland-spezifisch ist. Wenn kein Crash: Ursache ist im LO-Wayland-Backend.
+// Verwendung: ./gradlew loX11
+tasks.register('loX11', Exec) {
+    group = 'LibreOffice'
+    description = 'Startet LibreOffice mit GDK_BACKEND=x11 (XWayland). Druckvorschau-Crash-Test.'
+    dependsOn 'reinstallExtension'
+
+    def loLogDir = file("${buildDir}/lo-crash")
+    def salLogFile = file("${loLogDir}/sal-x11.log")
+
+    environment 'GDK_BACKEND', 'x11'
+    environment 'SAL_LOG', '+WARN'
+
+    commandLine 'bash', '-c', """
+        mkdir -p '${loLogDir}'
+        '${libreOfficePath}/program/soffice' --calc 2>&1 | tee '${salLogFile}'
+    """
+
+    doFirst {
+        println "═══════════════════════════════════════════════════════"
+        println " GDK_BACKEND=x11 (XWayland) – kein Wayland-GTK"
+        println " SAL_LOG → ${salLogFile}"
+        println " Test: Druckvorschau öffnen + schließen"
+        println " Kein Crash → Wayland-GTK-Bug in LO"
+        println "═══════════════════════════════════════════════════════"
+    }
+}
+
+// LO unter gdb starten für interaktive Crash-Analyse (Stack Trace).
+// Verwendung: ./gradlew loGdb
+//   → LO öffnet sich; Druckvorschau öffnen + schließen
+//   → Bei Crash: in gdb "bt full" eingeben → Stack Trace zeigt LO-Crash-Ursache
+//   → "q" zum Beenden
+tasks.register('loGdb', Exec) {
+    group = 'LibreOffice'
+    description = 'Startet LibreOffice unter gdb für interaktive Crash-Analyse.'
+    dependsOn 'reinstallExtension'
+
+    def loLogDir = file("${buildDir}/lo-crash")
+
+    commandLine 'bash', '-c', """
+        mkdir -p '${loLogDir}'
+        cd '${loLogDir}'
+        gdb -ex 'handle SIGSEGV stop' \\
+            -ex 'handle SIGABRT stop' \\
+            -ex 'run --calc' \\
+            '${libreOfficePath}/program/soffice.bin'
+    """
+
+    doFirst {
+        println "═══════════════════════════════════════════════════════"
+        println " gdb: interaktive Crash-Analyse"
+        println " 1. LO startet – Druckvorschau öffnen + schließen"
+        println " 2. Bei Crash: 'bt full' eingeben → Stack Trace"
+        println " 3. 'q' zum Beenden"
+        println "═══════════════════════════════════════════════════════"
+    }
+}
+
 // Führt alle Tests nacheinander durch: Unit-Tests, UI-Tests, Beispielturnier-Tests.
 // Locale für Beispielturnier wählbar: -Plocale=de|en|nl|fr|es (Standard: de)
 tasks.register('runAllTests') {
