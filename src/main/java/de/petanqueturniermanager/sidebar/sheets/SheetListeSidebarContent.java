@@ -12,9 +12,11 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.Rectangle;
+import com.sun.star.awt.XCallback;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XListBox;
+import com.sun.star.awt.XRequestCallback;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
@@ -66,40 +68,52 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private Set<String> kollabierteUnterGruppen;
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
-    private String letzteAktiveSheetName = null;
     private XSelectionSupplier selectionSupplier = null;
     /**
-     * Wird auf {@code true} gesetzt während programmatischer ListBox-Aktualisierungen
-     * (z.B. {@code auswahlWiederherstellen()} nach {@code listeNeuAufbauen()}). Verhindert,
-     * dass das dadurch ausgelöste {@code itemStateChanged} ein {@code setActiveSheet()}
-     * triggert und so den vom User gewählten Tab überschreibt.
+     * Verhindert, dass programmatische {@code selectItemPos}-Aufrufe (z.B. in
+     * {@code auswahlWiederherstellen()} oder {@code sidebarAuswahlSynchronisieren()})
+     * ein {@code setActiveSheet()} auslösen.
      */
-    private boolean unterdrueckeItemListener = false;
+    private volatile boolean unterdrueckeItemListener = false;
+    /**
+     * Verhindert Rückkopplungs-Schleifen in {@link #sidebarAuswahlSynchronisieren()}.
+     * Ohne diesen Guard könnte {@code selectItemPos()} → {@code itemStateChanged} →
+     * {@code sidebarAuswahlSynchronisieren()} → {@code selectItemPos()} → … eine
+     * Endlosschleife bilden, falls {@code unterdrueckeItemListener} z.B. durch einen
+     * asynchronen PostUserEvent nicht rechtzeitig greift.
+     */
+    private volatile boolean syncLaeuft = false;
+    /**
+     * Dispatcher zum Ausführen von Item-Aktionen nach dem aktuellen VCL-Event.
+     * <p>
+     * {@code itemStateChanged} feuert innerhalb von {@code pBox->Select()} – mitten im
+     * VCL-Event-Stack. Direktes Aufrufen von {@code setActiveSheet()} oder
+     * {@code window.dispose()} aus diesem Kontext führt zu VCL-Re-Entranz und SIGSEGV.
+     * {@code AsyncCallback.addCallback()} postet die Aktion via
+     * {@code Application::PostUserEvent}, die erst nach Abschluss des aktuellen
+     * Events ausgeführt wird.
+     */
+    private XRequestCallback itemDispatcher;
 
+    /**
+     * Synchronisiert die Sidebar-Auswahl wenn der User per Klick auf einen Sheet-Tab wechselt.
+     * <p>
+     * {@code selectionChanged} feuert innerhalb des VCL-Event-Stacks. Die eigentliche
+     * Synchronisierung ({@code selectItemPos}) wird daher via {@code itemDispatcher}
+     * (PostUserEvent) auf nach dem laufenden Event verschoben – identisches Muster
+     * wie in {@code itemStateChanged}.
+     */
     private final XSelectionChangeListener tabWechselListener = new XSelectionChangeListener() {
         @Override
         public void selectionChanged(EventObject event) {
-            if (SheetRunner.isRunning() || sheetListBox == null) {
+            if (SheetRunner.isRunning() || sheetListBox == null || itemDispatcher == null) {
                 return;
             }
-            var ws = getCurrentSpreadsheet();
-            if (ws == null) {
-                return;
-            }
-            var aktuellesSheet = ws.getWorkingSpreadsheetView().getActiveSheet();
-            if (aktuellesSheet == null) {
-                return;
-            }
-            var named = Lo.qi(XNamed.class, aktuellesSheet);
-            if (named == null) {
-                return;
-            }
-            var sheetName = named.getName();
-            if (sheetName.equals(letzteAktiveSheetName)) {
-                return;
-            }
-            letzteAktiveSheetName = sheetName;
-            sidebarAuswahlSynchronisieren(sheetName);
+            itemDispatcher.addCallback((XCallback) aData -> {
+                if (!istBereinigt()) {
+                    sidebarAuswahlSynchronisieren();
+                }
+            }, null);
         }
 
         @Override
@@ -119,6 +133,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     public SheetListeSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
             XSidebar xSidebar) {
         super(workingSpreadsheet, parentWindow, xSidebar);
+        logger.debug("SheetListeSidebarContent Konstruktor: sheetListBox={}", sheetListBox != null ? "non-null" : "null");
         SheetRunner.addStateChangeListener(prozessZustandListener);
         tabWechselListenerRegistrieren(workingSpreadsheet);
     }
@@ -127,8 +142,16 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
 
     @Override
     protected void felderHinzufuegen() {
-        // Lazy-Init: felderHinzufuegen() wird bereits aus super() aufgerufen,
-        // bevor die Feld-Initialisierer dieser Klasse gelaufen sind.
+        if (itemDispatcher == null) {
+            try {
+                var xContext = getCurrentSpreadsheet().getxContext();
+                var asyncCallback = xContext.getServiceManager()
+                        .createInstanceWithContext("com.sun.star.awt.AsyncCallback", xContext);
+                itemDispatcher = Lo.qi(XRequestCallback.class, asyncCallback);
+            } catch (Exception e) {
+                logger.warn("felderHinzufuegen: AsyncCallback-Service nicht verfügbar – Item-Aktionen ohne Defer", e);
+            }
+        }
         if (organisierer == null) {
             organisierer = new SheetBaumOrganisierer();
         }
@@ -157,6 +180,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         if (baumEintraege.isEmpty()) {
             sheetListeAufbauenLeer();
         } else {
+            logger.debug("felderHinzufuegen: {} Baum-Einträge gefunden, baue ListBox auf", baumEintraege.size());
             sheetListeAufbauenMitEintraegen();
         }
         requestLayout();
@@ -236,7 +260,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void listeNeuAufbauen() {
-        letzteAktiveSheetName = null;
         auswahlMerken();
         allesFelderEntfernenUndNeuFenster();
         felderHinzufuegen();
@@ -265,20 +288,27 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         @Override
         public void itemStateChanged(ItemEvent e) {
             if (unterdrueckeItemListener) {
-                // Programmatischer selectItemPos-Aufruf (z.B. aus auswahlWiederherstellen
-                // nach listeNeuAufbauen) – kein Sheet-Wechsel auslösen, sonst überschreibt
-                // die Sidebar den vom User per Tab-Klick aktivierten Tab.
                 return;
             }
             int idx = e.Selected;
             if (idx < 0 || idx >= baumEintraege.size()) {
+                logger.debug("itemStateChanged: idx={} außerhalb [0,{})", idx, baumEintraege.size());
                 return;
             }
-            switch (baumEintraege.get(idx)) {
-                case GruppenKopf kopf -> gruppeToggle(kopf.gruppe());
-                case SpieltagKopf kopf -> spieltagToggle(kopf.spieltagNr());
-                case UnterGruppenKopf kopf -> unterGruppeToggle(kopf.id());
-                case BlattKnoten knoten -> sheetAktivieren(knoten);
+            logger.debug("itemStateChanged: idx={}, eintrag={}", idx, baumEintraege.get(idx).getClass().getSimpleName());
+            // Alle Item-Aktionen werden via PostUserEvent auf den VCL-Hauptthread nach
+            // Abschluss des aktuellen Events verschoben. Direktaufrufe aus itemStateChanged
+            // (innerhalb von pBox->Select()) verursachen VCL-Re-Entranz und SIGSEGV, weil
+            // setActiveSheet() und window.dispose() VCL-Operationen sind.
+            if (itemDispatcher != null) {
+                itemDispatcher.addCallback((XCallback) aData -> {
+                    if (!istBereinigt()) {
+                        logger.debug("itemDispatcher: verarbeiteItemAuswahl({})", idx);
+                        verarbeiteItemAuswahl(idx);
+                    }
+                }, null);
+            } else {
+                verarbeiteItemAuswahl(idx);
             }
         }
 
@@ -287,6 +317,18 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             // intentional no-op
         }
     };
+
+    private void verarbeiteItemAuswahl(int idx) {
+        if (idx < 0 || idx >= baumEintraege.size()) {
+            return;
+        }
+        switch (baumEintraege.get(idx)) {
+            case GruppenKopf kopf -> gruppeToggle(kopf.gruppe());
+            case SpieltagKopf kopf -> spieltagToggle(kopf.spieltagNr());
+            case UnterGruppenKopf kopf -> unterGruppeToggle(kopf.id());
+            case BlattKnoten knoten -> sheetAktivieren(knoten);
+        }
+    }
 
     private void spieltagToggle(int spieltagNr) {
         auswahlMerken();
@@ -353,6 +395,11 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         tabWechselListenerRegistrieren(neuesSpreadsheet);
     }
 
+    @Override
+    protected void nachControllerWechsel(Object source) {
+        tabWechselListenerRegistrieren(getCurrentSpreadsheet());
+    }
+
     private void tabWechselListenerRegistrieren(WorkingSpreadsheet ws) {
         tabWechselListenerAbmelden();
         if (ws == null) {
@@ -379,29 +426,47 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         }
     }
 
-    private void sidebarAuswahlSynchronisieren(String sheetName) {
-        if (sheetListBox == null) {
+    private void sidebarAuswahlSynchronisieren() {
+        if (syncLaeuft || sheetListBox == null) {
             return;
         }
-        for (int i = 0; i < baumEintraege.size(); i++) {
-            if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
-                var named = Lo.qi(XNamed.class, knoten.sheet());
-                if (named != null && sheetName.equals(named.getName())) {
-                    unterdrueckeItemListener = true;
-                    try {
-                        sheetListBox.selectItemPos((short) i, true);
-                    } finally {
-                        unterdrueckeItemListener = false;
+        syncLaeuft = true;
+        try {
+            var ws = getCurrentSpreadsheet();
+            if (ws == null) {
+                return;
+            }
+            var aktuellesSheet = ws.getWorkingSpreadsheetView().getActiveSheet();
+            if (aktuellesSheet == null) {
+                return;
+            }
+            var named = Lo.qi(XNamed.class, aktuellesSheet);
+            if (named == null) {
+                return;
+            }
+            var sheetName = named.getName();
+            for (int i = 0; i < baumEintraege.size(); i++) {
+                if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
+                    var knotenNamed = Lo.qi(XNamed.class, knoten.sheet());
+                    if (knotenNamed != null && sheetName.equals(knotenNamed.getName())) {
+                        unterdrueckeItemListener = true;
+                        try {
+                            sheetListBox.selectItemPos((short) i, true);
+                        } finally {
+                            unterdrueckeItemListener = false;
+                        }
+                        return;
                     }
-                    return;
                 }
             }
-        }
-        unterdrueckeItemListener = true;
-        try {
-            sheetListBox.selectItemPos((short) -1, false);
+            unterdrueckeItemListener = true;
+            try {
+                sheetListBox.selectItemPos((short) -1, false);
+            } finally {
+                unterdrueckeItemListener = false;
+            }
         } finally {
-            unterdrueckeItemListener = false;
+            syncLaeuft = false;
         }
     }
 
@@ -412,6 +477,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         SheetRunner.removeStateChangeListener(prozessZustandListener);
         tabWechselListenerAbmelden();
         sheetListBox = null;
+        itemDispatcher = null;
         if (baumEintraege != null) {
             baumEintraege.clear();
         }

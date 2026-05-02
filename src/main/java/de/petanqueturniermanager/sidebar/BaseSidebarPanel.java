@@ -48,6 +48,10 @@ public abstract class BaseSidebarPanel extends ComponentBase implements XUIEleme
 			XSidebar xSidebar) {
 		this.resourceUrl = checkNotNull(resourceUrl);
 		panel = neuesPanel(workingSpreadsheet, parentWindow, xSidebar);
+		// Erst NACH dem Subklassen-Konstruktor initialisieren, damit alle
+		// Field-Initializers (z.B. itemListener-Instanzen) abgearbeitet sind,
+		// bevor felderHinzufuegen() sie an die UNO-Bridge übergibt.
+		panel.initialisieren();
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			SidebarPanelDelegator.get().registrieren(this);
 		}

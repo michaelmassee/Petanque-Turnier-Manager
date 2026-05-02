@@ -65,22 +65,21 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private XWindow window;
 	private GuiFactoryCreateParam guiFactoryCreateParam;
 	private Layout layout;
-	private boolean istBereinigt = false;
+	private volatile boolean istBereinigt = false;
 	/** Gesetzt wenn GTK-Fenster-Erstellung während FillToolbar verschoben wurde. */
 	private boolean ausstehendInit = false;
 
 	/**
-	 * Wenn das Panel während FillToolbar (Druckvorschau-Exit) konstruiert wird:
-	 * <ul>
-	 * <li>GTK-Fenster-Erstellung wird auf {@code onViewCreated} verschoben (re-entrant-Guard)</li>
-	 * <li>Keine Registrierung im Delegator oder als {@link ITurnierEventListener} –
-	 *     kein Event darf ein uninitialisiertes Panel erreichen</li>
-	 * <li>{@link BaseSidebarPanel} registriert sich stattdessen im {@link SidebarPanelDelegator}
-	 *     und leitet {@code onViewCreated} hierher weiter, sobald der Controller bereit ist</li>
-	 * </ul>
-	 * Im Normalfall ({@code ausstehendInit == false}) werden {@code fensterAdapter},
-	 * Delegator und TurnierEventListener VOR {@link #felderHinzufuegen()} registriert,
-	 * damit das {@code requestLayout()} am Ende korrekt auf {@code windowResized → doLayout()} führt.
+	 * Bewusst minimal: nur Felder zuweisen und {@code fensterAdapter} registrieren.
+	 * <p>
+	 * UI-Aufbau und Listener-Registrierung erfolgen ausschließlich in
+	 * {@link #initialisieren()}, das vom {@link BaseSidebarPanel}-Konstruktor
+	 * aufgerufen wird, NACHDEM der Subklassen-Konstruktor (inkl. aller
+	 * Field-Initializers) vollständig durchgelaufen ist. Sonst sieht
+	 * {@code felderHinzufuegen()} ggf. {@code null}-Listener der Subklasse –
+	 * das hat beim Sidebar-Toggle (Aus/Ein mit geladenem Dokument) zu
+	 * SIGSEGV-Crashes beim Klick in der Sheet-Liste geführt, weil ein
+	 * {@code null}-Listener an die UNO-Bridge übergeben wurde.
 	 */
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
@@ -88,15 +87,31 @@ public abstract class BaseSidebarContent extends ComponentBase
 		this.parentWindow = checkNotNull(parentWindow);
 
 		this.parentWindow.addWindowListener(fensterAdapter);
+	}
 
+	/**
+	 * Schließt die Initialisierung ab, sobald die Subklasse vollständig konstruiert
+	 * ist. Wird vom {@link BaseSidebarPanel}-Konstruktor aufgerufen.
+	 * <p>
+	 * Im Druckvorschau-Modus wird die GTK-Fenster-Erstellung auf
+	 * {@link #onViewCreated} verschoben (re-entrant-Guard); bis dahin existiert
+	 * nur ein Platzhalter-Fenster und {@link BaseSidebarPanel} registriert sich
+	 * stattdessen im {@link SidebarPanelDelegator}.
+	 * <p>
+	 * Im Normalfall werden Delegator und TurnierEventListener VOR
+	 * {@link #felderHinzufuegen()} registriert, damit das anschließende
+	 * {@code requestLayout()} korrekt auf {@code windowResized → doLayout()}
+	 * führt.
+	 */
+	final void initialisieren() {
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			ausstehendInit = true;
 			window = Lo.qi(XWindow.class, parentWindow); // Platzhalter für getWindow() bis Initialisierung abgeschlossen
-		} else {
-			neuesBasisFenster();
-			registrieren();
-			felderHinzufuegen();
+			return;
 		}
+		neuesBasisFenster();
+		registrieren();
+		felderHinzufuegen();
 	}
 
 	private void registrieren() {
@@ -221,15 +236,47 @@ public abstract class BaseSidebarContent extends ComponentBase
 		// Felder sind bereits vorhanden – nichts zu tun
 	}
 
+	@Override
+	public void onFocus(Object source) {
+		if (istBereinigt || ausstehendInit) {
+			return;
+		}
+		var xModel = Lo.qi(XModel.class, source);
+		if (xModel == null) {
+			return;
+		}
+		var controller = xModel.getCurrentController();
+		if (controller == null || Lo.qi(XSpreadsheetView.class, controller) == null) {
+			return;
+		}
+		nachControllerWechsel(source);
+	}
+
+	protected final boolean istBereinigt() {
+		return istBereinigt;
+	}
+
+	/**
+	 * Hook für Unterklassen: wird nach einem Controller-Wechsel aufgerufen
+	 * (sowohl nach verzögerter Initialisierung als auch für aktive Panels bei {@code onViewCreated}).
+	 * Typischer Anwendungsfall: UNO-Listener neu binden.
+	 */
+	protected void nachControllerWechsel(Object source) {
+		// Standard: keine Aktion
+	}
+
 	/**
 	 * Schließt die verzögerte Initialisierung ab, sobald der ScTabViewShell-Controller
 	 * aktiv ist (nach FillToolbar, also außerhalb des re-entrant-kritischen Fensters).
 	 * Wird von {@link BaseSidebarPanel#onViewCreated(Object)} direkt aufgerufen.
 	 * Erst hier wird der Content vollständig registriert.
+	 * <p>
+	 * Für bereits aktive Panels (kein {@code ausstehendInit}) wird {@link #nachControllerWechsel}
+	 * aufgerufen – der verlässlichste Lifecycle-Punkt für Controller-Wechsel.
 	 */
 	@Override
 	public void onViewCreated(Object source) {
-		if (!ausstehendInit || istBereinigt) {
+		if (istBereinigt) {
 			return;
 		}
 		var xModel = Lo.qi(XModel.class, source);
@@ -239,12 +286,16 @@ public abstract class BaseSidebarContent extends ComponentBase
 		if (Lo.qi(XSpreadsheetView.class, xModel.getCurrentController()) == null) {
 			return;
 		}
-		logger.debug("onViewCreated: verzögerte Initialisierung wird abgeschlossen");
-		ausstehendInit = false;
-		window = null;
-		neuesBasisFenster();
-		registrieren();
-		felderHinzufuegen();
+		if (ausstehendInit) {
+			logger.debug("onViewCreated: verzögerte Initialisierung wird abgeschlossen");
+			ausstehendInit = false;
+			window = null;
+			neuesBasisFenster();
+			registrieren();
+			felderHinzufuegen();
+			onSpreadsheetGewechselt(currentSpreadsheet);
+		}
+		nachControllerWechsel(source);
 	}
 
 	@Override
