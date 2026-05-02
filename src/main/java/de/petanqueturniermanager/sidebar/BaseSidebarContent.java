@@ -68,6 +68,20 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private volatile boolean istBereinigt = false;
 	/** Gesetzt wenn GTK-Fenster-Erstellung während FillToolbar verschoben wurde. */
 	private boolean ausstehendInit = false;
+	/** Zählt jeden Rebuild; Callbacks prüfen die Generation, um veraltete Events zu verwerfen. */
+	private int uiGeneration = 0;
+	/**
+	 * Letzte Generation, für die {@code requestLayout()} + vollständiger UI-Aufbau abgeschlossen wurden.
+	 * Ist nur dann {@code == uiGeneration}, wenn die UI stabil interaktiv ist.
+	 * Initialisiert auf {@code -1}, damit {@link #isUiReady()} vor dem ersten Build {@code false} liefert.
+	 */
+	private volatile int uiReadyGeneration = -1;
+	/**
+	 * Event, das während der Init-Phase (bevor {@code doLayout()} erstmals erfolgreich lief) eintraf
+	 * und deshalb nicht sofort verarbeitet werden konnte. Wird in {@link #doLayout()} nachgezogen,
+	 * sobald die UI stabil ist. Volatile, da es von Event-Threads geschrieben und vom VCL-Thread gelesen wird.
+	 */
+	private volatile ITurnierEvent ausstehendAktualisierung = null;
 
 	/**
 	 * Bewusst minimal: nur Felder zuweisen und {@code fensterAdapter} registrieren.
@@ -112,6 +126,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		neuesBasisFenster();
 		registrieren();
 		felderHinzufuegen();
+		requestLayout();
 	}
 
 	private void registrieren() {
@@ -140,11 +155,35 @@ public abstract class BaseSidebarContent extends ComponentBase
 	 */
 	protected void allesFelderEntfernenUndNeuFenster() {
 		logger.debug("allesFelderEntfernenUndNeuFenster");
-		window.dispose();
+		try {
+			vorFensterDispose();
+		} catch (Exception e) {
+			logger.error("Fehler beim Freigeben vor Window-Dispose", e);
+		}
+		if (window != null) {
+			window.dispose();
+		}
+		uiGeneration++; // erst nach dispose – alte UI ist jetzt tot, neue Generation beginnt
 		window = null;
-		guiFactoryCreateParam.clear();
-		guiFactoryCreateParam = null;
+		if (guiFactoryCreateParam != null) {
+			guiFactoryCreateParam.clear();
+			guiFactoryCreateParam = null;
+		}
+		ausstehendAktualisierung = null; // Rebuild ist vollständige Aktualisierung – pending Event obsolet
 		neuesBasisFenster();
+		felderHinzufuegen();
+		requestLayout();
+	}
+
+	/**
+	 * Hook: unmittelbar vor {@code window.dispose()} in einem Rebuild aufgerufen.
+	 * Unterklassen nullen hier ihre UNO-Control-Referenzen, damit ausstehende
+	 * VCL-Events (z.B. {@code itemStateChanged}) die Controls nicht mehr vorfinden
+	 * und sauber abbrechen. Globale Listener (SheetRunner, Timer usw.) NICHT hier
+	 * entfernen – die überleben den Rebuild und gehören in {@link #onDisposing}.
+	 */
+	protected void vorFensterDispose() {
+		// Standard: keine Aktion
 	}
 
 	/**
@@ -171,6 +210,8 @@ public abstract class BaseSidebarContent extends ComponentBase
 			return;
 		}
 		istBereinigt = true;
+		uiReadyGeneration = -1;
+		ausstehendAktualisierung = null;
 		logger.debug("BaseSidebarContent.bereinigen");
 
 		try {
@@ -189,6 +230,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 			} catch (RuntimeException e) {
 				logger.error("Fehler beim Entfernen des FensterListeners", e);
 			}
+			parentWindow = null;
 		}
 		layout = null;
 		try {
@@ -196,8 +238,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		} catch (RuntimeException e) {
 			logger.error("Fehler in onDisposing", e);
 		}
-		setCurrentSpreadsheet(null);
-		setParentWindow(null);
+		currentSpreadsheet = null;
 		if (guiFactoryCreateParam != null) {
 			guiFactoryCreateParam.clear();
 			guiFactoryCreateParam = null;
@@ -252,8 +293,26 @@ public abstract class BaseSidebarContent extends ComponentBase
 		nachControllerWechsel(source);
 	}
 
-	protected final boolean istBereinigt() {
-		return istBereinigt;
+	protected final int getUiGeneration() {
+		return uiGeneration;
+	}
+
+	/**
+	 * {@code true} sobald {@link #felderHinzufuegen()} + {@link #doLayout()} für die aktuelle
+	 * Generation vollständig abgeschlossen sind und das Panel interaktiv ist.
+	 * Nur dann dürfen UI-Events (itemStateChanged, selectionChanged) verarbeitet werden.
+	 */
+	protected final boolean isUiReady() {
+		return uiReadyGeneration == uiGeneration && !istBereinigt && !ausstehendInit;
+	}
+
+	/**
+	 * Prüft, ob die UI noch zur Generation {@code gen} gehört und stabil interaktiv ist.
+	 * Zu verwenden in allen deferred Callbacks (via {@code itemDispatcher}),
+	 * um veraltete Events sicher zu verwerfen.
+	 */
+	protected final boolean isUiAlive(int gen) {
+		return isUiReady() && gen == uiGeneration;
 	}
 
 	/**
@@ -293,7 +352,8 @@ public abstract class BaseSidebarContent extends ComponentBase
 			neuesBasisFenster();
 			registrieren();
 			felderHinzufuegen();
-			onSpreadsheetGewechselt(currentSpreadsheet);
+			requestLayout();
+			onSpreadsheetGewechselt(currentSpreadsheet); // nach Layout – Listener dürfen erst jetzt UI anfassen
 		}
 		nachControllerWechsel(source);
 	}
@@ -321,7 +381,12 @@ public abstract class BaseSidebarContent extends ComponentBase
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
 			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument);
 			onSpreadsheetGewechselt(currentSpreadsheet);
-			felderAktualisieren(new OnProperiesChangedEvent(currentSpreadsheet.getWorkingSpreadsheetDocument()));
+			var event = new OnProperiesChangedEvent(currentSpreadsheet.getWorkingSpreadsheetDocument());
+			if (isUiReady()) {
+				felderAktualisieren(event);
+			} else {
+				ausstehendAktualisierung = event;
+			}
 		}
 	}
 
@@ -364,6 +429,10 @@ public abstract class BaseSidebarContent extends ComponentBase
 		if (doc == null || !doc.equals(eventObj.getWorkingSpreadsheetDocument())) {
 			return;
 		}
+		if (!isUiReady()) {
+			ausstehendAktualisierung = eventObj;
+			return;
+		}
 		logger.debug("onPropertiesChanged");
 		felderAktualisieren(eventObj);
 	}
@@ -383,6 +452,14 @@ public abstract class BaseSidebarContent extends ComponentBase
 			}
 			if (getLayout() != null) {
 				getLayout().layout(posSizeParent);
+			}
+			if (uiReadyGeneration != uiGeneration) {
+				uiReadyGeneration = uiGeneration;
+				var pending = ausstehendAktualisierung;
+				if (pending != null) {
+					ausstehendAktualisierung = null;
+					felderAktualisieren(pending);
+				}
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -406,16 +483,8 @@ public abstract class BaseSidebarContent extends ComponentBase
 		return parentWindow;
 	}
 
-	protected final void setParentWindow(XWindow parentWindow) {
-		this.parentWindow = parentWindow;
-	}
-
 	public final WorkingSpreadsheet getCurrentSpreadsheet() {
 		return currentSpreadsheet;
-	}
-
-	protected final void setCurrentSpreadsheet(WorkingSpreadsheet currentSpreadsheet) {
-		this.currentSpreadsheet = currentSpreadsheet;
 	}
 
 	protected TurnierSystem getTurnierSystemAusDocument() {

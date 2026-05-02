@@ -145,7 +145,6 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             getLayout().addLayout(wsZeile, 1);
         }
 
-        requestLayout();
     }
 
     @Override
@@ -191,6 +190,17 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
                 logger.error("Fehler beim Aktualisieren des TurnierSchritt-Labels", e);
             }
         }
+    }
+
+    @Override
+    protected void vorFensterDispose() {
+        timerLabel = null;
+        timerIconControl = null;
+        versionLabel = null;
+        turnierSystemLabel = null;
+        turnierSchrittLabel = null;
+        webserverStatusLabel = null;
+        webserverIconControl = null;
     }
 
     @Override

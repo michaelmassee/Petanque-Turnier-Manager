@@ -69,20 +69,8 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private SheetBaumOrganisierer organisierer;
     private String gespeichertesSheet = null;
     private XSelectionSupplier selectionSupplier = null;
-    /**
-     * Verhindert, dass programmatische {@code selectItemPos}-Aufrufe (z.B. in
-     * {@code auswahlWiederherstellen()} oder {@code sidebarAuswahlSynchronisieren()})
-     * ein {@code setActiveSheet()} auslösen.
-     */
+    /** Kurzfristig {@code true} während programmatischer {@code selectItemPos}-Aufrufe. */
     private volatile boolean unterdrueckeItemListener = false;
-    /**
-     * Verhindert Rückkopplungs-Schleifen in {@link #sidebarAuswahlSynchronisieren()}.
-     * Ohne diesen Guard könnte {@code selectItemPos()} → {@code itemStateChanged} →
-     * {@code sidebarAuswahlSynchronisieren()} → {@code selectItemPos()} → … eine
-     * Endlosschleife bilden, falls {@code unterdrueckeItemListener} z.B. durch einen
-     * asynchronen PostUserEvent nicht rechtzeitig greift.
-     */
-    private volatile boolean syncLaeuft = false;
     /**
      * Dispatcher zum Ausführen von Item-Aktionen nach dem aktuellen VCL-Event.
      * <p>
@@ -106,13 +94,15 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private final XSelectionChangeListener tabWechselListener = new XSelectionChangeListener() {
         @Override
         public void selectionChanged(EventObject event) {
-            if (SheetRunner.isRunning() || sheetListBox == null || itemDispatcher == null) {
+            if (SheetRunner.isRunning() || !isUiReady() || sheetListBox == null || itemDispatcher == null) {
                 return;
             }
+            int gen = getUiGeneration();
             itemDispatcher.addCallback((XCallback) aData -> {
-                if (!istBereinigt()) {
-                    sidebarAuswahlSynchronisieren();
+                if (!isUiAlive(gen) || sheetListBox == null) {
+                    return;
                 }
+                sidebarAuswahlSynchronisieren();
             }, null);
         }
 
@@ -170,7 +160,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         var xDoc = dokumentOderNull();
         if (xDoc == null) {
             sheetListeAufbauenLeer();
-            requestLayout();
             return;
         }
 
@@ -183,7 +172,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             logger.debug("felderHinzufuegen: {} Baum-Einträge gefunden, baue ListBox auf", baumEintraege.size());
             sheetListeAufbauenMitEintraegen();
         }
-        requestLayout();
     }
 
     private void sheetListeAufbauenLeer() {
@@ -240,12 +228,8 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
                 var named = Lo.qi(XNamed.class, knoten.sheet());
                 if (named != null && gespeichertesSheet.equals(named.getName())) {
-                    unterdrueckeItemListener = true;
-                    try {
-                        sheetListBox.selectItemPos((short) i, true);
-                    } finally {
-                        unterdrueckeItemListener = false;
-                    }
+                    // uiZustand ist AUFBAU → itemStateChanged ignoriert selectItemPos automatisch
+                    sheetListBox.selectItemPos((short) i, true);
                     return;
                 }
             }
@@ -262,7 +246,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private void listeNeuAufbauen() {
         auswahlMerken();
         allesFelderEntfernenUndNeuFenster();
-        felderHinzufuegen();
     }
 
     private void auswahlMerken() {
@@ -287,7 +270,7 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     private final XItemListener itemListener = new XItemListener() {
         @Override
         public void itemStateChanged(ItemEvent e) {
-            if (unterdrueckeItemListener) {
+            if (!isUiReady() || sheetListBox == null || unterdrueckeItemListener) {
                 return;
             }
             int idx = e.Selected;
@@ -301,11 +284,13 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             // (innerhalb von pBox->Select()) verursachen VCL-Re-Entranz und SIGSEGV, weil
             // setActiveSheet() und window.dispose() VCL-Operationen sind.
             if (itemDispatcher != null) {
+                int gen = getUiGeneration();
                 itemDispatcher.addCallback((XCallback) aData -> {
-                    if (!istBereinigt()) {
-                        logger.debug("itemDispatcher: verarbeiteItemAuswahl({})", idx);
-                        verarbeiteItemAuswahl(idx);
+                    if (!isUiAlive(gen) || sheetListBox == null) {
+                        return;
                     }
+                    logger.debug("itemDispatcher: verarbeiteItemAuswahl({})", idx);
+                    verarbeiteItemAuswahl(idx);
                 }, null);
             } else {
                 verarbeiteItemAuswahl(idx);
@@ -338,7 +323,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             kollabierteSpielTage.add(spieltagNr);
         }
         allesFelderEntfernenUndNeuFenster();
-        felderHinzufuegen();
     }
 
     private void unterGruppeToggle(String id) {
@@ -349,7 +333,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             kollabierteUnterGruppen.add(id);
         }
         allesFelderEntfernenUndNeuFenster();
-        felderHinzufuegen();
     }
 
     private void gruppeToggle(SheetGruppe gruppe) {
@@ -360,7 +343,6 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
             kollabierteGruppen.add(gruppe);
         }
         allesFelderEntfernenUndNeuFenster();
-        felderHinzufuegen();
     }
 
     private void listBoxAktivierungAktualisieren() {
@@ -427,50 +409,49 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     }
 
     private void sidebarAuswahlSynchronisieren() {
-        if (syncLaeuft || sheetListBox == null) {
+        if (!isUiReady() || sheetListBox == null) {
             return;
         }
-        syncLaeuft = true;
-        try {
-            var ws = getCurrentSpreadsheet();
-            if (ws == null) {
-                return;
-            }
-            var aktuellesSheet = ws.getWorkingSpreadsheetView().getActiveSheet();
-            if (aktuellesSheet == null) {
-                return;
-            }
-            var named = Lo.qi(XNamed.class, aktuellesSheet);
-            if (named == null) {
-                return;
-            }
-            var sheetName = named.getName();
-            for (int i = 0; i < baumEintraege.size(); i++) {
-                if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
-                    var knotenNamed = Lo.qi(XNamed.class, knoten.sheet());
-                    if (knotenNamed != null && sheetName.equals(knotenNamed.getName())) {
-                        unterdrueckeItemListener = true;
-                        try {
-                            sheetListBox.selectItemPos((short) i, true);
-                        } finally {
-                            unterdrueckeItemListener = false;
-                        }
-                        return;
-                    }
+        var ws = getCurrentSpreadsheet();
+        if (ws == null) {
+            return;
+        }
+        var aktuellesSheet = ws.getWorkingSpreadsheetView().getActiveSheet();
+        if (aktuellesSheet == null) {
+            return;
+        }
+        var named = Lo.qi(XNamed.class, aktuellesSheet);
+        if (named == null) {
+            return;
+        }
+        var sheetName = named.getName();
+        for (int i = 0; i < baumEintraege.size(); i++) {
+            if (baumEintraege.get(i) instanceof BlattKnoten knoten) {
+                var knotenNamed = Lo.qi(XNamed.class, knoten.sheet());
+                if (knotenNamed != null && sheetName.equals(knotenNamed.getName())) {
+                    selectItemPosProgrammatisch((short) i, true);
+                    return;
                 }
             }
-            unterdrueckeItemListener = true;
-            try {
-                sheetListBox.selectItemPos((short) -1, false);
-            } finally {
-                unterdrueckeItemListener = false;
-            }
+        }
+        selectItemPosProgrammatisch((short) -1, false);
+    }
+
+    private void selectItemPosProgrammatisch(short pos, boolean selected) {
+        unterdrueckeItemListener = true;
+        try {
+            sheetListBox.selectItemPos(pos, selected);
         } finally {
-            syncLaeuft = false;
+            unterdrueckeItemListener = false;
         }
     }
 
     // ── Cleanup ──────────────────────────────────────────────────────────────
+
+    @Override
+    protected void vorFensterDispose() {
+        sheetListBox = null;
+    }
 
     @Override
     protected void onDisposing(EventObject event) {
