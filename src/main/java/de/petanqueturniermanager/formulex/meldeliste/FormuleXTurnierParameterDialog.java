@@ -276,7 +276,7 @@ class FormuleXTurnierParameterDialog {
         props.setPropertyValue("Value", (double) wert);
         props.setPropertyValue("ValueMin", (double) min);
         props.setPropertyValue("ValueMax", (double) max);
-        props.setPropertyValue("Increment", 1.0);
+        props.setPropertyValue("ValueStep", 1.0);
         props.setPropertyValue("DecimalAccuracy", (short) 0);
         props.setPropertyValue("Spin", Boolean.TRUE);
         cont.insertByName(name, model);
