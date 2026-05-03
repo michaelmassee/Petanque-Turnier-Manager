@@ -171,6 +171,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private static volatile XComponentContext SHARED_CONTEXT;
 	private static final AtomicBoolean REGISTERED = new AtomicBoolean(false);
 
+	// Dokument dieser ProtocolHandler-Instanz: wird in addStatusListener verwendet,
+	// damit Listener immer dem eigenen Dokument zugeordnet bleiben – unabhängig davon,
+	// welches Dokument beim addStatusListener-Aufruf gerade im Fokus ist.
+	private final XSpreadsheetDocument eigensDokument;
+
 	// Command-Konstanten
 	// SuperMelee
 	public static final String CMD_NEUE_MELDELISTE = "neue_meldeliste";
@@ -330,6 +335,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public ProtocolHandler(XComponentContext xContext) {
 		this.xContext = xContext;
 		SHARED_CONTEXT = xContext;
+		eigensDokument = holeAktivesDokument();
 		PetanqueTurnierMngrSingleton.init(xContext);
 		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
 		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt).
@@ -1042,9 +1048,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		String command = url.Path;
 		logger.trace("addStatusListener: command={} thread={} druckvorschauAktiv={}",
 				command, Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
-		var aktivesDokument = holeAktivesDokument();
+		// eigensDokument statt holeAktivesDokument(): Listener werden dem Dokument dieser
+		// ProtocolHandler-Instanz zugeordnet, nicht dem zufällig gerade fokussierten Dokument.
+		// Sonst kann beim Öffnen/Schließen eines zweiten Dokuments das falsche Dokument
+		// in den StatusEntry landen → Toolbar des verbleibenden Dokuments wird fälschlich disabled.
 		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
-				.add(new StatusEntry(listener, url, aktivesDokument));
+				.add(new StatusEntry(listener, url, eigensDokument));
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			// C++-Toolbar-Controller werden während FillToolbar (Druckvorschau-Exit) angelegt.
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
@@ -1053,7 +1062,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			logger.trace("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
-		postStatus(listener, url, isEnabled(command, aktivesDokument));
+		postStatus(listener, url, isEnabled(command, eigensDokument));
 	}
 
 	@Override

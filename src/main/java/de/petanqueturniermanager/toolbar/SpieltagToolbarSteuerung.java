@@ -10,6 +10,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XFramesSupplier;
 import com.sun.star.frame.XLayoutManager;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
 import com.sun.star.uno.XComponentContext;
 
@@ -113,7 +114,18 @@ public final class SpieltagToolbarSteuerung {
 
     private static boolean ermittleSichtbarkeit(XFrame xFrame, XComponentContext xContext) {
         try {
-            var ws = new WorkingSpreadsheet(xContext);
+            // Dokument aus dem eigenen Frame ermitteln – nicht das global aktive Dokument.
+            // Bei mehreren offenen Dokumenten könnte sonst der falsche TurnierSystem-Wert
+            // für diesen Frame verwendet werden.
+            var controller = xFrame.getController();
+            if (controller == null) {
+                return false;
+            }
+            var doc = Lo.qi(XSpreadsheetDocument.class, controller.getModel());
+            if (doc == null) {
+                return false;
+            }
+            var ws = new WorkingSpreadsheet(xContext, doc);
             TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
             return ts != null && ts.hatMehrereSpielTage();
         } catch (Exception e) {
