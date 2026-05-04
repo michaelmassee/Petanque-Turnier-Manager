@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.List;
+import java.util.Map;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -142,6 +143,10 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 
 	public String formulaSpielplanTeamName(String nrAdresse) throws GenerateException {
 		return delegate.formulaSpielplanTeamName(nrAdresse);
+	}
+
+	public Map<Integer, String> leseTeamNamen() throws GenerateException {
+		return delegate.leseTeamNamen();
 	}
 
 	public void alleTeamsAktivieren() throws GenerateException {

@@ -5,7 +5,9 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.ConditionOperator;
@@ -29,6 +31,9 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
@@ -377,6 +382,73 @@ class JGJMeldeListeDelegate implements MeldeListeKonstanten {
 			return nrAdresse;
 		}
 		return formulaSverweisSpielernamen(nrAdresse);
+	}
+
+	Map<Integer, String> leseTeamNamen() throws GenerateException {
+		Map<Integer, String> result = new HashMap<>();
+		XSpreadsheet mlSheet = sheet.getXSpreadSheet();
+		if (mlSheet == null) {
+			return result;
+		}
+		boolean zeigeTeamname = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+		boolean zeigeVerein = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
+		Formation formation = konfigurationSheet.getMeldeListeFormation();
+		int anzSpieler = formation.getAnzSpieler();
+		int ersterSpielerOffset = zeigeTeamname ? 2 : 1;
+		int spaltenProSpieler = zeigeVerein ? 3 : 2;
+		int maxSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
+
+		var xDoc = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		RangeData data = RangeHelper.from(mlSheet, xDoc,
+				RangePosition.from(0, ERSTE_DATEN_ZEILE, maxSpalte, ERSTE_DATEN_ZEILE + 999)).getDataFromRange();
+
+		for (RowData row : data) {
+			if (row.isEmpty()) {
+				break;
+			}
+			int nr = row.get(0).getIntVal(0);
+			if (nr <= 0) {
+				break;
+			}
+			String name = zeigeTeamname
+					? (row.size() > 1 ? row.get(1).getStringVal() : "")
+					: bauspielerNamenZusammen(row, anzSpieler, ersterSpielerOffset, spaltenProSpieler);
+			result.put(nr, name != null ? name : "");
+		}
+		return result;
+	}
+
+	private String bauspielerNamenZusammen(RowData row, int anzSpieler, int ersterSpielerOffset, int spaltenProSpieler) {
+		var sb = new StringBuilder();
+		for (int s = 0; s < anzSpieler; s++) {
+			int vorSpalte = ersterSpielerOffset + s * spaltenProSpieler;
+			int nachSpalte = vorSpalte + 1;
+			String vorname = vorSpalte < row.size() ? row.get(vorSpalte).getStringVal() : "";
+			String nachname = nachSpalte < row.size() ? row.get(nachSpalte).getStringVal() : "";
+			String spielerName = baueSpielerName(vorname, nachname);
+			if (!spielerName.isEmpty()) {
+				if (sb.length() > 0) {
+					sb.append(" / ");
+				}
+				sb.append(spielerName);
+			}
+		}
+		return sb.toString();
+	}
+
+	private static String baueSpielerName(String vorname, String nachname) {
+		String vn = vorname != null ? vorname.trim() : "";
+		String nn = nachname != null ? nachname.trim() : "";
+		if (vn.isEmpty() && nn.isEmpty()) {
+			return "";
+		}
+		if (vn.isEmpty()) {
+			return nn;
+		}
+		if (nn.isEmpty()) {
+			return vn;
+		}
+		return vn + " " + nn;
 	}
 
 	// ---------------------------------------------------------------

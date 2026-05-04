@@ -11,7 +11,6 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ColorHelper;
@@ -320,73 +319,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
     }
 
     private Map<Integer, String> leseTeamNamen(JGJMeldeListeSheet_Update meldeListe) throws GenerateException {
-        Map<Integer, String> result = new HashMap<>();
-        XSpreadsheet mlSheet = meldeListe.getXSpreadSheet();
-        if (mlSheet == null) {
-            return result;
-        }
-
-        var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
-        int ersteZeile = meldeListe.getErsteDatenZiele();
-        boolean zeigeTeamname = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
-        boolean zeigeVerein = konfigurationSheet.isMeldeListeVereinsnameAnzeigen();
-        Formation formation = konfigurationSheet.getMeldeListeFormation();
-        int anzSpieler = formation.getAnzSpieler();
-        int ersterSpielerOffset = zeigeTeamname ? 2 : 1;
-        int spaltenProSpieler = zeigeVerein ? 3 : 2;
-        int maxSpalte = ersterSpielerOffset + anzSpieler * spaltenProSpieler - 1;
-
-        RangeData data = RangeHelper.from(mlSheet, xDoc,
-                RangePosition.from(0, ersteZeile, maxSpalte, ersteZeile + 999)).getDataFromRange();
-
-        for (RowData row : data) {
-            if (row.isEmpty()) {
-                break;
-            }
-            int nr = row.get(0).getIntVal(0);
-            if (nr <= 0) {
-                break;
-            }
-            String name = zeigeTeamname
-                    ? (row.size() > 1 ? row.get(1).getStringVal() : "")
-                    : bauspielerNamenZusammen(row, anzSpieler, ersterSpielerOffset, spaltenProSpieler);
-            result.put(nr, name != null ? name : "");
-        }
-        return result;
-    }
-
-    private String bauspielerNamenZusammen(RowData row, int anzSpieler, int ersterSpielerOffset,
-            int spaltenProSpieler) {
-        var sb = new StringBuilder();
-        for (int s = 0; s < anzSpieler; s++) {
-            int vorSpalte = ersterSpielerOffset + s * spaltenProSpieler;
-            int nachSpalte = vorSpalte + 1;
-            String vorname = vorSpalte < row.size() ? row.get(vorSpalte).getStringVal() : "";
-            String nachname = nachSpalte < row.size() ? row.get(nachSpalte).getStringVal() : "";
-            String spielerName = baueSpielerName(vorname, nachname);
-            if (!spielerName.isEmpty()) {
-                if (sb.length() > 0) {
-                    sb.append(" / ");
-                }
-                sb.append(spielerName);
-            }
-        }
-        return sb.toString();
-    }
-
-    private static String baueSpielerName(String vorname, String nachname) {
-        String vn = vorname != null ? vorname.trim() : "";
-        String nn = nachname != null ? nachname.trim() : "";
-        if (vn.isEmpty() && nn.isEmpty()) {
-            return "";
-        }
-        if (vn.isEmpty()) {
-            return nn;
-        }
-        if (nn.isEmpty()) {
-            return vn;
-        }
-        return vn + " " + nn;
+        return meldeListe.leseTeamNamen();
     }
 
     protected void insertHeader(XSpreadsheet sheet) throws GenerateException {

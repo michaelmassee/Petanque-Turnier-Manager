@@ -2,6 +2,7 @@ package de.petanqueturniermanager.jedergegenjeden.spielplan;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
@@ -46,6 +47,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.LigaSpielPlan;
 import de.petanqueturniermanager.model.Team;
@@ -456,18 +458,30 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 
 	private void insertFormulaTeamNamen() throws GenerateException {
 		int letzteSpielZeile = letzteSpielZeile();
+		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
+		Map<Integer, String> teamNamen = zeigeNr ? Map.of() : meldeListe.leseTeamNamen();
+		String freispielText = I18n.get("spielplan.freispiel.name");
 
-		String formulaNameA = freispielName(meldeListe
-				.formulaSpielplanTeamName(Position.from(TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
-		StringCellValue nameAFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameA)
-				.setPos(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(nameAFormula);
+		RangeData nrData = RangeHelper.from(this, RangePosition.from(
+				TEAM_A_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE, TEAM_B_NR_SPALTE, letzteSpielZeile)).getDataFromRange();
 
-		String formulaNameB = freispielName(meldeListe
-				.formulaSpielplanTeamName(Position.from(TEAM_B_NR_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress()));
-		StringCellValue nameBFormula = StringCellValue.from(getXSpreadSheet()).setValue(formulaNameB)
-				.setPos(Position.from(NAME_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)).setFillAutoDown(letzteSpielZeile);
-		getSheetHelper().setFormulaInCell(nameBFormula);
+		RangeData nameData = new RangeData();
+		for (RowData row : nrData) {
+			int nrA = row.get(0).getIntVal(0);
+			int nrB = row.get(1).getIntVal(0);
+			RowData nameRow = nameData.addNewRow();
+			if (nrA <= 0) {
+				nameRow.newString("");
+				nameRow.newString("");
+			} else {
+				String nameA = zeigeNr ? String.valueOf(nrA) : teamNamen.getOrDefault(nrA, "");
+				String nameB = nrB <= 0 ? freispielText : (zeigeNr ? String.valueOf(nrB) : teamNamen.getOrDefault(nrB, ""));
+				nameRow.newString(nameA);
+				nameRow.newString(nameB);
+			}
+		}
+		RangeHelper.from(this, nameData.getRangePosition(Position.from(NAME_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE)))
+				.setDataInRange(nameData);
 	}
 
 	private void insertFormulaValidierung() throws GenerateException {
@@ -498,10 +512,6 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 					.setHoriJustify(CellHoriJustify.CENTER);
 			getSheetHelper().setFormulaInCell(valCellValue);
 		}
-	}
-
-	private String freispielName(String formulaName) {
-		return "WENNNV(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
 	}
 
 	private int letzteSpielZeile() throws GenerateException {
