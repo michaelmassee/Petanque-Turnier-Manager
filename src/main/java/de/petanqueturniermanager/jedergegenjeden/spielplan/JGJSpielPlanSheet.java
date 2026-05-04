@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.sun.star.awt.FontWeight;
+import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -30,6 +34,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
@@ -68,6 +73,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	private static final int NAME_B_SPALTE = NAME_A_SPALTE + 1;
 	public static final int SPIELPNKT_A_SPALTE = NAME_B_SPALTE + 1;
 	public static final int SPIELPNKT_B_SPALTE = SPIELPNKT_A_SPALTE + 1;
+	public static final int EINGABE_VALIDIERUNG_SPALTE = SPIELPNKT_B_SPALTE + 1;
 
 	private static final int PUNKTE_NR_WIDTH = AbstractSuperMeleeRanglisteFormatter.ENDSUMME_NUMBER_WIDTH;
 
@@ -186,6 +192,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			insertArbeitsspalten(spielPlanHRunde, spielPlanRRunde, ERSTE_SPIELTAG_DATEN_ZEILE);
 			insertFormulaPunkte();
 			insertFormulaTeamNamen();
+			insertFormulaValidierung();
 			formatieren(spielPlanHRunde, spielPlanRRunde, ERSTE_SPIELTAG_DATEN_ZEILE);
 		}
 
@@ -235,6 +242,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		// danach folgende Zebra-Formatierung nicht überschreibt
 		insertFormulaPunkte();
 		insertFormulaTeamNamen();
+		insertFormulaValidierung();
 
 		for (int g = 0; g < gruppen.size(); g++) {
 			formatieren(gruppenSpielplaeneH.get(g), gruppenSpielplaeneR.get(g), gruppenStartZeilen.get(g));
@@ -261,7 +269,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 				.from(getXSpreadSheet(), Position.from(SPIEL_NR_SPALTE, zeile), gruppenName)
 				.setEndPosMergeSpalte(SPIELPNKT_B_SPALTE)
 				.setCellBackColor(getKonfigurationSheet().getSpielPlanHeaderFarbe())
-				.setHoriJustify(com.sun.star.table.CellHoriJustify.CENTER)
+				.setHoriJustify(CellHoriJustify.CENTER)
 				.setBorder(BorderFactory.from().allThin().boldLn().forBottom().toBorder());
 		getSheetHelper().setStringValueInCell(headerVal);
 	}
@@ -462,6 +470,36 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		getSheetHelper().setFormulaInCell(nameBFormula);
 	}
 
+	private void insertFormulaValidierung() throws GenerateException {
+		int letzteSpielZeile = letzteSpielZeile();
+		XSpreadsheet sheet = getXSpreadSheet();
+
+		getSheetHelper().setColumnProperties(sheet, EINGABE_VALIDIERUNG_SPALTE,
+				ColumnProperties.from().setWidth(1800).centerJustify());
+
+		String fehlerText = I18n.get("schweizer.spielrunde.fehler.formel");
+		for (int zeile = ERSTE_SPIELTAG_DATEN_ZEILE; zeile <= letzteSpielZeile; zeile++) {
+			String ergA = Position.from(SPIELPNKT_A_SPALTE, zeile).getAddress();
+			String ergB = Position.from(SPIELPNKT_B_SPALTE, zeile).getAddress();
+			String nrB = Position.from(TEAM_B_NR_SPALTE, zeile).getAddress();
+
+			// @formatter:off
+			String valFormula = "IF(" + nrB + "<=0;\"\";IF(OR("
+					+ "AND(ISBLANK(" + ergA + ");ISBLANK(" + ergB + "));"
+					+ "AND(" + ergA + "<14;" + ergB + "<14;" + ergA + ">-1;" + ergB + ">-1;" + ergA + "<>" + ergB + ")"
+					+ ");\"\";\"" + fehlerText + "\"))";
+			// @formatter:on
+
+			StringCellValue valCellValue = StringCellValue
+					.from(sheet, Position.from(EINGABE_VALIDIERUNG_SPALTE, zeile), valFormula)
+					.setCharColor(ColorHelper.CHAR_COLOR_RED)
+					.setCharWeight(FontWeight.BOLD)
+					.setCharHeight(14)
+					.setHoriJustify(CellHoriJustify.CENTER);
+			getSheetHelper().setFormulaInCell(valCellValue);
+		}
+	}
+
 	private String freispielName(String formulaName) {
 		return "WENNNV(" + formulaName + ";\"" + I18n.get("spielplan.freispiel.name") + "\")";
 	}
@@ -492,8 +530,9 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		RanglisteGeradeUngeradeFormatHelper.from(this, runden).geradeFarbe(spielPlanHintergrundFarbeGerade)
 				.ungeradeFarbe(spielPlanHintergrundFarbeUnGerade).apply();
 
-		EditierbaresZelleFormatHelper.anwenden(this, RangePosition.from(
-				SPIELPNKT_A_SPALTE, startZeile, SPIELPNKT_B_SPALTE, letzteSpielZeile));
+		RangePosition ergRange = RangePosition.from(SPIELPNKT_A_SPALTE, startZeile, SPIELPNKT_B_SPALTE, letzteSpielZeile);
+		EditierbaresZelleFormatHelper.anwenden(this, ergRange);
+		formatiereErgebnisZellen(ergRange);
 
 		RangeProperties horTrennerDouble = RangeProperties.from()
 				.setBorder(BorderFactory.from().doubleLn().forBottom().toBorder());
@@ -549,6 +588,18 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, headerVertikal.spalte(NAME_B_SPALTE)).setRangeProperties(vertTrennerDoubleLeft);
 		RangeHelper.from(this, headerVertikal.spalte(SPIELPNKT_A_SPALTE)).setRangeProperties(vertTrennerBoldLeft);
 		RangeHelper.from(this, headerVertikal.spalte(SPIELPNKT_B_SPALTE + 1)).setRangeProperties(vertTrennerBoldLeft);
+	}
+
+	private void formatiereErgebnisZellen(RangePosition ergRange) throws GenerateException {
+		String cellA = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_A_SPALTE + 1) + "))";
+		String cellB = "INDIRECT(ADDRESS(ROW();" + (SPIELPNKT_B_SPALTE + 1) + "))";
+		String formulaGleicheWerte = "AND(NOT(ISBLANK(" + cellA + "));NOT(ISBLANK(" + cellB + "));"
+				+ cellA + "=" + cellB + ")";
+		ConditionalFormatHelper.from(this, ergRange).clear()
+				.formula1("0").formula2("13").operator(ConditionOperator.NOT_BETWEEN).styleIsFehler().applyAndDoReset()
+				.formula1("ISTEXT(" + ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")")
+				.operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset()
+				.formula1(formulaGleicheWerte).operator(ConditionOperator.FORMULA).styleIsFehler().applyAndDoReset();
 	}
 
 }
