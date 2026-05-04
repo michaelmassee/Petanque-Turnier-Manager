@@ -73,7 +73,8 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
 
     private void testNamenEinfuegen() throws GenerateException {
         int anzSpielerProTeam = formation.getAnzSpieler();
-        List<String> testNamen = testnamenLoader.listeMitTestNamen(anzTeams * anzSpielerProTeam * 2);
+        // Format aus TestnamenLoader: "Nachname, Vorname"
+        List<String> testNamen = testnamenLoader.listeMitTestNamen(anzTeams * anzSpielerProTeam);
 
         RangeData data = new RangeData();
         int nameIdx = 0;
@@ -82,8 +83,11 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
             RowData zeile = data.addNewRow();
             zeile.newInt(team + 1);
             for (int s = 0; s < anzSpielerProTeam; s++) {
-                zeile.newString(testNamen.get(nameIdx++));
-                zeile.newString(testNamen.get(nameIdx++));
+                String[] parts = testNamen.get(nameIdx++).split(", ", 2);
+                String vorname = parts.length > 1 ? parts[1] : parts[0];
+                String nachname = parts.length > 1 ? parts[0] : "";
+                zeile.newString(vorname);
+                zeile.newString(nachname);
             }
             zeile.newEmpty(); // Setzposition
             zeile.newInt(JGJMeldeListeDelegate.AKTIV_WERT_NIMMT_TEIL);
