@@ -29,7 +29,7 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 
 	public JGJMeldeListeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Meldeliste");
-		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ, METADATA_SCHLUESSEL);
+		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 
 	@Override
 	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
-		return getAlleMeldungen();
+		return delegate.getAktiveMeldungen();
 	}
 
 	@Override
@@ -134,6 +134,18 @@ public class JGJMeldeListeSheet_Update extends SheetRunner implements IMeldelist
 
 	public void upDateSheet() throws GenerateException {
 		delegate.upDateSheet();
+	}
+
+	public void vollstaendigAktualisieren() throws GenerateException {
+		delegate.vollstaendigAktualisieren();
+	}
+
+	public String formulaSpielplanTeamName(String nrAdresse) throws GenerateException {
+		return delegate.formulaSpielplanTeamName(nrAdresse);
+	}
+
+	public void alleTeamsAktivieren() throws GenerateException {
+		delegate.alleTeamsAktivieren();
 	}
 
 	@Override

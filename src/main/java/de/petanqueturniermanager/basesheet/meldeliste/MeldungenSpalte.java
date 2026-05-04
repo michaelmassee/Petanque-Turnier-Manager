@@ -71,7 +71,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final WeakRefHelper<ISheet> sheetWkRef;
 
 	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader,
-			int spalteMeldungNameWidth, int minAnzZeilen) {
+			int spalteMeldungNameWidth, int minAnzZeilen, int ersteMeldungNameSpalteOffset) {
 		checkNotNull(iSheet);
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
@@ -84,7 +84,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		this.anzZeilenInHeader = anzZeilenInHeader;
 		this.spalteMeldungNameWidth = spalteMeldungNameWidth;
 		this.meldungNrSpalte = spielerNrSpalte;
-		this.ersteMeldungNameSpalte = spielerNrSpalte + 1;
+		this.ersteMeldungNameSpalte = spielerNrSpalte + ersteMeldungNameSpalteOffset;
 		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.formation.getAnzSpieler() - 1;
 		this.sheetWkRef = new WeakRefHelper<>(iSheet);
 		this.minAnzZeilen = minAnzZeilen;
@@ -445,6 +445,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		private int anzZeilenInHeader = 1; // default ein zeile
 		private int spalteMeldungNameWidth = DEFAULT_MELDUNG_NAME_WIDTH;
 		private int minAnzZeilen = 1;
+		private int ersteMeldungNameSpalteOffset = 1; // default offset
 
 		private ISheet iSheet;
 
@@ -483,9 +484,14 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			return this;
 		}
 
+		public Bldr ersteMeldungNameSpalteOffset(int offset) {
+			this.ersteMeldungNameSpalteOffset = offset;
+			return this;
+		}
+
 		public <TL, T> MeldungenSpalte<TL, T> build() {
 			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader,
-					spalteMeldungNameWidth, minAnzZeilen);
+					spalteMeldungNameWidth, minAnzZeilen, ersteMeldungNameSpalteOffset);
 		}
 	}
 

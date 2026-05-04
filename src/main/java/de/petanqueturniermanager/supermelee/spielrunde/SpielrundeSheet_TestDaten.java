@@ -26,7 +26,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 import de.petanqueturniermanager.supermelee.meldeliste.AnmeldungenSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.meldeliste.TeilnehmerSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRangliste_Validator;
@@ -39,7 +39,7 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 	private final MeldeListeSheet_TestDaten meldeListeTestDatenGenerator;
 	private final SpieltagRanglisteSheet spieltagRanglisteSheet;
 	private final AnmeldungenSheet anmeldungenSheet;
-	private final TeilnehmerSheet teilnehmerSheet;
+	private final SupermeleeTeilnehmerSheet teilnehmerSheet;
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
@@ -53,7 +53,7 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 		meldeListeTestDatenGenerator = new MeldeListeSheet_TestDaten(workingSpreadsheet);
 		spieltagRanglisteSheet = new SpieltagRanglisteSheet(workingSpreadsheet);
 		anmeldungenSheet = new AnmeldungenSheet(workingSpreadsheet);
-		teilnehmerSheet = new TeilnehmerSheet(workingSpreadsheet);
+		teilnehmerSheet = new SupermeleeTeilnehmerSheet(workingSpreadsheet);
 	}
 
 	@VisibleForTesting

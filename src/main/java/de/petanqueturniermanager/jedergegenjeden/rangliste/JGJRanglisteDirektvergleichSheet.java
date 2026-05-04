@@ -68,9 +68,13 @@ public class JGJRanglisteDirektvergleichSheet extends SheetRunner implements ISh
 	public JGJRanglisteDirektvergleichSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-RanglisteSheet");
 		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
+		Formation formation = konfigurationSheet.getMeldeListeFormation();
+		int offset = konfigurationSheet.isMeldeListeTeamnameAnzeigen() ? 2 : 1;
 		meldungenSpalte = MeldungenSpalte.builder().spalteMeldungNameWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH)
-				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE).sheet(this)
-				.formation(Formation.TETE).anzZeilenInHeader(1).build();
+				.ersteDatenZiele(ERSTE_DATEN_ZEILE).spielerNrSpalte(TEAM_NR_SPALTE)
+				.ersteMeldungNameSpalteOffset(offset)
+				.sheet(this)
+				.formation(formation).anzZeilenInHeader(1).build();
 		meldeListe = initMeldeListeSheet(workingSpreadsheet);
 
 	}

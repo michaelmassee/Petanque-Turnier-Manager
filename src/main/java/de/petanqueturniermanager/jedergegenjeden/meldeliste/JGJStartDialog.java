@@ -9,10 +9,12 @@ import java.util.Optional;
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
@@ -24,22 +26,32 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 
 /**
  * Modaler Start-Dialog für neue JGJ-Meldelisten.
  * <p>
  * Abgefragt wird:
  * <ul>
- * <li>Gruppenname (Textfeld)</li>
+ * <li>Formation: Tête / Doublette / Triplette (Radio-Buttons)</li>
+ * <li>Teamname anzeigen (Checkbox)</li>
+ * <li>Vereinsname anzeigen (Checkbox)</li>
+ * <li>Anzeige im Spielplan: Teamnummer / Teamname (Radio-Buttons)</li>
  * </ul>
  */
 public class JGJStartDialog {
 
 	/** Ergebnis des Dialogs. */
-	public record StartParameter(String gruppenname) {
+	public record StartParameter(Formation formation,
+		boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
+		SpielplanTeamAnzeige spielplanTeamAnzeige,
+		int gruppengroesse,
+		boolean mitRueckrunde) {
 	}
 
 	private final WorkingSpreadsheet workingSpreadsheet;
@@ -66,9 +78,9 @@ public class JGJStartDialog {
 		XPropertySet dlgProps = Lo.qi(XPropertySet.class, dialogModel);
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
-		dlgProps.setPropertyValue("Width", Integer.valueOf(200));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(75));
-		dlgProps.setPropertyValue("Title", "Neue JGJ-Meldeliste");
+		dlgProps.setPropertyValue("Width", Integer.valueOf(170));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(218));
+		dlgProps.setPropertyValue("Title", I18n.get("dialog.jgj.title.neue.meldeliste"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
 		// 2. Dialog-Control anlegen
@@ -81,13 +93,41 @@ public class JGJStartDialog {
 		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
-		addLabel(xMSF, cont, "lblGruppenname", "Gruppenname:", 8, 8, 184, 10);
-		addEditField(xMSF, cont, "editGruppenname", 8, 22, 184, 14);
+		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.jgj.label.formation"), 8, 8, 100, 10);
+		addRadioButton(xMSF, cont, "radioTete",
+				Formation.TETE.getBezeichnung(), 8, 20, 150, 10, true);
+		addRadioButton(xMSF, cont, "radioDoublette",
+				Formation.DOUBLETTE.getBezeichnung(), 8, 32, 150, 10, false);
+		addRadioButton(xMSF, cont, "radioTriplette",
+				Formation.TRIPLETTE.getBezeichnung(), 8, 44, 150, 10, false);
 
-		addFixedLine(xMSF, cont, "sep1", 5, 42, 190, 2);
+		addFixedLine(xMSF, cont, "sep1", 5, 58, 160, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 42, 52, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 108, 52, 60, 14);
+		addCheckBox(xMSF, cont, "cbTeamname",
+				I18n.get("dialog.jgj.label.teamname"), 8, 64, 150, 10, false);
+		addCheckBox(xMSF, cont, "cbVereinsname",
+				I18n.get("dialog.jgj.label.vereinsname"), 8, 78, 150, 10, false);
+
+		addFixedLine(xMSF, cont, "sep2", 5, 92, 160, 2);
+
+		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 96, 150, 10);
+		addRadioButton(xMSF, cont, "radioSpielplanNr",
+				I18n.get("dialog.jgj.spielplan.teamnummer"), 8, 108, 150, 10, true);
+		addRadioButton(xMSF, cont, "radioSpielplanName",
+				I18n.get("dialog.jgj.spielplan.teamname"), 8, 120, 150, 10, false);
+
+		addFixedLine(xMSF, cont, "sep3", 5, 134, 160, 2);
+
+		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 138, 150, 10);
+		addEditField(xMSF, cont, "editGruppengroesse", 8, 150, 60, 14);
+
+		addCheckBox(xMSF, cont, "cbRueckrunde",
+				I18n.get("dialog.jgj.label.rueckrunde"), 8, 168, 150, 12, false);
+
+		addFixedLine(xMSF, cont, "sep4", 5, 184, 160, 2);
+
+		addButton(xMSF, cont, "btnOk", "OK", 30, 198, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 198, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -126,8 +166,14 @@ public class JGJStartDialog {
 
 		Optional<StartParameter> result = Optional.empty();
 		if (okPressed) {
-			String gruppenname = readEditText(xcc, "editGruppenname");
-			result = Optional.of(new StartParameter(gruppenname));
+			Formation formation = readFormation(xcc);
+			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
+			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
+			SpielplanTeamAnzeige spielplanAnzeige = isRadioSelected(xcc, "radioSpielplanName")
+					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
+			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
+			boolean mitRueckrunde = readCheckBoxState(xcc, "cbRueckrunde");
+			result = Optional.of(new StartParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige, gruppengroesse, mitRueckrunde));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();
@@ -140,6 +186,14 @@ public class JGJStartDialog {
 	// Hilfsmethoden – Zustand auslesen
 	// ---------------------------------------------------------------
 
+	private int parseGruppengroesse(String text) {
+		try {
+			return Math.max(0, Integer.parseInt(text.trim()));
+		} catch (NumberFormatException e) {
+			return 0;
+		}
+	}
+
 	private String readEditText(XControlContainer xcc, String name) {
 		XControl ctrl = xcc.getControl(name);
 		if (ctrl == null) {
@@ -147,6 +201,34 @@ public class JGJStartDialog {
 		}
 		XTextComponent text = Lo.qi(XTextComponent.class, ctrl);
 		return text != null ? text.getText() : "";
+	}
+
+	private Formation readFormation(XControlContainer xcc) {
+		if (isRadioSelected(xcc, "radioDoublette")) {
+			return Formation.DOUBLETTE;
+		}
+		if (isRadioSelected(xcc, "radioTriplette")) {
+			return Formation.TRIPLETTE;
+		}
+		return Formation.TETE;
+	}
+
+	private boolean isRadioSelected(XControlContainer xcc, String name) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return false;
+		}
+		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
+		return radio != null && radio.getState();
+	}
+
+	private boolean readCheckBoxState(XControlContainer xcc, String name) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return false;
+		}
+		XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
+		return cb != null && cb.getState() == 1;
 	}
 
 	private void attachButtonListener(XControlContainer xcc, String name, XActionListener listener) {
@@ -184,6 +266,34 @@ public class JGJStartDialog {
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("Text", "");
+		cont.insertByName(name, model);
+	}
+
+	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String label, int x, int y, int w, int h, boolean selected)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Label", label);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
+		props.setPropertyValue("State", (short) (selected ? 1 : 0));
+		cont.insertByName(name, model);
+	}
+
+	private void addCheckBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String label, int x, int y, int w, int h, boolean checked)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Label", label);
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
+		props.setPropertyValue("State", (short) (checked ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 

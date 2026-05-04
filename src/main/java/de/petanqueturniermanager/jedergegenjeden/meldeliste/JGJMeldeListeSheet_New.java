@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.IMeldeliste;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -23,6 +24,7 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -39,7 +41,7 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 
 	public JGJMeldeListeSheet_New(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Meldeliste");
-		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ, METADATA_SCHLUESSEL);
+		delegate = new JGJMeldeListeDelegate(this, workingSpreadsheet, TurnierSystem.JGJ);
 	}
 
 	@Override
@@ -75,7 +77,7 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 
 	@Override
 	public TeamMeldungen getAktiveMeldungen() throws GenerateException {
-		return getAlleMeldungen();
+		return delegate.getAktiveMeldungen();
 	}
 
 	@Override
@@ -143,14 +145,32 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 	}
 
 	/**
-	 * Erstellt die Meldeliste mit dem angegebenen Gruppenname ohne Dialog.
-	 * Wird von Test-Klassen aufgerufen, um den Start-Dialog zu umgehen.
+	 * Erstellt die Meldeliste mit den angegebenen Parametern ohne Dialog.
+	 * Wird auch von TestDaten-Klassen aufgerufen.
 	 */
-	public void createMeldelisteWithParams(String gruppenname) throws GenerateException {
+	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
+			boolean vereinsnameAnzeigen, SpielplanTeamAnzeige spielplanTeamAnzeige) throws GenerateException {
+		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanTeamAnzeige, 0, false);
+	}
+
+	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
+			boolean vereinsnameAnzeigen, SpielplanTeamAnzeige spielplanTeamAnzeige, int gruppengroesse)
+			throws GenerateException {
+		createMeldelisteWithParams(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanTeamAnzeige, gruppengroesse, false);
+	}
+
+	public void createMeldelisteWithParams(Formation formation, boolean teamnameAnzeigen,
+			boolean vereinsnameAnzeigen, SpielplanTeamAnzeige spielplanTeamAnzeige,
+			int gruppengroesse, boolean mitRueckrunde) throws GenerateException {
 		var neuesSheet = NewSheet.from(this, SheetNamen.meldeliste(), METADATA_SCHLUESSEL)
 				.pos(DefaultSheetPos.MELDELISTE).hideGrid().tabColor(getKonfigurationSheet().getMeldelisteTabFarbe()).setDocVersionWhenNew().create();
 		if (neuesSheet.isDidCreate()) {
-			getKonfigurationSheet().setGruppenname(gruppenname);
+			getKonfigurationSheet().setMeldeListeFormation(formation);
+			getKonfigurationSheet().setMeldeListeTeamnameAnzeigen(teamnameAnzeigen);
+			getKonfigurationSheet().setMeldeListeVereinsnameAnzeigen(vereinsnameAnzeigen);
+			getKonfigurationSheet().setSpielplanTeamAnzeige(spielplanTeamAnzeige);
+			getKonfigurationSheet().setGruppengroesse(gruppengroesse);
+			getKonfigurationSheet().setRueckrunde(mitRueckrunde);
 			delegate.upDateSheet();
 		}
 	}
@@ -185,7 +205,9 @@ public class JGJMeldeListeSheet_New extends SheetRunner implements IMeldeliste<T
 		getKonfigurationSheet().update();
 
 		getSheetHelper().removeAllSheetsExclude();
-		createMeldelisteWithParams(param.get().gruppenname());
+		createMeldelisteWithParams(param.get().formation(),
+				param.get().teamnameAnzeigen(), param.get().vereinsnameAnzeigen(),
+				param.get().spielplanTeamAnzeige(), param.get().gruppengroesse(), param.get().mitRueckrunde());
 	}
 
 }

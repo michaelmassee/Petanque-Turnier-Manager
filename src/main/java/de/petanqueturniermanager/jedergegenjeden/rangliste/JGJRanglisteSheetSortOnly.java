@@ -1,34 +1,16 @@
 package de.petanqueturniermanager.jedergegenjeden.rangliste;
 
-import com.sun.star.sheet.XSpreadsheet;
-
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 
 /**
- * Erstellung 20.06.2022 / Michael Massee
+ * Neu-Berechnung der JGJ-Rangliste ohne vollständigen Neuaufbau des Sheets.
+ * <p>
+ * Delegiert an {@link JGJRanglisteSheetUpdate}: liest den Spielplan neu ein,
+ * berechnet Statistiken und sortiert – ohne das Sheet zu löschen und neu anzulegen.
  */
+public class JGJRanglisteSheetSortOnly extends JGJRanglisteSheetUpdate {
 
-public class JGJRanglisteSheetSortOnly extends JGJRanglisteSheet {
-
-	public JGJRanglisteSheetSortOnly(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet);
-	}
-
-	@Override
-	protected void doRun() throws GenerateException {
-		XSpreadsheet sheet = getXSpreadSheet();
-		if (sheet == null) {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("msg.caption.fehler.sortieren.rangliste"))
-					.message(I18n.get("msg.text.keine.rangliste")).show();
-		} else {
-			getSheetHelper().setActiveSheet(sheet);
-			getRangListeSorter().doSort();
-		}
-	}
-
+    public JGJRanglisteSheetSortOnly(WorkingSpreadsheet workingSpreadsheet) {
+        super(workingSpreadsheet);
+    }
 }

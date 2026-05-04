@@ -12,26 +12,19 @@ import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpalte;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 
 public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
 	private static final Logger logger = LogManager.getLogger(JGJRanglisteSheetUITest.class);
 
-	private DocumentPropertiesHelper docPropHelper;
-
 	@BeforeEach
 	public void testMeldeListeErstelln() throws GenerateException {
 		JGJTestMeldeListeErstellen testMeldeListeErstellen = new JGJTestMeldeListeErstellen(wkingSpreadsheet, doc);
-
 		testMeldeListeErstellen.run();
-		this.docPropHelper = new DocumentPropertiesHelper(wkingSpreadsheet);
-		docPropHelper.setStringProperty(JGJPropertiesSpalte.KONFIG_PROP_NAME_GRUPPE, "Gruppe Test");
 	}
 
 	@Test
@@ -100,8 +93,8 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
 	private RangeHelper getRanglisteRange(JGJRanglisteSheet ranglist) throws GenerateException {
 		RangePosition rangeSplrErg = RangePosition.from(ranglist.getErsteSpalte(), ranglist.getErsteDatenZiele(),
-				ranglist.getManuellSortSpalte() + 3, ranglist.sucheLetzteZeileMitSpielerNummer());
-		assertThat(rangeSplrErg.getAddress()).isEqualTo("A4:BD8");
+				ranglist.validateSpalte(), ranglist.sucheLetzteZeileMitSpielerNummer());
+		assertThat(rangeSplrErg.getAddress()).isEqualTo("A3:J7");
 		RangeHelper rngHlpr = RangeHelper.from(ranglist.getXSpreadSheet(),
 				wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeSplrErg);
 		return rngHlpr;

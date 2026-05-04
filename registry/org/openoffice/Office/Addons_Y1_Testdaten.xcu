@@ -112,14 +112,30 @@
 								<node oor:name="Submenu">
 									<node oor:name="A2A1" oor:op="replace">
 										<prop oor:name="Title">
-											<value xml:lang="de">Beispielturnier</value>
-											<value xml:lang="en">Example Tournament</value>
-											<value xml:lang="es">Torneo de ejemplo</value>
-											<value xml:lang="fr">Tournoi exemple</value>
-											<value xml:lang="nl">Voorbeeldtoernooi</value>
+											<value xml:lang="de">Beispielturnier (10 Tête)</value>
+											<value xml:lang="en">Example Tournament (10 Tête)</value>
+											<value xml:lang="es">Torneo de ejemplo (10 Tête)</value>
+											<value xml:lang="fr">Tournoi exemple (10 Tête)</value>
+											<value xml:lang="nl">Voorbeeldtoernooi (10 Tête)</value>
 										</prop>
 										<prop oor:name="URL">
 											<value>ptm:jgj_testdaten_turnier</value>
+										</prop>
+										<prop oor:name="Target" oor:type="xs:string">
+											<value>_self</value>
+										</prop>
+									</node>
+
+									<node oor:name="A2A2" oor:op="replace">
+										<prop oor:name="Title">
+											<value xml:lang="de">Beispielturnier (17 Doublette)</value>
+											<value xml:lang="en">Example Tournament (17 Doublette)</value>
+											<value xml:lang="es">Torneo de ejemplo (17 Doublette)</value>
+											<value xml:lang="fr">Tournoi exemple (17 Doublette)</value>
+											<value xml:lang="nl">Voorbeeldtoernooi (17 Doublette)</value>
+										</prop>
+										<prop oor:name="URL">
+											<value>ptm:jgj_testdaten_turnier_doublette_17</value>
 										</prop>
 										<prop oor:name="Target" oor:type="xs:string">
 											<value>_self</value>

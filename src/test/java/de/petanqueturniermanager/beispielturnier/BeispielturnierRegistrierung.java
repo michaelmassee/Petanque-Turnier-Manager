@@ -8,6 +8,7 @@ import java.util.List;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJDoublette17TurnierTestDaten;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
 import de.petanqueturniermanager.ko.KoCadrageTurnierTestDaten;
 import de.petanqueturniermanager.ko.Ko16TeamsTurnierTestDaten;
@@ -122,13 +123,22 @@ public final class BeispielturnierRegistrierung {
                         "KoTurnierTestDaten.java"),
 
                 new Eintrag(
-                        "Jeder gegen Jeden (10 Teams)",
+                        "Jeder gegen Jeden (10 Teams, Tête)",
                         ws -> new JGJTurnierTestDaten(ws).generate(),
                         List.of(
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE,
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
                                 SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE),
                         "JGJTurnierTestDaten.java"),
+
+                new Eintrag(
+                        "Jeder gegen Jeden (17 Teams, Doublette, Gruppen à 6)",
+                        ws -> new JGJDoublette17TurnierTestDaten(ws).generate(),
+                        List.of(
+                                SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE,
+                                SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN,
+                                SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE),
+                        "JGJDoublette17TurnierTestDaten.java"),
 
                 new Eintrag(
                         "Supermelee (5 Spieltage)",

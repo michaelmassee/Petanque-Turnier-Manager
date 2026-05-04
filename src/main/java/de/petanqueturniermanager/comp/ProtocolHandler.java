@@ -79,6 +79,7 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektver
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJDoublette17TurnierTestDaten;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
@@ -129,7 +130,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpie
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_TestDaten;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.meldeliste.TeilnehmerSheet;
+import de.petanqueturniermanager.supermelee.meldeliste.SupermeleeTeilnehmerSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundePlan;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
@@ -210,6 +211,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_RANGLISTE = "jgj_rangliste";
 	public static final String CMD_JGJ_DIREKTVERGLEICH = "jgj_direktvergleich";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER = "jgj_testdaten_turnier";
+	public static final String CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17 = "jgj_testdaten_turnier_doublette_17";
 	// Schweizer
 	public static final String CMD_SCHWEIZER_START = "schweizer_start";
 	public static final String CMD_SCHWEIZER_NEUE_MELDELISTE = "schweizer_neue_meldeliste";
@@ -490,7 +492,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new AnmeldungenSheet(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			case CMD_TEILNEHMER:
-				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new SupermeleeTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_NAECHSTE_SPIELTAG:
 				new MeldeListeSheet_NeuerSpieltag(ws).testTurnierVorhanden().backUpDocument().start();
@@ -575,7 +577,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new JGJMeldeListeSheet_Update(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			case CMD_JGJ_TEILNEHMER:
-				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_SPIELPLAN:
 				new JGJSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
@@ -591,6 +593,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER:
 				new JGJTurnierTestDaten(ws).start();
+				break;
+			case CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17:
+				new JGJDoublette17TurnierTestDaten(ws).start();
 				break;
 			// ------------------------------
 			// Schweizer System
@@ -610,7 +615,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SchweizerMeldeListeSheetUpdate(ws).start();
 				break;
 			case CMD_SCHWEIZER_TEILNEHMER:
-				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
 				new SchweizerSpielrundeSheetUpdate(ws).start();
@@ -681,7 +686,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KoMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			case CMD_KO_TEILNEHMER:
-				new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_KO_TURNIERBAUM:
 				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().start();
@@ -1122,7 +1127,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
 				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER            -> ts == TurnierSystem.JGJ;
 			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
-			case CMD_JGJ_TESTDATEN_TURNIER                  -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
+			case CMD_JGJ_TESTDATEN_TURNIER,
+				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
 			// Maastrichter

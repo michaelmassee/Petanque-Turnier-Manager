@@ -3,10 +3,12 @@ package de.petanqueturniermanager.jedergegenjeden.konfiguration;
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.konfiguration.IPropertiesSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
+import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -84,16 +86,6 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	}
 
 	@Override
-	public String getGruppenname() throws GenerateException {
-		return propertiesSpalte.getGruppenname();
-	}
-
-	@Override
-	public void setGruppenname(String name) throws GenerateException {
-		propertiesSpalte.setGruppenname(name);
-	}
-
-	@Override
 	public Integer getFreispielPunktePlus() {
 		return propertiesSpalte.getFreispielPunktePlus();
 	}
@@ -101,6 +93,66 @@ public class JGJKonfigurationSheet extends BaseKonfigurationSheet implements IJG
 	@Override
 	public Integer getFreispielPunkteMinus() {
 		return propertiesSpalte.getFreispielPunkteMinus();
+	}
+
+	@Override
+	public Formation getMeldeListeFormation() {
+		return propertiesSpalte.getMeldeListeFormation();
+	}
+
+	@Override
+	public void setMeldeListeFormation(Formation formation) {
+		propertiesSpalte.setMeldeListeFormation(formation);
+	}
+
+	@Override
+	public boolean isMeldeListeTeamnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeTeamnameAnzeigen();
+	}
+
+	@Override
+	public void setMeldeListeTeamnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeTeamnameAnzeigen(anzeigen);
+	}
+
+	@Override
+	public boolean isMeldeListeVereinsnameAnzeigen() {
+		return propertiesSpalte.isMeldeListeVereinsnameAnzeigen();
+	}
+
+	@Override
+	public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
+		propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+	}
+
+	@Override
+	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
+		return propertiesSpalte.getSpielplanTeamAnzeige();
+	}
+
+	@Override
+	public void setSpielplanTeamAnzeige(SpielplanTeamAnzeige anzeige) {
+		propertiesSpalte.setSpielplanTeamAnzeige(anzeige);
+	}
+
+	@Override
+	public int getGruppengroesse() {
+		return propertiesSpalte.getGruppengroesse();
+	}
+
+	@Override
+	public void setGruppengroesse(int groesse) {
+		propertiesSpalte.setGruppengroesse(groesse);
+	}
+
+	@Override
+	public boolean isRueckrunde() {
+		return propertiesSpalte.isRueckrunde();
+	}
+
+	@Override
+	public void setRueckrunde(boolean mitRueckrunde) {
+		propertiesSpalte.setRueckrunde(mitRueckrunde);
 	}
 
 }

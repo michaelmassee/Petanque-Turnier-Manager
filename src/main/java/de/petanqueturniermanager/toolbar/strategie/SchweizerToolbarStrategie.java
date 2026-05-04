@@ -7,7 +7,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
-import de.petanqueturniermanager.schweizer.meldeliste.TeilnehmerSheet;
+import de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet;
 import de.petanqueturniermanager.toolbar.ITurnierSystemToolbarStrategie;
 
 /**
@@ -29,7 +29,7 @@ public class SchweizerToolbarStrategie implements ITurnierSystemToolbarStrategie
 
     @Override
     public void teilnehmer(WorkingSpreadsheet ws) throws Exception {
-        new TeilnehmerSheet(ws).testTurnierVorhanden().start();
+        new SchweizerTeilnehmerSheet(ws).testTurnierVorhanden().start();
     }
 
     @Override

@@ -40,7 +40,7 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
  * Bereinigte Teilnehmerliste für das Schweizer Turniersystem – als Aushang und Webseite.
  * Listet alle aktiven Teams in einem mehrspaltigem Raster auf.
  */
-public class TeilnehmerSheet extends SheetRunner implements ISheet {
+public class SchweizerTeilnehmerSheet extends SheetRunner implements ISheet {
 
     public static final int ERSTE_DATEN_ZEILE = 1;
     public static final int TEAM_NR_SPALTE = 0;
@@ -52,7 +52,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
     private final SchweizerKonfigurationSheet konfigurationSheet;
     private final SchweizerMeldeListeSheetUpdate meldeliste;
 
-    public TeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
+    public SchweizerTeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.SCHWEIZER, "Schweizer-Teilnehmer");
         konfigurationSheet = new SchweizerKonfigurationSheet(workingSpreadsheet);
         meldeliste = new SchweizerMeldeListeSheetUpdate(workingSpreadsheet);

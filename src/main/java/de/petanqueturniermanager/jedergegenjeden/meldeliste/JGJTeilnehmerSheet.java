@@ -1,11 +1,10 @@
-package de.petanqueturniermanager.ko.meldeliste;
+package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -27,35 +26,33 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * Bereinigte Teilnehmerliste für das K.-O. Turniersystem – als Aushang und Webseite.
- * Listet alle aktiven Teams in einem mehrspaltigem Raster auf.
+ * Bereinigte Teilnehmerliste für das Jeder-gegen-Jeden Turniersystem – als Aushang und Webseite.
+ * Listet alle Teams in einem mehrspaltigem Raster auf.
  */
-public class TeilnehmerSheet extends SheetRunner implements ISheet {
+public class JGJTeilnehmerSheet extends SheetRunner implements ISheet {
 
     public static final int ERSTE_DATEN_ZEILE = 1;
     public static final int TEAM_NR_SPALTE = 0;
     public static final int TEAM_NAME_SPALTE = 1;
     public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
 
-    private static final int TEAM_NAME_SPALTE_WIDTH = 6000;
+    private final JGJKonfigurationSheet konfigurationSheet;
+    private final JGJMeldeListeSheet_Update meldeliste;
 
-    private final KoKonfigurationSheet konfigurationSheet;
-    private final KoMeldeListeSheetUpdate meldeliste;
-
-    public TeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
-        super(workingSpreadsheet, TurnierSystem.KO, "KO-Teilnehmer");
-        konfigurationSheet = new KoKonfigurationSheet(workingSpreadsheet);
-        meldeliste = new KoMeldeListeSheetUpdate(workingSpreadsheet);
+    public JGJTeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
+        super(workingSpreadsheet, TurnierSystem.JGJ, "JGJ-Teilnehmer");
+        konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
+        meldeliste = new JGJMeldeListeSheet_Update(workingSpreadsheet);
     }
 
     @Override
-    protected KoKonfigurationSheet getKonfigurationSheet() {
+    protected JGJKonfigurationSheet getKonfigurationSheet() {
         return konfigurationSheet;
     }
 
@@ -74,20 +71,19 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
     @Override
     protected void doRun() throws GenerateException {
-        meldeliste.upDateSheet();
         generate();
     }
 
     public void generate() throws GenerateException {
         NewSheet.from(this, SheetNamen.teilnehmer(), SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
-                .tabColor(getKonfigurationSheet().getTeilnehmerTabFarbe()).pos(DefaultSheetPos.KO_TURNIERBAUM)
+                .tabColor(getKonfigurationSheet().getTeilnehmerTabFarbe()).pos(DefaultSheetPos.JGJ_WORK)
                 .forceCreate().hideGrid().setActiv().create();
 
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
-        meldeliste.doSort(meldeliste.getTeamnameSpalte(), true);
-        TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
+        meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
+        TeamMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
 
-        if (aktiveMeldungen.size() == 0) {
+        if (alleMeldungen.size() == 0) {
             MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
                     .caption(I18n.get("msg.caption.teilnehmer.fehler"))
                     .message(I18n.get("msg.text.keine.meldungen")).show();
@@ -100,7 +96,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
                 .setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
 
         ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
-                .setWidth(TEAM_NAME_SPALTE_WIDTH);
+                .setWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH);
         StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE))
                 .setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true);
 
@@ -109,11 +105,11 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
         int maxAnzTeilnehmerInSpalte = konfigurationSheet.getMaxAnzTeilnehmerInSpalte();
         spalteFormat(teamNrVal, celPropNr, nameFormula, celPropName);
 
-        processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", aktiveMeldungen.size());
+        processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", alleMeldungen.size());
 
-        for (Team team : aktiveMeldungen.getTeamList()) {
+        for (Team team : alleMeldungen.getTeamList()) {
             teamNrVal.setValue((double) team.getNr());
-            nameFormula.setValue(MeldeListeHelper.teamNameVlookup(teamNrVal.getPos().getAddress()));
+            nameFormula.setValue(meldeliste.formulaSverweisSpielernamen(teamNrVal.getPos().getAddress()));
 
             getSheetHelper().setNumberValueInCell(teamNrVal);
             getSheetHelper().setFormulaInCell(nameFormula);
@@ -139,7 +135,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 
         StringCellValue footer = StringCellValue.from(getXSpreadSheet(),
                 Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzTeamsInSpalte)).zeilePlusEins()
-                .setValue(I18n.get("teilnehmer.footer.anzahl", aktiveMeldungen.size()))
+                .setValue(I18n.get("teilnehmer.footer.anzahl", alleMeldungen.size()))
                 .setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);

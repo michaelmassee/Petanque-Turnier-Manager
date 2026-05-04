@@ -85,7 +85,7 @@ public class SheetBaumOrganisierer {
                 // Diese Gruppen erscheinen auf oberster Ebene (keine Einrückung)
                 var einrueckung = (gruppe == SheetGruppe.SUPERMELEE || gruppe == SheetGruppe.LIGA
                         || gruppe == SheetGruppe.SCHWEIZER || gruppe == SheetGruppe.KO
-                        || gruppe == SheetGruppe.FORMULEX) ? "" : "  ";
+                        || gruppe == SheetGruppe.FORMULEX || gruppe == SheetGruppe.JGJ) ? "" : "  ";
                 var knoten = knoten(sheet, schluessel, einrueckung);
                 if (knoten != null) {
                     gruppenMap.computeIfAbsent(gruppe, g -> new ArrayList<>()).add(knoten);
@@ -146,6 +146,10 @@ public class SheetBaumOrganisierer {
             } else if (gruppe == SheetGruppe.FORMULEX) {
                 var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
                 ergebnis.addAll(formulexEintraege(knoten, allgemeinKnoten));
+                verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
+            } else if (gruppe == SheetGruppe.JGJ) {
+                var allgemeinKnoten = gruppenMap.getOrDefault(SheetGruppe.ALLGEMEIN, List.of());
+                ergebnis.addAll(jgjEintraege(knoten, allgemeinKnoten));
                 verbrauchteGruppen.add(SheetGruppe.ALLGEMEIN);
             } else {
                 var expandiert = !kollabiert.contains(gruppe);
@@ -290,6 +294,40 @@ public class SheetBaumOrganisierer {
 
         knoten.stream()
                 .filter(k -> SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        return ergebnis;
+    }
+
+    /**
+     * Baut die flache Eintrags-Liste für JGJ-Blätter auf (ohne Gruppen-Header):
+     * Meldeliste → Teilnehmer → Spielplan → Rangliste → Direktvergleich.
+     */
+    private List<BlattBaumEintrag> jgjEintraege(List<BlattKnoten> knoten, List<BlattKnoten> allgemeinKnoten) {
+        var ergebnis = new ArrayList<BlattBaumEintrag>();
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_MELDELISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        allgemeinKnoten.stream()
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_SPIELPLAN.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE.equals(k.metadatenSchluessel()))
+                .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
+                .forEach(ergebnis::add);
+
+        knoten.stream()
+                .filter(k -> SheetMetadataHelper.SCHLUESSEL_JGJ_DIREKTVERGLEICH.equals(k.metadatenSchluessel()))
                 .map(k -> new BlattKnoten(k.sheet(), blattName(k), k.metadatenSchluessel()))
                 .forEach(ergebnis::add);
 

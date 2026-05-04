@@ -116,7 +116,7 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 
 	/**
 	 * Sortiert die Meldeliste nach der angegebenen Spalte.
-	 * Wird von TeilnehmerSheet aufgerufen, um vor der Ausgabe nach Name zu sortieren.
+	 * Wird von KoTeilnehmerSheet aufgerufen, um vor der Ausgabe nach Name zu sortieren.
 	 */
 	public void doSort(int spalteNr, boolean aufsteigend) throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();

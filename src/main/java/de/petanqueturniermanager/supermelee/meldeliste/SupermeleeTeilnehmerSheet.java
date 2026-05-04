@@ -41,7 +41,7 @@ import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
-public class TeilnehmerSheet extends SheetRunner implements ISheet {
+public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
 
 	public static final int ERSTE_DATEN_ZEILE = 1;
 	public static final int SPIELER_NR_SPALTE = 0; // Spalte A=0
@@ -52,7 +52,7 @@ public class TeilnehmerSheet extends SheetRunner implements ISheet {
 	private final MeldeListeSheet_Update meldeliste;
 	private SpielTagNr spielTagNr = null;
 
-	public TeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
+	public SupermeleeTeilnehmerSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Teilnehmer");
 		konfigurationSheet = new SuperMeleeKonfigurationSheet(workingSpreadsheet);
 		meldeliste = new MeldeListeSheet_Update(workingSpreadsheet);

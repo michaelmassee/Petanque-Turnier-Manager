@@ -161,7 +161,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 
 	/**
 	 * Sortiert die Meldeliste nach der angegebenen Spalte.
-	 * Wird von TeilnehmerSheet aufgerufen, um vor der Ausgabe nach Name zu sortieren.
+	 * Wird von SchweizerTeilnehmerSheet aufgerufen, um vor der Ausgabe nach Name zu sortieren.
 	 */
 	public void doSort(int spalteNr, boolean aufsteigend) throws GenerateException {
 		XSpreadsheet xSheet = getXSpreadSheet();
