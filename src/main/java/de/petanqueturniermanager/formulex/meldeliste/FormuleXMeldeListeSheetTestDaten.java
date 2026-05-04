@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.formulex.meldeliste;
 
-import java.util.List;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -16,11 +14,11 @@ import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationShe
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -33,12 +31,14 @@ public class FormuleXMeldeListeSheetTestDaten extends SheetRunner implements ISh
     private final int anzTeams;
     private final FormuleXListeDelegate delegate;
     private final FormuleXMeldeListeSheetNew meldeListeNew;
+    private final TestnamenLoader testnamenLoader;
 
     public FormuleXMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet, int anzTeams) {
         super(workingSpreadsheet, TurnierSystem.FORMULEX, "Formule X Meldeliste Testdaten");
         this.anzTeams = anzTeams;
         delegate = new FormuleXListeDelegate(this);
         meldeListeNew = new FormuleXMeldeListeSheetNew(workingSpreadsheet);
+        testnamenLoader = new TestnamenLoader();
     }
 
     @Override
@@ -83,46 +83,35 @@ public class FormuleXMeldeListeSheetTestDaten extends SheetRunner implements ISh
     // ---------------------------------------------------------------
 
     private void teamNamenEinfuegen() throws GenerateException {
-        XSpreadsheet xSheet = meldeListeNew.getXSpreadSheet();
-        getSheetHelper().setActiveSheet(xSheet);
+        var konfiguration = delegate.getKonfigurationSheet();
+        int anzSpieler = konfiguration.getMeldeListeFormation().getAnzSpieler();
+        boolean teamnameAktiv = konfiguration.isMeldeListeTeamnameAnzeigen();
+        boolean vereinsnameAktiv = konfiguration.isMeldeListeVereinsnameAnzeigen();
+        var spieler = testnamenLoader.listeMitSpielerTestNamen(anzTeams * anzSpieler);
 
-        Formation formation = delegate.getKonfigurationSheet().getMeldeListeFormation();
-        int anzSpieler = formation.getAnzSpieler();
-        int ersteDatenZeile = meldeListeNew.getErsteDatenZeile();
-
-        List<String> namen = new TestnamenLoader().listeMitTestNamen(anzTeams * anzSpieler);
-
-        boolean teamnameAktiv = delegate.getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
-        int teamnameSpalte = delegate.getTeamnameSpalte();
-
+        var data = new RangeData();
         for (int i = 0; i < anzTeams; i++) {
-            SheetRunner.testDoCancelTask();
-            int zeile = ersteDatenZeile + i;
-
-            if (teamnameAktiv && teamnameSpalte >= 0) {
-                getSheetHelper().setStringValueInCell(
-                        StringCellValue.from(xSheet, Position.from(teamnameSpalte, zeile), "Team " + (i + 1)));
+            testDoCancelTask();
+            var zeile = data.addNewRow();
+            if (teamnameAktiv) {
+                zeile.newString("Team " + (i + 1));
             }
-
             for (int s = 0; s < anzSpieler; s++) {
-                int nameIndex = i * anzSpieler + s;
-                if (nameIndex >= namen.size()) {
-                    break;
+                var stn = spieler.get(i * anzSpieler + s);
+                zeile.newString(stn.vorname());
+                zeile.newString(stn.nachname());
+                if (vereinsnameAktiv) {
+                    zeile.newString("Verein " + ((i % 5) + 1));
                 }
-                String[] parts = namen.get(nameIndex).split(", ", 2);
-                String vorname = parts.length > 1 ? parts[1] : parts[0];
-                String nachname = parts.length > 1 ? parts[0] : "";
-
-                getSheetHelper().setStringValueInCell(
-                        StringCellValue.from(xSheet, Position.from(delegate.getVornameSpalte(s), zeile), vorname));
-                getSheetHelper().setStringValueInCell(
-                        StringCellValue.from(xSheet, Position.from(delegate.getNachnameSpalte(s), zeile), nachname));
             }
-
-            getSheetHelper().setNumberValueInCell(
-                    NumberCellValue.from(xSheet, Position.from(delegate.getAktivSpalte(), zeile),
-                            FormuleXListeDelegate.AKTIV_WERT_NIMMT_TEIL));
+            zeile.newEmpty(); // Setzposition
+            zeile.newInt(FormuleXListeDelegate.AKTIV_WERT_NIMMT_TEIL);
         }
+
+        var xSheet = meldeListeNew.getXSpreadSheet();
+        var startPos = Position.from(1, FormuleXListeDelegate.ERSTE_DATEN_ZEILE);
+        RangeHelper.from(xSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                data.getRangePosition(startPos)).setDataInRange(data);
     }
 
 }

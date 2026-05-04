@@ -57,6 +57,15 @@ public class TestnamenLoader {
 		return testNamen;
 	}
 
+	public record SpielerTestname(String vorname, String nachname) {}
+
+	public List<SpielerTestname> listeMitSpielerTestNamen(int anzahl) {
+		return listeMitTestNamen(anzahl).stream().map(name -> {
+			String[] parts = name.split(", ", 2);
+			return parts.length > 1 ? new SpielerTestname(parts[1], parts[0]) : new SpielerTestname(parts[0], "");
+		}).toList();
+	}
+
 	// Testdaten Generator
 	// http://migano.de/testdaten.php
 

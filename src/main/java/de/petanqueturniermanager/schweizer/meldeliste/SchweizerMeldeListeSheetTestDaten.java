@@ -1,7 +1,5 @@
 package de.petanqueturniermanager.schweizer.meldeliste;
 
-import java.util.List;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -12,15 +10,15 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.helper.i18n.SheetNamen;
 
 /**
  * Erzeugt eine Schweizer Meldeliste mit Testdaten (ohne Dialog).
@@ -137,43 +135,34 @@ public class SchweizerMeldeListeSheetTestDaten extends SheetRunner implements IS
 	}
 
 	private void testNamenEinfuegen() throws GenerateException {
-		XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
-		getSheetHelper().setActiveSheet(meldelisteSheet);
-
-		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
-		int anzSpielerProTeam = formation.getAnzSpieler();
+		int anzSpielerProTeam = getKonfigurationSheet().getMeldeListeFormation().getAnzSpieler();
 		boolean teamnameAktiv = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAktiv = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();
+		var spieler = testnamenLoader.listeMitSpielerTestNamen(anzTeams * anzSpielerProTeam);
 
-		// 2 Namen pro Spieler (Vorname + Nachname)
-		List<String> testNamen = testnamenLoader.listeMitTestNamen(anzTeams * anzSpielerProTeam * 2);
-
-		int nameIdx = 0;
-		for (int team = 0; team < anzTeams && nameIdx < testNamen.size(); team++) {
-			SheetRunner.testDoCancelTask();
-			int zeile = ERSTE_DATEN_ZEILE + team;
-
+		var data = new RangeData();
+		for (int team = 0; team < anzTeams; team++) {
+			testDoCancelTask();
+			var zeile = data.addNewRow();
 			if (teamnameAktiv) {
-				getSheetHelper().setStringValueInCell(StringCellValue.from(meldelisteSheet,
-						Position.from(getTeamnameSpalte(), zeile), "Team " + (team + 1)));
+				zeile.newString("Team " + (team + 1));
 			}
-
-			for (int s = 0; s < anzSpielerProTeam && nameIdx + 1 < testNamen.size(); s++) {
-				getSheetHelper().setStringValueInCell(StringCellValue.from(meldelisteSheet,
-						Position.from(getVornameSpalte(s), zeile), testNamen.get(nameIdx++)));
-				getSheetHelper().setStringValueInCell(StringCellValue.from(meldelisteSheet,
-						Position.from(getNachnameSpalte(s), zeile), testNamen.get(nameIdx++)));
+			for (int s = 0; s < anzSpielerProTeam; s++) {
+				var stn = spieler.get(team * anzSpielerProTeam + s);
+				zeile.newString(stn.vorname());
+				zeile.newString(stn.nachname());
 				if (vereinsnameAktiv) {
-					getSheetHelper().setStringValueInCell(StringCellValue.from(meldelisteSheet,
-							Position.from(getVereinsnameSpalte(s), zeile), "Verein " + ((team % 5) + 1)));
+					zeile.newString("Verein " + ((team % 5) + 1));
 				}
 			}
-
-			// Aktiv-Spalte: alle Teams nehmen teil
-			getSheetHelper().setNumberValueInCell(
-					NumberCellValue.from(meldelisteSheet, Position.from(getAktivSpalte(), zeile),
-							SchweizerListeDelegate.AKTIV_WERT_NIMMT_TEIL));
+			zeile.newEmpty(); // Setzposition
+			zeile.newInt(SchweizerListeDelegate.AKTIV_WERT_NIMMT_TEIL);
 		}
+
+		var xSheet = meldeListe.getXSpreadSheet();
+		var startPos = Position.from(1, ERSTE_DATEN_ZEILE);
+		RangeHelper.from(xSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				data.getRangePosition(startPos)).setDataInRange(data);
 
 		meldeListe.upDateSheet();
 	}

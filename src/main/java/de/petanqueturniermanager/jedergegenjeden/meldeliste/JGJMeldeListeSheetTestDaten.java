@@ -1,7 +1,5 @@
 package de.petanqueturniermanager.jedergegenjeden.meldeliste;
 
-import java.util.List;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -15,7 +13,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
@@ -73,28 +70,24 @@ public class JGJMeldeListeSheetTestDaten extends SheetRunner implements ISheet {
 
     private void testNamenEinfuegen() throws GenerateException {
         int anzSpielerProTeam = formation.getAnzSpieler();
-        // Format aus TestnamenLoader: "Nachname, Vorname"
-        List<String> testNamen = testnamenLoader.listeMitTestNamen(anzTeams * anzSpielerProTeam);
+        var spieler = testnamenLoader.listeMitSpielerTestNamen(anzTeams * anzSpielerProTeam);
 
-        RangeData data = new RangeData();
-        int nameIdx = 0;
+        var data = new RangeData();
         for (int team = 0; team < anzTeams; team++) {
             testDoCancelTask();
-            RowData zeile = data.addNewRow();
+            var zeile = data.addNewRow();
             zeile.newInt(team + 1);
             for (int s = 0; s < anzSpielerProTeam; s++) {
-                String[] parts = testNamen.get(nameIdx++).split(", ", 2);
-                String vorname = parts.length > 1 ? parts[1] : parts[0];
-                String nachname = parts.length > 1 ? parts[0] : "";
-                zeile.newString(vorname);
-                zeile.newString(nachname);
+                var stn = spieler.get(team * anzSpielerProTeam + s);
+                zeile.newString(stn.vorname());
+                zeile.newString(stn.nachname());
             }
             zeile.newEmpty(); // Setzposition
             zeile.newInt(JGJMeldeListeDelegate.AKTIV_WERT_NIMMT_TEIL);
         }
 
-        XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
-        Position startPos = Position.from(delegate.getTeamNrSpalte(), JGJMeldeListeDelegate.ERSTE_DATEN_ZEILE);
+        var meldelisteSheet = meldeListe.getXSpreadSheet();
+        var startPos = Position.from(delegate.getTeamNrSpalte(), JGJMeldeListeDelegate.ERSTE_DATEN_ZEILE);
         RangeHelper.from(meldelisteSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
                 data.getRangePosition(startPos)).setDataInRange(data);
 

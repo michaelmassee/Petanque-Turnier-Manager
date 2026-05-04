@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.maastrichter.meldeliste;
 
-import java.util.List;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -15,12 +13,12 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -36,6 +34,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 
 	private final MaastrichterMeldeListeSheetNew meldeListeNew;
 	private final MaastrichterKonfigurationSheet konfigSheet;
+	private final TestnamenLoader testnamenLoader;
 	private final int anzTeams;
 
 	public MaastrichterMeldeListeSheetTestDaten(WorkingSpreadsheet workingSpreadsheet) {
@@ -47,6 +46,7 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 		this.anzTeams = anzTeams;
 		meldeListeNew = new MaastrichterMeldeListeSheetNew(workingSpreadsheet);
 		konfigSheet = new MaastrichterKonfigurationSheet(workingSpreadsheet);
+		testnamenLoader = new TestnamenLoader();
 	}
 
 	@Override
@@ -92,47 +92,36 @@ public class MaastrichterMeldeListeSheetTestDaten extends SheetRunner implements
 
 	private void testNamenEinfuegen() throws GenerateException {
 		var meldeliste = new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
-		XSpreadsheet xSheet = getXSpreadSheet();
-
 		int ersteDatenZeile = meldeliste.getErsteDatenZiele();
-		Formation formation = konfigSheet.getMeldeListeFormation();
-		int anzSpielerProTeam = formation.getAnzSpieler();
+		int anzSpielerProTeam = konfigSheet.getMeldeListeFormation().getAnzSpieler();
 		boolean teamnameAktiv = konfigSheet.isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAktiv = konfigSheet.isMeldeListeVereinsnameAnzeigen();
+		var spieler = testnamenLoader.listeMitSpielerTestNamen(anzTeams * anzSpielerProTeam);
 
-		List<String> testNamen = new TestnamenLoader().listeMitTestNamen(anzTeams * anzSpielerProTeam * 2);
-
-		int nameIdx = 0;
-		for (int team = 0; team < anzTeams && nameIdx < testNamen.size(); team++) {
-			SheetRunner.testDoCancelTask();
-			int zeile = ersteDatenZeile + team;
-
-			// Teamnummer manuell vergeben
-			getSheetHelper().setNumberValueInCell(NumberCellValue.from(xSheet,
-					Position.from(meldeliste.getTeamNrSpalte(), zeile), team + 1));
-
+		var data = new RangeData();
+		for (int team = 0; team < anzTeams; team++) {
+			testDoCancelTask();
+			var zeile = data.addNewRow();
+			zeile.newInt(team + 1); // TeamNr - manuell vergeben
 			if (teamnameAktiv) {
-				getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet,
-						Position.from(meldeliste.getTeamnameSpalte(), zeile), "Team " + (team + 1)));
+				zeile.newString("Team " + (team + 1));
 			}
-
-			for (int s = 0; s < anzSpielerProTeam && nameIdx + 1 < testNamen.size(); s++) {
-				getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet,
-						Position.from(meldeliste.getVornameSpalte(s), zeile), testNamen.get(nameIdx++)));
-				getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet,
-						Position.from(meldeliste.getNachnameSpalte(s), zeile), testNamen.get(nameIdx++)));
+			for (int s = 0; s < anzSpielerProTeam; s++) {
+				var stn = spieler.get(team * anzSpielerProTeam + s);
+				zeile.newString(stn.vorname());
+				zeile.newString(stn.nachname());
 				if (vereinsnameAktiv) {
-					getSheetHelper().setStringValueInCell(StringCellValue.from(xSheet,
-							Position.from(meldeliste.getVereinsnameSpalte(s), zeile),
-							"Verein " + ((team % 5) + 1)));
+					zeile.newString("Verein " + ((team % 5) + 1));
 				}
 			}
-
-			// Aktiv-Spalte: alle Teams nehmen teil
-			getSheetHelper().setNumberValueInCell(NumberCellValue.from(xSheet,
-					Position.from(meldeliste.getAktivSpalte(), zeile),
-					MaastrichterMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL));
+			zeile.newEmpty(); // Setzposition
+			zeile.newInt(MaastrichterMeldeListeSheetUpdate.AKTIV_WERT_NIMMT_TEIL);
 		}
+
+		var xSheet = getXSpreadSheet();
+		var startPos = Position.from(0, ersteDatenZeile);
+		RangeHelper.from(xSheet, getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				data.getRangePosition(startPos)).setDataInRange(data);
 
 		// Formatierung + bedingte Färbung anwenden (kein doRun, keine Nummernvergabe nötig)
 		meldeliste.upDateSheet();
