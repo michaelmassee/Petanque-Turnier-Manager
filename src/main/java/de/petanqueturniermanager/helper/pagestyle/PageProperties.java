@@ -11,6 +11,8 @@ import com.sun.star.sheet.XHeaderFooterContent;
 
 public class PageProperties extends HashMap<String, Object> {
 
+	private static final long serialVersionUID = 1L;
+
 	// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1style_1_1PageProperties.html
 
 	public static final String HEADER_IS_ON = "HeaderIsOn";

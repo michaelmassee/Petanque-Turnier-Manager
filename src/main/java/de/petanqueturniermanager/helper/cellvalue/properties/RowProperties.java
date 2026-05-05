@@ -9,6 +9,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Zeile
 public class RowProperties extends CommonProperties<RowProperties> {
 
+	private static final long serialVersionUID = 1L;
+
 	public static final String ISVISIBLE = ColumnProperties.ISVISIBLE;
 
 	RowProperties() {

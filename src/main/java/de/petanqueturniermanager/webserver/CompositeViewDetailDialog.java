@@ -123,6 +123,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
 
     /** Interne Validierungsausnahme. */
     private static final class UngueltigeEingabeException extends Exception {
+        private static final long serialVersionUID = 1L;
         UngueltigeEingabeException(String meldung) { super(meldung); }
     }
 

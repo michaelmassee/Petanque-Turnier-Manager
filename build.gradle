@@ -17,6 +17,41 @@ java {
     withSourcesJar()
 }
 
+// ===================================================
+// Compiler-Lints (Block B1 aus architektur-robust-analyse.md)
+// ===================================================
+// Produktions-Source: -Xlint:all -Werror, mit expliziten Ausnahmen für
+// Kategorien, die heute noch Massen-Warnings produzieren (eigene Cleanup-
+// Tasks). Neue Warnings in NICHT-suppressten Kategorien brechen den Build.
+//
+// TODO Cleanup-Backlog (jeweils Suppression entfernen, sobald clean):
+//   classfile             — externe Lib (github-api 1.330) referenziert
+//                           SuppressFBWarnings/WithBridgeMethods, die nicht
+//                           im Classpath sind. Nicht reparierbar von uns aus.
+//   dangling-doc-comments — ~60 Dateien mit /** … */-Header über `package`.
+//                           Mechanische Migration zu /* … */ nötig.
+//   this-escape           — wenige Stellen (BaseField, BaseSidebarPanel,
+//                           SuperMeleeTeamRechner, RowData, …); Konstruktor-
+//                           Refactoring case-by-case nötig.
+//   deprecation           — Apache Commons StringUtils.equals/equalsIgnoreCase/
+//                           appendIfMissing in mehreren Sidebar-Klassen;
+//                           Migration zu java.util.Objects.equals bzw.
+//                           direkten String-Methoden geplant.
+tasks.named('compileJava').configure {
+    options.compilerArgs.addAll([
+        '-Xlint:all,-classfile,-dangling-doc-comments,-this-escape,-deprecation',
+        '-Werror'
+    ])
+}
+
+// Test-Source: nur Warnings (kein -Werror). Test-Code wird seltener angefasst,
+// Migration zu strikten Lints erfolgt parallel zur Produktiv-Source.
+tasks.named('compileTestJava').configure {
+    options.compilerArgs.addAll([
+        '-Xlint:all,-classfile,-dangling-doc-comments,-this-escape,-deprecation'
+    ])
+}
+
 repositories {
     mavenCentral()
 }

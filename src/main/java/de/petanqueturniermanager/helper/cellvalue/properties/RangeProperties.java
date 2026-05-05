@@ -9,6 +9,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Range/ Bereich
 public class RangeProperties extends CommonProperties<RangeProperties> {
 
+	private static final long serialVersionUID = 1L;
+
 	RangeProperties() {
 	}
 

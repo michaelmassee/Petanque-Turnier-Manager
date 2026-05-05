@@ -100,6 +100,7 @@ public class WebserverKonfigDialog extends AbstractUnoDialog {
 
 	/** Interne Exception für Validierungsfehler – bleibt im Dialog. */
 	private static final class UngueltigeEingabeException extends Exception {
+		private static final long serialVersionUID = 1L;
 		UngueltigeEingabeException(String meldung) {
 			super(meldung);
 		}

@@ -23,6 +23,8 @@ import de.petanqueturniermanager.helper.sheet.numberformat.UserNumberFormat;
  */
 public abstract class CommonProperties<T> extends HashMap<String, Object> implements ICommonProperties {
 
+	private static final long serialVersionUID = 1L;
+
 	private UserNumberFormat userNumberFormat = null;
 
 	CommonProperties() {

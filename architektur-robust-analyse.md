@@ -76,7 +76,7 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 - ~~**A5** `@Disabled`-Tests entweder mit Begründung versehen oder löschen~~
 
 ### B. Build/CI-Härtung (mittel)
-- **B1** `gradle.properties` / `build.gradle`: Compiler-Flags `-Xlint:all -Werror` für Produktions-Source.
+- ~~**B1** `build.gradle`: `-Xlint:all -Werror` für Produktions-Source~~ — **erledigt**: aktiviert mit dokumentierten Suppressions für `classfile` (externe Lib), `dangling-doc-comments` (~60 Datei-Header), `this-escape` (case-by-case-Refactoring) und `deprecation` (Apache Commons StringUtils-Migration). `unchecked` und `serial` initial mitfixiert (`AbstractStore`, Properties-Klassen, Webserver-Exceptions). Test-Source nur Warnings, kein `-Werror`.
 - **B2** **SpotBugs** + **ErrorProne** als Gradle-Plugins. Initial-Lauf zur Bestandsaufnahme; Schwelle einfrieren ("keine neuen Findings").
 - **B3** Minimale **GitHub-Action**: `./gradlew test` auf jeden Push. Build-Status-Badge in README.
 - **B4** Optional: NullAway mit Annotated-Default für `helper`-Paket.
@@ -97,7 +97,7 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 ## 4. Empfohlene Reihenfolge
 
 1. ~~**Block A** (alles, ein Vormittag)~~ — **erledigt** (Commit `b4175e59`).
-2. **Block B1+B3** (CI + Lint): liefert Sicherheitsnetz für alles Weitere. **Nächster Schritt.**
+2. ~~**Block B1**~~ erledigt; **Block B3** (GitHub Actions) als nächster Schritt.
 3. **Block B2** (SpotBugs/ErrorProne): weitere Findings → in Backlog.
 4. **Block C** in dieser Reihenfolge: ~~C1~~ → ~~C2~~ → C4 → C3.
 5. **Block D**: nur wenn Erweiterungen anstehen, die die jeweilige Klasse ohnehin berühren (Boy-Scout-Rule).

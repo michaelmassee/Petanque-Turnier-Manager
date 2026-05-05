@@ -9,6 +9,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 // Spalte
 public class ColumnProperties extends CommonProperties<ColumnProperties> {
 
+	private static final long serialVersionUID = 1L;
+
 	public static final String ISVISIBLE = "IsVisible";
 
 	ColumnProperties() {

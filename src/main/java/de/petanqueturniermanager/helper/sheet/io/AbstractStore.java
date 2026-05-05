@@ -50,11 +50,13 @@ public abstract class AbstractStore<T> {
 		sheetHelper = new SheetHelper(workingSpreadsheet);
 	}
 
+	@SuppressWarnings("unchecked")
 	public final T prefix1(String filePrefix1) {
 		this.filePrefix1 = filePrefix1;
 		return (T) this;
 	}
 
+	@SuppressWarnings("unchecked")
 	public final T prefix2(String filePrefix2) {
 		this.filePrefix2 = filePrefix2;
 		return (T) this;
