@@ -123,7 +123,8 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
     public SheetListeSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow,
             XSidebar xSidebar) {
         super(workingSpreadsheet, parentWindow, xSidebar);
-        logger.debug("SheetListeSidebarContent Konstruktor: sheetListBox={}", sheetListBox != null ? "non-null" : "null");
+        // sheetListBox wird erst durch felderHinzufuegen() gesetzt — hier loggen war
+        // immer null (UR_UNINIT_READ).
         SheetRunner.addStateChangeListener(prozessZustandListener);
         tabWechselListenerRegistrieren(workingSpreadsheet);
     }

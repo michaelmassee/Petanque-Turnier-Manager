@@ -25,8 +25,13 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * @author Michael Massee
  *
  */
-public class KonfigurationSingleton {
+public final class KonfigurationSingleton {
 	static final Logger logger = LogManager.getLogger(KonfigurationSingleton.class);
+
+	// Utility-Klasse — keine Instanziierung. Trotz Klassenname kein echter Singleton:
+	// alle relevanten Methoden sind static und zustandslos.
+	private KonfigurationSingleton() {
+	}
 
 	// List<ConfigProperty<?>> KONFIG_PROPERTIES
 	public static List<ConfigProperty<?>> getKonfigProperties(WorkingSpreadsheet currentSpreadsheet) {

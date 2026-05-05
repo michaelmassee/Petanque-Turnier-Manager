@@ -39,7 +39,9 @@ public class MainKonfigDialog {
 
 	private static final Logger logger = LogManager.getLogger(MainKonfigDialog.class);
 
-	private static MainKonfigDialog konfigDialog;
+	// volatile: konfigDialog wird in init() gesetzt und in from() gelesen.
+	// Sichtbarkeitsgarantie zwischen den Threads notwendig.
+	private static volatile MainKonfigDialog konfigDialog;
 	private static final int MIN_HEIGHT = 200;
 	private static final int MIN_WIDTH = 500;
 	private static final String TITLE = "Konfiguration";
@@ -77,7 +79,7 @@ public class MainKonfigDialog {
 	/**
 	 * @param context
 	 */
-	public static MainKonfigDialog init(XComponentContext xContext) {
+	public static synchronized MainKonfigDialog init(XComponentContext xContext) {
 		checkNotNull(xContext);
 		if (MainKonfigDialog.konfigDialog == null) {
 			MainKonfigDialog.konfigDialog = new MainKonfigDialog(xContext);
