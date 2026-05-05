@@ -310,8 +310,14 @@ def mitUiTests = project.hasProperty('uitTests') && project.uitTests == 'true'
 
 // Java 25: LibreOffice lädt native Libs via System.load() – ohne --enable-native-access
 // erscheint pro Fork eine WARNING. Für alle Test-Tasks freischalten.
+//
+// Default-Locale auf de_DE pinnen: Mehrere Tests vergleichen i18n-Texte
+// (z.B. "Abbruch", "Spieler Namen … ist doppelt") und schlagen sonst auf
+// CI-Runnern mit en_US-Locale fehl.
 tasks.withType(Test).configureEach {
     jvmArgs '--enable-native-access=ALL-UNNAMED'
+    systemProperty 'user.language', 'de'
+    systemProperty 'user.country', 'DE'
 }
 
 test {
