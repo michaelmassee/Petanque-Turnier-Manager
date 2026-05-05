@@ -57,24 +57,69 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 				.as("Vorrunden-Rangliste-Sheet muss existieren").isNotNull();
 		assertThat(sheetHlp.findByName(SheetNamen.teilnehmer()))
 				.as("Teilnehmer-Sheet muss existieren").isNotNull();
-		// Finalrunde-Sheet: tatsächlicher Name kann je nach Konfiguration ("Finalrunde A",
-		// "A-Finale" o.ä.) variieren. Mindestens ein Finalrunde-Sheet muss existieren.
-		assertThat(anzahlSheetsMitTeilstring("Finale"))
-				.as("Mindestens ein Finalrunde-Sheet muss existieren").isGreaterThanOrEqualTo(1L);
+		// Bei 12 Teams nutzt die Maastrichter-Finalrunde das KO-Bracket (Sheet-Name "A-Finale").
+		assertThat(sheetHlp.findByName(SheetNamen.koFinaleGruppe("A")))
+				.as("A-Finale-Sheet muss existieren").isNotNull();
 
 		validiereMeldelistePerJson();
+		validiereVorrundenErgebnissePerJson(1, "maastrichter-vorrunde-1.json");
+		validiereVorrundenErgebnissePerJson(2, "maastrichter-vorrunde-2.json");
+		validiereVorrundenErgebnissePerJson(3, "maastrichter-vorrunde-3.json");
 		validiereVorrundenRanglistePerJson();
+		validiereTeilnehmerPerJson();
+		validiereFinaleAPerJson();
 	}
 
-	private long anzahlSheetsMitTeilstring(String teil) {
-		var alleNamen = wkingSpreadsheet.getWorkingSpreadsheetDocument().getSheets().getElementNames();
-		long count = 0;
-		for (String name : alleNamen) {
-			if (name.contains(teil)) {
-				count++;
-			}
-		}
-		return count;
+	private void validiereVorrundenErgebnissePerJson(int rundeNr, String referenzDatei) throws GenerateException {
+		String sheetName = SheetNamen.maastrichterVorrunde(rundeNr);
+		XSpreadsheet sheet = sheetHlp.findByName(sheetName);
+		assertThat(sheet).as("Vorrunden-Sheet '%s' muss existieren", sheetName).isNotNull();
+
+		// Schweizer-Format: 12 Teams → 6 Paarungen pro Runde, Spalten 0..6 (Bahn, TeamA-Nr, TeamA-Name, ErgA, ErgB, TeamB-Name, TeamB-Nr).
+		RangePosition vorrundenRange = RangePosition.from(
+				0, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE,
+				6, SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + (ANZ_TEAMS / 2) - 1);
+
+		// writeToJson(referenzDatei, vorrundenRange, sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		RangeData rangeData = rangeDateFromRangePosition(vorrundenRange, sheet,
+				wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
+		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereTeilnehmerPerJson() throws GenerateException {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.teilnehmer());
+		assertThat(sheet).isNotNull();
+
+		// Teilnehmerliste (Doublette → 2 Spieler pro Team × 12 Teams = 24 Spieler).
+		// Bereich: Spalten 0..3 (Startnummer, Vorname, Nachname, Verein/Teamname), Zeilen ab 1 für 24 Spieler.
+		RangePosition teilnehmerRange = RangePosition.from(0, 1, 3, 24);
+
+		// writeToJson("maastrichter-teilnehmer.json", teilnehmerRange, sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		RangeData rangeData = rangeDateFromRangePosition(teilnehmerRange, sheet,
+				wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream("maastrichter-teilnehmer.json");
+		validateWithJson(rangeData, jsonFile);
+	}
+
+	private void validiereFinaleAPerJson() throws GenerateException {
+		XSpreadsheet sheet = sheetHlp.findByName(SheetNamen.koFinaleGruppe("A"));
+		assertThat(sheet).isNotNull();
+
+		// Großzügiger Bereich – analog KO-Turnierbaum.
+		RangePosition finaleRange = RangePosition.from(0, 0, 23, 32);
+
+		// writeToJson("maastrichter-finale-a.json", finaleRange, sheet, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		RangeData rangeData = rangeDateFromRangePosition(finaleRange, sheet,
+				wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream("maastrichter-finale-a.json");
+		validateWithJson(rangeData, jsonFile);
 	}
 
 	/**
