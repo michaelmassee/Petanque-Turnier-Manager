@@ -50,3 +50,15 @@ jobs:
         # gradle.properties enthält einen lokalen org.gradle.java.home (SDKMAN-Pfad),
         # den wir per -D auf den vom setup-java bereitgestellten JAVA_HOME überschreiben.
         run: ./gradlew test -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
+
+      - name: SpotBugs (Bestandsaufnahme, ignoreFailures=true)
+        run: ./gradlew spotbugsMain -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon
+
+      - name: Upload SpotBugs report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-report
+          path: build/reports/spotbugs/
+          if-no-files-found: ignore
+          retention-days: 14

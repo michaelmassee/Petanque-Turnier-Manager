@@ -2,6 +2,7 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.github.spotbugs' version '6.0.26'
 }
 
 group = 'de.petanqueturniermanager'
@@ -50,6 +51,39 @@ tasks.named('compileTestJava').configure {
     options.compilerArgs.addAll([
         '-Xlint:all,-classfile,-dangling-doc-comments,-this-escape,-deprecation'
     ])
+}
+
+// ===================================================
+// SpotBugs (Block B2 aus architektur-robust-analyse.md)
+// ===================================================
+// Initialer Lauf zur Bestandsaufnahme: ignoreFailures = true, damit Findings
+// den Build nicht brechen. HTML- und XML-Report werden erzeugt; XML kann
+// später als Baseline-Excludefilter dienen ("keine neuen Findings").
+//
+// Aufruf:
+//   ./gradlew spotbugsMain   — nur Produktions-Source
+//   ./gradlew check          — schließt SpotBugs für Main + Test ein
+//
+// Reports: build/reports/spotbugs/main.{html,xml}
+spotbugs {
+    toolVersion = '4.9.6'       // Java 25 (class file 69) wird ab 4.9.x unterstützt
+    ignoreFailures = true       // Bestandsaufnahme; spätere Verschärfung via excludeFilter
+    effort = 'max'
+    reportLevel = 'medium'
+    excludeFilter = file('config/spotbugs/exclude.xml')
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        html { required = true }
+        xml  { required = true }
+    }
+}
+
+// SpotBugs läuft auf Test-Code selten lohnend (Mocks/Asserts erzeugen
+// false-positives). Vorerst nur main analysieren.
+tasks.named('spotbugsTest').configure {
+    enabled = false
 }
 
 repositories {
