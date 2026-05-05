@@ -51,6 +51,7 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		new KoTurnierTestDaten(wkingSpreadsheet, 8).generate();
 		validiereGrundstruktur(8);
 		validiereMeldelistePerJson(8, "ko-meldeliste-8.json");
+		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumEinzel(), "ko-turnierbaum-8.json");
 	}
 
 	@Test
@@ -58,6 +59,8 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		new Ko16TeamsTurnierTestDaten(wkingSpreadsheet).generate();
 		validiereGrundstruktur(16);
 		validiereMeldelistePerJson(16, "ko-meldeliste-16.json");
+		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumGruppe("A"), "ko-turnierbaum-16-gruppe-a.json");
+		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumGruppe("B"), "ko-turnierbaum-16-gruppe-b.json");
 	}
 
 	@Test
@@ -65,6 +68,7 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 		new KoCadrageTurnierTestDaten(wkingSpreadsheet).generate();
 		validiereGrundstruktur(10);
 		validiereMeldelistePerJson(10, "ko-meldeliste-10-cadrage.json");
+		validiereTurnierbaumPerJson(SheetNamen.koTurnierbaumEinzel(), "ko-turnierbaum-10-cadrage.json");
 	}
 
 	private void validiereGrundstruktur(int erwarteteTeams) throws GenerateException {
@@ -89,6 +93,24 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 			}
 		}
 		return count;
+	}
+
+	private void validiereTurnierbaumPerJson(String sheetName, String referenzDatei) throws GenerateException {
+		XSpreadsheet turnierbaum = sheetHlp.findByName(sheetName);
+		assertThat(turnierbaum).as("Turnierbaum-Sheet '%s' muss existieren", sheetName).isNotNull();
+
+		// Großzügiger Bereich, der alle 8/10/16-Team-Turnierbäume sicher umfasst.
+		// Mit Bahn-Spielbahn=N und Cadrage: bis zu 5 Runden × 4 Spalten + Cadrage-Offset = ~24 Spalten;
+		// 16 Teams brauchen bis zu ~32 Datenzeilen.
+		RangePosition turnierbaumRange = RangePosition.from(0, 0, 23, 32);
+
+		// writeToJson(referenzDatei, turnierbaumRange, turnierbaum, wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		RangeData rangeData = rangeDateFromRangePosition(turnierbaumRange, turnierbaum,
+				wkingSpreadsheet.getWorkingSpreadsheetDocument());
+
+		InputStream jsonFile = KoTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
+		validateWithJson(rangeData, jsonFile);
 	}
 
 	private void validiereMeldelistePerJson(int anzTeams, String referenzDatei) throws GenerateException {
