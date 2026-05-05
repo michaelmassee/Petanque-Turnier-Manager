@@ -56,3 +56,9 @@ frontend/dist/
 # IDE-Dateien
 frontend/.vscode/
 frontend/.idea/
+
+# Claude Code: lokale, user-spezifische Konfiguration und Runtime-State
+.claude/
+
+# Claude Code: lokale, user-spezifische Konfiguration und Runtime-State
+.claude/
