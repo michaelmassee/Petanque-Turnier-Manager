@@ -79,6 +79,11 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 - ~~**B1** `build.gradle`: `-Xlint:all -Werror` für Produktions-Source~~ — **erledigt**: aktiviert mit dokumentierten Suppressions für `classfile` (externe Lib), `dangling-doc-comments` (~60 Datei-Header), `this-escape` (case-by-case-Refactoring) und `deprecation` (Apache Commons StringUtils-Migration). `unchecked` und `serial` initial mitfixiert (`AbstractStore`, Properties-Klassen, Webserver-Exceptions). Test-Source nur Warnings, kein `-Werror`.
 - **B2** **SpotBugs** + **ErrorProne** als Gradle-Plugins. Initial-Lauf zur Bestandsaufnahme; Schwelle einfrieren ("keine neuen Findings").
 - ~~**B3** Minimale **GitHub-Action**~~ — **erledigt**: `.github/workflows/ci.yml` läuft `./gradlew test` auf Push & PR (master/main), inkl. JDK 25 (Temurin), Node 20, LibreOffice-SDK via apt und Gradle-Cache. Build-Status-Badge in allen 5 README-Sprachen ergänzt.
+- **B3a** **UI-Tests in eigener GitHub-Action** (separater Workflow `ui-tests.yml`, getrennt vom Push-CI). Pragmatischer Mix aus drei Triggern:
+   1. `workflow_dispatch` — manuell auslösbar
+   2. `pull_request` mit `paths:` (`src/**`, `registry/**`, `idl/**`, `frontend/**`, `build.gradle`) — Gate vor dem Merge
+   3. `schedule: '0 4 * * 1'` — wöchentlich Montagnacht; fängt Umgebungs-Drift (LO-apt-Update, Java-25-Patch) ohne tägliches Budget
+   Setup zusätzlich nötig: `apt-get install libreoffice-dev xvfb`, `xvfb-run --auto-servernum -- ./gradlew uiTests -Dorg.gradle.java.home=$JAVA_HOME`. Risiken: Bridge-Timing fragiler als lokal; `BeispielturnierUITest`-NPE-Baustelle wäre laufender Roter; kompletter `runAllTests` ~30–60 min Runner-Zeit. Für Beispielturnier-Suite optional `continue-on-error: true` im nightly-Lauf.
 - **B4** Optional: NullAway mit Annotated-Default für `helper`-Paket.
 
 ### C. Robustheits-Refaktor (gezielt)
