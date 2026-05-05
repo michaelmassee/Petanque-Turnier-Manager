@@ -19,10 +19,12 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
+import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCell;
 import com.sun.star.text.XText;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LogUtil;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 
 /**
@@ -224,8 +226,10 @@ public class SheetMetadataHelper {
                 }
             }
             namedRanges.addNewByName(scoreSchluessel, inhalt, refAddr, 0);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Schreiben der Score-Zellen-Metadaten für '{}'", scoreSchluessel, t);
+        } catch (Exception e) {
+            LogUtil.error(logger, "Score-Zellen-Metadaten schreiben fehlgeschlagen für '" + scoreSchluessel + "'", e);
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -239,30 +243,49 @@ public class SheetMetadataHelper {
      */
     public static String leseScoreText(XSpreadsheetDocument xDoc, String scoreSchluessel) {
         try {
-            XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
-            if (namedRanges == null || !namedRanges.hasByName(scoreSchluessel)) return null;
-            XNamedRange range = Lo.qi(XNamedRange.class, namedRanges.getByName(scoreSchluessel));
-            if (range == null) return null;
-            String content = range.getContent();
-            if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) return null;
-            XCellRangeReferrer referrer = Lo.qi(XCellRangeReferrer.class, range);
-            if (referrer == null) return null;
-            XCellRangeAddressable addrAble = Lo.qi(XCellRangeAddressable.class, referrer.getReferredCells());
-            if (addrAble == null) return null;
-            var addr = addrAble.getRangeAddress();
-            XIndexAccess sheets = Lo.qi(XIndexAccess.class, xDoc.getSheets());
-            if (sheets == null) return null;
-            XSpreadsheet sheet = Lo.qi(XSpreadsheet.class, sheets.getByIndex(addr.Sheet));
-            if (sheet == null) return null;
-            XCell cell = sheet.getCellByPosition(addr.StartColumn, addr.StartRow);
-            XText text = Lo.qi(XText.class, cell);
+            Optional<CellRangeAddress> addr = aufloeseNamedRangeAddresse(xDoc, scoreSchluessel);
+            if (addr.isEmpty()) return null;
+            Optional<XCell> cell = zelleAusAdresse(xDoc, addr.get());
+            if (cell.isEmpty()) return null;
+            XText text = Lo.qi(XText.class, cell.get());
             if (text == null) return null;
             String val = text.getString();
             return (val == null || val.isBlank()) ? null : val;
-        } catch (Throwable t) {
-            logger.error("Fehler beim Lesen des Score-Texts für '{}'", scoreSchluessel, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Score-Text lesen fehlgeschlagen für '" + scoreSchluessel + "'", e);
             return null;
+        } catch (Error e) {
+            throw e;
         }
+    }
+
+    /**
+     * Löst einen Named Range zu seiner aktuellen Cell-Range-Adresse auf.
+     * Liefert {@link Optional#empty()} wenn der Range fehlt, ungültig (#REF!/#BEZUG!) ist
+     * oder die UNO-Schnittstellen nicht verfügbar sind.
+     */
+    private static Optional<CellRangeAddress> aufloeseNamedRangeAddresse(XSpreadsheetDocument xDoc,
+                                                                         String scoreSchluessel) throws Exception {
+        XNamedRanges namedRanges = namedRangesAusDoc(xDoc);
+        if (namedRanges == null || !namedRanges.hasByName(scoreSchluessel)) return Optional.empty();
+        XNamedRange range = Lo.qi(XNamedRange.class, namedRanges.getByName(scoreSchluessel));
+        if (range == null) return Optional.empty();
+        String content = range.getContent();
+        if (content != null && (content.contains("#REF!") || content.contains("#BEZUG!"))) return Optional.empty();
+        XCellRangeReferrer referrer = Lo.qi(XCellRangeReferrer.class, range);
+        if (referrer == null) return Optional.empty();
+        XCellRangeAddressable addrAble = Lo.qi(XCellRangeAddressable.class, referrer.getReferredCells());
+        if (addrAble == null) return Optional.empty();
+        return Optional.of(addrAble.getRangeAddress());
+    }
+
+    /** Liefert die Zelle an der Startposition der gegebenen Range-Adresse. */
+    private static Optional<XCell> zelleAusAdresse(XSpreadsheetDocument xDoc, CellRangeAddress addr) throws Exception {
+        XIndexAccess sheets = Lo.qi(XIndexAccess.class, xDoc.getSheets());
+        if (sheets == null) return Optional.empty();
+        XSpreadsheet sheet = Lo.qi(XSpreadsheet.class, sheets.getByIndex(addr.Sheet));
+        if (sheet == null) return Optional.empty();
+        return Optional.ofNullable(sheet.getCellByPosition(addr.StartColumn, addr.StartRow));
     }
 
     /**
@@ -318,8 +341,10 @@ public class SheetMetadataHelper {
             String sheetName = Lo.qi(XNamed.class, xSheet).getName();
             int sheetIdx = sheetIndex(xDoc, xSheet);
             schreibeSheetMetadaten(namedRanges, sheetName, sheetIdx, namedRangeKey);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Schreiben der Sheet-Metadaten für '{}'", namedRangeKey, t);
+        } catch (Exception e) {
+            LogUtil.error(logger, "Sheet-Metadaten schreiben fehlgeschlagen für '" + namedRangeKey + "'", e);
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -353,16 +378,12 @@ public class SheetMetadataHelper {
             CellAddress refAddr = new CellAddress();
             refAddr.Sheet = (short) sheetIdx;
             namedRanges.addNewByName(namedRangeKey, inhalt, refAddr, 0);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Schreiben der Sheet-Metadaten für '{}'", namedRangeKey, t);
+        } catch (Exception e) {
+            LogUtil.error(logger, "Sheet-Metadaten schreiben fehlgeschlagen für '" + namedRangeKey + "'", e);
+        } catch (Error e) {
+            throw e;
         }
     }
-
-
-    /**
-     * Sucht ein Sheet primär über den sicheren benannten Bereich.
-     * Führt bei alten Dateien einen Fallback über den Namen durch und heilt die Datei automatisch.
-     */
 
 
     // ── Lesen / Suchen ───────────────────────────────────────────────────────
@@ -382,9 +403,11 @@ public class SheetMetadataHelper {
             return java.util.Arrays.stream(namedRanges.getElementNames())
                     .filter(name -> name.startsWith(prefix))
                     .toArray(String[]::new);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Abrufen von Schlüsseln mit Prefix '{}'", prefix, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Schlüssel-Lookup mit Prefix '" + prefix + "' fehlgeschlagen", e);
             return new String[0];
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -402,18 +425,25 @@ public class SheetMetadataHelper {
             XIndexAccess sheets = Lo.qi(XIndexAccess.class, xDoc.getSheets());
             return findeSheet(namedRanges,
                     rangeObj -> sheetIndexAusNamedRangeObj(rangeObj),
-                    idx -> {
-                        try {
-                            if (sheets == null) return null;
-                            return Lo.qi(XSpreadsheet.class, sheets.getByIndex(idx));
-                        } catch (Throwable t) {
-                            return null;
-                        }
-                    },
+                    idx -> sheetByIndex(sheets, idx),
                     namedRangeKey);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Suchen des Sheets für Schlüssel '{}'", namedRangeKey, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Sheet-Suche fehlgeschlagen für Schlüssel '" + namedRangeKey + "'", e);
             return Optional.empty();
+        } catch (Error e) {
+            throw e;
+        }
+    }
+
+    private static XSpreadsheet sheetByIndex(XIndexAccess sheets, int idx) {
+        if (sheets == null) return null;
+        try {
+            return Lo.qi(XSpreadsheet.class, sheets.getByIndex(idx));
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Sheet-Lookup über Index " + idx + " fehlgeschlagen", e);
+            return null;
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -444,9 +474,11 @@ public class SheetMetadataHelper {
             schreibeSheetMetadaten(xDoc, sheet, schluessel);
             logger.debug("Sheet '{}' geheilt: Metadaten-Schlüssel '{}' nachgetragen", fallbackName, schluessel);
             return sheet;
-        } catch (Throwable t) {
-            logger.error("Fehler beim Fallback-Lookup für Sheet '{}'", fallbackName, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Fallback-Lookup für Sheet '" + fallbackName + "' fehlgeschlagen", e);
             return null;
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -469,9 +501,11 @@ public class SheetMetadataHelper {
             Integer idx = sheetIdxAusNamedRange.apply(rangeObj);
             if (idx == null || idx < 0) return Optional.empty();
             return Optional.ofNullable(sheetByIdx.apply(idx));
-        } catch (Throwable t) {
-            logger.error("Fehler beim Suchen des Sheets für Schlüssel '{}'", namedRangeKey, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Sheet-Suche (intern) fehlgeschlagen für Schlüssel '" + namedRangeKey + "'", e);
             return Optional.empty();
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -488,9 +522,11 @@ public class SheetMetadataHelper {
             return istRegistriertesSheet(namedRanges,
                     rangeObj -> sheetIndexAusNamedRangeObj(rangeObj),
                     targetIdx, namedRangeKey);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Prüfen des Sheet-Metadaten-Schlüssels '{}'", namedRangeKey, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Sheet-Metadaten-Schlüssel prüfen fehlgeschlagen für '" + namedRangeKey + "'", e);
             return false;
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -505,9 +541,11 @@ public class SheetMetadataHelper {
             Object rangeObj = namedRanges.getByName(namedRangeKey);
             Integer idx = sheetIdxAusNamedRange.apply(rangeObj);
             return idx != null && idx >= 0 && idx == targetSheetIdx;
-        } catch (Throwable t) {
-            logger.error("Fehler beim Prüfen des Sheet-Metadaten-Schlüssels '{}'", namedRangeKey, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Sheet-Metadaten-Schlüssel prüfen (intern) fehlgeschlagen für '" + namedRangeKey + "'", e);
             return false;
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -526,8 +564,10 @@ public class SheetMetadataHelper {
             return findeSpieltagNr(namedRanges,
                     rangeObj -> sheetIndexAusNamedRangeObj(rangeObj),
                     targetIdx);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Suchen der Spieltag-Nr", t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Spieltag-Nr-Suche fehlgeschlagen", e);
+        } catch (Error e) {
+            throw e;
         }
         return Optional.empty();
     }
@@ -551,12 +591,16 @@ public class SheetMetadataHelper {
                                 name.length() - SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX.length());
                         return Optional.of(SpielTagNr.from(Integer.parseInt(nStr)));
                     }
-                } catch (Throwable t) {
-                    logger.error("Fehler beim Prüfen von Named-Range '{}'", name, t);
+                } catch (Exception e) {
+                    LogUtil.warn(logger, "Named-Range '" + name + "' prüfen fehlgeschlagen", e);
+                } catch (Error e) {
+                    throw e;
                 }
             }
-        } catch (Throwable t) {
-            logger.error("Fehler beim Suchen der Spieltag-Nr", t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Spieltag-Nr-Suche (intern) fehlgeschlagen", e);
+        } catch (Error e) {
+            throw e;
         }
         return Optional.empty();
     }
@@ -575,8 +619,10 @@ public class SheetMetadataHelper {
             }
             namedRanges.removeByName(schluessel);
             logger.debug("Metadaten-Schlüssel '{}' gelöscht.", schluessel);
-        } catch (Throwable t) {
-            logger.error("Fehler beim Löschen des Metadaten-Schlüssels '{}'", schluessel, t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Metadaten-Schlüssel löschen fehlgeschlagen für '" + schluessel + "'", e);
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -607,8 +653,10 @@ public class SheetMetadataHelper {
                     }
                 }
             }
-        } catch (Throwable t) {
-            logger.error("Fehler bei der Bereinigung verwaister Sheet-Metadaten", t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Bereinigung verwaister Sheet-Metadaten fehlgeschlagen", e);
+        } catch (Error e) {
+            throw e;
         }
     }
 
@@ -622,7 +670,7 @@ public class SheetMetadataHelper {
             Object namedRangesObj = props.getPropertyValue("NamedRanges");
             return Lo.qi(XNamedRanges.class, namedRangesObj);
         } catch (com.sun.star.beans.UnknownPropertyException | WrappedTargetException e) {
-            logger.error("NamedRanges-Property nicht gefunden", e);
+            LogUtil.error(logger, "NamedRanges-Property nicht gefunden", e);
             return null;
         }
     }
@@ -650,9 +698,11 @@ public class SheetMetadataHelper {
                     referrer.getReferredCells());
             if (addrAble == null) return -1;
             return addrAble.getRangeAddress().Sheet;
-        } catch (Throwable t) {
-            logger.error("Fehler beim Auflösen des Named-Range-Sheet-Index", t);
+        } catch (Exception e) {
+            LogUtil.warn(logger, "Named-Range-Sheet-Index auflösen fehlgeschlagen", e);
             return -1;
+        } catch (Error e) {
+            throw e;
         }
     }
 

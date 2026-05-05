@@ -35,8 +35,11 @@ public abstract class SheetRunner extends Thread {
 	private final WorkingSpreadsheet workingSpreadsheet;
 	private final SheetHelper sheetHelper;
 	private final TurnierSystem turnierSystem;
-	// package-private: damit SheetRunnerTest den Koordinator austauschen kann
-	static SheetRunnerKoordinator koordinator = new SheetRunnerKoordinator();
+	// package-private: damit SheetRunnerTest den Koordinator austauschen kann.
+	// volatile garantiert Sichtbarkeit zwischen Threads.
+	// Kein vollständiger Thread-Safety-Mechanismus!
+	// Ausreichend, da Setzen nur in Tests vor Start erfolgt.
+	static volatile SheetRunnerKoordinator koordinator = new SheetRunnerKoordinator();
 
 	/**
 	 * Gesetzt von {@link #start()}, um anzuzeigen dass der Koordinator bereits

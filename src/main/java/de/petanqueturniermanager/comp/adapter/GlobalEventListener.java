@@ -3,6 +3,7 @@ package de.petanqueturniermanager.comp.adapter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,7 @@ import com.sun.star.sheet.XSpreadsheetView;
 
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.LogUtil;
 
 public class GlobalEventListener implements XEventListener {
 
@@ -30,13 +32,6 @@ public class GlobalEventListener implements XEventListener {
 	private static final String ON_VIEW_CREATED = "OnViewCreated";
 	private static final String ON_VIEW_CLOSED  = "OnViewClosed";
 	private static final String ON_LOAD = "OnLoad";
-	// private static final String ON_LOAD_DONE = "OnLoadDone";
-
-	//	08.08.2022 21:52:34,750 DEBUG d.p.c.a.GlobalEventListener OnLoadFinished
-	//	08.08.2022 21:52:34,751 DEBUG d.p.c.a.GlobalEventListener OnTitleChanged
-	//	08.08.2022 21:52:34,968 DEBUG d.p.c.a.GlobalEventListener OnFocus
-	//	08.08.2022 21:52:34,970 DEBUG d.p.c.a.GlobalEventListener OnViewCreated
-	//	08.08.2022 21:52:35,046 DEBUG d.p.c.a.GlobalEventListener OnLoad
 
 	private static final String ON_UNFOCUS = "OnUnfocus";
 
@@ -88,8 +83,10 @@ public class GlobalEventListener implements XEventListener {
 				onFocus(docEvent.Source);
 			}
 
-		} catch (Throwable t) {
-			logger.error("", t);
+		} catch (Exception e) {
+			LogUtil.error(logger, "Globaler Event-Dispatch fehlgeschlagen", e);
+		} catch (Error e) {
+			throw e;
 		}
 	}
 
@@ -103,63 +100,25 @@ public class GlobalEventListener implements XEventListener {
 
 	/**
 	 * New Document was created visible. Unlike OnCreate this event is sent asynchronously at a time the view is completely created.
-	 *
-	 * @param source
 	 */
 	private void onNew(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onNew(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		verteile("onNew", source, IGlobalEventListener::onNew);
 	}
 
 	private void onLoadFinished(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onLoadFinished(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		verteile("onLoadFinished", source, IGlobalEventListener::onLoadFinished);
 	}
 
 	private void onLoad(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onLoad(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		verteile("onLoad", source, IGlobalEventListener::onLoad);
 	}
 
 	private void onFocus(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onFocus(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		verteile("onFocus", source, IGlobalEventListener::onFocus);
 	}
 
 	private void onUnfocus(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onUnfocus(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
-	}
-
-	private List<IGlobalEventListener> snapshot() {
-		synchronized (listeners) {
-			return new ArrayList<>(listeners);
-		}
+		verteile("onUnfocus", source, IGlobalEventListener::onUnfocus);
 	}
 
 	/**
@@ -171,17 +130,7 @@ public class GlobalEventListener implements XEventListener {
 	 * definiert ist und Datei->Neu verwendet wird.
 	 */
 	private void onCreate(Object source) {
-		// XComponent compo = UNO.XComponent(source);
-		// if (compo == null) return;
-		//
-		// // durch das Hinzufügen zum docManager kann im Event onViewCreated erkannt
-		// // werden, dass das Dokument frisch erzeugt wurde:
-		// XTextDocument xTextDoc = UNO.XTextDocument(source);
-		// if (xTextDoc != null)
-		// docManager.addTextDocument(xTextDoc);
-		// else
-		// docManager.add(compo);
-		// // Verarbeitet wird das Dokument erst bei onViewCreated
+		// keine Verarbeitung — bewusst leer
 	}
 
 	/**
@@ -189,13 +138,7 @@ public class GlobalEventListener implements XEventListener {
 	 * Das Event kommt bei allen Dokumenten, egal ob sie neu erzeugt, geladen, sichtbar oder unsichtbar sind.
 	 */
 	private void onViewCreated(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onViewCreated(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		verteile("onViewCreated", source, IGlobalEventListener::onViewCreated);
 	}
 
 	/**
@@ -203,36 +146,40 @@ public class GlobalEventListener implements XEventListener {
 	 * Beim Verlassen der Druckvorschau ist der Controller zu diesem Zeitpunkt bereits auf ScTabViewShell gewechselt.
 	 */
 	private void onViewClosed(Object source) {
-		for (IGlobalEventListener listner : snapshot()) {
-			try {
-				listner.onViewClosed(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
+		verteile("onViewClosed", source, IGlobalEventListener::onViewClosed);
 	}
 
 	/**
 	 * OnSave oder OnSaveAs-Events werden beim Speichern von Dokumenten aufgerufen.
-	 *
 	 */
 	private void onSaveOrSaveAs(Object source) {
-		// XTextDocument xTextDoc = UNO.XTextDocument(source);
-		// if (xTextDoc == null) return;
+		// derzeit keine Verarbeitung
 	}
 
 	/**
 	 * OnUnload kommt als letztes Event wenn ein Dokument geschlossen wurde.
-	 *
 	 */
 	private void onUnload(Object source) {
 		DocumentPropertiesHelper.removeDocument(source);
+		verteile("onUnload", source, IGlobalEventListener::onUnload);
+	}
+
+	private void verteile(String eventName, Object source, BiConsumer<IGlobalEventListener, Object> dispatch) {
 		for (IGlobalEventListener listner : snapshot()) {
 			try {
-				listner.onUnload(source);
-			} catch (Throwable e) {
-				logger.error(e.getMessage(), e);
+				dispatch.accept(listner, source);
+			} catch (Exception e) {
+				LogUtil.warn(logger, "Event " + eventName + " an "
+						+ listner.getClass().getSimpleName() + " fehlgeschlagen", e);
+			} catch (Error e) {
+				throw e;
 			}
+		}
+	}
+
+	private List<IGlobalEventListener> snapshot() {
+		synchronized (listeners) {
+			return new ArrayList<>(listeners);
 		}
 	}
 

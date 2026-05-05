@@ -198,7 +198,7 @@ public class OfficeDocumentHelper {
 	public static XWindow getWindow(XDesktop desktop) {
 		XFrame frame = desktop.getCurrentFrame();
 		if (frame == null) {
-			System.out.println("No current frame");
+			logger.warn("No current frame");
 			return null;
 		} else
 			return frame.getContainerWindow();

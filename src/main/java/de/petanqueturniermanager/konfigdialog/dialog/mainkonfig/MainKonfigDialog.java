@@ -44,8 +44,11 @@ public class MainKonfigDialog {
 	private static final int MIN_WIDTH = 500;
 	private static final String TITLE = "Konfiguration";
 
-	// weil problemen mit uno classloader + reflection, wird hier eine static liste verwendet
-	private static List<ConfigPanel> configPanelList = new ArrayList<>();
+	// Instanz-Feld: Liste war früher statisch (UNO classloader + reflection-Bedenken),
+	// dadurch akkumulierten sich Panels bei jedem initBox()-Aufruf in derselben JVM.
+	// Da MainKonfigDialog selbst statisch (über konfigDialog) gehalten wird, bleibt die
+	// Lebensdauer faktisch identisch — ohne den Akkumulations-Bug und ohne CME-Risiko.
+	private final List<ConfigPanel> configPanelList = new ArrayList<>();
 
 	private JFrame frame;
 	private JSplitPane splitPane;
@@ -164,7 +167,7 @@ public class MainKonfigDialog {
 	}
 
 	@VisibleForTesting
-	static List<ConfigPanel> getConfigPanelList() {
+	List<ConfigPanel> getConfigPanelList() {
 		return configPanelList;
 	}
 

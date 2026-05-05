@@ -150,9 +150,14 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		// waitEnter();
 	}
 
+	/**
+	 * Capture-Helper für JSON-Referenzen — manuell aktivieren,
+	 * siehe CLAUDE.md → "JSON-Referenzen erfassen / aktualisieren".
+	 * Bewusst kein echter Test, sondern Tooling.
+	 */
 	@Test
-	@Disabled
-	public void generateAndSaveTestDatenToJsonFiles() throws IOException, GenerateException {
+	@Disabled("Capture-Helper, nur manuell aktivieren")
+	public void captureJsonReferenceFiles() throws IOException, GenerateException {
 		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
 
 		// testrunden erstellen

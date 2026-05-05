@@ -31,9 +31,6 @@ public class MainKonfigDialogTest {
 		Assumptions.assumeFalse(GraphicsEnvironment.isHeadless(),
 				"Headless-JVM – MainKonfigDialog benötigt ein Display");
 		dialogToolsMock = Mockito.mock(DialogTools.class);
-		// Statische ConfigPanel-Liste vor jedem Test zurücksetzen, sonst akkumuliert
-		// initBox() bei jedem Aufruf neue Panels.
-		MainKonfigDialog.getConfigPanelList().clear();
 	}
 
 	@Test
@@ -47,7 +44,7 @@ public class MainKonfigDialogTest {
 		assertThat(dlg.getSplitPane()).as("SplitPane muss aufgebaut sein").isNotNull();
 		assertThat(dlg.getContent()).as("Content-Panel muss aufgebaut sein").isNotNull();
 
-		assertThat(MainKonfigDialog.getConfigPanelList())
+		assertThat(dlg.getConfigPanelList())
 				.as("Mindestens das Spielrunden-Panel muss registriert sein")
 				.isNotEmpty();
 	}
@@ -70,7 +67,7 @@ public class MainKonfigDialogTest {
 		MainKonfigDialog dlg = new MainKonfigDialog(dialogToolsMock);
 		dlg.initBox();
 
-		assertThat(MainKonfigDialog.getConfigPanelList())
+		assertThat(dlg.getConfigPanelList())
 				.as("Spielrunden-Konfigurations-Panel muss registriert sein")
 				.hasAtLeastOneElementOfType(SpielrundenKonfigPanel.class);
 	}
