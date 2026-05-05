@@ -197,6 +197,11 @@ public class PetanqueTurnierMngrSingleton {
 			globalEventListener.disposing(null);
 		}
 		turnierEventHandler.disposing();
+		// didRun zurücksetzen, damit ein erneuter init() nach dispose() wieder
+		// die abhängigen Subsysteme (TimerManager, ProcessBox, …) hochfährt.
+		// Sonst bleibt z.B. TimerManager null und nachfolgende UI-Tests scheitern
+		// in der Sidebar mit "TimerManager nicht initialisiert".
+		didRun.set(false);
 	}
 
 }
