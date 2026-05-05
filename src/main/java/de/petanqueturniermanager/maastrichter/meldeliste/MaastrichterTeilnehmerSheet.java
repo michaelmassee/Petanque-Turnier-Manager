@@ -1,31 +1,28 @@
-/**
- * Erstellung 2026 / Michael Massee
- */
 package de.petanqueturniermanager.maastrichter.meldeliste;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
-import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerNamenLeser.TeilnehmerNamen;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerSheetBuilder;
+import de.petanqueturniermanager.basesheet.meldeliste.TeilnehmerSheetBuilder.TeilnehmerEintrag;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.ColorHelper;
 import de.petanqueturniermanager.helper.ISheet;
-import de.petanqueturniermanager.helper.border.BorderFactory;
-import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
-import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.position.RangePosition;
-import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
@@ -33,20 +30,14 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
-import com.sun.star.table.CellHoriJustify;
-
 /**
  * Bereinigte Teilnehmerliste für das Maastrichter Turniersystem – als Aushang und Webseite.
- * Listet alle aktiven Teams in einem mehrspaltigem Raster auf.
+ * Listet alle aktiven Teams in einem mehrspaltigen Raster auf, gemeinsame Logik im
+ * {@link TeilnehmerSheetBuilder}.
  */
 public class MaastrichterTeilnehmerSheet extends SheetRunner implements ISheet {
 
-    public static final int ERSTE_DATEN_ZEILE = 1;
-    public static final int TEAM_NR_SPALTE = 0;
-    public static final int TEAM_NAME_SPALTE = 1;
-    public static final int ANZAHL_SPALTEN = 3; // nr + name + leer
-
-    private static final int TEAM_NAME_SPALTE_WIDTH = 6000;
+    private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 3;
 
     private final MaastrichterKonfigurationSheet konfigurationSheet;
     private final MaastrichterMeldeListeSheetUpdate meldeliste;
@@ -97,101 +88,39 @@ public class MaastrichterTeilnehmerSheet extends SheetRunner implements ISheet {
             return;
         }
 
-        ColumnProperties celPropNr = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
-                .setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH);
-        NumberCellValue teamNrVal = NumberCellValue.from(getXSpreadSheet(), Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE))
-                .setBorder(BorderFactory.from().allThin().toBorder()).setCharColor(ColorHelper.CHAR_COLOR_GRAY_SPIELER_NR);
+        boolean teamnameAktiv = konfigurationSheet.isMeldeListeTeamnameAnzeigen();
+        TeilnehmerNamen namen = TeilnehmerNamenLeser.from(meldeliste, MELDELISTE_ERSTE_DATEN_ZEILE,
+                konfigurationSheet.getMeldeListeFormation(), teamnameAktiv,
+                konfigurationSheet.isMeldeListeVereinsnameAnzeigen()).lesen();
+        Map<Integer, String> spielerNamen = namen.spielerNamen();
+        Map<Integer, String> teamnamen = namen.teamnamen();
 
-        ColumnProperties celPropName = ColumnProperties.from().setHoriJustify(CellHoriJustify.CENTER)
-                .setWidth(TEAM_NAME_SPALTE_WIDTH);
-        StringCellValue nameFormula = StringCellValue.from(getXSpreadSheet(), Position.from(TEAM_NAME_SPALTE, ERSTE_DATEN_ZEILE))
-                .setBorder(BorderFactory.from().allThin().toBorder()).setShrinkToFit(true);
-
-        int teamCntr = 1;
-        int maxAnzTeamsInSpalte = 0;
-        int maxAnzTeilnehmerInSpalte = konfigurationSheet.getMaxAnzTeilnehmerInSpalte();
-        spalteFormat(teamNrVal, celPropNr, nameFormula, celPropName);
+        List<TeilnehmerEintrag> eintraege = new ArrayList<>(aktiveMeldungen.size());
+        for (Team team : aktiveMeldungen.getTeamList()) {
+            int nr = team.getNr();
+            eintraege.add(new TeilnehmerEintrag(nr,
+                    teamnamen.getOrDefault(nr, ""),
+                    spielerNamen.getOrDefault(nr, "")));
+        }
 
         processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", aktiveMeldungen.size());
 
-        for (Team team : aktiveMeldungen.getTeamList()) {
-            teamNrVal.setValue((double) team.getNr());
-            nameFormula.setValue(MeldeListeHelper.teamNameVlookup(teamNrVal.getPos().getAddress()));
+        TeilnehmerSheetBuilder builder = TeilnehmerSheetBuilder.from(this)
+                .daten(eintraege)
+                .teamnameAktiv(teamnameAktiv)
+                .maxProBlock(konfigurationSheet.getMaxAnzTeilnehmerInSpalte())
+                .headerFarbe(konfigurationSheet.getMeldeListeHeaderFarbe())
+                .zebraFarben(konfigurationSheet.getMeldeListeHintergrundFarbeGerade(),
+                        konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade())
+                .aufbauen();
 
-            getSheetHelper().setNumberValueInCell(teamNrVal);
-            getSheetHelper().setFormulaInCell(nameFormula);
-
-            teamNrVal.zeilePlusEins();
-            nameFormula.zeilePlusEins();
-
-            if ((teamCntr / maxAnzTeilnehmerInSpalte) * maxAnzTeilnehmerInSpalte == teamCntr) {
-                teamNrVal.spalte((teamCntr / maxAnzTeilnehmerInSpalte) * ANZAHL_SPALTEN).zeile(ERSTE_DATEN_ZEILE);
-                nameFormula.spalte(teamNrVal.getPos().getSpalte() + 1).zeile(ERSTE_DATEN_ZEILE);
-                spalteFormat(teamNrVal, celPropNr, nameFormula, celPropName);
-            }
-            teamCntr++;
-            if (maxAnzTeamsInSpalte < maxAnzTeilnehmerInSpalte) {
-                maxAnzTeamsInSpalte++;
-            }
-        }
-
-        int letzteSpalte = nameFormula.getPos().getSpalte();
-
-        headerSchreiben(letzteSpalte);
-        zebrafarbenSchreiben(letzteSpalte, maxAnzTeamsInSpalte);
-
-        StringCellValue footer = StringCellValue.from(getXSpreadSheet(),
-                Position.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE + maxAnzTeamsInSpalte)).zeilePlusEins()
+        int letzteSpalte = builder.getLetzteDatenSpalte();
+        int footerZeile = builder.getLetzteDatenZeile() + 1;
+        StringCellValue footer = StringCellValue.from(getXSpreadSheet(), Position.from(0, footerZeile))
                 .setValue(I18n.get("teilnehmer.footer.anzahl", aktiveMeldungen.size()))
-                .setEndPosMergeSpalte(letzteSpalte).setCharWeight(com.sun.star.awt.FontWeight.BOLD).setCharHeight(12)
+                .setEndPosMergeSpalte(letzteSpalte).setCharWeight(FontWeight.BOLD).setCharHeight(12)
                 .setShrinkToFit(true);
         getSheetHelper().setStringValueInCell(footer);
-        printBereichDefinieren(footer.getPos(), letzteSpalte);
-    }
-
-    private void headerSchreiben(int letzteSpalte) throws GenerateException {
-        var headerFarbe = konfigurationSheet.getMeldeListeHeaderFarbe();
-        int anzahlBloecke = letzteSpalte / ANZAHL_SPALTEN + 1;
-        for (int block = 0; block < anzahlBloecke; block++) {
-            int nrSpalte = block * ANZAHL_SPALTEN + TEAM_NR_SPALTE;
-            int nameSpalte = nrSpalte + 1;
-            getSheetHelper().setStringValueInCell(StringCellValue
-                    .from(getXSpreadSheet(), Position.from(nrSpalte, 0), I18n.get("column.header.nr"))
-                    .setBorder(BorderFactory.from().allThin().toBorder())
-                    .setCellBackColor(headerFarbe)
-                    .setHoriJustify(CellHoriJustify.CENTER)
-                    .setShrinkToFit(true));
-            getSheetHelper().setStringValueInCell(StringCellValue
-                    .from(getXSpreadSheet(), Position.from(nameSpalte, 0), I18n.get("column.header.name"))
-                    .setBorder(BorderFactory.from().allThin().toBorder())
-                    .setCellBackColor(headerFarbe)
-                    .setHoriJustify(CellHoriJustify.CENTER)
-                    .setShrinkToFit(true));
-        }
-    }
-
-    private void zebrafarbenSchreiben(int letzteSpalte, int anzahlZeilen) throws GenerateException {
-        if (anzahlZeilen <= 0) {
-            return;
-        }
-        var geradeFarbe = konfigurationSheet.getMeldeListeHintergrundFarbeGerade();
-        var ungeradeFarbe = konfigurationSheet.getMeldeListeHintergrundFarbeUnGerade();
-        var datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
-                letzteSpalte, ERSTE_DATEN_ZEILE + anzahlZeilen - 1);
-        SheetHelper.faerbeZeilenAbwechselnd(this, datenRange, geradeFarbe, ungeradeFarbe);
-    }
-
-    private void printBereichDefinieren(Position footerPos, int letzteSpalte) throws GenerateException {
-        processBoxinfo("processbox.print.bereich");
-        Position linksOben = Position.from(TEAM_NR_SPALTE, 0);
-        Position rechtsUnten = Position.from(letzteSpalte, footerPos.getZeile());
-        PrintArea.from(getXSpreadSheet(), getWorkingSpreadsheet()).setPrintArea(RangePosition.from(linksOben, rechtsUnten));
-    }
-
-    private void spalteFormat(NumberCellValue nrVal, ColumnProperties celPropNr,
-            StringCellValue nameVal, ColumnProperties celPropName) throws GenerateException {
-        getSheetHelper().setColumnProperties(getXSpreadSheet(), nrVal.getPos().getSpalte(), celPropNr);
-        getSheetHelper().setColumnProperties(getXSpreadSheet(), nameVal.getPos().getSpalte(), celPropName);
-        getSheetHelper().setColumnProperties(getXSpreadSheet(), nameVal.getPos().getSpalte() + 1, celPropNr);
+        builder.freezeUndPrintbereich(footerZeile);
     }
 }

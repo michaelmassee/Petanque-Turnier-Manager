@@ -487,6 +487,7 @@ class SchweizerListeDelegate implements MeldeListeKonstanten {
 		konfigurationSheet.setAktiveSpielRunde(spielRundeNr);
 	}
 
+
 	/**
 	 * Letzte Zeile mit einem nicht-leeren Vorname (Spieler 1) ab ERSTE_DATEN_ZEILE.
 	 * Gibt ERSTE_DATEN_ZEILE - 1 zurück wenn keine Daten vorhanden.
