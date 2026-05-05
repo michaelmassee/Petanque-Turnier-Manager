@@ -32,24 +32,27 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Install LibreOffice (UNO-SDK-JARs für compileOnly/test)
-        # Liefert /usr/lib/libreoffice/program/classes/{ridl,unoil,juh,jurt}.jar.
-        # Timeout + Retry: apt-Mirror-Hänger sind regelmässig auf GitHub-Runnern.
-        timeout-minutes: 8
+      - name: Install LibreOffice UNO-SDK-JARs für compileOnly/test
+        # Wir brauchen nur /usr/lib/libreoffice/program/classes/{ridl,unoil,juh,jurt}.jar.
+        # libreoffice-java-common (~25 MB) liefert die zusammen mit libreoffice-core
+        # — kein volles libreoffice-Meta-Paket (~500 MB) nötig. Reduziert Install-Zeit
+        # und Mirror-Last drastisch. Pro Versuch ein eigenes 4-min-Timeout via `timeout`,
+        # kein Step-Timeout (sonst killt es den Retry vorzeitig).
         run: |
           set -e
           for attempt in 1 2 3; do
-            echo "::group::apt-get update + install (Versuch $attempt)"
-            if sudo apt-get update && \
-               sudo apt-get install -y --no-install-recommends \
-                 libreoffice \
+            echo "::group::apt update + install (Versuch $attempt)"
+            if timeout 240 sudo apt-get update && \
+               timeout 240 sudo apt-get install -y --no-install-recommends \
+                 libreoffice-core \
                  libreoffice-java-common; then
               echo "::endgroup::"
+              ls /usr/lib/libreoffice/program/classes/ | head
               exit 0
             fi
             echo "::endgroup::"
-            echo "Versuch $attempt fehlgeschlagen, neuer Versuch in 10s ..."
-            sleep 10
+            echo "Versuch $attempt fehlgeschlagen, neuer Versuch in 15 s …"
+            sleep 15
           done
           echo "Alle 3 apt-Versuche fehlgeschlagen."
           exit 1
