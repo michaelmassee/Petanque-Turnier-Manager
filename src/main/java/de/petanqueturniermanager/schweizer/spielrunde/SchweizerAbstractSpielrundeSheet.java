@@ -93,7 +93,7 @@ public abstract class SchweizerAbstractSpielrundeSheet extends SheetRunner imple
 	private final SpielrundeHelper spielrundeHelper;
 	private final String sheetBaseName;
 	private SpielRundeNr spielRundeNrInSheet = null;
-	private boolean forceOk = false; // wird fuer Test verwendet
+	private volatile boolean forceOk = false; // wird fuer Test verwendet
 
 	//	private SpielRundeNr sheetSpielRundeNr = null; // muss nicht der Aktive sein
 

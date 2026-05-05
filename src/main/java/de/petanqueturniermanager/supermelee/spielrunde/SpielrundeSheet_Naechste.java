@@ -37,7 +37,7 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
-	private boolean forceOk = false;
+	private volatile boolean forceOk = false;
 
 	public SpielrundeSheet_Naechste(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrunde");

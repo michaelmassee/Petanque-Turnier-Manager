@@ -6,6 +6,8 @@ package de.petanqueturniermanager.sidebar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -67,9 +69,9 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private Layout layout;
 	private volatile boolean istBereinigt = false;
 	/** Gesetzt wenn GTK-Fenster-Erstellung während FillToolbar verschoben wurde. */
-	private boolean ausstehendInit = false;
+	private volatile boolean ausstehendInit = false;
 	/** Zählt jeden Rebuild; Callbacks prüfen die Generation, um veraltete Events zu verwerfen. */
-	private int uiGeneration = 0;
+	private final AtomicInteger uiGeneration = new AtomicInteger(0);
 	/**
 	 * Letzte Generation, für die {@code requestLayout()} + vollständiger UI-Aufbau abgeschlossen wurden.
 	 * Ist nur dann {@code == uiGeneration}, wenn die UI stabil interaktiv ist.
@@ -163,7 +165,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		if (window != null) {
 			window.dispose();
 		}
-		uiGeneration++; // erst nach dispose – alte UI ist jetzt tot, neue Generation beginnt
+		uiGeneration.incrementAndGet(); // erst nach dispose – alte UI ist jetzt tot, neue Generation beginnt
 		window = null;
 		if (guiFactoryCreateParam != null) {
 			guiFactoryCreateParam.clear();
@@ -294,7 +296,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	}
 
 	protected final int getUiGeneration() {
-		return uiGeneration;
+		return uiGeneration.get();
 	}
 
 	/**
@@ -303,7 +305,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	 * Nur dann dürfen UI-Events (itemStateChanged, selectionChanged) verarbeitet werden.
 	 */
 	protected final boolean isUiReady() {
-		return uiReadyGeneration == uiGeneration && !istBereinigt && !ausstehendInit;
+		return uiReadyGeneration == uiGeneration.get() && !istBereinigt && !ausstehendInit;
 	}
 
 	/**
@@ -312,7 +314,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	 * um veraltete Events sicher zu verwerfen.
 	 */
 	protected final boolean isUiAlive(int gen) {
-		return isUiReady() && gen == uiGeneration;
+		return isUiReady() && gen == uiGeneration.get();
 	}
 
 	/**
@@ -453,8 +455,9 @@ public abstract class BaseSidebarContent extends ComponentBase
 			if (getLayout() != null) {
 				getLayout().layout(posSizeParent);
 			}
-			if (uiReadyGeneration != uiGeneration) {
-				uiReadyGeneration = uiGeneration;
+			int genJetzt = uiGeneration.get();
+			if (uiReadyGeneration != genJetzt) {
+				uiReadyGeneration = genJetzt;
 				var pending = ausstehendAktualisierung;
 				if (pending != null) {
 					ausstehendAktualisierung = null;

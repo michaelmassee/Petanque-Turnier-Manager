@@ -20,7 +20,7 @@ public class TerminateListener implements XTerminateListener {
 
 	private static TerminateListener terminateListener = null;
 
-	public static void addThisListenerOnce(XComponentContext context) {
+	public static synchronized void addThisListenerOnce(XComponentContext context) {
 		if (terminateListener == null) {
 			XDesktop currentDesktop = DocumentHelper.getCurrentDesktop(context);
 			terminateListener = new TerminateListener();

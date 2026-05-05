@@ -92,10 +92,10 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
     private final SpielrundeHelper spielrundeHelper;
 
     /** Rundennummer des im aktuellen Lauf erstellten Sheets (0 = noch nicht erstellt). */
-    private int aktuelleRundeNr;
+    private volatile int aktuelleRundeNr;
 
     /** Wird für Tests gesetzt, damit forceCreate aktiviert wird. */
-    private boolean forceOk;
+    private volatile boolean forceOk;
 
     public KaskadeSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskaden-Spielrunde");

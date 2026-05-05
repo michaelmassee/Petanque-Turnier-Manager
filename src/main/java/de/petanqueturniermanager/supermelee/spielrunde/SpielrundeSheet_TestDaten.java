@@ -42,7 +42,7 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
-	private boolean forceOk = false;
+	private volatile boolean forceOk = false;
 
 	public SpielrundeSheet_TestDaten(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrunde");

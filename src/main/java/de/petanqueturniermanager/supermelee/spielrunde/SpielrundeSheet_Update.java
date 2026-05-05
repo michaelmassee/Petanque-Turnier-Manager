@@ -29,7 +29,7 @@ public class SpielrundeSheet_Update extends SheetRunner
 
 	private SpielTagNr spielTag = null;
 	private SpielRundeNr spielRundeNr = null;
-	private boolean forceOk = false;
+	private volatile boolean forceOk = false;
 
 	public SpielrundeSheet_Update(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.SUPERMELEE, "Spielrunde");

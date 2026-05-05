@@ -25,6 +25,26 @@
     </Match>
 
     <!--
+        WebServerInstanz/CompositeViewInstanz: getCachedInitJson() und
+        getKonfiguration() sind nicht synchronized, die zugehörigen Setter schon.
+        Die gelesenen Felder (cachedInitJson, konfiguration) sind aber bereits
+        volatile — Sichtbarkeit ist garantiert, kein Sync-Bedarf für reine Reads.
+        Die Setter-Synchronisation schützt nur Compound-Updates (Cache + SSE-Push).
+        → False Positive für diese 4 Getter.
+    -->
+    <Match>
+        <Or>
+            <Class name="de.petanqueturniermanager.webserver.WebServerInstanz"/>
+            <Class name="de.petanqueturniermanager.webserver.CompositeViewInstanz"/>
+        </Or>
+        <Or>
+            <Method name="getCachedInitJson"/>
+            <Method name="getKonfiguration"/>
+        </Or>
+        <Bug pattern="UG_SYNC_SET_UNSYNC_GET"/>
+    </Match>
+
+    <!--
         TimerManager.get(): SpotBugs meldet SING_SINGLETON_GETTER_NOT_SYNCHRONIZED.
         Das Feld 'instanz' ist aber bereits 'volatile' (siehe TimerManager.java:37);
         ein Lese-Zugriff auf eine volatile-Referenz braucht keine Synchronisation.

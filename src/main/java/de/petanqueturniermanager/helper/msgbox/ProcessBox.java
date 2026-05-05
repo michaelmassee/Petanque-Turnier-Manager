@@ -42,7 +42,7 @@ public class ProcessBox implements TimerListener {
     private static final int MIN_WIDTH = 600;
     private static final String TITLE = "Pétanque Turnier Manager";
     private static volatile ProcessBox processBox;
-    private static boolean headlessMode = false;
+    private static volatile boolean headlessMode = false;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
 

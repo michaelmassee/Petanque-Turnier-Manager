@@ -97,7 +97,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
     private final FormuleXMeldeListeSheetUpdate meldeListe;
     private final SpielrundeHelper spielrundeHelper;
     private SpielRundeNr spielRundeNrInSheet = null;
-    private boolean forceOk = false;
+    private volatile boolean forceOk = false;
 
     protected FormuleXAbstractSpielrundeSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.FORMULEX, "Formule X Spielrunde");

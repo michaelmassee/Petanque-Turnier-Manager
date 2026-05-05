@@ -74,7 +74,7 @@ public class LigaRanglisteSheet extends SheetRunner implements ISheet, IRanglist
 	private final MeldungenSpalte<TeamMeldungen, Team> meldungenSpalte;
 	private final LigaMeldeListeSheetUpdate meldeListe;
 	private final RangListeSorter rangListeSorter;
-	private int cachedAnzZeilen = -1;
+	private volatile int cachedAnzZeilen = -1;
 
 	/**
 	 * @param workingSpreadsheet

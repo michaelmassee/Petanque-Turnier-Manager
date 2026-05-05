@@ -114,7 +114,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
      */
     private final List<String> panelUrls = new ArrayList<>();
     /** Index des aktuell ausgewählten Panels (-1 = keines). */
-    private int ausgewaehlterPanelIndex = 0;
+    private volatile int ausgewaehlterPanelIndex = 0;
 
     private final List<String> dynamischeControlNamen = new ArrayList<>();
 

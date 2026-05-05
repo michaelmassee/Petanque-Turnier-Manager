@@ -37,9 +37,9 @@ public class SortHelper {
 	private final RangePosition rangePositionToSort;
 
 	// private int sortSpalte = 0; // 0 = erste spalte
-	private boolean aufSteigendSortieren = true;
-	private boolean caseSensitive = false;
-	private boolean bindFormatsToContent = false;
+	private volatile boolean aufSteigendSortieren = true;
+	private volatile boolean caseSensitive = false;
+	private volatile boolean bindFormatsToContent = false;
 	private int[] sortSpalten = new int[] { 0 }; // default erste spalte
 	private final XSpreadsheet xSpreadsheet;
 	private final XSpreadsheetDocument workingSpreadsheetDocument;

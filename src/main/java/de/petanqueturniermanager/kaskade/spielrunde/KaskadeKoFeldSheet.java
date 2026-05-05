@@ -48,7 +48,7 @@ public class KaskadeKoFeldSheet extends SheetRunner implements ISheet {
     private String letzterBezeichner;
 
     /** Wird für Tests gesetzt, damit forceCreate bei KaskadeGruppenRanglisteSheet aktiviert wird. */
-    private boolean forceOk;
+    private volatile boolean forceOk;
 
     public KaskadeKoFeldSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskaden-KO-Feld");

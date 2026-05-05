@@ -99,12 +99,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	static final int SIEGER_NAME_COL_WIDTH = 5000;
 
 	// Farben – aus Konfiguration gelesen (Standardwerte als Fallback)
-	private int headerFarbe       = 0x2544DD;
-	private int teamAFarbe        = 0xDCEEFA;
-	private int teamBFarbe        = 0xF0F7FF;
-	private int siegerFarbe       = 0xFFD700;
-	private int bahnFarbe         = 0xEEEEEE;
-	private int drittePlatzFarbe  = 0xCD7F32;
+	private volatile int headerFarbe       = 0x2544DD;
+	private volatile int teamAFarbe        = 0xDCEEFA;
+	private volatile int teamBFarbe        = 0xF0F7FF;
+	private volatile int siegerFarbe       = 0xFFD700;
+	private volatile int bahnFarbe         = 0xEEEEEE;
+	private volatile int drittePlatzFarbe  = 0xCD7F32;
 
 	/** Unicode-Zeichen für die Konnektorspalte */
 	private static final String CHAR_TOP = "┐";
@@ -120,18 +120,18 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private String aktuellerGruppenSheetName = null;
 
 	// Cadrage-State
-	private boolean mitCadrage = false;
-	private int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
-	private int anzFreilose = 0;
-	private int gesanzTeamsIntern = 0;
+	private volatile boolean mitCadrage = false;
+	private volatile int cadrageSpaltOffset = 0; // = colGroupSize wenn Cadrage vorhanden, sonst 0
+	private volatile int anzFreilose = 0;
+	private volatile int gesanzTeamsIntern = 0;
 
 	// Spalten-Offsets (dynamisch je nach spielbahn)
 	// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
 	// Ohne Bahn:   Team(0) | Score(1) | Connector(2)             → colGroupSize = 3
-	private int teamOffset = 0;
-	private int scoreOffset = 1;
-	private int connectorOffset = 2;
-	private int colGroupSize = 3;
+	private volatile int teamOffset = 0;
+	private volatile int scoreOffset = 1;
+	private volatile int connectorOffset = 2;
+	private volatile int colGroupSize = 3;
 
 	/** Sammelt Score-Zell-Positionen während einer Bracket-Erstellung für den Blattschutz. */
 	private List<Position> aktuelleScorePositionen = null;

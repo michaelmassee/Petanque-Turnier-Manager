@@ -38,7 +38,7 @@ public class OfficeStarter {
 	// https://help.libreoffice.org/6.2/he/text/shared/guide/start_parameters.html
 	private static final String SOFFICE_BIN = "soffice";
 
-	private boolean usingPipes = false;
+	private volatile boolean usingPipes = false;
 	private XComponentContext xComponentContext = null;
 
 	private Process sofficeProcess = null; // OS-Prozess des gestarteten soffice, für forceful termination
@@ -47,7 +47,7 @@ public class OfficeStarter {
 	private XDesktop xDesktop;
 	private XComponentLoader xComponentLoader;
 
-	private boolean headless = false;
+	private volatile boolean headless = false;
 	private String userInstallation = null; // custom user profile directory
 
 	private static AtomicBoolean isOfficeTerminated = new AtomicBoolean();

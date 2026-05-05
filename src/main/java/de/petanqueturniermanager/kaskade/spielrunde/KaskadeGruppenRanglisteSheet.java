@@ -83,7 +83,7 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
     private final KaskadeMeldeListeSheetUpdate meldeListe;
 
     /** Wird für Tests gesetzt, damit forceCreate aktiviert wird. */
-    private boolean forceOk;
+    private volatile boolean forceOk;
 
     public KaskadeGruppenRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
         super(workingSpreadsheet, TurnierSystem.KASKADE, "Kaskaden-Gruppenrangliste");

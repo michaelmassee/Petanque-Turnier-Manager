@@ -63,7 +63,7 @@ public abstract class SheetRunner extends Thread {
 		return logPrefix;
 	}
 
-	private boolean backupDocumentAfterRun;
+	private volatile boolean backupDocumentAfterRun;
 
 	protected SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet, "WorkingSpreadsheet==null");
