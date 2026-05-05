@@ -14,6 +14,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJTestMeldeListeErstellen;
 
 /**
@@ -58,6 +59,7 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 	@Test
 	public void testSpielplanNummern() throws GenerateException {
 		logger.info("testSpielplanNummern");
+		new JGJKonfigurationSheet(wkingSpreadsheet).setRueckrunde(true);
 		JGJSpielPlanSheet spielPlan = new JGJSpielPlanSheet(wkingSpreadsheet);
 		spielPlan.run();
 

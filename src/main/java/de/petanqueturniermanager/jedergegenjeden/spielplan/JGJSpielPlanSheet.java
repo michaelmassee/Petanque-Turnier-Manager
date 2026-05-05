@@ -195,6 +195,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 			insertFormulaPunkte();
 			insertFormulaTeamNamen();
 			insertFormulaValidierung();
+			verbergeArbeitsspalten();
 			formatieren(spielPlanHRunde, spielPlanRRunde, ERSTE_SPIELTAG_DATEN_ZEILE);
 		}
 
@@ -245,6 +246,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		insertFormulaPunkte();
 		insertFormulaTeamNamen();
 		insertFormulaValidierung();
+		verbergeArbeitsspalten();
 
 		for (int g = 0; g < gruppen.size(); g++) {
 			formatieren(gruppenSpielplaeneH.get(g), gruppenSpielplaeneR.get(g), gruppenStartZeilen.get(g));
@@ -360,13 +362,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		RangeHelper.from(this, rangeData.getRangePosition(startPos)).setDataInRange(rangeData).setRangeProperties(
 				RangeProperties.from().centerJustify().setBorder(BorderFactory.from().allThin().toBorder()));
 
-		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
-				.isVisible(false);
 		XSpreadsheet sheet = getXSpreadSheet();
-		getSheetHelper().setColumnProperties(sheet, TEAM_A_NR_SPALTE, spalteBreite);
-		getSheetHelper().setColumnProperties(sheet, TEAM_B_NR_SPALTE, spalteBreite);
-		getSheetHelper().setColumnProperties(sheet, SPIELE_A_SPALTE, spalteBreite);
-		getSheetHelper().setColumnProperties(sheet, SPIELE_B_SPALTE, spalteBreite);
 
 		int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
 		int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
@@ -382,6 +378,16 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 				zeile++;
 			}
 		}
+	}
+
+	private void verbergeArbeitsspalten() throws GenerateException {
+		ColumnProperties spalteBreite = ColumnProperties.from().setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
+				.isVisible(false);
+		XSpreadsheet sheet = getXSpreadSheet();
+		getSheetHelper().setColumnProperties(sheet, TEAM_A_NR_SPALTE, spalteBreite);
+		getSheetHelper().setColumnProperties(sheet, TEAM_B_NR_SPALTE, spalteBreite);
+		getSheetHelper().setColumnProperties(sheet, SPIELE_A_SPALTE, spalteBreite);
+		getSheetHelper().setColumnProperties(sheet, SPIELE_B_SPALTE, spalteBreite);
 	}
 
 	private void insertSpieltageDaten(List<List<TeamPaarung>> spielPlanHRunde,
@@ -413,7 +419,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		{
 			String formulaHeimPunkteStr = "WENN("
 					+ Position.from(SPIELPNKT_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
-					+ Position.from(SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
+					+ Position.from(SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0)";
 
 			StringCellValue formulaHeimPunkte = StringCellValue.from(getXSpreadSheet())
 					.setValue(formulaHeimPunkteStr)
@@ -429,7 +435,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		{
 			String formulaGastPunkteStr = "WENN("
 					+ Position.from(SPIELPNKT_B_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ">"
-					+ Position.from(SPIELPNKT_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0";
+					+ Position.from(SPIELPNKT_A_SPALTE, ERSTE_SPIELTAG_DATEN_ZEILE).getAddress() + ";1;0)";
 
 			StringCellValue formulaGastPunkte = StringCellValue.from(getXSpreadSheet())
 					.setValue(formulaGastPunkteStr)
