@@ -2,6 +2,7 @@
 
 # Pétanque-Turnier-Manager
 
+[![CI](https://github.com/michaelmassee/Petanque-Turnier-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/michaelmassee/Petanque-Turnier-Manager/actions/workflows/ci.yml)
 [![License: EUPL v1.2](https://img.shields.io/badge/License-EUPL_1.2-blue.svg)](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12)
 [![Wiki](https://img.shields.io/badge/Doku-Projekt_Wiki-green.svg)](https://github.com/michaelmassee/Petanque-Turnier-Manager/wiki)
 [![Spenden mit PayPal](https://img.shields.io/badge/Spenden-PayPal-blue.svg)](https://www.paypal.me/michaelmassee1)

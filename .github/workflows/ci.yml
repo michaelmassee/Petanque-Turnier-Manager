@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Build & Unit-Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install LibreOffice (UNO-SDK-JARs für compileOnly/test)
+        # Liefert /usr/lib/libreoffice/program/classes/{ridl,unoil,juh,jurt}.jar.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libreoffice \
+            libreoffice-java-common
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        # gradle.properties enthält einen lokalen org.gradle.java.home (SDKMAN-Pfad),
+        # den wir per -D auf den vom setup-java bereitgestellten JAVA_HOME überschreiben.
+        run: ./gradlew test -Dorg.gradle.java.home="$JAVA_HOME" --no-daemon --stacktrace
