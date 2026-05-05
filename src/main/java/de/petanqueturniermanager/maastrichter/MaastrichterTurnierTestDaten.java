@@ -3,8 +3,8 @@
  */
 package de.petanqueturniermanager.maastrichter;
 
-import java.util.concurrent.ThreadLocalRandom;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -188,8 +188,8 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 			if (nrB <= 0) continue; // Freilos – kein Ergebnis nötig
 
 			int zeile = SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
-			int winner = ThreadLocalRandom.current().nextInt(2);
-			int loserPts = ThreadLocalRandom.current().nextInt(0, 13);
+			int winner = RandomSource.nextInt(2);
+			int loserPts = RandomSource.nextInt(0, 13);
 			int ergA = (winner == 0) ? 13 : loserPts;
 			int ergB = (winner == 0) ? loserPts : 13;
 

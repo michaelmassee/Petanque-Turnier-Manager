@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.kaskade;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -14,6 +12,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -140,8 +139,8 @@ public class KaskadeTurnierTestDaten extends SheetRunner implements ISheet {
             }
 
             int datenZeile = KaskadeSpielrundeSheet.ERSTE_DATEN_ZEILE + i;
-            int gewinner   = ThreadLocalRandom.current().nextInt(2);
-            int verliererP = ThreadLocalRandom.current().nextInt(0, 13);
+            int gewinner   = RandomSource.nextInt(2);
+            int verliererP = RandomSource.nextInt(0, 13);
             int ergA = (gewinner == 0) ? 13 : verliererP;
             int ergB = (gewinner == 0) ? verliererP : 13;
 

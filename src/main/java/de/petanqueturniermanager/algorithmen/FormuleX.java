@@ -18,6 +18,7 @@ import org.apache.commons.collections4.ListUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamPaarung;
 
@@ -136,7 +137,7 @@ public class FormuleX {
 
 		// shuffle für zufällige Losung
 		List<Team> shuffled = new ArrayList<>(teams);
-		Collections.shuffle(shuffled);
+		Collections.shuffle(shuffled, RandomSource.asJavaRandom());
 
 		// split into 2 lists
 		List<List<Team>> partition = ListUtils.partition(shuffled, anzTeamPaarungen);

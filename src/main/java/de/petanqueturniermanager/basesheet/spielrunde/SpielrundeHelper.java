@@ -9,6 +9,7 @@ import com.sun.star.sheet.ConditionOperator;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
@@ -132,7 +133,7 @@ public class SpielrundeHelper {
 				bahnnummern.add(i);
 			}
 			// mishen
-			Collections.shuffle(bahnnummern);
+			Collections.shuffle(bahnnummern, RandomSource.asJavaRandom());
 			StringCellValue stringCellValue = StringCellValue.from(sheet, posErsteDatenZelle);
 			for (Integer bahnnr : bahnnummern) {
 				SheetRunner.testDoCancelTask();

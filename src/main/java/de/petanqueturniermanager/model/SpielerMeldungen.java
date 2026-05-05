@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.google.common.base.MoreObjects;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
@@ -79,7 +80,7 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 	 * Liste der Spieler mischen
 	 */
 	public SpielerMeldungen shuffle() {
-		Collections.shuffle(spielerList);
+		Collections.shuffle(spielerList, RandomSource.asJavaRandom());
 		return this;
 	}
 

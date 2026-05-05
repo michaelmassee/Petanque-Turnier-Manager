@@ -1,7 +1,7 @@
 package de.petanqueturniermanager.schweizer.spielrunde;
 
-import java.util.concurrent.ThreadLocalRandom;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -128,8 +128,8 @@ public class SchweizerTurnierTestDaten extends SchweizerAbstractSpielrundeSheet 
 			}
 
 			int zeile = ERSTE_DATEN_ZEILE + i;
-			int winner = ThreadLocalRandom.current().nextInt(2); // 0 oder 1
-			int loserPts = ThreadLocalRandom.current().nextInt(0, 13); // 0–12
+			int winner = RandomSource.nextInt(2); // 0 oder 1
+			int loserPts = RandomSource.nextInt(0, 13); // 0–12
 			int ergA = (winner == 0) ? 13 : loserPts;
 			int ergB = (winner == 0) ? loserPts : 13;
 

@@ -3,8 +3,8 @@
  */
 package de.petanqueturniermanager.poule;
 
-import java.util.concurrent.ThreadLocalRandom;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -185,8 +185,8 @@ public class PouleTurnierTestDaten extends SheetRunner implements ISheet {
      * Schreibt ein Zufallsergebnis (13:x mit x ∈ 0..12) in die ERG-Spalten der angegebenen Zeile.
      */
     private void schreibeErgebnis(XSpreadsheet xSheet, int zeile) throws GenerateException {
-        int loserPts = ThreadLocalRandom.current().nextInt(0, 13);
-        int winner = ThreadLocalRandom.current().nextInt(2);
+        int loserPts = RandomSource.nextInt(0, 13);
+        int winner = RandomSource.nextInt(2);
         int ergA = (winner == 0) ? 13 : loserPts;
         int ergB = (winner == 0) ? loserPts : 13;
 

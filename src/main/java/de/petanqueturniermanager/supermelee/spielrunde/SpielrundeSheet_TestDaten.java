@@ -5,8 +5,6 @@ package de.petanqueturniermanager.supermelee.spielrunde;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -17,6 +15,7 @@ import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -208,9 +207,9 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 
 					Position pos = Position.from(ERSTE_SPALTE_ERGEBNISSE, zeileCntr);
 
-					int welchenTeamHatGewonnen = ThreadLocalRandom.current().nextInt(0, 2);
-					int gewinnerPunkte = ThreadLocalRandom.current().nextInt(9, 14);
-					int verliererPunkte = ThreadLocalRandom.current().nextInt(0, gewinnerPunkte);
+					int welchenTeamHatGewonnen = RandomSource.nextInt(0, 2);
+					int gewinnerPunkte = RandomSource.nextInt(9, 14);
+					int verliererPunkte = RandomSource.nextInt(0, gewinnerPunkte);
 					int valA = (welchenTeamHatGewonnen == 0 ? verliererPunkte : gewinnerPunkte);
 					int valB = (welchenTeamHatGewonnen == 0 ? gewinnerPunkte : verliererPunkte);
 

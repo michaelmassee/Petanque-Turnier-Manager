@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -76,7 +77,7 @@ public class LigaMeldeListeSheetTestDaten extends SheetRunner implements ISheet 
 		TurnierSheet.from(meldelisteSheet, getWorkingSpreadsheet()).setActiv();
 
 		List<String> testNamen = listeMitTestNamen();
-		Collections.shuffle(testNamen);
+		Collections.shuffle(testNamen, RandomSource.asJavaRandom());
 
 		RangeData data = new RangeData();
 

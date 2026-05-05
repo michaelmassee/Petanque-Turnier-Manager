@@ -3,9 +3,9 @@
  */
 package de.petanqueturniermanager.liga.spielplan;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import de.petanqueturniermanager.algorithmen.JederGegenJeden;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -81,8 +81,8 @@ public class LigaSpielPlanSheetTestDaten extends LigaSpielPlanSheet {
 			for (int i = 0; i < anzPaarungen; i++) {
 				ArrayList<SpielErgebnis> ergebnisse = new ArrayList<>();
 				for (int sp = 0; sp < anzSpielInBegnung; sp++) {
-					int welchenTeamHatGewonnen = ThreadLocalRandom.current().nextInt(0, 2); // 0,1
-					int verliererPunkte = ThreadLocalRandom.current().nextInt(0, 13); // 0 - 12
+					int welchenTeamHatGewonnen = RandomSource.nextInt(0, 2); // 0,1
+					int verliererPunkte = RandomSource.nextInt(0, 13); // 0 - 12
 					SpielErgebnis ergebnis;
 					if (welchenTeamHatGewonnen == 0) {
 						ergebnis = new SpielErgebnis(13, verliererPunkte);

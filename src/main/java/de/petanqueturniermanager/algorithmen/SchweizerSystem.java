@@ -17,6 +17,7 @@ import org.apache.commons.collections4.ListUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
@@ -141,7 +142,7 @@ public class SchweizerSystem {
 
 		// first shuffle
 		List<Team> shuffled = new ArrayList<>(teams);
-		Collections.shuffle(shuffled);
+		Collections.shuffle(shuffled, RandomSource.asJavaRandom());
 
 		// now sort nach Setzpos
 		List<Team> sortedTeamList = shuffled.stream()

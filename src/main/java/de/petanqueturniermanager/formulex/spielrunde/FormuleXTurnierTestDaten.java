@@ -3,8 +3,6 @@
  */
 package de.petanqueturniermanager.formulex.spielrunde;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -15,6 +13,7 @@ import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetTest
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -111,8 +110,8 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
             int nrB = row.get(1).getIntVal(0);
             RowData ergebnisZeile = ergebnisData.addNewRow();
             if (nrB > 0) {
-                int winner = ThreadLocalRandom.current().nextInt(2);
-                int loserPts = ThreadLocalRandom.current().nextInt(0, 13);
+                int winner = RandomSource.nextInt(2);
+                int loserPts = RandomSource.nextInt(0, 13);
                 ergebnisZeile.add(new CellData(winner == 0 ? 13 : loserPts));
                 ergebnisZeile.add(new CellData(winner == 0 ? loserPts : 13));
             } else {

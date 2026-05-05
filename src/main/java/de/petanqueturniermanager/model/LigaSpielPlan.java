@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.algorithmen.JederGegenJeden;
 
 /**
@@ -39,7 +40,7 @@ public class LigaSpielPlan {
 
 	public LigaSpielPlan schufflePlan() {
 		for (int i = 0; i < 5; i++) { // 5 mal durchmischen
-			Collections.shuffle(spielPlan);
+			Collections.shuffle(spielPlan, RandomSource.asJavaRandom());
 		}
 		return this;
 	}

@@ -1,7 +1,7 @@
 package de.petanqueturniermanager.jedergegenjeden.spielplan;
 
-import java.util.concurrent.ThreadLocalRandom;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
@@ -107,8 +107,8 @@ public class JGJTurnierTestDaten extends JGJSpielPlanSheet {
             if (nrB <= 0) continue; // Freispiel – kein Ergebnis nötig
 
             int spielZeile = ERSTE_SPIELTAG_DATEN_ZEILE + i;
-            int gewinner = ThreadLocalRandom.current().nextInt(2);
-            int verliererPunkte = ThreadLocalRandom.current().nextInt(0, 13);
+            int gewinner = RandomSource.nextInt(2);
+            int verliererPunkte = RandomSource.nextInt(0, 13);
             int ergA = (gewinner == 0) ? 13 : verliererPunkte;
             int ergB = (gewinner == 0) ? verliererPunkte : 13;
 

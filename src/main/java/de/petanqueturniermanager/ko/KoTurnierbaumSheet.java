@@ -40,6 +40,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.random.RandomSource;
 
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
@@ -787,7 +788,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			for (int i = 0; i < anzMatches; i++) {
 				bahnen[i] = i + 1;
 			}
-			Random rng = new Random();
+			Random rng = RandomSource.asJavaRandom();
 			for (int i = anzMatches - 1; i > 0; i--) {
 				int j = rng.nextInt(i + 1);
 				int tmp = bahnen[i];

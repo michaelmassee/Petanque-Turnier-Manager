@@ -5,7 +5,6 @@
 package de.petanqueturniermanager.supermelee.meldeliste;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.commons.lang3.StringUtils;
 import com.sun.star.sheet.XSpreadsheet;
@@ -20,6 +19,7 @@ import de.petanqueturniermanager.helper.TestnamenLoader;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
@@ -86,7 +86,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 		for (Spieler spieler : aktiveUndAusgesetztMeldungenAktuellenSpielTag.spieler()) {
 			SheetRunner.testDoCancelTask();
 
-			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
+			int randomNum = RandomSource.nextInt(1, 5);
 			int spielerZeile = meldeListe.getSpielerZeileNr(spieler.getNr());
 			numVal.zeile(spielerZeile);
 			if (randomNum == 2) {
@@ -124,7 +124,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 		for (int zeileCnt = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeileCnt <= letzteDatenZeile; zeileCnt++) {
 			SheetRunner.testDoCancelTask();
 
-			int randomNum = ThreadLocalRandom.current().nextInt(1, 5);
+			int randomNum = RandomSource.nextInt(1, 5);
 			numVal.zeile(zeileCnt);
 			if (randomNum == 1) {
 				getSheetHelper().setNumberValueInCell(numVal.setValue((double) 1));
@@ -169,7 +169,7 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 					.setStringValueInCell(spielrNamen.setPos(posSpielerName).setValue(testNamen.get(spielerCntr)));
 
 			spielrNr.zeile(posSpielerName.getZeile());
-			int randomNum = ThreadLocalRandom.current().nextInt(0, 3);
+			int randomNum = RandomSource.nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
 				// zum test spielrnr vorgeben, mix in nr erreichen
 				getSheetHelper().setNumberValueInCell(spielrNr.setValue((double) spielerCntr + 1));

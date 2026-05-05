@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.exception.AlgorithmenException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
@@ -309,7 +310,7 @@ public class SuperMeleePaarungenV2 {
         int numTeams = n / teamSize;
 
         // Schritt 1: Zufällig mischen — für unterschiedliche Lösungen je Runde
-        Collections.shuffle(spieler);
+        Collections.shuffle(spieler, RandomSource.asJavaRandom());
 
         // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf
         boolean[][] matrix = new boolean[n][n];

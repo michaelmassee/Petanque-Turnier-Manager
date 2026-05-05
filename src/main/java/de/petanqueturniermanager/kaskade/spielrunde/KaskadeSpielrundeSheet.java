@@ -20,6 +20,7 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
+import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.KaskadenKoRunde;
 import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlan;
@@ -272,7 +273,7 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             int rundenNr, TeamMeldungen meldungenNachSP) throws GenerateException {
         if (ersteRunde) {
             var auslosung = new ArrayList<>(meldungenNachSP.teams());
-            Collections.shuffle(auslosung);
+            Collections.shuffle(auslosung, RandomSource.asJavaRandom());
             return Map.of("", auslosung.stream().map(Team::getNr).toList());
         }
         return new KaskadeRundenErgebnisLeser(getWorkingSpreadsheet()).ladeZwischenPositionen(rundenNr, plan);
