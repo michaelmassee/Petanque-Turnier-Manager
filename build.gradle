@@ -3,6 +3,7 @@ plugins {
     id 'java'
     id 'application'
     id 'com.github.spotbugs' version '6.0.26'
+    id 'net.ltgt.errorprone' version '4.1.0'
 }
 
 group = 'de.petanqueturniermanager'
@@ -86,6 +87,44 @@ tasks.named('spotbugsTest').configure {
     enabled = false
 }
 
+// ===================================================
+// NullAway via ErrorProne (Block B4 aus architektur-robust-analyse.md)
+// ===================================================
+// Annotated-Default — Pilot auf `helper.random` (kleines, neues Paket mit
+// nur einer Klasse). Methoden/Felder dort gelten als non-null, sofern nicht
+// explizit @Nullable annotiert. JSpecify-Mode aktiv, damit @org.jspecify.*
+// statt @javax.annotation.Nullable verwendet wird.
+//
+// Backlog: weitere helper-Subpakete schrittweise hinzufügen
+// (siehe NullAway:AnnotatedPackages — komma-separierte Liste). Im
+// helper-Wurzelpaket erzeugt der Annotated-Default heute ~100 Findings;
+// diese müssen vor einer breiteren Aktivierung als @Nullable annotiert oder
+// auf non-null hart gemacht werden.
+//
+// ErrorProne ist auf Java 25 (Class-File 69) noch jung — bei Inkompatibilität
+// kann der gesamte Block per `-PdisableErrorProne=true` ausgeschaltet werden.
+def errorProneAktiviert = !project.hasProperty('disableErrorProne')
+
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone.enabled = errorProneAktiviert
+    if (errorProneAktiviert) {
+        // Standard-ErrorProne-Checks deaktivieren (Bestandsaufnahme separat),
+        // nur NullAway scharf schalten.
+        options.errorprone.disableAllChecks = true
+        options.errorprone.check('NullAway', CheckSeverity.ERROR)
+        options.errorprone.option('NullAway:AnnotatedPackages', 'de.petanqueturniermanager.helper.random')
+        options.errorprone.option('NullAway:JSpecifyMode', 'true')
+    }
+}
+
+// ErrorProne fasst Tests bewusst nicht an — Mocks/Reflection produzieren
+// massive False-Positives.
+tasks.named('compileTestJava').configure {
+    options.errorprone.enabled = false
+}
+
 repositories {
     mavenCentral()
 }
@@ -135,6 +174,11 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.assertj:assertj-core:3.27.6'
     testImplementation 'org.mockito:mockito-core:5.21.0'
+
+    // Block B4: NullAway via ErrorProne. JSpecify als Annotations-Standard.
+    errorprone 'com.google.errorprone:error_prone_core:2.36.0'
+    errorprone 'com.uber.nullaway:nullaway:0.12.1'
+    compileOnly 'org.jspecify:jspecify:1.0.0'
 }
 
 configurations.all {
