@@ -90,7 +90,7 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 ### C. Robustheits-Refaktor (gezielt)
 - ~~**C1** Helper `LogUtil` einführen + `catch (Throwable)` → `catch (Exception)`~~ — **teilweise erledigt** (`SidebarPanelDelegator`, `GlobalEventListener`, `SheetMetadataHelper`); restliche ~30 Stellen per Boy-Scout-Rule.
 - ~~**C2** `SheetMetadataHelper.leseScoreText` Refactor~~ — **erledigt** (intern Optional, API unverändert). `Lo.requireQI` nicht eingeführt — durch Optional-Chain obsolet.
-- **C3** Mindest-Smoke-Test für `WebServerManager` (Start/Stop, eine Anfrage, JSON-Schema-Check).
+- ~~**C3** Mindest-Smoke-Test für `WebServerManager`~~ — **erledigt**: `WebServerInstanzSmokeTest` mit 6 Tests deckt Start/Stop, HTTP-Status-Codes (200/404/405) und JSON-Schema des `/debug/sse`-Diagnose-Endpunkts ab. Läuft ohne LibreOffice (StubResolver, freier OS-Port). `WebServerManager` selbst bleibt UNO-abhängig — getestet wird die innere `WebServerInstanz`, die das HTTP- und SSE-Handling kapselt.
 - **C4** Algorithmen-Tests ausweiten auf `forme/`, `kaskade/`, `poule/` (analog zu `SchweizerSystemTest`).
 
 ### D. Strukturelle Maßnahmen (groß)
