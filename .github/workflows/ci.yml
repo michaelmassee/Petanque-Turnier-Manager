@@ -13,6 +13,7 @@ jobs:
   test:
     name: Build & Unit-Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -33,11 +34,25 @@ jobs:
 
       - name: Install LibreOffice (UNO-SDK-JARs für compileOnly/test)
         # Liefert /usr/lib/libreoffice/program/classes/{ridl,unoil,juh,jurt}.jar.
+        # Timeout + Retry: apt-Mirror-Hänger sind regelmässig auf GitHub-Runnern.
+        timeout-minutes: 8
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libreoffice \
-            libreoffice-java-common
+          set -e
+          for attempt in 1 2 3; do
+            echo "::group::apt-get update + install (Versuch $attempt)"
+            if sudo apt-get update && \
+               sudo apt-get install -y --no-install-recommends \
+                 libreoffice \
+                 libreoffice-java-common; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Versuch $attempt fehlgeschlagen, neuer Versuch in 10s ..."
+            sleep 10
+          done
+          echo "Alle 3 apt-Versuche fehlgeschlagen."
+          exit 1
 
       - name: Install frontend dependencies
         working-directory: frontend
