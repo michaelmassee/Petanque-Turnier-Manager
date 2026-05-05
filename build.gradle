@@ -273,6 +273,12 @@ tasks.register('runLibreoffice', Exec) {
 // Mit -PuitTests=true werden auch UITests ausgeführt und die Extension reinstalliert.
 def mitUiTests = project.hasProperty('uitTests') && project.uitTests == 'true'
 
+// Java 25: LibreOffice lädt native Libs via System.load() – ohne --enable-native-access
+// erscheint pro Fork eine WARNING. Für alle Test-Tasks freischalten.
+tasks.withType(Test).configureEach {
+    jvmArgs '--enable-native-access=ALL-UNNAMED'
+}
+
 test {
     if (mitUiTests) {
         dependsOn 'reinstallExtension'

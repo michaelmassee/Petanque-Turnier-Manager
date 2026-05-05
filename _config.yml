@@ -8,3 +8,5 @@ exclude:
   - .gitignore
   - sidebar-liste-umbau.md
   - sidebar-neu.md
+  - architektur-robust-analyse.md
+  - luecken-in-ui-test.md
