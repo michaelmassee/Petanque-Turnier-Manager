@@ -3,6 +3,7 @@ package de.petanqueturniermanager.supermelee.meldeliste;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,8 +91,6 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
                 .spielTagPageStyle(getSpielTagNr())
                 .forceCreate().hideGrid().setActiv().create();
 
-        meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
-
         processBoxinfo("processbox.spieltag.meldungen.einlesen", getSpielTagNr().getNr());
         SpielerMeldungen aktiveUndAusgesetzt = meldeliste.getAktiveUndAusgesetztMeldungen();
 
@@ -109,6 +108,7 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
             int nr = spieler.getNr();
             eintraege.add(new TeilnehmerEintrag(nr, "", spielerNamen.getOrDefault(nr, "")));
         }
+        eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
 
         processBoxinfo("processbox.spieltag.meldungen.einfuegen", getSpielTagNr().getNr(), aktiveUndAusgesetzt.size());
 

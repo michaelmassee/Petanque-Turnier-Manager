@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.schweizer.meldeliste;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -89,7 +90,6 @@ public class SchweizerTeilnehmerSheet extends SheetRunner implements ISheet {
                 .forceCreate().hideGrid().setActiv().create();
 
         processBoxinfo("processbox.teilnehmer.meldungen.einlesen");
-        meldeliste.doSort(meldeliste.getSpielerNameErsteSpalte(), true);
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
 
         if (aktiveMeldungen.size() == 0) {
@@ -113,6 +113,7 @@ public class SchweizerTeilnehmerSheet extends SheetRunner implements ISheet {
                     teamnamen.getOrDefault(nr, ""),
                     spielerNamen.getOrDefault(nr, "")));
         }
+        eintraege.sort(Comparator.comparingInt(TeilnehmerEintrag::nr));
 
         processBoxinfo("processbox.teilnehmer.meldungen.einfuegen", aktiveMeldungen.size());
 
