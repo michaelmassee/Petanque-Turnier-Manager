@@ -512,7 +512,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new SpielrundeSheet_Naechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SUPER_SPIELRUNDEPLAN:
-				new SpielrundePlan(ws).testTurnierVorhanden().start();
+				new SpielrundePlan(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SPIELRUNDEN_TESTDATEN:
 				new SpielrundeSheet_TestDaten(ws).start();
@@ -594,7 +594,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new JGJRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_JGJ_GRUPPEN_SPIELPLAENE:
-				new JGJGruppenSpielplaeneSheet(ws).testTurnierVorhanden().start();
+				new JGJGruppenSpielplaeneSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER:
 				new JGJTurnierTestDaten(ws).start();
@@ -623,10 +623,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new de.petanqueturniermanager.schweizer.meldeliste.SchweizerTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_SCHWEIZER_AKTUELLE_SPIELRUNDE:
-				new SchweizerSpielrundeSheetUpdate(ws).start();
+				new SchweizerSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SCHWEIZER_NAECHSTE_SPIELRUNDE:
-				new SchweizerSpielrundeSheetNaechste(ws).start();
+				new SchweizerSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_SCHWEIZER_RANGLISTE:
 				new SchweizerRanglisteSheet(ws).testTurnierVorhanden().start();
@@ -653,16 +653,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new MaastrichterMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
 				break;
 			case CMD_MAASTRICHTER_NAECHSTE_VORRUNDE:
-				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().start();
+				new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_AKTUELLE_VORRUNDE:
-				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().start();
+				new MaastrichterSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_VORRUNDEN_RANGLISTE:
 				new MaastrichterVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_MAASTRICHTER_FINALRUNDEN:
-				new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new MaastrichterFinalrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_MAASTRICHTER_TEILNEHMER:
 				new MaastrichterTeilnehmerSheet(ws).testTurnierVorhanden().start();
@@ -694,7 +694,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new de.petanqueturniermanager.ko.meldeliste.KoTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_KO_TURNIERBAUM:
-				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new KoTurnierbaumSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KO_TESTDATEN_NUR_MELDELISTE:
 				new KoMeldeListeSheetTestDaten(ws, 8).start();
@@ -720,10 +720,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new FormuleXTeilnehmerSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_FORMULEX_NAECHSTE_SPIELRUNDE:
-				new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().start();
+				new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_FORMULEX_AKTUELLE_SPIELRUNDE:
-				new FormuleXSpielrundeSheetUpdate(ws).testTurnierVorhanden().start();
+				new FormuleXSpielrundeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_FORMULEX_RANGLISTE:
 				new FormuleXRanglisteSheet(ws).testTurnierVorhanden().start();
@@ -752,15 +752,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new KaskadeTurnierTestDaten(ws).start();
 				break;
 			case CMD_KASKADE_NAECHSTE_RUNDE:
-				new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KASKADE_AKTUELLE_RUNDE:
-				new KaskadeAktuelleRundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new KaskadeAktuelleRundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_KASKADE_KO_FELDER: {
 				var koFelder = new KaskadeKoFeldSheet(ws);
 				koFelder.setForceOk(true);
-				koFelder.testTurnierVorhanden().backUpDocument().start();
+				koFelder.testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			}
 			// ------------------------------
@@ -781,16 +781,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new PouleMeldeListeSheetTestDaten(ws).start();
 				break;
 			case CMD_POULE_VORRUNDE:
-				new PouleVorrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new PouleVorrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_SPIELPLAENE:
-				new PouleSpielplaeneSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new PouleSpielplaeneSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_VORRUNDEN_RANGLISTE:
 				new PouleVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
 				break;
 			case CMD_POULE_KO:
-				new PouleKoSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				new PouleKoSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_POULE_TESTDATEN_TURNIER:
 				new PouleTurnierTestDaten(ws).start();

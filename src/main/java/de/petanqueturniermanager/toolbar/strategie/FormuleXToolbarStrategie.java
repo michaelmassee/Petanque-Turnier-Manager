@@ -23,7 +23,7 @@ public class FormuleXToolbarStrategie implements ITurnierSystemToolbarStrategie 
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().start();
+        new FormuleXSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override

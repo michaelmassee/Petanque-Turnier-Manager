@@ -24,7 +24,7 @@ public class KaskadeToolbarStrategie implements ITurnierSystemToolbarStrategie {
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().start();
+        new KaskadeSpielrundeSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override
