@@ -78,6 +78,8 @@ public final class SheetNamen {
     public static final String KEY_KASKADE_GRUPPENRANGLISTE         = "sheet.name.kaskade.gruppenrangliste";
     /** Formule X Spielrunde: {0} = Rundennummer. Beispiel: "1. Spielrunde" */
     public static final String KEY_FORMULEX_SPIELRUNDE_MUSTER       = "sheet.name.formulex.spielrunde.muster";
+    /** JGJ Gruppen-Spielplan-Aushang: {0} = Gruppenbuchstabe. Beispiel: "Gruppe A Spielplan" */
+    public static final String KEY_JGJ_GRUPPE_SPIELPLAN_MUSTER      = "sheet.name.jgj.gruppe.spielplan.muster";
 
     // ── Legacy-Werte: unveränderliche deutsche Originalnamen ─────────────────
     // Werden ausschließlich als Fallback in findeSheetUndHeile() für alte Dokumente verwendet.
@@ -395,6 +397,17 @@ public final class SheetNamen {
     public static String formulexSpielrunde(int rundeNr) {
         var muster = getOderFallback(KEY_FORMULEX_SPIELRUNDE_MUSTER, "{0}. " + LEGACY_FORMULEX_SPIELRUNDE_PRAEFIX);
         return new MessageFormat(muster, Locale.ROOT).format(new Object[]{rundeNr});
+    }
+
+    /**
+     * JGJ Gruppen-Spielplan-Aushang: z.B. "Gruppe A Spielplan".
+     *
+     * @param buchstabe Gruppenbuchstabe, z.B. "A", "B"
+     * @return lokalisierter Tabellenname
+     */
+    public static String jgjGruppeSpielplan(String buchstabe) {
+        var muster = getOderFallback(KEY_JGJ_GRUPPE_SPIELPLAN_MUSTER, "Gruppe {0} " + LEGACY_SPIELPLAN);
+        return new MessageFormat(muster, Locale.ROOT).format(new Object[]{buchstabe});
     }
 
     // ── Hilfsmethode ─────────────────────────────────────────────────────────

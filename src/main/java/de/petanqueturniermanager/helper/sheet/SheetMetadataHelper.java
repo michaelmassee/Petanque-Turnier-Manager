@@ -74,6 +74,8 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_JGJ_SPIELPLAN = "__PTM_JGJ_SPIELPLAN__";
     public static final String SCHLUESSEL_JGJ_RANGLISTE = "__PTM_JGJ_RANGLISTE__";
     public static final String SCHLUESSEL_JGJ_DIREKTVERGLEICH = "__PTM_JGJ_DIREKTVERGLEICH__";
+    /** Prefix für nummerierte JGJ-Gruppen-Spielplan-Aushang-Sheets (1 pro Gruppe). */
+    public static final String SCHLUESSEL_JGJ_GRUPPE_SPIELPLAN_PREFIX = "__PTM_JGJ_GRUPPE_SPIELPLAN_";
 
     // ── Konstanten: Liga ─────────────────────────────────────────────────────
 
@@ -276,6 +278,10 @@ public class SheetMetadataHelper {
             n /= 26;
         }
         return sb.toString();
+    }
+
+    public static String schluesselJgjGruppeSpielplan(String gruppenBuchstabe) {
+        return SCHLUESSEL_JGJ_GRUPPE_SPIELPLAN_PREFIX + gruppenBuchstabe + SCHLUESSEL_SUFFIX;
     }
 
     public static String schluesselPouleSpielplan(int pouleNr) {

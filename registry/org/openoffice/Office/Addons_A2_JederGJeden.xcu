@@ -163,6 +163,28 @@
 									<value>_self</value>
 								</prop>
 							</node>
+
+							<node oor:name="A2B1" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+
+							<node oor:name="A2B2" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="en">Group schedules (printout)</value>
+									<value xml:lang="de">Gruppen-Spielpläne (Aushang)</value>
+									<value xml:lang="es">Calendarios de grupo (cartel)</value>
+									<value xml:lang="fr">Calendriers de groupe (affichage)</value>
+									<value xml:lang="nl">Groepsspeelschema's (aanplakbiljet)</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:jgj_gruppen_spielplaene</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->
