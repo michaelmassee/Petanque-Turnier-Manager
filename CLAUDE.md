@@ -223,6 +223,11 @@ Beispiel korrekt: `"VLOOKUP(" + nr + ";$'" + SheetNamen.meldeliste() + "'.$A$1:$
 - **Language:** All new class names, methods, variable names, JavaDoc, and inline comments MUST be in German to match the existing codebase.
 - **UI Strings & i18n:** **EVERY string visible to the user** (sheet column headers, cell contents, comments, MessageBox texts, processbox messages, error messages, labels,menus, titles – anything the user can read) **MUST be managed via the i18n framework** using `I18n.get("key")`. This applies to all new code AND any previously hardcoded strings found during work. Translations must be added to all existing language files: `messages.properties` (DE/default), `messages_en.properties`, `messages_fr.properties`, `messages_nl.properties`, `messages_es.properties` in `src/main/resources/de/petanqueturniermanager/i18n/`. Never write a user-visible string literal directly into Java code.
 - **Java Features:** The project uses Java 25. Feel free to use modern features like `var`, records, switch expressions, and text blocks where appropriate.
+- **Nullness-Annotationen — Standard ist JSpecify** (`org.jspecify.annotations.*`). Andere Annotationen (`javax.annotation.Nullable` aus JSR-305, `org.jetbrains.annotations.*`, `org.checkerframework.*`) sind **verboten** für neuen Code. Konvention:
+  - `@NullMarked` an `package-info.java` setzen, sobald ein (Sub-)Paket NullAway-clean ist; dann gilt dort *non-null by default*.
+  - Innerhalb annotierter Pakete nur `@org.jspecify.annotations.Nullable` für Felder/Parameter/Rückgaben, die `null` sein dürfen.
+  - Außerhalb annotierter Pakete: keine Annotationen — alter Code bleibt unangetastet, NullAway ignoriert ihn (`AnnotatedPackages` in `build.gradle` ist die Allowlist).
+  - Aktuell annotiert: `de.petanqueturniermanager.helper.random`. Weitere Pakete iterativ.
 
 ## Error Handling & Logging
 - **Do not swallow exceptions:** Never write empty `catch` blocks.

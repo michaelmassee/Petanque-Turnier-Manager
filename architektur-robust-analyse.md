@@ -140,5 +140,5 @@ Bevor wir implementieren, brauchen wir Richtung in folgenden Punkten:
 
 1. Welcher Block soll als Erstes umgesetzt werden — **A** (Quick-Wins), **B** (CI/Lint-Setup) oder direkt ein gezielter **C**-Refactor?
 2. Soll **GitHub Actions** angelegt werden, oder bleibt CI bewusst lokal?
-3. **NullAway/JSpecify** zustimmungspflichtig? (Annotation-Style legt Stil-Standard für lange Zeit fest.)
+3. ~~**NullAway/JSpecify** zustimmungspflichtig?~~ — **entschieden**: JSpecify (`org.jspecify.annotations.*`) ist verbindlicher Standard. Andere Annotation-Familien (JSR-305, JetBrains, Checker Framework) sind für neuen Code verboten. Konvention `@NullMarked` auf Paket-Ebene + `@Nullable` für Ausnahmen. Festgeschrieben in `CLAUDE.md` → "Code Style & Language".
 4. Bei **D1/D2** (große Refactorings): Soll dies "nur wenn Klasse sowieso angefasst wird" gelten, oder als eigene Aufgabe geplant werden?
