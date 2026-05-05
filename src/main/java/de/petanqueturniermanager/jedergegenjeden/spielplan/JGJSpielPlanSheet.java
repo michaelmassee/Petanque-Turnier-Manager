@@ -50,7 +50,7 @@ import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_U
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.model.LigaSpielPlan;
-import de.petanqueturniermanager.model.Team;
+import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
@@ -210,7 +210,7 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 	}
 
 	private void generiereGruppenSpielplan(TeamMeldungen meldungen, int gruppengroesse, boolean mitRueckrunde) throws GenerateException {
-		List<TeamMeldungen> gruppen = teileInGruppen(meldungen, gruppengroesse);
+		List<TeamMeldungen> gruppen = JGJGruppenAufteiler.teileInGruppen(meldungen, gruppengroesse);
 		List<Integer> gruppenHeaderZeilen = new ArrayList<>();
 		List<Integer> gruppenStartZeilen = new ArrayList<>();
 		List<List<List<TeamPaarung>>> gruppenSpielplaeneH = new ArrayList<>();
@@ -281,19 +281,6 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		int anzPaarungen = spielPlanHRunde.isEmpty() ? 0 : spielPlanHRunde.get(0).size();
 		int multiplikator = spielPlanRRunde.isEmpty() ? 1 : 2;
 		return anzRunden * anzPaarungen * multiplikator;
-	}
-
-	private List<TeamMeldungen> teileInGruppen(TeamMeldungen meldungen, int gruppengroesse) {
-		List<Team> teams = meldungen.teams();
-		List<TeamMeldungen> gruppen = new ArrayList<>();
-		for (int i = 0; i < teams.size(); i += gruppengroesse) {
-			TeamMeldungen gruppe = new TeamMeldungen();
-			for (int j = i; j < Math.min(i + gruppengroesse, teams.size()); j++) {
-				gruppe.addTeamWennNichtVorhanden(teams.get(j));
-			}
-			gruppen.add(gruppe);
-		}
-		return gruppen;
 	}
 
 	private static String gruppenBuchstabe(int index) {

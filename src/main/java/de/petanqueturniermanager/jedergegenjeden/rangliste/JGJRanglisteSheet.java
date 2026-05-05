@@ -40,6 +40,7 @@ import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
+import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
@@ -199,7 +200,7 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
 
     private void berechnungUndSchreibenGruppen(XSpreadsheet sheet, JGJMeldeListeSheet_Update meldeListe,
             TeamMeldungen aktiveMeldungen, int gruppengroesse) throws GenerateException {
-        List<TeamMeldungen> gruppen = teileInGruppen(aktiveMeldungen, gruppengroesse);
+        List<TeamMeldungen> gruppen = JGJGruppenAufteiler.teileInGruppen(aktiveMeldungen, gruppengroesse);
         Map<Integer, String> teamNamen = leseTeamNamen(meldeListe);
         int aktuelleZeile = ERSTE_DATEN_ZEILE;
 
@@ -492,19 +493,6 @@ public class JGJRanglisteSheet extends SheetRunner implements ISheet, IRangliste
         processBoxinfo("processbox.print.bereich");
         PrintArea.from(sheet, getWorkingSpreadsheet()).setPrintArea(
                 RangePosition.from(TEAM_NR_SPALTE, HEADER_ZEILE, SPIELPUNKTE_DIFF_SPALTE, letzteZeile));
-    }
-
-    private List<TeamMeldungen> teileInGruppen(TeamMeldungen meldungen, int gruppengroesse) {
-        List<Team> teams = meldungen.teams();
-        List<TeamMeldungen> gruppen = new ArrayList<>();
-        for (int i = 0; i < teams.size(); i += gruppengroesse) {
-            TeamMeldungen gruppe = new TeamMeldungen();
-            for (int j = i; j < Math.min(i + gruppengroesse, teams.size()); j++) {
-                gruppe.addTeamWennNichtVorhanden(teams.get(j));
-            }
-            gruppen.add(gruppe);
-        }
-        return gruppen;
     }
 
     private static String gruppenBuchstabe(int index) {
