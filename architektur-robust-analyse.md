@@ -28,18 +28,18 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 
 ## 2. Kritische Stellen (priorisiert)
 
+> **Status (Commit `b4175e59`):** P1 #1–#4, P2 #9, P2 #10 und P3 #12 sind umgesetzt. Verbleibend: P2 #5–#8, P3 #11.
+
 ### Kritisch (P1)
 
-1. **`SheetRunner.koordinator` ist `static` ohne `volatile`** — `SheetRunner.java:39`. Kommentar erlaubt Test-Austausch. Zwischen Tests und Produktivlauf besteht kein Memory-Barrier; in Edge-Cases kann ein zweiter Runner-Thread eine veraltete Referenz sehen. Mindestens `volatile` setzen, idealerweise auf Setter-Methode mit `synchronized` umstellen oder Test-Hook über Subklasse statt Feld-Mutation.
+1. ~~**`SheetRunner.koordinator` ist `static` ohne `volatile`**~~ — **erledigt**: Feld als `volatile` markiert mit Limitierungs-Kommentar (`SheetRunner.java:39–43`).
 
-2. **`Throwable`-Catches in 43 Stellen** — Pattern: `catch (Throwable t) { logger.error(t.getMessage(), t); }`. Bei `t.getMessage() == null` (z.B. NPE) verliert die Logmeldung den Kontext. Beispiele: `SidebarPanelDelegator.java:49–51`, `SheetMetadataHelper.java:227`, `GlobalEventListener.java:91`. Außerdem: `Throwable` fängt `OutOfMemoryError` und `StackOverflowError` mit ab — meist unbeabsichtigt.
-   → Empfehlung: helper `LogUtil.error(logger, "Kontext", t)` einführen, der `t.toString()` als Fallback nimmt; Catches bevorzugt auf `Exception` einengen.
+2. ~~**`Throwable`-Catches in 43 Stellen**~~ — **teilweise erledigt**: in `SidebarPanelDelegator`, `GlobalEventListener` und `SheetMetadataHelper` migriert auf `catch (Exception) { LogUtil.error/warn(...) } catch (Error e) { throw e; }` mit operationsspezifischen Kontext-Strings. Neuer Helper `helper/LogUtil.java` (mit Test) verhindert Logverlust bei `null`-Message und leerem Kontext.
+   → **Verbleibend** (~30 Stellen außerhalb der drei Schlüsseldateien): per Boy-Scout-Rule bei künftigen Touches migrieren.
 
-3. **`leseScoreText()`-Null-Kette** — `SheetMetadataHelper.java:240–266`: 9× `if (x == null) return null` hintereinander. Schwer zu warten, Caller können Fehlerursachen nicht unterscheiden.
-   → Refactoring zu `Optional<String>` oder eigenem Result-Typ; alternativ Helper `Lo.chain(...)`.
+3. ~~**`leseScoreText()`-Null-Kette**~~ — **erledigt**: intern auf zwei private `Optional`-Helper aufgeteilt (`aufloeseNamedRangeAddresse`, `zelleAusAdresse`). Öffentliche Signatur (`String`/`null`) bewusst unverändert.
 
-4. **`MainKonfigDialog.configPanelList`** — `static List<ConfigPanel>` als plain `ArrayList`. Wenn der Konfig-Dialog je aus einem zweiten Kontext geöffnet würde (Listener-Re-Entry), entstehen ConcurrentModificationExceptions. Heute selten, aber latent.
-   → `CopyOnWriteArrayList` oder Instanz-Feld.
+4. ~~**`MainKonfigDialog.configPanelList`**~~ — **erledigt**: `static` → `final` Instanz-Feld; behebt nebenbei den Akkumulations-Bug bei mehrfachem `initBox()` (vorher per Test-Workaround `.clear()` behandelt).
 
 ### Mittel (P2)
 
@@ -54,25 +54,26 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 8. **`return null` an 138 Stellen, keine `@Nullable`-Annotationen** — Caller können Optionalität nicht erkennen.
    → Schrittweise JSpecify- oder JetBrains-`@Nullable` einführen, beginnend bei Helper-APIs.
 
-9. **`System.out.println` in Produktionscode** — `OfficeDocumentHelper.java:201`. Kosmetisch, aber Symptom: kein Lint blockt das.
+9. ~~**`System.out.println` in Produktionscode**~~ — **erledigt**: `OfficeDocumentHelper.java:201` → `logger.warn(...)`.
 
-10. **3 `@Disabled`-Tests ohne klare Wieder-Aktivierungs-Strategie** — `EndranglisteSheetUITest:154`, `KoGruppeABSheetUITest:21`. Tendenz: weiterer Test-Verfall.
+10. ~~**`@Disabled`-Tests ohne klare Wieder-Aktivierungs-Strategie**~~ — **erledigt**: `EndranglisteSheetUITest` Capture-Helper umbenannt zu `captureJsonReferenceFiles` mit dokumentierter Begründung; `KoGruppeABSheetUITest` gelöscht (TODO-only mit blockierendem `waitEnter()`).
 
 ### Kosmetisch (P3)
 
 11. **15+ TODO/FIXME-Marker** ohne Tracker-Verlinkung.
-12. **Auskommentierter Code** (`GlobalEventListener.java:174–183`).
+
+12. ~~**Auskommentierter Code**~~ — **erledigt**: `GlobalEventListener.onCreate`-Block (12 Zeilen) entfernt.
 
 ---
 
 ## 3. Maßnahmen-Katalog (vom kleinsten Hebel zum größten)
 
-### A. Sofort, niedriger Aufwand, hoher Wert
-- **A1** `SheetRunner.koordinator` → `volatile` (1 Zeile). **P1.**
-- **A2** `OfficeDocumentHelper.java:201` `System.out.println` → Logger.
-- **A3** Auskommentierten Code in `GlobalEventListener` löschen.
-- **A4** `MainKonfigDialog.configPanelList` → Instanz-Feld oder `CopyOnWriteArrayList`.
-- **A5** `@Disabled`-Tests entweder mit Begründung versehen oder löschen.
+### A. Sofort, niedriger Aufwand, hoher Wert — **abgeschlossen** (Commit `b4175e59`)
+- ~~**A1** `SheetRunner.koordinator` → `volatile`~~
+- ~~**A2** `OfficeDocumentHelper.java:201` `System.out.println` → Logger~~
+- ~~**A3** Auskommentierten Code in `GlobalEventListener` löschen~~
+- ~~**A4** `MainKonfigDialog.configPanelList` → Instanz-Feld~~
+- ~~**A5** `@Disabled`-Tests entweder mit Begründung versehen oder löschen~~
 
 ### B. Build/CI-Härtung (mittel)
 - **B1** `gradle.properties` / `build.gradle`: Compiler-Flags `-Xlint:all -Werror` für Produktions-Source.
@@ -81,8 +82,8 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 - **B4** Optional: NullAway mit Annotated-Default für `helper`-Paket.
 
 ### C. Robustheits-Refaktor (gezielt)
-- **C1** Helper `LogUtil.errorMitKontext(logger, kontextMsg, throwable)` der `t.toString()` als Fallback nimmt; `catch (Throwable)` → `catch (Exception)` wo möglich. Iterativ einführen, beginnend bei `helper/sheet/*`.
-- **C2** `SheetMetadataHelper.leseScoreText` zu `Optional<String>` migrieren; Helper `Lo.requireQI(class, obj)` für Aufrufer-Code, der eine UNO-Schnittstelle erwartet (wirft mit aussagekräftiger Meldung, wenn `null`).
+- ~~**C1** Helper `LogUtil` einführen + `catch (Throwable)` → `catch (Exception)`~~ — **teilweise erledigt** (`SidebarPanelDelegator`, `GlobalEventListener`, `SheetMetadataHelper`); restliche ~30 Stellen per Boy-Scout-Rule.
+- ~~**C2** `SheetMetadataHelper.leseScoreText` Refactor~~ — **erledigt** (intern Optional, API unverändert). `Lo.requireQI` nicht eingeführt — durch Optional-Chain obsolet.
 - **C3** Mindest-Smoke-Test für `WebServerManager` (Start/Stop, eine Anfrage, JSON-Schema-Check).
 - **C4** Algorithmen-Tests ausweiten auf `forme/`, `kaskade/`, `poule/` (analog zu `SchweizerSystemTest`).
 
@@ -95,10 +96,10 @@ Projektstand: 520 Java-Dateien, 107 Test-Klassen, Java 25, ohne CI, ohne statisc
 
 ## 4. Empfohlene Reihenfolge
 
-1. **Block A** (alles, ein Vormittag): unmittelbare Risiken weg, niedriges Regressions-Risiko.
-2. **Block B1+B3** (CI + Lint): liefert Sicherheitsnetz für alles Weitere.
+1. ~~**Block A** (alles, ein Vormittag)~~ — **erledigt** (Commit `b4175e59`).
+2. **Block B1+B3** (CI + Lint): liefert Sicherheitsnetz für alles Weitere. **Nächster Schritt.**
 3. **Block B2** (SpotBugs/ErrorProne): weitere Findings → in Backlog.
-4. **Block C** in dieser Reihenfolge: C1 → C2 → C4 → C3.
+4. **Block C** in dieser Reihenfolge: ~~C1~~ → ~~C2~~ → C4 → C3.
 5. **Block D**: nur wenn Erweiterungen anstehen, die die jeweilige Klasse ohnehin berühren (Boy-Scout-Rule).
 
 ---
