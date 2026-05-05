@@ -54,6 +54,7 @@ public class MainKonfigDialog {
 	private final DialogTools dialogTools;
 
 	MainKonfigDialog(DialogTools dialogTools) {
+		this.frame = new JFrame();
 		this.dialogTools = dialogTools;
 	}
 
@@ -140,6 +141,31 @@ public class MainKonfigDialog {
 		visible();
 		toFront();
 		return this;
+	}
+
+	@VisibleForTesting
+	JFrame getFrame() {
+		return frame;
+	}
+
+	@VisibleForTesting
+	JTree getTree() {
+		return tree;
+	}
+
+	@VisibleForTesting
+	JSplitPane getSplitPane() {
+		return splitPane;
+	}
+
+	@VisibleForTesting
+	JPanel getContent() {
+		return content;
+	}
+
+	@VisibleForTesting
+	static List<ConfigPanel> getConfigPanelList() {
+		return configPanelList;
 	}
 
 	public MainKonfigDialog title(String title) {
