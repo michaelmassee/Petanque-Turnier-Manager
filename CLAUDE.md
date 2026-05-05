@@ -101,6 +101,40 @@ IDL files in `idl/` define the XGlobal interface for Calc functions. The `addin/
 - **Unit tests**: Algorithm and model tests run standalone with `./gradlew test`
 - **UI tests**: Classes ending in `UITest` extend `BaseCalcUITest`, which launches a headless LibreOffice instance via `OfficeStarter` using the user's installed extension from `~/.config/libreoffice/4`. These tests require the extension to be installed first via `./gradlew reinstallExtension`.
 
+### Reproduzierbare Zufallsdaten – `RandomSource`
+
+Alle `Random`-/`ThreadLocalRandom.current()`-/`Collections.shuffle(list)`-Aufrufe im Produktivcode laufen über `de.petanqueturniermanager.helper.random.RandomSource`. Default-Pfad ist verhaltensgleich zu `ThreadLocalRandom`; im Test kann per Thread-lokal gesetztem Seed exakte Reproduzierbarkeit erzwungen werden.
+
+**Regeln für neuen Code:**
+- Niemals `new Random()` oder `ThreadLocalRandom.current()` direkt verwenden – immer `RandomSource.nextInt(...)` bzw. `RandomSource.asJavaRandom()`.
+- `Collections.shuffle(list)` ist verboten – stattdessen `Collections.shuffle(list, RandomSource.asJavaRandom())`.
+
+**Test-Pattern für E2E-`*TurnierTestDaten`-UI-Tests:**
+
+```java
+@BeforeEach @Override
+public void beforeTest() {
+    super.beforeTest();
+    RandomSource.setSeed(42L);
+}
+
+@AfterEach
+public void resetRandom() {
+    RandomSource.reset();
+}
+```
+
+Anschließend Sheets per `validateWithJson(rangeData, jsonFile)` (aus `BaseCalcUITest`) gegen JSON-Referenzdateien unter `src/test/resources/de/petanqueturniermanager/<system>/` validieren.
+
+**JSON-Referenzen erfassen / aktualisieren:**
+1. Im Test temporär `writeToJson(name, range, sheet, doc)` vor dem `validateWithJson(...)`-Aufruf aktivieren.
+2. Test laufen lassen – die Datei wird in `$HOME` geschrieben.
+3. Datei nach `src/test/resources/.../<package>/` kopieren.
+4. `writeToJson(...)`-Aufruf wieder auskommentieren.
+5. Bei mehreren JSONs pro Test: iterativ vorgehen, nach jedem Capture die JSON nach Resources kopieren und Test erneut laufen lassen (jeder Lauf erfasst eine weitere Datei, da der Test beim ersten fehlenden Reference-File abbricht).
+
+Beispiele: `KoTurnierTestDatenUITest`, `MaastrichterTurnierTestDatenUITest`, `JGJTurnierTestDatenUITest`, `FormuleXTurnierTestDatenUITest`.
+
 ## Known Build Issues
 
 See `BUILD_ISSUES.md` for details on:
