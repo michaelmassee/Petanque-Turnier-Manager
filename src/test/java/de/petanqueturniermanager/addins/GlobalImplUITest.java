@@ -179,6 +179,92 @@ public class GlobalImplUITest extends BaseCalcUITest {
 			.contains("STRINGPROPERTY");
 	}
 
+	// -------------------------------------------------------------------------
+	// Algorithmik-Funktionen (PTM.CADRAGE.*, PTM.POULE.*, PTM.SUPERMELEE.*)
+	//
+	// Diese Funktionen rechnen rein numerisch und sind unabhängig vom geladenen
+	// Dokument. Statt Formeln über Zellen auszuwerten (UNO-Socket evaluiert
+	// Add-In-Formeln nicht synchron), werden die Methoden direkt am
+	// GlobalImpl-Objekt aufgerufen und die Ergebnisse mit bekannten
+	// Erwartungswerten der zugrunde liegenden Rechner-Klassen verglichen.
+	// -------------------------------------------------------------------------
+
+	@Test
+	public void testPTMCadrageFunktionen() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		// Zweierpotenz → keine Cadrage nötig
+		assertThat(impl.ptmcadrageanzteams(8)).as("8 Teams: keine Cadrage").isEqualTo(0);
+		assertThat(impl.ptmcadragezielanz(8)).as("8 Teams: Ziel = 8").isEqualTo(8);
+		assertThat(impl.ptmcadrageanzfreilose(8)).as("8 Teams: 8 Freilose").isEqualTo(8);
+
+		// 10 Teams: Ziel 8, 4 Cadrage-Teams (auf 2 reduziert), 6 Freilose
+		assertThat(impl.ptmcadragezielanz(10)).as("10 Teams: Ziel = 8").isEqualTo(8);
+		assertThat(impl.ptmcadrageanzteams(10)).as("10 Teams: 4 Cadrage-Teams").isEqualTo(4);
+
+		// 17 Teams: Ziel 16, 2 Cadrage-Teams
+		assertThat(impl.ptmcadragezielanz(17)).as("17 Teams: Ziel = 16").isEqualTo(16);
+		assertThat(impl.ptmcadrageanzteams(17)).as("17 Teams: 2 Cadrage-Teams").isEqualTo(2);
+
+		// Edge: <=2 Teams → 0
+		assertThat(impl.ptmcadrageanzteams(1)).isZero();
+		assertThat(impl.ptmcadrageanzteams(2)).isZero();
+	}
+
+	@Test
+	public void testPTMPouleFunktionen() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		// 8 Teams → 2 Vierergruppen, 0 Dreier
+		assertThat(impl.ptmpouleanzgruppen(8)).as("8 Teams: 2 Gruppen").isEqualTo(2);
+		assertThat(impl.ptmpouleanzvierergruppen(8)).as("8 Teams: 2 Vierer").isEqualTo(2);
+		assertThat(impl.ptmpouleanzdreiergruppen(8)).as("8 Teams: 0 Dreier").isZero();
+
+		// 9 Teams → 3 Dreiergruppen
+		assertThat(impl.ptmpouleanzgruppen(9)).as("9 Teams: 3 Gruppen").isEqualTo(3);
+		assertThat(impl.ptmpouleanzvierergruppen(9)).as("9 Teams: 0 Vierer").isZero();
+		assertThat(impl.ptmpouleanzdreiergruppen(9)).as("9 Teams: 3 Dreier").isEqualTo(3);
+
+		// 13 Teams → 1 Vierer + 3 Dreier = 4 Gruppen
+		assertThat(impl.ptmpouleanzgruppen(13)).as("13 Teams: 4 Gruppen").isEqualTo(4);
+		assertThat(impl.ptmpouleanzvierergruppen(13)).as("13 Teams: 1 Vierer").isEqualTo(1);
+		assertThat(impl.ptmpouleanzdreiergruppen(13)).as("13 Teams: 3 Dreier").isEqualTo(3);
+
+		// Edge: <3 Teams → 0
+		assertThat(impl.ptmpouleanzgruppen(2)).isZero();
+		assertThat(impl.ptmpouleanzgruppen(0)).isZero();
+	}
+
+	@Test
+	public void testPTMSuperMeleeFunktionen() {
+		GlobalImpl impl = new GlobalImpl(starter.getxComponentContext());
+
+		// 12 Spieler: 4 Triplette (Triplette-Modus) bzw. 6 Doublette (Doublette-Modus)
+		assertThat(impl.ptmsmtriplanztriplette(12)).as("12 Spieler: 4 Triplette").isEqualTo(4);
+		assertThat(impl.ptmsmtriplanzdoublette(12)).as("12 Spieler im Triplette-Modus: 0 Doublette").isZero();
+		assertThat(impl.ptmsmdouplanzdoublette(12)).as("12 Spieler: 6 Doublette").isEqualTo(6);
+
+		// Validierung – nur ungerade Zahlen außer Vielfache zwischen Triplette/Doublette sind invalide.
+		// 7 ist invalide (weder durch 3 noch durch 2 sauber teilbar im SuperMelee-Sinn).
+		assertThat(impl.ptmsmvalide(8)).as("8 Spieler valide").isEqualTo(1);
+		assertThat(impl.ptmsmvalide(9)).as("9 Spieler valide").isEqualTo(1);
+		assertThat(impl.ptmsmvalide(12)).as("12 Spieler valide").isEqualTo(1);
+		assertThat(impl.ptmsmvalide(7)).as("7 Spieler invalide").isZero();
+
+		// 9 Spieler: 3 Doublette + 1 Triplette (Mix-Konfiguration)
+		assertThat(impl.ptmsmtriplanztriplette(9)).as("9 Spieler im Triplette-Modus: 1 Triplette").isEqualTo(1);
+		assertThat(impl.ptmsmtriplanzdoublette(9)).as("9 Spieler im Triplette-Modus: 3 Doublette").isEqualTo(3);
+
+		// Anzahl Teams ("Paarungen" in der Original-API) und Bahnen bei 12 Spielern (Triplette-Modus):
+		// 4 Teams insgesamt, 2 Spiele/Bahnen.
+		assertThat(impl.ptmsmtriplanzpaarungen(12)).as("12 Spieler Triplette: 4 Teams").isEqualTo(4);
+		assertThat(impl.ptmsmtriplanzbahnen(12)).as("12 Spieler Triplette: 2 Bahnen").isEqualTo(2);
+
+		// Edge: <4 Spieler → 0
+		assertThat(impl.ptmsmtriplanztriplette(3)).isZero();
+		assertThat(impl.ptmsmdouplanzdoublette(0)).isZero();
+	}
+
 	@Test
 	public void testPropertyUpdate() {
 		// Testet Property-Round-Trip (setIntProperty / getIntProperty) sowie
