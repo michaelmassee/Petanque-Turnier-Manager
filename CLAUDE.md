@@ -19,6 +19,21 @@ LO source: **`/home/michael/devel/projects_massee/libreoffice`** — always chec
 - **Test Classes Included:** The strict Clean Code, zero warnings, and refactoring rules apply equally to all Test classes. Treat test code with the same care as production code.
 - **Kein zellenweises Schreiben in Schleifen:** Schleifen, die einzelne Zellen nacheinander beschreiben, sind zu vermeiden. Stattdessen MUSS `RangeHelper` (zusammen mit `RangeData`/`RowData`) verwendet werden, um Daten als Block in einen Zellbereich zu schreiben.
 
+## SpotBugs
+
+Lauf: `./gradlew spotbugsMain` — Reports: `build/reports/spotbugs/main.{html,xml}`. Konfiguration in `build.gradle`, Filter in `config/spotbugs/exclude.xml`.
+
+**Aktueller Stand: 0 Findings.** Alle Kategorien (CORRECTNESS, MT_CORRECTNESS, PERFORMANCE, BAD_PRACTICE, STYLE, I18N, MALICIOUS_CODE) sind triagiert — entweder per Fix oder per dokumentiertem Exclude in `exclude.xml`.
+
+**Neue Findings:** Beim Hinzufügen/Ändern von Code MUSS `spotbugsMain` clean bleiben. Echte Bugs werden gefixt; nur bei begründeten False Positives wird ein neuer `<Match>`-Block in `exclude.xml` ergänzt mit klarer Begründung (warum FP, was die Pattern-Annahme verletzt). Niemals stillschweigend per `@SuppressFBWarnings` im Code suppress'en.
+
+**Architekturweite Excludes** (akzeptierte Kategorie-/Klassen-Pauschalen, alle in `exclude.xml` begründet):
+- **`MALICIOUS_CODE`** (komplette Kategorie): Defensive-Copy-Pflicht greift nicht für UNO-Remote-Proxies, geteiltes Domain-Modell und statische Property-Registries.
+- **`CT_CONSTRUCTOR_THROW`** (7 Klassen): Kein Finalizer-Attack-Risiko in plugin-internem Code.
+- **`EQ_COMPARETO_USE_OBJECT_EQUALS`** (`Spieler*Ergebnis`): `compareTo` definiert Sortierung, `equals` bleibt bewusst identity-basiert.
+- **`UG_SYNC_SET_UNSYNC_GET`** + **`SING_SINGLETON_GETTER_NOT_SYNCHRONIZED`**: Felder sind `volatile`, Reads brauchen kein `synchronized`.
+- **`ProtocolHandler.SHARED_CONTEXT`** + **`ProtocolHandler.isEnabled` (`REC_CATCH_EXCEPTION`)**: Beabsichtigter Cross-Instance-State bzw. defensiver Catch-all für Toolbar-Stabilität.
+
 ## Build Commands
 
 The project uses Gradle
