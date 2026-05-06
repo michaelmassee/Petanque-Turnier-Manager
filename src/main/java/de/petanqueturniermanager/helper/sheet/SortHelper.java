@@ -167,8 +167,7 @@ public class SortHelper {
 		Map<Integer, List<Integer>> groups = Arrays.stream(sortSpaltenToSplit).boxed()
 				.collect(Collectors.groupingBy(s -> counter.getAndIncrement() / chunkSize));
 
-		List<List<Integer>> bloecke = new ArrayList<>();
-		bloecke = groups.values().stream().collect(Collectors.toList());
+		List<List<Integer>> bloecke = new ArrayList<>(groups.values());
 
 		Collections.reverse(bloecke);
 

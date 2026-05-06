@@ -5,6 +5,8 @@ package de.petanqueturniermanager.konfigdialog.dialog.element;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XTextComponent;
 
@@ -20,7 +22,7 @@ public class UITextAreaProperty implements UIProperty {
 	private static final int DEFAULT_TEXT_HEIGHT = 30;
 	private static final int GAP_HEIGHT = 7;
 
-	private static int propCntr = 0;
+	private static final AtomicInteger PROP_CNTR = new AtomicInteger();
 
 	private final String propName;
 	private final String label;
@@ -40,8 +42,9 @@ public class UITextAreaProperty implements UIProperty {
 		this.label = checkNotNull(label);
 		this.defaultVal = checkNotNull(defaultVal);
 		this.textHeight = textHeight;
-		uiName = "UITextArea" + propCntr;
-		labelName = "UILabel" + propCntr++;
+		int id = PROP_CNTR.getAndIncrement();
+		uiName = "UITextArea" + id;
+		labelName = "UILabel" + id;
 	}
 
 	public int getHeight() {

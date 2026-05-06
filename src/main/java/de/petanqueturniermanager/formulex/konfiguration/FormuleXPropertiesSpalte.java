@@ -163,12 +163,7 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
     }
 
     public Formation getMeldeListeFormation() {
-        String val = readStringProperty(KONFIG_PROP_MELDELISTE_FORMATION);
-        try {
-            return Formation.valueOf(val);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            return Formation.TRIPLETTE;
-        }
+        return readEnumProperty(KONFIG_PROP_MELDELISTE_FORMATION, Formation.class, Formation.TRIPLETTE);
     }
 
     public void setMeldeListeFormation(Formation formation) {

@@ -85,8 +85,7 @@ public class TextAreaDialog {
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 
 		// ---------------------------------------------------------------------------------------------------
-		int posY = 10;
-		posY += uITextAreaProperty.doInsert(dialogModel, xControlCont, posY);
+		uITextAreaProperty.doInsert(dialogModel, xControlCont, 10);
 		// ---------------------------------------------------------------------------------------------------
 
 		// create a Ok button model and set the properties

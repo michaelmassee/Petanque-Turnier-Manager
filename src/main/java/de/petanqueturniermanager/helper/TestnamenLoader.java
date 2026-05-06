@@ -3,6 +3,7 @@ package de.petanqueturniermanager.helper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +43,8 @@ public class TestnamenLoader {
 
 		CSVParser parser = new CSVParserBuilder().withSeparator(';').withIgnoreQuotations(true).build();
 
-		try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvFile)).withSkipLines(1 + skip)
+		try (CSVReader reader = new CSVReaderBuilder(new InputStreamReader(csvFile, StandardCharsets.UTF_8))
+				.withSkipLines(1 + skip)
 				.withCSVParser(parser).build()) {
 			String[] nextLine;
 			int anzRead = 1;

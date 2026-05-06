@@ -129,8 +129,6 @@ public class OfficeDocumentHelper {
 		logger.info("Opening template " + templatePath);
 		try {
 			String templateURL = templateFile.toURI().toURL().toExternalForm();
-			if (templateURL == null)
-				return null;
 
 			PropertyValue[] props = PropertyValueHelper.from().add("Hidden", true).add("AsTemplate", true).propList();
 

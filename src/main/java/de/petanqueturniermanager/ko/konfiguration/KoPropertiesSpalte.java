@@ -205,12 +205,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	}
 
 	public Formation getMeldeListeFormation() {
-		String val = readStringProperty(KONFIG_PROP_MELDELISTE_FORMATION);
-		try {
-			return Formation.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return Formation.DOUBLETTE;
-		}
+		return readEnumProperty(KONFIG_PROP_MELDELISTE_FORMATION, Formation.class, Formation.DOUBLETTE);
 	}
 
 	public void setMeldeListeFormation(Formation formation) {
@@ -234,12 +229,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	}
 
 	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-		String val = readStringProperty(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE);
-		try {
-			return KoSpielbaumTeamAnzeige.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return KoSpielbaumTeamAnzeige.NR;
-		}
+		return readEnumProperty(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE, KoSpielbaumTeamAnzeige.class, KoSpielbaumTeamAnzeige.NR);
 	}
 
 	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
@@ -247,12 +237,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	}
 
 	public SpielrundeSpielbahn getSpielbaumSpielbahn() {
-		String val = readStringProperty(KONFIG_PROP_SPIELBAUM_SPIELBAHN);
-		try {
-			return SpielrundeSpielbahn.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return SpielrundeSpielbahn.X;
-		}
+		return readEnumProperty(KONFIG_PROP_SPIELBAUM_SPIELBAHN, SpielrundeSpielbahn.class, SpielrundeSpielbahn.X);
 	}
 
 	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {

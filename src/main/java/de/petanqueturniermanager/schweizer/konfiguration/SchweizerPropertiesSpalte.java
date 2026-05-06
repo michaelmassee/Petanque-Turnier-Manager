@@ -192,9 +192,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 	@Override
 	public Formation getMeldeListeFormation() {
-		String val = readStringProperty(KONFIG_PROP_MELDELISTE_FORMATION);
-		Formation formation = Formation.valueOf(val);
-		return formation != null ? formation : Formation.TRIPLETTE;
+		return readEnumProperty(KONFIG_PROP_MELDELISTE_FORMATION, Formation.class, Formation.TRIPLETTE);
 	}
 
 	@Override
@@ -224,12 +222,7 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 	@Override
 	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		String val = readStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE);
-		try {
-			return SpielplanTeamAnzeige.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return SpielplanTeamAnzeige.NR;
-		}
+		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
 	}
 
 	@Override
@@ -239,12 +232,8 @@ public class SchweizerPropertiesSpalte extends BasePropertiesSpalte implements I
 
 	@Override
 	public SchweizerRankingModus getRankingModus() {
-		String val = readStringProperty(KONFIG_PROP_RANKING_MODUS);
-		try {
-			return SchweizerRankingModus.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return SchweizerRankingModus.MIT_BUCHHOLZ;
-		}
+		return readEnumProperty(KONFIG_PROP_RANKING_MODUS, SchweizerRankingModus.class,
+				SchweizerRankingModus.MIT_BUCHHOLZ);
 	}
 
 	@Override

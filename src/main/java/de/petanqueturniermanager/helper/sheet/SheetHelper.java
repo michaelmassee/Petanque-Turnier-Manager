@@ -767,7 +767,7 @@ public class SheetHelper {
 		int endSpalte = range.getEndeSpalte();
 		for (int zeile = range.getStartZeile(); zeile <= range.getEndeZeile(); zeile++) {
 			// zeile ist 0-basiert; ROW()-Formel wäre zeile+1 (1-basiert)
-			int farbe = (zeile % 2 == 1) ? geradeFarbe : ungeradeFarbe;
+			int farbe = ((zeile & 1) == 1) ? geradeFarbe : ungeradeFarbe;
 			sheetHelper.setPropertyInRange(xSheet,
 					RangePosition.from(startSpalte, zeile, endSpalte, zeile),
 					"CellBackColor", farbe);

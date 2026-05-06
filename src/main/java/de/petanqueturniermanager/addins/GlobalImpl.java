@@ -36,7 +36,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 		"com.sun.star.sheet.AddIn"  // Standard AddIn Service
 	};
 
-	private static AtomicBoolean isDirty = new AtomicBoolean(false);
+	private static final AtomicBoolean isDirty = new AtomicBoolean(false);
 
 	// DisplayNames aus GlobalAddIn.xcu - diese werden für Formeln in Calc verwendet
 	// =PTM.ALG.INTPROPERTY("propertyname")
@@ -80,7 +80,7 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	// wird nur einmal aufgerufen für alle sheets
 	public GlobalImpl(XComponentContext xContext) {
 		this.xContext = xContext;
-		GlobalImpl.isDirty = new AtomicBoolean(false);
+		GlobalImpl.isDirty.set(false);
 		PetanqueTurnierMngrSingleton.init(xContext);
 	}
 

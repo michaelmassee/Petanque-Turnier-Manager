@@ -151,12 +151,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 	@Override
 	public Formation getMeldeListeFormation() {
-		String val = readStringProperty(KONFIG_PROP_MELDELISTE_FORMATION);
-		try {
-			return Formation.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return Formation.TETE;
-		}
+		return readEnumProperty(KONFIG_PROP_MELDELISTE_FORMATION, Formation.class, Formation.TETE);
 	}
 
 	@Override
@@ -186,12 +181,7 @@ public class JGJPropertiesSpalte extends BasePropertiesSpalte implements IJGJPro
 
 	@Override
 	public SpielplanTeamAnzeige getSpielplanTeamAnzeige() {
-		String val = readStringProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE);
-		try {
-			return SpielplanTeamAnzeige.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return SpielplanTeamAnzeige.NR;
-		}
+		return readEnumProperty(KONFIG_PROP_SPIELPLAN_TEAM_ANZEIGE, SpielplanTeamAnzeige.class, SpielplanTeamAnzeige.NR);
 	}
 
 	@Override

@@ -217,6 +217,21 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		return StringTools.stringToBoolean(readStringProperty(key));
 	}
 
+	/**
+	 * Liest eine Enum-Property robust: leerer/unbekannter Wert → defaultValue.
+	 */
+	protected <E extends Enum<E>> E readEnumProperty(String key, Class<E> enumClass, E defaultValue) {
+		String val = readStringProperty(key);
+		if (val == null || val.isEmpty()) {
+			return defaultValue;
+		}
+		try {
+			return Enum.valueOf(enumClass, val);
+		} catch (IllegalArgumentException e) {
+			return defaultValue;
+		}
+	}
+
 	public void setStringProperty(String key, String val) {
 		docPropHelper.setStringProperty(key, val);
 	}

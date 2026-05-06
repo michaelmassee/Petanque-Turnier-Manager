@@ -74,9 +74,7 @@ public class PoulePropertiesSpalte extends BasePropertiesSpalte implements IPoul
 
     @Override
     public Formation getMeldeListeFormation() {
-        var val = readStringProperty(KONFIG_PROP_MELDELISTE_FORMATION);
-        var formation = Formation.valueOf(val);
-        return formation != null ? formation : Formation.TRIPLETTE;
+        return readEnumProperty(KONFIG_PROP_MELDELISTE_FORMATION, Formation.class, Formation.TRIPLETTE);
     }
 
     @Override

@@ -97,4 +97,31 @@
         <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
     </Match>
 
+    <!--
+        ProtocolHandler.SHARED_CONTEXT: SpotBugs ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD.
+        Bewusste Cross-Instance-State: ProtocolHandler wird von LO einmal pro Frame
+        instanziiert; die statische isEnabled()-Pruefung (XStatusListener) braucht den
+        XComponentContext aus irgendeiner Instanz – das Feld ist volatile und nur als
+        spaet initialisierter Bootstrap-Verweis gedacht.
+        → False Positive.
+    -->
+    <Match>
+        <Class name="de.petanqueturniermanager.comp.ProtocolHandler"/>
+        <Field name="SHARED_CONTEXT"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+
+    <!--
+        ProtocolHandler.isEnabled(): REC_CATCH_EXCEPTION ist beabsichtigt.
+        Diese Methode entscheidet die Aktivierung jedes Toolbar-Eintrags und darf
+        unter keinen Umstaenden propagieren – ein einzelner UNO-Fehler beim Lesen
+        der Properties wuerde sonst die ganze Toolbar lahmlegen. Catch-all → false.
+        → False Positive.
+    -->
+    <Match>
+        <Class name="de.petanqueturniermanager.comp.ProtocolHandler"/>
+        <Method name="isEnabled"/>
+        <Bug pattern="REC_CATCH_EXCEPTION"/>
+    </Match>
+
 </FindBugsFilter>

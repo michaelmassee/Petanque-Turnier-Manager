@@ -113,7 +113,7 @@ public class RegistrationHandler {
 
 		// see resources
 		InputStream in = RegistrationHandler.class.getResourceAsStream("RegistrationHandler.classes");
-		LineNumberReader reader = new LineNumberReader(new InputStreamReader(in));
+		LineNumberReader reader = new LineNumberReader(new InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
 
 		try {
 			String line = reader.readLine();

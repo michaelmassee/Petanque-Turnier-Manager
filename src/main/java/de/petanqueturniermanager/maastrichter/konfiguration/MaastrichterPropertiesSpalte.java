@@ -65,12 +65,8 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	}
 
 	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
-		String val = readStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE);
-		try {
-			return KoSpielbaumTeamAnzeige.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return KoSpielbaumTeamAnzeige.NR;
-		}
+		return readEnumProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE,
+				KoSpielbaumTeamAnzeige.class, KoSpielbaumTeamAnzeige.NR);
 	}
 
 	public void setSpielbaumTeamAnzeige(KoSpielbaumTeamAnzeige anzeige) {
@@ -78,12 +74,8 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	}
 
 	public SpielrundeSpielbahn getSpielbaumSpielbahn() {
-		String val = readStringProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_SPIELBAHN);
-		try {
-			return SpielrundeSpielbahn.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return SpielrundeSpielbahn.X;
-		}
+		return readEnumProperty(KoPropertiesSpalte.KONFIG_PROP_SPIELBAUM_SPIELBAHN,
+				SpielrundeSpielbahn.class, SpielrundeSpielbahn.X);
 	}
 
 	public void setSpielbaumSpielbahn(SpielrundeSpielbahn spielbahn) {
@@ -117,12 +109,8 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	}
 
 	public MaastrichterGruppenModus getMaastrichterGruppenModus() {
-		String val = readStringProperty(KONFIG_PROP_GRUPPEN_MODUS);
-		try {
-			return MaastrichterGruppenModus.valueOf(val);
-		} catch (IllegalArgumentException | NullPointerException e) {
-			return MaastrichterGruppenModus.NACH_SIEGEN;
-		}
+		return readEnumProperty(KONFIG_PROP_GRUPPEN_MODUS, MaastrichterGruppenModus.class,
+				MaastrichterGruppenModus.NACH_SIEGEN);
 	}
 
 	public void setMaastrichterGruppenModus(MaastrichterGruppenModus modus) {

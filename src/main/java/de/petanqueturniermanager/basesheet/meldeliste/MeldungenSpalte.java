@@ -243,10 +243,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 				.from(getISheet(),
 						RangePosition.from(meldungNrSpalte, getErsteDatenZiele(), meldungNrSpalte, MAX_ANZ_MELDUNGEN))
 				.searchLastEmptyInSpalte();
-		if (result != null) {
-			return result.getZeile();
-		}
-		return getErsteDatenZiele();
+		return result.getZeile();
 	}
 
 	/**
