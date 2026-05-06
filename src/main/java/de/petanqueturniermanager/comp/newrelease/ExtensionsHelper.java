@@ -15,8 +15,6 @@ import com.sun.star.deployment.PackageInformationProvider;
 import com.sun.star.deployment.XPackageInformationProvider;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
-
 /**
  * @author Michael Massee
  *
@@ -27,13 +25,10 @@ public class ExtensionsHelper {
 
 	public static final String EXTENSION_ID = "de.petanqueturniermanager";
 
-	private final WeakRefHelper<XComponentContext> xComponentContext;
+	private final XComponentContext xComponentContext;
 
-	/**
-	 * @param iSheet
-	 */
 	private ExtensionsHelper(XComponentContext xComponentContext) {
-		this.xComponentContext = new WeakRefHelper<>(checkNotNull(xComponentContext));
+		this.xComponentContext = checkNotNull(xComponentContext);
 	}
 
 	public static final ExtensionsHelper from(XComponentContext xComponentContext) {
@@ -41,7 +36,7 @@ public class ExtensionsHelper {
 	}
 
 	private XPackageInformationProvider getXPackageInformationProvider() {
-		return PackageInformationProvider.get(xComponentContext.get());
+		return PackageInformationProvider.get(xComponentContext);
 	}
 
 	public ExtensionsHelper listExtensions() {

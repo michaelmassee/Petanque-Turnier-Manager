@@ -18,7 +18,6 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
@@ -32,7 +31,8 @@ public abstract class BaseField<T> {
 
 	static final Logger logger = LogManager.getLogger(BaseField.class);
 
-	private WeakRefHelper<GuiFactoryCreateParam> guiFactoryCreateParamWkRef;
+	// Sidebar-Field-Lifecycle: Param wird im Konstruktor gesetzt und in disposing()/setGuiFactoryCreateParam(null) explizit freigegeben.
+	private GuiFactoryCreateParam guiFactoryCreateParam;
 	private Layout hLayout;
 	private XMultiPropertySet properties;
 	private final String imageUrlDir;
@@ -43,7 +43,7 @@ public abstract class BaseField<T> {
 	public static final Rectangle BASE_RECTANGLE = new Rectangle(0, 0, lineWidth, lineHeight);
 
 	protected BaseField(GuiFactoryCreateParam guiFactoryCreateParam) {
-		this.guiFactoryCreateParamWkRef = new WeakRefHelper<>(guiFactoryCreateParam);
+		this.guiFactoryCreateParam = guiFactoryCreateParam;
 		hLayout = new HorizontalLayout();
 		imageUrlDir = ExtensionsHelper.from(guiFactoryCreateParam.getContext()).getImageUrlDir();
 		doCreate();
@@ -56,19 +56,19 @@ public abstract class BaseField<T> {
 	protected abstract void doCreate();
 
 	protected final XMultiComponentFactory getxMCF() {
-		return guiFactoryCreateParamWkRef.get().getxMCF();
+		return guiFactoryCreateParam.getxMCF();
 	}
 
 	protected final XComponentContext getxContext() {
-		return guiFactoryCreateParamWkRef.get().getContext();
+		return guiFactoryCreateParam.getContext();
 	}
 
 	protected final XToolkit getToolkit() {
-		return guiFactoryCreateParamWkRef.get().getToolkit();
+		return guiFactoryCreateParam.getToolkit();
 	}
 
 	protected final XWindowPeer getWindowPeer() {
-		return guiFactoryCreateParamWkRef.get().getWindowPeer();
+		return guiFactoryCreateParam.getWindowPeer();
 	}
 
 	/**
@@ -79,15 +79,11 @@ public abstract class BaseField<T> {
 	}
 
 	protected final void setGuiFactoryCreateParam(GuiFactoryCreateParam guiFactoryCreateParam) {
-		if (guiFactoryCreateParam == null) {
-			guiFactoryCreateParamWkRef = null;
-		} else {
-			this.guiFactoryCreateParamWkRef = new WeakRefHelper<>(guiFactoryCreateParam);
-		}
+		this.guiFactoryCreateParam = guiFactoryCreateParam;
 	}
 
 	protected final GuiFactoryCreateParam getGuiFactoryCreateParam() {
-		return guiFactoryCreateParamWkRef.get();
+		return guiFactoryCreateParam;
 	}
 
 	@SuppressWarnings("unchecked")
