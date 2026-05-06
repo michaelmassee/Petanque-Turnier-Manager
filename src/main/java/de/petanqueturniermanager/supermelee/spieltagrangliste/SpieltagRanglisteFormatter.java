@@ -20,7 +20,6 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.rangliste.ISpielTagRangliste;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
@@ -30,7 +29,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSor
 
 public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter {
 
-	private final WeakRefHelper<ISpielTagRangliste> ranglisteWkRef;
+	private final ISpielTagRangliste rangliste;
 	private final int anzSpaltenInSpielrunde;
 	private final int ersteSpielRundeSpalte;
 
@@ -38,17 +37,15 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 			MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, int ersteSpielRundeSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
-		checkNotNull(rangliste);
-		ranglisteWkRef = new WeakRefHelper<>(rangliste);
+		this.rangliste = checkNotNull(rangliste);
 		this.anzSpaltenInSpielrunde = anzSpaltenInSpielrunde;
 		this.ersteSpielRundeSpalte = ersteSpielRundeSpalte;
 	}
 
 	public void updateHeader() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo("processbox.formatiere.header");
+		rangliste.processBoxinfo("processbox.formatiere.header");
 
-		ISpielTagRangliste rangliste = ranglisteWkRef.get();
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
 			return;
@@ -114,10 +111,9 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 
 	public void formatDaten() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo("processbox.formatiere.daten");
+		rangliste.processBoxinfo("processbox.formatiere.daten");
 
-		ISpielTagRangliste rangliste = ranglisteWkRef.get();
-		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalteWkRef().get();
+		MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte = getSpielerSpalte();
 
 		int anzRunden = rangliste.getAnzahlRunden();
 		if (anzRunden < 1) {
@@ -142,11 +138,11 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 	@Override
 	public StringCellValue addFooter() throws GenerateException {
 
-		ranglisteWkRef.get().processBoxinfo("processbox.fusszeile.einfuegen");
+		rangliste.processBoxinfo("processbox.fusszeile.einfuegen");
 
 		StringCellValue stringVal = super.addFooter();
 
-		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
+		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpalte();
 
 		int nichtgespieltPlus = propertiesSpalte.getNichtGespielteRundePlus();
 		int nichtgespieltMinus = propertiesSpalte.getNichtGespielteRundeMinus();

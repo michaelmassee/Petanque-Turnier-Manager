@@ -14,7 +14,6 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
@@ -23,7 +22,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSor
 
 public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter {
 
-	private final WeakRefHelper<IEndRangliste> ranglisteWkRef;
+	private final IEndRangliste rangliste;
 	private final int anzSpaltenInSpieltag;
 	private final int ersteSpielTagSpalte;
 
@@ -31,14 +30,12 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 			MeldungenSpalte<SpielerMeldungen, Spieler> spielerSpalte, int ersteSpielTagSpalte,
 			ISuperMeleePropertiesSpalte propertiesSpalte) {
 		super(spielerSpalte, propertiesSpalte, rangliste);
-		checkNotNull(rangliste);
-		ranglisteWkRef = new WeakRefHelper<>(rangliste);
+		this.rangliste = checkNotNull(rangliste);
 		this.anzSpaltenInSpieltag = anzSpaltenInSpieltag;
 		this.ersteSpielTagSpalte = ersteSpielTagSpalte;
 	}
 
 	public void updateHeader() throws GenerateException {
-		IEndRangliste rangliste = ranglisteWkRef.get();
 		int anzSpieltagen = rangliste.getAnzahlSpieltage();
 		if (anzSpieltagen < 1) {
 			return;
@@ -69,7 +66,6 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 	}
 
 	public void formatDaten() throws GenerateException {
-		IEndRangliste rangliste = ranglisteWkRef.get();
 		int anzSpielTage = rangliste.getAnzahlSpieltage();
 		if (anzSpielTage < 1) {
 			return;
@@ -102,8 +98,7 @@ public class EndRanglisteFormatter extends AbstractSuperMeleeRanglisteFormatter 
 
 	@Override
 	protected SuprMleEndranglisteSortMode getSuprMleEndranglisteSortMode() {
-		ISuperMeleePropertiesSpalte propertiesSpalte = getPropertiesSpaltewkRef().get();
-		return propertiesSpalte.getSuprMleEndranglisteSortMode();
+		return getPropertiesSpalte().getSuprMleEndranglisteSortMode();
 	}
 
 }
