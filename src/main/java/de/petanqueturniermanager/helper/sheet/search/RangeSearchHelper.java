@@ -26,7 +26,6 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 /**
  * @author Michael Massee
@@ -49,10 +48,6 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 
 	public static RangeSearchHelper from(ISheet iSheet, RangePosition rangePos) {
 		return new RangeSearchHelper(iSheet, rangePos);
-	}
-
-	public static RangeSearchHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePos) {
-		return new RangeSearchHelper(checkNotNull(sheetWkRef).get(), rangePos);
 	}
 
 	/**
