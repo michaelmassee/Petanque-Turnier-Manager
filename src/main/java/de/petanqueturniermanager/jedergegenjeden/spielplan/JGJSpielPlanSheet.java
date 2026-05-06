@@ -255,6 +255,38 @@ public class JGJSpielPlanSheet extends SheetRunner implements ISheet {
 		for (int g = 0; g < gruppen.size(); g++) {
 			schreibeGruppenHeaderBeschriftung(gruppenHeaderZeilen.get(g), gruppenBuchstabe(g));
 		}
+
+		erstelleAushangSheets(gruppenStartZeilen, gruppenSpielplaeneH, gruppenSpielplaeneR);
+	}
+
+	/**
+	 * Erstellt für jede Gruppe ein eigenes Aushang-Sheet, dessen Ergebnis-Spalten
+	 * per Formel auf die zentralen Ergebnis-Zellen dieses Spielplans verweisen.
+	 * Iteriert in umgekehrter Reihenfolge, damit die Tabs nach dem Einfügen
+	 * an Position {@link DefaultSheetPos#JGJ_WORK} in natürlicher A→Z-Folge
+	 * vor dem zentralen "Spielplan"-Tab erscheinen.
+	 */
+	private void erstelleAushangSheets(List<Integer> gruppenStartZeilen,
+			List<List<List<TeamPaarung>>> gruppenSpielplaeneH,
+			List<List<List<TeamPaarung>>> gruppenSpielplaeneR) throws GenerateException {
+
+		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
+		Map<Integer, String> teamNamen = zeigeNr ? Map.of() : meldeListe.leseTeamNamen();
+		String freispielText = I18n.get("spielplan.freispiel.name");
+
+		JGJGruppenSpielplaeneSheet aushang = new JGJGruppenSpielplaeneSheet(this, konfigurationSheet);
+		for (int g = gruppenStartZeilen.size() - 1; g >= 0; g--) {
+			SheetRunner.testDoCancelTask();
+			aushang.erstelle(gruppenBuchstabe(g), gruppenStartZeilen.get(g),
+					gruppenSpielplaeneH.get(g), gruppenSpielplaeneR.get(g),
+					zeigeNr, teamNamen, freispielText);
+		}
+
+		// Nach dem Erstellen der Aushänge wieder den zentralen Spielplan aktivieren,
+		// damit der Benutzer die Eingabezellen direkt sieht.
+		if (SheetRunner.isRunning()) {
+			getTurnierSheet().setActiv();
+		}
 	}
 
 	private void schreibeGruppenNrZeile(int zeile) throws GenerateException {

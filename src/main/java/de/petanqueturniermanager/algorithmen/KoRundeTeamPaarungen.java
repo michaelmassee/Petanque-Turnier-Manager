@@ -137,6 +137,3 @@ public class KoRundeTeamPaarungen {
 		return String.join(" ", doppelteGespieltePaarungen);
 	}
 }
-
-/** Kapselt einen gefundenen Tausch: das Team aus der Rangliste und die Paarung, deren B getauscht wird. */
-record TauschTeams(Team teamAusRangliste, TeamPaarung teamPaarungTausch) {}

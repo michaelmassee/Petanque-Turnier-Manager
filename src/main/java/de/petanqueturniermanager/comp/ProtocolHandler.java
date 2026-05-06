@@ -78,7 +78,6 @@ import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_U
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetSortOnly;
-import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJGruppenSpielplaeneSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJDoublette17TurnierTestDaten;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
@@ -211,7 +210,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_JGJ_RANGLISTE_SORTIEREN = "jgj_rangliste_sortieren";
 	public static final String CMD_JGJ_RANGLISTE = "jgj_rangliste";
 	public static final String CMD_JGJ_DIREKTVERGLEICH = "jgj_direktvergleich";
-	public static final String CMD_JGJ_GRUPPEN_SPIELPLAENE = "jgj_gruppen_spielplaene";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER = "jgj_testdaten_turnier";
 	public static final String CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17 = "jgj_testdaten_turnier_doublette_17";
 	// Schweizer
@@ -592,9 +590,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_JGJ_DIREKTVERGLEICH:
 				new JGJRanglisteDirektvergleichSheet(ws).testTurnierVorhanden().start();
-				break;
-			case CMD_JGJ_GRUPPEN_SPIELPLAENE:
-				new JGJGruppenSpielplaeneSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
 				break;
 			case CMD_JGJ_TESTDATEN_TURNIER:
 				new JGJTurnierTestDaten(ws).start();
@@ -1130,8 +1125,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_JGJ_NEUE_MELDELISTE                    -> ts == TurnierSystem.KEIN;
 			case CMD_JGJ_UPDATE_MELDELISTE, CMD_JGJ_SPIELPLAN,
 				 CMD_JGJ_RANGLISTE, CMD_JGJ_RANGLISTE_SORTIEREN,
-				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER,
-				 CMD_JGJ_GRUPPEN_SPIELPLAENE                            -> ts == TurnierSystem.JGJ;
+				 CMD_JGJ_DIREKTVERGLEICH, CMD_JGJ_TEILNEHMER            -> ts == TurnierSystem.JGJ;
 			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_JGJ_TESTDATEN_TURNIER,
 				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;

@@ -12,9 +12,13 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.util.CellProtection;
 import com.sun.star.util.XProtectable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 
 /**
  * Zentraler Singleton für Sheet-Schutz (Blattschutz) im Turnier-Modus.
@@ -51,8 +55,8 @@ public class BlattschutzManager {
         // Schritt 1: CellStyles sichern BEVOR irgendein Sheet geschützt wird
         konfiguration.zelleStylesAktualisieren(ws);
 
-        // Schritt 2: Schutz-Infos einmalig berechnen
-        var infos = konfiguration.berechneSchutzInfos(ws);
+        // Schritt 2: Schutz-Infos einmalig berechnen, ergänzt um system-übergreifende Sheets
+        var infos = mitGlobalenSchutzInfos(konfiguration.berechneSchutzInfos(ws), ws);
 
         // Schritt 3: Pro Sheet entsperren → Zellschutz → sperren
         for (var info : infos) {
@@ -78,7 +82,7 @@ public class BlattschutzManager {
      * @param ws            aktuelles Spreadsheet
      */
     public void entsperren(IBlattschutzKonfiguration konfiguration, WorkingSpreadsheet ws) {
-        var infos = konfiguration.berechneSchutzInfos(ws);
+        var infos = mitGlobalenSchutzInfos(konfiguration.berechneSchutzInfos(ws), ws);
         for (var info : infos) {
             try {
                 entsperreSheet(info.sheet());
@@ -89,6 +93,20 @@ public class BlattschutzManager {
     }
 
     // -------------------------------------------------------------------------
+
+    /**
+     * Ergänzt die system-spezifischen Schutz-Infos um Sheets, die in jedem
+     * Turniersystem im Turnier-Modus vollständig gesperrt sein müssen
+     * (z.B. das Teilnehmer-Sheet). So muss diese Regel nicht in jeder
+     * {@link IBlattschutzKonfiguration} dupliziert werden.
+     */
+    private List<SheetSchutzInfo> mitGlobalenSchutzInfos(List<SheetSchutzInfo> systemInfos, WorkingSpreadsheet ws) {
+        var alle = new ArrayList<>(systemInfos);
+        var xDoc = ws.getWorkingSpreadsheetDocument();
+        SheetMetadataHelper.findeSheet(xDoc, SheetMetadataHelper.SCHLUESSEL_TEILNEHMER)
+                .ifPresent(sheet -> alle.add(SheetSchutzInfo.vollGesperrt(sheet)));
+        return alle;
+    }
 
     private void entsperreSheetFallsNoetig(XSpreadsheet sheet) {
         var xProt = Lo.qi(XProtectable.class, sheet);

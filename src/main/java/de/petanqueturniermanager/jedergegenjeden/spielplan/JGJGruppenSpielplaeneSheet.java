@@ -4,8 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -17,8 +21,6 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -27,27 +29,26 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.jedergegenjeden.JGJGruppenAufteiler;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
-import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
-import de.petanqueturniermanager.model.LigaSpielPlan;
-import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.model.TeamPaarung;
-import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
  * Erstellt für jede JGJ-Gruppe ein eigenes minimales Spielplan-Sheet (Aushang).
  * <p>
- * Reine Anzeige – keine Eingabe vorgesehen, Werte werden statisch geschrieben
- * und sind nicht mit der Ergebnis-Erfassung verknüpft.
- * Geeignet zum Drucken oder als Quelle für die Webseiten-Ausgabe.
+ * Reine Anzeige zum Drucken oder als Quelle für die Webseiten-Ausgabe.
+ * Die Ergebnis-Spalten verweisen per Formel auf die zentralen Ergebnis-Zellen
+ * im "Spielplan"-Tab, sodass Eingaben automatisch hier sichtbar werden.
+ * <p>
+ * Wird ausschließlich aus {@link JGJSpielPlanSheet} im Gruppen-Modus aufgerufen –
+ * die Reihenfolge der Paarungen muss exakt der Reihenfolge im zentralen
+ * Spielplan entsprechen, damit die Zeilen-Referenzen passen.
  */
-public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
+public class JGJGruppenSpielplaeneSheet implements ISheet {
 
 	private static final int HEADER_TITEL_ZEILE = 0;
 	private static final int HEADER_SPALTEN_ZEILE = 1;
@@ -63,20 +64,19 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 	private static final int SPALTE_BREITE_NR = 1000;        // 1 cm
 	private static final int SPALTE_BREITE_ERGEBNIS = 1000;  // 1 cm
 
+	private final ISheet parent;
 	private final JGJKonfigurationSheet konfigurationSheet;
-	private final JGJMeldeListeSheet_Update meldeListe;
 
 	private XSpreadsheet aktuellesSheet;
 
-	public JGJGruppenSpielplaeneSheet(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.JGJ);
-		konfigurationSheet = new JGJKonfigurationSheet(workingSpreadsheet);
-		meldeListe = new JGJMeldeListeSheet_Update(workingSpreadsheet);
+	public JGJGruppenSpielplaeneSheet(ISheet parent, JGJKonfigurationSheet konfigurationSheet) {
+		this.parent = parent;
+		this.konfigurationSheet = konfigurationSheet;
 	}
 
 	@Override
-	protected JGJKonfigurationSheet getKonfigurationSheet() {
-		return konfigurationSheet;
+	public SheetHelper getSheetHelper() throws GenerateException {
+		return parent.getSheetHelper();
 	}
 
 	@Override
@@ -85,52 +85,45 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 	}
 
 	@Override
+	public Logger getLogger() {
+		return LogManager.getLogger(this.getClass());
+	}
+
+	@Override
+	public XComponentContext getxContext() {
+		return parent.getxContext();
+	}
+
+	@Override
+	public WorkingSpreadsheet getWorkingSpreadsheet() {
+		return parent.getWorkingSpreadsheet();
+	}
+
+	@Override
+	public void processBoxinfo(String i18nKey, Object... args) {
+		parent.processBoxinfo(i18nKey, args);
+	}
+
+	@Override
 	public TurnierSheet getTurnierSheet() throws GenerateException {
 		return TurnierSheet.from(getXSpreadSheet(), getWorkingSpreadsheet());
 	}
 
-	@Override
-	protected void doRun() throws GenerateException {
-		processBoxinfo("processbox.jgj.gruppen.spielplaene.erstellen");
-
-		int gruppengroesse = konfigurationSheet.getGruppengroesse();
-		TeamMeldungen meldungen = meldeListe.getAktiveMeldungen();
-
-		if (gruppengroesse <= 0 || meldungen.size() <= gruppengroesse) {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("msg.caption.jgj.gruppen.spielplaene"))
-					.message(I18n.get("msg.text.jgj.gruppen.spielplaene.keine.gruppen"))
-					.show();
-			return;
-		}
-
-		boolean mitRueckrunde = konfigurationSheet.isRueckrunde();
-		List<TeamMeldungen> gruppen = JGJGruppenAufteiler.teileInGruppen(meldungen, gruppengroesse);
-		boolean zeigeNr = konfigurationSheet.getSpielplanTeamAnzeige() == SpielplanTeamAnzeige.NR;
-		Map<Integer, String> teamNamen = zeigeNr ? Map.of() : meldeListe.leseTeamNamen();
-		String freispielText = I18n.get("spielplan.freispiel.name");
-
-		// Rückwärts erstellen: Da jedes neue Sheet an Position JGJ_WORK eingefügt wird und
-		// vorhandene Sheets nach hinten verschiebt, ergibt rückwärtige Iteration die
-		// natürliche Tab-Reihenfolge A, B, C, … für den Anwender.
-		for (int g = gruppen.size() - 1; g >= 0; g--) {
-			SheetRunner.testDoCancelTask();
-			String buchstabe = gruppenBuchstabe(g);
-			erstelleGruppenSheet(gruppen.get(g), buchstabe, mitRueckrunde, zeigeNr, teamNamen, freispielText);
-		}
-
-		// Nach dem Lauf das erste Gruppen-Sheet (Gruppe A) aktivieren, damit der Anwender
-		// sofort den korrekten Tab-Inhalt sieht.
-		String ersterMetaKey = SheetMetadataHelper.schluesselJgjGruppeSpielplan(gruppenBuchstabe(0));
-		String ersterName = SheetNamen.jgjGruppeSpielplan(gruppenBuchstabe(0));
-		XSpreadsheet ersteGruppe = SheetMetadataHelper.findeSheetUndHeile(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), ersterMetaKey, ersterName);
-		if (ersteGruppe != null && SheetRunner.isRunning()) {
-			TurnierSheet.from(ersteGruppe, getWorkingSpreadsheet()).setActiv();
-		}
-	}
-
-	private void erstelleGruppenSheet(TeamMeldungen gruppe, String buchstabe, boolean mitRueckrunde,
+	/**
+	 * Erstellt das Aushang-Sheet einer einzelnen Gruppe und verdrahtet die
+	 * Ergebnis-Spalten per Formel mit dem zentralen Spielplan.
+	 *
+	 * @param buchstabe              Gruppen-Buchstabe (A, B, C, ...)
+	 * @param zentraleStartZeile     Zeile (0-basiert) im zentralen Spielplan, ab der
+	 *                               die Spiele dieser Gruppe stehen.
+	 * @param hRunde                 Hinrunde (Reihenfolge wie im zentralen Spielplan).
+	 * @param rRunde                 Rückrunde oder leere Liste.
+	 * @param zeigeNr                {@code true}: Team-Nr statt Name anzeigen.
+	 * @param teamNamen              Mapping Team-Nr → Name (wenn {@code !zeigeNr}).
+	 * @param freispielText          Anzeigetext für Freispiel-Paarungen.
+	 */
+	public void erstelle(String buchstabe, int zentraleStartZeile,
+			List<List<TeamPaarung>> hRunde, List<List<TeamPaarung>> rRunde,
 			boolean zeigeNr, Map<Integer, String> teamNamen, String freispielText) throws GenerateException {
 
 		String sheetName = SheetNamen.jgjGruppeSpielplan(buchstabe);
@@ -144,17 +137,12 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 		aktuellesSheet = SheetMetadataHelper.findeSheetUndHeile(
 				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), metaKey, sheetName);
 		try {
-			schreibeSpaltenBreiten();
+			schreibeSpaltenBreiten(zeigeNr);
 			schreibeTitelZeile(buchstabe);
 			schreibeSpaltenHeader();
 
-			LigaSpielPlan ligaSpielPlan = new LigaSpielPlan(gruppe);
-			List<List<TeamPaarung>> hRunde = ligaSpielPlan.schufflePlan().getSpielPlanClone();
-			List<List<TeamPaarung>> rRunde = mitRueckrunde
-					? ligaSpielPlan.flipTeams().getSpielPlanClone()
-					: List.<List<TeamPaarung>>of();
-
 			int letzteDatenZeile = schreibeSpieleDaten(hRunde, rRunde, zeigeNr, teamNamen, freispielText);
+			schreibeErgebnisFormeln(letzteDatenZeile, zentraleStartZeile);
 
 			formatiereSheet(letzteDatenZeile, hRunde, rRunde);
 			definierePrintBereich(letzteDatenZeile);
@@ -168,13 +156,14 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 		}
 	}
 
-	private void schreibeSpaltenBreiten() throws GenerateException {
+	private void schreibeSpaltenBreiten(boolean zeigeNr) throws GenerateException {
+		int teamSpalteBreite = zeigeNr ? SPALTE_BREITE_NR : JGJKonfigurationSheet.MELDUNG_NAME_WIDTH;
 		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_NR,
 				ColumnProperties.from().setWidth(SPALTE_BREITE_NR).centerJustify());
 		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_TEAM_A,
-				ColumnProperties.from().setWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH));
+				ColumnProperties.from().setWidth(teamSpalteBreite));
 		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_TEAM_B,
-				ColumnProperties.from().setWidth(JGJKonfigurationSheet.MELDUNG_NAME_WIDTH));
+				ColumnProperties.from().setWidth(teamSpalteBreite));
 		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_ERGEBNIS_A,
 				ColumnProperties.from().setWidth(SPALTE_BREITE_ERGEBNIS).centerJustify());
 		getSheetHelper().setColumnProperties(aktuellesSheet, SPALTE_ERGEBNIS_B,
@@ -232,9 +221,6 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 		alleSpieltage.addAll(hRunde);
 		alleSpieltage.addAll(rRunde);
 
-		int freispielPlus = konfigurationSheet.getFreispielPunktePlus();
-		int freispielMinus = konfigurationSheet.getFreispielPunkteMinus();
-
 		RangeData daten = new RangeData();
 		int hIndex = 1;
 		int rIndex = 1;
@@ -255,15 +241,9 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 				int nrB = hatB ? paarung.getB().getNr() : 0;
 
 				row.newString(zeigeNr ? String.valueOf(nrA) : teamNamen.getOrDefault(nrA, ""));
-				if (!hatB) {
-					row.newString(freispielText);
-					row.newInt(freispielPlus);
-					row.newInt(freispielMinus);
-				} else {
-					row.newString(zeigeNr ? String.valueOf(nrB) : teamNamen.getOrDefault(nrB, ""));
-					row.newString("");
-					row.newString("");
-				}
+				row.newString(hatB
+						? (zeigeNr ? String.valueOf(nrB) : teamNamen.getOrDefault(nrB, ""))
+						: freispielText);
 			}
 			if (inHinrunde && hIndex > hAnzahl) {
 				inHinrunde = false;
@@ -271,14 +251,44 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 		}
 
 		Position startPos = Position.from(SPALTE_NR, ERSTE_DATEN_ZEILE);
-		RangeHelper.from(this, daten.getRangePosition(startPos))
-				.setDataInRange(daten)
+		int letzteDatenZeile = ERSTE_DATEN_ZEILE + daten.size() - 1;
+
+		RangeHelper.from(this, daten.getRangePosition(startPos)).setDataInRange(daten);
+
+		// Border/Formatierung über die komplette Datenzeile (inkl. der per Formel
+		// befüllten Ergebnis-Spalten) anwenden.
+		RangeHelper.from(this,
+				RangePosition.from(SPALTE_NR, ERSTE_DATEN_ZEILE, LETZTE_SPALTE, letzteDatenZeile))
 				.setRangeProperties(RangeProperties.from()
 						.setBorder(BorderFactory.from().allThin().toBorder())
 						.centerJustify().setShrinkToFit(true)
 						.topMargin(110).bottomMargin(110).setCharHeight(12));
 
-		return ERSTE_DATEN_ZEILE + daten.size() - 1;
+		return letzteDatenZeile;
+	}
+
+	/**
+	 * Schreibt für die Ergebnis-Spalten Formeln, die direkt auf die Ergebnis-Zellen
+	 * im zentralen Spielplan-Tab verweisen. Verwendet relative Zeilen-Referenzen,
+	 * damit {@code fillAutoDown} die Zeilen entsprechend hochzählt.
+	 */
+	private void schreibeErgebnisFormeln(int letzteDatenZeile, int zentraleStartZeile) throws GenerateException {
+		String spielplanRef = "$'" + SheetNamen.spielplan() + "'.";
+
+		String ergAStart = Position.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE, zentraleStartZeile).getAddress();
+		String ergBStart = Position.from(JGJSpielPlanSheet.SPIELPNKT_B_SPALTE, zentraleStartZeile).getAddress();
+
+		StringCellValue formulaA = StringCellValue.from(aktuellesSheet)
+				.setValue(spielplanRef + ergAStart)
+				.setPos(Position.from(SPALTE_ERGEBNIS_A, ERSTE_DATEN_ZEILE))
+				.setFillAutoDown(letzteDatenZeile);
+		getSheetHelper().setFormulaInCell(formulaA);
+
+		StringCellValue formulaB = StringCellValue.from(aktuellesSheet)
+				.setValue(spielplanRef + ergBStart)
+				.setPos(Position.from(SPALTE_ERGEBNIS_B, ERSTE_DATEN_ZEILE))
+				.setFillAutoDown(letzteDatenZeile);
+		getSheetHelper().setFormulaInCell(formulaB);
 	}
 
 	private static int anzPaarungen(List<List<TeamPaarung>> spielplan) {
@@ -348,9 +358,5 @@ public class JGJGruppenSpielplaeneSheet extends SheetRunner implements ISheet {
 				Position.from(SPALTE_NR, HEADER_TITEL_ZEILE),
 				Position.from(LETZTE_SPALTE, letzteDatenZeile));
 		PrintArea.from(aktuellesSheet, getWorkingSpreadsheet()).setPrintArea(bereich);
-	}
-
-	private static String gruppenBuchstabe(int index) {
-		return String.valueOf((char) ('A' + index));
 	}
 }
