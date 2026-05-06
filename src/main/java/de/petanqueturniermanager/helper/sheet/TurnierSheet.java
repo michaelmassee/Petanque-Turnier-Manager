@@ -37,12 +37,15 @@ import de.petanqueturniermanager.helper.position.RangePosition;
  */
 public class TurnierSheet {
 	private static final Logger logger = LogManager.getLogger(TurnierSheet.class);
-	private final WeakRefHelper<XSpreadsheet> wkRefxSpreadsheet;
-	private final WeakRefHelper<WorkingSpreadsheet> wkRefWorkingSpreadsheet;
+	// Bewusst Strong-Refs: TurnierSheet ist ein kurzlebiger Fluent-Helper.
+	// WeakReference führt hier zu Heisenbugs zwischen verketteten Calls, weil der UNO-Proxy
+	// nirgends sonst gehalten wird und vom GC zwischen from(...) und doFreeze() geclearet werden kann.
+	private final XSpreadsheet xSpreadsheet;
+	private final WorkingSpreadsheet workingSpreadsheet;
 
 	private TurnierSheet(XSpreadsheet xSpreadsheet, WorkingSpreadsheet currentSpreadsheet) {
-		wkRefxSpreadsheet = new WeakRefHelper<>(checkNotNull(xSpreadsheet));
-		wkRefWorkingSpreadsheet = new WeakRefHelper<>(checkNotNull(currentSpreadsheet));
+		this.xSpreadsheet = checkNotNull(xSpreadsheet);
+		this.workingSpreadsheet = checkNotNull(currentSpreadsheet);
 	}
 
 	public static TurnierSheet from(XSpreadsheet xSpreadsheet, WorkingSpreadsheet currentSpreadsheet) {
@@ -68,7 +71,7 @@ public class TurnierSheet {
 	}
 
 	public TurnierSheet setActiv() {
-		wkRefWorkingSpreadsheet.get().getWorkingSpreadsheetView().setActiveSheet(wkRefxSpreadsheet.get());
+		workingSpreadsheet.getWorkingSpreadsheetView().setActiveSheet(xSpreadsheet);
 		return this;
 	}
 
@@ -96,7 +99,7 @@ public class TurnierSheet {
 		// dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
 		// dispatcher.executeDispatch (document, ".uno: ToggleSheetGrid", "", 0, Array ())
 		PropertyValue[] aArgs = new PropertyValue[0];
-		wkRefWorkingSpreadsheet.get().executeDispatch(".uno:ToggleSheetGrid", "", 0, aArgs);
+		workingSpreadsheet.executeDispatch(".uno:ToggleSheetGrid", "", 0, aArgs);
 		return this;
 	}
 
@@ -138,7 +141,7 @@ public class TurnierSheet {
 	 */
 	public TurnierSheet tabColor(int color) {
 		if (color > 0) {
-			XPropertySet xPropSet = Lo.qi(com.sun.star.beans.XPropertySet.class, wkRefxSpreadsheet.get());
+			XPropertySet xPropSet = Lo.qi(com.sun.star.beans.XPropertySet.class, xSpreadsheet);
 			if (xPropSet != null) {
 				try {
 					xPropSet.setPropertyValue("TabColor", Integer.valueOf(color));
@@ -167,7 +170,7 @@ public class TurnierSheet {
 	public XCellRange getCellRangeByPosition(RangePosition range) {
 		checkNotNull(range);
 		try {
-			return wkRefxSpreadsheet.get().getCellRangeByPosition(range.getStartSpalte(), range.getStartZeile(),
+			return xSpreadsheet.getCellRangeByPosition(range.getStartSpalte(), range.getStartZeile(),
 					range.getEndeSpalte(), range.getEndeZeile());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
@@ -176,15 +179,11 @@ public class TurnierSheet {
 	}
 
 	public <C> C queryInterfaceXSpreadsheet(Class<C> clazz) {
-		return Lo.qi(clazz, wkRefxSpreadsheet.get());
+		return Lo.qi(clazz, xSpreadsheet);
 	}
 
 	public <C> C queryInterfaceSpreadsheetView(Class<C> clazz) {
-		WorkingSpreadsheet workingSpreadsheet = wkRefWorkingSpreadsheet.get();
-		if (workingSpreadsheet != null) {
-			return Lo.qi(clazz, workingSpreadsheet.getWorkingSpreadsheetView());
-		}
-		return null;
+		return Lo.qi(clazz, workingSpreadsheet.getWorkingSpreadsheetView());
 	}
 
 	// iSheetNr = oMySheet.RangeAddress.Sheet
@@ -194,7 +193,7 @@ public class TurnierSheet {
 	// https://wiki.openoffice.org/wiki/Documentation/DevGuide/Spreadsheets/Cell_Ranges_and_Cells_Container
 
 	public int getSheetPosition() {
-		XSpreadsheets xSpreadsheets = wkRefWorkingSpreadsheet.get().getWorkingSpreadsheetDocument().getSheets();
+		XSpreadsheets xSpreadsheets = workingSpreadsheet.getWorkingSpreadsheetDocument().getSheets();
 		XIndexAccess xIndexAccess = Lo.qi(XIndexAccess.class, xSpreadsheets);
 		int anzSheets = xIndexAccess.getCount();
 		String thisSheetName = getName();
@@ -217,7 +216,7 @@ public class TurnierSheet {
 	}
 
 	public String getName() {
-		XNamed xsheetname = Lo.qi(XNamed.class, wkRefxSpreadsheet.get());
+		XNamed xsheetname = Lo.qi(XNamed.class, xSpreadsheet);
 		return xsheetname.getName();
 	}
 
@@ -225,7 +224,7 @@ public class TurnierSheet {
 		checkNotNull(pos);
 		XCell xCell = null;
 		try {
-			xCell = wkRefxSpreadsheet.get().getCellByPosition(pos.getColumn(), pos.getRow());
+			xCell = xSpreadsheet.getCellByPosition(pos.getColumn(), pos.getRow());
 		} catch (IndexOutOfBoundsException e) {
 			logger.error(e.getMessage(), e);
 		}

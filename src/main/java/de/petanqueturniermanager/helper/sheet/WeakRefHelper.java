@@ -23,14 +23,15 @@ public class WeakRefHelper<T> {
 	}
 
 	public final boolean isPresent() {
-		return !this.wkRef.refersTo(null) && this.wkRef.get() != null;
+		return this.wkRef.get() != null;
 	}
 
 	public final T get() {
-		if (!this.wkRef.refersTo(null)) {
-			return this.wkRef.get();
+		// Einmaliger Read — kein TOCTOU-Race zwischen Check und Auflösung.
+		T referent = this.wkRef.get();
+		if (referent == null) {
+			throw new NullPointerException("Weakref " + wkRef + " ist Nicht mehr verfügbar");
 		}
-		// darf nicht passieren
-		throw new NullPointerException("Weakref " + wkRef + " ist Nicht mehr verfügbar");
+		return referent;
 	}
 }
