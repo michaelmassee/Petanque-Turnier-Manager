@@ -18,26 +18,28 @@ import de.petanqueturniermanager.helper.ISheet;
  */
 public abstract class BaseHelper {
 
-	private final WeakRefHelper<ISheet> wkRefISheet;
+	// Strong-Ref: BaseHelper-Subklassen sind kurzlebige Operations-Helper.
+	// Der ISheet (i.d.R. SheetRunner) wird ohnehin extern strong gehalten.
+	private final ISheet iSheet;
 
-	public BaseHelper(ISheet iSheet) {
-		wkRefISheet = new WeakRefHelper<>(checkNotNull(iSheet));
+	protected BaseHelper(ISheet iSheet) {
+		this.iSheet = checkNotNull(iSheet);
 	}
 
 	protected final ISheet getISheet() {
-		return wkRefISheet.get();
+		return iSheet;
 	}
 
 	protected final SheetHelper getSheetHelper() throws GenerateException {
-		return wkRefISheet.get().getSheetHelper();
+		return iSheet.getSheetHelper();
 	}
 
 	protected final XSpreadsheet getXSpreadSheet() throws GenerateException {
-		return wkRefISheet.get().getXSpreadSheet();
+		return iSheet.getXSpreadSheet();
 	}
 
 	protected final WorkingSpreadsheet getWorkingSpreadsheet() {
-		return wkRefISheet.get().getWorkingSpreadsheet();
+		return iSheet.getWorkingSpreadsheet();
 	}
 
 	protected final XSpreadsheetDocument getWorkingSpreadsheetDocument() {
