@@ -23,17 +23,16 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 public class RangListeSpalte {
 
 	private final int rangListeSpalte;
 
-	private final WeakRefHelper<IRangliste> iRanglisteSheet;
+	private final IRangliste iRanglisteSheet;
 
 	public RangListeSpalte(int rangListeSpalte, IRangliste iRanglisteSheet) {
 		this.rangListeSpalte = rangListeSpalte;
-		this.iRanglisteSheet = new WeakRefHelper<>(iRanglisteSheet);
+		this.iRanglisteSheet = iRanglisteSheet;
 	}
 
 	/**
@@ -46,7 +45,7 @@ public class RangListeSpalte {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return iRanglisteSheet.get().getSheetHelper();
+		return iRanglisteSheet.getSheetHelper();
 	}
 
 	public int getRangListeSpalte() {
@@ -55,7 +54,7 @@ public class RangListeSpalte {
 
 	public void insertHeaderInSheet(int headerColor) throws GenerateException {
 
-		iRanglisteSheet.get().processBoxinfo("processbox.rangliste.spalten.einfuegen");
+		iRanglisteSheet.processBoxinfo("processbox.rangliste.spalten.einfuegen");
 
 		int ersteZeile = getIRanglisteSheet().getErsteDatenZiele();
 
@@ -70,7 +69,7 @@ public class RangListeSpalte {
 
 	public void upDateRanglisteSpalte() throws GenerateException {
 
-		iRanglisteSheet.get().processBoxinfo("processbox.rangliste.aktualisieren");
+		iRanglisteSheet.processBoxinfo("processbox.rangliste.aktualisieren");
 		// SummenSpalten
 		int letzteZeile = getIRanglisteSheet().getLetzteMitDatenZeileInSpielerNrSpalte();
 		// int ersteSpalteEndsumme = getIRanglisteSheet().getErsteSummeSpalte();
@@ -90,7 +89,7 @@ public class RangListeSpalte {
 		// Rangliste Logic
 		// @See RANG Function
 
-		List<Position> ranglisteSpalten = iRanglisteSheet.get().getRanglisteSpalten();
+		List<Position> ranglisteSpalten = iRanglisteSheet.getRanglisteSpalten();
 
 		StringBuffer formulaBuff = new StringBuffer();
 		formulaBuff.append("IF(ROW()=" + (ersteZeile + 1) + ";1;" + "IF(AND(");
@@ -126,7 +125,7 @@ public class RangListeSpalte {
 	}
 
 	private IRangliste getIRanglisteSheet() {
-		return iRanglisteSheet.get();
+		return iRanglisteSheet;
 	}
 
 	protected XSpreadsheet getSheet() throws GenerateException {

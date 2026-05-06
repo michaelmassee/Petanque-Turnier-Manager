@@ -25,14 +25,13 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 
 public class RangListeSorter {
 
-	private final WeakRefHelper<IRangliste> iRanglisteSheet;
+	private final IRangliste iRanglisteSheet;
 
 	public RangListeSorter(IRangliste iRanglisteSheet) {
-		this.iRanglisteSheet = new WeakRefHelper<>(iRanglisteSheet);
+		this.iRanglisteSheet = iRanglisteSheet;
 	}
 
 	/**
@@ -45,11 +44,11 @@ public class RangListeSorter {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return iRanglisteSheet.get().getSheetHelper();
+		return iRanglisteSheet.getSheetHelper();
 	}
 
 	protected IRangliste getIRangliste() {
-		return iRanglisteSheet.get();
+		return iRanglisteSheet;
 	}
 
 	public void insertManuelsortSpalten(boolean isVisible) throws GenerateException {
