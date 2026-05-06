@@ -11,7 +11,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.model.TeamRangliste;
@@ -22,10 +21,10 @@ import de.petanqueturniermanager.model.TeamRangliste;
  */
 public class Ranglisten {
 
-	private final WeakRefHelper<ISheet> parentSheet;
+	private final ISheet parentSheet;
 
 	public Ranglisten(ISheet parentSheet) {
-		this.parentSheet = new WeakRefHelper<>(parentSheet);
+		this.parentSheet = parentSheet;
 	}
 
 	public TeamRangliste gruppeAusRanglisteEinlesen(int grpNr, String ranglisteSheetName) throws GenerateException {
@@ -38,7 +37,7 @@ public class Ranglisten {
 		if (null != rangliste) {
 			getSheetHelper().setActiveSheet(rangliste);
 		} else {
-			rangliste = NewSheet.temporary(parentSheet.get(), ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
+			rangliste = NewSheet.temporary(parentSheet, ranglisteSheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
 		processBoxinfo("processbox.rangliste.einlesen");
@@ -61,7 +60,7 @@ public class Ranglisten {
 	 * @param string
 	 */
 	private void processBoxinfo(String i18nKey, Object... args) {
-		parentSheet.get().processBoxinfo(i18nKey, args);
+		parentSheet.processBoxinfo(i18nKey, args);
 
 	}
 
@@ -70,7 +69,7 @@ public class Ranglisten {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return parentSheet.get().getSheetHelper();
+		return parentSheet.getSheetHelper();
 	}
 
 }

@@ -15,7 +15,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamRangliste;
@@ -49,10 +48,10 @@ public class Vorrunden {
 
 	private static final String RNDHEADER = "Rnd";
 
-	private final WeakRefHelper<ISheet> parentSheet;
+	private final ISheet parentSheet;
 
 	public Vorrunden(ISheet parentSheet) {
-		this.parentSheet = new WeakRefHelper<>(parentSheet);
+		this.parentSheet = parentSheet;
 	}
 
 	public XSpreadsheet getSheet() throws GenerateException {
@@ -62,7 +61,7 @@ public class Vorrunden {
 		if (null != vorRunden) {
 			getSheetHelper().setActiveSheet(vorRunden);
 		} else {
-			vorRunden = NewSheet.temporary(parentSheet.get(), sheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
+			vorRunden = NewSheet.temporary(parentSheet, sheetName).pos(DefaultSheetPos.MELEE_WORK).forceCreate().setActiv().create().getSheet();
 		}
 
 		return vorRunden;
@@ -110,12 +109,12 @@ public class Vorrunden {
 
 	/** Gibt eine Prozessbox-Meldung über das übergeordnete Sheet aus. */
 	private void processBoxinfo(String i18nKey, Object... args) {
-		parentSheet.get().processBoxinfo(i18nKey, args);
+		parentSheet.processBoxinfo(i18nKey, args);
 	}
 
 	/** Gibt den {@link SheetHelper} des übergeordneten Sheets zurück. */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return parentSheet.get().getSheetHelper();
+		return parentSheet.getSheetHelper();
 	}
 
 }

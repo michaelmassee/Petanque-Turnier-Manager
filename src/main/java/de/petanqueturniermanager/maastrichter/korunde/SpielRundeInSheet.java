@@ -12,7 +12,6 @@ import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.model.FormeSpielrunde;
 import de.petanqueturniermanager.model.TeamPaarung;
 
@@ -25,10 +24,10 @@ public class SpielRundeInSheet {
 	private static final int HEADERZEILE = 0; // = A
 	static final int ERSTEZEILE = 1; // = B
 
-	private final WeakRefHelper<SheetRunner> parentSheet;
+	private final SheetRunner parentSheet;
 
 	public SpielRundeInSheet(SheetRunner parentSheet) {
-		this.parentSheet = new WeakRefHelper<>(parentSheet);
+		this.parentSheet = parentSheet;
 	}
 
 	public void erstelleSpielRundeInSheet(int grpCntr, XSpreadsheet spreadsheet, KoRundeTeamPaarungen teamPaarungen, FormeSpielrunde spielRunde) throws GenerateException {
@@ -58,7 +57,7 @@ public class SpielRundeInSheet {
 	 * @throws GenerateException
 	 */
 	private SheetHelper getSheetHelper() throws GenerateException {
-		return parentSheet.get().getSheetHelper();
+		return parentSheet.getSheetHelper();
 	}
 
 }
