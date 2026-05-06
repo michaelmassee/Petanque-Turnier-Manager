@@ -64,11 +64,6 @@ public class SortHelper {
 		return new SortHelper(xSpreadsheet, xSpreadsheetDocument, rangePosition);
 	}
 
-	public static SortHelper from(WeakRefHelper<ISheet> sheetWkRef, RangePosition rangePosition)
-			throws GenerateException {
-		return new SortHelper(checkNotNull(sheetWkRef).get(), rangePosition);
-	}
-
 	/**
 	 * default = 0 = erste Spalte
 	 *

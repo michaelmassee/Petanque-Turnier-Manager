@@ -21,7 +21,6 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.MeldungenHintergrundFarbeUnGeradeStyle;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ConfigPropertyType;
 import de.petanqueturniermanager.konfigdialog.HeaderFooterConfigProperty;
@@ -68,7 +67,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	public static final String KONFIG_PROP_TAB_COLOR_RANGLISTE       = "Tab-Farbe Rangliste";
 	public static final String KONFIG_PROP_TAB_COLOR_DIREKTVERGLEICH = "Tab-Farbe Direktvergleich";
 
-	protected final WeakRefHelper<ISheet> sheetWkRef;
+	// Strong-Ref: BasePropertiesSpalte ist ein operationaler Helper, der nicht über die ISheet-Lebensdauer hinaus existiert.
+	protected final ISheet iSheet;
 	private final DocumentPropertiesHelper docPropHelper;
 
 	protected static void ADDBaseProp(List<ConfigProperty<?>> KONFIG_PROPERTIES) {
@@ -141,9 +141,8 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	}
 
 	protected BasePropertiesSpalte(ISheet sheet) {
-		sheetWkRef = new WeakRefHelper<>(sheet);
-		checkNotNull(sheet);
-		docPropHelper = newDocumentPropertiesHelper(sheetWkRef.get().getWorkingSpreadsheet());
+		this.iSheet = checkNotNull(sheet);
+		docPropHelper = newDocumentPropertiesHelper(sheet.getWorkingSpreadsheet());
 	}
 
 	@VisibleForTesting
@@ -154,7 +153,7 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	protected abstract List<ConfigProperty<?>> getKonfigProperties();
 
 	protected WorkingSpreadsheet getWorkingSpreadsheet() {
-		return sheetWkRef.get().getWorkingSpreadsheet();
+		return iSheet.getWorkingSpreadsheet();
 	}
 
 	/**

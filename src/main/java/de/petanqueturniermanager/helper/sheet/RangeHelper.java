@@ -63,15 +63,6 @@ public class RangeHelper {
 		return new RangeHelper(sheet, rangePos);
 	}
 
-	/**
-	 * @param wkRefxSpreadsheet
-	 * @param rangePosition
-	 * @throws GenerateException
-	 */
-	public static RangeHelper from(WeakRefHelper<ISheet> wkRefISheet, RangePosition rangePos) throws GenerateException {
-		return new RangeHelper(checkNotNull(wkRefISheet).get(), rangePos);
-	}
-
 	public static RangeHelper from(ISheet sheet, int ersteSpalte, int ersteZeile, int letzteSpalte, int letzteZeile)
 			throws GenerateException {
 		return new RangeHelper(sheet, RangePosition.from(ersteSpalte, ersteZeile, letzteSpalte, letzteZeile));

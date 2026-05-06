@@ -36,7 +36,6 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.WeakRefHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
@@ -68,7 +67,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final int spalteMeldungNameWidth;
 	private final int minAnzZeilen;
 
-	private final WeakRefHelper<ISheet> sheetWkRef;
+	// Strong-Ref: MeldungenSpalte ist ein operationaler Helper im Lebenszyklus eines SheetRunners.
+	private final ISheet iSheet;
 
 	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader,
 			int spalteMeldungNameWidth, int minAnzZeilen, int ersteMeldungNameSpalteOffset) {
@@ -86,7 +86,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		this.meldungNrSpalte = spielerNrSpalte;
 		this.ersteMeldungNameSpalte = spielerNrSpalte + ersteMeldungNameSpalteOffset;
 		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.formation.getAnzSpieler() - 1;
-		this.sheetWkRef = new WeakRefHelper<>(iSheet);
+		this.iSheet = iSheet;
 		this.minAnzZeilen = minAnzZeilen;
 	}
 
@@ -345,7 +345,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		if (letzteZeile >= ersteDatenZiele) {
 			RangePosition spielNrRange = RangePosition.from(meldungNrSpalte, ersteDatenZiele, meldungNrSpalte,
 					letzteZeile);
-			RangeData dataFromRange = RangeHelper.from(sheetWkRef, spielNrRange).getDataFromRange();
+			RangeData dataFromRange = RangeHelper.from(getISheet(), spielNrRange).getDataFromRange();
 			for (RowData zeile : dataFromRange) {
 				int spielerNr = zeile.get(0).getIntVal(-1);
 				if (spielerNr < 1) {
@@ -421,7 +421,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	private final ISheet getISheet() {
-		return sheetWkRef.get();
+		return iSheet;
 	}
 
 	public int getLetzteMeldungNameSpalte() {
