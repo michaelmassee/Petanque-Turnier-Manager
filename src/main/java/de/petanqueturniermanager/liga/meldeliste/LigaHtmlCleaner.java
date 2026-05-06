@@ -95,8 +95,6 @@ public class LigaHtmlCleaner {
 		Document ligaHtmlOrg;
 		Document ligaHtmlNew;
 		try {
-			htmlTargetFile.createNewFile(); // new if not exist
-
 			ligaHtmlOrg = Jsoup.parse(htmlOrgFile);
 			ligaHtmlNew = newLigaDocument();
 

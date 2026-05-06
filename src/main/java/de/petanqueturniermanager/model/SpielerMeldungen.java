@@ -147,19 +147,19 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 	@Override
 	public String toString() {
 
-		String spielerNr = "[";
+		StringBuilder spielerNr = new StringBuilder("[");
 		for (Spieler spielerAusTeam : spielerList) {
 			if (spielerNr.length() > 1) {
-				spielerNr += ",";
+				spielerNr.append(",");
 			}
-			spielerNr += spielerAusTeam.getNr();
+			spielerNr.append(spielerAusTeam.getNr());
 		}
-		spielerNr += "]";
+		spielerNr.append("]");
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
 				.add("Anzahl", size())
-				.add("Spieler", spielerNr)
+				.add("Spieler", spielerNr.toString())
 				.toString();
 		// @formatter:on
 

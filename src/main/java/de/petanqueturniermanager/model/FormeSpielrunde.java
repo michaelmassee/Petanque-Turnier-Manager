@@ -40,19 +40,19 @@ public class FormeSpielrunde extends NrComparable {
 	@Override
 	public String toString() {
 
-		String teamsStr = "[";
+		StringBuilder teamsStr = new StringBuilder("[");
 		for (TeamPaarung teamPaarung : teamPaarungen) {
 			if (teamsStr.length() > 1) {
-				teamsStr += ",";
+				teamsStr.append(",");
 			}
-			teamsStr += teamPaarung.toString();
+			teamsStr.append(teamPaarung.toString());
 		}
-		teamsStr += "]";
+		teamsStr.append("]");
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
 				.add("Nr", nr)
-				.add("Teams", teamsStr)
+				.add("Teams", teamsStr.toString())
 				.toString();
 		// @formatter:on
 

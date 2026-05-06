@@ -41,7 +41,6 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 
 	XFixedText label;
 	XMultiPropertySet labelProperties;
-	XFixedText colorLabel;
 	XButton btn;
 
 	private LabelPlusBackgrColorAndColorChooser(XMultiComponentFactory xMCF, XComponentContext xContext,
@@ -77,7 +76,6 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 
 			XControl labelControl = GuiFactory.createLabel(getxMCF(), getxContext(), getToolkit(), getWindowPeer(), "",
 					BASE_RECTANGLE, props);
-			colorLabel = Lo.qi(XFixedText.class, labelControl);
 			setProperties(Lo.qi(XMultiPropertySet.class, labelControl.getModel()));
 			getLayout().addFixedWidthControl(labelControl, 70);
 		}
@@ -118,7 +116,6 @@ public class LabelPlusBackgrColorAndColorChooser extends BaseField<LabelPlusBack
 		super.disposing();
 		labelProperties = null;
 		label = null;
-		colorLabel = null;
 		btn = null;
 	}
 

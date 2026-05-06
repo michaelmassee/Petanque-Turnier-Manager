@@ -19,8 +19,8 @@ import de.petanqueturniermanager.helper.Lo;
  */
 public class UILabel extends UIElement<UILabel, XFixedText> {
 	private static final Logger logger = LogManager.getLogger(UILabel.class);
-	private final String PROP_LABEL = "Label";
-	private final String PROP_ALIGN = "Align";
+	private static final String PROP_LABEL = "Label";
+	private static final String PROP_ALIGN = "Align";
 
 	private UILabel(Object dialogModel) throws Exception {
 		super(dialogModel);

@@ -13,7 +13,7 @@ import com.sun.star.awt.Rectangle;
  */
 public class HorizontalLayout implements Layout {
 
-    private final int LEFT_RIGHT_BORDER = 5;
+    private static final int LEFT_RIGHT_BORDER = 5;
     private int marginBetween = 1;
 
     /**

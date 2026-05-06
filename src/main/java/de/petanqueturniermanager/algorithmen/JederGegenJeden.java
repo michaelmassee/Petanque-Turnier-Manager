@@ -32,7 +32,7 @@ public class JederGegenJeden {
 		checkNotNull(meldungen);
 		this.meldungen = Collections.unmodifiableList(meldungen.teams());
 		anzMeldungen = meldungen.teams().size();
-		freiSpiel = IsEvenOrOdd.IsOdd(anzMeldungen);
+		freiSpiel = IsEvenOrOdd.isOdd(anzMeldungen);
 	}
 
 	public int anzRunden() {
@@ -68,7 +68,7 @@ public class JederGegenJeden {
 			// letzte Teampaarung ist einfach nach schema F
 			// wegen heim und gast je nach runde umdrehen, nur wenn kein freispiel
 			// bei freispiel nicht drehen sondern reihenfolge bleibt
-			if (IsEvenOrOdd.IsOdd(rundenCntr) || freiSpiel) {
+			if (IsEvenOrOdd.isOdd(rundenCntr) || freiSpiel) {
 				runde.add(newTeamPaarung(rundenCntr - 1, letzteMeldungNr - 1));
 			} else {
 				runde.add(newTeamPaarung(letzteMeldungNr - 1, rundenCntr - 1));

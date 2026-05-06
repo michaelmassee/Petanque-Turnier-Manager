@@ -115,16 +115,14 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	}
 
 	public String mitSpielerStr() {
-		String mitspielerStr = "(";
+		StringBuilder mitspielerStr = new StringBuilder("(");
 		for (Integer warImTeamSpielerNr : warImTeamMit) {
-
-			if (!mitspielerStr.endsWith("(")) {
-				mitspielerStr += ",";
+			if (mitspielerStr.length() > 1) {
+				mitspielerStr.append(",");
 			}
-
-			mitspielerStr += warImTeamSpielerNr;
+			mitspielerStr.append(warImTeamSpielerNr);
 		}
-		return mitspielerStr;
+		return mitspielerStr.toString();
 	}
 
 	public boolean isIstInTeam() throws AlgorithmenException {
@@ -154,18 +152,18 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	@Override
 	public String toString() {
 
-		String warImTeamInfo = "";
+		StringBuilder warImTeamInfo = new StringBuilder();
 		for (Integer warImTeamSpielerNr : warImTeamMit) {
 			if (warImTeamInfo.length() > 0) {
-				warImTeamInfo += ",";
+				warImTeamInfo.append(",");
 			}
-			warImTeamInfo += warImTeamSpielerNr;
+			warImTeamInfo.append(warImTeamSpielerNr);
 		}
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
 				.add("nr", getNr())
-				.add("\nwarImTeamMit", warImTeamInfo)
+				.add("\nwarImTeamMit", warImTeamInfo.toString())
 				.toString();
 		// @formatter:on
 

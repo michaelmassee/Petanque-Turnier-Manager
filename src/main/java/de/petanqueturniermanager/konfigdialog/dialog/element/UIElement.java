@@ -29,13 +29,12 @@ import de.petanqueturniermanager.helper.Lo;
 public abstract class UIElement<T, I> {
 	private static final Logger logger = LogManager.getLogger(UIElement.class);
 
-	protected final String PROP_POSX = "PositionX";
-	protected final String PROP_POSY = "PositionY";
-	protected final String PROP_WIDTH = "Width";
-	protected final String PROP_HEIGHT = "Height";
-	protected final String PROP_NAME = "Name";
-	protected final String PROP_TABINDEX = "TabIndex";
-	protected final String PROP_MULTILINE = "MultiLine";
+	protected static final String PROP_POSX = "PositionX";
+	protected static final String PROP_POSY = "PositionY";
+	protected static final String PROP_WIDTH = "Width";
+	protected static final String PROP_HEIGHT = "Height";
+	protected static final String PROP_NAME = "Name";
+	protected static final String PROP_MULTILINE = "MultiLine";
 
 	private String fieldname;
 
@@ -94,11 +93,6 @@ public abstract class UIElement<T, I> {
 
 	public final T height(int height) {
 		setProperty(PROP_HEIGHT, Integer.valueOf(height));
-		return (T) this;
-	}
-
-	public final T TabIndex(int tabIndex) {
-		setProperty(PROP_TABINDEX, Short.valueOf((short) tabIndex));
 		return (T) this;
 	}
 

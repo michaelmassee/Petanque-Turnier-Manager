@@ -33,7 +33,7 @@ public class LigaSpielPlan {
 	public List<List<TeamPaarung>> getSpielPlanClone() {
 		return spielPlan.stream().map(teamparungList -> {
 			return teamparungList.stream().map(teamPaarung -> {
-				return (TeamPaarung) teamPaarung.clone();
+				return teamPaarung.clone();
 			}).collect(Collectors.toList());
 		}).collect(Collectors.toList());
 	}

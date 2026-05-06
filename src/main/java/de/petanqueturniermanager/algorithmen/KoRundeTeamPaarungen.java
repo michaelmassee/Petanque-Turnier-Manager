@@ -42,7 +42,7 @@ public class KoRundeTeamPaarungen {
 	public KoRundeTeamPaarungen(TeamRangliste teamRangListe) {
 		checkNotNull(teamRangListe, "TeamRangliste == null");
 		checkArgument(!teamRangListe.isEmpty(), "TeamRangliste.isEmpty");
-		checkArgument(IsEvenOrOdd.IsEven(teamRangListe.size()), "Keine gerade anzahl Teams in der Liste");
+		checkArgument(IsEvenOrOdd.isEven(teamRangListe.size()), "Keine gerade anzahl Teams in der Liste");
 		this.teamRangListe = teamRangListe;
 	}
 

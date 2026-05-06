@@ -57,4 +57,44 @@
         <Bug pattern="SING_SINGLETON_GETTER_NOT_SYNCHRONIZED"/>
     </Match>
 
+    <!--
+        CT_CONSTRUCTOR_THROW: SpotBugs warnt vor Konstruktoren, die Exceptions werfen,
+        weil ein Angreifer per Finalizer-Attack auf einen halb-initialisierten Zustand
+        zugreifen koennte. Diese Klassen sind weder Cloneable noch Serializable und
+        haben keine ueberschriebenen finalize()-Methoden. Ab Java 9 ist der Finalizer-
+        Attack durch das Sicherheitsmodell ohnehin entscheidend entschaerft, und die
+        betroffenen Konstruktoren werden ausschliesslich aus Plugin-internem Code mit
+        kontrollierten Aufrufern verwendet (kein UNO-Zugriff von aussen).
+        → Bewusst akzeptiert, kein Risiko in diesem Kontext.
+    -->
+    <Match>
+        <Or>
+            <Class name="de.petanqueturniermanager.comp.GlobalProperties"/>
+            <Class name="de.petanqueturniermanager.helper.DocumentPropertiesHelper"/>
+            <Class name="de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper"/>
+            <Class name="de.petanqueturniermanager.konfigdialog.dialog.element.UIElement"/>
+            <Class name="de.petanqueturniermanager.timer.TimerWebServerInstanz"/>
+            <Class name="de.petanqueturniermanager.webserver.CompositeViewInstanz"/>
+            <Class name="de.petanqueturniermanager.webserver.WebServerInstanz"/>
+        </Or>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
+        EQ_COMPARETO_USE_OBJECT_EQUALS: SpielerEndranglisteErgebnis und SpielerSpieltagErgebnis
+        ueberschreiben compareTo() (Rangordnung nach Spielen/Punkten), aber nicht equals().
+        Das ist beabsichtigt: equals() bleibt identity-basiert (Object), weil zwei
+        Ergebnisinstanzen mit identischen Statistik-Feldern semantisch nicht "gleich" sind —
+        sie gehoeren zu unterschiedlichen Spielern oder Spieltagen. compareTo() definiert
+        nur die Sortierung in der Rangliste, keine Aequivalenzrelation.
+        → Bewusst akzeptierte Inkonsistenz mit Comparable-Empfehlung.
+    -->
+    <Match>
+        <Or>
+            <Class name="de.petanqueturniermanager.supermelee.ergebnis.SpielerEndranglisteErgebnis"/>
+            <Class name="de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis"/>
+        </Or>
+        <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
+    </Match>
+
 </FindBugsFilter>

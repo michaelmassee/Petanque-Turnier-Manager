@@ -170,11 +170,15 @@ public class TeamPaarung implements Cloneable {
 	}
 
 	@Override
-	public Object clone() {
-		if (b.isPresent()) {
-			return new TeamPaarung(Team.from(a.nr), Team.from(b.get().nr));
+	public TeamPaarung clone() {
+		try {
+			TeamPaarung copy = (TeamPaarung) super.clone();
+			copy.a = Team.from(a.nr);
+			copy.b = b.isPresent() ? Optional.of(Team.from(b.get().nr)) : Optional.empty();
+			return copy;
+		} catch (CloneNotSupportedException e) {
+			throw new AssertionError(e);
 		}
-		return new TeamPaarung(Team.from(a.nr));
 	}
 
 	/**

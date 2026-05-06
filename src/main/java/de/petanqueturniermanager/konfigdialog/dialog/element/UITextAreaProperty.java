@@ -73,7 +73,7 @@ public class UITextAreaProperty implements UIProperty {
 				.name(uiName)
 				.posX(45).posY(posY).width(200).height(textHeight)
 				.multiLine(true).vScroll(true).hScroll(true)
-				.Text(propVal)
+				.text(propVal)
 				.doInsert(xControlCont);
 		// @formatter:on
 		return getHeight();

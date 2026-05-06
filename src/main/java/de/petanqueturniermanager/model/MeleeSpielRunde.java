@@ -103,19 +103,19 @@ public class MeleeSpielRunde extends NrComparable {
 	@Override
 	public String toString() {
 
-		String teamsStr = "[";
+		StringBuilder teamsStr = new StringBuilder("[");
 		for (Team team : teams) {
 			if (teamsStr.length() > 1) {
-				teamsStr += ",";
+				teamsStr.append(",");
 			}
-			teamsStr += team.toString();
+			teamsStr.append(team.toString());
 		}
-		teamsStr += "]";
+		teamsStr.append("]");
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
 				.add("Nr", nr)
-				.add("Teams", teamsStr)
+				.add("Teams", teamsStr.toString())
 				.toString();
 		// @formatter:on
 

@@ -136,7 +136,7 @@ public class SchweizerSystem {
 	 * @return eine Liste der Paarungen für die erste Runde
 	 */
 	public List<TeamPaarung> ersteRunde(List<Team> teams) {
-		boolean freiSpiel = IsEvenOrOdd.IsOdd(teams.size());
+		boolean freiSpiel = IsEvenOrOdd.isOdd(teams.size());
 		int letzteMeldungNr = freiSpiel ? teams.size() + 1 : teams.size();
 		int anzTeamPaarungen = letzteMeldungNr / 2;
 
@@ -202,7 +202,7 @@ public class SchweizerSystem {
 	 * @return eine Liste der Paarungen für die nächste Runde (Freilos am Ende)
 	 */
 	public List<TeamPaarung> weitereRunde(List<Team> teams, List<SchweizerTeamErgebnis> ergebnisse) {
-		boolean freiSpiel = IsEvenOrOdd.IsOdd(teams.size());
+		boolean freiSpiel = IsEvenOrOdd.isOdd(teams.size());
 		List<TeamPaarung> teamPaarungList = new ArrayList<>();
 
 		// sicher gehen dass hatgegner flag auf false

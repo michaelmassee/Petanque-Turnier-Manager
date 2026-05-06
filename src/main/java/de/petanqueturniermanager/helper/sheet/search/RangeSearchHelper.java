@@ -96,8 +96,8 @@ public class RangeSearchHelper extends AbstractSearchHelper {
 			searchDescriptor.setSearchString(regExpr);
 			// properties
 			// https://api.libreoffice.org/docs/idl/ref/servicecom_1_1sun_1_1star_1_1util_1_1SearchDescriptor.html
-			for (String propKey : properties.keySet()) {
-				searchDescriptor.setPropertyValue(propKey, properties.get(propKey));
+			for (Map.Entry<String, Object> entry : properties.entrySet()) {
+				searchDescriptor.setPropertyValue(entry.getKey(), entry.getValue());
 			}
 			searchDescriptor.setPropertyValue(SEARCH_REGULAR_EXPRESSION, true);
 			result = getRangePositionFromResult(xSearchableFromRange, searchDescriptor);

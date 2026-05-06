@@ -18,14 +18,17 @@ package de.petanqueturniermanager.algorithmen;
  *
  * @author Michael Massee
  */
-public class IsEvenOrOdd {
+public final class IsEvenOrOdd {
+
+	private IsEvenOrOdd() {
+	}
 
 	// https://stackoverflow.com/questions/7342237/check-whether-number-is-even-or-odd/7342253
-	public static boolean IsEven(int nmbr) {
+	public static boolean isEven(int nmbr) {
 		return ((nmbr & 1) == 0);
 	}
 
-	public static boolean IsOdd(int nmbr) {
-		return !IsEvenOrOdd.IsEven(nmbr);
+	public static boolean isOdd(int nmbr) {
+		return !isEven(nmbr);
 	}
 }

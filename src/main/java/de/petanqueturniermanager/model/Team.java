@@ -169,19 +169,19 @@ public class Team extends NrComparable implements IMeldung<Team> {
 	@Override
 	public String toString() {
 
-		String spielerNr = "[";
+		StringBuilder spielerNr = new StringBuilder("[");
 		for (Spieler spielerAusTeam : spielerList) {
 			if (spielerNr.length() > 1) {
-				spielerNr += ",";
+				spielerNr.append(",");
 			}
-			spielerNr += spielerAusTeam.getNr();
+			spielerNr.append(spielerAusTeam.getNr());
 		}
-		spielerNr += "]";
+		spielerNr.append("]");
 
 		// @formatter:off
 		return MoreObjects.toStringHelper(this)
 				.add("nr", nr)
-				.add("Spieler", spielerNr)
+				.add("Spieler", spielerNr.toString())
 				.add("SetzPos", setzPos)
 				.toString();
 		// @formatter:on

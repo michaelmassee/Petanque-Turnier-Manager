@@ -19,10 +19,9 @@ import de.petanqueturniermanager.helper.Lo;
 public class UITextArea extends UIElement<UITextArea, XTextComponent> {
 	private static final Logger logger = LogManager.getLogger(UITextArea.class);
 
-	private final String PROP_MULTILINE = "MultiLine";
-	private final String PROP_HSCROLL = "HScroll";
-	private final String PROP_VSCROLL = "VScroll";
-	private final String PROP_TEXT = "Text";
+	private static final String PROP_HSCROLL = "HScroll";
+	private static final String PROP_VSCROLL = "VScroll";
+	private static final String PROP_TEXT = "Text";
 
 	private UITextArea(Object dialogModel) throws Exception {
 		super(dialogModel);
@@ -65,7 +64,7 @@ public class UITextArea extends UIElement<UITextArea, XTextComponent> {
 		return this;
 	}
 
-	public final UITextArea Text(String text) {
+	public final UITextArea text(String text) {
 		setProperty(PROP_TEXT, text);
 		return this;
 	}
