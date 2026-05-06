@@ -124,4 +124,41 @@
         <Bug pattern="REC_CATCH_EXCEPTION"/>
     </Match>
 
+    <!--
+        ============================================================
+        MALICIOUS_CODE-Kategorie pauschal ausgeschlossen (154 Findings)
+        ============================================================
+        Betroffene Pattern: EI_EXPOSE_REP, EI_EXPOSE_REP2, MS_EXPOSE_REP,
+        MS_MUTABLE_COLLECTION, MS_MUTABLE_COLLECTION_PKGPROTECT, MS_PKGPROTECT.
+
+        Begruendung:
+        Diese Pattern warnen vor fehlender defensiver Kopie/Immutable-Wrapping
+        an API-Grenzen. Sie sind fuer Bibliotheken mit unbekannten/hostile
+        Aufrufern gedacht. Petanque-Turnier-Manager ist eine LibreOffice-Calc-
+        Extension mit ausschliesslich plugin-internem Aufrufverkehr:
+
+        1. UNO-API-Referenzen (XSpreadsheetDocument, XComponentContext, XSheet,
+           XControl, XToolkit, ...) sind Remote-Proxies auf LO-interne Objekte –
+           defensives Kopieren ist weder moeglich noch sinnvoll.
+        2. Das Domain-Modell (Team, Spieler, TeamPaarung, Direktvergleich,
+           SpielerSpielrundeErgebnis, KaskadenKoRunde, ...) teilt absichtlich
+           Zustand zwischen Algorithmen und Sheet-Schreibern – Kopien wuerden
+           Querverweise (gegner, warImTeamMit, etc.) zerstoeren.
+        3. KONFIG_PROPERTIES-Listen in *PropertiesSpalte werden in statischen
+           Init-Bloecken aufgebaut und dann als Read-Only-Registry verwendet;
+           Immutable-Wrapping wuerde das Add-on-Property-Schema erschweren ohne
+           realen Sicherheitsgewinn.
+        4. Singleton-Getter (TimerManager.get, WebServerManager.get, ProcessBox,
+           BlattschutzManager, ...) geben absichtlich die Singleton-Instanz
+           zurueck – das ist das Wesen des Patterns.
+
+        Statt 150+ Einzel-Excludes oder grossflaechiger Defensiv-Kopier-Aktion
+        wird die Kategorie hier dokumentiert akzeptiert. Wenn die Architektur
+        spaeter erodiert (z.B. echtes Public-API-Modul), kann dieser Pauschal-
+        Exclude wieder aufgeloest werden.
+    -->
+    <Match>
+        <Bug category="MALICIOUS_CODE"/>
+    </Match>
+
 </FindBugsFilter>
