@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 24.11.2019 / Michael Massee
  */
 package de.petanqueturniermanager.helper.sheet.rangedata;

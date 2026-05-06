@@ -224,15 +224,19 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     }
 
     private void erstelleStatischeControls() throws com.sun.star.uno.Exception {
-        // Kopfzeile: Port, Zoom, Aktiv
+        // Kopfzeile: Port, Zoom, Aktiv, Header/Footer
         int aktiv = (initialerEintrag == null || initialerEintrag.aktiv()) ? 1 : 0;
         int zoom = initialerEintrag != null ? initialerEintrag.zoom() : GlobalProperties.DEFAULT_ZOOM;
+        // Default = true (mit Header/Footer); für neue Einträge ebenfalls true.
+        int mitHeaderFooter = (initialerEintrag == null || initialerEintrag.mitHeaderFooter()) ? 1 : 0;
 
         fuegeFixedTextEin("lblPort", "Port:", 5, KOPF_Y, 20, ZEILE_H);
         fuegeEditEin("txtPort", String.valueOf(initialerPort), 28, KOPF_Y, 40, ZEILE_H);
         fuegeFixedTextEin("lblZoom", I18n.get("webserver.konfig.tabelle.kopf.zoom") + ":", 80, KOPF_Y, 25, ZEILE_H);
         fuegeEditEin("txtZoom", String.valueOf(zoom), 108, KOPF_Y, 30, ZEILE_H);
         fuegeCheckBoxEin("cbAktiv", I18n.get("webserver.konfig.tabelle.kopf.aktiv"), 150, KOPF_Y, 60, ZEILE_H, aktiv == 1);
+        fuegeCheckBoxEin("cbMitHeaderFooter", I18n.get("webserver.komposit.mit.header.footer"),
+                215, KOPF_Y, 195, ZEILE_H, mitHeaderFooter == 1);
 
         // Übernehmen / OK / Abbrechen
         fuegeButtonEin("btnUebernehmen", I18n.get("webserver.composite.dialog.detail.uebernehmen"),
@@ -505,6 +509,11 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         XControl aktivCtrl = xcc.getControl("cbAktiv");
         boolean aktiv = aktivCtrl != null && Lo.qi(XCheckBox.class, aktivCtrl).getState() == 1;
 
+        // Header/Footer global rendern – Default true (auch bei fehlendem Control)
+        XControl mitHeaderFooterCtrl = xcc.getControl("cbMitHeaderFooter");
+        boolean mitHeaderFooter = mitHeaderFooterCtrl == null
+                || Lo.qi(XCheckBox.class, mitHeaderFooterCtrl).getState() == 1;
+
         // Panels
         if (panelSheets.isEmpty()) {
             throw new UngueltigeEingabeException(I18n.get("webserver.composite.konfig.fehler.kein.panel"));
@@ -537,7 +546,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 .create();
         String layoutJson = gson.toJson(wurzel, SplitKnoten.class);
 
-        return new CompositeViewEintragRoh(port, aktiv, zoom, layoutJson, panels);
+        return new CompositeViewEintragRoh(port, aktiv, zoom, mitHeaderFooter, layoutJson, panels);
     }
 
     // ---- Baum-Operationen (statisch für Testbarkeit) ----

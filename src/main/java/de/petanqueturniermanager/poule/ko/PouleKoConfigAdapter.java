@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 2026 / Michael Massee
  */
 package de.petanqueturniermanager.poule.ko;

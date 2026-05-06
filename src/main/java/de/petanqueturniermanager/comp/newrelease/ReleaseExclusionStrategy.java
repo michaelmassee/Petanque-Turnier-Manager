@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 29.12.2019 / Michael Massee
  */
 package de.petanqueturniermanager.comp.newrelease;

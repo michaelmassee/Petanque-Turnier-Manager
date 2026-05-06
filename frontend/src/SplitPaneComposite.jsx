@@ -13,8 +13,10 @@ import Panel from './Panel';
  *
  * @param {Object} props.knoten - aktueller Baumknoten
  * @param {Object[]} props.panels - Array aller Panel-Tabellenzustände (Index = Panel-ID)
+ * @param {boolean} [props.headerFooterUnterdruecken] - wenn true, blendet alle Panel-eigenen
+ *        Kopf-/Fußzeilen aus (globaler Header/Footer wird in App.jsx gerendert)
  */
-export default function SplitPaneComposite({ knoten, panels }) {
+export default function SplitPaneComposite({ knoten, panels, headerFooterUnterdruecken }) {
   if (!knoten) return null;
 
   // Blattknoten
@@ -22,7 +24,11 @@ export default function SplitPaneComposite({ knoten, panels }) {
     const table = panels[knoten.panel];
     return (
       <div style={{ height: '100%', width: '100%', overflow: 'auto' }}>
-        <Panel table={table} sheetnamenAnzeigen={table?.blattnameAnzeigen ?? false} />
+        <Panel
+          table={table}
+          sheetnamenAnzeigen={table?.blattnameAnzeigen ?? false}
+          headerFooterUnterdruecken={headerFooterUnterdruecken}
+        />
       </div>
     );
   }
@@ -40,6 +46,7 @@ export default function SplitPaneComposite({ knoten, panels }) {
         <SplitPaneComposite
           knoten={knoten.links}
           panels={panels}
+          headerFooterUnterdruecken={headerFooterUnterdruecken}
         />
       </ResizablePanel>
       <PanelResizeHandle style={{
@@ -52,6 +59,7 @@ export default function SplitPaneComposite({ knoten, panels }) {
         <SplitPaneComposite
           knoten={knoten.rechts}
           panels={panels}
+          headerFooterUnterdruecken={headerFooterUnterdruecken}
         />
       </ResizablePanel>
     </PanelGroup>

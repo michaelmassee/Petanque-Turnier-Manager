@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 21.05.2019 / Michael Massee
  */
 package de.petanqueturniermanager.maastrichter.korunde;

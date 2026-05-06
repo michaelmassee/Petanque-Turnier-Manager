@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 04.05.2019 / Michael Massee
  */
 package de.petanqueturniermanager.supermelee.spielrunde;

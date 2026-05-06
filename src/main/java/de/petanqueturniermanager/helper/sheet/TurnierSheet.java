@@ -1,9 +1,11 @@
-/**
+/*
  * Erstellung 14.04.2019 / Michael Massee
  */
 package de.petanqueturniermanager.helper.sheet;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -203,7 +205,7 @@ public class TurnierSheet {
 			for (int index = 0; index < anzSheets; index++) {
 				XSpreadsheet xSpreadsheet = Lo.qi(XSpreadsheet.class, xIndexAccess.getByIndex(index));
 				XNamed xsheetname = Lo.qi(XNamed.class, xSpreadsheet);
-				if (StringUtils.equals(thisSheetName, xsheetname.getName())) {
+				if (Objects.equals(thisSheetName, xsheetname.getName())) {
 					retIdx = index;
 					break;
 				}

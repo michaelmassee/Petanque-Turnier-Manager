@@ -22,26 +22,25 @@ java {
 // ===================================================
 // Compiler-Lints (Block B1 aus architektur-robust-analyse.md)
 // ===================================================
-// Produktions-Source: -Xlint:all -Werror, mit expliziten Ausnahmen für
-// Kategorien, die heute noch Massen-Warnings produzieren (eigene Cleanup-
-// Tasks). Neue Warnings in NICHT-suppressten Kategorien brechen den Build.
+// Produktions-Source: -Xlint:all -Werror, mit expliziten Ausnahmen.
+// Neue Warnings in NICHT-suppressten Kategorien brechen den Build.
 //
-// TODO Cleanup-Backlog (jeweils Suppression entfernen, sobald clean):
-//   classfile             — externe Lib (github-api 1.330) referenziert
-//                           SuppressFBWarnings/WithBridgeMethods, die nicht
-//                           im Classpath sind. Nicht reparierbar von uns aus.
-//   dangling-doc-comments — ~60 Dateien mit /** … */-Header über `package`.
-//                           Mechanische Migration zu /* … */ nötig.
-//   this-escape           — wenige Stellen (BaseField, BaseSidebarPanel,
-//                           SuperMeleeTeamRechner, RowData, …); Konstruktor-
-//                           Refactoring case-by-case nötig.
-//   deprecation           — Apache Commons StringUtils.equals/equalsIgnoreCase/
-//                           appendIfMissing in mehreren Sidebar-Klassen;
-//                           Migration zu java.util.Objects.equals bzw.
-//                           direkten String-Methoden geplant.
+// Dauerhafte Suppressions (bewusste Architekturentscheidung, kein TODO):
+//   classfile    — externe Lib (github-api 1.330) referenziert SuppressFBWarnings/
+//                  WithBridgeMethods, die nicht im Classpath sind. Nicht reparierbar
+//                  von uns aus.
+//   this-escape  — ~70 Stellen über die ganze Sheet-/Sidebar-Hierarchie. Muster:
+//                  Konstruktor reicht `this` an assoziierte Objekte weiter
+//                  (z.B. `propertiesSpalte = new XyzPropertiesSpalte(this)`) oder
+//                  ruft abstrakte Lifecycle-Methoden (`doCreate()`, `init()`).
+//                  Subklassen-Hierarchien sind plugin-intern und geschlossen,
+//                  Initialisierungs-Reihenfolge ist etabliert; kein bekannter
+//                  Init-Order-Bug. Refactoring (Factory + post-construct init)
+//                  wäre invasiv ohne UI-CI als Sicherheitsnetz und hat keinen
+//                  erkennbaren Robustheits-Gewinn.
 tasks.named('compileJava').configure {
     options.compilerArgs.addAll([
-        '-Xlint:all,-classfile,-dangling-doc-comments,-this-escape,-deprecation',
+        '-Xlint:all,-classfile,-this-escape',
         '-Werror'
     ])
 }
@@ -50,7 +49,7 @@ tasks.named('compileJava').configure {
 // Migration zu strikten Lints erfolgt parallel zur Produktiv-Source.
 tasks.named('compileTestJava').configure {
     options.compilerArgs.addAll([
-        '-Xlint:all,-classfile,-dangling-doc-comments,-this-escape,-deprecation'
+        '-Xlint:all,-classfile,-this-escape'
     ])
 }
 

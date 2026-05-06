@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 11.02.2020 / Michael Massee
  */
 package de.petanqueturniermanager.supermelee.spieltagrangliste;

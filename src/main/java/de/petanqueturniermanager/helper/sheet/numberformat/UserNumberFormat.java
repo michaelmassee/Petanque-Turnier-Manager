@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 26.12.2019 / Michael Massee
  */
 package de.petanqueturniermanager.helper.sheet.numberformat;

@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 12.01.2020 / Michael Massee
  */
 package de.petanqueturniermanager.comp;
@@ -69,18 +69,17 @@ public class PetanqueTurnierMngrSingleton {
 	private PetanqueTurnierMngrSingleton() {
 	}
 
+	/** Liefert den LibreOffice-Komponentenkontext (nach {@link #init} verfügbar). */
+	public static XComponentContext getContext() {
+		return sharedContext;
+	}
+
 	/**
 	 * der erste Konstruktur macht Init <br>
 	 * wird und kann mehrmals aufgerufen !!
 	 *
 	 * @param context
 	 */
-
-	/** Liefert den LibreOffice-Komponentenkontext (nach {@link #init} verfügbar). */
-	public static XComponentContext getContext() {
-		return sharedContext;
-	}
-
 	public static final void init(XComponentContext context) {
 		if (didRun.getAndSet(true)) {
 			return;

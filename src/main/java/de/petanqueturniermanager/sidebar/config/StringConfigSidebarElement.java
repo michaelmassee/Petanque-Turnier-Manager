@@ -1,12 +1,13 @@
-/**
+/*
  * Erstellung 24.01.2020 / Michael Massee
  */
 package de.petanqueturniermanager.sidebar.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Objects;
+
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,7 +57,7 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 	}
 
 	private void setPropertyValue(String newVal) {
-		if (StringUtils.equals(getPropertyValue(), newVal)) {
+		if (Objects.equals(getPropertyValue(), newVal)) {
 			return; // nichts zu tun
 		}
 

@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
+/*
  * Erstellung 09.03.2023 / Michael Massee
  */
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 12.04.2020 / Michael Massee
  */
 package de.petanqueturniermanager.schweizer.konfiguration;

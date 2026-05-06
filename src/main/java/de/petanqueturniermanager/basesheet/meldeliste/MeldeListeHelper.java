@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 10.11.2019 / Michael Massee
  */
 package de.petanqueturniermanager.basesheet.meldeliste;

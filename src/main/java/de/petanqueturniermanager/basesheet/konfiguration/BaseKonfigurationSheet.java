@@ -1,9 +1,9 @@
-/**
+/*
  * Erstellung 10.11.2019 / Michael Massee
  */
 package de.petanqueturniermanager.basesheet.konfiguration;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Objects;
 
 import com.sun.star.sheet.XSpreadsheet;
 
@@ -117,7 +117,7 @@ public abstract class BaseKonfigurationSheet extends SheetRunner implements IPro
 			String pluginVersionNummer = ExtensionsHelper.from(getxContext()).getVersionNummer();
 			boolean versionDoMatch = false;
 			if (docVersion != null) {
-				versionDoMatch = StringUtils.compare(docVersion, pluginVersionNummer) == 0;
+				versionDoMatch = Objects.equals(docVersion, pluginVersionNummer);
 			}
 
 			if (!versionDoMatch) {

@@ -24,7 +24,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 
-/**
+/*
  * Erstellung 01.07.2022 / Michael Massee
  */
 

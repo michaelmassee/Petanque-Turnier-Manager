@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 19.01.2020 / Michael Massee
  */
 package de.petanqueturniermanager.sidebar.fields;
@@ -6,8 +6,6 @@ package de.petanqueturniermanager.sidebar.fields;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.XControl;
@@ -19,6 +17,7 @@ import com.sun.star.lang.EventObject;
 import com.sun.star.style.VerticalAlignment;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.konfigdialog.ComboBoxItem;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
@@ -68,7 +67,7 @@ public class LabelPlusCombobox extends BaseField<LabelPlusCombobox> implements X
 
 	public LabelPlusCombobox labelText(String text) {
 		if (label != null) {
-			label.setText(StringUtils.appendIfMissing(text, " :"));
+			label.setText(StringTools.appendIfMissing(text, " :"));
 		}
 		return this;
 	}

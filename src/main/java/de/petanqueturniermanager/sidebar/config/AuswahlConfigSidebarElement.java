@@ -1,11 +1,9 @@
-/**
+/*
  * Erstellung 24.01.2020 / Michael Massee
  */
 package de.petanqueturniermanager.sidebar.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.XItemListener;
@@ -13,6 +11,7 @@ import com.sun.star.lang.EventObject;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.konfigdialog.AuswahlConfigProperty;
 import de.petanqueturniermanager.konfigdialog.ComboBoxItem;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
@@ -49,7 +48,7 @@ public class AuswahlConfigSidebarElement implements ConfigSidebarElement, XItemL
 	}
 
 	private void setPropertyValue(String keyVal) {
-		if (StringUtils.equalsIgnoreCase(getPropertyValue(), keyVal)) {
+		if (StringTools.equalsIgnoreCase(getPropertyValue(), keyVal)) {
 			// nichts zu tun
 			return;
 		}

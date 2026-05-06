@@ -294,7 +294,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
             if (aktivCtrl == null) break;
             boolean aktiv = Lo.qi(XCheckBox.class, aktivCtrl).getState() == 1;
             var alt = eintraege.get(i);
-            eintraege.set(i, new CompositeViewEintragRoh(alt.port(), aktiv, alt.zoom(), alt.layoutJson(), alt.panels()));
+            eintraege.set(i, new CompositeViewEintragRoh(alt.port(), aktiv, alt.zoom(), alt.mitHeaderFooter(), alt.layoutJson(), alt.panels()));
         }
     }
 

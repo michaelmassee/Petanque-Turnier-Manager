@@ -2,7 +2,7 @@ package de.petanqueturniermanager.helper;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 
-/**
+/*
  * Erstellung 19.06.2022 / Michael Massee
  */
 

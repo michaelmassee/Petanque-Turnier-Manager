@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import com.google.common.primitives.Ints;
 import com.sun.star.sheet.XSpreadsheet;
 
-/**
+/*
  * Erstellung 17.07.2022 / Michael Massee
  */
 

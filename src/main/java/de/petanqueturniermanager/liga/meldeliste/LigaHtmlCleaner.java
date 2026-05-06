@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -18,6 +17,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 
 import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
@@ -87,7 +87,7 @@ public class LigaHtmlCleaner {
 	}
 
 	public LigaHtmlCleaner pdfDownloadBaseUrl(String pdfDownloadBaseUrl) {
-		this.pdfDownloadBaseUrl = StringUtils.appendIfMissing(pdfDownloadBaseUrl, "/");
+		this.pdfDownloadBaseUrl = StringTools.appendIfMissing(pdfDownloadBaseUrl, "/");
 		return this;
 	}
 

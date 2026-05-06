@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 30.07.2019 / Michael Massee
  */
 package de.petanqueturniermanager.konfigdialog.dialog.mainkonfig;

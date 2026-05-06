@@ -38,6 +38,8 @@ function panelAusNachricht(msg) {
     timerZustand: msg.timerZustand ?? null,
     timerBezeichnung: msg.timerBezeichnung ?? null,
     timerHintergrundFarbe: msg.timerHintergrundFarbe ?? null,
+    hinweisTitel: msg.hinweisTitel ?? null,
+    hinweisText: msg.hinweisText ?? null,
     zoom: msg.zoom ?? 100,
     zentrieren: msg.zentriert ?? false,
     blattnameAnzeigen: msg.blattnameAnzeigen ?? false,
@@ -70,6 +72,10 @@ function panelDiffAusNachricht(msg, vorher) {
     timerZustand: msg.timerZustand ?? vorher?.timerZustand ?? null,
     timerBezeichnung: msg.timerBezeichnung ?? vorher?.timerBezeichnung ?? null,
     timerHintergrundFarbe: msg.timerHintergrundFarbe ?? vorher?.timerHintergrundFarbe ?? null,
+    // Hinweis-Status NICHT mit vorher mergen: wenn das Backend eine reguläre Nachricht
+    // (init/diff/url/timer) sendet, soll ein vorheriger "fehlend"-Zustand verschwinden.
+    hinweisTitel: msg.hinweisTitel ?? null,
+    hinweisText: msg.hinweisText ?? null,
     zoom: msg.zoom ?? vorher?.zoom ?? 100,
     zentrieren: msg.zentriert ?? vorher?.zentrieren ?? false,
     blattnameAnzeigen: msg.blattnameAnzeigen ?? vorher?.blattnameAnzeigen ?? false,
@@ -167,6 +173,7 @@ function reducer(state, action) {
         composite: {
           layout: msg.layout,
           zoom: msg.zoom ?? 100,
+          mitHeaderFooter: msg.mitHeaderFooter ?? true,
           panels,
         },
       };
@@ -185,6 +192,7 @@ function reducer(state, action) {
         composite: {
           layout: msg.layout ?? state.composite?.layout,
           zoom: msg.zoom ?? state.composite?.zoom ?? 100,
+          mitHeaderFooter: msg.mitHeaderFooter ?? state.composite?.mitHeaderFooter ?? true,
           panels: neuerePanels,
         },
       };
@@ -271,12 +279,41 @@ export default function App() {
 
   // Composite View
   if (composite && composite.layout) {
+    const erstesPanel = composite.panels[0];
+    const compositeMitHeaderFooter = composite.mitHeaderFooter !== false;
+    const compositeHatKopfzeile = compositeMitHeaderFooter && erstesPanel && (
+      erstesPanel.kopfzeileLinks?.trim()
+      || erstesPanel.kopfzeileMitte?.trim()
+      || erstesPanel.kopfzeileRechts?.trim()
+    );
+    const compositeHatFusszeile = compositeMitHeaderFooter && erstesPanel && (
+      erstesPanel.fusszeileLinks?.trim()
+      || erstesPanel.fusszeileMitte?.trim()
+      || erstesPanel.fusszeileRechts?.trim()
+    );
     return (
-      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-        <SplitPaneComposite
-          knoten={composite.layout}
-          panels={composite.panels}
-        />
+      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {compositeHatKopfzeile && (
+          <div className="seitenzeile">
+            <span className="links">{erstesPanel.kopfzeileLinks}</span>
+            <span className="mitte">{erstesPanel.kopfzeileMitte}</span>
+            <span className="rechts">{erstesPanel.kopfzeileRechts}</span>
+          </div>
+        )}
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <SplitPaneComposite
+            knoten={composite.layout}
+            panels={composite.panels}
+            headerFooterUnterdruecken
+          />
+        </div>
+        {compositeHatFusszeile && (
+          <div className="seitenzeile">
+            <span className="links">{erstesPanel.fusszeileLinks}</span>
+            <span className="mitte">{erstesPanel.fusszeileMitte}</span>
+            <span className="rechts">{erstesPanel.fusszeileRechts}</span>
+          </div>
+        )}
         <Signatur />
       </div>
     );

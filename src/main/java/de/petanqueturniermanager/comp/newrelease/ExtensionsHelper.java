@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 29.12.2019 / Michael Massee
  */
 package de.petanqueturniermanager.comp.newrelease;
@@ -7,13 +7,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.deployment.PackageInformationProvider;
 import com.sun.star.deployment.XPackageInformationProvider;
 import com.sun.star.uno.XComponentContext;
+
+import de.petanqueturniermanager.helper.StringTools;
 
 /**
  * @author Michael Massee
@@ -63,7 +64,7 @@ public class ExtensionsHelper {
 	 */
 
 	public String getImageUrlDir() {
-		return StringUtils.appendIfMissing(getXPackageInformationProvider().getPackageLocation(EXTENSION_ID), "/")
+		return StringTools.appendIfMissing(getXPackageInformationProvider().getPackageLocation(EXTENSION_ID), "/")
 				+ "images/";
 	}
 

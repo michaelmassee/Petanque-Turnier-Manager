@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 09.12.2019 / Michael Massee
  */
 package de.petanqueturniermanager.liga.rangliste;

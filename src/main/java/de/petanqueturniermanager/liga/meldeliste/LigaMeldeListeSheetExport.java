@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung : 30.06.2022 / Michael Massee
  **/
 
@@ -216,7 +216,7 @@ public class LigaMeldeListeSheetExport extends SheetRunner implements IMeldelist
 			}
 
 			String name = FilenameUtils.getName(htmlExportFile.getCanonicalPath());
-			name = StringUtils.replace(name, ".html", ".clean.html");
+			name = name.replace(".html", ".clean.html");
 			File target = new File(FilenameUtils.getFullPath(htmlExportFile.getCanonicalPath()), name);
 			File cleanHtml = LigaHtmlCleaner.from(htmlExportFileUri, target).logoUrl(turnierlogoUrl)
 					.ranglistePdfName(fileNameOnlyPdfRangliste).spielplanPdfName(fileNameOnlyPdfSpielplan)

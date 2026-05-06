@@ -13,13 +13,15 @@ import de.petanqueturniermanager.comp.GlobalProperties;
  * </ul>
  * Null-Felder werden von Gson nicht serialisiert.
  *
- * @param typ          Nachrichtentyp
- * @param version      monoton steigende Versionsnummer (null bei hinweis)
- * @param panels       Panel-Daten (null bei hinweis)
- * @param layout       serialisierter {@link SplitKnoten}-Baum als Objekt (null bei hinweis)
- * @param zoom         globaler Zoom-Faktor in % (0 bei hinweis)
- * @param hinweisTitel Titel der Hinweismeldung (null außer bei hinweis)
- * @param hinweisText  Text der Hinweismeldung (null außer bei hinweis)
+ * @param typ             Nachrichtentyp
+ * @param version         monoton steigende Versionsnummer (null bei hinweis)
+ * @param panels          Panel-Daten (null bei hinweis)
+ * @param layout          serialisierter {@link SplitKnoten}-Baum als Objekt (null bei hinweis)
+ * @param zoom            globaler Zoom-Faktor in % (0 bei hinweis)
+ * @param mitHeaderFooter ob das Frontend einen globalen Document-Header/Footer (aus Panel 0)
+ *                        rendern soll; {@code null} bei hinweis
+ * @param hinweisTitel    Titel der Hinweismeldung (null außer bei hinweis)
+ * @param hinweisText     Text der Hinweismeldung (null außer bei hinweis)
  */
 public record CompositeSseNachricht(
         String typ,
@@ -27,24 +29,25 @@ public record CompositeSseNachricht(
         List<CompositePanelNachricht> panels,
         Object layout,
         int zoom,
+        Boolean mitHeaderFooter,
         String hinweisTitel,
         String hinweisText) {
 
     /** Vollständiger Zustand aller Panels für neue/reconnectende Verbindungen. */
     static CompositeSseNachricht init(int version, List<CompositePanelNachricht> panels,
-            SplitKnoten layout, int zoom) {
-        return new CompositeSseNachricht("composite_init", version, panels, layout, zoom, null, null);
+            SplitKnoten layout, int zoom, boolean mitHeaderFooter) {
+        return new CompositeSseNachricht("composite_init", version, panels, layout, zoom, mitHeaderFooter, null, null);
     }
 
     /** Nur geänderte Panels; Layout wird immer mitgesendet (für Reconnects). */
     static CompositeSseNachricht diff(int version, List<CompositePanelNachricht> panels,
-            SplitKnoten layout, int zoom) {
-        return new CompositeSseNachricht("composite_diff", version, panels, layout, zoom, null, null);
+            SplitKnoten layout, int zoom, boolean mitHeaderFooter) {
+        return new CompositeSseNachricht("composite_diff", version, panels, layout, zoom, mitHeaderFooter, null, null);
     }
 
     /** Hinweismeldung, wenn ein Sheet nicht verfügbar ist. */
     static CompositeSseNachricht hinweis(String titel, String text) {
         return new CompositeSseNachricht("hinweis", null, null, null,
-                GlobalProperties.DEFAULT_ZOOM, titel, text);
+                GlobalProperties.DEFAULT_ZOOM, null, titel, text);
     }
 }

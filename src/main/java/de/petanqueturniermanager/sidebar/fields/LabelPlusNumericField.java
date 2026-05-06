@@ -1,12 +1,10 @@
-/**
+/*
  * Erstellung 19.01.2020 / Michael Massee
  */
 package de.petanqueturniermanager.sidebar.fields;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.sun.star.awt.TextEvent;
 import com.sun.star.awt.XControl;
@@ -24,6 +22,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 
@@ -91,7 +90,7 @@ public class LabelPlusNumericField extends BaseField<LabelPlusNumericField> impl
 
 	public LabelPlusNumericField labelText(String text) {
 		if (label != null) {
-			label.setText(StringUtils.appendIfMissing(text, " :"));
+			label.setText(StringTools.appendIfMissing(text, " :"));
 		}
 		return this;
 	}

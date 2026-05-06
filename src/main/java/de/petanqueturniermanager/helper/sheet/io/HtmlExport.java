@@ -17,7 +17,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.PropertyValueHelper;
 
-/**
+/*
  * Erstellung 03.07.2022 / Michael Massee
  */
 

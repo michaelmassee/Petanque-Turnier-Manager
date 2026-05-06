@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 14.01.2020 / Michael Massee
  */
 package de.petanqueturniermanager.helper.sheet;

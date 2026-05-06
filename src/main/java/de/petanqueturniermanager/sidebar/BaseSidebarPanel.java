@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 21.01.2020 / Michael Massee
  * Neu geschrieben 2026-03
  */

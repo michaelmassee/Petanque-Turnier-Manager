@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 29.11.2019 / Michael Massee
  */
 package de.petanqueturniermanager.liga.spielplan;

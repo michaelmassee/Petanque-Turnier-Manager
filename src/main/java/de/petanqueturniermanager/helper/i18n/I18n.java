@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 20.03.2026 / Michael Massee
  */
 package de.petanqueturniermanager.helper.i18n;

@@ -1,4 +1,4 @@
-/**
+/*
 * Erstellung : 28.04.2018 / Michael Massee
 **/
 

@@ -9,12 +9,32 @@ const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
  *
  * @param {Object} props.table - Tabellenzustand (entspricht state.table in App.jsx)
  * @param {boolean} props.sheetnamenAnzeigen - ob Blattnamen in der Kopfzeile angezeigt werden
+ * @param {boolean} [props.headerFooterUnterdruecken] - blendet die Panel-eigenen Kopf-/Fußzeilen aus
+ *        (verwendet von SplitPaneComposite, wenn ein globaler Header/Footer gerendert wird)
  */
-export default function Panel({ table, sheetnamenAnzeigen }) {
+export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdruecken }) {
   const [iframeFehler, setIframeFehler] = useState(false);
 
   if (!table) {
     return null;
+  }
+
+  if (table.hinweisTitel || table.hinweisText) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        width: '100%', height: '100%', padding: '16px', boxSizing: 'border-box',
+        flexDirection: 'column', gap: '8px', textAlign: 'center',
+      }}>
+        <div style={{ fontSize: '2em' }}>⏳</div>
+        {table.hinweisTitel && (
+          <div style={{ fontWeight: 'bold' }}>{table.hinweisTitel}</div>
+        )}
+        {table.hinweisText && (
+          <div style={{ fontSize: '0.9em' }}>{table.hinweisText}</div>
+        )}
+      </div>
+    );
   }
 
   if (table.timerAnzeige != null) {
@@ -70,13 +90,17 @@ export default function Panel({ table, sheetnamenAnzeigen }) {
     return null;
   }
 
-  const hatKopfzeile = table.kopfzeileLinks?.trim()
+  const hatKopfzeile = !headerFooterUnterdruecken && (
+    table.kopfzeileLinks?.trim()
     || table.kopfzeileMitte?.trim()
-    || table.kopfzeileRechts?.trim();
+    || table.kopfzeileRechts?.trim()
+  );
 
-  const hatFusszeile = table.fusszeileLinks?.trim()
+  const hatFusszeile = !headerFooterUnterdruecken && (
+    table.fusszeileLinks?.trim()
     || table.fusszeileMitte?.trim()
-    || table.fusszeileRechts?.trim();
+    || table.fusszeileRechts?.trim()
+  );
 
   return (
     <div style={{ paddingBottom: '8px', overflow: 'auto', height: '100%', boxSizing: 'border-box' }}>

@@ -37,7 +37,9 @@ public record CompositePanelNachricht(
         String timerAnzeige,
         String timerZustand,
         String timerBezeichnung,
-        String timerHintergrundFarbe) {
+        String timerHintergrundFarbe,
+        String hinweisTitel,
+        String hinweisText) {
 
     /**
      * Erstellt eine vollständige Panel-Nachricht (init) aus einem TabelleModel.
@@ -52,7 +54,7 @@ public record CompositePanelNachricht(
                 modell.getKopfzeileLinks(), modell.getKopfzeileMitte(), modell.getKopfzeileRechts(),
                 modell.getFusszeileLinks(), modell.getFusszeileMitte(), modell.getFusszeileRechts(),
                 modell.getKopfZeilenAnzahl(),
-                null, null, null, null, null);
+                null, null, null, null, null, null, null);
     }
 
     /**
@@ -68,7 +70,7 @@ public record CompositePanelNachricht(
                 diffModell.getKopfzeileLinks(), diffModell.getKopfzeileMitte(), diffModell.getKopfzeileRechts(),
                 diffModell.getFusszeileLinks(), diffModell.getFusszeileMitte(), diffModell.getFusszeileRechts(),
                 diffModell.getKopfZeilenAnzahl(),
-                null, null, null, null, null);
+                null, null, null, null, null, null, null);
     }
 
     /**
@@ -82,7 +84,24 @@ public record CompositePanelNachricht(
                 panelId, 100, false, false, "",
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
-                externeUrl, null, null, null, null);
+                externeUrl, null, null, null, null, null, null);
+    }
+
+    /**
+     * Erstellt eine Panel-Hinweis-Nachricht (z.B. "Sheet nicht gefunden") für ein einzelnes Panel.
+     * Andere Panels werden davon nicht beeinflusst.
+     *
+     * @param panelId Panel-Index
+     * @param titel   Hinweis-Titel (i18n)
+     * @param text    Hinweis-Text (i18n)
+     */
+    static CompositePanelNachricht fehlend(int panelId, String titel, String text) {
+        return new CompositePanelNachricht(
+                panelId, 100, false, false, "",
+                null, null, null, null, null, null,
+                null, null, null, null, null, null, 0,
+                null, null, null, null, null,
+                titel, text);
     }
 
     /**
@@ -99,6 +118,7 @@ public record CompositePanelNachricht(
                 null, null, null, null, null, null,
                 null, null, null, null, null, null, 0,
                 null,
-                state.anzeige(), state.zustand().name(), state.bezeichnung(), state.hintergrundFarbe());
+                state.anzeige(), state.zustand().name(), state.bezeichnung(), state.hintergrundFarbe(),
+                null, null);
     }
 }

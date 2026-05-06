@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung : 24.03.2018 / Michael Massee
  **/
 
@@ -7,9 +7,9 @@ package de.petanqueturniermanager.helper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Hashtable;
+import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -118,7 +118,7 @@ public class DocumentPropertiesHelper {
 	public void setStringProperty(String propName, String val) {
 		if (val != null) {
 			String oldVal = currentPropListe.get(propName);
-			if (!StringUtils.equals(oldVal, val)) {
+			if (!Objects.equals(oldVal, val)) {
 				setStringPropertyInDocument(propName, val);
 				currentPropListe.put(propName, val);
 				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,

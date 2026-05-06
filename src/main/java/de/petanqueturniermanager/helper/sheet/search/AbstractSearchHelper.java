@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 13.06.2022 / Michael Massee
  */
 package de.petanqueturniermanager.helper.sheet.search;

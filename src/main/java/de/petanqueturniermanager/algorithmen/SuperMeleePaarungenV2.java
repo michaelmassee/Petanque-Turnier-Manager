@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung : 2026-02-24 / Michael Massee
  */
 package de.petanqueturniermanager.algorithmen;

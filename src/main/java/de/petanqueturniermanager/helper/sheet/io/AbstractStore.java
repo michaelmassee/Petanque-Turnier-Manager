@@ -73,13 +73,13 @@ public abstract class AbstractStore<T> {
 	}
 
 	protected final Path parentDir() throws MalformedURLException, URISyntaxException {
-		URL docUrl = new URL(getLocation());
+		URL docUrl = URI.create(getLocation()).toURL();
 		Path path = Path.of(docUrl.toURI());
 		return path.getParent();
 	}
 
 	protected final Path orgFileName() throws MalformedURLException, URISyntaxException {
-		URL docUrl = new URL(getLocation());
+		URL docUrl = URI.create(getLocation()).toURL();
 		Path path = Path.of(docUrl.toURI());
 		return path.getFileName();
 	}

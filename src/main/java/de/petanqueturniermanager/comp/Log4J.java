@@ -1,4 +1,4 @@
-/**
+/*
  * Erstellung 05.05.2019 / Michael Massee
  */
 package de.petanqueturniermanager.comp;
@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.Appender;
@@ -15,6 +14,7 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.appender.RollingFileAppender;
 import org.apache.logging.log4j.core.config.Configuration;
 
+import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 
 /**
@@ -57,19 +57,20 @@ public class Log4J {
 		if (logFile != null) {
 			try {
 				ProcessBox.from().prefix("Log4J").info("Open:" + logFile.getCanonicalPath());
-				String cmd = null;
+				String[] cmd = null;
 				// java.awt.Desktop => coredump, not working
 				// https://stackoverflow.com/questions/526037/how-to-open-user-system-preferred-editor-for-given-file
 				String osName = System.getProperty("os.name");
-				if (StringUtils.containsIgnoreCase(osName, "win")) {
-					cmd = "rundll32 url.dll,FileProtocolHandler " + logFile.getCanonicalPath();
-				} else if (StringUtils.containsIgnoreCase(osName, "linux")) {
-					cmd = "xdg-open " + logFile.getCanonicalPath();
-				} else if (StringUtils.containsIgnoreCase(osName, "mac")) {
-					cmd = "open " + logFile.getCanonicalPath();
+				String filePath = logFile.getCanonicalPath();
+				if (StringTools.containsIgnoreCase(osName, "win")) {
+					cmd = new String[] { "rundll32", "url.dll,FileProtocolHandler", filePath };
+				} else if (StringTools.containsIgnoreCase(osName, "linux")) {
+					cmd = new String[] { "xdg-open", filePath };
+				} else if (StringTools.containsIgnoreCase(osName, "mac")) {
+					cmd = new String[] { "open", filePath };
 				}
 				if (cmd != null) {
-					logger.info(cmd);
+					logger.info(String.join(" ", cmd));
 					Runtime.getRuntime().exec(cmd);
 				}
 			} catch (IOException e) {
