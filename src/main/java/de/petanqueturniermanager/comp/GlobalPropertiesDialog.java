@@ -22,6 +22,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
@@ -35,12 +36,14 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
     private static final String CTL_CB_AUTOSAVE    = "cbAutosave";
     private static final String CTL_CB_BACKUP      = "cbBackup";
     private static final String CTL_CB_NEW_VERSION = "cbNewVersion";
+    private static final String CTL_CB_PROZESSBOX_VORDERGRUND = "cbProzessBoxVordergrund";
     private static final String CTL_CMB_LOGLEVEL   = "cmbLogLevel";
 
     // Gespeicherte Control-Referenzen für beiOkGeklickt()
     private XCheckBox      cbAutosave;
     private XCheckBox      cbBackup;
     private XCheckBox      cbNewVersion;
+    private XCheckBox      cbProzessBoxVordergrund;
     private XTextComponent cmbLogLevel;
 
     public GlobalPropertiesDialog(XComponentContext xContext) {
@@ -63,7 +66,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
 
     @Override
     protected int getHoehe() {
-        return 90;
+        return 105;
     }
 
     @Override
@@ -85,37 +88,46 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
         fuegeCheckBoxEin(xMSF, cont, CTL_CB_NEW_VERSION,
                 "Neue-Version-Prüfung immer aktiv (Entwicklungsmodus)", 5, 35, 188, 12,
                 gp.isNewVersionCheckImmerTrue());
+        fuegeCheckBoxEin(xMSF, cont, CTL_CB_PROZESSBOX_VORDERGRUND,
+                "ProzessBox im Vordergrund halten", 5, 50, 188, 12,
+                gp.isProzessBoxImVordergrund());
 
         // --- Log-Level ---
-        fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 52, 60, 10);
+        fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 67, 60, 10);
         fuegeComboBoxEin(xMSF, cont, CTL_CMB_LOGLEVEL, new String[]{ "", "info", "debug" },
-                70, 50, 120, 12, gp.getLogLevel().toLowerCase());
+                70, 65, 120, 12, gp.getLogLevel().toLowerCase());
 
         // --- Buttons ---
-        fuegeButtonEin(xMSF, cont, "btnOk",       "OK",        50,  70, 50, 14,
+        fuegeButtonEin(xMSF, cont, "btnOk",       "OK",        50,  85, 50, 14,
                 (short) PushButtonType.OK_value);
-        fuegeButtonEin(xMSF, cont, "btnAbbrechen", "Abbrechen", 110, 70, 70, 14,
+        fuegeButtonEin(xMSF, cont, "btnAbbrechen", "Abbrechen", 110, 85, 70, 14,
                 (short) PushButtonType.CANCEL_value);
 
         // Control-Referenzen für beiOkGeklickt() merken
         XControlContainer xcc = Lo.qi(XControlContainer.class, xDialog);
-        cbAutosave   = leseCheckBox(xcc, CTL_CB_AUTOSAVE);
-        cbBackup     = leseCheckBox(xcc, CTL_CB_BACKUP);
-        cbNewVersion = leseCheckBox(xcc, CTL_CB_NEW_VERSION);
-        cmbLogLevel  = leseTextComponent(xcc, CTL_CMB_LOGLEVEL);
+        cbAutosave              = leseCheckBox(xcc, CTL_CB_AUTOSAVE);
+        cbBackup                = leseCheckBox(xcc, CTL_CB_BACKUP);
+        cbNewVersion            = leseCheckBox(xcc, CTL_CB_NEW_VERSION);
+        cbProzessBoxVordergrund = leseCheckBox(xcc, CTL_CB_PROZESSBOX_VORDERGRUND);
+        cmbLogLevel             = leseTextComponent(xcc, CTL_CMB_LOGLEVEL);
     }
 
     @Override
     protected void beiOkGeklickt() throws Exception {
         GlobalProperties gp = GlobalProperties.get();
         String gewaehlterLevel = (cmbLogLevel != null) ? cmbLogLevel.getText() : "";
+        // Default für ProzessBox-Vordergrund ist true → bei nicht gesetzter Checkbox wie unverändert lassen
+        boolean prozessBoxImVordergrund = cbProzessBoxVordergrund == null
+                || cbProzessBoxVordergrund.getState() == 1;
         gp.speichern(
                 cbAutosave   != null && cbAutosave.getState()   == 1,
                 cbBackup     != null && cbBackup.getState()     == 1,
                 cbNewVersion != null && cbNewVersion.getState() == 1,
+                prozessBoxImVordergrund,
                 gewaehlterLevel
         );
         NewReleaseChecker.callbacksAusloesen();
+        ProcessBox.applyVordergrundEinstellung();
         logger.info("Plugin-Konfiguration gespeichert");
     }
 
