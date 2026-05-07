@@ -108,7 +108,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(285));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(263));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -136,42 +136,42 @@ public class KoTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep2", 5, 58, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbaum", "Anzeige im Spielbaum:", 8, 64, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbaumNr", "Teamnummer", 8, 76, 140, 10,
-				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielbaumName", "Teamname", 8, 88, 140, 10,
-				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME);
+		addLabel(xMSF, cont, "lblSpielbaum", "Anzeige im Spielbaum:", 8, 64, 80, 10);
+		addListBox(xMSF, cont, "lstSpielbaum",
+				new String[] { "Teamnummer", "Teamname" },
+				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
+				92, 62, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 102, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 108, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbahnX", "Keine Spalte", 8, 120, 140, 10,
+		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 86, 140, 10);
+		addRadioButton(xMSF, cont, "radioSpielbahnX", "Keine Spalte", 8, 98, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.X);
-		addRadioButton(xMSF, cont, "radioSpielbahnL", "Leere Spalte (händisch)", 8, 132, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbahnL", "Leere Spalte (händisch)", 8, 110, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.L);
-		addRadioButton(xMSF, cont, "radioSpielbahnN", "Durchnummerieren (1-n)", 8, 144, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbahnN", "Durchnummerieren (1-n)", 8, 122, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.N);
-		addRadioButton(xMSF, cont, "radioSpielbahnR", "Zufällig vergeben", 8, 156, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbahnR", "Zufällig vergeben", 8, 134, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.R);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 172, 150, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 150, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 178, 140, 10, defaultSpielUmPlatz3);
+		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 156, 140, 10, defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 192, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 170, 150, 2);
 
-		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 198, 100, 10);
-		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 210, 60, 12, defaultGruppenGroesse, 2, 512);
+		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 176, 100, 10);
+		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 188, 60, 12, defaultGruppenGroesse, 2, 512);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 226, 150, 2);
+		addFixedLine(xMSF, cont, "sep6", 5, 204, 150, 2);
 
-		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 232, 100, 10);
-		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 244, 60, 12, defaultMinRestGroesse, 1, 512);
+		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 210, 100, 10);
+		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 222, 60, 12, defaultMinRestGroesse, 1, 512);
 
-		addFixedLine(xMSF, cont, "sep7", 5, 260, 150, 2);
+		addFixedLine(xMSF, cont, "sep7", 5, 238, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 268, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 268, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 246, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 246, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -213,7 +213,7 @@ public class KoTurnierParameterDialog {
 			Formation formation = readFormation(xcc);
 			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			KoSpielbaumTeamAnzeige spielbaumAnzeige = isRadioSelected(xcc, "radioSpielbaumName")
+			KoSpielbaumTeamAnzeige spielbaumAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
 					? KoSpielbaumTeamAnzeige.NAME
 					: KoSpielbaumTeamAnzeige.NR;
 			SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
