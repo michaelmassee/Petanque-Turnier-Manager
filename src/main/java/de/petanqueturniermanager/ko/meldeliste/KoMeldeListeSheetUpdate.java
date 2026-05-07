@@ -106,6 +106,14 @@ public class KoMeldeListeSheetUpdate extends SheetRunner implements ISheet, Meld
 		return delegate.getAktiveMeldungen();
 	}
 
+	public TeamMeldungen getAlleMeldungen() throws GenerateException {
+		return delegate.getAlleMeldungen();
+	}
+
+	public void alleTeamsAktivieren() throws GenerateException {
+		delegate.alleTeamsAktivieren();
+	}
+
 	public TeamMeldungen getMeldungenSortiertNachRangliste() throws GenerateException {
 		return delegate.getMeldungenSortiertNachRangliste();
 	}

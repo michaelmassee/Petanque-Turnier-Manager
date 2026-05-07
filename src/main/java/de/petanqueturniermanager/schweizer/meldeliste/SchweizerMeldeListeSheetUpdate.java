@@ -16,11 +16,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
-import de.petanqueturniermanager.helper.msgbox.MessageBox;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
-import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -184,9 +180,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
 		}
-		if (vollstaendigAktualisieren()) {
-			pruefeUndFragObAlleAktivieren();
-		}
+		vollstaendigAktualisieren();
 		if (TurnierModus.get().istAktiv()) {
 			BlattschutzRegistry.fuer(getTurnierSystem())
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
@@ -213,30 +207,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 		return true;
 	}
 
-	private void pruefeUndFragObAlleAktivieren() throws GenerateException {
-		TeamMeldungen aktiveMeldungen = getAktiveMeldungen();
-		if (aktiveMeldungen.size() > 0) {
-			return;
-		}
-		TeamMeldungen alleMeldungen = getAlleMeldungen();
-		if (alleMeldungen.size() == 0) {
-			return;
-		}
-		MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
-				.caption(I18n.get("msg.caption.keine.aktiven.meldungen"))
-				.message(I18n.get("msg.text.keine.aktiven.teams.aktivieren", alleMeldungen.size()))
-				.show();
-		if (result == MessageBoxResult.YES) {
-			alleTeamsAktivieren();
-		} else {
-			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("msg.caption.aktuelle.spielrunde.fehler"))
-					.message(I18n.get("schweizer.spielrunde.fehler.zu.wenige.meldungen", 0))
-					.show();
-		}
-	}
-
-	private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
+private void stringsBesinigen(XSpreadsheet xSheet) throws GenerateException {
 		Formation formation = getKonfigurationSheet().getMeldeListeFormation();
 		boolean teamnameAktiv = getKonfigurationSheet().isMeldeListeTeamnameAnzeigen();
 		boolean vereinsnameAktiv = getKonfigurationSheet().isMeldeListeVereinsnameAnzeigen();

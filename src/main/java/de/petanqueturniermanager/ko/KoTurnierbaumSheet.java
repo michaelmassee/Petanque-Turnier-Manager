@@ -37,6 +37,7 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -403,6 +404,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 
+		pruefeUndFragObAlleAktivieren();
+
 		String rangFehler = meldeliste.validiereRangSpalte();
 		if (rangFehler != null) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
@@ -434,6 +437,24 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (TurnierModus.get().istAktiv()) {
 			BlattschutzRegistry.fuer(TurnierSystem.KO)
 					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+		}
+	}
+
+	private void pruefeUndFragObAlleAktivieren() throws GenerateException {
+		TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
+		if (aktiveMeldungen.size() > 0) {
+			return;
+		}
+		TeamMeldungen alleMeldungen = meldeliste.getAlleMeldungen();
+		if (alleMeldungen.size() == 0) {
+			return;
+		}
+		MessageBoxResult result = MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_YES_NO)
+				.caption(I18n.get("msg.caption.keine.aktiven.meldungen"))
+				.message(I18n.get("msg.text.keine.aktiven.teams.aktivieren", alleMeldungen.size()))
+				.show();
+		if (result == MessageBoxResult.YES) {
+			meldeliste.alleTeamsAktivieren();
 		}
 	}
 
