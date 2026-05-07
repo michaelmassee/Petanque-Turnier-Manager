@@ -14,7 +14,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
-import com.sun.star.awt.XRadioButton;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
@@ -93,7 +93,7 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(200));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(121));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -108,48 +108,39 @@ public class SchweizerTurnierParameterDialog {
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
 		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
+		addListBox(xMSF, cont, "lstFormation",
+				new String[] { Formation.TETE.getBezeichnung(),
+						Formation.DOUBLETTE.getBezeichnung(),
+						Formation.TRIPLETTE.getBezeichnung() },
+				formationIndex(defaultFormation), 92, 6, 60, 12);
 
-		addRadioButton(xMSF, cont, "radioTete",
-				Formation.TETE.getBezeichnung(), 8, 21, 140, 10,
-				defaultFormation == Formation.TETE);
-		addRadioButton(xMSF, cont, "radioDoublette",
-				Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10,
-				defaultFormation == Formation.DOUBLETTE);
-		addRadioButton(xMSF, cont, "radioTriplette",
-				Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10,
-				defaultFormation == Formation.TRIPLETTE);
-
-		addFixedLine(xMSF, cont, "sep1", 5, 59, 150, 2);
+		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
 
 		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen",
-				8, 65, 140, 10, defaultTeamnameAnzeigen);
+				8, 30, 140, 10, defaultTeamnameAnzeigen);
 
 		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen",
-				8, 79, 140, 10, defaultVereinsnameAnzeigen);
+				8, 44, 140, 10, defaultVereinsnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 95, 150, 2);
+		addFixedLine(xMSF, cont, "sep2", 5, 60, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 99, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielplanNr",
-				"Teamnummer", 8, 111, 140, 10,
-				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielplanName",
-				"Teamname", 8, 123, 140, 10,
-				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME);
+		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 64, 80, 10);
+		addListBox(xMSF, cont, "lstSpielplan",
+				new String[] { "Teamnummer", "Teamname" },
+				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
+				92, 62, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 137, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 139, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 143, 140, 10);
-		addRadioButton(xMSF, cont, "radioMitBuchholz",
-				"Mit Buchholz (Standard)", 8, 155, 140, 10,
-				defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
-		addRadioButton(xMSF, cont, "radioOhneBuchholz",
-				"Ohne Buchholz", 8, 167, 140, 10,
-				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
+		addFixedLine(xMSF, cont, "sep4", 5, 82, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 86, 80, 10);
+		addListBox(xMSF, cont, "lstRankingModus",
+				new String[] { "Mit Buchholz (Standard)", "Ohne Buchholz" },
+				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
+				92, 84, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 181, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 181, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 102, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 102, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -191,9 +182,9 @@ public class SchweizerTurnierParameterDialog {
 			Formation formation = readFormation(xcc);
 			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			SpielplanTeamAnzeige spielplanAnzeige = isRadioSelected(xcc, "radioSpielplanName")
+			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
-			SchweizerRankingModus rankingModus = isRadioSelected(xcc, "radioOhneBuchholz")
+			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
 			result = Optional.of(
 					new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige, rankingModus));
@@ -210,22 +201,28 @@ public class SchweizerTurnierParameterDialog {
 	// ---------------------------------------------------------------
 
 	private Formation readFormation(XControlContainer xcc) {
-		if (isRadioSelected(xcc, "radioTete")) {
-			return Formation.TETE;
-		}
-		if (isRadioSelected(xcc, "radioDoublette")) {
-			return Formation.DOUBLETTE;
-		}
-		return Formation.TRIPLETTE;
+		return switch (readListBoxSelected(xcc, "lstFormation")) {
+			case 1 -> Formation.DOUBLETTE;
+			case 2 -> Formation.TRIPLETTE;
+			default -> Formation.TETE;
+		};
 	}
 
-	private boolean isRadioSelected(XControlContainer xcc, String name) {
+	private static short formationIndex(Formation formation) {
+		return switch (formation) {
+			case DOUBLETTE -> 1;
+			case TRIPLETTE -> 2;
+			default -> 0;
+		};
+	}
+
+	private short readListBoxSelected(XControlContainer xcc, String name) {
 		XControl ctrl = xcc.getControl(name);
 		if (ctrl == null) {
-			return false;
+			return 0;
 		}
-		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
-		return radio != null && radio.getState();
+		XListBox lb = Lo.qi(XListBox.class, ctrl);
+		return lb != null ? lb.getSelectedItemPos() : 0;
 	}
 
 	private boolean readCheckBoxState(XControlContainer xcc, String name) {
@@ -263,17 +260,18 @@ public class SchweizerTurnierParameterDialog {
 		cont.insertByName(name, model);
 	}
 
-	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean selected)
+	private void addListBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String[] items, short selectedIndex, int x, int y, int w, int h)
 			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
+		props.setPropertyValue("Dropdown", Boolean.TRUE);
+		props.setPropertyValue("StringItemList", items);
+		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
 		props.setPropertyValue("PositionX", Integer.valueOf(x));
 		props.setPropertyValue("PositionY", Integer.valueOf(y));
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
-		props.setPropertyValue("State", (short) (selected ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 

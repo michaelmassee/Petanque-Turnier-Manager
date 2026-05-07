@@ -13,8 +13,8 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XNumericField;
-import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
@@ -102,7 +102,7 @@ public class MaastrichterTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(410));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(232));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -115,67 +115,67 @@ public class MaastrichterTurnierParameterDialog {
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
 		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.maastrichter.formation.label"), 8, 8, 80, 10);
-		addRadioButton(xMSF, cont, "radioTete", Formation.TETE.getBezeichnung(), 8, 21, 140, 10,
-				defaultFormation == Formation.TETE);
-		addRadioButton(xMSF, cont, "radioDoublette", Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10,
-				defaultFormation == Formation.DOUBLETTE);
-		addRadioButton(xMSF, cont, "radioTriplette", Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10,
-				defaultFormation == Formation.TRIPLETTE);
+		addListBox(xMSF, cont, "lstFormation",
+				new String[] { Formation.TETE.getBezeichnung(),
+						Formation.DOUBLETTE.getBezeichnung(),
+						Formation.TRIPLETTE.getBezeichnung() },
+				formationIndex(defaultFormation), 92, 6, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep1", 5, 59, 150, 2);
-		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.maastrichter.teamname.anzeigen"), 8, 65, 140, 10,
+		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
+		addCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.maastrichter.teamname.anzeigen"), 8, 30, 140, 10,
 				defaultTeamnameAnzeigen);
-		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.maastrichter.vereinsname.anzeigen"), 8, 79, 140, 10,
+		addCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.maastrichter.vereinsname.anzeigen"), 8, 44, 140, 10,
 				defaultVereinsnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 95, 150, 2);
-		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 99, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielplanNr", I18n.get("dialog.maastrichter.auswahl.nr"), 8, 111, 140, 10,
-				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielplanName", I18n.get("dialog.maastrichter.auswahl.name"), 8, 123, 140, 10,
-				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME);
+		addFixedLine(xMSF, cont, "sep2", 5, 60, 150, 2);
+		addLabel(xMSF, cont, "lblSpielplan", I18n.get("dialog.maastrichter.spielplan.anzeige.label"), 8, 64, 80, 10);
+		addListBox(xMSF, cont, "lstSpielplan",
+				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
+						I18n.get("dialog.maastrichter.auswahl.name") },
+				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
+				92, 62, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 137, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.maastrichter.ranking.modus.label"), 8, 141, 140, 10);
-		addRadioButton(xMSF, cont, "radioMitBuchholz", I18n.get("dialog.maastrichter.ranking.mit.buchholz"), 8, 153,
-				140, 10, defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
-		addRadioButton(xMSF, cont, "radioOhneBuchholz", I18n.get("dialog.maastrichter.ranking.ohne.buchholz"), 8, 165,
-				140, 10, defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
+		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", I18n.get("dialog.maastrichter.ranking.modus.label"), 8, 84, 80, 10);
+		addListBox(xMSF, cont, "lstRankingModus",
+				new String[] { I18n.get("dialog.maastrichter.ranking.mit.buchholz"),
+						I18n.get("dialog.maastrichter.ranking.ohne.buchholz") },
+				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
+				92, 82, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 179, 150, 2);
-		addLabel(xMSF, cont, "lblAnzVorrunden", I18n.get("dialog.maastrichter.anz.vorrunden.label"), 8, 183, 100, 10);
-		addNumericField(xMSF, cont, "nfAnzVorrunden", defaultAnzVorrunden, 2, 5, 112, 181, 40, 12);
+		addFixedLine(xMSF, cont, "sep4", 5, 100, 150, 2);
+		addLabel(xMSF, cont, "lblAnzVorrunden", I18n.get("dialog.maastrichter.anz.vorrunden.label"), 8, 104, 100, 10);
+		addNumericField(xMSF, cont, "nfAnzVorrunden", defaultAnzVorrunden, 2, 5, 112, 102, 40, 12);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 200, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 121, 150, 2);
 		addLabel(xMSF, cont, "lblSpielbaumTeamAnzeige", I18n.get("dialog.maastrichter.spielbaum.anzeige.label"), 8,
-				204, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbaumNr", I18n.get("dialog.maastrichter.auswahl.nr"), 8, 216, 140, 10,
-				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielbaumName", I18n.get("dialog.maastrichter.auswahl.name"), 8, 228, 140, 10,
-				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME);
+				125, 80, 10);
+		addListBox(xMSF, cont, "lstSpielbaum",
+				new String[] { I18n.get("dialog.maastrichter.auswahl.nr"),
+						I18n.get("dialog.maastrichter.auswahl.name") },
+				(short) (defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME ? 1 : 0),
+				92, 123, 60, 12);
 
-		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 242, 140, 10,
+		addCheckBox(xMSF, cont, "cbSpielUmPlatz3", I18n.get("dialog.maastrichter.spiel.um.platz3"), 8, 141, 140, 10,
 				defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 256, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 260, 140, 10);
-		addRadioButton(xMSF, cont, "radioNachSiegen", I18n.get("dialog.maastrichter.gruppen.modus.nach.siegen"), 8,
-				272, 140, 10, defaultGruppenModus == MaastrichterGruppenModus.NACH_SIEGEN);
-		addRadioButton(xMSF, cont, "radioNachGroesse", I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse"), 8,
-				284, 140, 10, defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE);
-		addLabel(xMSF, cont, "lblGruppenModusHinweis", I18n.get("dialog.maastrichter.gruppen.modus.hinweis"), 8, 296,
-				150, 10);
-
-		addFixedLine(xMSF, cont, "sep7", 5, 310, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 314, 100,
+		addFixedLine(xMSF, cont, "sep6", 5, 155, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenModus", I18n.get("dialog.maastrichter.gruppen.modus.label"), 8, 159, 80, 10);
+		addListBox(xMSF, cont, "lstGruppenModus",
+				new String[] { I18n.get("dialog.maastrichter.gruppen.modus.nach.siegen"),
+						I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse") },
+				(short) (defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE ? 1 : 0),
+				92, 157, 60, 12);
+		addFixedLine(xMSF, cont, "sep7", 5, 173, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 177, 100,
 				10);
-		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 312, 40, 12);
-		addLabel(xMSF, cont, "lblMinRestGroesse", I18n.get("dialog.maastrichter.min.rest.groesse.label"), 8, 329, 100,
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 175, 40, 12);
+		addLabel(xMSF, cont, "lblMinRestGroesse", I18n.get("dialog.maastrichter.min.rest.groesse.label"), 8, 192, 100,
 				10);
-		addNumericField(xMSF, cont, "nfMinRestGroesse", defaultMinRestGroesse, 1, 256, 112, 327, 40, 12);
+		addNumericField(xMSF, cont, "nfMinRestGroesse", defaultMinRestGroesse, 1, 256, 112, 190, 40, 12);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 390, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 390, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 210, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 210, 60, 14);
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
@@ -214,15 +214,15 @@ public class MaastrichterTurnierParameterDialog {
 			Formation formation = readFormation(xcc);
 			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			SpielplanTeamAnzeige spielplanAnzeige = isRadioSelected(xcc, "radioSpielplanName")
+			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
-			SchweizerRankingModus rankingModus = isRadioSelected(xcc, "radioOhneBuchholz")
+			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
 			int anzVorrunden = readNumericField(xcc, "nfAnzVorrunden", defaultAnzVorrunden);
-			KoSpielbaumTeamAnzeige spielbaumTeamAnzeige = isRadioSelected(xcc, "radioSpielbaumName")
+			KoSpielbaumTeamAnzeige spielbaumTeamAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
 					? KoSpielbaumTeamAnzeige.NAME : KoSpielbaumTeamAnzeige.NR;
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbSpielUmPlatz3");
-			MaastrichterGruppenModus gruppenModus = isRadioSelected(xcc, "radioNachGroesse")
+			MaastrichterGruppenModus gruppenModus = readListBoxSelected(xcc, "lstGruppenModus") == 1
 					? MaastrichterGruppenModus.NACH_GROESSE : MaastrichterGruppenModus.NACH_SIEGEN;
 			int gruppenGroesse = readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse);
 			int minRestGroesse = readNumericField(xcc, "nfMinRestGroesse", defaultMinRestGroesse);
@@ -242,16 +242,26 @@ public class MaastrichterTurnierParameterDialog {
 	// ---------------------------------------------------------------
 
 	private Formation readFormation(XControlContainer xcc) {
-		if (isRadioSelected(xcc, "radioTete")) return Formation.TETE;
-		if (isRadioSelected(xcc, "radioDoublette")) return Formation.DOUBLETTE;
-		return Formation.TRIPLETTE;
+		return switch (readListBoxSelected(xcc, "lstFormation")) {
+			case 1 -> Formation.DOUBLETTE;
+			case 2 -> Formation.TRIPLETTE;
+			default -> Formation.TETE;
+		};
 	}
 
-	private boolean isRadioSelected(XControlContainer xcc, String name) {
+	private static short formationIndex(Formation formation) {
+		return switch (formation) {
+			case DOUBLETTE -> 1;
+			case TRIPLETTE -> 2;
+			default -> 0;
+		};
+	}
+
+	private short readListBoxSelected(XControlContainer xcc, String name) {
 		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) return false;
-		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
-		return radio != null && radio.getState();
+		if (ctrl == null) return 0;
+		XListBox lb = Lo.qi(XListBox.class, ctrl);
+		return lb != null ? lb.getSelectedItemPos() : 0;
 	}
 
 	private boolean readCheckBoxState(XControlContainer xcc, String name) {
@@ -293,17 +303,18 @@ public class MaastrichterTurnierParameterDialog {
 		cont.insertByName(name, model);
 	}
 
-	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean selected)
+	private void addListBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String[] items, short selectedIndex, int x, int y, int w, int h)
 			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
 		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
+		props.setPropertyValue("Dropdown", Boolean.TRUE);
+		props.setPropertyValue("StringItemList", items);
+		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
 		props.setPropertyValue("PositionX", Integer.valueOf(x));
 		props.setPropertyValue("PositionY", Integer.valueOf(y));
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
-		props.setPropertyValue("State", (short) (selected ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 

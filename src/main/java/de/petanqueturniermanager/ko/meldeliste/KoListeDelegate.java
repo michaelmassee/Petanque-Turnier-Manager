@@ -23,6 +23,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.border.BorderFactory;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
@@ -465,6 +466,46 @@ class KoListeDelegate implements MeldeListeKonstanten {
 	// ---------------------------------------------------------------
 	// Daten einlesen
 	// ---------------------------------------------------------------
+
+	/** Liest alle Team-Meldungen aus dem Sheet, unabhängig vom Aktiv-Status. */
+	TeamMeldungen getAlleMeldungen() throws GenerateException {
+		XSpreadsheet xSheet = sheet.getXSpreadSheet();
+		int vornameSpalte = getVornameSpalte(0);
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		TeamMeldungen meldungen = new TeamMeldungen();
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			meldungen.addTeamWennNichtVorhanden(Team.from(nr));
+		}
+		return meldungen;
+	}
+
+	/** Setzt alle Teams mit gültiger Teamnummer auf AKTIV_WERT_NIMMT_TEIL (1). */
+	void alleTeamsAktivieren() throws GenerateException {
+		XSpreadsheet xSheet = sheet.getXSpreadSheet();
+		int vornameSpalte = getVornameSpalte(0);
+		int aktivSpalte = getAktivSpalte();
+		int letzteZeile = letzteZeileMitDaten(xSheet);
+		for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+			String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
+			if (vorname == null || vorname.isEmpty()) {
+				continue;
+			}
+			int nr = sheet.getSheetHelper().getIntFromCell(xSheet, Position.from(getTeamNrSpalte(), zeile));
+			if (nr <= 0) {
+				continue;
+			}
+			sheet.getSheetHelper().setNumberValueInCell(
+					NumberCellValue.from(xSheet, Position.from(aktivSpalte, zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
+		}
+	}
 
 	/** Liefert alle aktiven Teams aus der Meldeliste, sortiert nach Nr. */
 	TeamMeldungen getAktiveMeldungen() throws GenerateException {

@@ -13,7 +13,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
-import com.sun.star.awt.XRadioButton;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XSpinField;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
@@ -76,7 +76,7 @@ class FormuleXTurnierParameterDialog {
         dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
         dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
         dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-        dlgProps.setPropertyValue("Height", Integer.valueOf(165));
+        dlgProps.setPropertyValue("Height", Integer.valueOf(130));
         dlgProps.setPropertyValue("Title", I18n.get("dialog.formulex.turnier.parameter.titel"));
         dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -89,29 +89,28 @@ class FormuleXTurnierParameterDialog {
         XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
         fuegeLabel(xMSF, cont, "lblFormation", I18n.get("dialog.poule.label.formation"), 8, 8, 80, 10);
-        fuegeRadioButton(xMSF, cont, "radioTete",
-                Formation.TETE.getBezeichnung(), 8, 21, 140, 10, standardFormation == Formation.TETE);
-        fuegeRadioButton(xMSF, cont, "radioDoublette",
-                Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10, standardFormation == Formation.DOUBLETTE);
-        fuegeRadioButton(xMSF, cont, "radioTriplette",
-                Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10, standardFormation == Formation.TRIPLETTE);
+        fuegeListBox(xMSF, cont, "lstFormation",
+                new String[] { Formation.TETE.getBezeichnung(),
+                        Formation.DOUBLETTE.getBezeichnung(),
+                        Formation.TRIPLETTE.getBezeichnung() },
+                formationIndex(standardFormation), 92, 6, 60, 12);
 
-        fuegeTrennlinie(xMSF, cont, "sep1", 5, 59, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep1", 5, 24, 150, 2);
 
         fuegeCheckBox(xMSF, cont, "cbTeamname", I18n.get("dialog.poule.label.teamname"),
-                8, 65, 140, 10, standardTeamnameAnzeigen);
+                8, 30, 140, 10, standardTeamnameAnzeigen);
         fuegeCheckBox(xMSF, cont, "cbVereinsname", I18n.get("dialog.poule.label.vereinsname"),
-                8, 79, 140, 10, standardVereinsnameAnzeigen);
+                8, 44, 140, 10, standardVereinsnameAnzeigen);
 
-        fuegeTrennlinie(xMSF, cont, "sep2", 5, 93, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep2", 5, 58, 150, 2);
 
-        fuegeLabel(xMSF, cont, "lblAnzahlRunden", I18n.get("dialog.formulex.label.anzahl.runden"), 8, 99, 100, 10);
-        fuegeSpinner(xMSF, cont, "spinnerRunden", 110, 97, 40, 12, standardAnzahlRunden, 1, 20);
+        fuegeLabel(xMSF, cont, "lblAnzahlRunden", I18n.get("dialog.formulex.label.anzahl.runden"), 8, 64, 100, 10);
+        fuegeSpinner(xMSF, cont, "spinnerRunden", 110, 62, 40, 12, standardAnzahlRunden, 1, 20);
 
-        fuegeTrennlinie(xMSF, cont, "sep3", 5, 115, 150, 2);
+        fuegeTrennlinie(xMSF, cont, "sep3", 5, 80, 150, 2);
 
-        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 143, 50, 14);
-        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 143, 60, 14);
+        fuegeButton(xMSF, cont, "btnOk", I18n.get("dialog.button.ok"), 22, 108, 50, 14);
+        fuegeButton(xMSF, cont, "btnCancel", I18n.get("dialog.button.abbrechen"), 88, 108, 60, 14);
 
         XDialog xDialog = Lo.qi(XDialog.class, dialog);
         okGedrueckt = false;
@@ -165,22 +164,28 @@ class FormuleXTurnierParameterDialog {
     // ---------------------------------------------------------------
 
     private Formation leseFormation(XControlContainer xcc) {
-        if (istRadioGewaehlt(xcc, "radioTete")) {
-            return Formation.TETE;
-        }
-        if (istRadioGewaehlt(xcc, "radioDoublette")) {
-            return Formation.DOUBLETTE;
-        }
-        return Formation.TRIPLETTE;
+        return switch (leseListBoxAuswahl(xcc, "lstFormation")) {
+            case 1 -> Formation.DOUBLETTE;
+            case 2 -> Formation.TRIPLETTE;
+            default -> Formation.TETE;
+        };
     }
 
-    private boolean istRadioGewaehlt(XControlContainer xcc, String name) {
+    private static short formationIndex(Formation formation) {
+        return switch (formation) {
+            case DOUBLETTE -> 1;
+            case TRIPLETTE -> 2;
+            default -> 0;
+        };
+    }
+
+    private short leseListBoxAuswahl(XControlContainer xcc, String name) {
         XControl ctrl = xcc.getControl(name);
         if (ctrl == null) {
-            return false;
+            return 0;
         }
-        XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
-        return radio != null && radio.getState();
+        XListBox lb = Lo.qi(XListBox.class, ctrl);
+        return lb != null ? lb.getSelectedItemPos() : 0;
     }
 
     private boolean leseCheckBoxZustand(XControlContainer xcc, String name) {
@@ -236,17 +241,18 @@ class FormuleXTurnierParameterDialog {
         cont.insertByName(name, model);
     }
 
-    private void fuegeRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
-            String name, String label, int x, int y, int w, int h, boolean gewaehlt)
+    private void fuegeListBox(XMultiServiceFactory xMSF, XNameContainer cont,
+            String name, String[] items, short selectedIndex, int x, int y, int w, int h)
             throws com.sun.star.uno.Exception {
-        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
+        Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
         XPropertySet props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("Label", label);
+        props.setPropertyValue("Dropdown", Boolean.TRUE);
+        props.setPropertyValue("StringItemList", items);
+        props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
         props.setPropertyValue("PositionX", Integer.valueOf(x));
         props.setPropertyValue("PositionY", Integer.valueOf(y));
         props.setPropertyValue("Width", Integer.valueOf(w));
         props.setPropertyValue("Height", Integer.valueOf(h));
-        props.setPropertyValue("State", (short) (gewaehlt ? 1 : 0));
         cont.insertByName(name, model);
     }
 
