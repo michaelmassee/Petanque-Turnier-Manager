@@ -15,7 +15,6 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XListBox;
-import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
@@ -80,7 +79,7 @@ public class JGJStartDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(170));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(196));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(162));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.jgj.title.neue.meldeliste"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -94,41 +93,40 @@ public class JGJStartDialog {
 		XNameContainer cont = Lo.qi(XNameContainer.class, dialogModel);
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
-		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.jgj.label.formation"), 8, 8, 100, 10);
-		addRadioButton(xMSF, cont, "radioTete",
-				Formation.TETE.getBezeichnung(), 8, 20, 150, 10, true);
-		addRadioButton(xMSF, cont, "radioDoublette",
-				Formation.DOUBLETTE.getBezeichnung(), 8, 32, 150, 10, false);
-		addRadioButton(xMSF, cont, "radioTriplette",
-				Formation.TRIPLETTE.getBezeichnung(), 8, 44, 150, 10, false);
+		addLabel(xMSF, cont, "lblFormation", I18n.get("dialog.jgj.label.formation"), 8, 8, 80, 10);
+		addListBox(xMSF, cont, "lstFormation",
+				new String[] { Formation.TETE.getBezeichnung(),
+						Formation.DOUBLETTE.getBezeichnung(),
+						Formation.TRIPLETTE.getBezeichnung() },
+				(short) 0, 92, 6, 70, 12);
 
-		addFixedLine(xMSF, cont, "sep1", 5, 58, 160, 2);
+		addFixedLine(xMSF, cont, "sep1", 5, 24, 160, 2);
 
 		addCheckBox(xMSF, cont, "cbTeamname",
-				I18n.get("dialog.jgj.label.teamname"), 8, 64, 150, 10, false);
+				I18n.get("dialog.jgj.label.teamname"), 8, 30, 150, 10, false);
 		addCheckBox(xMSF, cont, "cbVereinsname",
-				I18n.get("dialog.jgj.label.vereinsname"), 8, 78, 150, 10, false);
+				I18n.get("dialog.jgj.label.vereinsname"), 8, 44, 150, 10, false);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 92, 160, 2);
+		addFixedLine(xMSF, cont, "sep2", 5, 58, 160, 2);
 
-		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 96, 80, 10);
+		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 62, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplanAnzeige",
 				new String[] { I18n.get("dialog.jgj.spielplan.teamnummer"),
 						I18n.get("dialog.jgj.spielplan.teamname") },
-				(short) 0, 92, 94, 70, 12);
+				(short) 0, 92, 60, 70, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 112, 160, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 78, 160, 2);
 
-		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 116, 150, 10);
-		addEditField(xMSF, cont, "editGruppengroesse", 8, 128, 60, 14);
+		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 82, 150, 10);
+		addEditField(xMSF, cont, "editGruppengroesse", 8, 94, 60, 14);
 
 		addCheckBox(xMSF, cont, "cbRueckrunde",
-				I18n.get("dialog.jgj.label.rueckrunde"), 8, 146, 150, 12, false);
+				I18n.get("dialog.jgj.label.rueckrunde"), 8, 112, 150, 12, false);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 162, 160, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 128, 160, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 30, 176, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 176, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 30, 142, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 142, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -205,22 +203,11 @@ public class JGJStartDialog {
 	}
 
 	private Formation readFormation(XControlContainer xcc) {
-		if (isRadioSelected(xcc, "radioDoublette")) {
-			return Formation.DOUBLETTE;
-		}
-		if (isRadioSelected(xcc, "radioTriplette")) {
-			return Formation.TRIPLETTE;
-		}
-		return Formation.TETE;
-	}
-
-	private boolean isRadioSelected(XControlContainer xcc, String name) {
-		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) {
-			return false;
-		}
-		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
-		return radio != null && radio.getState();
+		return switch (readListBoxSelected(xcc, "lstFormation")) {
+			case 1 -> Formation.DOUBLETTE;
+			case 2 -> Formation.TRIPLETTE;
+			default -> Formation.TETE;
+		};
 	}
 
 	private short readListBoxSelected(XControlContainer xcc, String name) {
@@ -276,20 +263,6 @@ public class JGJStartDialog {
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("Text", "");
-		cont.insertByName(name, model);
-	}
-
-	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean selected)
-			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		props.setPropertyValue("State", (short) (selected ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 

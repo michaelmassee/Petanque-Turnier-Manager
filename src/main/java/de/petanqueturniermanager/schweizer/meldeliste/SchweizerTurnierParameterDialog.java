@@ -94,7 +94,7 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(178));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(143));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -109,46 +109,41 @@ public class SchweizerTurnierParameterDialog {
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
 		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
+		addListBox(xMSF, cont, "lstFormation",
+				new String[] { Formation.TETE.getBezeichnung(),
+						Formation.DOUBLETTE.getBezeichnung(),
+						Formation.TRIPLETTE.getBezeichnung() },
+				formationIndex(defaultFormation), 92, 6, 60, 12);
 
-		addRadioButton(xMSF, cont, "radioTete",
-				Formation.TETE.getBezeichnung(), 8, 21, 140, 10,
-				defaultFormation == Formation.TETE);
-		addRadioButton(xMSF, cont, "radioDoublette",
-				Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10,
-				defaultFormation == Formation.DOUBLETTE);
-		addRadioButton(xMSF, cont, "radioTriplette",
-				Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10,
-				defaultFormation == Formation.TRIPLETTE);
-
-		addFixedLine(xMSF, cont, "sep1", 5, 59, 150, 2);
+		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
 
 		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen",
-				8, 65, 140, 10, defaultTeamnameAnzeigen);
+				8, 30, 140, 10, defaultTeamnameAnzeigen);
 
 		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen",
-				8, 79, 140, 10, defaultVereinsnameAnzeigen);
+				8, 44, 140, 10, defaultVereinsnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 95, 150, 2);
+		addFixedLine(xMSF, cont, "sep2", 5, 60, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 99, 80, 10);
+		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 64, 80, 10);
 		addListBox(xMSF, cont, "lstSpielplan",
 				new String[] { "Teamnummer", "Teamname" },
 				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
-				92, 97, 60, 12);
+				92, 62, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 115, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 117, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 121, 140, 10);
+		addFixedLine(xMSF, cont, "sep4", 5, 82, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 86, 140, 10);
 		addRadioButton(xMSF, cont, "radioMitBuchholz",
-				"Mit Buchholz (Standard)", 8, 133, 140, 10,
+				"Mit Buchholz (Standard)", 8, 98, 140, 10,
 				defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
 		addRadioButton(xMSF, cont, "radioOhneBuchholz",
-				"Ohne Buchholz", 8, 145, 140, 10,
+				"Ohne Buchholz", 8, 110, 140, 10,
 				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 159, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 159, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 124, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 124, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -209,13 +204,19 @@ public class SchweizerTurnierParameterDialog {
 	// ---------------------------------------------------------------
 
 	private Formation readFormation(XControlContainer xcc) {
-		if (isRadioSelected(xcc, "radioTete")) {
-			return Formation.TETE;
-		}
-		if (isRadioSelected(xcc, "radioDoublette")) {
-			return Formation.DOUBLETTE;
-		}
-		return Formation.TRIPLETTE;
+		return switch (readListBoxSelected(xcc, "lstFormation")) {
+			case 1 -> Formation.DOUBLETTE;
+			case 2 -> Formation.TRIPLETTE;
+			default -> Formation.TETE;
+		};
+	}
+
+	private static short formationIndex(Formation formation) {
+		return switch (formation) {
+			case DOUBLETTE -> 1;
+			case TRIPLETTE -> 2;
+			default -> 0;
+		};
 	}
 
 	private boolean isRadioSelected(XControlContainer xcc, String name) {
