@@ -20,7 +20,7 @@
 				<node oor:name="Submenu">
 					<!-- ****************************************************************** -->
 					<!-- Liga -->
-					<node oor:name="A06" oor:op="fuse">
+					<node oor:name="A5" oor:op="fuse">
 						<prop oor:name="URL" oor:type="xs:string">
 							<value/>
 						</prop>
@@ -40,7 +40,7 @@
 						<node oor:name="Submenu">
 							<!-- name= bestimmt reihenfolge im menu -->
 							<!-- ****************************************************************** -->
-							<node oor:name="A06A1" oor:op="replace">
+							<node oor:name="A5A1" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Start (new Tournament)</value>
 									<value xml:lang="de">Start (neues Turnier)</value>
@@ -56,13 +56,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A06A2" oor:op="replace">
+							<node oor:name="A5A2" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A06A3" oor:op="replace">
+							<node oor:name="A5A3" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Refresh Entrylist</value>
 									<value xml:lang="de">Meldeliste aktualisieren</value>
@@ -78,13 +78,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A06A4" oor:op="replace">
+							<node oor:name="A5A4" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A06A5" oor:op="replace">
+							<node oor:name="A5A5" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Gameplan</value>
 									<value xml:lang="de">Spielplan</value>
@@ -100,7 +100,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A06A6" oor:op="replace">
+							<node oor:name="A5A6" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Ranking</value>
 									<value xml:lang="de">Rangliste</value>
@@ -116,7 +116,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A06A7" oor:op="replace">
+							<node oor:name="A5A7" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Sort Ranking</value>
 									<value xml:lang="de">Rangliste sortieren</value>
@@ -132,7 +132,7 @@
 								</prop>
 							</node>
 
-							<node oor:name="A06A8" oor:op="replace">
+							<node oor:name="A5A8" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Directcomparison</value>
 									<value xml:lang="de">Direktvergleich</value>
@@ -148,13 +148,13 @@
 								</prop>
 							</node>
 
-							<node oor:name="A06A9" oor:op="replace">
+							<node oor:name="A5A9" oor:op="replace">
 								<prop oor:name="URL" oor:type="xs:string">
 									<value>private:separator</value>
 								</prop>
 							</node>
 
-							<node oor:name="A06A10" oor:op="replace">
+							<node oor:name="A5A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="en">Export PDF and HTML</value>
 									<value xml:lang="de">Export PDF und HTML</value>

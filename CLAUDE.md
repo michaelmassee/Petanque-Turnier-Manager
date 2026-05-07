@@ -96,6 +96,8 @@ Menu items are defined in XCU files under `registry/org/openoffice/Office/` (one
 
 **Node-Namen in XCU-Menüs müssen strikt sequenziell nummeriert sein.** Die dritte Stelle (der Zähler) darf **niemals** alphanumerische Suffixe enthalten (z.B. `B2A`, `A5A2S`). LibreOffice sortiert Nodes nach dem Namen — ein Suffix wie `A` in `B2A` führt zu falscher Anzeigereihenfolge. Bei jeder Änderung (Einfügen, Löschen) alle betroffenen Nummern neu durchnummerieren.
 
+**Hintergrund:** Die Sortierung erfolgt in `configmgr/source/config_map.hxx` über `LengthContentsCompare` — primär nach **Stringlänge**, sekundär lexikographisch. Daher sortiert „B2A" (Länge 3) hinter alle Length-2-Slots wie „A1", „W1" etc., unabhängig von der lexikographischen Stelle. Konsequenz: einen Trenner zwischen `A0` und `A1` einzufügen ist nicht möglich, ohne *alle* anderen Top-Level-Slots derselben Submenu-Ebene auf gleiche Länge zu bringen — und selbst dann ist das Verhalten nicht stabil reproduzierbar (Versuch mit dreistelliger Normalisierung A00..A10/W10/X10..Y80/Z10/Z20 ließ in einem Test nur die `Y*`/`Z*`-Einträge sichtbar; Ursache nicht abschließend geklärt). **Pragmatik:** beim Original-Schema (zweistellig, A0..A9, W1, X1..) bleiben und auf Trenner zwischen den Top-Level-Slots verzichten.
+
 Separator-Nodes belegen einfach den nächsten freien Slot:
 ```xml
 <node oor:name="A5" oor:op="replace">
