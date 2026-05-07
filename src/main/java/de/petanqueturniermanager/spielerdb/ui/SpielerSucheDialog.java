@@ -63,7 +63,9 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private static final int H = 360;
     private static final int SUCH_FELD_X = 8, SUCH_FELD_Y = 22, SUCH_FELD_W = 350, SUCH_FELD_H = 12;
     private static final int FILTER_Y = 38, FILTER_W = 250, FILTER_H = 10;
-    private static final int LIST_X = 8, LIST_Y = 50, LIST_W = 350, LIST_H = 245;
+    private static final int VEREIN_LABEL_X = 8, VEREIN_LABEL_Y = 54, VEREIN_LABEL_W = 35;
+    private static final int VEREIN_X = 45, VEREIN_Y = 52, VEREIN_W = 315, VEREIN_H = 12;
+    private static final int LIST_X = 8, LIST_Y = 68, LIST_W = 350, LIST_H = 227;
     private static final int BTN_X = 365, BTN_W = 165, BTN_H = 14;
     private static final int TEAM_LIST_H = 120;
     private static final int FOOTER_Y = 305;
@@ -83,6 +85,16 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private final List<SpielerMitVerein> teamAuswahl = new ArrayList<>();
     /** Cache der bereits in der Meldeliste stehenden Spieler (normiert). Leer im Verwaltungs-Modus. */
     private Set<String> bereitsGemeldeteNormiert = Set.of();
+    /**
+     * Items der Vereins-Filter-Dropdown:
+     * <ul>
+     *   <li>Index 0: „(alle Vereine)" → kein Filter</li>
+     *   <li>Index 1: „(ohne Verein)" → nur Spieler mit {@code vereinNr == null}</li>
+     *   <li>Index ≥ 2: Vereinsnamen alphabetisch — exakter Vergleich gegen
+     *       {@link SpielerMitVerein#vereinName()}</li>
+     * </ul>
+     */
+    private List<String> vereinsnamenSortiert = List.of();
 
     public SpielerSucheDialog(XComponentContext xContext, SpielerRepository spielerRepo,
             VereinRepository vereinRepo, @Nullable MeldelisteZiel ziel) {
@@ -133,6 +145,15 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
                     SUCH_FELD_X, FILTER_Y, FILTER_W, FILTER_H, true);
             aktualisiereGemeldeteCache();
         }
+
+        // Vereins-Filter (Dropdown). Sichtbar in beiden Modi: hilft auch in der
+        // reinen Verwaltung beim Eingrenzen großer Bestände.
+        controls.fixedText("lblFilterVerein",
+                I18n.get("spielerdb.suche.filter.verein.label"),
+                VEREIN_LABEL_X, VEREIN_LABEL_Y, VEREIN_LABEL_W, 10);
+        controls.dropdownListBox("lstFilterVerein",
+                ladeVereinsFilterItems(),
+                VEREIN_X, VEREIN_Y, VEREIN_W, VEREIN_H);
 
         // Trefferliste
         controls.listBox("lstTreffer", LIST_X, LIST_Y, LIST_W, LIST_H);
@@ -195,6 +216,9 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
             // Filter-Wechsel re-triggert die aktuelle Suche, damit Aus-/Einblenden sofort wirkt.
             controls.registriereCheckBoxListener("chkFilterGemeldet", this::beimSuchTextGeaendert);
         }
+        // Vereins-Filter: Auswahl-Wechsel triggert Re-Render der Trefferliste.
+        controls.registriereListBoxAuswahl("lstFilterVerein",
+                this::beimSuchTextGeaendert, () -> { /* Doppelklick ohne Aktion */ });
 
         // Initial-Trefferliste
         ladeAlle();
@@ -272,14 +296,70 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         boolean filterMeldeliste = istUebernahmeModus()
                 && c.istAngekreuzt("chkFilterGemeldet")
                 && !bereitsGemeldeteNormiert.isEmpty();
-        if (teamAuswahlNr.isEmpty() && !filterMeldeliste) {
+        VereinFilter vereinFilter = aktuellerVereinFilter(c);
+        if (teamAuswahlNr.isEmpty() && !filterMeldeliste && vereinFilter.istAlle()) {
             return treffer;
         }
         return treffer.stream()
                 .filter(s -> !teamAuswahlNr.contains(s.nr()))
                 .filter(s -> !filterMeldeliste
                         || !bereitsGemeldeteNormiert.contains(norm(s.spielernameVollstaendig())))
+                .filter(vereinFilter::passt)
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    /**
+     * Lädt alle Vereinsnamen einmalig und baut die Item-Liste der
+     * Vereins-Dropdown auf: „(alle Vereine)", „(ohne Verein)", dann
+     * Vereinsnamen alphabetisch.
+     */
+    private String[] ladeVereinsFilterItems() {
+        try {
+            vereinsnamenSortiert = vereinRepo.findAll().stream()
+                    .map(v -> v.name())
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
+                    .collect(Collectors.toUnmodifiableList());
+        } catch (SpielerDbException e) {
+            logger.warn("Vereine für Filter laden fehlgeschlagen", e);
+            vereinsnamenSortiert = List.of();
+        }
+        List<String> items = new ArrayList<>(vereinsnamenSortiert.size() + 2);
+        items.add(I18n.get("spielerdb.suche.filter.verein.alle"));
+        items.add(I18n.get("spielerdb.suche.filter.verein.ohne"));
+        items.addAll(vereinsnamenSortiert);
+        return items.toArray(String[]::new);
+    }
+
+    private VereinFilter aktuellerVereinFilter(UnoControlsHelper c) {
+        short idx = c.ausgewaehlterIndex("lstFilterVerein");
+        if (idx <= 0) {
+            return VereinFilter.alle();
+        }
+        if (idx == 1) {
+            return VereinFilter.ohneVerein();
+        }
+        int vereinIdx = idx - 2;
+        if (vereinIdx < 0 || vereinIdx >= vereinsnamenSortiert.size()) {
+            return VereinFilter.alle();
+        }
+        return VereinFilter.name(vereinsnamenSortiert.get(vereinIdx));
+    }
+
+    /** Repräsentiert die Auswahl der Vereins-Filter-Dropdown. */
+    private record VereinFilter(@Nullable String name, boolean nurOhne) {
+        static VereinFilter alle() { return new VereinFilter(null, false); }
+        static VereinFilter ohneVerein() { return new VereinFilter(null, true); }
+        static VereinFilter name(String name) { return new VereinFilter(name, false); }
+        boolean istAlle() { return name == null && !nurOhne; }
+        boolean passt(SpielerMitVerein s) {
+            if (istAlle()) {
+                return true;
+            }
+            if (nurOhne) {
+                return s.vereinNr() == null;
+            }
+            return name != null && name.equalsIgnoreCase(s.vereinName());
+        }
     }
 
     private void aktualisiereGemeldeteCache() {

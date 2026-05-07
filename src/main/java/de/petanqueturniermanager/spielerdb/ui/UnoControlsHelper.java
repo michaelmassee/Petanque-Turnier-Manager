@@ -99,6 +99,24 @@ final class UnoControlsHelper {
         cont.insertByName(name, model);
     }
 
+    /** Dropdown-ListBox (single-select, nicht-editierbar) für Filter-Auswahlen. */
+    void dropdownListBox(String name, String[] items, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("Dropdown", Boolean.TRUE);
+        props.setPropertyValue("MultiSelection", Boolean.FALSE);
+        props.setPropertyValue("StringItemList", items);
+        if (items.length > 0) {
+            props.setPropertyValue("SelectedItems", new short[] { 0 });
+        }
+        cont.insertByName(name, model);
+    }
+
     /** Checkbox mit Initial-Zustand. */
     void checkBox(String name, String label, int x, int y, int w, int h, boolean angekreuzt)
             throws com.sun.star.uno.Exception {
