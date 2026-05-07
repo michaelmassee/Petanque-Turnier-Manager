@@ -102,7 +102,7 @@ public class MaastrichterTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(246));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(232));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.maastrichter.titel"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -166,19 +166,16 @@ public class MaastrichterTurnierParameterDialog {
 						I18n.get("dialog.maastrichter.gruppen.modus.nach.groesse") },
 				(short) (defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE ? 1 : 0),
 				92, 157, 60, 12);
-		addLabel(xMSF, cont, "lblGruppenModusHinweis", I18n.get("dialog.maastrichter.gruppen.modus.hinweis"), 8, 173,
-				150, 10);
-
-		addFixedLine(xMSF, cont, "sep7", 5, 187, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 191, 100,
+		addFixedLine(xMSF, cont, "sep7", 5, 173, 150, 2);
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 177, 100,
 				10);
-		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 189, 40, 12);
-		addLabel(xMSF, cont, "lblMinRestGroesse", I18n.get("dialog.maastrichter.min.rest.groesse.label"), 8, 206, 100,
+		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 175, 40, 12);
+		addLabel(xMSF, cont, "lblMinRestGroesse", I18n.get("dialog.maastrichter.min.rest.groesse.label"), 8, 192, 100,
 				10);
-		addNumericField(xMSF, cont, "nfMinRestGroesse", defaultMinRestGroesse, 1, 256, 112, 204, 40, 12);
+		addNumericField(xMSF, cont, "nfMinRestGroesse", defaultMinRestGroesse, 1, 256, 112, 190, 40, 12);
 
-		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 224, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 224, 60, 14);
+		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 210, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 210, 60, 14);
 
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
 		okPressed = false;
