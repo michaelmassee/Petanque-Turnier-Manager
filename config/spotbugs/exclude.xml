@@ -161,4 +161,30 @@
         <Bug category="MALICIOUS_CODE"/>
     </Match>
 
+    <!--
+        SpielerDbConnection: embedded HSQLDB im User-Homeverzeichnis. Der Default
+        "SA"/"" ist HSQLDB-Standard für embedded mode (keine Auth, lokale Datei).
+        Ein "echtes" Passwort wäre Sicherheitstheater — die Datei ist ohnehin
+        per Filesystem-Permissions geschützt, und das Passwort müsste irgendwo
+        unverschlüsselt mitliegen.
+        → False Positive.
+    -->
+    <Match>
+        <Class name="de.petanqueturniermanager.spielerdb.SpielerDbConnection"/>
+        <Bug pattern="DMI_EMPTY_DB_PASSWORD"/>
+    </Match>
+
+    <!--
+        SpielerDbConnection.close() resettet das statische INSTANCE-Feld auf null,
+        damit ein erneutes getInstance() eine frische Connection aufbaut. Der
+        Schreibzugriff von einer Instanzmethode aus ist beabsichtigter Singleton-
+        Lifecycle (analog zu MainKonfigDialog-Reset im Tests-Hook).
+        → False Positive.
+    -->
+    <Match>
+        <Class name="de.petanqueturniermanager.spielerdb.SpielerDbConnection"/>
+        <Method name="close"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+
 </FindBugsFilter>

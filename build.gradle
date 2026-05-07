@@ -150,18 +150,24 @@ dependencies {
     implementation 'io.github.g00fy2:versioncompare:1.5.0'
     implementation 'org.jsoup:jsoup:1.22.1'
     implementation 'com.opencsv:opencsv:5.12.0'
+    // Lokale Spieler-Stammdaten-DB. SQLite (xerial) ist multi-process-sicher
+    // (POSIX-/Win32-Filelocks) und kollidiert nicht mit LO's eigenen Java-Libs
+    // — daher kein Shading nötig.
+    implementation 'org.xerial:sqlite-jdbc:3.53.1.0'
 
-    // LibreOffice SDK dependencies - using local installation
-    compileOnly fileTree(dir: libreOfficeClassesPath, include: ['*.jar'])
+    // LibreOffice SDK dependencies - using local installation.
+    // hsqldb.jar bleibt ausgeschlossen: LO bringt eine 1.8.0-Variante mit, die
+    // den UNO-Classloader für jede zukünftige Java-DB-Lib vergiften würde.
+    compileOnly fileTree(dir: libreOfficeClassesPath, include: ['*.jar'], exclude: ['hsqldb.jar', 'sdbc_hsqldb.jar'])
     compileOnly files(
         "${libreOfficeClassesPath}/ridl.jar",
         "${libreOfficeClassesPath}/unoil.jar",
         "${libreOfficeClassesPath}/jurt.jar",
         "${libreOfficeClassesPath}/juh.jar"
     )
-    
+
     // LibreOffice SDK für Tests - use testImplementation so classes are available at runtime
-    testImplementation fileTree(dir: libreOfficeClassesPath, include: ['*.jar'])
+    testImplementation fileTree(dir: libreOfficeClassesPath, include: ['*.jar'], exclude: ['hsqldb.jar', 'sdbc_hsqldb.jar'])
     testImplementation files(
         "${libreOfficeClassesPath}/ridl.jar",
         "${libreOfficeClassesPath}/unoil.jar",
