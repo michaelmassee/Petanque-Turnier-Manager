@@ -15,7 +15,6 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XListBox;
-import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
@@ -94,7 +93,7 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(143));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(121));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -134,16 +133,14 @@ public class SchweizerTurnierParameterDialog {
 		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
 
 		addFixedLine(xMSF, cont, "sep4", 5, 82, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 86, 140, 10);
-		addRadioButton(xMSF, cont, "radioMitBuchholz",
-				"Mit Buchholz (Standard)", 8, 98, 140, 10,
-				defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
-		addRadioButton(xMSF, cont, "radioOhneBuchholz",
-				"Ohne Buchholz", 8, 110, 140, 10,
-				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
+		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 86, 80, 10);
+		addListBox(xMSF, cont, "lstRankingModus",
+				new String[] { "Mit Buchholz (Standard)", "Ohne Buchholz" },
+				(short) (defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ ? 1 : 0),
+				92, 84, 60, 12);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 124, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 124, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 102, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 102, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -187,7 +184,7 @@ public class SchweizerTurnierParameterDialog {
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
 			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
-			SchweizerRankingModus rankingModus = isRadioSelected(xcc, "radioOhneBuchholz")
+			SchweizerRankingModus rankingModus = readListBoxSelected(xcc, "lstRankingModus") == 1
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
 			result = Optional.of(
 					new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen, spielplanAnzeige, rankingModus));
@@ -217,15 +214,6 @@ public class SchweizerTurnierParameterDialog {
 			case TRIPLETTE -> 2;
 			default -> 0;
 		};
-	}
-
-	private boolean isRadioSelected(XControlContainer xcc, String name) {
-		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) {
-			return false;
-		}
-		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
-		return radio != null && radio.getState();
 	}
 
 	private short readListBoxSelected(XControlContainer xcc, String name) {
@@ -269,20 +257,6 @@ public class SchweizerTurnierParameterDialog {
 		props.setPropertyValue("PositionY", Integer.valueOf(y));
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
-		cont.insertByName(name, model);
-	}
-
-	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean selected)
-			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		props.setPropertyValue("State", (short) (selected ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 
