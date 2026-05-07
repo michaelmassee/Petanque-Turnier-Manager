@@ -2,19 +2,36 @@ package de.petanqueturniermanager.spielerdb;
 
 import java.util.Optional;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
+import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
+import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
+import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * Erkennt anhand des Dokumenten-Turniersystems die richtige Formation und
- * baut einen {@link MeldelisteZiel}-Adapter, der auf das Standard-Meldeliste-Sheet
+ * Erkennt anhand des Dokumenten-Turniersystems das passende Konfigurations-Sheet
+ * und baut einen {@link MeldelisteZiel}-Adapter, der auf das Standard-Meldeliste-Sheet
  * schreibt. Liefert {@link Optional#empty()} wenn das Dokument kein bekanntes
- * Turniersystem hat oder kein Meldeliste-Sheet existiert.
+ * (unterstütztes) Turniersystem hat oder kein Meldeliste-Sheet existiert.
+ *
+ * <p>Layout-Werte (Formation, Teamname-/Vereinsnamen-Anzeige) werden über die
+ * system-spezifische {@code *KonfigurationSheet}-Klasse gelesen — damit greifen
+ * deren Konfig-Defaults korrekt, und gleichzeitig persistiert
+ * {@code BasePropertiesSpalte.readStringProperty} fehlende Werte einmalig in die
+ * UserDefinedProperties (siehe {@code initStringPropertyIfAbsent}).
  */
 public final class MeldelisteZielFactory {
+
+    private static final Logger logger = LogManager.getLogger(MeldelisteZielFactory.class);
 
     private MeldelisteZielFactory() {}
 
@@ -23,32 +40,66 @@ public final class MeldelisteZielFactory {
         if (ts == null || ts == TurnierSystem.KEIN) {
             return Optional.empty();
         }
-        Formation formation = formationFuer(ts, ws);
-        return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), formation);
+        Optional<MeldelisteLayout> layoutOpt = leseLayout(ts, ws);
+        if (layoutOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        MeldelisteLayout l = layoutOpt.get();
+        return SheetMeldelisteAdapter.fuer(ws, SheetNamen.meldeliste(), ts,
+                l.formation(), l.teamnameAktiv(), l.vereinsnameAktiv());
     }
 
-    /** Property-Key, unter dem alle Systeme die Formation im Konfig-Sheet ablegen. */
-    private static final String KONFIG_PROP_FORMATION = "Meldeliste Formation";
+    /**
+     * Layout-Triplet aus dem system-spezifischen KonfigurationSheet.
+     */
+    private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {}
 
     /**
-     * Liest die Formation aus dem Konfig-Sheet (gemeinsamer Property-Key über
-     * alle Turniersysteme). Supermelee hat keine konfigurierbare Formation —
-     * dort gilt immer {@link Formation#MELEE}. Bei Lese-/Parse-Fehlern wird
-     * defensiv {@link Formation#TETE} angenommen (1 Spieler pro Übernahme,
-     * kein Block-Sammelpanel).
+     * Liest das Meldeliste-Layout aus dem zum Turniersystem passenden Konfigurations-Sheet.
+     * Supermelee hat keine konfigurierbare Formation — dort gilt immer
+     * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten.
+     * Für Systeme ohne Spieler-DB-Übernahme-Unterstützung (Liga, Maastrichter)
+     * liefert die Methode {@link Optional#empty()}.
      */
-    private static Formation formationFuer(TurnierSystem ts, WorkingSpreadsheet ws) {
-        if (ts == TurnierSystem.SUPERMELEE) {
-            return Formation.MELEE;
-        }
-        String roh = new DocumentPropertiesHelper(ws).getStringProperty(KONFIG_PROP_FORMATION, "");
-        if (roh.isEmpty()) {
-            return Formation.TETE;
-        }
+    private static Optional<MeldelisteLayout> leseLayout(TurnierSystem ts, WorkingSpreadsheet ws) {
         try {
-            return Formation.valueOf(roh);
-        } catch (IllegalArgumentException e) {
-            return Formation.TETE;
+            return switch (ts) {
+                case SUPERMELEE -> Optional.of(new MeldelisteLayout(Formation.MELEE, false, false));
+                case KO -> {
+                    KoKonfigurationSheet k = new KoKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case SCHWEIZER -> {
+                    SchweizerKonfigurationSheet k = new SchweizerKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case JGJ -> {
+                    JGJKonfigurationSheet k = new JGJKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case POULE -> {
+                    PouleKonfigurationSheet k = new PouleKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case KASKADE -> {
+                    KaskadeKonfigurationSheet k = new KaskadeKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case FORMULEX -> {
+                    FormuleXKonfigurationSheet k = new FormuleXKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case LIGA, MAASTRICHTER, KEIN -> Optional.empty();
+            };
+        } catch (RuntimeException e) {
+            logger.warn("Konfig-Layout für {} konnte nicht gelesen werden", ts, e);
+            return Optional.empty();
         }
     }
 }

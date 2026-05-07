@@ -204,12 +204,18 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 	 * @return defaultVal aus ConfigProperty, -1 wenn fehler
 	 */
 	public String readStringProperty(String key) {
-		String val = null;
-
 		// value aus Document properties lesen
 		Object defaultVal = getDefaultProp(key);
-		val = docPropHelper.getStringProperty(key, ((defaultVal == null) ? "" : defaultVal.toString()));
-		return val;
+		String defaultStr = (defaultVal == null) ? "" : defaultVal.toString();
+		// Fehlende Property einmalig mit dem Konfig-Default in die UserDefinedProperties
+		// schreiben — sonst bleibt der Default nur Code-seitig sichtbar, und externe
+		// Leser (z.B. MeldelisteZielFactory) bekämen weiter leeres Ergebnis.
+		// initStringPropertyIfAbsent ist no-op, sobald die Property gesetzt wurde,
+		// es entstehen also keine wiederholten Doc-Mutationen.
+		if (defaultVal != null) {
+			docPropHelper.initStringPropertyIfAbsent(key, defaultStr);
+		}
+		return docPropHelper.getStringProperty(key, defaultStr);
 	}
 
 	public Boolean readBooleanProperty(String key) {

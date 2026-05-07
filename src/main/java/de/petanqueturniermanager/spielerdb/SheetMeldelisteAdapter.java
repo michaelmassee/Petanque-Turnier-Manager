@@ -13,7 +13,6 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -55,10 +54,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private static final int SPALTE_NR = 0;
     private static final int HEADER_ZEILE_MAX_SCAN = 5;
     private static final int MAX_DATEN_ZEILE = 999;
-
-    private static final String PROP_TEAMNAME    = "Meldeliste Teamname";
-    private static final String PROP_VEREINSNAME = "Meldeliste Vereinsname";
-    private static final String FLAG_AN          = "J";
 
     /**
      * Wert in der Aktiv-Spalte: „nimmt teil". Die Konvention ist über
@@ -102,15 +97,14 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     }
 
     /**
-     * Baut einen Adapter, falls das Dokument ein bekanntes Turniersystem nutzt
-     * und das angegebene Sheet existiert. Liest die Anzeige-Flags
-     * {@code Meldeliste Teamname} / {@code Meldeliste Vereinsname} aus den
-     * Dokument-Properties; defensiv {@code false} bei nicht gesetzt.
+     * Baut einen Adapter aus expliziten Layout-Werten (Formation und Anzeige-Flags),
+     * die der Aufrufer aus dem system-spezifischen KonfigurationSheet gelesen hat.
+     * Vermeidet Property-Lookups direkt im Adapter — die Quelle der Wahrheit ist
+     * jeweils der zum Turniersystem passende {@code *KonfigurationSheet}.
      */
-    static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName, Formation formation) {
+    static Optional<MeldelisteZiel> fuer(WorkingSpreadsheet ws, String sheetName,
+            TurnierSystem ts, Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {
         try {
-            DocumentPropertiesHelper props = new DocumentPropertiesHelper(ws);
-            TurnierSystem ts = props.getTurnierSystemAusDocument();
             if (ts == null || ts == TurnierSystem.KEIN) {
                 return Optional.empty();
             }
@@ -120,11 +114,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
                 return Optional.empty();
             }
             int datenZeile = ermittleErsteDatenZeile(sh, sheet);
-            boolean teamname    = FLAG_AN.equalsIgnoreCase(props.getStringProperty(PROP_TEAMNAME, ""));
-            boolean vereinsname = FLAG_AN.equalsIgnoreCase(props.getStringProperty(PROP_VEREINSNAME, ""));
             return Optional.of(new SheetMeldelisteAdapter(
                     ws.getWorkingSpreadsheetDocument(), sheet, sh, ts, formation, datenZeile,
-                    teamname, vereinsname));
+                    teamnameAktiv, vereinsnameAktiv));
         } catch (Exception e) {
             logger.warn("Adapter-Erkennung fehlgeschlagen", e);
             return Optional.empty();
