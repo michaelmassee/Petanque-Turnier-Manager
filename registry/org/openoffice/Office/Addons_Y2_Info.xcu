@@ -150,10 +150,10 @@
 									<value xml:lang="nl">Projectpagina openen in browser</value>
 								</prop>
 								<prop oor:name="URL">
-									<value>https://michaelmassee.github.io/Petanque-Turnier-Manager/</value>
+									<value>ptm:projekt_seite_oeffnen</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
-									<value>_blank</value>
+									<value>_self</value>
 								</prop>
 							</node>
 
