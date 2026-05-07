@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +33,7 @@ import de.petanqueturniermanager.spielerdb.SpielerDatensatz;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 import de.petanqueturniermanager.spielerdb.SpielerRepository;
+import de.petanqueturniermanager.spielerdb.matching.SpielerMatchKeyNormalizer;
 import de.petanqueturniermanager.spielerdb.VereinDatensatz;
 import de.petanqueturniermanager.spielerdb.VereinRepository;
 
@@ -167,11 +167,7 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
     }
 
     private static String matchSchluessel(String vorname, String nachname, @Nullable String verein) {
-        return norm(vorname) + "|" + norm(nachname) + "|" + norm(verein == null ? "" : verein);
-    }
-
-    private static String norm(String s) {
-        return s.strip().toLowerCase(Locale.ROOT);
+        return SpielerMatchKeyNormalizer.spielerSchluesselMitVereinName(vorname, nachname, verein);
     }
 
     private static String formatZeile(FehlendeSpielerDaten d) {
@@ -255,7 +251,7 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
         if (vereinName == null || vereinName.isEmpty()) {
             return null;
         }
-        String key = norm(vereinName);
+        String key = SpielerMatchKeyNormalizer.vereinSchluessel(vereinName);
         Integer cached = cache.get(key);
         if (cached != null) {
             return cached;

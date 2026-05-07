@@ -1,6 +1,5 @@
 package de.petanqueturniermanager.spielerdb.ui;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -19,14 +18,6 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
-import com.sun.star.ui.dialogs.ExecutableDialogResults;
-import com.sun.star.ui.dialogs.ExtendedFilePickerElementIds;
-import com.sun.star.ui.dialogs.FilePicker;
-import com.sun.star.ui.dialogs.FolderPicker;
-import com.sun.star.ui.dialogs.TemplateDescription;
-import com.sun.star.ui.dialogs.XFilePicker3;
-import com.sun.star.ui.dialogs.XFilePickerControlAccess;
-import com.sun.star.ui.dialogs.XFolderPicker2;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
@@ -39,7 +30,7 @@ import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.export.AllExportFilter;
 import de.petanqueturniermanager.spielerdb.export.ExportEntity;
-import de.petanqueturniermanager.spielerdb.export.ExportFormat;
+import de.petanqueturniermanager.spielerdb.SpielerDbDateiFormat;
 import de.petanqueturniermanager.spielerdb.export.ExportRequest;
 import de.petanqueturniermanager.spielerdb.export.ExportSettings;
 import de.petanqueturniermanager.spielerdb.export.SpielerDbCalcExporter;
@@ -66,7 +57,7 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
     private static final int B = 380;
     private static final int H = 220;
 
-    private static final ExportFormat[] FORMATE = ExportFormat.values();
+    private static final SpielerDbDateiFormat[] FORMATE = SpielerDbDateiFormat.values();
 
     private final SpielerDbExportLoader loader;
     private final SpielerDbConnection dbConnection;
@@ -123,17 +114,17 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         c.registriereActionListener("btnWaehlen", this::beimWaehlen);
         c.registriereActionListener("btnExport", this::beimExport);
 
-        wendeFormatAn(ExportFormat.CSV);
+        wendeFormatAn(SpielerDbDateiFormat.CSV);
     }
 
-    private ExportFormat aktuellesFormat() {
+    private SpielerDbDateiFormat aktuellesFormat() {
         UnoControlsHelper c = this.controls;
         if (c == null) {
-            return ExportFormat.CSV;
+            return SpielerDbDateiFormat.CSV;
         }
         short idx = c.ausgewaehlterIndex("cmbFormat");
         if (idx < 0 || idx >= FORMATE.length) {
-            return ExportFormat.CSV;
+            return SpielerDbDateiFormat.CSV;
         }
         return FORMATE[idx];
     }
@@ -142,12 +133,12 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         wendeFormatAn(aktuellesFormat());
     }
 
-    private void wendeFormatAn(ExportFormat format) {
+    private void wendeFormatAn(SpielerDbDateiFormat format) {
         UnoControlsHelper c = this.controls;
         if (c == null) {
             return;
         }
-        boolean scopeAktiv = format != ExportFormat.SQLITE_BACKUP;
+        boolean scopeAktiv = format != SpielerDbDateiFormat.SQLITE_BACKUP;
         c.enabled("cbSpieler", scopeAktiv);
         c.enabled("cbVereine", scopeAktiv);
         c.enabled("cbLabels", scopeAktiv);
@@ -157,7 +148,7 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
     }
 
     private void beimWaehlen() {
-        ExportFormat format = aktuellesFormat();
+        SpielerDbDateiFormat format = aktuellesFormat();
         try {
             String gewaehlt = oeffnePicker(format);
             if (gewaehlt != null) {
@@ -174,67 +165,14 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
     }
 
     @Nullable
-    private String oeffnePicker(ExportFormat format) throws com.sun.star.uno.Exception {
-        if (format.zielTyp() == ExportFormat.ZielTyp.ORDNER) {
-            return oeffneOrdnerPicker(format);
-        }
-        return oeffneDateiPicker(format);
-    }
-
-    @Nullable
-    private String oeffneOrdnerPicker(ExportFormat format) {
-        XFolderPicker2 picker = FolderPicker.create(xContext);
-        picker.setTitle(I18n.get("spielerdb.export.dialog.titel"));
+    private String oeffnePicker(SpielerDbDateiFormat format) throws com.sun.star.uno.Exception {
+        String titel = I18n.get("spielerdb.export.dialog.titel");
         String letzter = settings.letzterPfad(format);
-        if (letzter != null && !letzter.isEmpty()) {
-            picker.setDisplayDirectory(pfadAlsUrl(letzter));
+        if (format.zielTyp() == SpielerDbDateiFormat.ZielTyp.ORDNER) {
+            return SpielerDbPickerHelfer.oeffneOrdnerPicker(xContext, titel, letzter);
         }
-        short res = picker.execute();
-        if (res != ExecutableDialogResults.OK) {
-            return null;
-        }
-        return urlAlsPfad(picker.getDirectory());
-    }
-
-    @Nullable
-    private String oeffneDateiPicker(ExportFormat format) throws com.sun.star.uno.Exception {
-        XFilePicker3 picker = FilePicker.createWithMode(xContext,
-                TemplateDescription.FILESAVE_AUTOEXTENSION);
-        picker.setTitle(I18n.get("spielerdb.export.dialog.titel"));
-        picker.appendFilter(format.anzeigeName(), "*." + format.defaultEndung());
-        XFilePickerControlAccess access = Lo.qi(XFilePickerControlAccess.class, picker);
-        if (access != null) {
-            try {
-                access.setValue(ExtendedFilePickerElementIds.CHECKBOX_AUTOEXTENSION,
-                        (short) 0, Boolean.TRUE);
-            } catch (RuntimeException e) {
-                // optional — Picker funktioniert auch ohne explizite AutoExtension.
-                logger.debug("AutoExtension-Property konnte nicht gesetzt werden: {}", e.getMessage());
-            }
-        }
-        String letzter = settings.letzterPfad(format);
-        if (letzter != null && !letzter.isEmpty()) {
-            Path p = Path.of(letzter);
-            Path eltern = p.getParent();
-            if (eltern != null) {
-                picker.setDisplayDirectory(pfadAlsUrl(eltern.toString()));
-            }
-            Path dateinameP = p.getFileName();
-            if (dateinameP != null) {
-                picker.setDefaultName(dateinameP.toString());
-            }
-        } else {
-            picker.setDefaultName("spielerdb." + format.defaultEndung());
-        }
-        short res = picker.execute();
-        if (res != ExecutableDialogResults.OK) {
-            return null;
-        }
-        String[] dateien = picker.getFiles();
-        if (dateien.length == 0) {
-            return null;
-        }
-        return urlAlsPfad(dateien[0]);
+        return SpielerDbPickerHelfer.oeffneDateiPicker(xContext, titel, format, letzter,
+                SpielerDbPickerHelfer.PickerModus.SPEICHERN);
     }
 
     private void beimExport() {
@@ -242,21 +180,21 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         if (c == null) {
             return;
         }
-        ExportFormat format = aktuellesFormat();
+        SpielerDbDateiFormat format = aktuellesFormat();
         String pfadText = c.leseText("edZiel").strip();
         if (pfadText.isEmpty()) {
             zeigeFehler(I18n.get("spielerdb.export.fehler.kein_pfad"));
             return;
         }
         EnumSet<ExportEntity> scope = leseScope(format, c);
-        if (format != ExportFormat.SQLITE_BACKUP && scope.isEmpty()) {
+        if (format != SpielerDbDateiFormat.SQLITE_BACKUP && scope.isEmpty()) {
             zeigeFehler(I18n.get("spielerdb.export.fehler.kein_scope"));
             return;
         }
 
         Path target = Path.of(pfadText);
         ExportRequest request = new ExportRequest(format,
-                format == ExportFormat.SQLITE_BACKUP ? EnumSet.allOf(ExportEntity.class) : scope,
+                format == SpielerDbDateiFormat.SQLITE_BACKUP ? EnumSet.allOf(ExportEntity.class) : scope,
                 new AllExportFilter(), target);
 
         try {
@@ -272,15 +210,15 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         }
     }
 
-    private SpielerDbExportData ladeDaten(ExportFormat format, EnumSet<ExportEntity> scope)
+    private SpielerDbExportData ladeDaten(SpielerDbDateiFormat format, EnumSet<ExportEntity> scope)
             throws SpielerDbException {
-        if (format == ExportFormat.SQLITE_BACKUP) {
+        if (format == SpielerDbDateiFormat.SQLITE_BACKUP) {
             return loader.lade(EnumSet.noneOf(ExportEntity.class), appVersion());
         }
         return loader.lade(scope, appVersion());
     }
 
-    private SpielerDbExporter exporterFuer(ExportFormat format) {
+    private SpielerDbExporter exporterFuer(SpielerDbDateiFormat format) {
         return switch (format) {
             case CSV -> new SpielerDbCsvExporter();
             case JSON -> new SpielerDbJsonExporter();
@@ -289,8 +227,8 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         };
     }
 
-    private static EnumSet<ExportEntity> leseScope(ExportFormat format, UnoControlsHelper c) {
-        if (format == ExportFormat.SQLITE_BACKUP) {
+    private static EnumSet<ExportEntity> leseScope(SpielerDbDateiFormat format, UnoControlsHelper c) {
+        if (format == SpielerDbDateiFormat.SQLITE_BACKUP) {
             return EnumSet.noneOf(ExportEntity.class);
         }
         EnumSet<ExportEntity> scope = EnumSet.noneOf(ExportEntity.class);
@@ -306,12 +244,12 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         return scope;
     }
 
-    private void zeigeErfolg(ExportFormat format, EnumSet<ExportEntity> scope, Path target,
+    private void zeigeErfolg(SpielerDbDateiFormat format, EnumSet<ExportEntity> scope, Path target,
             SpielerDbExportData data) {
         List<String> zeilen = new ArrayList<>();
         zeilen.add(I18n.get("spielerdb.export.fertig.kopf", target.toString()));
         zeilen.add("");
-        if (format == ExportFormat.SQLITE_BACKUP) {
+        if (format == SpielerDbDateiFormat.SQLITE_BACKUP) {
             zeilen.add(I18n.get("spielerdb.export.fertig.sqlite"));
         } else {
             if (scope.contains(ExportEntity.SPIELER)) {
@@ -347,22 +285,6 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
         } catch (RuntimeException e) {
             logger.debug("Plugin-Version nicht verfügbar: {}", e.getMessage());
             return null;
-        }
-    }
-
-    private static String pfadAlsUrl(String absoluterPfad) {
-        try {
-            return Path.of(absoluterPfad).toAbsolutePath().toUri().toURL().toExternalForm();
-        } catch (java.net.MalformedURLException | RuntimeException e) {
-            return "";
-        }
-    }
-
-    private static String urlAlsPfad(String url) {
-        try {
-            return Path.of(URI.create(url)).toString();
-        } catch (RuntimeException e) {
-            return url;
         }
     }
 }

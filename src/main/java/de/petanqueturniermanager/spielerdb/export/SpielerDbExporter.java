@@ -4,7 +4,7 @@ import de.petanqueturniermanager.spielerdb.SpielerDbException;
 
 /**
  * Schreibt {@link SpielerDbExportData} in eines der unterstützten Formate.
- * Eine Implementierung pro {@link ExportFormat}.
+ * Eine Implementierung pro {@link de.petanqueturniermanager.spielerdb.SpielerDbDateiFormat}.
  */
 public interface SpielerDbExporter {
 
