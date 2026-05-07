@@ -77,7 +77,7 @@ class VereinRepositoryTest {
     @Test
     void delete_mitSpielern_wirftInBenutzungException() throws Exception {
         VereinDatensatz v = repo.insert("BC Linden");
-        spielerRepo.insert(SpielerDatensatz.neu("Max", "Mustermann", v.nr(), null));
+        spielerRepo.insert(SpielerDatensatz.neu("Max", "Mustermann", v.nr(), null, null));
 
         assertThatThrownBy(() -> repo.delete(v.nr()))
                 .isInstanceOf(InBenutzungException.class);
@@ -88,8 +88,8 @@ class VereinRepositoryTest {
     void countSpieler_zaehltZuordnungen() throws Exception {
         VereinDatensatz v = repo.insert("BC Linden");
         assertThat(repo.countSpieler(v.nr())).isZero();
-        spielerRepo.insert(SpielerDatensatz.neu("A", "X", v.nr(), null));
-        spielerRepo.insert(SpielerDatensatz.neu("B", "Y", v.nr(), null));
+        spielerRepo.insert(SpielerDatensatz.neu("A", "X", v.nr(), null, null));
+        spielerRepo.insert(SpielerDatensatz.neu("B", "Y", v.nr(), null, null));
         assertThat(repo.countSpieler(v.nr())).isEqualTo(2);
     }
 

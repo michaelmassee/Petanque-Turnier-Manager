@@ -20,8 +20,11 @@ import org.jspecify.annotations.Nullable;
 public final class SpielerRepository {
 
     private static final String SELECT_JOIN =
-            "SELECT s.NR, s.VORNAME, s.NACHNAME, s.VEREIN_NR, s.LIZENZNR, v.NAME AS VEREIN_NAME "
-                    + "FROM SPIELER s LEFT JOIN VEREIN v ON s.VEREIN_NR = v.NR ";
+            "SELECT s.NR, s.VORNAME, s.NACHNAME, s.VEREIN_NR, s.LABEL_NR, s.LIZENZNR, "
+                    + "v.NAME AS VEREIN_NAME, l.NAME AS LABEL_NAME "
+                    + "FROM SPIELER s "
+                    + "LEFT JOIN VEREIN v ON s.VEREIN_NR = v.NR "
+                    + "LEFT JOIN LABEL l ON s.LABEL_NR = l.NR ";
 
     private final Connection connection;
 
@@ -144,16 +147,19 @@ public final class SpielerRepository {
             throw new SpielerDbException("Vorname und Nachname sind Pflichtfelder");
         }
         String lizenz = normLizenz(neu.lizenznr());
-        String sql = "INSERT INTO SPIELER (VORNAME, NACHNAME, VEREIN_NR, LIZENZNR) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO SPIELER (VORNAME, NACHNAME, VEREIN_NR, LABEL_NR, LIZENZNR) "
+                + "VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, vorname);
             ps.setString(2, nachname);
             setNullableInt(ps, 3, neu.vereinNr());
-            setNullableString(ps, 4, lizenz);
+            setNullableInt(ps, 4, neu.labelNr());
+            setNullableString(ps, 5, lizenz);
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
-                    return new SpielerDatensatz(keys.getInt(1), vorname, nachname, neu.vereinNr(), lizenz);
+                    return new SpielerDatensatz(keys.getInt(1), vorname, nachname,
+                            neu.vereinNr(), neu.labelNr(), lizenz);
                 }
                 throw new SpielerDbException("Insert lieferte keinen Schlüssel");
             }
@@ -162,7 +168,9 @@ public final class SpielerRepository {
                 throw new LizenzDuplikatException("Lizenznummer existiert bereits: " + lizenz, e);
             }
             if (istFkVerletzung(e)) {
-                throw new SpielerDbException("Verein-Referenz ungültig: " + neu.vereinNr(), e);
+                throw new SpielerDbException(
+                        "Verein-/Label-Referenz ungültig: vereinNr=" + neu.vereinNr()
+                                + ", labelNr=" + neu.labelNr(), e);
             }
             throw new SpielerDbException("Spieler-Insert fehlgeschlagen", e);
         }
@@ -179,13 +187,15 @@ public final class SpielerRepository {
             throw new SpielerDbException("Vorname und Nachname sind Pflichtfelder");
         }
         String lizenz = normLizenz(datensatz.lizenznr());
-        String sql = "UPDATE SPIELER SET VORNAME = ?, NACHNAME = ?, VEREIN_NR = ?, LIZENZNR = ? WHERE NR = ?";
+        String sql = "UPDATE SPIELER SET VORNAME = ?, NACHNAME = ?, VEREIN_NR = ?, "
+                + "LABEL_NR = ?, LIZENZNR = ? WHERE NR = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, vorname);
             ps.setString(2, nachname);
             setNullableInt(ps, 3, datensatz.vereinNr());
-            setNullableString(ps, 4, lizenz);
-            ps.setInt(5, nr);
+            setNullableInt(ps, 4, datensatz.labelNr());
+            setNullableString(ps, 5, lizenz);
+            ps.setInt(6, nr);
             int n = ps.executeUpdate();
             if (n == 0) {
                 throw new SpielerDbException("Spieler nicht gefunden: nr=" + nr);
@@ -195,7 +205,9 @@ public final class SpielerRepository {
                 throw new LizenzDuplikatException("Lizenznummer existiert bereits: " + lizenz, e);
             }
             if (istFkVerletzung(e)) {
-                throw new SpielerDbException("Verein-Referenz ungültig: " + datensatz.vereinNr(), e);
+                throw new SpielerDbException(
+                        "Verein-/Label-Referenz ungültig: vereinNr=" + datensatz.vereinNr()
+                                + ", labelNr=" + datensatz.labelNr(), e);
             }
             throw new SpielerDbException("Spieler-Update fehlgeschlagen: nr=" + nr, e);
         }
@@ -229,8 +241,12 @@ public final class SpielerRepository {
         int vereinNrRaw = rs.getInt("VEREIN_NR");
         Integer vereinNr = rs.wasNull() ? null : Integer.valueOf(vereinNrRaw);
         String vereinName = rs.getString("VEREIN_NAME");
+        int labelNrRaw = rs.getInt("LABEL_NR");
+        Integer labelNr = rs.wasNull() ? null : Integer.valueOf(labelNrRaw);
+        String labelName = rs.getString("LABEL_NAME");
         String lizenznr = rs.getString("LIZENZNR");
-        return new SpielerMitVerein(nr, vorname, nachname, vereinNr, vereinName, lizenznr);
+        return new SpielerMitVerein(nr, vorname, nachname,
+                vereinNr, vereinName, labelNr, labelName, lizenznr);
     }
 
     @Nullable

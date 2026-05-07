@@ -76,6 +76,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- A0A4: Labels-Verwaltung -->
+							<node oor:name="A0A4" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Labels-Verwaltung…</value>
+									<value xml:lang="en">Label management…</value>
+									<value xml:lang="es">Gestión de etiquetas…</value>
+									<value xml:lang="fr">Gestion des labels…</value>
+									<value xml:lang="nl">Labelbeheer…</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_labels</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

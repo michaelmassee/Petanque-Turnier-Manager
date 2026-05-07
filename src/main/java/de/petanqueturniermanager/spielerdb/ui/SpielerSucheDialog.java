@@ -30,6 +30,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
+import de.petanqueturniermanager.spielerdb.LabelRepository;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel.MeldelisteSchreibException;
 import de.petanqueturniermanager.spielerdb.SpielerDatensatz;
@@ -65,7 +66,9 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private static final int FILTER_Y = 38, FILTER_W = 250, FILTER_H = 10;
     private static final int VEREIN_LABEL_X = 8, VEREIN_LABEL_Y = 54, VEREIN_LABEL_W = 35;
     private static final int VEREIN_X = 45, VEREIN_Y = 52, VEREIN_W = 315, VEREIN_H = 12;
-    private static final int LIST_X = 8, LIST_Y = 68, LIST_W = 350, LIST_H = 227;
+    private static final int LBLFILTER_LABEL_X = 8, LBLFILTER_LABEL_Y = 70, LBLFILTER_LABEL_W = 35;
+    private static final int LBLFILTER_X = 45, LBLFILTER_Y = 68, LBLFILTER_W = 315, LBLFILTER_H = 12;
+    private static final int LIST_X = 8, LIST_Y = 84, LIST_W = 350, LIST_H = 211;
     private static final int BTN_X = 365, BTN_W = 165, BTN_H = 14;
     private static final int TEAM_LIST_H = 120;
     private static final int FOOTER_Y = 305;
@@ -73,6 +76,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
 
     private final SpielerRepository spielerRepo;
     private final VereinRepository vereinRepo;
+    private final LabelRepository labelRepo;
     @Nullable private final MeldelisteZiel ziel;
 
     @Nullable private UnoControlsHelper controls;
@@ -95,12 +99,16 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
      * </ul>
      */
     private List<String> vereinsnamenSortiert = List.of();
+    /** Item-Liste der Label-Filter-Dropdown — analog zu {@link #vereinsnamenSortiert}. */
+    private List<String> labelnamenSortiert = List.of();
 
     public SpielerSucheDialog(XComponentContext xContext, SpielerRepository spielerRepo,
-            VereinRepository vereinRepo, @Nullable MeldelisteZiel ziel) {
+            VereinRepository vereinRepo, LabelRepository labelRepo,
+            @Nullable MeldelisteZiel ziel) {
         super(xContext);
         this.spielerRepo = spielerRepo;
         this.vereinRepo = vereinRepo;
+        this.labelRepo = labelRepo;
         this.ziel = ziel;
     }
 
@@ -154,6 +162,14 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         controls.dropdownListBox("lstFilterVerein",
                 ladeVereinsFilterItems(),
                 VEREIN_X, VEREIN_Y, VEREIN_W, VEREIN_H);
+
+        // Label-Filter (Dropdown).
+        controls.fixedText("lblFilterLabel",
+                I18n.get("spielerdb.suche.filter.label.label"),
+                LBLFILTER_LABEL_X, LBLFILTER_LABEL_Y, LBLFILTER_LABEL_W, 10);
+        controls.dropdownListBox("lstFilterLabel",
+                ladeLabelFilterItems(),
+                LBLFILTER_X, LBLFILTER_Y, LBLFILTER_W, LBLFILTER_H);
 
         // Trefferliste
         controls.listBox("lstTreffer", LIST_X, LIST_Y, LIST_W, LIST_H);
@@ -218,6 +234,8 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         }
         // Vereins-Filter: Auswahl-Wechsel triggert Re-Render der Trefferliste.
         controls.registriereListBoxAuswahl("lstFilterVerein",
+                this::beimSuchTextGeaendert, () -> { /* Doppelklick ohne Aktion */ });
+        controls.registriereListBoxAuswahl("lstFilterLabel",
                 this::beimSuchTextGeaendert, () -> { /* Doppelklick ohne Aktion */ });
 
         // Initial-Trefferliste
@@ -296,15 +314,18 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         boolean filterMeldeliste = istUebernahmeModus()
                 && c.istAngekreuzt("chkFilterGemeldet")
                 && !bereitsGemeldeteNormiert.isEmpty();
-        VereinFilter vereinFilter = aktuellerVereinFilter(c);
-        if (teamAuswahlNr.isEmpty() && !filterMeldeliste && vereinFilter.istAlle()) {
+        StammdatenFilter vereinFilter = aktuellerVereinFilter(c);
+        StammdatenFilter labelFilter = aktuellerLabelFilter(c);
+        if (teamAuswahlNr.isEmpty() && !filterMeldeliste
+                && vereinFilter.istAlle() && labelFilter.istAlle()) {
             return treffer;
         }
         return treffer.stream()
                 .filter(s -> !teamAuswahlNr.contains(s.nr()))
                 .filter(s -> !filterMeldeliste
                         || !bereitsGemeldeteNormiert.contains(norm(s.spielernameVollstaendig())))
-                .filter(vereinFilter::passt)
+                .filter(s -> vereinFilter.passt(s.vereinNr(), s.vereinName()))
+                .filter(s -> labelFilter.passt(s.labelNr(), s.labelName()))
                 .collect(Collectors.toUnmodifiableList());
     }
 
@@ -323,42 +344,80 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
             logger.warn("Vereine für Filter laden fehlgeschlagen", e);
             vereinsnamenSortiert = List.of();
         }
-        List<String> items = new ArrayList<>(vereinsnamenSortiert.size() + 2);
-        items.add(I18n.get("spielerdb.suche.filter.verein.alle"));
-        items.add(I18n.get("spielerdb.suche.filter.verein.ohne"));
-        items.addAll(vereinsnamenSortiert);
+        return baueFilterItems(vereinsnamenSortiert,
+                I18n.get("spielerdb.suche.filter.verein.alle"),
+                I18n.get("spielerdb.suche.filter.verein.ohne"));
+    }
+
+    private String[] ladeLabelFilterItems() {
+        try {
+            labelnamenSortiert = labelRepo.findAll().stream()
+                    .map(l -> l.name())
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
+                    .collect(Collectors.toUnmodifiableList());
+        } catch (SpielerDbException e) {
+            logger.warn("Labels für Filter laden fehlgeschlagen", e);
+            labelnamenSortiert = List.of();
+        }
+        return baueFilterItems(labelnamenSortiert,
+                I18n.get("spielerdb.suche.filter.label.alle"),
+                I18n.get("spielerdb.suche.filter.label.ohne"));
+    }
+
+    private static String[] baueFilterItems(List<String> namen, String labelAlle, String labelOhne) {
+        List<String> items = new ArrayList<>(namen.size() + 2);
+        items.add(labelAlle);
+        items.add(labelOhne);
+        items.addAll(namen);
         return items.toArray(String[]::new);
     }
 
-    private VereinFilter aktuellerVereinFilter(UnoControlsHelper c) {
-        short idx = c.ausgewaehlterIndex("lstFilterVerein");
-        if (idx <= 0) {
-            return VereinFilter.alle();
-        }
-        if (idx == 1) {
-            return VereinFilter.ohneVerein();
-        }
-        int vereinIdx = idx - 2;
-        if (vereinIdx < 0 || vereinIdx >= vereinsnamenSortiert.size()) {
-            return VereinFilter.alle();
-        }
-        return VereinFilter.name(vereinsnamenSortiert.get(vereinIdx));
+    private StammdatenFilter aktuellerVereinFilter(UnoControlsHelper c) {
+        return baueFilter(c, "lstFilterVerein", vereinsnamenSortiert);
     }
 
-    /** Repräsentiert die Auswahl der Vereins-Filter-Dropdown. */
-    private record VereinFilter(@Nullable String name, boolean nurOhne) {
-        static VereinFilter alle() { return new VereinFilter(null, false); }
-        static VereinFilter ohneVerein() { return new VereinFilter(null, true); }
-        static VereinFilter name(String name) { return new VereinFilter(name, false); }
+    private StammdatenFilter aktuellerLabelFilter(UnoControlsHelper c) {
+        return baueFilter(c, "lstFilterLabel", labelnamenSortiert);
+    }
+
+    private static StammdatenFilter baueFilter(UnoControlsHelper c, String controlName,
+            List<String> namenSortiert) {
+        short idx = c.ausgewaehlterIndex(controlName);
+        if (idx <= 0) {
+            return StammdatenFilter.alle();
+        }
+        if (idx == 1) {
+            return StammdatenFilter.ohne();
+        }
+        int nameIdx = idx - 2;
+        if (nameIdx < 0 || nameIdx >= namenSortiert.size()) {
+            return StammdatenFilter.alle();
+        }
+        return StammdatenFilter.name(namenSortiert.get(nameIdx));
+    }
+
+    /**
+     * Generischer Filter für die Stammdaten-Dropdowns „Verein" und „Label":
+     * <ul>
+     *   <li>{@link #alle()} — kein Filter</li>
+     *   <li>{@link #ohne()} — nur Spieler mit {@code referenzNr == null}</li>
+     *   <li>{@link #name(String)} — nur Spieler mit übereinstimmendem Namen
+     *       (case-insensitiv).</li>
+     * </ul>
+     */
+    private record StammdatenFilter(@Nullable String name, boolean nurOhne) {
+        static StammdatenFilter alle() { return new StammdatenFilter(null, false); }
+        static StammdatenFilter ohne() { return new StammdatenFilter(null, true); }
+        static StammdatenFilter name(String name) { return new StammdatenFilter(name, false); }
         boolean istAlle() { return name == null && !nurOhne; }
-        boolean passt(SpielerMitVerein s) {
+        boolean passt(@Nullable Integer referenzNr, @Nullable String referenzName) {
             if (istAlle()) {
                 return true;
             }
             if (nurOhne) {
-                return s.vereinNr() == null;
+                return referenzNr == null;
             }
-            return name != null && name.equalsIgnoreCase(s.vereinName());
+            return name != null && name.equalsIgnoreCase(referenzName);
         }
     }
 
@@ -425,7 +484,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
 
     private void beimNeu() {
         try {
-            SpielerErfassenDialog d = new SpielerErfassenDialog(xContext, spielerRepo, vereinRepo, null);
+            SpielerErfassenDialog d = new SpielerErfassenDialog(xContext, spielerRepo, vereinRepo, labelRepo, null);
             Optional<SpielerDatensatz> erg = d.zeigen();
             if (erg.isPresent()) {
                 aktualisiereSucheNachAenderung();
@@ -441,7 +500,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
             return;
         }
         try {
-            SpielerErfassenDialog d = new SpielerErfassenDialog(xContext, spielerRepo, vereinRepo, sel.get());
+            SpielerErfassenDialog d = new SpielerErfassenDialog(xContext, spielerRepo, vereinRepo, labelRepo, sel.get());
             Optional<SpielerDatensatz> erg = d.zeigen();
             if (erg.isPresent()) {
                 aktualisiereSucheNachAenderung();

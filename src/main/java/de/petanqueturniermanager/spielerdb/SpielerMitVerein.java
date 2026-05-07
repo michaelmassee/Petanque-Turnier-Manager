@@ -4,7 +4,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Anzeige-Record für die Trefferliste der Suche: Spielerfelder denormalisiert
- * mit Vereinsname (aus dem JOIN), um N+1-Queries zu vermeiden.
+ * mit Vereins- und Label-Name (aus den JOINs), um N+1-Queries zu vermeiden.
  */
 public record SpielerMitVerein(
         int nr,
@@ -12,6 +12,8 @@ public record SpielerMitVerein(
         String nachname,
         @Nullable Integer vereinNr,
         @Nullable String vereinName,
+        @Nullable Integer labelNr,
+        @Nullable String labelName,
         @Nullable String lizenznr) {
 
     /** Anzeigeform für die Meldeliste-Übernahme (Default: "Vorname Nachname"). */
