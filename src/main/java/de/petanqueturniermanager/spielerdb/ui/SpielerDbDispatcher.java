@@ -5,10 +5,13 @@ import java.util.Optional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -19,6 +22,7 @@ import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.spielerdb.VereinRepository;
+import de.petanqueturniermanager.spielerdb.export.SpielerDbExportLoader;
 
 /**
  * Bindeglied zwischen {@link de.petanqueturniermanager.comp.ProtocolHandler}
@@ -71,6 +75,7 @@ public final class SpielerDbDispatcher {
         if (conn.isEmpty()) {
             return;
         }
+        aktiviereMeldelisteSheet(ws);
         ProcessBox pb = ProcessBox.from();
         boolean warSichtbar = pb.istSichtbar();
         if (warSichtbar) {
@@ -137,6 +142,22 @@ public final class SpielerDbDispatcher {
         }
     }
 
+    public static void exportSpielerDb(WorkingSpreadsheet ws) {
+        Optional<SpielerDbConnection> conn = oeffneOderMelde(ws.getxContext());
+        if (conn.isEmpty()) {
+            return;
+        }
+        try {
+            SpielerDbExportLoader exportLoader = new SpielerDbExportLoader(
+                    new SpielerRepository(conn.get()),
+                    new VereinRepository(conn.get()),
+                    new LabelRepository(conn.get()));
+            new SpielerDbExportDialog(ws.getxContext(), exportLoader, conn.get()).zeigen();
+        } catch (com.sun.star.uno.Exception | RuntimeException e) {
+            logger.error("Spieler-DB-Export-Dialog fehlgeschlagen", e);
+        }
+    }
+
     public static void oeffneLabelVerwaltung(WorkingSpreadsheet ws) {
         Optional<SpielerDbConnection> conn = oeffneOderMelde(ws.getxContext());
         if (conn.isEmpty()) {
@@ -147,6 +168,24 @@ public final class SpielerDbDispatcher {
                     new LabelRepository(conn.get())).zeigen();
         } catch (com.sun.star.uno.Exception e) {
             logger.error("Label-Verwalten-Dialog fehlgeschlagen", e);
+        }
+    }
+
+    /**
+     * Aktiviert das Meldeliste-Sheet im Vordergrund, damit der Anwender beim
+     * Öffnen des Übernahme-Dialogs den Schreibkontext sieht. Fehler werden
+     * stillschweigend geloggt — die Aktivierung ist UX-Komfort und darf den
+     * Dialog-Workflow nicht blockieren.
+     */
+    private static void aktiviereMeldelisteSheet(WorkingSpreadsheet ws) {
+        try {
+            SheetHelper sh = new SheetHelper(ws);
+            XSpreadsheet meldeliste = sh.findByName(SheetNamen.meldeliste());
+            if (meldeliste != null) {
+                sh.setActiveSheet(meldeliste);
+            }
+        } catch (RuntimeException e) {
+            logger.warn("Meldeliste-Sheet konnte nicht aktiviert werden", e);
         }
     }
 

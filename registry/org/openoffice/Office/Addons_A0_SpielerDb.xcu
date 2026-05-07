@@ -31,11 +31,11 @@
 							<!-- A0A1: Spieler-Verwaltung -->
 							<node oor:name="A0A1" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Spieler-Verwaltung…</value>
-									<value xml:lang="en">Player management…</value>
-									<value xml:lang="es">Gestión de jugadores…</value>
-									<value xml:lang="fr">Gestion des joueurs…</value>
-									<value xml:lang="nl">Spelersbeheer…</value>
+									<value xml:lang="de">Spieler-Verwaltung</value>
+									<value xml:lang="en">Player management</value>
+									<value xml:lang="es">Gestión de jugadores</value>
+									<value xml:lang="fr">Gestion des joueurs</value>
+									<value xml:lang="nl">Spelersbeheer</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spielerdb_oeffnen</value>
@@ -47,11 +47,11 @@
 							<!-- A0A2: In Meldeliste übernehmen -->
 							<node oor:name="A0A2" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">In Meldeliste übernehmen…</value>
-									<value xml:lang="en">Add players to entry list…</value>
-									<value xml:lang="es">Añadir a la inscripción…</value>
-									<value xml:lang="fr">Ajouter à la liste…</value>
-									<value xml:lang="nl">Spelers naar inschrijflijst…</value>
+									<value xml:lang="de">In Meldeliste übernehmen</value>
+									<value xml:lang="en">Add players to entry list</value>
+									<value xml:lang="es">Añadir a la inscripción</value>
+									<value xml:lang="fr">Ajouter à la liste</value>
+									<value xml:lang="nl">Spelers naar inschrijflijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spielerdb_in_meldeliste</value>
@@ -63,11 +63,11 @@
 							<!-- A0A3: Vereins-Verwaltung -->
 							<node oor:name="A0A3" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Vereins-Verwaltung…</value>
-									<value xml:lang="en">Club management…</value>
-									<value xml:lang="es">Gestión de clubes…</value>
-									<value xml:lang="fr">Gestion des clubs…</value>
-									<value xml:lang="nl">Verenigingsbeheer…</value>
+									<value xml:lang="de">Vereins-Verwaltung</value>
+									<value xml:lang="en">Club management</value>
+									<value xml:lang="es">Gestión de clubes</value>
+									<value xml:lang="fr">Gestion des clubs</value>
+									<value xml:lang="nl">Verenigingsbeheer</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spielerdb_vereine</value>
@@ -79,11 +79,11 @@
 							<!-- A0A4: Labels-Verwaltung -->
 							<node oor:name="A0A4" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Labels-Verwaltung…</value>
-									<value xml:lang="en">Label management…</value>
-									<value xml:lang="es">Gestión de etiquetas…</value>
-									<value xml:lang="fr">Gestion des labels…</value>
-									<value xml:lang="nl">Labelbeheer…</value>
+									<value xml:lang="de">Labels-Verwaltung</value>
+									<value xml:lang="en">Label management</value>
+									<value xml:lang="es">Gestión de etiquetas</value>
+									<value xml:lang="fr">Gestion des labels</value>
+									<value xml:lang="nl">Labelbeheer</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spielerdb_labels</value>
@@ -95,14 +95,30 @@
 							<!-- A0A5: Mit Meldeliste abgleichen -->
 							<node oor:name="A0A5" oor:op="replace">
 								<prop oor:name="Title">
-									<value xml:lang="de">Mit Meldeliste abgleichen…</value>
-									<value xml:lang="en">Sync with entry list…</value>
-									<value xml:lang="es">Sincronizar con la inscripción…</value>
-									<value xml:lang="fr">Synchroniser avec la liste…</value>
-									<value xml:lang="nl">Synchroniseren met inschrijflijst…</value>
+									<value xml:lang="de">Mit Meldeliste abgleichen</value>
+									<value xml:lang="en">Sync with entry list</value>
+									<value xml:lang="es">Sincronizar con la inscripción</value>
+									<value xml:lang="fr">Synchroniser avec la liste</value>
+									<value xml:lang="nl">Synchroniseren met inschrijflijst</value>
 								</prop>
 								<prop oor:name="URL">
 									<value>ptm:spielerdb_abgleich</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- A0A6: Exportieren -->
+							<node oor:name="A0A6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Exportieren</value>
+									<value xml:lang="en">Export</value>
+									<value xml:lang="es">Exportar</value>
+									<value xml:lang="fr">Exporter</value>
+									<value xml:lang="nl">Exporteren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_export</value>
 								</prop>
 								<prop oor:name="Target" oor:type="xs:string">
 									<value>_self</value>
