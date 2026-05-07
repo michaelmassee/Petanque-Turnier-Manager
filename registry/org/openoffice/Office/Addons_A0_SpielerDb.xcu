@@ -124,6 +124,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- A0A7: Importieren -->
+							<node oor:name="A0A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Importieren</value>
+									<value xml:lang="en">Import</value>
+									<value xml:lang="es">Importar</value>
+									<value xml:lang="fr">Importer</value>
+									<value xml:lang="nl">Importeren</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_import</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

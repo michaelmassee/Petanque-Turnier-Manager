@@ -304,6 +304,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_LABELS        = "spielerdb_labels";
 	public static final String CMD_SPIELERDB_ABGLEICH      = "spielerdb_abgleich";
 	public static final String CMD_SPIELERDB_EXPORT        = "spielerdb_export";
+	public static final String CMD_SPIELERDB_IMPORT        = "spielerdb_import";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -841,6 +842,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 						.exportSpielerDb(ws);
 				break;
+			case CMD_SPIELERDB_IMPORT:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.importSpielerDb(ws);
+				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				handleKonfiguration(command, ws);
 				break;
@@ -1297,7 +1302,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_VEREINE,
 				 CMD_SPIELERDB_LABELS,
 				 CMD_SPIELERDB_ABGLEICH,
-				 CMD_SPIELERDB_EXPORT                       -> true;
+				 CMD_SPIELERDB_EXPORT,
+				 CMD_SPIELERDB_IMPORT                       -> true;
 			// Übernahme in Meldeliste / Toolbar-Btn: nur wenn Turnier vorhanden
 			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
 			// Timer – zustandsabhängig

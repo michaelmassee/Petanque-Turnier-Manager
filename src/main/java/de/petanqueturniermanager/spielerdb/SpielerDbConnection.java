@@ -3,10 +3,13 @@ package de.petanqueturniermanager.spielerdb;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.apache.logging.log4j.LogManager;
@@ -242,6 +245,100 @@ public final class SpielerDbConnection implements AutoCloseable {
             return !connection.isClosed();
         } catch (SQLException e) {
             return false;
+        }
+    }
+
+    /**
+     * Liefert den absoluten Pfad zur DB-Datei, falls die JDBC-URL ein File-Backend
+     * ist (z.B. {@code jdbc:sqlite:/.../spieler.sqlite3}). Für In-Memory- oder
+     * andere Spezial-URLs wird {@code null} geliefert.
+     */
+    @Nullable
+    public Path dbDatei() {
+        if (jdbcUrl == null || !jdbcUrl.startsWith("jdbc:sqlite:")) {
+            return null;
+        }
+        String pfad = jdbcUrl.substring("jdbc:sqlite:".length());
+        if (pfad.isEmpty() || pfad.startsWith(":")) {
+            return null;
+        }
+        return Path.of(pfad);
+    }
+
+    /**
+     * Ersetzt die aktuelle Spieler-DB-Datei durch {@code quelle}. Schließt die
+     * aktuelle Connection, sichert die alte Datei nach
+     * {@code <db>.bak.<yyyyMMdd-HHmmss>}, kopiert die Quelle an die DB-Stelle
+     * und öffnet die Connection neu.
+     *
+     * <p>Pre-Conditions: aktuelle DB ist file-basiert, {@code quelle} ist eine
+     * SQLite-Datei (Magic-Bytes geprüft). Bei Fehler im Kopier-/Open-Schritt
+     * wird das Backup zurückgespielt und die Connection wieder geöffnet.
+     */
+    public static synchronized void restoreVon(Path quelle) throws SpielerDbException {
+        SpielerDbConnection inst = INSTANCE;
+        if (inst == null) {
+            throw new SpielerDbException("Spieler-DB ist nicht initialisiert");
+        }
+        Path zielDatei = inst.dbDatei();
+        if (zielDatei == null) {
+            throw new SpielerDbException("Restore unterstützt nur file-basierte SQLite-DBs");
+        }
+        pruefeSqliteMagic(quelle);
+
+        String zeitstempel = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        Path backup = zielDatei.resolveSibling(zielDatei.getFileName() + ".bak." + zeitstempel);
+
+        try {
+            inst.connection.close();
+        } catch (SQLException e) {
+            throw new SpielerDbException("Aktuelle DB-Connection nicht schließbar", e);
+        }
+        INSTANCE = null;
+
+        try {
+            if (Files.exists(zielDatei)) {
+                Files.move(zielDatei, backup, StandardCopyOption.REPLACE_EXISTING);
+            }
+            Files.copy(quelle, zielDatei, StandardCopyOption.REPLACE_EXISTING);
+            // Connection wird beim nächsten getInstance() neu aufgebaut.
+        } catch (IOException e) {
+            // Best-Effort-Wiederherstellung des alten Zustands.
+            try {
+                if (Files.exists(backup)) {
+                    Files.move(backup, zielDatei, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException restoreFehler) {
+                logger.error("Backup-Wiederherstellung fehlgeschlagen — manuelle Recovery von "
+                        + backup + " nötig", restoreFehler);
+            }
+            throw new SpielerDbException("Restore fehlgeschlagen, alter Stand wurde zurückgespielt", e);
+        }
+    }
+
+    /**
+     * SQLite-Header beginnt mit dem ASCII-String {@code "SQLite format 3\0"}
+     * (16 Bytes). Verhindert, dass beliebige Dateien als „Backup" akzeptiert
+     * werden.
+     */
+    private static void pruefeSqliteMagic(Path datei) throws SpielerDbException {
+        byte[] erwartet = "SQLite format 3\0".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        try {
+            byte[] kopf = new byte[erwartet.length];
+            try (var in = Files.newInputStream(datei)) {
+                int gelesen = in.readNBytes(kopf, 0, kopf.length);
+                if (gelesen != erwartet.length) {
+                    throw new SpielerDbException("Datei zu klein für ein SQLite-Backup: " + datei);
+                }
+            }
+            for (int i = 0; i < erwartet.length; i++) {
+                if (kopf[i] != erwartet[i]) {
+                    throw new SpielerDbException("Datei ist kein SQLite-Backup: " + datei);
+                }
+            }
+        } catch (IOException e) {
+            throw new SpielerDbException("SQLite-Backup nicht lesbar: " + datei, e);
         }
     }
 

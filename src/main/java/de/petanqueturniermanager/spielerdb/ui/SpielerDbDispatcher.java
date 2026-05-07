@@ -158,6 +158,18 @@ public final class SpielerDbDispatcher {
         }
     }
 
+    public static void importSpielerDb(WorkingSpreadsheet ws) {
+        Optional<SpielerDbConnection> conn = oeffneOderMelde(ws.getxContext());
+        if (conn.isEmpty()) {
+            return;
+        }
+        try {
+            new SpielerDbImportDialog(ws.getxContext(), conn.get()).zeigen();
+        } catch (com.sun.star.uno.Exception | RuntimeException e) {
+            logger.error("Spieler-DB-Import-Dialog fehlgeschlagen", e);
+        }
+    }
+
     public static void oeffneLabelVerwaltung(WorkingSpreadsheet ws) {
         Optional<SpielerDbConnection> conn = oeffneOderMelde(ws.getxContext());
         if (conn.isEmpty()) {
