@@ -5,8 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Locale;
@@ -171,42 +169,32 @@ public final class SpielerDbConnection implements AutoCloseable {
                       VORNAME VARCHAR(100) NOT NULL,
                       NACHNAME VARCHAR(100) NOT NULL,
                       VEREIN_NR INTEGER,
-                      LABEL_NR INTEGER,
                       LIZENZNR VARCHAR(50),
                       CONSTRAINT FK_SPIELER_VEREIN FOREIGN KEY (VEREIN_NR)
-                        REFERENCES VEREIN(NR) ON DELETE RESTRICT,
-                      CONSTRAINT FK_SPIELER_LABEL FOREIGN KEY (LABEL_NR)
+                        REFERENCES VEREIN(NR) ON DELETE RESTRICT
+                    )
+                    """);
+            // Junction-Tabelle für n:m Spieler ↔ Label.
+            // CASCADE auf Spieler-Seite: Spieler löschen entfernt seine Zuweisungen automatisch.
+            // RESTRICT auf Label-Seite: Label kann nicht gelöscht werden, solange zugewiesen.
+            st.execute("""
+                    CREATE TABLE IF NOT EXISTS SPIELER_LABEL (
+                      SPIELER_NR INTEGER NOT NULL,
+                      LABEL_NR INTEGER NOT NULL,
+                      PRIMARY KEY (SPIELER_NR, LABEL_NR),
+                      CONSTRAINT FK_SL_SPIELER FOREIGN KEY (SPIELER_NR)
+                        REFERENCES SPIELER(NR) ON DELETE CASCADE,
+                      CONSTRAINT FK_SL_LABEL FOREIGN KEY (LABEL_NR)
                         REFERENCES LABEL(NR) ON DELETE RESTRICT
                     )
                     """);
-            // Migration: LABEL_NR auch in alten DBs, die SPIELER bereits ohne diese
-            // Spalte angelegt haben. ALTER TABLE ... ADD COLUMN ist in SQLite nicht
-            // idempotent, daher Existenz-Check via PRAGMA table_info.
-            if (!spalteExistiert(conn, "SPIELER", "LABEL_NR")) {
-                st.execute("ALTER TABLE SPIELER ADD COLUMN LABEL_NR INTEGER "
-                        + "REFERENCES LABEL(NR) ON DELETE RESTRICT");
-            }
             st.execute("CREATE INDEX IF NOT EXISTS IDX_SPIELER_NACHNAME ON SPIELER(NACHNAME)");
             st.execute("CREATE INDEX IF NOT EXISTS IDX_SPIELER_VEREIN ON SPIELER(VEREIN_NR)");
-            st.execute("CREATE INDEX IF NOT EXISTS IDX_SPIELER_LABEL ON SPIELER(LABEL_NR)");
+            st.execute("CREATE INDEX IF NOT EXISTS IDX_SL_LABEL ON SPIELER_LABEL(LABEL_NR)");
             // SQLite-UNIQUE auf nullable Spalte: mehrere NULL erlaubt (Standard-SQL),
             // damit ist die Bedingung „Lizenznr eindeutig wenn gesetzt" erfüllt.
             st.execute("CREATE UNIQUE INDEX IF NOT EXISTS UQ_SPIELER_LIZENZ ON SPIELER(LIZENZNR)");
         }
-    }
-
-    private static boolean spalteExistiert(Connection conn, String tabelle, String spalte) throws SQLException {
-        // PRAGMA table_info akzeptiert keine Bind-Parameter; Tabellenname ist
-        // jedoch ausschließlich ein hier hartcodierter Wert — kein Injection-Risiko.
-        try (PreparedStatement ps = conn.prepareStatement("PRAGMA table_info(" + tabelle + ")");
-                ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) {
-                if (spalte.equalsIgnoreCase(rs.getString("name"))) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private static boolean istLockFehler(SQLException e) {

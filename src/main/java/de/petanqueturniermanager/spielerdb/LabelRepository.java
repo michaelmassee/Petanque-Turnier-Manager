@@ -136,9 +136,9 @@ public final class LabelRepository {
         }
     }
 
-    /** Anzahl Spieler, denen dieses Label zugeordnet ist. */
+    /** Anzahl Spieler, denen dieses Label zugeordnet ist (über die Junction-Tabelle). */
     public int countSpieler(int labelNr) throws SpielerDbException {
-        String sql = "SELECT COUNT(*) FROM SPIELER WHERE LABEL_NR = ?";
+        String sql = "SELECT COUNT(*) FROM SPIELER_LABEL WHERE LABEL_NR = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setInt(1, labelNr);
             try (ResultSet rs = ps.executeQuery()) {

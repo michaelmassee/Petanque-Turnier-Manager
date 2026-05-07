@@ -324,8 +324,9 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
                 .filter(s -> !teamAuswahlNr.contains(s.nr()))
                 .filter(s -> !filterMeldeliste
                         || !bereitsGemeldeteNormiert.contains(norm(s.spielernameVollstaendig())))
-                .filter(s -> vereinFilter.passt(s.vereinNr(), s.vereinName()))
-                .filter(s -> labelFilter.passt(s.labelNr(), s.labelName()))
+                .filter(s -> vereinFilter.passt(s.vereinNr() == null ? List.of() : List.of(s.vereinNr()),
+                        s.vereinName() == null ? List.of() : List.of(s.vereinName())))
+                .filter(s -> labelFilter.passt(s.labelNrs(), s.labelNamen()))
                 .collect(Collectors.toUnmodifiableList());
     }
 
@@ -400,9 +401,10 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
      * Generischer Filter für die Stammdaten-Dropdowns „Verein" und „Label":
      * <ul>
      *   <li>{@link #alle()} — kein Filter</li>
-     *   <li>{@link #ohne()} — nur Spieler mit {@code referenzNr == null}</li>
-     *   <li>{@link #name(String)} — nur Spieler mit übereinstimmendem Namen
-     *       (case-insensitiv).</li>
+     *   <li>{@link #ohne()} — nur Spieler ohne Zuordnung (leere Listen)</li>
+     *   <li>{@link #name(String)} — nur Spieler, deren Zuordnungs-Liste den
+     *       Namen enthält (case-insensitiv). Verein wird als Liste der Länge ≤ 1
+     *       übergeben, Labels als n-elementige Liste.</li>
      * </ul>
      */
     private record StammdatenFilter(@Nullable String name, boolean nurOhne) {
@@ -410,14 +412,22 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         static StammdatenFilter ohne() { return new StammdatenFilter(null, true); }
         static StammdatenFilter name(String name) { return new StammdatenFilter(name, false); }
         boolean istAlle() { return name == null && !nurOhne; }
-        boolean passt(@Nullable Integer referenzNr, @Nullable String referenzName) {
+        boolean passt(List<Integer> referenzNrs, List<String> referenzNamen) {
             if (istAlle()) {
                 return true;
             }
             if (nurOhne) {
-                return referenzNr == null;
+                return referenzNrs.isEmpty();
             }
-            return name != null && name.equalsIgnoreCase(referenzName);
+            if (name == null) {
+                return false;
+            }
+            for (String n : referenzNamen) {
+                if (name.equalsIgnoreCase(n)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

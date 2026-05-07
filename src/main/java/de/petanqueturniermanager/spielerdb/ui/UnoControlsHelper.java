@@ -99,6 +99,44 @@ final class UnoControlsHelper {
         cont.insertByName(name, model);
     }
 
+    /** Multi-Select-ListBox (Mehrfachauswahl per Strg/Shift). */
+    void multiSelectListBox(String name, String[] items, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("Dropdown", Boolean.FALSE);
+        props.setPropertyValue("MultiSelection", Boolean.TRUE);
+        props.setPropertyValue("StringItemList", items);
+        cont.insertByName(name, model);
+    }
+
+    /** Setzt die ausgewählten Indizes einer Multi-Select-ListBox. */
+    void setzeAusgewaehlteIndizes(String name, short[] indizes) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) {
+            return;
+        }
+        try {
+            Lo.qi(XPropertySet.class, ctrl.getModel())
+                    .setPropertyValue("SelectedItems", indizes);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.warn("SelectedItems konnte nicht gesetzt werden für '{}': {}", name, e.getMessage());
+        }
+    }
+
+    /** Liefert die aktuell ausgewählten Indizes einer Multi-Select-ListBox. */
+    short[] ausgewaehlteIndizes(String name) {
+        XListBox lb = listBox(name);
+        if (lb == null) {
+            return new short[0];
+        }
+        return lb.getSelectedItemsPos();
+    }
+
     /** Dropdown-ListBox (single-select, nicht-editierbar) für Filter-Auswahlen. */
     void dropdownListBox(String name, String[] items, int x, int y, int w, int h)
             throws com.sun.star.uno.Exception {

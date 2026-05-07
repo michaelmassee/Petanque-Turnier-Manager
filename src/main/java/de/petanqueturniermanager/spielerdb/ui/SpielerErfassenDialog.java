@@ -1,6 +1,10 @@
 package de.petanqueturniermanager.spielerdb.ui;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,9 +47,10 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
     private static final Logger logger = LogManager.getLogger(SpielerErfassenDialog.class);
 
     private static final int B = 240;
-    private static final int H = 168;
+    private static final int H = 210;
     private static final int LBL_X = 8, LBL_W = 60, LBL_H = 10;
     private static final int FELD_X = 75, FELD_W = 155, FELD_H = 12;
+    private static final int LABEL_LIST_H = 56;
 
     private final SpielerRepository spielerRepo;
     private final VereinRepository vereinRepo;
@@ -56,6 +61,9 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
 
     @Nullable private UnoControlsHelper controls;
     @Nullable private XDialog xDialog;
+
+    /** Reihenfolge entspricht Items in der Label-Listbox; Index → ID. */
+    private List<LabelDatensatz> alleLabels = List.of();
 
     public SpielerErfassenDialog(XComponentContext xContext, SpielerRepository spielerRepo,
             VereinRepository vereinRepo, LabelRepository labelRepo,
@@ -102,11 +110,15 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
         controls.comboBox("cbxVerein", vereine, selektierterVerein, FELD_X, y - 2, FELD_W, FELD_H);
         y += 18;
         controls.fixedText("lblLabel", I18n.get("spielerdb.erfassen.label"), LBL_X, y, LBL_W, LBL_H);
-        String[] labels = ladeLabelnamen();
-        String selektiertesLabel = bearbeiten != null && bearbeiten.labelName() != null
-                ? bearbeiten.labelName() : "";
-        controls.comboBox("cbxLabel", labels, selektiertesLabel, FELD_X, y - 2, FELD_W, FELD_H);
-        y += 18;
+        ladeAlleLabels();
+        controls.multiSelectListBox("lstLabels",
+                alleLabels.stream().map(LabelDatensatz::name).toArray(String[]::new),
+                FELD_X, y - 2, FELD_W, LABEL_LIST_H);
+        if (bearbeiten != null && !bearbeiten.labelNrs().isEmpty()) {
+            controls.setzeAusgewaehlteIndizes("lstLabels",
+                    indizesFuer(bearbeiten.labelNrs()));
+        }
+        y += LABEL_LIST_H + 6;
         controls.fixedText("lblLizenznr", I18n.get("spielerdb.erfassen.lizenznr"), LBL_X, y, LBL_W, LBL_H);
         controls.edit("txtLizenznr", bearbeiten == null ? "" : nullToEmpty(bearbeiten.lizenznr()),
                 FELD_X, y - 2, FELD_W, FELD_H);
@@ -128,13 +140,42 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
         }
     }
 
-    private String[] ladeLabelnamen() {
+    private void ladeAlleLabels() {
         try {
-            return labelRepo.findAll().stream().map(LabelDatensatz::name).toArray(String[]::new);
+            alleLabels = labelRepo.findAll();
         } catch (SpielerDbException e) {
             logger.error("Labels laden fehlgeschlagen", e);
-            return new String[0];
+            alleLabels = List.of();
         }
+    }
+
+    private short[] indizesFuer(List<Integer> labelNrs) {
+        Set<Integer> gesucht = new HashSet<>(labelNrs);
+        List<Short> indizes = new ArrayList<>();
+        for (int i = 0; i < alleLabels.size(); i++) {
+            Integer nr = alleLabels.get(i).nr();
+            if (nr != null && gesucht.contains(nr)) {
+                indizes.add((short) i);
+            }
+        }
+        short[] out = new short[indizes.size()];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = indizes.get(i);
+        }
+        return out;
+    }
+
+    private List<Integer> labelNrsAusAuswahl(short[] indizes) {
+        List<Integer> nrs = new ArrayList<>(indizes.length);
+        for (short idx : indizes) {
+            if (idx >= 0 && idx < alleLabels.size()) {
+                Integer nr = alleLabels.get(idx).nr();
+                if (nr != null) {
+                    nrs.add(nr);
+                }
+            }
+        }
+        return nrs;
     }
 
     private void beimOkKlick() {
@@ -146,7 +187,7 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
         String vorname = c.leseText("txtVorname").strip();
         String nachname = c.leseText("txtNachname").strip();
         String vereinEing = c.leseText("cbxVerein").strip();
-        String labelEing = c.leseText("cbxLabel").strip();
+        List<Integer> labelNrs = labelNrsAusAuswahl(c.ausgewaehlteIndizes("lstLabels"));
         String lizenz = c.leseText("txtLizenznr").strip();
 
         if (vorname.isEmpty() || nachname.isEmpty()) {
@@ -160,14 +201,10 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
                 // User hat Anlegen-Rückfrage abgelehnt — Eingabe bleibt, Dialog offen.
                 return;
             }
-            Integer labelNr = aufloeseOderAnlegenLabel(labelEing).orElse(null);
-            if (labelNr == null && !labelEing.isEmpty()) {
-                return;
-            }
 
             SpielerDatensatz neu = new SpielerDatensatz(
                     bearbeiten == null ? null : bearbeiten.nr(),
-                    vorname, nachname, vereinNr, labelNr,
+                    vorname, nachname, vereinNr, labelNrs,
                     lizenz.isEmpty() ? null : lizenz);
 
             if (bearbeiten == null) {
@@ -207,29 +244,6 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
         } catch (DuplikatException e) {
             // Race: zweiter Lookup, dann sicher ohne Rückfrage akzeptieren.
             return vereinRepo.findByName(eingabe).map(VereinDatensatz::nr);
-        }
-    }
-
-    private Optional<Integer> aufloeseOderAnlegenLabel(String eingabe) throws SpielerDbException {
-        if (eingabe.isEmpty()) {
-            return Optional.empty();
-        }
-        Optional<LabelDatensatz> bestehend = labelRepo.findByName(eingabe);
-        if (bestehend.isPresent()) {
-            return bestehend.get().nr() == null ? Optional.empty() : Optional.of(bestehend.get().nr());
-        }
-        MessageBoxResult res = MessageBox.from(xContext, MessageBoxTypeEnum.QUESTION_YES_NO)
-                .caption(I18n.get("spielerdb.frage.titel"))
-                .message(I18n.get("spielerdb.frage.label_anlegen", eingabe))
-                .show();
-        if (res != MessageBoxResult.YES) {
-            return Optional.empty();
-        }
-        try {
-            LabelDatensatz angelegt = labelRepo.insert(eingabe);
-            return Optional.ofNullable(angelegt.nr());
-        } catch (LabelRepository.DuplikatException e) {
-            return labelRepo.findByName(eingabe).map(LabelDatensatz::nr);
         }
     }
 

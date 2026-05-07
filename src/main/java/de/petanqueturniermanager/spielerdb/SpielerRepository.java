@@ -19,12 +19,23 @@ import org.jspecify.annotations.Nullable;
  */
 public final class SpielerRepository {
 
+    /**
+     * Trennzeichen für die in {@code group_concat} gepackten Label-IDs/-Namen.
+     * Bewusst exotisches Zeichen, kann in Labelnamen praktisch nicht vorkommen.
+     */
+    private static final String LABEL_SEP = "";
+
     private static final String SELECT_JOIN =
-            "SELECT s.NR, s.VORNAME, s.NACHNAME, s.VEREIN_NR, s.LABEL_NR, s.LIZENZNR, "
-                    + "v.NAME AS VEREIN_NAME, l.NAME AS LABEL_NAME "
+            "SELECT s.NR, s.VORNAME, s.NACHNAME, s.VEREIN_NR, s.LIZENZNR, "
+                    + "v.NAME AS VEREIN_NAME, "
+                    + "(SELECT group_concat(l.NR, '" + LABEL_SEP + "') "
+                    + "   FROM SPIELER_LABEL sl JOIN LABEL l ON l.NR = sl.LABEL_NR "
+                    + "   WHERE sl.SPIELER_NR = s.NR ORDER BY JAVA_LOWER(l.NAME)) AS LABEL_NRS, "
+                    + "(SELECT group_concat(l.NAME, '" + LABEL_SEP + "') "
+                    + "   FROM SPIELER_LABEL sl JOIN LABEL l ON l.NR = sl.LABEL_NR "
+                    + "   WHERE sl.SPIELER_NR = s.NR ORDER BY JAVA_LOWER(l.NAME)) AS LABEL_NAMES "
                     + "FROM SPIELER s "
-                    + "LEFT JOIN VEREIN v ON s.VEREIN_NR = v.NR "
-                    + "LEFT JOIN LABEL l ON s.LABEL_NR = l.NR ";
+                    + "LEFT JOIN VEREIN v ON s.VEREIN_NR = v.NR ";
 
     private final Connection connection;
 
@@ -147,32 +158,43 @@ public final class SpielerRepository {
             throw new SpielerDbException("Vorname und Nachname sind Pflichtfelder");
         }
         String lizenz = normLizenz(neu.lizenznr());
-        String sql = "INSERT INTO SPIELER (VORNAME, NACHNAME, VEREIN_NR, LABEL_NR, LIZENZNR) "
-                + "VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, vorname);
-            ps.setString(2, nachname);
-            setNullableInt(ps, 3, neu.vereinNr());
-            setNullableInt(ps, 4, neu.labelNr());
-            setNullableString(ps, 5, lizenz);
-            ps.executeUpdate();
-            try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) {
-                    return new SpielerDatensatz(keys.getInt(1), vorname, nachname,
-                            neu.vereinNr(), neu.labelNr(), lizenz);
+        String sql = "INSERT INTO SPIELER (VORNAME, NACHNAME, VEREIN_NR, LIZENZNR) "
+                + "VALUES (?, ?, ?, ?)";
+        boolean vorigerAutoCommit = true;
+        try {
+            vorigerAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            int neueNr;
+            try (PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, vorname);
+                ps.setString(2, nachname);
+                setNullableInt(ps, 3, neu.vereinNr());
+                setNullableString(ps, 4, lizenz);
+                ps.executeUpdate();
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (!keys.next()) {
+                        throw new SpielerDbException("Insert lieferte keinen Schlüssel");
+                    }
+                    neueNr = keys.getInt(1);
                 }
-                throw new SpielerDbException("Insert lieferte keinen Schlüssel");
             }
+            schreibeLabelZuweisungen(neueNr, neu.labelNrs());
+            connection.commit();
+            return new SpielerDatensatz(neueNr, vorname, nachname,
+                    neu.vereinNr(), neu.labelNrs(), lizenz);
         } catch (SQLException e) {
+            rollbackLeise();
             if (istUniqueVerletzung(e)) {
                 throw new LizenzDuplikatException("Lizenznummer existiert bereits: " + lizenz, e);
             }
             if (istFkVerletzung(e)) {
                 throw new SpielerDbException(
                         "Verein-/Label-Referenz ungültig: vereinNr=" + neu.vereinNr()
-                                + ", labelNr=" + neu.labelNr(), e);
+                                + ", labelNrs=" + neu.labelNrs(), e);
             }
             throw new SpielerDbException("Spieler-Insert fehlgeschlagen", e);
+        } finally {
+            wiederherstellenAutoCommit(vorigerAutoCommit);
         }
     }
 
@@ -188,28 +210,37 @@ public final class SpielerRepository {
         }
         String lizenz = normLizenz(datensatz.lizenznr());
         String sql = "UPDATE SPIELER SET VORNAME = ?, NACHNAME = ?, VEREIN_NR = ?, "
-                + "LABEL_NR = ?, LIZENZNR = ? WHERE NR = ?";
-        try (PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setString(1, vorname);
-            ps.setString(2, nachname);
-            setNullableInt(ps, 3, datensatz.vereinNr());
-            setNullableInt(ps, 4, datensatz.labelNr());
-            setNullableString(ps, 5, lizenz);
-            ps.setInt(6, nr);
-            int n = ps.executeUpdate();
-            if (n == 0) {
-                throw new SpielerDbException("Spieler nicht gefunden: nr=" + nr);
+                + "LIZENZNR = ? WHERE NR = ?";
+        boolean vorigerAutoCommit = true;
+        try {
+            vorigerAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                ps.setString(1, vorname);
+                ps.setString(2, nachname);
+                setNullableInt(ps, 3, datensatz.vereinNr());
+                setNullableString(ps, 4, lizenz);
+                ps.setInt(5, nr);
+                int n = ps.executeUpdate();
+                if (n == 0) {
+                    throw new SpielerDbException("Spieler nicht gefunden: nr=" + nr);
+                }
             }
+            ersetzeLabelZuweisungen(nr, datensatz.labelNrs());
+            connection.commit();
         } catch (SQLException e) {
+            rollbackLeise();
             if (istUniqueVerletzung(e)) {
                 throw new LizenzDuplikatException("Lizenznummer existiert bereits: " + lizenz, e);
             }
             if (istFkVerletzung(e)) {
                 throw new SpielerDbException(
                         "Verein-/Label-Referenz ungültig: vereinNr=" + datensatz.vereinNr()
-                                + ", labelNr=" + datensatz.labelNr(), e);
+                                + ", labelNrs=" + datensatz.labelNrs(), e);
             }
             throw new SpielerDbException("Spieler-Update fehlgeschlagen: nr=" + nr, e);
+        } finally {
+            wiederherstellenAutoCommit(vorigerAutoCommit);
         }
     }
 
@@ -241,12 +272,73 @@ public final class SpielerRepository {
         int vereinNrRaw = rs.getInt("VEREIN_NR");
         Integer vereinNr = rs.wasNull() ? null : Integer.valueOf(vereinNrRaw);
         String vereinName = rs.getString("VEREIN_NAME");
-        int labelNrRaw = rs.getInt("LABEL_NR");
-        Integer labelNr = rs.wasNull() ? null : Integer.valueOf(labelNrRaw);
-        String labelName = rs.getString("LABEL_NAME");
+        List<Integer> labelNrs = parseIntList(rs.getString("LABEL_NRS"));
+        List<String> labelNamen = parseStringList(rs.getString("LABEL_NAMES"));
         String lizenznr = rs.getString("LIZENZNR");
         return new SpielerMitVerein(nr, vorname, nachname,
-                vereinNr, vereinName, labelNr, labelName, lizenznr);
+                vereinNr, vereinName, labelNrs, labelNamen, lizenznr);
+    }
+
+    private static List<Integer> parseIntList(@Nullable String konkateniert) {
+        if (konkateniert == null || konkateniert.isEmpty()) {
+            return List.of();
+        }
+        String[] teile = konkateniert.split(LABEL_SEP, -1);
+        List<Integer> ergebnis = new ArrayList<>(teile.length);
+        for (String t : teile) {
+            ergebnis.add(Integer.valueOf(t));
+        }
+        return List.copyOf(ergebnis);
+    }
+
+    private static List<String> parseStringList(@Nullable String konkateniert) {
+        if (konkateniert == null || konkateniert.isEmpty()) {
+            return List.of();
+        }
+        return List.of(konkateniert.split(LABEL_SEP, -1));
+    }
+
+    /** Schreibt die Junction-Einträge — Aufruf innerhalb einer Transaktion. */
+    private void schreibeLabelZuweisungen(int spielerNr, List<Integer> labelNrs) throws SQLException {
+        if (labelNrs.isEmpty()) {
+            return;
+        }
+        String sql = "INSERT INTO SPIELER_LABEL (SPIELER_NR, LABEL_NR) VALUES (?, ?)";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            for (Integer labelNr : labelNrs) {
+                ps.setInt(1, spielerNr);
+                ps.setInt(2, labelNr);
+                ps.addBatch();
+            }
+            ps.executeBatch();
+        }
+    }
+
+    /** Ersetzt alle bisherigen Junction-Einträge — Aufruf innerhalb einer Transaktion. */
+    private void ersetzeLabelZuweisungen(int spielerNr, List<Integer> labelNrs) throws SQLException {
+        try (PreparedStatement del = connection.prepareStatement(
+                "DELETE FROM SPIELER_LABEL WHERE SPIELER_NR = ?")) {
+            del.setInt(1, spielerNr);
+            del.executeUpdate();
+        }
+        schreibeLabelZuweisungen(spielerNr, labelNrs);
+    }
+
+    private void rollbackLeise() {
+        try {
+            connection.rollback();
+        } catch (SQLException ex) {
+            // Sekundärfehler beim Rollback — primäre Exception nicht überdecken.
+        }
+    }
+
+    private void wiederherstellenAutoCommit(boolean vorigerWert) {
+        try {
+            connection.setAutoCommit(vorigerWert);
+        } catch (SQLException ex) {
+            // Verbindung könnte bereits geschlossen sein — keine kritische Folge,
+            // nächste Operation legt den Wert ohnehin neu fest.
+        }
     }
 
     @Nullable
