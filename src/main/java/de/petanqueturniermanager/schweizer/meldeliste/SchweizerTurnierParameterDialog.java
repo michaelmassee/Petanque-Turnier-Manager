@@ -14,6 +14,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
@@ -93,7 +94,7 @@ public class SchweizerTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(200));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(178));
 		dlgProps.setPropertyValue("Title", "Schweizer Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -129,27 +130,25 @@ public class SchweizerTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep2", 5, 95, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 99, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielplanNr",
-				"Teamnummer", 8, 111, 140, 10,
-				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielplanName",
-				"Teamname", 8, 123, 140, 10,
-				defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME);
+		addLabel(xMSF, cont, "lblSpielplan", "Anzeige in Spielplan:", 8, 99, 80, 10);
+		addListBox(xMSF, cont, "lstSpielplan",
+				new String[] { "Teamnummer", "Teamname" },
+				(short) (defaultSpielplanTeamAnzeige == SpielplanTeamAnzeige.NAME ? 1 : 0),
+				92, 97, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 137, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 115, 150, 2);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 139, 150, 2);
-		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 143, 140, 10);
+		addFixedLine(xMSF, cont, "sep4", 5, 117, 150, 2);
+		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 121, 140, 10);
 		addRadioButton(xMSF, cont, "radioMitBuchholz",
-				"Mit Buchholz (Standard)", 8, 155, 140, 10,
+				"Mit Buchholz (Standard)", 8, 133, 140, 10,
 				defaultRankingModus != SchweizerRankingModus.OHNE_BUCHHOLZ);
 		addRadioButton(xMSF, cont, "radioOhneBuchholz",
-				"Ohne Buchholz", 8, 167, 140, 10,
+				"Ohne Buchholz", 8, 145, 140, 10,
 				defaultRankingModus == SchweizerRankingModus.OHNE_BUCHHOLZ);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 181, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 181, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 159, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 159, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -191,7 +190,7 @@ public class SchweizerTurnierParameterDialog {
 			Formation formation = readFormation(xcc);
 			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			SpielplanTeamAnzeige spielplanAnzeige = isRadioSelected(xcc, "radioSpielplanName")
+			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplan") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
 			SchweizerRankingModus rankingModus = isRadioSelected(xcc, "radioOhneBuchholz")
 					? SchweizerRankingModus.OHNE_BUCHHOLZ : SchweizerRankingModus.MIT_BUCHHOLZ;
@@ -226,6 +225,15 @@ public class SchweizerTurnierParameterDialog {
 		}
 		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
 		return radio != null && radio.getState();
+	}
+
+	private short readListBoxSelected(XControlContainer xcc, String name) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return 0;
+		}
+		XListBox lb = Lo.qi(XListBox.class, ctrl);
+		return lb != null ? lb.getSelectedItemPos() : 0;
 	}
 
 	private boolean readCheckBoxState(XControlContainer xcc, String name) {
@@ -274,6 +282,21 @@ public class SchweizerTurnierParameterDialog {
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("State", (short) (selected ? 1 : 0));
+		cont.insertByName(name, model);
+	}
+
+	private void addListBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String[] items, short selectedIndex, int x, int y, int w, int h)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Dropdown", Boolean.TRUE);
+		props.setPropertyValue("StringItemList", items);
+		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		cont.insertByName(name, model);
 	}
 

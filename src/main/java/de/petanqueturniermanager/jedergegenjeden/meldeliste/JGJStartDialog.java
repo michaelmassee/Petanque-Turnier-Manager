@@ -14,6 +14,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
@@ -79,7 +80,7 @@ public class JGJStartDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(170));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(218));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(196));
 		dlgProps.setPropertyValue("Title", I18n.get("dialog.jgj.title.neue.meldeliste"));
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -110,24 +111,24 @@ public class JGJStartDialog {
 
 		addFixedLine(xMSF, cont, "sep2", 5, 92, 160, 2);
 
-		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 96, 150, 10);
-		addRadioButton(xMSF, cont, "radioSpielplanNr",
-				I18n.get("dialog.jgj.spielplan.teamnummer"), 8, 108, 150, 10, true);
-		addRadioButton(xMSF, cont, "radioSpielplanName",
-				I18n.get("dialog.jgj.spielplan.teamname"), 8, 120, 150, 10, false);
+		addLabel(xMSF, cont, "lblSpielplanAnzeige", I18n.get("dialog.jgj.label.spielplan.anzeige"), 8, 96, 80, 10);
+		addListBox(xMSF, cont, "lstSpielplanAnzeige",
+				new String[] { I18n.get("dialog.jgj.spielplan.teamnummer"),
+						I18n.get("dialog.jgj.spielplan.teamname") },
+				(short) 0, 92, 94, 70, 12);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 134, 160, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 112, 160, 2);
 
-		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 138, 150, 10);
-		addEditField(xMSF, cont, "editGruppengroesse", 8, 150, 60, 14);
+		addLabel(xMSF, cont, "lblGruppengroesse", I18n.get("dialog.jgj.label.gruppengroesse"), 8, 116, 150, 10);
+		addEditField(xMSF, cont, "editGruppengroesse", 8, 128, 60, 14);
 
 		addCheckBox(xMSF, cont, "cbRueckrunde",
-				I18n.get("dialog.jgj.label.rueckrunde"), 8, 168, 150, 12, false);
+				I18n.get("dialog.jgj.label.rueckrunde"), 8, 146, 150, 12, false);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 184, 160, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 162, 160, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 30, 198, 50, 14);
-		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 198, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 30, 176, 50, 14);
+		addButton(xMSF, cont, "btnCancel", I18n.get("button.abbrechen"), 100, 176, 60, 14);
 
 		// 4. Button-Listener VOR createPeer() anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -169,7 +170,7 @@ public class JGJStartDialog {
 			Formation formation = readFormation(xcc);
 			boolean teamnameAnzeigen = readCheckBoxState(xcc, "cbTeamname");
 			boolean vereinsnameAnzeigen = readCheckBoxState(xcc, "cbVereinsname");
-			SpielplanTeamAnzeige spielplanAnzeige = isRadioSelected(xcc, "radioSpielplanName")
+			SpielplanTeamAnzeige spielplanAnzeige = readListBoxSelected(xcc, "lstSpielplanAnzeige") == 1
 					? SpielplanTeamAnzeige.NAME : SpielplanTeamAnzeige.NR;
 			int gruppengroesse = parseGruppengroesse(readEditText(xcc, "editGruppengroesse"));
 			boolean mitRueckrunde = readCheckBoxState(xcc, "cbRueckrunde");
@@ -220,6 +221,15 @@ public class JGJStartDialog {
 		}
 		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
 		return radio != null && radio.getState();
+	}
+
+	private short readListBoxSelected(XControlContainer xcc, String name) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return 0;
+		}
+		XListBox lb = Lo.qi(XListBox.class, ctrl);
+		return lb != null ? lb.getSelectedItemPos() : 0;
 	}
 
 	private boolean readCheckBoxState(XControlContainer xcc, String name) {
@@ -280,6 +290,21 @@ public class JGJStartDialog {
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("State", (short) (selected ? 1 : 0));
+		cont.insertByName(name, model);
+	}
+
+	private void addListBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String[] items, short selectedIndex, int x, int y, int w, int h)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Dropdown", Boolean.TRUE);
+		props.setPropertyValue("StringItemList", items);
+		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		cont.insertByName(name, model);
 	}
 
