@@ -507,6 +507,11 @@ public class ProcessBox implements TimerListener {
         }
     }
 
+    public boolean istSichtbar() {
+        if (disposed || frame == null) return false;
+        return frame.isVisible();
+    }
+
     public ProcessBox hide() {
         if (disposed || frame == null) return this;
         SwingUtilities.invokeLater(() -> {

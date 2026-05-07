@@ -15,7 +15,6 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
-import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -235,8 +234,9 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
 
         try {
-            schreibeNeueTeamNr(zeile);
-
+            // Team-Nr (Spalte 0) wird bewusst nicht hier gesetzt — der
+            // anschließende „Meldeliste Aktualisieren"-Lauf vergibt fortlaufend
+            // konsistente Nummern für alle aktiven Teams.
             RowData row = new RowData();
             // Teamname-Slot bleibt leer — User füllt das ggf. manuell.
             if (teamnameAktiv) {
@@ -275,12 +275,6 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         }
     }
 
-    private void schreibeNeueTeamNr(int zeile) {
-        int neueNr = letzteVergebeneNr() + 1;
-        sheetHelper.setStringValueInCell(StringCellValue
-                .from(sheet, Position.from(SPALTE_NR, zeile), String.valueOf(neueNr)));
-    }
-
     /** Erste Zeile, in der kein Spieler eingetragen ist (Vorname + Nachname Slot 0 leer). */
     private int naechsteFreieZeile() {
         for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
@@ -291,24 +285,5 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             }
         }
         return -1;
-    }
-
-    private int letzteVergebeneNr() {
-        int max = 0;
-        for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
-            String nrText = sicherText(sheetHelper, sheet, SPALTE_NR, zeile).strip();
-            if (nrText.isEmpty()) {
-                break;
-            }
-            try {
-                int nr = Integer.parseInt(nrText);
-                if (nr > max) {
-                    max = nr;
-                }
-            } catch (NumberFormatException e) {
-                // ignorieren — Header-Reste o.ä.
-            }
-        }
-        return max;
     }
 }

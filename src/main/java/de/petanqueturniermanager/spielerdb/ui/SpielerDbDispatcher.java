@@ -11,6 +11,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
 import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
@@ -35,6 +36,11 @@ public final class SpielerDbDispatcher {
         if (conn.isEmpty()) {
             return;
         }
+        ProcessBox pb = ProcessBox.from();
+        boolean warSichtbar = pb.istSichtbar();
+        if (warSichtbar) {
+            pb.hide();
+        }
         try {
             new SpielerSucheDialog(ws.getxContext(),
                     new SpielerRepository(conn.get()),
@@ -42,6 +48,10 @@ public final class SpielerDbDispatcher {
                     null /* Verwaltungsmodus */).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("Spieler-Suche-Dialog fehlgeschlagen", e);
+        } finally {
+            if (warSichtbar) {
+                pb.visible();
+            }
         }
     }
 
@@ -59,6 +69,11 @@ public final class SpielerDbDispatcher {
         if (conn.isEmpty()) {
             return;
         }
+        ProcessBox pb = ProcessBox.from();
+        boolean warSichtbar = pb.istSichtbar();
+        if (warSichtbar) {
+            pb.hide();
+        }
         try {
             new SpielerSucheDialog(ctx,
                     new SpielerRepository(conn.get()),
@@ -66,6 +81,10 @@ public final class SpielerDbDispatcher {
                     ziel.get()).zeigen();
         } catch (com.sun.star.uno.Exception e) {
             logger.error("Spieler-Suche-Dialog fehlgeschlagen", e);
+        } finally {
+            if (warSichtbar) {
+                pb.visible();
+            }
         }
     }
 

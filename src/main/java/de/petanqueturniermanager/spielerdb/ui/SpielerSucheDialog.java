@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -61,6 +62,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private static final int B = 540;
     private static final int H = 360;
     private static final int SUCH_FELD_X = 8, SUCH_FELD_Y = 22, SUCH_FELD_W = 350, SUCH_FELD_H = 12;
+    private static final int FILTER_Y = 38, FILTER_W = 250, FILTER_H = 10;
     private static final int LIST_X = 8, LIST_Y = 50, LIST_W = 350, LIST_H = 245;
     private static final int BTN_X = 365, BTN_W = 165, BTN_H = 14;
     private static final int TEAM_LIST_H = 120;
@@ -74,8 +76,13 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     @Nullable private UnoControlsHelper controls;
     @Nullable private XDialog xDialog;
 
+    /** Rohe (ungefilterte) Trefferliste aus dem Repository – Quelle für Re-Renderings nach Sammelliste-Mutationen. */
+    private List<SpielerMitVerein> rohTreffer = List.of();
+    /** Aktuell sichtbare, gefilterte Liste – maßgeblich für Indizierung in {@link #ausgewaehlt()}. */
     private List<SpielerMitVerein> trefferListe = List.of();
     private final List<SpielerMitVerein> teamAuswahl = new ArrayList<>();
+    /** Cache der bereits in der Meldeliste stehenden Spieler (normiert). Leer im Verwaltungs-Modus. */
+    private Set<String> bereitsGemeldeteNormiert = Set.of();
 
     public SpielerSucheDialog(XComponentContext xContext, SpielerRepository spielerRepo,
             VereinRepository vereinRepo, @Nullable MeldelisteZiel ziel) {
@@ -117,6 +124,15 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         controls.fixedText("lblSuche", I18n.get("spielerdb.suche.feld"),
                 SUCH_FELD_X, SUCH_FELD_Y - 10, SUCH_FELD_W, 10);
         controls.edit("txtSuche", "", SUCH_FELD_X, SUCH_FELD_Y, SUCH_FELD_W, SUCH_FELD_H);
+
+        // Filter-Checkbox: nur im Übernahme-Modus sinnvoll, weil sich die
+        // „bereits gemeldeten Spieler" auf die aktive Meldeliste beziehen.
+        if (istUebernahmeModus()) {
+            controls.checkBox("chkFilterGemeldet",
+                    I18n.get("spielerdb.suche.filter.gemeldete_ausblenden"),
+                    SUCH_FELD_X, FILTER_Y, FILTER_W, FILTER_H, true);
+            aktualisiereGemeldeteCache();
+        }
 
         // Trefferliste
         controls.listBox("lstTreffer", LIST_X, LIST_Y, LIST_W, LIST_H);
@@ -176,6 +192,8 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         controls.registriereActionListener("btnLoeschen", this::beimLoeschen);
         if (istUebernahmeModus()) {
             controls.registriereActionListener("btnUebernehmen", this::beimUebernehmen);
+            // Filter-Wechsel re-triggert die aktuelle Suche, damit Aus-/Einblenden sofort wirkt.
+            controls.registriereCheckBoxListener("chkFilterGemeldet", this::beimSuchTextGeaendert);
         }
 
         // Initial-Trefferliste
@@ -224,14 +242,54 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         if (c == null) {
             return;
         }
-        this.trefferListe = treffer;
+        this.rohTreffer = treffer;
+        List<SpielerMitVerein> sichtbar = filtereSichtbar(c, treffer);
+        this.trefferListe = sichtbar;
         c.setzeListItems("lstTreffer",
-                treffer.stream().map(SpielerSucheDialog::formatZeile).toArray(String[]::new));
+                sichtbar.stream().map(SpielerSucheDialog::formatZeile).toArray(String[]::new));
         c.enabled("btnBearbeiten", false);
         c.enabled("btnLoeschen", false);
         if (!istBlockModus()) {
             c.enabled("btnUebernehmen", false);
         }
+    }
+
+    /**
+     * Liefert die in der Hauptliste sichtbaren Treffer:
+     * <ul>
+     *   <li>Spieler, die bereits in der Team-Sammelliste rechts stehen, werden
+     *       <b>immer</b> ausgeblendet (Block-Modus; im Single-Modus ist
+     *       {@code teamAuswahl} leer und der Filter wirkungslos).</li>
+     *   <li>Spieler, die bereits in der Meldeliste stehen, werden zusätzlich
+     *       ausgeblendet, wenn der Übernahme-Modus aktiv ist und die
+     *       Filter-Checkbox angekreuzt ist.</li>
+     * </ul>
+     */
+    private List<SpielerMitVerein> filtereSichtbar(UnoControlsHelper c, List<SpielerMitVerein> treffer) {
+        Set<Integer> teamAuswahlNr = teamAuswahl.stream()
+                .map(SpielerMitVerein::nr)
+                .collect(Collectors.toUnmodifiableSet());
+        boolean filterMeldeliste = istUebernahmeModus()
+                && c.istAngekreuzt("chkFilterGemeldet")
+                && !bereitsGemeldeteNormiert.isEmpty();
+        if (teamAuswahlNr.isEmpty() && !filterMeldeliste) {
+            return treffer;
+        }
+        return treffer.stream()
+                .filter(s -> !teamAuswahlNr.contains(s.nr()))
+                .filter(s -> !filterMeldeliste
+                        || !bereitsGemeldeteNormiert.contains(norm(s.spielernameVollstaendig())))
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    private void aktualisiereGemeldeteCache() {
+        if (ziel == null) {
+            bereitsGemeldeteNormiert = Set.of();
+            return;
+        }
+        bereitsGemeldeteNormiert = ziel.getVorhandeneSpielernamen().stream()
+                .map(SpielerSucheDialog::norm)
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private static String formatZeile(SpielerMitVerein s) {
@@ -382,6 +440,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         }
         teamAuswahl.add(sel.get());
         aktualisiereTeamAnzeige();
+        setzeTreffer(rohTreffer);
         if (teamAuswahl.size() == spielerProBlock()) {
             UnoControlsHelper c = this.controls;
             if (c != null) {
@@ -407,6 +466,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private void beimVerwerfen() {
         teamAuswahl.clear();
         aktualisiereTeamAnzeige();
+        setzeTreffer(rohTreffer);
         UnoControlsHelper c = this.controls;
         if (c != null) {
             c.enabled("btnUebernehmen", false);
@@ -430,6 +490,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         }
         teamAuswahl.remove(idx);
         aktualisiereTeamAnzeige();
+        setzeTreffer(rohTreffer);
         if (teamAuswahl.size() < spielerProBlock()) {
             c.enabled("btnUebernehmen", false);
         }
@@ -445,6 +506,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         schreibeUndMelde(new ArrayList<>(teamAuswahl));
         teamAuswahl.clear();
         aktualisiereTeamAnzeige();
+        setzeTreffer(rohTreffer);
         UnoControlsHelper c = this.controls;
         if (c != null) {
             c.enabled("btnUebernehmen", false);
@@ -487,6 +549,10 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
                     .caption(I18n.get("spielerdb.menu.toplevel"))
                     .message(I18n.get("spielerdb.info.uebernommen", n))
                     .show();
+            // Frisch übernommene Spieler aus der sichtbaren Trefferliste entfernen,
+            // wenn der Filter aktiv ist — sonst tauchen sie weiter auf.
+            aktualisiereGemeldeteCache();
+            setzeTreffer(rohTreffer);
         } catch (MeldelisteSchreibException e) {
             logger.error("Block-Schreiben fehlgeschlagen", e);
             zeigeFehler(e.getMessage());
@@ -501,11 +567,9 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     }
 
     /**
-     * Bequemlichkeit: Wenn die Trefferliste "alpha gefiltert" werden soll
-     * (z.B. später Mehrfach-Selektion). Aktuell ungenutzt — bewusst belassen
-     * als Beispiel, dass case-insensitiv-getrimmter Vergleich der Standard ist.
+     * Case-insensitiv-getrimmter Vergleichs-Schlüssel für Spielernamen,
+     * konsistent zum Doppelten-Schutz in {@code MeldelisteZiel.findeZeileMitName}.
      */
-    @SuppressWarnings("unused")
     private static String norm(String s) {
         return s.strip().toLowerCase(Locale.ROOT);
     }

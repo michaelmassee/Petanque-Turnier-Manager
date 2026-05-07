@@ -9,8 +9,10 @@ import com.sun.star.awt.ItemEvent;
 import com.sun.star.awt.PushButtonType;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XItemListener;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XTextListener;
@@ -95,6 +97,46 @@ final class UnoControlsHelper {
         props.setPropertyValue("Dropdown", Boolean.FALSE);
         props.setPropertyValue("MultiSelection", Boolean.FALSE);
         cont.insertByName(name, model);
+    }
+
+    /** Checkbox mit Initial-Zustand. */
+    void checkBox(String name, String label, int x, int y, int w, int h, boolean angekreuzt)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Label", label);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("State", (short) (angekreuzt ? 1 : 0));
+        cont.insertByName(name, model);
+    }
+
+    /** {@code true} wenn die Checkbox angekreuzt ist (State == 1). */
+    boolean istAngekreuzt(String name) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) {
+            return false;
+        }
+        XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
+        return cb != null && cb.getState() == 1;
+    }
+
+    /** Reagiert auf jeden Wechsel des Häkchen-Zustands. */
+    void registriereCheckBoxListener(String name, Runnable aktion) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) {
+            return;
+        }
+        XCheckBox cb = Lo.qi(XCheckBox.class, ctrl);
+        if (cb == null) {
+            return;
+        }
+        cb.addItemListener(new XItemListener() {
+            @Override public void itemStateChanged(ItemEvent e) { aktion.run(); }
+            @Override public void disposing(EventObject e) { /* kein Aufräumen nötig */ }
+        });
     }
 
     void button(String name, String label, int x, int y, int w, int h) throws com.sun.star.uno.Exception {
@@ -202,7 +244,7 @@ final class UnoControlsHelper {
         if (lb == null) {
             return;
         }
-        lb.addItemListener(new com.sun.star.awt.XItemListener() {
+        lb.addItemListener(new XItemListener() {
             @Override public void itemStateChanged(ItemEvent e) { aufAuswahl.run(); }
             @Override public void disposing(EventObject e) { /* kein Aufräumen nötig */ }
         });
