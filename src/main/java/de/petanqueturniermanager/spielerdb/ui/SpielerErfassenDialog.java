@@ -42,7 +42,7 @@ import de.petanqueturniermanager.spielerdb.VereinRepository.DuplikatException;
  * Erfasst oder bearbeitet einen Spieler. Verein wird per Autocomplete-ComboBox
  * gewählt; Freitext löst beim OK eine Rückfrage „Verein anlegen?" aus.
  */
-public final class SpielerErfassenDialog extends AbstractUnoDialog {
+public final class  SpielerErfassenDialog extends AbstractUnoDialog {
 
     private static final Logger logger = LogManager.getLogger(SpielerErfassenDialog.class);
 
@@ -50,7 +50,8 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
     private static final int H = 210;
     private static final int LBL_X = 8, LBL_W = 60, LBL_H = 10;
     private static final int FELD_X = 75, FELD_W = 155, FELD_H = 12;
-    private static final int LABEL_LIST_H = 56;
+    private static final int LABEL_LIST_H = 46;
+    private static final int LABEL_HINT_H = 10;
 
     private final SpielerRepository spielerRepo;
     private final VereinRepository vereinRepo;
@@ -118,7 +119,10 @@ public final class SpielerErfassenDialog extends AbstractUnoDialog {
             controls.setzeAusgewaehlteIndizes("lstLabels",
                     indizesFuer(bearbeiten.labelNrs()));
         }
-        y += LABEL_LIST_H + 6;
+        controls.fixedText("lblLabelHinweis",
+                I18n.get("spielerdb.erfassen.label.hinweis"),
+                FELD_X, y - 2 + LABEL_LIST_H + 1, FELD_W, LABEL_HINT_H);
+        y += LABEL_LIST_H + LABEL_HINT_H + 4;
         controls.fixedText("lblLizenznr", I18n.get("spielerdb.erfassen.lizenznr"), LBL_X, y, LBL_W, LBL_H);
         controls.edit("txtLizenznr", bearbeiten == null ? "" : nullToEmpty(bearbeiten.lizenznr()),
                 FELD_X, y - 2, FELD_W, FELD_H);
