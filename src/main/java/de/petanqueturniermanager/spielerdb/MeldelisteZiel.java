@@ -25,6 +25,14 @@ public interface MeldelisteZiel {
     List<String> getVorhandeneSpielernamen();
 
     /**
+     * Liest alle eingetragenen Spieler als Rohdaten (Vorname, Nachname, optional
+     * Vereinsname pro Slot) aus der Meldeliste. Leere Slots werden übersprungen.
+     * Wird vom Abgleich-Dialog genutzt, um fehlende Spieler in die Spieler-DB
+     * zu übernehmen.
+     */
+    List<MeldelisteSpielerDaten> leseAlleSpielerRoh();
+
+    /**
      * Sucht einen Namen (case-insensitiv getrimmt) in der bestehenden Meldeliste.
      *
      * @return 1-basierte Spieler-Nr-Zeile oder {@code -1} wenn nicht vorhanden.

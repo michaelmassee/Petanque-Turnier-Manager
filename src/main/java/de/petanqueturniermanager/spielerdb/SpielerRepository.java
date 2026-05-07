@@ -132,6 +132,53 @@ public final class SpielerRepository {
         }
     }
 
+    /**
+     * Sucht einen vorhandenen Spieler mit identischem Vor-, Nachnamen und
+     * Verein (case-insensitiv). Ein {@code null}-Verein matcht nur einen
+     * Datensatz, der ebenfalls keinen Verein hat. {@code ausserNr} kann beim
+     * Bearbeiten gesetzt werden, um den eigenen Datensatz auszuschließen.
+     */
+    public Optional<SpielerMitVerein> findeDuplikat(String vorname, String nachname,
+            @Nullable Integer vereinNr, @Nullable Integer ausserNr) throws SpielerDbException {
+        String vor = vorname.strip();
+        String nach = nachname.strip();
+        if (vor.isEmpty() || nach.isEmpty()) {
+            return Optional.empty();
+        }
+        StringBuilder sql = new StringBuilder(SELECT_JOIN);
+        sql.append("WHERE JAVA_LOWER(s.VORNAME) = JAVA_LOWER(?) ")
+                .append("AND JAVA_LOWER(s.NACHNAME) = JAVA_LOWER(?) ");
+        if (vereinNr == null) {
+            sql.append("AND s.VEREIN_NR IS NULL ");
+        } else {
+            sql.append("AND s.VEREIN_NR = ? ");
+        }
+        if (ausserNr != null) {
+            sql.append("AND s.NR <> ? ");
+        }
+        sql.append("LIMIT 1");
+        try (PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+            int idx = 1;
+            ps.setString(idx++, vor);
+            ps.setString(idx++, nach);
+            if (vereinNr != null) {
+                ps.setInt(idx++, vereinNr);
+            }
+            if (ausserNr != null) {
+                ps.setInt(idx++, ausserNr);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(map(rs));
+                }
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new SpielerDbException("Duplikat-Lookup fehlgeschlagen: "
+                    + vor + " " + nach, e);
+        }
+    }
+
     public Optional<SpielerMitVerein> findByLizenz(String lizenznr) throws SpielerDbException {
         String norm = lizenznr.strip();
         if (norm.isEmpty()) {
@@ -184,6 +231,10 @@ public final class SpielerRepository {
                     neu.vereinNr(), neu.labelNrs(), lizenz);
         } catch (SQLException e) {
             rollbackLeise();
+            if (istNameDuplikat(e)) {
+                throw new NameDuplikatException("Spieler mit gleichem Vor-/Nachnamen "
+                        + "und Verein existiert bereits: " + vorname + " " + nachname, e);
+            }
             if (istUniqueVerletzung(e)) {
                 throw new LizenzDuplikatException("Lizenznummer existiert bereits: " + lizenz, e);
             }
@@ -230,6 +281,10 @@ public final class SpielerRepository {
             connection.commit();
         } catch (SQLException e) {
             rollbackLeise();
+            if (istNameDuplikat(e)) {
+                throw new NameDuplikatException("Spieler mit gleichem Vor-/Nachnamen "
+                        + "und Verein existiert bereits: " + vorname + " " + nachname, e);
+            }
             if (istUniqueVerletzung(e)) {
                 throw new LizenzDuplikatException("Lizenznummer existiert bereits: " + lizenz, e);
             }
@@ -366,6 +421,22 @@ public final class SpielerRepository {
         }
     }
 
+    /**
+     * UNIQUE-Verletzung des kombinierten Indexes
+     * {@code UQ_SPIELER_NAME_VEREIN} — also gleicher Vor-/Nachname samt Verein.
+     * Wird per Index-Name in der SQLite-Fehlermeldung erkannt.
+     */
+    private static boolean istNameDuplikat(SQLException e) {
+        if (!istUniqueVerletzung(e)) {
+            return false;
+        }
+        String raw = e.getMessage();
+        if (raw == null) {
+            return false;
+        }
+        return raw.toLowerCase(Locale.ROOT).contains("uq_spieler_name_verein");
+    }
+
     private static boolean istUniqueVerletzung(SQLException e) {
         String raw = e.getMessage();
         if (raw == null) {
@@ -393,6 +464,14 @@ public final class SpielerRepository {
         String state = e.getSQLState();
         return state != null && state.startsWith("23")
                 && (msg.contains("foreign") || msg.contains("integrity"));
+    }
+
+    /** Vor-/Nachname + Verein (case-insensitiv, getrimmt) bereits vergeben. */
+    public static final class NameDuplikatException extends SpielerDbException {
+        private static final long serialVersionUID = 1L;
+        public NameDuplikatException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
     /** Lizenznummer (case-sensitiv) ist bereits vergeben. */

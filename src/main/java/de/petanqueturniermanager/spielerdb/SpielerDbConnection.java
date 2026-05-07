@@ -138,13 +138,15 @@ public final class SpielerDbConnection implements AutoCloseable {
      * Repository-Aufrufern.
      */
     private static void registriereJavaLower(Connection conn) throws SQLException {
+        // FLAG_DETERMINISTIC ist Pflicht, damit JAVA_LOWER in CREATE-INDEX-Ausdrücken
+        // (UQ_SPIELER_NAME_VEREIN) genutzt werden darf — SQLite verweigert sonst.
         org.sqlite.Function.create(conn, "JAVA_LOWER", new org.sqlite.Function() {
             @Override
             protected void xFunc() throws SQLException {
                 String arg = value_text(0);
                 result(arg == null ? null : arg.toLowerCase(Locale.ROOT));
             }
-        });
+        }, 1, org.sqlite.Function.FLAG_DETERMINISTIC);
     }
 
     private static void schemaAnlegen(Connection conn) throws SQLException {
@@ -194,6 +196,22 @@ public final class SpielerDbConnection implements AutoCloseable {
             // SQLite-UNIQUE auf nullable Spalte: mehrere NULL erlaubt (Standard-SQL),
             // damit ist die Bedingung „Lizenznr eindeutig wenn gesetzt" erfüllt.
             st.execute("CREATE UNIQUE INDEX IF NOT EXISTS UQ_SPIELER_LIZENZ ON SPIELER(LIZENZNR)");
+            // Eindeutigkeit über (Vorname, Nachname, Verein) – getrimmt und Unicode-
+            // case-insensitiv via JAVA_LOWER. COALESCE(VEREIN_NR, -1) zwingt Null-
+            // Vereine in dieselbe Vergleichsgruppe (sonst würde SQLite NULL-Werte als
+            // distinct behandeln und mehrere namensgleiche Spieler ohne Verein zulassen).
+            // -1 ist als Sentinel sicher, weil VEREIN.NR über AUTOINCREMENT bei 1 startet.
+            try {
+                st.execute("CREATE UNIQUE INDEX IF NOT EXISTS UQ_SPIELER_NAME_VEREIN "
+                        + "ON SPIELER(JAVA_LOWER(TRIM(VORNAME)), JAVA_LOWER(TRIM(NACHNAME)), "
+                        + "COALESCE(VEREIN_NR, -1))");
+            } catch (SQLException e) {
+                // Legacy-DB enthält bereits Duplikate – Index kann nicht angelegt werden.
+                // Lauter Hinweis im Log; die Anwendung läuft weiter, der Pre-Check im
+                // Erfassen-Dialog verhindert das Anlegen neuer Duplikate.
+                logger.warn("UQ_SPIELER_NAME_VEREIN konnte nicht angelegt werden "
+                        + "(vermutlich vorhandene Duplikate): {}", e.getMessage());
+            }
         }
     }
 

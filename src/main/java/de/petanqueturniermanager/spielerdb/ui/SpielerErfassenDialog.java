@@ -34,6 +34,7 @@ import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.spielerdb.SpielerRepository.LizenzDuplikatException;
+import de.petanqueturniermanager.spielerdb.SpielerRepository.NameDuplikatException;
 import de.petanqueturniermanager.spielerdb.VereinDatensatz;
 import de.petanqueturniermanager.spielerdb.VereinRepository;
 import de.petanqueturniermanager.spielerdb.VereinRepository.DuplikatException;
@@ -206,6 +207,10 @@ public final class  SpielerErfassenDialog extends AbstractUnoDialog {
                 return;
             }
 
+            if (istNamensduplikat(vorname, nachname, vereinNr)) {
+                return;
+            }
+
             SpielerDatensatz neu = new SpielerDatensatz(
                     bearbeiten == null ? null : bearbeiten.nr(),
                     vorname, nachname, vereinNr, labelNrs,
@@ -218,12 +223,36 @@ public final class  SpielerErfassenDialog extends AbstractUnoDialog {
                 ergebnis = neu;
             }
             dlg.endExecute();
+        } catch (NameDuplikatException e) {
+            zeigeFehler(I18n.get("spielerdb.fehler.spieler_db_doppelt",
+                    vorname, nachname, vereinEing));
         } catch (LizenzDuplikatException e) {
             zeigeFehler(I18n.get("spielerdb.fehler.lizenz_doppelt", lizenz));
         } catch (SpielerDbException e) {
             logger.error("Spieler speichern fehlgeschlagen", e);
             zeigeFehler(I18n.get("spielerdb.fehler.dbinit", e.getMessage()));
         }
+    }
+
+    /**
+     * Prüft, ob bereits ein Spieler mit identischem Vor-/Nachnamen samt Verein
+     * (case-insensitiv, getrimmt) in der DB existiert. Im Bearbeiten-Modus wird
+     * der eigene Datensatz ausgeschlossen. Liefert {@code true} und zeigt eine
+     * Fehlermeldung, wenn ein Duplikat gefunden wurde — der DB-Unique-Index
+     * {@code UQ_SPIELER_NAME_VEREIN} würde sonst dieselbe Verletzung erzwingen.
+     */
+    private boolean istNamensduplikat(String vorname, String nachname, @Nullable Integer vereinNr)
+            throws SpielerDbException {
+        Integer ausserNr = bearbeiten == null ? null : bearbeiten.nr();
+        Optional<SpielerMitVerein> dup = spielerRepo.findeDuplikat(vorname, nachname, vereinNr, ausserNr);
+        if (dup.isEmpty()) {
+            return false;
+        }
+        SpielerMitVerein s = dup.get();
+        String vereinAnzeige = s.vereinName() == null ? "" : s.vereinName();
+        zeigeFehler(I18n.get("spielerdb.fehler.spieler_db_doppelt",
+                s.vorname(), s.nachname(), vereinAnzeige));
+        return true;
     }
 
     private Optional<Integer> aufloeseOderAnlegenVerein(String eingabe) throws SpielerDbException {

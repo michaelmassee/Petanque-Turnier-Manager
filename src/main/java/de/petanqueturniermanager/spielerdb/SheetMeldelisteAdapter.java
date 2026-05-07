@@ -190,6 +190,35 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
         return namen;
     }
 
+    /** Spaltenindex der optionalen Vereinsname-Zelle für Spieler-Slot {@code i} (0-basiert). */
+    private int vereinSpalte(int slotIndex) {
+        return nachnameSpalte(slotIndex) + 1;
+    }
+
+    @Override
+    public List<MeldelisteSpielerDaten> leseAlleSpielerRoh() {
+        List<MeldelisteSpielerDaten> result = new ArrayList<>();
+        for (int zeile = ersteDatenZeile; zeile <= MAX_DATEN_ZEILE; zeile++) {
+            String erstesVor = sicherText(sheetHelper, sheet, vornameSpalte(0), zeile).strip();
+            String erstesNach = sicherText(sheetHelper, sheet, nachnameSpalte(0), zeile).strip();
+            if (erstesVor.isEmpty() && erstesNach.isEmpty()) {
+                break;
+            }
+            for (int s = 0; s < anzSpieler; s++) {
+                String vor  = sicherText(sheetHelper, sheet, vornameSpalte(s), zeile).strip();
+                String nach = sicherText(sheetHelper, sheet, nachnameSpalte(s), zeile).strip();
+                if (vor.isEmpty() && nach.isEmpty()) {
+                    continue;
+                }
+                String verein = vereinsnameAktiv
+                        ? sicherText(sheetHelper, sheet, vereinSpalte(s), zeile).strip()
+                        : null;
+                result.add(new MeldelisteSpielerDaten(vor, nach, verein, zeile + 1));
+            }
+        }
+        return result;
+    }
+
     @Override
     public int findeZeileMitName(String spielerName) {
         String norm = spielerName.strip().toLowerCase(Locale.ROOT);

@@ -61,17 +61,17 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private static final Logger logger = LogManager.getLogger(SpielerSucheDialog.class);
 
     private static final int B = 540;
-    private static final int H = 360;
-    private static final int SUCH_FELD_X = 8, SUCH_FELD_Y = 22, SUCH_FELD_W = 350, SUCH_FELD_H = 12;
-    private static final int FILTER_Y = 38, FILTER_W = 250, FILTER_H = 10;
-    private static final int VEREIN_LABEL_X = 8, VEREIN_LABEL_Y = 54, VEREIN_LABEL_W = 35;
-    private static final int VEREIN_X = 45, VEREIN_Y = 52, VEREIN_W = 315, VEREIN_H = 12;
-    private static final int LBLFILTER_LABEL_X = 8, LBLFILTER_LABEL_Y = 70, LBLFILTER_LABEL_W = 35;
-    private static final int LBLFILTER_X = 45, LBLFILTER_Y = 68, LBLFILTER_W = 315, LBLFILTER_H = 12;
-    private static final int LIST_X = 8, LIST_Y = 84, LIST_W = 350, LIST_H = 211;
+    private static final int H = 290;
+    private static final int SUCH_FELD_X = 8, SUCH_FELD_Y = 12, SUCH_FELD_W = 350, SUCH_FELD_H = 12;
+    private static final int FILTER_X = 365, FILTER_Y = 14, FILTER_W = 170, FILTER_H = 10;
+    private static final int VEREIN_LABEL_X = 8, VEREIN_LABEL_Y = 30, VEREIN_LABEL_W = 35;
+    private static final int VEREIN_X = 45, VEREIN_Y = 28, VEREIN_W = 315, VEREIN_H = 12;
+    private static final int LBLFILTER_LABEL_X = 8, LBLFILTER_LABEL_Y = 46, LBLFILTER_LABEL_W = 35;
+    private static final int LBLFILTER_X = 45, LBLFILTER_Y = 44, LBLFILTER_W = 315, LBLFILTER_H = 12;
+    private static final int LIST_X = 8, LIST_Y = 60, LIST_W = 350, LIST_H = 200;
     private static final int BTN_X = 365, BTN_W = 165, BTN_H = 14;
-    private static final int TEAM_LIST_H = 120;
-    private static final int FOOTER_Y = 305;
+    private static final int TEAM_LIST_H = 100;
+    private static final int FOOTER_Y = 262;
     private static final int LIMIT_TREFFER = 200;
 
     private final SpielerRepository spielerRepo;
@@ -150,7 +150,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         if (istUebernahmeModus()) {
             controls.checkBox("chkFilterGemeldet",
                     I18n.get("spielerdb.suche.filter.gemeldete_ausblenden"),
-                    SUCH_FELD_X, FILTER_Y, FILTER_W, FILTER_H, true);
+                    FILTER_X, FILTER_Y, FILTER_W, FILTER_H, true);
             aktualisiereGemeldeteCache();
         }
 

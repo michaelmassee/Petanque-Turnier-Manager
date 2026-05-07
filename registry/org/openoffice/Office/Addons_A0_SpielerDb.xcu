@@ -92,6 +92,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- A0A5: Mit Meldeliste abgleichen -->
+							<node oor:name="A0A5" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Mit Meldeliste abgleichen…</value>
+									<value xml:lang="en">Sync with entry list…</value>
+									<value xml:lang="es">Sincronizar con la inscripción…</value>
+									<value xml:lang="fr">Synchroniser avec la liste…</value>
+									<value xml:lang="nl">Synchroniseren met inschrijflijst…</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_abgleich</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

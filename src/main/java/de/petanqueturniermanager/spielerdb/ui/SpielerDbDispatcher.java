@@ -91,6 +91,39 @@ public final class SpielerDbDispatcher {
         }
     }
 
+    public static void abgleichMitMeldeliste(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerAktivesSheet(ws);
+        if (ziel.isEmpty()) {
+            MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
+                    .caption(I18n.get("spielerdb.menu.toplevel"))
+                    .message(I18n.get("spielerdb.fehler.keine_meldeliste"))
+                    .show();
+            return;
+        }
+        Optional<SpielerDbConnection> conn = oeffneOderMelde(ctx);
+        if (conn.isEmpty()) {
+            return;
+        }
+        ProcessBox pb = ProcessBox.from();
+        boolean warSichtbar = pb.istSichtbar();
+        if (warSichtbar) {
+            pb.hide();
+        }
+        try {
+            new SpielerDbAbgleichDialog(ctx,
+                    new SpielerRepository(conn.get()),
+                    new VereinRepository(conn.get()),
+                    ziel.get()).zeigen();
+        } catch (com.sun.star.uno.Exception | RuntimeException e) {
+            logger.error("Spieler-DB-Abgleich-Dialog fehlgeschlagen", e);
+        } finally {
+            if (warSichtbar) {
+                pb.visible();
+            }
+        }
+    }
+
     public static void oeffneVereinsVerwaltung(WorkingSpreadsheet ws) {
         Optional<SpielerDbConnection> conn = oeffneOderMelde(ws.getxContext());
         if (conn.isEmpty()) {

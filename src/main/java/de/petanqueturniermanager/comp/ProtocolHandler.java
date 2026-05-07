@@ -302,6 +302,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_IN_MELDELISTE = "spielerdb_in_meldeliste";
 	public static final String CMD_SPIELERDB_VEREINE       = "spielerdb_vereine";
 	public static final String CMD_SPIELERDB_LABELS        = "spielerdb_labels";
+	public static final String CMD_SPIELERDB_ABGLEICH      = "spielerdb_abgleich";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -827,6 +828,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 						.oeffneLabelVerwaltung(ws);
 				break;
+			case CMD_SPIELERDB_ABGLEICH:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.abgleichMitMeldeliste(ws);
+				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				handleKonfiguration(command, ws);
 				break;
@@ -1278,7 +1283,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_SPIELERDB_OEFFNEN,
 				 CMD_SPIELERDB_IN_MELDELISTE,
 				 CMD_SPIELERDB_VEREINE,
-				 CMD_SPIELERDB_LABELS                       -> true;
+				 CMD_SPIELERDB_LABELS,
+				 CMD_SPIELERDB_ABGLEICH                     -> true;
 			// Timer – zustandsabhängig
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,
