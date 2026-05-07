@@ -14,6 +14,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -59,6 +60,16 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
     private static final String PROP_TEAMNAME    = "Meldeliste Teamname";
     private static final String PROP_VEREINSNAME = "Meldeliste Vereinsname";
     private static final String FLAG_AN          = "J";
+
+    /**
+     * Wert in der Aktiv-Spalte: „nimmt teil". Die Konvention ist über
+     * Schweizer/JGJ/KO/Poule/FormuleX/Kaskade hinweg konstant
+     * ({@code AKTIV_WERT_NIMMT_TEIL = 1}); die Aktiv-Spalte selbst sitzt zwei
+     * Spalten rechts neben der letzten Spielerdaten-Spalte (dazwischen liegt
+     * SP/RNG). Übernommene Teams würden ohne dieses Flag als „inaktiv"
+     * gelten und der Update-Workflow käme mit „Es sind keine Teams aktiv".
+     */
+    private static final int AKTIV_WERT_NIMMT_TEIL = 1;
 
     private final XSpreadsheetDocument doc;
     private final XSpreadsheet sheet;
@@ -251,6 +262,13 @@ final class SheetMeldelisteAdapter implements MeldelisteZiel {
             // Range startet immer in Spalte 1 (rechts neben Spalte 0 = Nr).
             RangePosition pos = RangePosition.from(1, zeile, letzteSchreibSpalte, zeile);
             RangeHelper.from(sheet, doc, pos).setDataInRange(rangeData);
+
+            // Aktiv-Spalte (= letzteDatenSpalte + 2) auf „nimmt teil" setzen,
+            // sonst kommt „Meldeliste Aktualisieren" mit der Frage „Es sind
+            // keine Teams aktiv. Sollen alle aktiviert werden?".
+            int aktivSpalte = letzteSchreibSpalte + 2;
+            sheetHelper.setNumberValueInCell(NumberCellValue
+                    .from(sheet, Position.from(aktivSpalte, zeile)).setValue(AKTIV_WERT_NIMMT_TEIL));
             return spieler.size();
         } catch (Exception e) {
             throw new MeldelisteSchreibException("Schreibvorgang fehlgeschlagen", e);
