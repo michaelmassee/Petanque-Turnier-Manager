@@ -15,7 +15,6 @@ import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XNumericField;
-import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
@@ -108,7 +107,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(263));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(217));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -144,34 +143,30 @@ public class KoTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 86, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbahnX", "Keine Spalte", 8, 98, 140, 10,
-				defaultSpielbahn == SpielrundeSpielbahn.X);
-		addRadioButton(xMSF, cont, "radioSpielbahnL", "Leere Spalte (händisch)", 8, 110, 140, 10,
-				defaultSpielbahn == SpielrundeSpielbahn.L);
-		addRadioButton(xMSF, cont, "radioSpielbahnN", "Durchnummerieren (1-n)", 8, 122, 140, 10,
-				defaultSpielbahn == SpielrundeSpielbahn.N);
-		addRadioButton(xMSF, cont, "radioSpielbahnR", "Zufällig vergeben", 8, 134, 140, 10,
-				defaultSpielbahn == SpielrundeSpielbahn.R);
+		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 86, 70, 10);
+		addListBox(xMSF, cont, "lstSpielbahn",
+				new String[] { "Keine Spalte", "Leere Spalte (händisch)",
+						"Durchnummerieren (1-n)", "Zufällig vergeben" },
+				spielbahnIndex(defaultSpielbahn), 82, 84, 70, 12);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 150, 150, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 104, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 156, 140, 10, defaultSpielUmPlatz3);
+		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 110, 140, 10, defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 170, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 124, 150, 2);
 
-		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 176, 100, 10);
-		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 188, 60, 12, defaultGruppenGroesse, 2, 512);
+		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 130, 100, 10);
+		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 142, 60, 12, defaultGruppenGroesse, 2, 512);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 204, 150, 2);
+		addFixedLine(xMSF, cont, "sep6", 5, 158, 150, 2);
 
-		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 210, 100, 10);
-		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 222, 60, 12, defaultMinRestGroesse, 1, 512);
+		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 164, 100, 10);
+		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 176, 60, 12, defaultMinRestGroesse, 1, 512);
 
-		addFixedLine(xMSF, cont, "sep7", 5, 238, 150, 2);
+		addFixedLine(xMSF, cont, "sep7", 5, 192, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 246, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 246, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 200, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 200, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -216,10 +211,12 @@ public class KoTurnierParameterDialog {
 			KoSpielbaumTeamAnzeige spielbaumAnzeige = readListBoxSelected(xcc, "lstSpielbaum") == 1
 					? KoSpielbaumTeamAnzeige.NAME
 					: KoSpielbaumTeamAnzeige.NR;
-			SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
-			if (isRadioSelected(xcc, "radioSpielbahnL")) spielbahn = SpielrundeSpielbahn.L;
-			else if (isRadioSelected(xcc, "radioSpielbahnN")) spielbahn = SpielrundeSpielbahn.N;
-			else if (isRadioSelected(xcc, "radioSpielbahnR")) spielbahn = SpielrundeSpielbahn.R;
+			SpielrundeSpielbahn spielbahn = switch (readListBoxSelected(xcc, "lstSpielbahn")) {
+				case 1 -> SpielrundeSpielbahn.L;
+				case 2 -> SpielrundeSpielbahn.N;
+				case 3 -> SpielrundeSpielbahn.R;
+				default -> SpielrundeSpielbahn.X;
+			};
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbPlatz3");
 			int gruppenGroesse = readNumericFieldValue(xcc, "tfGruppenGroesse", defaultGruppenGroesse);
 			int minRestGroesse = readNumericFieldValue(xcc, "tfMinRestGroesse", defaultMinRestGroesse);
@@ -253,6 +250,15 @@ public class KoTurnierParameterDialog {
 		};
 	}
 
+	private static short spielbahnIndex(SpielrundeSpielbahn spielbahn) {
+		return switch (spielbahn) {
+			case L -> 1;
+			case N -> 2;
+			case R -> 3;
+			default -> 0;
+		};
+	}
+
 	private short readListBoxSelected(XControlContainer xcc, String name) {
 		XControl ctrl = xcc.getControl(name);
 		if (ctrl == null) {
@@ -260,15 +266,6 @@ public class KoTurnierParameterDialog {
 		}
 		XListBox lb = Lo.qi(XListBox.class, ctrl);
 		return lb != null ? lb.getSelectedItemPos() : 0;
-	}
-
-	private boolean isRadioSelected(XControlContainer xcc, String name) {
-		XControl ctrl = xcc.getControl(name);
-		if (ctrl == null) {
-			return false;
-		}
-		XRadioButton radio = Lo.qi(XRadioButton.class, ctrl);
-		return radio != null && radio.getState();
 	}
 
 	private boolean readCheckBoxState(XControlContainer xcc, String name) {
@@ -312,20 +309,6 @@ public class KoTurnierParameterDialog {
 		props.setPropertyValue("PositionY", Integer.valueOf(y));
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
-		cont.insertByName(name, model);
-	}
-
-	private void addRadioButton(XMultiServiceFactory xMSF, XNameContainer cont,
-			String name, String label, int x, int y, int w, int h, boolean selected)
-			throws com.sun.star.uno.Exception {
-		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlRadioButtonModel");
-		XPropertySet props = Lo.qi(XPropertySet.class, model);
-		props.setPropertyValue("Label", label);
-		props.setPropertyValue("PositionX", Integer.valueOf(x));
-		props.setPropertyValue("PositionY", Integer.valueOf(y));
-		props.setPropertyValue("Width", Integer.valueOf(w));
-		props.setPropertyValue("Height", Integer.valueOf(h));
-		props.setPropertyValue("State", (short) (selected ? 1 : 0));
 		cont.insertByName(name, model);
 	}
 
