@@ -13,6 +13,7 @@ import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XNumericField;
 import com.sun.star.awt.XRadioButton;
 import com.sun.star.awt.XToolkit;
@@ -107,7 +108,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(320));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(285));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -122,56 +123,55 @@ public class KoTurnierParameterDialog {
 		XControlContainer xcc = Lo.qi(XControlContainer.class, dialog);
 
 		addLabel(xMSF, cont, "lblFormation", "Formation:", 8, 8, 80, 10);
-		addRadioButton(xMSF, cont, "radioTete", Formation.TETE.getBezeichnung(), 8, 21, 140, 10,
-				defaultFormation == Formation.TETE);
-		addRadioButton(xMSF, cont, "radioDoublette", Formation.DOUBLETTE.getBezeichnung(), 8, 33, 140, 10,
-				defaultFormation == Formation.DOUBLETTE);
-		addRadioButton(xMSF, cont, "radioTriplette", Formation.TRIPLETTE.getBezeichnung(), 8, 45, 140, 10,
-				defaultFormation == Formation.TRIPLETTE);
+		addListBox(xMSF, cont, "lstFormation",
+				new String[] { Formation.TETE.getBezeichnung(),
+						Formation.DOUBLETTE.getBezeichnung(),
+						Formation.TRIPLETTE.getBezeichnung() },
+				formationIndex(defaultFormation), 92, 6, 60, 12);
 
-		addFixedLine(xMSF, cont, "sep1", 5, 59, 150, 2);
+		addFixedLine(xMSF, cont, "sep1", 5, 24, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen", 8, 65, 140, 10, defaultTeamnameAnzeigen);
-		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen", 8, 79, 140, 10, defaultVereinsnameAnzeigen);
+		addCheckBox(xMSF, cont, "cbTeamname", "Teamname anzeigen", 8, 30, 140, 10, defaultTeamnameAnzeigen);
+		addCheckBox(xMSF, cont, "cbVereinsname", "Vereinsname anzeigen", 8, 44, 140, 10, defaultVereinsnameAnzeigen);
 
-		addFixedLine(xMSF, cont, "sep2", 5, 93, 150, 2);
+		addFixedLine(xMSF, cont, "sep2", 5, 58, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbaum", "Anzeige im Spielbaum:", 8, 99, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbaumNr", "Teamnummer", 8, 111, 140, 10,
+		addLabel(xMSF, cont, "lblSpielbaum", "Anzeige im Spielbaum:", 8, 64, 140, 10);
+		addRadioButton(xMSF, cont, "radioSpielbaumNr", "Teamnummer", 8, 76, 140, 10,
 				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NR);
-		addRadioButton(xMSF, cont, "radioSpielbaumName", "Teamname", 8, 123, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbaumName", "Teamname", 8, 88, 140, 10,
 				defaultSpielbaumTeamAnzeige == KoSpielbaumTeamAnzeige.NAME);
 
-		addFixedLine(xMSF, cont, "sep3", 5, 137, 150, 2);
+		addFixedLine(xMSF, cont, "sep3", 5, 102, 150, 2);
 
-		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 143, 140, 10);
-		addRadioButton(xMSF, cont, "radioSpielbahnX", "Keine Spalte", 8, 155, 140, 10,
+		addLabel(xMSF, cont, "lblSpielbahn", "Spielbahn im Spielbaum:", 8, 108, 140, 10);
+		addRadioButton(xMSF, cont, "radioSpielbahnX", "Keine Spalte", 8, 120, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.X);
-		addRadioButton(xMSF, cont, "radioSpielbahnL", "Leere Spalte (händisch)", 8, 167, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbahnL", "Leere Spalte (händisch)", 8, 132, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.L);
-		addRadioButton(xMSF, cont, "radioSpielbahnN", "Durchnummerieren (1-n)", 8, 179, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbahnN", "Durchnummerieren (1-n)", 8, 144, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.N);
-		addRadioButton(xMSF, cont, "radioSpielbahnR", "Zufällig vergeben", 8, 191, 140, 10,
+		addRadioButton(xMSF, cont, "radioSpielbahnR", "Zufällig vergeben", 8, 156, 140, 10,
 				defaultSpielbahn == SpielrundeSpielbahn.R);
 
-		addFixedLine(xMSF, cont, "sep4", 5, 207, 150, 2);
+		addFixedLine(xMSF, cont, "sep4", 5, 172, 150, 2);
 
-		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 213, 140, 10, defaultSpielUmPlatz3);
+		addCheckBox(xMSF, cont, "cbPlatz3", "Spiel um Platz 3/4", 8, 178, 140, 10, defaultSpielUmPlatz3);
 
-		addFixedLine(xMSF, cont, "sep5", 5, 227, 150, 2);
+		addFixedLine(xMSF, cont, "sep5", 5, 192, 150, 2);
 
-		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 233, 100, 10);
-		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 245, 60, 12, defaultGruppenGroesse, 2, 512);
+		addLabel(xMSF, cont, "lblGruppenGroesse", "Gruppen Größe:", 8, 198, 100, 10);
+		addNumericField(xMSF, cont, "tfGruppenGroesse", 8, 210, 60, 12, defaultGruppenGroesse, 2, 512);
 
-		addFixedLine(xMSF, cont, "sep6", 5, 261, 150, 2);
+		addFixedLine(xMSF, cont, "sep6", 5, 226, 150, 2);
 
-		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 267, 100, 10);
-		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 279, 60, 12, defaultMinRestGroesse, 1, 512);
+		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 232, 100, 10);
+		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 244, 60, 12, defaultMinRestGroesse, 1, 512);
 
-		addFixedLine(xMSF, cont, "sep7", 5, 295, 150, 2);
+		addFixedLine(xMSF, cont, "sep7", 5, 260, 150, 2);
 
-		addButton(xMSF, cont, "btnOk", "OK", 22, 303, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 303, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 268, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 268, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -238,13 +238,28 @@ public class KoTurnierParameterDialog {
 	// ---------------------------------------------------------------
 
 	private Formation readFormation(XControlContainer xcc) {
-		if (isRadioSelected(xcc, "radioTete")) {
-			return Formation.TETE;
+		return switch (readListBoxSelected(xcc, "lstFormation")) {
+			case 1 -> Formation.DOUBLETTE;
+			case 2 -> Formation.TRIPLETTE;
+			default -> Formation.TETE;
+		};
+	}
+
+	private static short formationIndex(Formation formation) {
+		return switch (formation) {
+			case DOUBLETTE -> 1;
+			case TRIPLETTE -> 2;
+			default -> 0;
+		};
+	}
+
+	private short readListBoxSelected(XControlContainer xcc, String name) {
+		XControl ctrl = xcc.getControl(name);
+		if (ctrl == null) {
+			return 0;
 		}
-		if (isRadioSelected(xcc, "radioDoublette")) {
-			return Formation.DOUBLETTE;
-		}
-		return Formation.TRIPLETTE;
+		XListBox lb = Lo.qi(XListBox.class, ctrl);
+		return lb != null ? lb.getSelectedItemPos() : 0;
 	}
 
 	private boolean isRadioSelected(XControlContainer xcc, String name) {
@@ -311,6 +326,21 @@ public class KoTurnierParameterDialog {
 		props.setPropertyValue("Width", Integer.valueOf(w));
 		props.setPropertyValue("Height", Integer.valueOf(h));
 		props.setPropertyValue("State", (short) (selected ? 1 : 0));
+		cont.insertByName(name, model);
+	}
+
+	private void addListBox(XMultiServiceFactory xMSF, XNameContainer cont,
+			String name, String[] items, short selectedIndex, int x, int y, int w, int h)
+			throws com.sun.star.uno.Exception {
+		Object model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+		XPropertySet props = Lo.qi(XPropertySet.class, model);
+		props.setPropertyValue("Dropdown", Boolean.TRUE);
+		props.setPropertyValue("StringItemList", items);
+		props.setPropertyValue("SelectedItems", new short[] { selectedIndex });
+		props.setPropertyValue("PositionX", Integer.valueOf(x));
+		props.setPropertyValue("PositionY", Integer.valueOf(y));
+		props.setPropertyValue("Width", Integer.valueOf(w));
+		props.setPropertyValue("Height", Integer.valueOf(h));
 		cont.insertByName(name, model);
 	}
 
