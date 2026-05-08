@@ -10,6 +10,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.algorithmen.FormuleXErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
@@ -98,11 +99,25 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
             return false;
         }
 
+        // Bestehende Rangliste aktualisieren, damit die Sortierung der Paarungen
+        // auf dem aktuellen Stand basiert. Nur ab Runde >= 2 sinnvoll.
+        if (neueSpielrundeNr >= 2) {
+            vorNaechsterRunde();
+        }
+
         getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrundeNr));
 
         List<FormuleXErgebnis> ergebnisse = gespieltenRundenEinlesen(aktiveMeldungen, 1, neueSpielrundeNr - 1);
 
         return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrundeNr), ergebnisse);
+    }
+
+    /**
+     * Hook: aktualisiert die FormuleX-Rangliste vor dem Anlegen der nächsten
+     * Runde. Wird nur ab neuer Rundennummer >= 2 aufgerufen.
+     */
+    protected void vorNaechsterRunde() throws GenerateException {
+        new FormuleXRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
     }
 
     private boolean alleErgebnisseEingetragen(SpielRundeNr spielRundeNr) throws GenerateException {

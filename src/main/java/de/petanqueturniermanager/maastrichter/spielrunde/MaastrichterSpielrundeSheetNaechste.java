@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.maastrichter.spielrunde;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -11,6 +12,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
@@ -62,8 +64,13 @@ public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeShee
 		return true;
 	}
 
+	@Override
+	protected void vorNaechsterRunde() throws GenerateException {
+		new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
+	}
+
 	/** Öffentlicher Einstiegspunkt für Testdaten-Generatoren. */
-	public void erstelleNaechsteVorrunde() throws de.petanqueturniermanager.exception.GenerateException {
+	public void erstelleNaechsteVorrunde() throws GenerateException {
 		doRun();
 	}
 

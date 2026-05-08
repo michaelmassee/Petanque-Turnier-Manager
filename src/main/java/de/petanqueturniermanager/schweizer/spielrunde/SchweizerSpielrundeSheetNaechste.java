@@ -19,6 +19,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.toolbar.TurnierModus;
@@ -96,6 +97,12 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 			return false;
 		}
 
+		// Bestehende Rangliste aktualisieren, damit die Auslosung der neuen Runde auf
+		// einem konsistenten Stand basiert. Nur ab Runde >= 2 sinnvoll.
+		if (neueSpielrunde >= 2) {
+			vorNaechsterRunde();
+		}
+
 		// Konfiguration auf neue Rundennummer setzen (muss VOR neueSpielrunde() passieren,
 		// da getSpielRundeNr() den Sheet-Namen daraus ableitet)
 		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrunde));
@@ -117,6 +124,17 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	 */
 	protected boolean pruefeKannNeueRundeErstellen(int neueSpielrundeNr) {
 		return true;
+	}
+
+	/**
+	 * Hook: wird unmittelbar vor dem Anlegen der nächsten Spielrunde aufgerufen,
+	 * sobald die neue Rundennummer >= 2 ist und alle Vorprüfungen bestanden sind.
+	 * Default: aktualisiert die Schweizer-Rangliste, damit die Auslosung auf den
+	 * aktuellen Ergebnissen basiert. Subklassen können die zu aktualisierende
+	 * Rangliste austauschen (z.B. Maastrichter-Vorrunden-Rangliste).
+	 */
+	protected void vorNaechsterRunde() throws GenerateException {
+		new SchweizerRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
 	}
 
 	/**
