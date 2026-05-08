@@ -6,100 +6,102 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.EnumSet;
+import java.text.Collator;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 
-import org.jspecify.annotations.Nullable;
+import com.opencsv.CSVWriterBuilder;
+import com.opencsv.ICSVWriter;
 
-import de.petanqueturniermanager.spielerdb.LabelDatensatz;
+import de.petanqueturniermanager.spielerdb.SpielerDbCsvFormat;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
-import de.petanqueturniermanager.spielerdb.VereinDatensatz;
 
 /**
- * Schreibt pro Entity eine eigene CSV-Datei in das Zielverzeichnis. UTF-8 mit
- * BOM (für Excel/Calc-Kompatibilität) und Semikolon-Separator (DE-Locale).
+ * Schreibt die Spieler-Stammdaten in eine flache, single-file CSV mit den
+ * Spalten {@code vorname;nachname;verein;lizenznr} — ohne IDs. Vereine sind
+ * über den Namen denormalisiert in der Spielerzeile enthalten; Labels sind
+ * im Format nicht abgedeckt (für Roundtrips inkl. Labels stehen JSON,
+ * Calc-ODS und SQLite-Backup zur Verfügung).
  *
- * <p>Spaltenschema (stabil; Re-Import ist auf diese Header angewiesen):
- * <ul>
- *   <li>{@code spieler.csv}: nr;vorname;nachname;vereinNr;vereinName;lizenznr</li>
- *   <li>{@code vereine.csv}: nr;name</li>
- *   <li>{@code labels.csv}: nr;name</li>
- *   <li>{@code spieler_labels.csv}: spielerNr;labelNr</li>
- * </ul>
+ * <p>Datei-Aufbau:
+ * <ol>
+ *   <li>UTF-8 BOM (Excel-Kompatibilität)</li>
+ *   <li>Format-Marker: {@code # PTM-SpielerDB-CSV;version=1}</li>
+ *   <li>Header: {@code vorname;nachname;verein;lizenznr}</li>
+ *   <li>Daten-Zeilen, sortiert nach Nachname → Vorname → Verein
+ *       (locale-stabiler {@link Collator}, case-insensitiv)</li>
+ * </ol>
+ *
+ * <p>Quoting/Escape erfolgt strikt über opencsv ({@link CSVWriter}) mit
+ * Separator {@code ;} und Quote {@code "} — Felder mit Sonderzeichen
+ * werden gequotet, eingebettete Anführungszeichen verdoppelt.
+ *
+ * <p>{@code request.target()} muss eine Datei sein (Endung {@code .csv}).
+ * {@link ExportEntity#VEREINE} und {@link ExportEntity#LABELS} im Scope
+ * werden ignoriert — die flache CSV deckt nur Spieler+Verein ab.
  */
 public final class SpielerDbCsvExporter implements SpielerDbExporter {
 
     private static final char BOM = '﻿';
-    private static final char SEP = ';';
-    private static final String NL = "\r\n";
 
     @Override
     public void export(SpielerDbExportData data, ExportRequest request) throws SpielerDbException {
-        Path zielVerzeichnis = request.target();
-        try {
-            Files.createDirectories(zielVerzeichnis);
+        if (!request.entities().contains(ExportEntity.SPIELER)) {
+            throw new SpielerDbException(
+                    "Flache CSV exportiert Spieler+Verein — Spieler-Entity muss im Scope sein");
+        }
+        Path zielDatei = request.target();
+        Path elternVerzeichnis = zielDatei.toAbsolutePath().getParent();
+        if (elternVerzeichnis != null) {
+            try {
+                Files.createDirectories(elternVerzeichnis);
+            } catch (IOException e) {
+                throw new SpielerDbException("CSV-Zielverzeichnis nicht anlegbar: "
+                        + elternVerzeichnis, e);
+            }
+        }
+
+        List<SpielerMitVerein> sortiert = sortiere(data.spieler());
+
+        try (BufferedWriter writer = oeffne(zielDatei);
+                ICSVWriter csv = new CSVWriterBuilder(writer)
+                        .withSeparator(SpielerDbCsvFormat.SEPARATOR)
+                        .withLineEnd(System.lineSeparator())
+                        .build()) {
+            writer.write(SpielerDbCsvFormat.formatMarkerZeile() + System.lineSeparator());
+            csv.writeNext(SpielerDbCsvFormat.HEADER, false);
+            for (SpielerMitVerein s : sortiert) {
+                csv.writeNext(zuZeile(s), false);
+            }
         } catch (IOException e) {
-            throw new SpielerDbException("CSV-Zielverzeichnis nicht anlegbar: " + zielVerzeichnis, e);
-        }
-        EnumSet<ExportEntity> entities = request.entities();
-        try {
-            if (entities.contains(ExportEntity.SPIELER)) {
-                schreibeSpieler(data, zielVerzeichnis.resolve("spieler.csv"));
-            }
-            if (entities.contains(ExportEntity.VEREINE)) {
-                schreibeVereine(data, zielVerzeichnis.resolve("vereine.csv"));
-            }
-            if (entities.contains(ExportEntity.LABELS)) {
-                schreibeLabels(data, zielVerzeichnis.resolve("labels.csv"));
-            }
-            if (entities.contains(ExportEntity.SPIELER) && entities.contains(ExportEntity.LABELS)) {
-                schreibeJunction(data, zielVerzeichnis.resolve("spieler_labels.csv"));
-            }
-        } catch (IOException e) {
-            throw new SpielerDbException("CSV-Export fehlgeschlagen: " + zielVerzeichnis, e);
+            throw new SpielerDbException("CSV-Export fehlgeschlagen: " + zielDatei, e);
         }
     }
 
-    private static void schreibeSpieler(SpielerDbExportData data, Path datei) throws IOException {
-        try (BufferedWriter w = oeffne(datei)) {
-            schreibeKopf(w, "nr", "vorname", "nachname", "vereinNr", "vereinName", "lizenznr");
-            for (SpielerMitVerein s : data.spieler()) {
-                schreibeZeile(w,
-                        Integer.toString(s.nr()),
-                        s.vorname(),
-                        s.nachname(),
-                        formatNullableInt(s.vereinNr()),
-                        s.vereinName() == null ? "" : s.vereinName(),
-                        s.lizenznr() == null ? "" : s.lizenznr());
-            }
-        }
+    private static List<SpielerMitVerein> sortiere(List<SpielerMitVerein> spieler) {
+        // Collator für stabile, locale-konsistente Reihenfolge (Umlaute richtig).
+        Collator collator = Collator.getInstance(Locale.ROOT);
+        collator.setStrength(Collator.SECONDARY); // case-insensitiv
+        Comparator<String> stringComparator = Comparator.nullsFirst(collator::compare);
+        Comparator<SpielerMitVerein> cmp = Comparator
+                .<SpielerMitVerein, String>comparing(SpielerMitVerein::nachname, stringComparator)
+                .thenComparing(SpielerMitVerein::vorname, stringComparator)
+                .thenComparing(SpielerMitVerein::vereinName, stringComparator);
+        List<SpielerMitVerein> kopie = new ArrayList<>(spieler);
+        kopie.sort(cmp);
+        return kopie;
     }
 
-    private static void schreibeVereine(SpielerDbExportData data, Path datei) throws IOException {
-        try (BufferedWriter w = oeffne(datei)) {
-            schreibeKopf(w, "nr", "name");
-            for (VereinDatensatz v : data.vereine()) {
-                schreibeZeile(w, formatNullableInt(v.nr()), v.name());
-            }
-        }
-    }
-
-    private static void schreibeLabels(SpielerDbExportData data, Path datei) throws IOException {
-        try (BufferedWriter w = oeffne(datei)) {
-            schreibeKopf(w, "nr", "name");
-            for (LabelDatensatz l : data.labels()) {
-                schreibeZeile(w, formatNullableInt(l.nr()), l.name());
-            }
-        }
-    }
-
-    private static void schreibeJunction(SpielerDbExportData data, Path datei) throws IOException {
-        try (BufferedWriter w = oeffne(datei)) {
-            schreibeKopf(w, "spielerNr", "labelNr");
-            for (SpielerLabelZuordnung z : data.spielerLabels()) {
-                schreibeZeile(w, Integer.toString(z.spielerNr()), Integer.toString(z.labelNr()));
-            }
-        }
+    private static String[] zuZeile(SpielerMitVerein s) {
+        return new String[] {
+                s.vorname(),
+                s.nachname(),
+                s.vereinName() == null ? "" : s.vereinName(),
+                s.lizenznr() == null ? "" : s.lizenznr()
+        };
     }
 
     private static BufferedWriter oeffne(Path datei) throws IOException {
@@ -107,34 +109,5 @@ public final class SpielerDbCsvExporter implements SpielerDbExporter {
         // BOM zuerst — sonst erkennt Excel UTF-8 nicht und stellt Umlaute falsch dar.
         w.write(BOM);
         return new BufferedWriter(w);
-    }
-
-    private static void schreibeKopf(BufferedWriter w, String... spalten) throws IOException {
-        schreibeZeile(w, spalten);
-    }
-
-    private static void schreibeZeile(BufferedWriter w, String... werte) throws IOException {
-        for (int i = 0; i < werte.length; i++) {
-            if (i > 0) {
-                w.write(SEP);
-            }
-            w.write(maskiere(werte[i]));
-        }
-        w.write(NL);
-    }
-
-    private static String maskiere(String wert) {
-        boolean braucheQuotes = wert.indexOf(SEP) >= 0
-                || wert.indexOf('"') >= 0
-                || wert.indexOf('\n') >= 0
-                || wert.indexOf('\r') >= 0;
-        if (!braucheQuotes) {
-            return wert;
-        }
-        return "\"" + wert.replace("\"", "\"\"") + "\"";
-    }
-
-    private static String formatNullableInt(@Nullable Integer wert) {
-        return wert == null ? "" : Integer.toString(wert);
     }
 }

@@ -139,9 +139,13 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
             return;
         }
         boolean scopeAktiv = format != SpielerDbDateiFormat.SQLITE_BACKUP;
+        // Flache CSV deckt nur Spieler+Vereinsname ab; Vereine und Labels werden
+        // vom Exporter ignoriert. Im UI als deaktiviert darstellen, damit der
+        // Anwender die Einschränkung sieht.
+        boolean csv = format == SpielerDbDateiFormat.CSV;
         c.enabled("cbSpieler", scopeAktiv);
-        c.enabled("cbVereine", scopeAktiv);
-        c.enabled("cbLabels", scopeAktiv);
+        c.enabled("cbVereine", scopeAktiv && !csv);
+        c.enabled("cbLabels", scopeAktiv && !csv);
 
         String letzter = settings.letzterPfad(format);
         c.setzeText("edZiel", letzter == null ? "" : letzter);
@@ -230,6 +234,10 @@ public final class SpielerDbExportDialog extends AbstractUnoDialog {
     private static EnumSet<ExportEntity> leseScope(SpielerDbDateiFormat format, UnoControlsHelper c) {
         if (format == SpielerDbDateiFormat.SQLITE_BACKUP) {
             return EnumSet.noneOf(ExportEntity.class);
+        }
+        if (format == SpielerDbDateiFormat.CSV) {
+            // Flache CSV deckt nur Spieler+Vereinsname ab — Scope ist fix.
+            return EnumSet.of(ExportEntity.SPIELER);
         }
         EnumSet<ExportEntity> scope = EnumSet.noneOf(ExportEntity.class);
         if (c.istAngekreuzt("cbSpieler")) {

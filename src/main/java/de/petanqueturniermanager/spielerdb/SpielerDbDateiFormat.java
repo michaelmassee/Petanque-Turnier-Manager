@@ -9,7 +9,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
  */
 public enum SpielerDbDateiFormat {
 
-    CSV(ZielTyp.ORDNER, "csv", "spielerdb.format.csv"),
+    CSV(ZielTyp.DATEI, "csv", "spielerdb.format.csv"),
     JSON(ZielTyp.DATEI, "json", "spielerdb.format.json"),
     CALC(ZielTyp.DATEI, "ods", "spielerdb.format.calc"),
     SQLITE_BACKUP(ZielTyp.DATEI, "sqlite3", "spielerdb.format.sqlite");

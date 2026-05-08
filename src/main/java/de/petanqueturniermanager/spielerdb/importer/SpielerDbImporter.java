@@ -238,7 +238,7 @@ public final class SpielerDbImporter {
                 }
                 case DUPLIKATE_SEPARAT -> {
                     Optional<Integer> neu = versucheInsertSpieler(con, s.vorname(), s.nachname(),
-                            neueVereinNr, s.lizenznr(), warnungen);
+                            neueVereinNr, s.lizenznr(), s.quellZeile(), warnungen);
                     if (neu.isPresent()) {
                         counter.spielerEingefuegt++;
                         mapping.merkeSpieler(s.altNr(), neu.get());
@@ -344,13 +344,14 @@ public final class SpielerDbImporter {
      */
     private static Optional<Integer> versucheInsertSpieler(Connection con, String vorname,
             String nachname, @Nullable Integer vereinNr, @Nullable String lizenznr,
-            List<ImportWarnung> warnungen) throws SQLException {
+            @Nullable Integer quellZeile, List<ImportWarnung> warnungen) throws SQLException {
         try {
             return Optional.of(insertSpieler(con, vorname, nachname, vereinNr, lizenznr));
         } catch (SQLException e) {
             String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase(Locale.ROOT);
             if (msg.contains("unique") || msg.contains("constraint")) {
-                warnungen.add(new ImportWarnung("Spieler '" + vorname + " " + nachname
+                String praefix = quellZeile != null ? "Zeile " + quellZeile + ": " : "";
+                warnungen.add(new ImportWarnung(praefix + "Spieler '" + vorname + " " + nachname
                         + "' konnte nicht eingefügt werden (UNIQUE-Verletzung) — übersprungen"));
                 return Optional.empty();
             }
@@ -369,10 +370,11 @@ public final class SpielerDbImporter {
             neueLizenz = s.lizenznr();
         } else if (s.lizenznr() != null && !s.lizenznr().isEmpty()
                 && !s.lizenznr().equals(db.lizenznr())) {
-            warnungen.add(new ImportWarnung(
-                    "Lizenznummer für '" + s.vorname() + " " + s.nachname()
-                            + "' bleibt erhalten (DB: '" + db.lizenznr()
-                            + "', Import: '" + s.lizenznr() + "')"));
+            String praefix = s.quellZeile() != null ? "Zeile " + s.quellZeile() + ": " : "";
+            warnungen.add(new ImportWarnung(praefix
+                    + "Lizenznummer für '" + s.vorname() + " " + s.nachname()
+                    + "' bleibt erhalten (DB: '" + db.lizenznr()
+                    + "', Import: '" + s.lizenznr() + "')"));
         }
 
         try (PreparedStatement ps = con.prepareStatement(

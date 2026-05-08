@@ -23,8 +23,8 @@ class SpielerDbImportValidatorTest {
                 List.of());
         SpielerDbValidationException ex =
                 org.assertj.core.api.Assertions.catchThrowableOfType(
-                        () -> new SpielerDbImportValidator().validiere(roh),
-                        SpielerDbValidationException.class);
+                        SpielerDbValidationException.class,
+                        () -> new SpielerDbImportValidator().validiere(roh));
         assertThat(ex).isNotNull();
         assertThat(ex.fehler()).hasSize(3);
     }
@@ -45,6 +45,80 @@ class SpielerDbImportValidatorTest {
         assertThat(vd.spieler().get(0).lizenznr()).isEqualTo("LIZ-NEU");
         assertThat(vd.warnungen()).hasSize(1);
         assertThat(vd.warnungen().get(0).text()).contains("mehrfach");
+    }
+
+    @Test
+    void impliziteVereineWerdenAusSpielernSynthesiert() throws Exception {
+        // Spieler haben nur vereinName, keine vereinNr und keine RohVerein-Liste.
+        ImportRohdaten roh = new ImportRohdaten(
+                List.of(
+                        new RohSpieler(null, "Hans", "Müller", null, "BC Linden", null, 3),
+                        new RohSpieler(null, "Anna", "Schmidt", null, "BC Eiche", null, 4)),
+                List.of(),
+                List.of(),
+                List.of());
+        ValidierteDaten vd = new SpielerDbImportValidator().validiere(roh);
+
+        assertThat(vd.vereine()).hasSize(2);
+        assertThat(vd.vereine()).allSatisfy(v ->
+                assertThat(v.altNr()).isNotNull().isNegative());
+        // Spieler bekommen Sentinel-altVereinNr, der zu einem ValVerein passt.
+        for (var spieler : vd.spieler()) {
+            assertThat(spieler.altVereinNr()).isNotNull().isNegative();
+            assertThat(vd.vereine().stream().anyMatch(v -> v.altNr().equals(spieler.altVereinNr())))
+                    .isTrue();
+        }
+    }
+
+    @Test
+    void vereinNormalisierungDedupliziertWhitespaceVarianten() throws Exception {
+        ImportRohdaten roh = new ImportRohdaten(
+                List.of(
+                        new RohSpieler(null, "A", "X", null, "BC Linden", null),
+                        new RohSpieler(null, "B", "Y", null, "BC Linden ", null),
+                        new RohSpieler(null, "C", "Z", null, "BC  Linden", null)),
+                List.of(),
+                List.of(),
+                List.of());
+        ValidierteDaten vd = new SpielerDbImportValidator().validiere(roh);
+
+        // Alle drei Spieler verweisen auf denselben (impliziten) Verein.
+        assertThat(vd.vereine()).hasSize(1);
+        assertThat(vd.spieler()).hasSize(3);
+        Integer gemeinsamerAltNr = vd.vereine().get(0).altNr();
+        assertThat(vd.spieler()).allSatisfy(s ->
+                assertThat(s.altVereinNr()).isEqualTo(gemeinsamerAltNr));
+    }
+
+    @Test
+    void duplikatWarnungEnthaeltZeilennummer() throws Exception {
+        ImportRohdaten roh = new ImportRohdaten(
+                List.of(
+                        new RohSpieler(null, "Hans", "Müller", null, "BC Linden", null, 3),
+                        new RohSpieler(null, "hans", "MÜLLER", null, "BC Linden", "LIZ", 17)),
+                List.of(),
+                List.of(),
+                List.of());
+        ValidierteDaten vd = new SpielerDbImportValidator().validiere(roh);
+
+        assertThat(vd.spieler()).hasSize(1);
+        assertThat(vd.warnungen()).hasSize(1);
+        assertThat(vd.warnungen().get(0).text()).contains("Zeile 17");
+    }
+
+    @Test
+    void fehlerEnthaeltZeilennummerWennVerfuegbar() {
+        ImportRohdaten roh = new ImportRohdaten(
+                List.of(new RohSpieler(null, "", "", null, null, null, 42)),
+                List.of(),
+                List.of(),
+                List.of());
+        SpielerDbValidationException ex =
+                org.assertj.core.api.Assertions.catchThrowableOfType(
+                        SpielerDbValidationException.class,
+                        () -> new SpielerDbImportValidator().validiere(roh));
+        assertThat(ex).isNotNull();
+        assertThat(ex.fehler()).anyMatch(f -> f.contains("Zeile 42"));
     }
 
     @Test

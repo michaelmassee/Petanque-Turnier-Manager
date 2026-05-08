@@ -14,8 +14,7 @@ import de.petanqueturniermanager.spielerdb.export.ExportEntity;
  * @param entities Zu importierende Entities. Junction wird vom Importer
  *                 automatisch ergänzt, wenn Spieler und Labels beide
  *                 enthalten sind.
- * @param source   Quellpfad — bei {@link SpielerDbDateiFormat#CSV} ein
- *                 Verzeichnis, sonst eine Datei.
+ * @param source   Quellpfad — eine einzelne Datei (für CSV: {@code .csv}-Datei).
  * @param modus    UI-Preset für die Konfliktbehandlung.
  * @param dryRun   Wenn {@code true}, läuft die Pipeline vollständig durch,
  *                 die Transaktion wird aber zurückgerollt — Counts werden

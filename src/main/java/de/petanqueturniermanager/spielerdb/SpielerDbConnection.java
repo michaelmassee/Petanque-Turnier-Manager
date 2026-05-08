@@ -295,12 +295,27 @@ public final class SpielerDbConnection implements AutoCloseable {
         } catch (SQLException e) {
             throw new SpielerDbException("Aktuelle DB-Connection nicht schließbar", e);
         }
+        try {
+            if (!inst.connection.isClosed()) {
+                throw new SpielerDbException(
+                        "DB-Connection meldet sich nach close() nicht als geschlossen — Restore abgebrochen");
+            }
+        } catch (SQLException e) {
+            throw new SpielerDbException("DB-Connection-Status nicht prüfbar", e);
+        }
         INSTANCE = null;
+
+        Path walDatei = zielDatei.resolveSibling(zielDatei.getFileName() + "-wal");
+        Path shmDatei = zielDatei.resolveSibling(zielDatei.getFileName() + "-shm");
 
         try {
             if (Files.exists(zielDatei)) {
                 Files.move(zielDatei, backup, StandardCopyOption.REPLACE_EXISTING);
             }
+            // Begleit-Dateien des WAL-Modes löschen — sonst würde die neue DB
+            // mit dem alten Write-Ahead-Log gestartet und ggf. korrumpieren.
+            Files.deleteIfExists(walDatei);
+            Files.deleteIfExists(shmDatei);
             Files.copy(quelle, zielDatei, StandardCopyOption.REPLACE_EXISTING);
             // Connection wird beim nächsten getInstance() neu aufgebaut.
         } catch (IOException e) {

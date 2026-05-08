@@ -169,9 +169,12 @@ public final class SpielerDbImportDialog extends AbstractUnoDialog {
             return;
         }
         boolean konfigAktiv = format != SpielerDbDateiFormat.SQLITE_BACKUP;
+        // Flache CSV deckt nur Spieler+Vereinsname ab; Vereine/Labels-Scope hat
+        // keine Wirkung. Im UI als deaktiviert darstellen.
+        boolean csv = format == SpielerDbDateiFormat.CSV;
         c.enabled("cbSpieler", konfigAktiv);
-        c.enabled("cbVereine", konfigAktiv);
-        c.enabled("cbLabels", konfigAktiv);
+        c.enabled("cbVereine", konfigAktiv && !csv);
+        c.enabled("cbLabels", konfigAktiv && !csv);
         c.enabled("cmbModus", konfigAktiv);
 
         String letzter = settings.letzterPfad(format);
@@ -225,7 +228,7 @@ public final class SpielerDbImportDialog extends AbstractUnoDialog {
             return;
         }
 
-        EnumSet<ExportEntity> scope = leseScope(c);
+        EnumSet<ExportEntity> scope = scopeFuer(format, c);
         if (scope.isEmpty()) {
             zeigeFehler(I18n.get("spielerdb.import.fehler.kein_scope"));
             return;
@@ -283,7 +286,11 @@ public final class SpielerDbImportDialog extends AbstractUnoDialog {
         };
     }
 
-    private static EnumSet<ExportEntity> leseScope(UnoControlsHelper c) {
+    private static EnumSet<ExportEntity> scopeFuer(SpielerDbDateiFormat format, UnoControlsHelper c) {
+        if (format == SpielerDbDateiFormat.CSV) {
+            // Flache CSV deckt nur Spieler+Vereinsname ab — Scope ist fix.
+            return EnumSet.of(ExportEntity.SPIELER);
+        }
         EnumSet<ExportEntity> scope = EnumSet.noneOf(ExportEntity.class);
         if (c.istAngekreuzt("cbSpieler")) {
             scope.add(ExportEntity.SPIELER);

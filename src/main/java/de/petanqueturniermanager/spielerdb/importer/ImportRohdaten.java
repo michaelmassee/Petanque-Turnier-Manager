@@ -28,13 +28,31 @@ public record ImportRohdaten(
         spielerLabels = List.copyOf(spielerLabels);
     }
 
+    /**
+     * Roh-Spieler aus einer Import-Quelle.
+     *
+     * @param quellZeile 1-basierte Zeilennummer in der Quell-Datei (sofern
+     *                   vorhanden — z.B. CSV). Wird in Warnungen verwendet,
+     *                   um konkrete Datei-Stellen zu benennen. Quellen ohne
+     *                   Zeilenkontext (JSON-Array, Calc-Sheet) liefern
+     *                   {@code null}.
+     */
     public record RohSpieler(
             @Nullable Integer nr,
             String vorname,
             String nachname,
             @Nullable Integer vereinNr,
             @Nullable String vereinName,
-            @Nullable String lizenznr) { }
+            @Nullable String lizenznr,
+            @Nullable Integer quellZeile) {
+
+        /** Convenience-Konstruktor für Quellen ohne Datei-Zeilenkontext. */
+        public RohSpieler(@Nullable Integer nr, String vorname, String nachname,
+                @Nullable Integer vereinNr, @Nullable String vereinName,
+                @Nullable String lizenznr) {
+            this(nr, vorname, nachname, vereinNr, vereinName, lizenznr, null);
+        }
+    }
 
     public record RohVerein(
             @Nullable Integer nr,

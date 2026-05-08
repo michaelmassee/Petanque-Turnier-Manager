@@ -1,12 +1,13 @@
 package de.petanqueturniermanager.spielerdb.importer;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 import org.jspecify.annotations.Nullable;
@@ -16,163 +17,178 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvException;
 
+import de.petanqueturniermanager.spielerdb.SpielerDbCsvFormat;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
-import de.petanqueturniermanager.spielerdb.export.ExportEntity;
-import de.petanqueturniermanager.spielerdb.importer.ImportRohdaten.RohLabel;
 import de.petanqueturniermanager.spielerdb.importer.ImportRohdaten.RohSpieler;
-import de.petanqueturniermanager.spielerdb.importer.ImportRohdaten.RohSpielerLabel;
-import de.petanqueturniermanager.spielerdb.importer.ImportRohdaten.RohVerein;
 
 /**
- * Liest die vier CSV-Dateien aus einem Ordner — exakt symmetrisch zu
- * {@code SpielerDbCsvExporter}. UTF-8 mit optionalem BOM, Semikolon-Separator,
- * Quote-Handling über opencsv.
+ * Liest die flache, single-file Spieler-DB-CSV — symmetrisch zum
+ * {@link de.petanqueturniermanager.spielerdb.export.SpielerDbCsvExporter}.
  *
- * <p>Pro Scope-Entity wird die jeweilige Datei verlangt; fehlt sie, schlägt
- * der Reader hart fehl (mit klarer Pfadangabe). Header-Validierung erfolgt
- * im Validator — der Reader liefert Roh-Strings.
+ * <p>Akzeptiert UTF-8 mit oder ohne BOM, beliebiges Zeilenende ({@code \n},
+ * {@code \r\n}, {@code \r}), Separator {@code ;} und RFC-4180-Quoting (über
+ * opencsv).
+ *
+ * <p>Erwartete Datei-Struktur:
+ * <ol>
+ *   <li>Optional: Format-Marker-Zeile {@code # PTM-SpielerDB-CSV;version=N}.
+ *       Wenn vorhanden, wird die Version geprüft — neuere Versionen führen
+ *       zu einem klaren Fehler ("Plugin aktualisieren?"). Fehlt der Marker,
+ *       wird tolerant weitergelesen — Header-Validierung greift dann.</li>
+ *   <li>Header {@code vorname;nachname;verein;lizenznr}.</li>
+ *   <li>Daten-Zeilen.</li>
+ * </ol>
+ *
+ * <p>Pro Daten-Zeile wird ein {@link RohSpieler} erzeugt; alle Werte werden
+ * vor der Übergabe an den Validator normalisiert (NFC, Whitespace-Collapse,
+ * {@code strip()}). Leere {@code verein}- und {@code lizenznr}-Felder werden
+ * zu {@code null} (statt Leer-String). Vereine werden implizit aus
+ * {@code RohSpieler.vereinName} abgeleitet — die {@code vereine}-Liste in
+ * {@link ImportRohdaten} bleibt leer.
+ *
+ * <p>{@code request.source()} muss eine Datei sein.
  */
 public final class SpielerDbCsvImportReader implements SpielerDbImportReader {
 
-    private static final char SEP = ';';
     private static final char BOM = '﻿';
+
+    private static final int IDX_VORNAME = 0;
+    private static final int IDX_NACHNAME = 1;
+    private static final int IDX_VEREIN = 2;
+    private static final int IDX_LIZENZ = 3;
 
     @Override
     public ImportRohdaten read(ImportRequest request) throws SpielerDbException {
-        Path verzeichnis = request.source();
-        if (!Files.isDirectory(verzeichnis)) {
-            throw new SpielerDbException("CSV-Quelle ist kein Verzeichnis: " + verzeichnis);
-        }
-        EnumSet<ExportEntity> entities = request.entities();
-
-        List<RohSpieler> spieler = entities.contains(ExportEntity.SPIELER)
-                ? leseSpieler(verzeichnis.resolve("spieler.csv"))
-                : List.of();
-        List<RohVerein> vereine = entities.contains(ExportEntity.VEREINE)
-                ? leseVereine(verzeichnis.resolve("vereine.csv"))
-                : List.of();
-        List<RohLabel> labels = entities.contains(ExportEntity.LABELS)
-                ? leseLabels(verzeichnis.resolve("labels.csv"))
-                : List.of();
-        List<RohSpielerLabel> junction =
-                entities.contains(ExportEntity.SPIELER) && entities.contains(ExportEntity.LABELS)
-                        ? leseJunction(verzeichnis.resolve("spieler_labels.csv"))
-                        : List.of();
-
-        return new ImportRohdaten(spieler, vereine, labels, junction);
-    }
-
-    private static List<RohSpieler> leseSpieler(Path datei) throws SpielerDbException {
-        List<String[]> zeilen = leseAlleZeilen(datei);
-        validiereHeader(datei, zeilen, "nr", "vorname", "nachname",
-                "vereinNr", "vereinName", "lizenznr");
-        List<RohSpieler> erg = new ArrayList<>(zeilen.size() - 1);
-        for (int i = 1; i < zeilen.size(); i++) {
-            String[] z = zeilen.get(i);
-            erg.add(new RohSpieler(
-                    parseInteger(spalte(z, 0)),
-                    spalte(z, 1),
-                    spalte(z, 2),
-                    parseInteger(spalte(z, 3)),
-                    leerAlsNull(spalte(z, 4)),
-                    leerAlsNull(spalte(z, 5))));
-        }
-        return erg;
-    }
-
-    private static List<RohVerein> leseVereine(Path datei) throws SpielerDbException {
-        List<String[]> zeilen = leseAlleZeilen(datei);
-        validiereHeader(datei, zeilen, "nr", "name");
-        List<RohVerein> erg = new ArrayList<>(zeilen.size() - 1);
-        for (int i = 1; i < zeilen.size(); i++) {
-            String[] z = zeilen.get(i);
-            erg.add(new RohVerein(parseInteger(spalte(z, 0)), spalte(z, 1)));
-        }
-        return erg;
-    }
-
-    private static List<RohLabel> leseLabels(Path datei) throws SpielerDbException {
-        List<String[]> zeilen = leseAlleZeilen(datei);
-        validiereHeader(datei, zeilen, "nr", "name");
-        List<RohLabel> erg = new ArrayList<>(zeilen.size() - 1);
-        for (int i = 1; i < zeilen.size(); i++) {
-            String[] z = zeilen.get(i);
-            erg.add(new RohLabel(parseInteger(spalte(z, 0)), spalte(z, 1)));
-        }
-        return erg;
-    }
-
-    private static List<RohSpielerLabel> leseJunction(Path datei) throws SpielerDbException {
-        List<String[]> zeilen = leseAlleZeilen(datei);
-        validiereHeader(datei, zeilen, "spielerNr", "labelNr");
-        List<RohSpielerLabel> erg = new ArrayList<>(zeilen.size() - 1);
-        for (int i = 1; i < zeilen.size(); i++) {
-            String[] z = zeilen.get(i);
-            Integer sNr = parseInteger(spalte(z, 0));
-            Integer lNr = parseInteger(spalte(z, 1));
-            if (sNr == null || lNr == null) {
-                throw new SpielerDbException("Junction-Datei " + datei
-                        + " enthält leere NR in Zeile " + (i + 1));
-            }
-            erg.add(new RohSpielerLabel(sNr, lNr));
-        }
-        return erg;
-    }
-
-    private static List<String[]> leseAlleZeilen(Path datei) throws SpielerDbException {
+        Path datei = request.source();
         if (!Files.isRegularFile(datei)) {
-            throw new SpielerDbException("Erwartete CSV-Datei fehlt: " + datei);
+            throw new SpielerDbException("CSV-Quelle ist keine Datei: " + datei);
         }
+
         try (Reader r = Files.newBufferedReader(datei, StandardCharsets.UTF_8);
-                CSVReader csv = new CSVReaderBuilder(r)
-                        .withCSVParser(new CSVParserBuilder().withSeparator(SEP).build())
-                        .build()) {
-            List<String[]> zeilen = csv.readAll();
-            if (!zeilen.isEmpty()) {
-                String[] erste = zeilen.get(0);
-                if (erste.length > 0 && !erste[0].isEmpty() && erste[0].charAt(0) == BOM) {
-                    erste[0] = erste[0].substring(1);
-                }
+                BufferedReader br = new BufferedReader(r)) {
+            int aktuelleZeile = 0;
+            String erste = br.readLine();
+            aktuelleZeile++;
+            if (erste == null) {
+                throw new SpielerDbException("CSV-Datei ist leer: " + datei);
             }
-            return zeilen;
-        } catch (IOException | CsvException e) {
+            erste = entferneBom(erste);
+
+            String headerZeile;
+            if (SpielerDbCsvFormat.istMarkerZeile(erste)) {
+                pruefeVersion(datei, erste);
+                headerZeile = br.readLine();
+                aktuelleZeile++;
+            } else {
+                // Marker fehlt — tolerant weiterlesen.
+                headerZeile = erste;
+            }
+            if (headerZeile == null) {
+                throw new SpielerDbException("CSV-Datei enthält keinen Header: " + datei);
+            }
+
+            // Header und Daten-Zeilen über opencsv parsen, damit Quoting konsistent
+            // mit dem Exporter behandelt wird (auch im Header — falls jemand mal
+            // einen Header mit Sonderzeichen erfindet).
+            try (CSVReader csv = new CSVReaderBuilder(new java.io.StringReader(headerZeile))
+                    .withCSVParser(new CSVParserBuilder()
+                            .withSeparator(SpielerDbCsvFormat.SEPARATOR).build())
+                    .build()) {
+                String[] header = csv.readNext();
+                if (header == null) {
+                    throw new SpielerDbException("CSV-Datei enthält keinen Header: " + datei);
+                }
+                validiereHeader(datei, header);
+            } catch (CsvException e) {
+                throw new SpielerDbException("CSV-Header nicht parsebar: " + datei, e);
+            }
+
+            List<RohSpieler> spieler = leseSpielerZeilen(datei, br, aktuelleZeile);
+            return new ImportRohdaten(spieler, List.of(), List.of(), List.of());
+        } catch (IOException e) {
             throw new SpielerDbException("CSV-Lesen fehlgeschlagen: " + datei, e);
         }
     }
 
-    private static void validiereHeader(Path datei, List<String[]> zeilen, String... erwartet)
-            throws SpielerDbException {
-        if (zeilen.isEmpty()) {
-            throw new SpielerDbException("CSV-Datei ist leer: " + datei);
+    private static List<RohSpieler> leseSpielerZeilen(Path datei, BufferedReader br,
+            int bereitsGeleseneZeilen) throws SpielerDbException {
+        try (CSVReader csv = new CSVReaderBuilder(br)
+                .withCSVParser(new CSVParserBuilder()
+                        .withSeparator(SpielerDbCsvFormat.SEPARATOR).build())
+                .build()) {
+            List<RohSpieler> erg = new ArrayList<>();
+            int datenZeileInDatei = bereitsGeleseneZeilen;
+            String[] zeile;
+            while ((zeile = csv.readNext()) != null) {
+                datenZeileInDatei++;
+                if (zeile.length == 0 || (zeile.length == 1 && zeile[0].isEmpty())) {
+                    continue; // Leerzeile überspringen
+                }
+                String vorname = normalisiere(spalte(zeile, IDX_VORNAME));
+                String nachname = normalisiere(spalte(zeile, IDX_NACHNAME));
+                String verein = leerAlsNull(normalisiere(spalte(zeile, IDX_VEREIN)));
+                String lizenz = leerAlsNull(normalisiere(spalte(zeile, IDX_LIZENZ)));
+                erg.add(new RohSpieler(null, vorname, nachname, null, verein, lizenz,
+                        datenZeileInDatei));
+            }
+            return erg;
+        } catch (IOException | CsvException e) {
+            throw new SpielerDbException("CSV-Daten nicht parsebar: " + datei, e);
         }
-        String[] kopf = zeilen.get(0);
-        if (kopf.length < erwartet.length) {
+    }
+
+    private static void pruefeVersion(Path datei, String markerZeile) throws SpielerDbException {
+        Integer version = SpielerDbCsvFormat.leseVersion(markerZeile);
+        if (version == null) {
+            throw new SpielerDbException("Format-Marker in " + datei
+                    + " enthält keine gültige Versionsangabe: " + markerZeile);
+        }
+        if (version > SpielerDbCsvFormat.VERSION) {
+            throw new SpielerDbException("CSV-Datei " + datei + " ist Version " + version
+                    + ", dieses Plugin kennt höchstens Version " + SpielerDbCsvFormat.VERSION
+                    + " — Plugin aktualisieren?");
+        }
+    }
+
+    private static void validiereHeader(Path datei, String[] header) throws SpielerDbException {
+        String[] erwartet = SpielerDbCsvFormat.HEADER;
+        if (header.length < erwartet.length) {
             throw new SpielerDbException("Header in " + datei + " hat zu wenige Spalten: "
-                    + kopf.length + " < " + erwartet.length);
+                    + header.length + " < " + erwartet.length);
         }
         for (int i = 0; i < erwartet.length; i++) {
-            if (!erwartet[i].equals(kopf[i])) {
+            String gefunden = header[i] == null ? "" : header[i].strip();
+            if (i == 0) {
+                gefunden = entferneBom(gefunden);
+            }
+            if (!erwartet[i].equalsIgnoreCase(gefunden)) {
                 throw new SpielerDbException("Header-Spalte " + (i + 1) + " in " + datei
-                        + " erwartet '" + erwartet[i] + "', gefunden '" + kopf[i] + "'");
+                        + " erwartet '" + erwartet[i] + "', gefunden '" + gefunden + "'");
             }
         }
     }
 
-    private static String spalte(String[] zeile, int idx) {
-        return idx < zeile.length ? zeile[idx] : "";
+    private static String entferneBom(String s) {
+        if (!s.isEmpty() && s.charAt(0) == BOM) {
+            return s.substring(1);
+        }
+        return s;
     }
 
-    @Nullable
-    private static Integer parseInteger(String s) {
-        String t = s.strip();
-        if (t.isEmpty()) {
-            return null;
+    private static String spalte(String[] zeile, int idx) {
+        return idx < zeile.length ? (zeile[idx] == null ? "" : zeile[idx]) : "";
+    }
+
+    /**
+     * NFC-Normalisierung + Whitespace-Collapse + {@code strip()}. Macht aus
+     * "BC  Linden " → "BC Linden", aus "" → "".
+     */
+    private static String normalisiere(String s) {
+        if (s.isEmpty()) {
+            return "";
         }
-        try {
-            return Integer.valueOf(t);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        String nfc = Normalizer.normalize(s, Normalizer.Form.NFC);
+        return nfc.replaceAll("\\s+", " ").strip();
     }
 
     @Nullable
