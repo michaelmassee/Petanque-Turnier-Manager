@@ -25,12 +25,6 @@ public class KaskadeKoBracketKonfigAdapter implements IKoBracketKonfiguration {
         return 8;
     }
 
-    /** Wird in {@code erstelleGruppeBracket} nicht genutzt – vernünftiger Default. */
-    @Override
-    public int getMinRestGroesse() {
-        return 4;
-    }
-
     @Override
     public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
         return KoSpielbaumTeamAnzeige.NR;

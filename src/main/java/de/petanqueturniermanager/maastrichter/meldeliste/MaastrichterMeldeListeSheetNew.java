@@ -83,7 +83,6 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 					konfigurationSheet.getSpielbaumSpielbahn(),
 					konfigurationSheet.isSpielbaumSpielUmPlatz3(),
 					konfigurationSheet.getGruppenGroesse(),
-					konfigurationSheet.getMinRestGroesse(),
 					konfigurationSheet.getMaastrichterGruppenModus());
 		} catch (Exception e) {
 			logger.error("{} Fehler beim Anzeigen des Parameterdialogs: {}", e.getMessage(), e);
@@ -106,7 +105,6 @@ public class MaastrichterMeldeListeSheetNew extends SheetRunner implements IShee
 		konfigurationSheet.setSpielbaumSpielbahn(param.get().spielbaumSpielbahn);
 		konfigurationSheet.setSpielbaumSpielUmPlatz3(param.get().spielUmPlatz3);
 		konfigurationSheet.setGruppenGroesse(param.get().gruppenGroesse);
-		konfigurationSheet.setMinRestGroesse(param.get().minRestGroesse);
 		konfigurationSheet.setMaastrichterGruppenModus(param.get().gruppenModus);
 
 		erstelleMeldeliste(param.get().formation, param.get().teamnameAnzeigen, param.get().vereinsnameAnzeigen,

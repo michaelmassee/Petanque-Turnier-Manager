@@ -59,11 +59,10 @@ public class KoTurnierParameterDialog {
 		public final SpielrundeSpielbahn spielbaumSpielbahn;
 		public final boolean spielUmPlatz3;
 		public final int gruppenGroesse;
-		public final int minRestGroesse;
 
 		public TurnierParameter(Formation formation, boolean teamnameAnzeigen, boolean vereinsnameAnzeigen,
 				KoSpielbaumTeamAnzeige spielbaumTeamAnzeige, SpielrundeSpielbahn spielbaumSpielbahn,
-				boolean spielUmPlatz3, int gruppenGroesse, int minRestGroesse) {
+				boolean spielUmPlatz3, int gruppenGroesse) {
 			this.formation = formation;
 			this.teamnameAnzeigen = teamnameAnzeigen;
 			this.vereinsnameAnzeigen = vereinsnameAnzeigen;
@@ -71,7 +70,6 @@ public class KoTurnierParameterDialog {
 			this.spielbaumSpielbahn = spielbaumSpielbahn;
 			this.spielUmPlatz3 = spielUmPlatz3;
 			this.gruppenGroesse = gruppenGroesse;
-			this.minRestGroesse = minRestGroesse;
 		}
 	}
 
@@ -94,7 +92,7 @@ public class KoTurnierParameterDialog {
 	public Optional<TurnierParameter> show(Formation defaultFormation, boolean defaultTeamnameAnzeigen,
 			boolean defaultVereinsnameAnzeigen, KoSpielbaumTeamAnzeige defaultSpielbaumTeamAnzeige,
 			SpielrundeSpielbahn defaultSpielbahn, boolean defaultSpielUmPlatz3,
-			int defaultGruppenGroesse, int defaultMinRestGroesse) throws com.sun.star.uno.Exception {
+			int defaultGruppenGroesse) throws com.sun.star.uno.Exception {
 
 		ProcessBox.from().hide();
 
@@ -107,7 +105,7 @@ public class KoTurnierParameterDialog {
 		dlgProps.setPropertyValue("PositionX", Integer.valueOf(50));
 		dlgProps.setPropertyValue("PositionY", Integer.valueOf(50));
 		dlgProps.setPropertyValue("Width", Integer.valueOf(160));
-		dlgProps.setPropertyValue("Height", Integer.valueOf(217));
+		dlgProps.setPropertyValue("Height", Integer.valueOf(195));
 		dlgProps.setPropertyValue("Title", "K.-O. Turnier \u2013 Parameter");
 		dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
 
@@ -160,13 +158,8 @@ public class KoTurnierParameterDialog {
 
 		addFixedLine(xMSF, cont, "sep6", 5, 158, 150, 2);
 
-		addLabel(xMSF, cont, "lblMinRestGroesse", "Min. Rest-Größe:", 8, 164, 100, 10);
-		addNumericField(xMSF, cont, "tfMinRestGroesse", 8, 176, 60, 12, defaultMinRestGroesse, 1, 512);
-
-		addFixedLine(xMSF, cont, "sep7", 5, 192, 150, 2);
-
-		addButton(xMSF, cont, "btnOk", "OK", 22, 200, 50, 14);
-		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 200, 60, 14);
+		addButton(xMSF, cont, "btnOk", "OK", 22, 175, 50, 14);
+		addButton(xMSF, cont, "btnCancel", "Abbrechen", 88, 175, 60, 14);
 
 		// 4. Button-Listener anhängen
 		XDialog xDialog = Lo.qi(XDialog.class, dialog);
@@ -219,9 +212,8 @@ public class KoTurnierParameterDialog {
 			};
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbPlatz3");
 			int gruppenGroesse = readNumericFieldValue(xcc, "tfGruppenGroesse", defaultGruppenGroesse);
-			int minRestGroesse = readNumericFieldValue(xcc, "tfMinRestGroesse", defaultMinRestGroesse);
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
-					spielbaumAnzeige, spielbahn, spielUmPlatz3, gruppenGroesse, minRestGroesse));
+					spielbaumAnzeige, spielbahn, spielUmPlatz3, gruppenGroesse));
 		}
 
 		Lo.qi(XComponent.class, dialog).dispose();

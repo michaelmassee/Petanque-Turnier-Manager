@@ -59,15 +59,6 @@ public class MaastrichterKonfigurationSheet extends SchweizerKonfigurationSheet 
 	}
 
 	@Override
-	public int getMinRestGroesse() {
-		return getPropertiesSpalte().getMinRestGroesse();
-	}
-
-	public void setMinRestGroesse(int minRestGroesse) {
-		getPropertiesSpalte().setMinRestGroesse(minRestGroesse);
-	}
-
-	@Override
 	public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
 		return getPropertiesSpalte().getSpielbaumTeamAnzeige();
 	}

@@ -681,16 +681,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				new MaastrichterTurnierTestDaten(ws).start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_57:
-				// 57 Teams: 4 Vorrunden, gruppenGroesse=16, minRestGroesse=8
-				// → GruppenAufteilungRechner ergibt [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
+				// 57 Teams: 4 Vorrunden, gruppenGroesse=16
+				// → Aufteilung [16,16,16,9] = 4 KO-Gruppen, D mit Cadrage
 				// → 57 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 57, 4, 16, 8).start();
+				new MaastrichterTurnierTestDaten(ws, 57, 4, 16).start();
 				break;
 			case CMD_MAASTRICHTER_TESTDATEN_TURNIER_35:
-				// 35 Teams: 3 Vorrunden, gruppenGroesse=16, minRestGroesse=8
-				// → GruppenAufteilungRechner ergibt [16,19] = Gruppe A (kein Cadrage) + Gruppe B (mit Cadrage)
+				// 35 Teams: 3 Vorrunden, gruppenGroesse=16
+				// → Aufteilung [16,16,3] = 3 Gruppen; mit 1-Team-Fold-Schutz wird der
+				//   3er-Rest als eigene Gruppe C beibehalten (≥2 Teams)
 				// → 35 Teams ungerade → automatisch Freilos pro Vorrunde
-				new MaastrichterTurnierTestDaten(ws, 35, 3, 16, 8).start();
+				new MaastrichterTurnierTestDaten(ws, 35, 3, 16).start();
 				break;
 			// ------------------------------
 			// K.-O.

@@ -57,8 +57,10 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *   <li>Teams nach konfiguriertem Modus in Finalgruppen einteilen:
  *       <ul>
  *         <li>{@link MaastrichterGruppenModus#NACH_SIEGEN}: A = max. Siege, B = max-1, ...</li>
- *         <li>{@link MaastrichterGruppenModus#NACH_GROESSE}: gleichmäßige Aufteilung via
- *             {@code GruppenAufteilungRechner}</li>
+ *         <li>{@link MaastrichterGruppenModus#NACH_GROESSE}: einfache Aufteilung
+ *             nach Rang in Chunks der konfigurierten Gruppengröße; Rest erhält
+ *             immer eine eigene Folgegruppe (1-Team-Rest wird in vorherige
+ *             Gruppe gefaltet)</li>
  *       </ul>
  *   </li>
  *   <li>Innerhalb jeder Gruppe nach Schweizer Kriterien sortieren (für Setzliste)</li>
@@ -131,8 +133,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		MaastrichterGruppenModus gruppenModus = konfigSheet.getMaastrichterGruppenModus();
 		List<List<SchweizerTeamErgebnis>> gruppen = switch (gruppenModus) {
 			case NACH_SIEGEN -> teileNachSiegen(sortiert, anzVorrunden);
-			case NACH_GROESSE -> teileNachGroesse(sortiert,
-					konfigSheet.getGruppenGroesse(), konfigSheet.getMinRestGroesse());
+			case NACH_GROESSE -> teileNachGroesse(sortiert, konfigSheet.getGruppenGroesse());
 		};
 
 		// Alte Finale-Blätter löschen
@@ -186,14 +187,13 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 	}
 
 	/**
-	 * Teilt die sortierten Teams gleichmäßig nach Rang auf (bisheriges Verhalten).
+	 * Teilt die sortierten Teams nach Rang in Chunks gemäß {@link GruppenAufteilungRechner}.
 	 */
 	private List<List<SchweizerTeamErgebnis>> teileNachGroesse(
-			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse, int minRestGroesse) {
+			List<SchweizerTeamErgebnis> sortiert, int gruppenGroesse) {
 
 		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
-				sortiert.size(), gruppenGroesse, minRestGroesse);
-
+				sortiert.size(), gruppenGroesse);
 		List<List<SchweizerTeamErgebnis>> gruppen = new ArrayList<>();
 		int startIndex = 0;
 		for (int groesse : gruppenGroessen) {

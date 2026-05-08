@@ -33,11 +33,6 @@ public class PouleKoConfigAdapter implements IKoBracketKonfiguration {
     }
 
     @Override
-    public int getMinRestGroesse() {
-        return 2;
-    }
-
-    @Override
     public KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige() {
         return KoSpielbaumTeamAnzeige.NR;
     }

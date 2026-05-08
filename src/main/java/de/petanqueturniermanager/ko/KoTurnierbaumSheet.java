@@ -493,13 +493,13 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/**
 	 * Teilt alle Meldungen in Gruppen auf und erstellt pro Gruppe einen eigenen Turnierbaum-Sheet.
-	 * Die Aufteilung berücksichtigt Szenario 1/2 gemäß {@link GruppenAufteilungRechner}.
+	 * Die Aufteilung erfolgt gemäß {@link GruppenAufteilungRechner} (einfache Chunk-Aufteilung,
+	 * Rest erhält eigene Folgegruppe; 1-Team-Rest wird in vorherige Gruppe gefaltet).
 	 */
 	private void erstelleAlleGruppenBaeume(TeamMeldungen alleMeldungen, int gruppenGroesse)
 			throws GenerateException {
-		int minRestGroesse = getKonfigurationSheet().getMinRestGroesse();
 		List<Integer> gruppenGroessen = GruppenAufteilungRechner.berechne(
-				alleMeldungen.size(), gruppenGroesse, minRestGroesse);
+				alleMeldungen.size(), gruppenGroesse);
 		int anzGruppen = gruppenGroessen.size();
 
 		alleGruppenSheetNamenLoeschen();

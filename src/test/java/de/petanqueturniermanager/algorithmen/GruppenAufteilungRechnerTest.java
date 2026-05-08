@@ -12,83 +12,84 @@ public class GruppenAufteilungRechnerTest {
     // ---------------------------------------------------------------
 
     @Test
-    public void testExaktAufgeteilt_keineRestgruppe() {
-        // 32 Teams, max 16 → [16, 16]
-        assertThat(GruppenAufteilungRechner.berechne(32, 16, 16)).containsExactly(16, 16);
+    public void testExaktAufgeteilt_zweiGruppen() {
+        assertThat(GruppenAufteilungRechner.berechne(32, 16)).containsExactly(16, 16);
     }
 
     @Test
     public void testExaktAufgeteilt_eineGruppe() {
-        // 16 Teams, max 16 → [16]
-        assertThat(GruppenAufteilungRechner.berechne(16, 16, 16)).containsExactly(16);
+        assertThat(GruppenAufteilungRechner.berechne(16, 16)).containsExactly(16);
+    }
+
+    @Test
+    public void testExaktAufgeteilt_dreiGruppen() {
+        assertThat(GruppenAufteilungRechner.berechne(48, 16)).containsExactly(16, 16, 16);
     }
 
     // ---------------------------------------------------------------
-    // Szenario 1: Rest >= minRestGroesse → eigenes Folgeturnier
+    // Rest >= 2 → eigene Folgegruppe
     // ---------------------------------------------------------------
 
     @Test
-    public void testSzenario1_restGroesserMinRest() {
-        // 42 Teams, max 16, minRest 16 → Rest=10 < 16 → Szenario 2!
-        // Korrektur: 42 / 16 = 2 Rest 10 → 10 < 16 → Szenario 2 → [16, 26]
-        // Um Szenario 1 zu testen: minRest = 8 → 10 >= 8 → [16, 16, 10]
-        assertThat(GruppenAufteilungRechner.berechne(42, 16, 8)).containsExactly(16, 16, 10);
+    public void test15Teams_gruppe8() {
+        // 15 Teams, max 8 → [8, 7]
+        assertThat(GruppenAufteilungRechner.berechne(15, 8)).containsExactly(8, 7);
     }
 
     @Test
-    public void testSzenario1_restGleichMinRest() {
-        // 48 Teams, max 16, minRest 16 → Rest=0 → perfekt → [16, 16, 16]
-        assertThat(GruppenAufteilungRechner.berechne(48, 16, 16)).containsExactly(16, 16, 16);
+    public void test35Teams_gruppe16() {
+        // 35 Teams, max 16 → [16, 16, 3]
+        assertThat(GruppenAufteilungRechner.berechne(35, 16)).containsExactly(16, 16, 3);
     }
 
     @Test
-    public void testSzenario1_restGleichMinRest_direkt() {
-        // 40 Teams, max 16, minRest 8 → Rest=8 >= 8 → [16, 16, 8]
-        assertThat(GruppenAufteilungRechner.berechne(40, 16, 8)).containsExactly(16, 16, 8);
+    public void test57Teams_gruppe16() {
+        // 57 Teams, max 16 → [16, 16, 16, 9]
+        assertThat(GruppenAufteilungRechner.berechne(57, 16)).containsExactly(16, 16, 16, 9);
     }
 
     @Test
-    public void testSzenario1_minRest4_rest5() {
-        // 21 Teams, max 16, minRest 4 → Rest=5 >= 4 → [16, 5]
-        assertThat(GruppenAufteilungRechner.berechne(21, 16, 4)).containsExactly(16, 5);
-    }
-
-    // ---------------------------------------------------------------
-    // Szenario 2: Rest < minRestGroesse → in letzte Gruppe falten
-    // ---------------------------------------------------------------
-
-    @Test
-    public void testSzenario2_restKleinerMinRest() {
-        // 34 Teams, max 16, minRest 16 → Rest=2 < 16 → [16, 18]
-        assertThat(GruppenAufteilungRechner.berechne(34, 16, 16)).containsExactly(16, 18);
+    public void test18Teams_gruppe16() {
+        // 18 Teams, max 16 → [16, 2]
+        assertThat(GruppenAufteilungRechner.berechne(18, 16)).containsExactly(16, 2);
     }
 
     @Test
-    public void testSzenario2_18Teams() {
-        // 18 Teams, max 16, minRest 16 → Rest=2 < 16 → Szenario 2 → letztes volles Feld: 16+2=18 → [18]
-        assertThat(GruppenAufteilungRechner.berechne(18, 16, 16)).containsExactly(18);
-    }
-
-    @Test
-    public void testSzenario2_minRest4_rest3() {
-        // 19 Teams, max 16, minRest 4 → Rest=3 < 4 → [16+3=19]
-        assertThat(GruppenAufteilungRechner.berechne(19, 16, 4)).containsExactly(19);
-    }
-
-    @Test
-    public void testSzenario2_42Teams_minRest16() {
-        // 42 Teams, max 16, minRest 16 → Rest=10 < 16 → Szenario 2 → [16, 26]
-        assertThat(GruppenAufteilungRechner.berechne(42, 16, 16)).containsExactly(16, 26);
+    public void testNurRest_keineVolleGruppe() {
+        // 3 Teams, max 16 → [3]
+        assertThat(GruppenAufteilungRechner.berechne(3, 16)).containsExactly(3);
     }
 
     // ---------------------------------------------------------------
-    // Sonderfall: kein volles Team-Feld, Rest < minRestGroesse
+    // 1-Team-Rest wird in vorherige Gruppe gefaltet
     // ---------------------------------------------------------------
 
     @Test
-    public void testSonderfall_nurRestKleinerMinRest() {
-        // 3 Teams, max 16, minRest 16 → keine vollen Gruppen, Rest=3 → [3]
-        assertThat(GruppenAufteilungRechner.berechne(3, 16, 16)).containsExactly(3);
+    public void test9Teams_gruppe8_einTeamFold() {
+        // 9 Teams, max 8 → [8, 1] → Fold → [9]
+        assertThat(GruppenAufteilungRechner.berechne(9, 8)).containsExactly(9);
+    }
+
+    @Test
+    public void test17Teams_gruppe16_einTeamFold() {
+        // 17 Teams, max 16 → [16, 1] → Fold → [17]
+        assertThat(GruppenAufteilungRechner.berechne(17, 16)).containsExactly(17);
+    }
+
+    @Test
+    public void test33Teams_gruppe16_einTeamFold() {
+        // 33 Teams, max 16 → [16, 16, 1] → Fold → [16, 17]
+        assertThat(GruppenAufteilungRechner.berechne(33, 16)).containsExactly(16, 17);
+    }
+
+    // ---------------------------------------------------------------
+    // Sonderfall: 1 Team gesamt (keine Fold-Möglichkeit)
+    // ---------------------------------------------------------------
+
+    @Test
+    public void testNur1Team() {
+        // 1 Team, max 16 → [1] (kein Fold möglich, da nur eine Gruppe)
+        assertThat(GruppenAufteilungRechner.berechne(1, 16)).containsExactly(1);
     }
 
     // ---------------------------------------------------------------
@@ -96,26 +97,20 @@ public class GruppenAufteilungRechnerTest {
     // ---------------------------------------------------------------
 
     @Test
-    public void testIllegalArg_maxGruppenGroesseKeineZweierpotenz() {
-        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(42, 15, 16))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void testIllegalArg_minRestGroesseKeineZweierpotenz() {
-        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(42, 16, 15))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     public void testIllegalArg_anzTeamsNull() {
-        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(0, 16, 16))
+        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(0, 16))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void testIllegalArg_anzTeamsNegativ() {
-        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(-1, 16, 16))
+        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(-1, 16))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void testIllegalArg_maxGruppenGroesseZuKlein() {
+        assertThatThrownBy(() -> GruppenAufteilungRechner.berechne(16, 1))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

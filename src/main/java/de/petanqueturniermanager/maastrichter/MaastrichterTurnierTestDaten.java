@@ -40,20 +40,18 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  *   <li>Meldeliste (konfigurierbare Anzahl Teams, Doublette)</li>
  *   <li>Vorrunden (Schweizer System) mit Zufallsergebnissen</li>
  *   <li>Vorrunden-Rangliste</li>
- *   <li>Finalrunden (A/B/C/…-Bracket nach GruppenAufteilungRechner)</li>
+ *   <li>Finalrunden (A/B/C/…-Bracket nach Gruppengröße)</li>
  * </ol>
  */
 public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
-	/** Standard-Konfiguration: 12 Teams, 3 Vorrunden, Gruppen à 16, Min-Rest 16 */
+	/** Standard-Konfiguration: 12 Teams, 3 Vorrunden, Gruppen à 16 */
 	private static final int DEFAULT_ANZ_TEAMS      = 12;
 	private static final int DEFAULT_ANZ_VORRUNDEN  = 3;
 	private static final int DEFAULT_GRUPPEN_GROESSE = 16;
-	private static final int DEFAULT_MIN_REST_GROESSE = 16;
 
 	private final int anzVorrunden;
 	private final int gruppenGroesse;
-	private final int minRestGroesse;
 
 	private final MaastrichterMeldeListeSheetTestDaten meldelisteTestDaten;
 	private final MaastrichterSpielrundeSheetNaechste naechsteVorrunde;
@@ -61,10 +59,9 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 	private final MaastrichterFinalrundeSheet finalrundeSheet;
 	private final MaastrichterTeilnehmerSheet teilnehmerSheet;
 
-	/** Standard-Konstruktor: 12 Teams, 3 Vorrunden, gruppenGroesse=16, minRestGroesse=16 */
+	/** Standard-Konstruktor: 12 Teams, 3 Vorrunden, gruppenGroesse=16 */
 	public MaastrichterTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
-		this(workingSpreadsheet, DEFAULT_ANZ_TEAMS, DEFAULT_ANZ_VORRUNDEN,
-				DEFAULT_GRUPPEN_GROESSE, DEFAULT_MIN_REST_GROESSE);
+		this(workingSpreadsheet, DEFAULT_ANZ_TEAMS, DEFAULT_ANZ_VORRUNDEN, DEFAULT_GRUPPEN_GROESSE);
 	}
 
 	/**
@@ -73,14 +70,12 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 	 * @param anzTeams        Anzahl zu generierender Teams
 	 * @param anzVorrunden    Anzahl Schweizer Vorrunden
 	 * @param gruppenGroesse  Maximale Teams pro KO-Finalgruppe (Zweierpotenz)
-	 * @param minRestGroesse  Mindestzahl für eigene Restgruppe (Zweierpotenz)
 	 */
 	public MaastrichterTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet,
-			int anzTeams, int anzVorrunden, int gruppenGroesse, int minRestGroesse) {
+			int anzTeams, int anzVorrunden, int gruppenGroesse) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER, "Maastrichter-Turnier-Testdaten");
 		this.anzVorrunden   = anzVorrunden;
 		this.gruppenGroesse = gruppenGroesse;
-		this.minRestGroesse = minRestGroesse;
 		meldelisteTestDaten = new MaastrichterMeldeListeSheetTestDaten(workingSpreadsheet, anzTeams);
 		naechsteVorrunde = new MaastrichterSpielrundeSheetNaechste(workingSpreadsheet);
 		ranglisteSheet = new MaastrichterVorrundenRanglisteSheet(workingSpreadsheet);
@@ -126,7 +121,6 @@ public class MaastrichterTurnierTestDaten extends SheetRunner implements ISheet,
 		konfigSheet.setSpielrundeSpielbahn(SpielrundeSpielbahn.R);
 		konfigSheet.setAnzVorrunden(anzVorrunden);
 		konfigSheet.setGruppenGroesse(gruppenGroesse);
-		konfigSheet.setMinRestGroesse(minRestGroesse);
 		konfigSheet.setMaastrichterGruppenModus(MaastrichterGruppenModus.NACH_GROESSE);
 
 		// 2. Vorrunden erstellen und mit Zufallsergebnissen füllen

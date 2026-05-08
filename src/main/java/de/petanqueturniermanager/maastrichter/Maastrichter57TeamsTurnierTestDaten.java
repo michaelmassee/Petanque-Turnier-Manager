@@ -11,6 +11,6 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 public class Maastrichter57TeamsTurnierTestDaten extends MaastrichterTurnierTestDaten {
 
     public Maastrichter57TeamsTurnierTestDaten(WorkingSpreadsheet workingSpreadsheet) {
-        super(workingSpreadsheet, 57, 4, 16, 8);
+        super(workingSpreadsheet, 57, 4, 16);
     }
 }

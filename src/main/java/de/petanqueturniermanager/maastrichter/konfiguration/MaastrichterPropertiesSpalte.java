@@ -99,15 +99,6 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 		writeIntProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE, Math.max(2, gruppenGroesse));
 	}
 
-	public int getMinRestGroesse() {
-		int val = readIntProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_REST_GROESSE);
-		return val > 0 ? val : 16;
-	}
-
-	public void setMinRestGroesse(int minRestGroesse) {
-		writeIntProperty(KoPropertiesSpalte.KONFIG_PROP_MIN_REST_GROESSE, Math.max(1, minRestGroesse));
-	}
-
 	public MaastrichterGruppenModus getMaastrichterGruppenModus() {
 		return readEnumProperty(KONFIG_PROP_GRUPPEN_MODUS, MaastrichterGruppenModus.class,
 				MaastrichterGruppenModus.NACH_GROESSE);

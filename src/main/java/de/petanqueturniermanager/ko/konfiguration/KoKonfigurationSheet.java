@@ -127,14 +127,6 @@ public class KoKonfigurationSheet extends BaseKonfigurationSheet implements IKoB
 		propertiesSpalte.setGruppenGroesse(gruppenGroesse);
 	}
 
-	public int getMinRestGroesse() {
-		return propertiesSpalte.getMinRestGroesse();
-	}
-
-	public void setMinRestGroesse(int minRestGroesse) {
-		propertiesSpalte.setMinRestGroesse(minRestGroesse);
-	}
-
 	@Override public int getKoTurnierbaumTabFarbe()       { return propertiesSpalte.getKoTurnierbaumTabFarbe(); }
 	@Override public int getTurnierbaumHeaderFarbe()      { return propertiesSpalte.getTurnierbaumHeaderFarbe(); }
 	@Override public int getTurnierbaumTeamAFarbe()       { return propertiesSpalte.getTurnierbaumTeamAFarbe(); }

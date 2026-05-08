@@ -47,7 +47,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	public static final String KONFIG_PROP_SPIELBAUM_PLATZ3 = "Spielbaum Spiel um Platz 3";
 
 	public static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
-	public static final String KONFIG_PROP_MIN_REST_GROESSE = "Turnierbaum Min. Rest-Größe";
 
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -112,16 +111,11 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
 				.setDefaultVal(16).setDescription("config.desc.ko.gruppen.groesse")
 				.inSideBar());
-
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_REST_GROESSE)
-				.setDefaultVal(16)
-				.setDescription("config.desc.ko.min.rest.groesse")
-				.inSideBar());
 	}
 
 	/**
 	 * Fügt die KO-Bracket-spezifischen Properties (spielbahn, teamAnzeige, spielUmPlatz3,
-	 * gruppenGroesse, minRestGroesse) zur angegebenen Liste hinzu.
+	 * gruppenGroesse) zur angegebenen Liste hinzu.
 	 * Ermöglicht Wiederverwendung in anderen Turniersystemen (z.B. Maastrichter).
 	 */
 	public static void addKoBracketProperties(List<ConfigProperty<?>> props) {
@@ -148,12 +142,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		props.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
 				.setDefaultVal(16).setDescription(
 						"Maximale Teamanzahl pro Gruppe.\r\nBei mehr Teams werden mehrere Gruppen A, B, C … erstellt.\r\nEmpfehlung: Zweierpotenz (4, 8, 16, 32), damit volle Gruppen kein Cadrage benötigen.")
-				.inSideBar());
-
-		props.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_MIN_REST_GROESSE)
-				.setDefaultVal(16)
-				.setDescription(
-						"Mindestanzahl Teams im Rest für ein eigenes Folgeturnier (Zweierpotenz: 4, 8, 16, 32 …).\r\nRest < diesem Wert wird in die letzte Gruppe gefaltet.")
 				.inSideBar());
 	}
 
@@ -263,19 +251,6 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	public void setGruppenGroesse(int gruppenGroesse) {
 		writeIntProperty(KONFIG_PROP_GRUPPEN_GROESSE, Math.max(2, gruppenGroesse));
-	}
-
-	/**
-	 * Mindestzahl Teams im Rest für ein eigenes Folgeturnier (Default 16, Zweierpotenz).
-	 * Rest kleiner als dieser Wert wird in die letzte volle Gruppe gefaltet.
-	 */
-	public int getMinRestGroesse() {
-		int val = readIntProperty(KONFIG_PROP_MIN_REST_GROESSE);
-		return val > 0 ? val : 16;
-	}
-
-	public void setMinRestGroesse(int minRestGroesse) {
-		writeIntProperty(KONFIG_PROP_MIN_REST_GROESSE, Math.max(1, minRestGroesse));
 	}
 
 	public int getKoTurnierbaumTabFarbe() {
