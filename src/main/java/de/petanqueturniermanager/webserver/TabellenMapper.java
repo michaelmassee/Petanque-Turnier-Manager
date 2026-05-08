@@ -56,6 +56,14 @@ public class TabellenMapper {
     private static final String DOUBLE = " double ";
 
     /**
+     * Präfix interner Score-/Edit-Metadaten-Zellen (z.B. KO-Turnierbaum, Maastrichter,
+     * Kaskade, Poule). Wird normalerweise durch den Druckbereich der jeweiligen Sheets
+     * ausgegrenzt; dieser Filter ist eine zusätzliche Absicherung, falls ein Sheet keinen
+     * oder einen falsch dimensionierten Druckbereich hat (Used-Area-Fallback).
+     */
+    private static final String INTERN_METADATEN_PRAEFIX = "PTM_EDIT:";
+
+    /**
      * Mappt das übergebene Sheet vollständig in ein {@link TabelleModel}.
      * <p>
      * Liest zusätzlich Kopf- und Fußzeile aus dem PageStyle des Sheets.
@@ -274,7 +282,11 @@ public class TabellenMapper {
 
             if (CellContentType.TEXT.equals(type)) {
                 XText txt = Lo.qi(XText.class, cell);
-                return (txt != null) ? txt.getString() : "";
+                String text = (txt != null) ? txt.getString() : "";
+                if (text.startsWith(INTERN_METADATEN_PRAEFIX)) {
+                    return null;
+                }
+                return text;
             }
 
             if (CellContentType.VALUE.equals(type)) {

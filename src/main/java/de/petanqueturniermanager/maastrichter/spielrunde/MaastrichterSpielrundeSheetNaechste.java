@@ -4,7 +4,10 @@
 package de.petanqueturniermanager.maastrichter.spielrunde;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.msgbox.MessageBox;
+import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
@@ -44,6 +47,19 @@ public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeShee
 	@Override
 	protected SchweizerMeldeListeSheetUpdate initMeldeListeSheet(WorkingSpreadsheet workingSpreadsheet) {
 		return new MaastrichterMeldeListeSheetUpdate(workingSpreadsheet);
+	}
+
+	@Override
+	protected boolean pruefeKannNeueRundeErstellen(int neueSpielrundeNr) {
+		int maxVorrunden = ((MaastrichterKonfigurationSheet) getKonfigurationSheet()).getAnzVorrunden();
+		if (maxVorrunden > 0 && neueSpielrundeNr > maxVorrunden) {
+			MessageBox.from(getxContext(), MessageBoxTypeEnum.ERROR_OK)
+					.caption(I18n.get("msg.caption.naechste.runde.nicht.moeglich"))
+					.message(I18n.get("msg.text.maastrichter.max.vorrunden.erreicht", maxVorrunden))
+					.show();
+			return false;
+		}
+		return true;
 	}
 
 	/** Öffentlicher Einstiegspunkt für Testdaten-Generatoren. */

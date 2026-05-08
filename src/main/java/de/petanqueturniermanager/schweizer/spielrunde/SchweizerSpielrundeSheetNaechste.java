@@ -92,6 +92,10 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 			neueSpielrunde++;
 		}
 
+		if (!pruefeKannNeueRundeErstellen(neueSpielrunde)) {
+			return false;
+		}
+
 		// Konfiguration auf neue Rundennummer setzen (muss VOR neueSpielrunde() passieren,
 		// da getSpielRundeNr() den Sheet-Namen daraus ableitet)
 		getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrunde));
@@ -104,6 +108,15 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 				: aktiveMeldungen;
 
 		return neueSpielrunde(meldungenFuerAuslosung, SpielRundeNr.from(neueSpielrunde), ergebnisse);
+	}
+
+	/**
+	 * Hook für Subklassen: prüft ob die nächste Runde mit Nummer {@code neueSpielrundeNr}
+	 * überhaupt erstellt werden darf (z.B. konfigurierte Maximalanzahl). Default: erlaubt.
+	 * Subklassen sollen bei Ablehnung selbst eine Nutzermeldung anzeigen.
+	 */
+	protected boolean pruefeKannNeueRundeErstellen(int neueSpielrundeNr) {
+		return true;
 	}
 
 	/**

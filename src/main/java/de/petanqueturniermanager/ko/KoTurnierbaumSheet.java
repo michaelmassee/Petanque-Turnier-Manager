@@ -41,6 +41,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.print.PrintArea;
 import de.petanqueturniermanager.helper.random.RandomSource;
 
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
@@ -674,6 +675,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				: siegerNameSpalte(numRunden);
 		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, HEADER_ZEILE_TITEL, letzteZeile, 0, letzteSpalte);
 		formatieresSiegerSpalten(xSheet, numRunden);
+
+		// Druckbereich auf den sichtbaren Bracket-Bereich begrenzen.
+		// Score-Daten-Arbeitszelle (siegerNameSpalte + 2) liegt bewusst außerhalb,
+		// damit sie weder gedruckt noch im Web-Renderer (Used-Area-Fallback) auftaucht.
+		PrintArea.from(xSheet, getWorkingSpreadsheet())
+				.setPrintArea(RangePosition.from(0, HEADER_ZEILE_TITEL, letzteSpalte, letzteZeile));
 
 		speichereScoreBereiche(xSheet, numRunden, metadatenSchluessel, aktuelleScorePositionen);
 		aktuelleScorePositionen = null;
