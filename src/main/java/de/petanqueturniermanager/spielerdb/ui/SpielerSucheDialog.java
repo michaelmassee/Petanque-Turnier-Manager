@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.LogManager;
@@ -81,6 +83,9 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
 
     @Nullable private UnoControlsHelper controls;
     @Nullable private XDialog xDialog;
+    /** Single-Shot-Timer fürs automatische Leeren des Inline-Status-Labels nach erfolgreicher Übernahme. */
+    @Nullable private Timer statusTimer;
+    private static final int STATUS_ANZEIGEDAUER_MS = 3000;
 
     /** Rohe (ungefilterte) Trefferliste aus dem Repository – Quelle für Re-Renderings nach Sammelliste-Mutationen. */
     private List<SpielerMitVerein> rohTreffer = List.of();
@@ -113,7 +118,12 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     }
 
     public void zeigen() throws com.sun.star.uno.Exception {
-        erstelleUndAusfuehren();
+        try {
+            erstelleUndAusfuehren();
+        } finally {
+            stoppeStatusTimer();
+            controls = null;
+        }
     }
 
     @Override protected String getTitel() {
@@ -215,6 +225,10 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
                     ? I18n.get("spielerdb.suche.hinweis_doppelklick_team")
                     : I18n.get("spielerdb.suche.hinweis_doppelklick");
             controls.fixedText("lblHinweis", hinweis, LIST_X, FOOTER_Y, LIST_W, 10);
+            // Inline-Erfolgs-Status (rechts unten, neben dem Hinweis-Text). Wird nach
+            // erfolgreicher Übernahme von schreibeUndMelde() gesetzt und nach kurzer
+            // Zeit automatisch wieder geleert. Ersetzt die früher modale INFO-MessageBox.
+            controls.fixedText("lblStatus", "", BTN_X, FOOTER_Y, BTN_W, 10);
         }
 
         // Schließen
@@ -694,10 +708,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         }
         try {
             int n = ziel.schreibeBlock(spieler);
-            MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
-                    .caption(I18n.get("spielerdb.menu.toplevel"))
-                    .message(I18n.get("spielerdb.info.uebernommen", n))
-                    .show();
+            zeigeKurzStatus(I18n.get("spielerdb.info.uebernommen", n));
             // Frisch übernommene Spieler aus der sichtbaren Trefferliste entfernen,
             // wenn der Filter aktiv ist — sonst tauchen sie weiter auf.
             aktualisiereGemeldeteCache();
@@ -705,6 +716,45 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
         } catch (MeldelisteSchreibException e) {
             logger.error("Block-Schreiben fehlgeschlagen", e);
             zeigeFehler(e.getMessage());
+        }
+    }
+
+    /**
+     * Zeigt einen kurzen Inline-Status rechts unten im Dialog und leert das Label
+     * automatisch nach {@link #STATUS_ANZEIGEDAUER_MS}. Ersetzt die frühere modale
+     * INFO-MessageBox nach erfolgreicher Übernahme — kein Klick nötig.
+     */
+    private void zeigeKurzStatus(String text) {
+        UnoControlsHelper c = this.controls;
+        if (c == null) {
+            return;
+        }
+        c.label("lblStatus", text);
+        stoppeStatusTimer();
+        Timer t = new Timer("SpielerSucheDialog-Status", true);
+        statusTimer = t;
+        t.schedule(new TimerTask() {
+            @Override public void run() {
+                UnoControlsHelper cc = controls;
+                if (cc == null) {
+                    return;
+                }
+                try {
+                    cc.label("lblStatus", "");
+                } catch (RuntimeException ex) {
+                    // Dialog wurde inzwischen geschlossen — Label-Zugriff schlägt fehl,
+                    // ist aber nicht weiter relevant.
+                    logger.debug("Status-Label leeren fehlgeschlagen (Dialog vermutlich zu)", ex);
+                }
+            }
+        }, STATUS_ANZEIGEDAUER_MS);
+    }
+
+    private void stoppeStatusTimer() {
+        Timer t = statusTimer;
+        if (t != null) {
+            t.cancel();
+            statusTimer = null;
         }
     }
 
