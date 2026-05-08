@@ -78,15 +78,29 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private static final Logger logger = LogManager.getLogger(KoTurnierbaumSheet.class);
 
-	/** Header-Zeilen */
-	private static final int HEADER_ZEILE_TITEL = 0;
-	private static final int HEADER_ZEILE_SPALTEN = 1;
+	/**
+	 * Header-Zeilen.
+	 * <p>
+	 * Bei mehreren Gruppen wird zusätzlich Zeile 0 als „Gruppe X"-Banner verwendet,
+	 * dann sind alle nachfolgenden Header- und Datenzeilen um {@link #gruppenZeileOffset}
+	 * nach unten verschoben. Reads erfolgen daher immer über die Hilfsmethoden
+	 * {@link #headerZeileTitel()}, {@link #headerZeileSpalten()}, {@link #ersteZeile()}
+	 * und {@link #scoreDataZeile()}, niemals direkt über die Konstanten.
+	 */
+	private static final int HEADER_ZEILE_TITEL_BASE = 0;
+	private static final int HEADER_ZEILE_SPALTEN_BASE = 1;
+	private static final int ERSTE_ZEILE_BASE = 2;
 
-	/** Erste Datenzeile (nach 2 Header-Zeilen). */
-	static final int ERSTE_ZEILE = 2;
+	/** Offset für alle Zeilen, wenn ein „Gruppe X"-Banner über dem Bracket steht (sonst 0). */
+	private volatile int gruppenZeileOffset = 0;
 
-	/** Zeile der versteckten Score-Daten-Arbeitszelle (Spalten-Header-Zeile, nicht die Titel-Zeile). */
-	static final int SCORE_DATA_ZEILE = HEADER_ZEILE_SPALTEN;
+	/** Optionaler „Gruppe X"-Label-Buchstabe (z.B. „A"); {@code null} = kein Banner. */
+	private volatile String gruppenHeaderLabel = null;
+
+	private int headerZeileTitel()    { return HEADER_ZEILE_TITEL_BASE   + gruppenZeileOffset; }
+	private int headerZeileSpalten()  { return HEADER_ZEILE_SPALTEN_BASE + gruppenZeileOffset; }
+	private int ersteZeile()          { return ERSTE_ZEILE_BASE          + gruppenZeileOffset; }
+	private int scoreDataZeile()      { return headerZeileSpalten(); }
 
 	/** Präfix in der Score-Daten-Arbeitszelle – macht den Inhalt beim Debuggen erkennbar. */
 	static final String SCORE_DATA_PREFIX = "PTM_EDIT:";
@@ -197,7 +211,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	int teamAZeile(int runde, int match) {
 		if (runde == 1) {
-			return match * 3 + ERSTE_ZEILE;
+			return match * 3 + ersteZeile();
 		}
 		return teamBZeile(runde - 1, 2 * match);
 	}
@@ -207,7 +221,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	int teamBZeile(int runde, int match) {
 		if (runde == 1) {
-			return match * 3 + ERSTE_ZEILE + 1;
+			return match * 3 + ersteZeile() + 1;
 		}
 		return teamAZeile(runde - 1, 2 * match + 1);
 	}
@@ -328,6 +342,19 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	 */
 	public void erstelleGruppeBracket(TeamMeldungen gruppeTeams, String sheetName, short sheetPos,
 			IKoBracketKonfiguration konfig, String metadatenSchluessel) throws GenerateException {
+		erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfig, metadatenSchluessel, null);
+	}
+
+	/**
+	 * Erstellt einen KO-Bracket-Sheet mit explizitem „Gruppe X"-Banner über dem Turnierbaum.
+	 * Wird z.B. von {@code MaastrichterFinalrundeSheet} verwendet, um die A/B/C/D-Finalrunden
+	 * zu beschriften.
+	 *
+	 * @param gruppenLabel    Buchstabe/Bezeichner für das Gruppen-Banner (z.B. „A"); {@code null} = ohne Banner
+	 */
+	public void erstelleGruppeBracket(TeamMeldungen gruppeTeams, String sheetName, short sheetPos,
+			IKoBracketKonfiguration konfig, String metadatenSchluessel, String gruppenLabel)
+			throws GenerateException {
 		if (gruppeTeams.size() < 2) {
 			return;
 		}
@@ -343,7 +370,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					.create();
 			XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
 			TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
-			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig, metadatenSchluessel);
+			erstelleTurnierbaum(xSheet, gruppeTeams, numRunden, bracketGroesse, konfig, metadatenSchluessel,
+					gruppenLabel);
 		} finally {
 			this.aktuellerGruppenSheetName = null;
 		}
@@ -504,8 +532,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 				XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
 				TurnierSheet.from(xSheet, getWorkingSpreadsheet()).setActiv();
+				String gruppenLabel = (anzGruppen > 1) ? String.valueOf((char) ('A' + g)) : null;
 				erstelleTurnierbaum(xSheet, gruppenMeldungen, numRunden, bracketGroesse,
-						getKonfigurationSheet(), schluesselFuerGruppe(g, anzGruppen));
+						getKonfigurationSheet(), schluesselFuerGruppe(g, anzGruppen), gruppenLabel);
 			} finally {
 				this.aktuellerGruppenSheetName = null;
 			}
@@ -547,12 +576,14 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	}
 
 	private void erstelleTurnierbaum(XSpreadsheet xSheet, TeamMeldungen meldungen, int numRunden,
-			int bracketGroesse, IKoBracketKonfiguration konfig, String metadatenSchluessel)
-			throws GenerateException {
+			int bracketGroesse, IKoBracketKonfiguration konfig, String metadatenSchluessel,
+			String gruppenLabel) throws GenerateException {
 
 		sheet().processBoxinfo("processbox.ko.turnierbaum.erstellen");
 
 		this.aktuelleScorePositionen = new ArrayList<>();
+		this.gruppenHeaderLabel = gruppenLabel;
+		this.gruppenZeileOffset = (gruppenLabel != null) ? 1 : 0;
 
 		this.spielbahn = konfig.getSpielbaumSpielbahn();
 		this.teamAnzeige = konfig.getSpielbaumTeamAnzeige();
@@ -673,22 +704,45 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		int letzteSpalte = (teamAnzeige == KoSpielbaumTeamAnzeige.NAME)
 				? siegerSpalte(numRunden)
 				: siegerNameSpalte(numRunden);
-		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, HEADER_ZEILE_TITEL, letzteZeile, 0, letzteSpalte);
+		getSheetHelper().setOptimaleBreiteUndHoeheAlles(xSheet, 0, letzteZeile, 0, letzteSpalte);
 		formatieresSiegerSpalten(xSheet, numRunden);
+
+		// "Gruppe X"-Banner über dem Bracket (nur bei Mehrgruppen)
+		if (gruppenHeaderLabel != null) {
+			schreibeGruppenHeader(xSheet, letzteSpalte);
+		}
 
 		// Druckbereich auf den sichtbaren Bracket-Bereich begrenzen.
 		// Score-Daten-Arbeitszelle (siegerNameSpalte + 2) liegt bewusst außerhalb,
 		// damit sie weder gedruckt noch im Web-Renderer (Used-Area-Fallback) auftaucht.
 		PrintArea.from(xSheet, getWorkingSpreadsheet())
-				.setPrintArea(RangePosition.from(0, HEADER_ZEILE_TITEL, letzteSpalte, letzteZeile));
+				.setPrintArea(RangePosition.from(0, 0, letzteSpalte, letzteZeile));
 
 		speichereScoreBereiche(xSheet, numRunden, metadatenSchluessel, aktuelleScorePositionen);
 		aktuelleScorePositionen = null;
+		gruppenHeaderLabel = null;
+		gruppenZeileOffset = 0;
+	}
+
+	/**
+	 * Schreibt das „Gruppe X"-Banner in Zeile 0, gemerged über die volle Breite des Brackets.
+	 */
+	private void schreibeGruppenHeader(XSpreadsheet xSheet, int letzteSpalte) throws GenerateException {
+		String text = I18n.get("ko.turnierbaum.gruppe.header", gruppenHeaderLabel);
+		getSheetHelper().setStringValueInCell(
+				StringCellValue.from(xSheet, Position.from(0, 0), text)
+						.setEndPosMergeSpaltePlus(letzteSpalte)
+						.setCharWeight(FontWeight.BOLD)
+						.setHoriJustify(CellHoriJustify.CENTER)
+						.setCellBackColor(headerFarbe)
+						.setCharColor("FFFFFF")
+						.setShrinkToFit(true)
+						.setBorder(BorderFactory.from().allThin().toBorder()));
 	}
 
 	/**
 	 * Kodiert die gesammelten Score-Positionen als kompakten String, schreibt ihn in eine
-	 * versteckte Arbeitszelle ({@code siegerNameSpalte + 2}, {@link #SCORE_DATA_ZEILE}) und
+	 * versteckte Arbeitszelle ({@code siegerNameSpalte + 2}, {@link #scoreDataZeile()}) und
 	 * legt einen Named Range ({@code __PTM_SCORE_…}) darauf an.
 	 */
 	private void speichereScoreBereiche(XSpreadsheet xSheet, int numRunden,
@@ -698,10 +752,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 				.collect(Collectors.joining("|"));
 		int dataSpalte = siegerNameSpalte(numRunden) + 2;
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(dataSpalte, SCORE_DATA_ZEILE), encoded));
+				StringCellValue.from(xSheet, Position.from(dataSpalte, scoreDataZeile()), encoded));
 		var scoreKey = SheetMetadataHelper.scoreSchluessel(metadatenSchluessel);
 		SheetMetadataHelper.schreibeScoreZellenMetadaten(
-				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), xSheet, scoreKey, dataSpalte, SCORE_DATA_ZEILE);
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), xSheet, scoreKey, dataSpalte, scoreDataZeile());
 		formatiereScoreZellen(positionen);
 	}
 
@@ -909,7 +963,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (mitCadrage) {
 			int titelStartSpalte = mitBahn() ? cadrageBahnSpalte() : cadrageTeamSpalte();
 			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(titelStartSpalte, HEADER_ZEILE_TITEL), I18n.get("column.header.cadrage"))
+					StringCellValue.from(xSheet, Position.from(titelStartSpalte, headerZeileTitel()), I18n.get("column.header.cadrage"))
 							.setEndPosMergeSpaltePlus(colGroupSize - 1)
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.CENTER)
@@ -930,7 +984,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			// Zeile 0: Rundentitel über alle Spalten der Runde (merged)
 			int titelStartSpalte = mitBahn() ? bahnSpalte(r) : teamSpalte(r);
 			getSheetHelper().setStringValueInCell(
-					StringCellValue.from(xSheet, Position.from(titelStartSpalte, HEADER_ZEILE_TITEL), rundentitel)
+					StringCellValue.from(xSheet, Position.from(titelStartSpalte, headerZeileTitel()), rundentitel)
 							.setEndPosMergeSpaltePlus(colGroupSize - 1)
 							.setCharWeight(FontWeight.BOLD)
 							.setHoriJustify(CellHoriJustify.CENTER)
@@ -949,7 +1003,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 		// Sieger-Header (merged über siegerSpalte + siegerNameSpalte)
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), HEADER_ZEILE_TITEL), I18n.get("column.header.sieger"))
+				StringCellValue.from(xSheet, Position.from(siegerSpalte(numRunden), headerZeileTitel()), I18n.get("column.header.sieger"))
 						.setEndPosMergeSpaltePlus(1)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
@@ -971,7 +1025,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	private void schreibeSpaltenHeader(XSpreadsheet xSheet, int spalte, String label) throws GenerateException {
 		getSheetHelper().setStringValueInCell(
-				StringCellValue.from(xSheet, Position.from(spalte, HEADER_ZEILE_SPALTEN), label)
+				StringCellValue.from(xSheet, Position.from(spalte, headerZeileSpalten()), label)
 						.setCharWeight(FontWeight.BOLD)
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(headerFarbe)
@@ -1347,6 +1401,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setHoriJustify(CellHoriJustify.CENTER)
 						.setCellBackColor(headerFarbe)
 						.setCharColor("FFFFFF")
+						.setShrinkToFit(true)
 						.setBorder(BorderFactory.from().allThin().toBorder()));
 
 		// "3. Platz" Kopf-Label in der Sieger-Spalte

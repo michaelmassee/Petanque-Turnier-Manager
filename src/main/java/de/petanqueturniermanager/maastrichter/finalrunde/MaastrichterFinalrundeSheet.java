@@ -152,7 +152,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 				String sheetName = SheetNamen.koFinaleGruppe(gruppenBuchstabe);
 				processBoxinfo("processbox.erstelle.sheet.teams", sheetName, gruppeErg.size());
 				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
-						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe));
+						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe), gruppenBuchstabe);
 				sheetPos++;
 			}
 		}
