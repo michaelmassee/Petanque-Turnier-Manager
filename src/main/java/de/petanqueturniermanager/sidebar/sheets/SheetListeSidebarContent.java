@@ -20,7 +20,9 @@ import com.sun.star.awt.XRequestCallback;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNamed;
+import com.sun.star.frame.XController;
 import com.sun.star.frame.XModel;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.lang.EventObject;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.ui.LayoutSize;
@@ -392,7 +394,14 @@ public class SheetListeSidebarContent extends BaseSidebarContent {
         if (model == null) {
             return;
         }
-        selectionSupplier = Lo.qi(XSelectionSupplier.class, model.getCurrentController());
+        XController controller;
+        try {
+            controller = model.getCurrentController();
+        } catch (DisposedException e) {
+            logger.debug("Model bereits disposed, Listener-Registrierung übersprungen");
+            return;
+        }
+        selectionSupplier = Lo.qi(XSelectionSupplier.class, controller);
         if (selectionSupplier != null) {
             selectionSupplier.addSelectionChangeListener(tabWechselListener);
         }

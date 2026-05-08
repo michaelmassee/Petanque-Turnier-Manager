@@ -47,6 +47,11 @@ public class MaastrichterVorrundenRanglisteSheetUpdate extends SchweizerRanglist
 	}
 
 	@Override
+	protected String getSpielrundenMetadatenSchluessel(int rundeNr) {
+		return SheetMetadataHelper.schluesselMaastrichterVorrunde(rundeNr);
+	}
+
+	@Override
 	protected SchweizerMeldeListeSheetUpdate erstelleMeldeListeSheet() {
 		return new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
 	}

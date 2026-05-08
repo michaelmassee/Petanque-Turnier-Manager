@@ -136,6 +136,15 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		return SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE;
 	}
 
+	/**
+	 * Named-Range-Schlüssel für ein einzelnes Spielrunden-Sheet.
+	 * Subklassen (z.B. Maastrichter) überschreiben dies, damit beim Lookup nicht
+	 * versehentlich ein systemfremder Schlüssel ins Dokument geheilt wird.
+	 */
+	protected String getSpielrundenMetadatenSchluessel(int rundeNr) {
+		return SheetMetadataHelper.schluesselSchweizerSpielrunde(rundeNr);
+	}
+
 	/** Erstellt das Meldelisten-Sheet-Objekt für das Lesen der Teamnamen/Nummern. */
 	protected SchweizerMeldeListeSheetUpdate erstelleMeldeListeSheet() {
 		return new SchweizerMeldeListeSheetUpdate(getWorkingSpreadsheet());
@@ -293,7 +302,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			SheetRunner.testDoCancelTask();
 			// Iterations-Lookup: Metadaten-first (überlebt Umbenennung), Fallback auf Namen
 			XSpreadsheet rundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
-					SheetMetadataHelper.schluesselSchweizerSpielrunde(runde), runde + ". " + getSpielrundenBasisName());
+					getSpielrundenMetadatenSchluessel(runde), runde + ". " + getSpielrundenBasisName());
 			if (rundeSheet == null) {
 				logger.debug("leseAlleSpielergebnisse: Runde {} – Sheet nicht gefunden, übersprungen", runde);
 				continue;
