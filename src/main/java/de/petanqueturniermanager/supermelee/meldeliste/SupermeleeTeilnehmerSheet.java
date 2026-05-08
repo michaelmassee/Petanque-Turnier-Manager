@@ -78,8 +78,16 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
     protected void doRun() throws GenerateException {
         setSpielTagNr(getKonfigurationSheet().getAktiveSpieltag());
         meldeliste.setSpielTag(getSpielTagNr());
+        if (TurnierModus.get().istAktiv()) {
+            BlattschutzRegistry.fuer(getTurnierSystem())
+                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+        }
         meldeliste.upDateSheet();
         generate();
+        if (TurnierModus.get().istAktiv()) {
+            BlattschutzRegistry.fuer(getTurnierSystem())
+                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+        }
     }
 
     public void generate() throws GenerateException {
@@ -138,11 +146,6 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
         getSheetHelper().setStringValueInCell(footer);
 
         builder.freezeUndPrintbereich(footer.getPos().getZeile());
-
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
-                    k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-        }
     }
 
     private Map<Integer, String> leseSpielerNamenAusMeldeliste() throws GenerateException {
