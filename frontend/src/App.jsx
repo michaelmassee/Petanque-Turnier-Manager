@@ -279,25 +279,31 @@ export default function App() {
 
   // Composite View
   if (composite && composite.layout) {
-    const erstesPanel = composite.panels[0];
     const compositeMitHeaderFooter = composite.mitHeaderFooter !== false;
-    const compositeHatKopfzeile = compositeMitHeaderFooter && erstesPanel && (
-      erstesPanel.kopfzeileLinks?.trim()
-      || erstesPanel.kopfzeileMitte?.trim()
-      || erstesPanel.kopfzeileRechts?.trim()
+    // Globalen Header/Footer aus dem ERSTEN Panel mit nicht-leeren Kopf-/Fußzeilen wählen.
+    // Panel 0 darf ein Timer/URL/fehlend-Panel sein – dort sind die Felder null und würden
+    // sonst dazu führen, dass GAR KEIN Header/Footer angezeigt wird, obwohl andere Sheet-Panels
+    // welche hätten. Kopfzeile und Fußzeile werden separat gesucht (können aus verschiedenen
+    // Panels stammen).
+    const panelsSortiert = compositeMitHeaderFooter
+      ? Object.keys(composite.panels)
+          .map((k) => Number(k))
+          .sort((a, b) => a - b)
+          .map((id) => composite.panels[id])
+      : [];
+    const kopfzeilenPanel = panelsSortiert.find((p) =>
+      p && (p.kopfzeileLinks?.trim() || p.kopfzeileMitte?.trim() || p.kopfzeileRechts?.trim())
     );
-    const compositeHatFusszeile = compositeMitHeaderFooter && erstesPanel && (
-      erstesPanel.fusszeileLinks?.trim()
-      || erstesPanel.fusszeileMitte?.trim()
-      || erstesPanel.fusszeileRechts?.trim()
+    const fusszeilenPanel = panelsSortiert.find((p) =>
+      p && (p.fusszeileLinks?.trim() || p.fusszeileMitte?.trim() || p.fusszeileRechts?.trim())
     );
     return (
       <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {compositeHatKopfzeile && (
+        {kopfzeilenPanel && (
           <div className="seitenzeile">
-            <span className="links">{erstesPanel.kopfzeileLinks}</span>
-            <span className="mitte">{erstesPanel.kopfzeileMitte}</span>
-            <span className="rechts">{erstesPanel.kopfzeileRechts}</span>
+            <span className="links">{kopfzeilenPanel.kopfzeileLinks}</span>
+            <span className="mitte">{kopfzeilenPanel.kopfzeileMitte}</span>
+            <span className="rechts">{kopfzeilenPanel.kopfzeileRechts}</span>
           </div>
         )}
         <div style={{ flex: 1, minHeight: 0 }}>
@@ -307,11 +313,11 @@ export default function App() {
             headerFooterUnterdruecken
           />
         </div>
-        {compositeHatFusszeile && (
+        {fusszeilenPanel && (
           <div className="seitenzeile">
-            <span className="links">{erstesPanel.fusszeileLinks}</span>
-            <span className="mitte">{erstesPanel.fusszeileMitte}</span>
-            <span className="rechts">{erstesPanel.fusszeileRechts}</span>
+            <span className="links">{fusszeilenPanel.fusszeileLinks}</span>
+            <span className="mitte">{fusszeilenPanel.fusszeileMitte}</span>
+            <span className="rechts">{fusszeilenPanel.fusszeileRechts}</span>
           </div>
         )}
         <Signatur />
