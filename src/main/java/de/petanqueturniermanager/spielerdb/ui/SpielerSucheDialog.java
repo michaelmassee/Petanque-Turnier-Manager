@@ -72,7 +72,7 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
     private static final int LBLFILTER_X = 45, LBLFILTER_Y = 44, LBLFILTER_W = 315, LBLFILTER_H = 12;
     private static final int LIST_X = 8, LIST_Y = 60, LIST_W = 350, LIST_H = 200;
     private static final int BTN_X = 365, BTN_W = 165, BTN_H = 14;
-    private static final int TEAM_LIST_H = 100;
+    private static final int TEAM_LIST_H = 92;
     private static final int FOOTER_Y = 262;
     private static final int LIMIT_TREFFER = 200;
 
@@ -724,12 +724,15 @@ public final class SpielerSucheDialog extends AbstractUnoDialog {
      * automatisch nach {@link #STATUS_ANZEIGEDAUER_MS}. Ersetzt die frühere modale
      * INFO-MessageBox nach erfolgreicher Übernahme — kein Klick nötig.
      */
+    private static final int STATUS_FARBE_ERFOLG = 0x008000;
+
     private void zeigeKurzStatus(String text) {
         UnoControlsHelper c = this.controls;
         if (c == null) {
             return;
         }
         c.label("lblStatus", text);
+        c.labelTextColor("lblStatus", STATUS_FARBE_ERFOLG);
         stoppeStatusTimer();
         Timer t = new Timer("SpielerSucheDialog-Status", true);
         statusTimer = t;

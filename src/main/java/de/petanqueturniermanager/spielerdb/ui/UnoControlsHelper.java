@@ -259,6 +259,22 @@ final class UnoControlsHelper {
         }
     }
 
+    /**
+     * Setzt die Schriftfarbe eines Controls. {@code rgb < 0} (z.&nbsp;B. {@code -1})
+     * setzt die UNO-Property auf „automatisch", was den Default-Schwarz wiederherstellt.
+     */
+    void labelTextColor(String name, int rgb) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) {
+            return;
+        }
+        try {
+            Lo.qi(XPropertySet.class, ctrl.getModel()).setPropertyValue("TextColor", rgb);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.warn("TextColor konnte nicht gesetzt werden für '{}': {}", name, e.getMessage());
+        }
+    }
+
     void registriereActionListener(String name, Runnable aktion) {
         XControl ctrl = xcc.getControl(name);
         if (ctrl == null) {
