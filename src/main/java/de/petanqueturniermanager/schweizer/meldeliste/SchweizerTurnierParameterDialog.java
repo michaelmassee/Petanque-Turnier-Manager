@@ -131,8 +131,6 @@ public class SchweizerTurnierParameterDialog {
 				92, 62, 60, 12);
 
 		addFixedLine(xMSF, cont, "sep3", 5, 80, 150, 2);
-
-		addFixedLine(xMSF, cont, "sep4", 5, 82, 150, 2);
 		addLabel(xMSF, cont, "lblRankingModus", "Ranglisten-Wertung:", 8, 86, 80, 10);
 		addListBox(xMSF, cont, "lstRankingModus",
 				new String[] { "Mit Buchholz (Standard)", "Ohne Buchholz" },

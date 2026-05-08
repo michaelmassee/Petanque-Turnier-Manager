@@ -42,6 +42,8 @@ public interface XGlobal extends XInterface {
         new MethodTypeInfo("ptmpouleanzvierergruppen",          24, 0),
         new MethodTypeInfo("ptmpouleanzdreiergruppen",          25, 0),
         new MethodTypeInfo("ptmbooleanproperty",                26, 0),
+        new MethodTypeInfo("ptmdbspieleranzahl",                27, 0),
+        new MethodTypeInfo("ptmdbspielersuche",                 28, 0),
     };
 
     String ptmstringproperty(String propname);
@@ -97,4 +99,8 @@ public interface XGlobal extends XInterface {
     int ptmpouleanzdreiergruppen(int anzTeams);
 
     int ptmbooleanproperty(String propname);
+
+    int ptmdbspieleranzahl();
+
+    String[][] ptmdbspielersuche(String suche, boolean wildcard);
 }

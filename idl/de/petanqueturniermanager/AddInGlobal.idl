@@ -42,6 +42,9 @@ module de { module petanqueturniermanager { module addin {
     long ptmpouleanzdreiergruppen ([in] long anzTeams);
     // Boolean-Property (PTM.ALG.BOOLEANPROPERTY)
     long ptmbooleanproperty ([in] string propname); // return 0 (false) or 1 (true)
+    // Spieler-DB-Lookup (PTM.DB.SPIELER.*)
+    long ptmdbspieleranzahl ();
+    sequence< sequence< string > > ptmdbspielersuche ([in] string suche, [in] boolean wildcard);
   };
 
 }; }; };

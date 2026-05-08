@@ -136,6 +136,26 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<node oor:name="Y6I" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<node oor:name="Y6J" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Projektseite im Browser öffnen</value>
+									<value xml:lang="en">Open project page in browser</value>
+									<value xml:lang="es">Abrir página del proyecto en el navegador</value>
+									<value xml:lang="fr">Ouvrir la page du projet dans le navigateur</value>
+									<value xml:lang="nl">Projectpagina openen in browser</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:projekt_seite_oeffnen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 
 						</node>
 					</node>

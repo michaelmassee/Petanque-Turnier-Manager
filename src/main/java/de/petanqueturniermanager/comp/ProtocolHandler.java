@@ -297,6 +297,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TIMER_STOPPEN          = "timer_stoppen";
 	public static final String CMD_TIMER_PLUS_MINUTE      = "timer_plus_minute";
 	public static final String CMD_TIMER_MINUS_MINUTE     = "timer_minus_minute";
+	// Spieler-DB
+	public static final String CMD_SPIELERDB_OEFFNEN       = "spielerdb_oeffnen";
+	public static final String CMD_SPIELERDB_IN_MELDELISTE = "spielerdb_in_meldeliste";
+	public static final String CMD_SPIELERDB_VEREINE       = "spielerdb_vereine";
+	public static final String CMD_SPIELERDB_LABELS        = "spielerdb_labels";
+	public static final String CMD_SPIELERDB_ABGLEICH      = "spielerdb_abgleich";
+	public static final String CMD_SPIELERDB_VORLAGE_ERSTELLEN = "spielerdb_vorlage_erstellen";
+	public static final String CMD_SPIELERDB_VORLAGE_ABGLEICH  = "spielerdb_vorlage_abgleich";
+	public static final String CMD_SPIELERDB_EXPORT        = "spielerdb_export";
+	public static final String CMD_SPIELERDB_IMPORT        = "spielerdb_import";
 	// Konfiguration
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
@@ -312,6 +322,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LOGFILE_ANZEIGEN      = "logfileAnzeigen";
 	public static final String CMD_PLUGIN_KONFIGURATION  = "pluginKonfiguration";
 	public static final String CMD_PROCESSBOX_ANZEIGEN   = "processboxAnzeigen";
+	public static final String CMD_PROJEKT_SEITE_OEFFNEN = "projekt_seite_oeffnen";
+
+	private static final String PROJEKT_SEITE_URL =
+			"https://michaelmassee.github.io/Petanque-Turnier-Manager/";
 	// Symbolleiste
 	public static final String CMD_TOOLBAR_START                 = "toolbar_start";
 	public static final String CMD_TOOLBAR_WEITER                = "toolbar_weiter";
@@ -804,6 +818,44 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_FARBEN:
 				handleKonfiguration(command, ws);
 				break;
+			// ------------------------------
+			// Spieler-DB
+			case CMD_SPIELERDB_OEFFNEN:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.oeffneSpielerVerwaltung(ws);
+				break;
+			case CMD_SPIELERDB_IN_MELDELISTE:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.uebernehmenInMeldeliste(ws);
+				break;
+			case CMD_SPIELERDB_VEREINE:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.oeffneVereinsVerwaltung(ws);
+				break;
+			case CMD_SPIELERDB_LABELS:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.oeffneLabelVerwaltung(ws);
+				break;
+			case CMD_SPIELERDB_ABGLEICH:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.abgleichMitMeldeliste(ws);
+				break;
+			case CMD_SPIELERDB_VORLAGE_ERSTELLEN:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.vorlageErstellen(ws);
+				break;
+			case CMD_SPIELERDB_VORLAGE_ABGLEICH:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.abgleichMitVorlage(ws);
+				break;
+			case CMD_SPIELERDB_EXPORT:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.exportSpielerDb(ws);
+				break;
+			case CMD_SPIELERDB_IMPORT:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.importSpielerDb(ws);
+				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				handleKonfiguration(command, ws);
 				break;
@@ -826,6 +878,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_PROCESSBOX_ANZEIGEN:
 				ProcessBox.zeigeImVordergrund();
+				break;
+			case CMD_PROJEKT_SEITE_OEFFNEN:
+				oeffneBrowserUrl(PROJEKT_SEITE_URL);
 				break;
 			case CMD_ABBRUCH:
 				SheetRunner.cancelRunner();
@@ -1232,6 +1287,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
+				 CMD_PROJEKT_SEITE_OEFFNEN,
 				 CMD_ABBRUCH                                -> true;
 			// Symbolleiste
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
@@ -1251,6 +1307,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TOOLBAR_DRUCKVORSCHAU                  -> true;
 			// Turnier Modus – immer aktiviert
 			case CMD_TURNIER_MODUS                          -> true;
+			// Spieler-DB – im Allgemeinen immer aktiviert (Verfügbarkeit der DB ist Laufzeit-Check)
+			case CMD_SPIELERDB_OEFFNEN,
+				 CMD_SPIELERDB_VEREINE,
+				 CMD_SPIELERDB_LABELS,
+				 CMD_SPIELERDB_ABGLEICH,
+				 CMD_SPIELERDB_VORLAGE_ERSTELLEN,
+				 CMD_SPIELERDB_VORLAGE_ABGLEICH,
+				 CMD_SPIELERDB_EXPORT,
+				 CMD_SPIELERDB_IMPORT                       -> true;
+			// Übernahme in Meldeliste / Toolbar-Btn: nur wenn Turnier vorhanden
+			case CMD_SPIELERDB_IN_MELDELISTE                -> ts != TurnierSystem.KEIN;
 			// Timer – zustandsabhängig
 			case CMD_TIMER_STARTEN_DIALOG                   -> timerInaktivOderBeendet();
 			case CMD_TIMER_PAUSE_FORTSETZEN,

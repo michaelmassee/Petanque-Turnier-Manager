@@ -86,8 +86,13 @@ public class MessageBox extends AbstractMessageBox {
 			}
 		}
 
-		// Log window ausblenden, weil wenn an der gleiche Stelle, wird dieser Dialog überdeckt
-		ProcessBox.from().hide();
+		// Log window ausblenden, weil wenn an der gleiche Stelle, wird dieser Dialog überdeckt.
+		// Vorigen Sichtbarkeitsstand merken — nur wenn die ProcessBox vorher offen war,
+		// wird sie nach dem Dialog wieder eingeblendet. Sonst (z.B. Spieler-DB-Dialoge,
+		// die nichts mit Tournament-Runs zu tun haben) bleibt das Log-Fenster zu.
+		ProcessBox processBox = ProcessBox.from();
+		boolean processBoxWarSichtbar = processBox.istSichtbar();
+		processBox.hide();
 
 		MessageBoxResult result = null;
 		XMessageBox xMessageBox = null;
@@ -127,7 +132,9 @@ public class MessageBox extends AbstractMessageBox {
 			result = MessageBoxResult.findResult(msgBoxresult);
 		}
 
-		ProcessBox.from().visible();
+		if (processBoxWarSichtbar) {
+			processBox.visible();
+		}
 
 		return result;
 	}

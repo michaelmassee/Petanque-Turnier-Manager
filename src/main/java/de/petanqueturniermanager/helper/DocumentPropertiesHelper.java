@@ -263,6 +263,24 @@ public class DocumentPropertiesHelper {
 		}
 	}
 
+	/**
+	 * Schreibt {@code defaultVal} in die UserDefinedProperties des Dokuments,
+	 * sofern dort noch keine Property unter {@code propName} existiert (case-insensitiv).
+	 * Wird genutzt, um Bestandsdokumente nachträglich auf einen vollständigen
+	 * Property-Satz zu migrieren — vermeidet, dass „fehlende" Properties dauerhaft
+	 * nur durch Code-Defaults maskiert bleiben und zwischen Lese-Pfaden
+	 * (Konfig-Sheet vs. extern via {@link #getStringProperty}) divergieren.
+	 */
+	public void initStringPropertyIfAbsent(String propName, String defaultVal) {
+		if (defaultVal == null) {
+			return;
+		}
+		boolean absent = currentPropListe.keySet().stream().noneMatch(key -> key.equalsIgnoreCase(propName));
+		if (absent) {
+			setStringProperty(propName, defaultVal);
+		}
+	}
+
 	public boolean getTurnierModusAusDocument() {
 		return getBooleanProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIER_MODUS, false);
 	}

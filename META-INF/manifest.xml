@@ -18,31 +18,37 @@
     <!-- Addon Menu Configurations -->
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A1_FormuleX.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_A0_SpielerDb.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A2_JederGJeden.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_B0_Separator.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A3_KO.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C1_FormuleX.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A4_Kaskaden.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C2_JederGJeden.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A5_Liga.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C3_KO.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A6_Maastrichter.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C4_Kaskaden.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A7_Poule.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C5_Liga.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A8_Schweizer.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C6_Maastrichter.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
-        manifest:full-path="registry/org/openoffice/Office/Addons_A9_Supermelee.xcu"/>
+        manifest:full-path="registry/org/openoffice/Office/Addons_C7_Poule.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_C8_Schweizer.xcu"/>
+    <manifest:file-entry
+        manifest:media-type="application/vnd.sun.star.configuration-data"
+        manifest:full-path="registry/org/openoffice/Office/Addons_C9_Supermelee.xcu"/>
     <manifest:file-entry
         manifest:media-type="application/vnd.sun.star.configuration-data"
         manifest:full-path="registry/org/openoffice/Office/Addons_W1_Separator.xcu"/>

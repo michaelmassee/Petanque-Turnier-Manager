@@ -766,6 +766,79 @@
 					<prop oor:name="Category"><value>Add-In</value></prop>
 				</node>
 
+				<!-- ============================================================ -->
+				<!-- PTM.DB.SPIELER.* — Spieler-DB-Lookups als Calc-Funktionen.    -->
+				<!-- ============================================================ -->
+				<node oor:name="ptmdbspieleranzahl" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.DB.SPIELER.ANZAHL</value>
+						<value xml:lang="de">PTM.DB.SPIELER.ANZAHL</value>
+						<value xml:lang="es">PTM.DB.SPIELER.ANZAHL</value>
+						<value xml:lang="fr">PTM.DB.SPIELER.ANZAHL</value>
+						<value xml:lang="nl">PTM.DB.SPIELER.ANZAHL</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: number of players in the player database.</value>
+						<value xml:lang="de">Petanque Turniermanager: Anzahl der Spieler in der Spieler-Datenbank.</value>
+						<value xml:lang="es">Petanque Turniermanager: número de jugadores en la base de datos.</value>
+						<value xml:lang="fr">Petanque Turniermanager : nombre de joueurs dans la base de données.</value>
+						<value xml:lang="nl">Petanque Turniermanager: aantal spelers in de spelersdatabase.</value>
+					</prop>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
+				<node oor:name="ptmdbspielersuche" oor:op="replace">
+					<prop oor:name="DisplayName">
+						<value xml:lang="en">PTM.DB.SPIELER.SUCHE</value>
+						<value xml:lang="de">PTM.DB.SPIELER.SUCHE</value>
+						<value xml:lang="es">PTM.DB.SPIELER.SUCHE</value>
+						<value xml:lang="fr">PTM.DB.SPIELER.SUCHE</value>
+						<value xml:lang="nl">PTM.DB.SPIELER.SUCHE</value>
+					</prop>
+					<prop oor:name="Description">
+						<value xml:lang="en">Petanque Turniermanager: searches the player database. Returns first name, last name, club as a 2D range (max. 200 hits).</value>
+						<value xml:lang="de">Petanque Turniermanager: durchsucht die Spieler-Datenbank. Liefert Vorname, Nachname, Verein als 2D-Bereich (max. 200 Treffer).</value>
+						<value xml:lang="es">Petanque Turniermanager: busca en la base de datos. Devuelve nombre, apellido y club como rango 2D (máx. 200 resultados).</value>
+						<value xml:lang="fr">Petanque Turniermanager : recherche dans la base de données. Renvoie prénom, nom, club sous forme de plage 2D (max. 200 résultats).</value>
+						<value xml:lang="nl">Petanque Turniermanager: zoekt in de spelersdatabase. Levert voornaam, achternaam, vereniging als 2D-bereik (max. 200 treffers).</value>
+					</prop>
+					<node oor:name="Parameters">
+						<node oor:name="suche" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Search term</value>
+								<value xml:lang="de">Suchbegriff</value>
+								<value xml:lang="es">Término de búsqueda</value>
+								<value xml:lang="fr">Terme de recherche</value>
+								<value xml:lang="nl">Zoekterm</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">Match against last name and first name (case-insensitive). Trimmed and limited to 100 characters.</value>
+								<value xml:lang="de">Suche über Nachname und Vorname (Groß-/Kleinschreibung egal). Wird getrimmt und auf 100 Zeichen begrenzt.</value>
+								<value xml:lang="es">Búsqueda en apellido y nombre (no distingue mayúsculas). Se recorta y limita a 100 caracteres.</value>
+								<value xml:lang="fr">Recherche dans le nom et le prénom (insensible à la casse). Tronqué à 100 caractères.</value>
+								<value xml:lang="nl">Zoeken op achternaam en voornaam (hoofdletterongevoelig). Wordt getrimd en beperkt tot 100 tekens.</value>
+							</prop>
+						</node>
+						<node oor:name="wildcard" oor:op="replace">
+							<prop oor:name="DisplayName">
+								<value xml:lang="en">Wildcard</value>
+								<value xml:lang="de">Wildcard</value>
+								<value xml:lang="es">Comodín</value>
+								<value xml:lang="fr">Joker</value>
+								<value xml:lang="nl">Wildcard</value>
+							</prop>
+							<prop oor:name="Description">
+								<value xml:lang="en">FALSE = prefix match (term%); TRUE = substring match (%term%).</value>
+								<value xml:lang="de">FALSCH = Anfangs-Treffer (term%); WAHR = Teilstring-Treffer (%term%).</value>
+								<value xml:lang="es">FALSO = coincidencia por prefijo (term%); VERDADERO = subcadena (%term%).</value>
+								<value xml:lang="fr">FAUX = correspondance par préfixe (term%) ; VRAI = sous-chaîne (%term%).</value>
+								<value xml:lang="nl">ONWAAR = prefix-match (term%); WAAR = substring-match (%term%).</value>
+							</prop>
+						</node>
+					</node>
+					<prop oor:name="Category"><value>Add-In</value></prop>
+				</node>
+
 			</node>
 		</node>
 	</node>

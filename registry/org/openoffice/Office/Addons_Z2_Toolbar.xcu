@@ -392,6 +392,36 @@
                         <value>_self</value>
                     </prop>
                 </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Trennlinie -->
+                <node oor:name="m22" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>private:separator</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Spieler-DB: Meldungen in Meldeliste übernehmen
+                     (nur aktiv wenn Turnier vorhanden) -->
+                <node oor:name="m23" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:spielerdb_in_meldeliste</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Spieler-DB: Meldungen übernehmen</value>
+                        <value xml:lang="en">Player DB: Add players to entry list</value>
+                        <value xml:lang="es">BD jugadores: añadir a la inscripción</value>
+                        <value xml:lang="fr">Base joueurs : ajouter à la liste</value>
+                        <value xml:lang="nl">Spelers-DB: naar inschrijflijst</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
                 <!-- ****************************************************************** -->
 
             </node>
@@ -581,6 +611,20 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-drucken.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.spielerdb_in_meldeliste" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:spielerdb_in_meldeliste</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-spielerdb-meldungen.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-spielerdb-meldungen.png</value>
                     </prop>
                 </node>
             </node>

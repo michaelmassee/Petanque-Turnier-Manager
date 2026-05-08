@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.addins;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.StringUtils;
@@ -13,16 +15,21 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.addin.XGlobal;
+import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.Direktvergleich;
+import de.petanqueturniermanager.algorithmen.PouleGruppenRechner;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
-import de.petanqueturniermanager.algorithmen.CadrageRechner;
-import de.petanqueturniermanager.algorithmen.PouleGruppenRechner;
+import de.petanqueturniermanager.spielerdb.SpielerAddInCache;
+import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
+import de.petanqueturniermanager.spielerdb.SpielerDbException;
+import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
+import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.addin.XGlobal;
 
 public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	static final Logger logger = LogManager.getLogger(GlobalImpl.class);
@@ -64,6 +71,15 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	public static final String PTM_POULE_ANZ_GRUPPEN        = "PTM.POULE.ANZ_GRUPPEN";
 	public static final String PTM_POULE_ANZ_VIERER_GRUPPEN = "PTM.POULE.ANZ_VIERER_GRUPPEN";
 	public static final String PTM_POULE_ANZ_DREIER_GRUPPEN = "PTM.POULE.ANZ_DREIER_GRUPPEN";
+
+	public static final String PTM_DB_SPIELER_ANZAHL = "PTM.DB.SPIELER.ANZAHL";
+	public static final String PTM_DB_SPIELER_SUCHE  = "PTM.DB.SPIELER.SUCHE";
+
+	private static final int SUCHE_LIMIT = 200;
+	private static final int SUCHE_MAX_LEN = 100;
+	private static final String[][] LEERES_SUCH_ERGEBNIS = new String[0][0];
+
+	private final SpielerAddInCache spielerCache = new SpielerAddInCache();
 
 	public static final String FORMAT_PTM_INT_PROPERTY(String propName) {
 		return PTM_INT_PROPERTY + "(\"" + propName + "\")";
@@ -360,6 +376,72 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	@Override
 	public int ptmpouleanzdreiergruppen(int anzTeams) {
 		return berechnePoule(anzTeams, () -> PouleGruppenRechner.anzDreiTeamGruppen(anzTeams));
+	}
+
+	// ------------------- PTM.DB.SPIELER.* Formeln -----------------
+	// Synchronisiert über spielerCache als Monitor: HSQLDB-Connection ist nicht
+	// thread-safe für parallele Statements, Calc-Recalcs sind heute sequenziell
+	// pro Sheet, aber das ist nicht garantiert.
+
+	@Override
+	public int ptmdbspieleranzahl() {
+		try {
+			synchronized (spielerCache) {
+				return spielerCache.holeOderBerechne("anzahl", () -> {
+					try {
+						return spielerRepository().anzahl();
+					} catch (SpielerDbException e) {
+						logger.error("PTM.DB.SPIELER.ANZAHL fehlgeschlagen", e);
+						return 0;
+					}
+				});
+			}
+		} catch (RuntimeException | LinkageError e) {
+			logger.error("PTM.DB.SPIELER.ANZAHL: harter Init-Fehler", e);
+			return 0;
+		}
+	}
+
+	@Override
+	public String[][] ptmdbspielersuche(String suche, boolean wildcard) {
+		String normalized = (suche == null ? "" : suche).trim().toLowerCase(Locale.ROOT);
+		if (normalized.length() > SUCHE_MAX_LEN) {
+			normalized = normalized.substring(0, SUCHE_MAX_LEN);
+		}
+		String key = "suche:" + wildcard + ":" + normalized;
+		String suchTerm = normalized;
+		try {
+			synchronized (spielerCache) {
+				return spielerCache.holeOderBerechne(key, () -> {
+					try {
+						List<SpielerMitVerein> treffer = spielerRepository()
+								.findeMitWildcard(suchTerm, wildcard, SUCHE_LIMIT);
+						String[][] tabelle = new String[treffer.size()][3];
+						for (int i = 0; i < treffer.size(); i++) {
+							SpielerMitVerein s = treffer.get(i);
+							tabelle[i][0] = s.vorname();
+							tabelle[i][1] = s.nachname();
+							tabelle[i][2] = s.vereinName() == null ? "" : s.vereinName();
+						}
+						return tabelle;
+					} catch (SpielerDbException e) {
+						logger.error("PTM.DB.SPIELER.SUCHE fehlgeschlagen: '{}'", suchTerm, e);
+						return LEERES_SUCH_ERGEBNIS;
+					}
+				});
+			}
+		} catch (RuntimeException | LinkageError e) {
+			logger.error("PTM.DB.SPIELER.SUCHE: harter Init-Fehler", e);
+			return LEERES_SUCH_ERGEBNIS;
+		}
+	}
+
+	private SpielerRepository spielerRepository() {
+		try {
+			return new SpielerRepository(SpielerDbConnection.getInstance());
+		} catch (SpielerDbException e) {
+			throw new IllegalStateException("Spieler-DB nicht erreichbar", e);
+		}
 	}
 
 }
