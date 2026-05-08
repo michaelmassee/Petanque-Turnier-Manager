@@ -43,6 +43,7 @@ public final class SheetNamen {
     public static final String KEY_POULE_VORRUNDE                   = "sheet.name.poule.vorrunde";
     public static final String KEY_POULE_TEILNEHMER                 = "sheet.name.poule.teilnehmer";
     public static final String KEY_POULE_VORRUNDEN_RANGLISTE        = "sheet.name.poule.vorrunden.rangliste";
+    public static final String KEY_SPIELERDB_VORLAGE                = "sheet.name.spielerdb.vorlage";
 
     // ── i18n-Schlüssel – Muster mit Platzhaltern ─────────────────────────────
 
@@ -206,6 +207,14 @@ public final class SheetNamen {
 
     public static String pouleVorrundenRangliste() {
         return getOderFallback(KEY_POULE_VORRUNDEN_RANGLISTE, LEGACY_POULE_VORRUNDEN_RANGLISTE);
+    }
+
+    /**
+     * Spieler-DB-Vorlage: flaches 3-Spalten-Sheet (Vorname, Nachname, Verein),
+     * das vom Anwender befüllt und für den DB-Abgleich gelesen wird.
+     */
+    public static String spielerDbVorlage() {
+        return getOderFallback(KEY_SPIELERDB_VORLAGE, "Spieler-DB Vorlage");
     }
 
     /**

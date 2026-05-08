@@ -303,6 +303,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_SPIELERDB_VEREINE       = "spielerdb_vereine";
 	public static final String CMD_SPIELERDB_LABELS        = "spielerdb_labels";
 	public static final String CMD_SPIELERDB_ABGLEICH      = "spielerdb_abgleich";
+	public static final String CMD_SPIELERDB_VORLAGE_ERSTELLEN = "spielerdb_vorlage_erstellen";
+	public static final String CMD_SPIELERDB_VORLAGE_ABGLEICH  = "spielerdb_vorlage_abgleich";
 	public static final String CMD_SPIELERDB_EXPORT        = "spielerdb_export";
 	public static final String CMD_SPIELERDB_IMPORT        = "spielerdb_import";
 	// Konfiguration
@@ -838,6 +840,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 						.abgleichMitMeldeliste(ws);
 				break;
+			case CMD_SPIELERDB_VORLAGE_ERSTELLEN:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.vorlageErstellen(ws);
+				break;
+			case CMD_SPIELERDB_VORLAGE_ABGLEICH:
+				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+						.abgleichMitVorlage(ws);
+				break;
 			case CMD_SPIELERDB_EXPORT:
 				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
 						.exportSpielerDb(ws);
@@ -1302,6 +1312,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_SPIELERDB_VEREINE,
 				 CMD_SPIELERDB_LABELS,
 				 CMD_SPIELERDB_ABGLEICH,
+				 CMD_SPIELERDB_VORLAGE_ERSTELLEN,
+				 CMD_SPIELERDB_VORLAGE_ABGLEICH,
 				 CMD_SPIELERDB_EXPORT,
 				 CMD_SPIELERDB_IMPORT                       -> true;
 			// Übernahme in Meldeliste / Toolbar-Btn: nur wenn Turnier vorhanden

@@ -13,24 +13,13 @@ import de.petanqueturniermanager.basesheet.meldeliste.Formation;
  * das Turniersystem und liefert hier die nötigen Werte; der Dialog selbst bleibt
  * frei von Sheet-/UNO-Abhängigkeiten oberhalb dieser Schnittstelle.
  */
-public interface MeldelisteZiel {
+public interface MeldelisteZiel extends AbgleichQuelle {
 
     /** Formation der Meldeliste (TETE/DOUBLETTE/TRIPLETTE/MELEE). */
     Formation getFormation();
 
-    /** Anzeigename des Turniersystems (z.B. „Supermelee", „Schweizer"). */
-    String getSystemBezeichnung();
-
     /** Aktuell in der Meldeliste eingetragene Spielernamen (case-insensitiv getrimmt). */
     List<String> getVorhandeneSpielernamen();
-
-    /**
-     * Liest alle eingetragenen Spieler als Rohdaten (Vorname, Nachname, optional
-     * Vereinsname pro Slot) aus der Meldeliste. Leere Slots werden übersprungen.
-     * Wird vom Abgleich-Dialog genutzt, um fehlende Spieler in die Spieler-DB
-     * zu übernehmen.
-     */
-    List<MeldelisteSpielerDaten> leseAlleSpielerRoh();
 
     /**
      * Sucht einen Namen (case-insensitiv getrimmt) in der bestehenden Meldeliste.

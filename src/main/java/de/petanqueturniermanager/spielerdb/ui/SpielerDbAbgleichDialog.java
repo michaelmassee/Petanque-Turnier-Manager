@@ -1,5 +1,6 @@
 package de.petanqueturniermanager.spielerdb.ui;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -27,8 +28,11 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
+import de.petanqueturniermanager.spielerdb.AbgleichQuelle;
+import de.petanqueturniermanager.spielerdb.AbgleichStatusSenke;
+import de.petanqueturniermanager.spielerdb.AbgleichStatusSenke.AbgleichStatus;
+import de.petanqueturniermanager.spielerdb.AbgleichStatusSenke.ZeilenStatus;
 import de.petanqueturniermanager.spielerdb.MeldelisteSpielerDaten;
-import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.SpielerDatensatz;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
@@ -60,26 +64,44 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
 
     private final SpielerRepository spielerRepo;
     private final VereinRepository vereinRepo;
-    private final MeldelisteZiel ziel;
+    private final AbgleichQuelle quelle;
+    @Nullable private final AbgleichStatusSenke senke;
 
     @Nullable private UnoControlsHelper controls;
 
     /** Fehlend-Liste in Anzeige-Reihenfolge (1:1 zu den Listbox-Einträgen). */
     private List<FehlendeSpielerDaten> fehlend = List.of();
 
+    /** Snapshot aller Quell-Zeilen (incl. Duplikaten) für den Senke-Bericht. */
+    private List<MeldelisteSpielerDaten> quellSnapshot = List.of();
+    /** dbIndex zum Zeitpunkt des allerersten {@link #ladeFehlende()}. */
+    @Nullable private Set<String> dbKeysAnfang;
+    /** Match-Schlüssel der erfolgreich neu importierten Datensätze. */
+    private final Set<String> importErfolgKeys = new HashSet<>();
+    /** Match-Schlüssel zu Fehlerursache für gescheiterte Imports. */
+    private final Map<String, String> importFehlerKeys = new HashMap<>();
+
     public SpielerDbAbgleichDialog(XComponentContext xContext, SpielerRepository spielerRepo,
-            VereinRepository vereinRepo, MeldelisteZiel ziel) {
+            VereinRepository vereinRepo, AbgleichQuelle quelle) {
+        this(xContext, spielerRepo, vereinRepo, quelle, null);
+    }
+
+    public SpielerDbAbgleichDialog(XComponentContext xContext, SpielerRepository spielerRepo,
+            VereinRepository vereinRepo, AbgleichQuelle quelle, @Nullable AbgleichStatusSenke senke) {
         super(xContext);
         this.spielerRepo = spielerRepo;
         this.vereinRepo = vereinRepo;
-        this.ziel = ziel;
+        this.quelle = quelle;
+        this.senke = senke;
     }
 
     public void zeigen() throws com.sun.star.uno.Exception {
         erstelleUndAusfuehren();
     }
 
-    @Override protected String getTitel() { return I18n.get("spielerdb.abgleich.titel"); }
+    @Override protected String getTitel() {
+        return I18n.get("spielerdb.abgleich.titel", quelle.getSystemBezeichnung());
+    }
     @Override protected int getBreite() { return B; }
     @Override protected int getHoehe() { return H; }
     @Override protected boolean istVeraenderbar() { return false; }
@@ -123,7 +145,8 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
         if (c == null) {
             return;
         }
-        List<MeldelisteSpielerDaten> ausMeldeliste = ziel.leseAlleSpielerRoh();
+        List<MeldelisteSpielerDaten> ausMeldeliste = quelle.leseAlleSpielerRoh();
+        this.quellSnapshot = List.copyOf(ausMeldeliste);
         Set<String> dbIndex;
         try {
             dbIndex = baueDbIndex();
@@ -132,6 +155,9 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
             zeigeFehler(I18n.get("spielerdb.fehler.dbinit",
                     e.getMessage() == null ? "" : e.getMessage()));
             return;
+        }
+        if (this.dbKeysAnfang == null) {
+            this.dbKeysAnfang = Set.copyOf(dbIndex);
         }
 
         Map<String, FehlendeSpielerDaten> fehlendDedup = new LinkedHashMap<>();
@@ -148,7 +174,7 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
         this.fehlend = List.copyOf(fehlendDedup.values());
 
         c.label("lblKopf", I18n.get("spielerdb.abgleich.kopf",
-                ausMeldeliste.size(), bereitsInDb, fehlend.size()));
+                quelle.getSystemBezeichnung(), ausMeldeliste.size(), bereitsInDb, fehlend.size()));
         c.setzeListItems("lstFehlend",
                 fehlend.stream().map(SpielerDbAbgleichDialog::formatZeile).toArray(String[]::new));
         boolean nichtLeer = !fehlend.isEmpty();
@@ -213,13 +239,44 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
 
         ImportErgebnis erg = importiere(indizes);
 
+        berichteStatusAnSenke();
+
         MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
-                .caption(I18n.get("spielerdb.abgleich.titel"))
+                .caption(I18n.get("spielerdb.abgleich.titel", quelle.getSystemBezeichnung()))
                 .message(I18n.get("spielerdb.abgleich.info.fertig",
                         erg.importiert, erg.neueVereine, erg.fehler))
                 .show();
 
         ladeFehlende();
+    }
+
+    private void berichteStatusAnSenke() {
+        if (senke == null || quellSnapshot.isEmpty()) {
+            return;
+        }
+        Set<String> dbAnfang = dbKeysAnfang == null ? Set.of() : dbKeysAnfang;
+        List<ZeilenStatus> liste = new ArrayList<>(quellSnapshot.size());
+        for (MeldelisteSpielerDaten m : quellSnapshot) {
+            String key = matchSchluessel(m.vorname(), m.nachname(), m.vereinName());
+            AbgleichStatus st;
+            String reason = null;
+            if (dbAnfang.contains(key)) {
+                st = AbgleichStatus.IN_DB;
+            } else if (importErfolgKeys.contains(key)) {
+                st = AbgleichStatus.NEU;
+            } else if (importFehlerKeys.containsKey(key)) {
+                st = AbgleichStatus.FEHLER;
+                reason = importFehlerKeys.get(key);
+            } else {
+                st = AbgleichStatus.FEHLT;
+            }
+            liste.add(new ZeilenStatus(m.zeile1Basiert(), st, reason));
+        }
+        try {
+            senke.schreibeStatus(liste);
+        } catch (RuntimeException e) {
+            logger.warn("Status-Rückschreiben in Quelle fehlgeschlagen", e);
+        }
     }
 
     private ImportErgebnis importiere(short[] indizes) {
@@ -232,14 +289,19 @@ public final class SpielerDbAbgleichDialog extends AbstractUnoDialog {
                 continue;
             }
             FehlendeSpielerDaten d = fehlend.get(idx);
+            String key = matchSchluessel(d.vorname(), d.nachname(), d.vereinName());
             try {
                 Integer vereinNr = vereinNrFuer(d.vereinName(), vereinNrCache, erg);
                 spielerRepo.insert(SpielerDatensatz.neu(
                         d.vorname(), d.nachname(), vereinNr, List.of(), null));
                 erg.importiert++;
+                importErfolgKeys.add(key);
+                importFehlerKeys.remove(key);
             } catch (SpielerDbException e) {
                 logger.error("Import von '{} {}' fehlgeschlagen", d.vorname(), d.nachname(), e);
                 erg.fehler++;
+                importFehlerKeys.put(key,
+                        e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
             }
         }
         return erg;

@@ -108,8 +108,46 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A6: Exportieren -->
+							<!-- A0A6: Vorlage erstellen -->
 							<node oor:name="A0A6" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Vorlage erstellen</value>
+									<value xml:lang="en">Create template</value>
+									<value xml:lang="es">Crear plantilla</value>
+									<value xml:lang="fr">Créer un modèle</value>
+									<value xml:lang="nl">Sjabloon aanmaken</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_vorlage_erstellen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- A0A7: Mit Vorlage abgleichen -->
+							<node oor:name="A0A7" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Mit Vorlage abgleichen</value>
+									<value xml:lang="en">Sync with template</value>
+									<value xml:lang="es">Sincronizar con plantilla</value>
+									<value xml:lang="fr">Synchroniser avec le modèle</value>
+									<value xml:lang="nl">Synchroniseren met sjabloon</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_vorlage_abgleich</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
+							<!-- A0A8: Trenner -->
+							<node oor:name="A0A8" oor:op="replace">
+								<prop oor:name="URL" oor:type="xs:string">
+									<value>private:separator</value>
+								</prop>
+							</node>
+							<!-- A0A9: Exportieren -->
+							<node oor:name="A0A9" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Exportieren</value>
 									<value xml:lang="en">Export</value>
@@ -124,8 +162,8 @@
 									<value>_self</value>
 								</prop>
 							</node>
-							<!-- A0A7: Importieren -->
-							<node oor:name="A0A7" oor:op="replace">
+							<!-- A0A10: Importieren -->
+							<node oor:name="A0A10" oor:op="replace">
 								<prop oor:name="Title">
 									<value xml:lang="de">Importieren</value>
 									<value xml:lang="en">Import</value>

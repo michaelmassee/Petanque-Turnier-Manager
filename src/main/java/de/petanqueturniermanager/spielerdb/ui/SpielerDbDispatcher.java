@@ -23,6 +23,9 @@ import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.spielerdb.VereinRepository;
 import de.petanqueturniermanager.spielerdb.export.SpielerDbExportLoader;
+import de.petanqueturniermanager.spielerdb.vorlage.SheetVorlageAdapter;
+import de.petanqueturniermanager.spielerdb.vorlage.SpielerDbVorlageSheet;
+import de.petanqueturniermanager.exception.GenerateException;
 
 /**
  * Bindeglied zwischen {@link de.petanqueturniermanager.comp.ProtocolHandler}
@@ -122,6 +125,58 @@ public final class SpielerDbDispatcher {
                     ziel.get()).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("Spieler-DB-Abgleich-Dialog fehlgeschlagen", e);
+        } finally {
+            if (warSichtbar) {
+                pb.visible();
+            }
+        }
+    }
+
+    public static void vorlageErstellen(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        try {
+            SpielerDbVorlageSheet.bereitstellen(ws);
+        } catch (GenerateException | RuntimeException e) {
+            logger.error("Vorlage-Sheet konnte nicht angelegt werden", e);
+            MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("spielerdb.fehler.titel"))
+                    .message(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage())
+                    .show();
+        }
+    }
+
+    public static void abgleichMitVorlage(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        Optional<SpielerDbConnection> conn = oeffneOderMelde(ctx);
+        if (conn.isEmpty()) {
+            return;
+        }
+        SheetVorlageAdapter quelle = new SheetVorlageAdapter(ws);
+        // Eager-Probe: Sheet-Existenz und Header-Validierung VOR Dialog-Öffnung,
+        // damit Fehlermeldungen als saubere MessageBox erscheinen statt als
+        // leerer Dialog mit „0 Spieler gefunden".
+        try {
+            quelle.leseAlleSpielerRoh();
+        } catch (SheetVorlageAdapter.VorlageNichtVerfuegbarException e) {
+            MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
+                    .caption(I18n.get("spielerdb.menu.toplevel"))
+                    .message(e.getMessage())
+                    .show();
+            return;
+        }
+
+        ProcessBox pb = ProcessBox.from();
+        boolean warSichtbar = pb.istSichtbar();
+        if (warSichtbar) {
+            pb.hide();
+        }
+        try {
+            new SpielerDbAbgleichDialog(ctx,
+                    new SpielerRepository(conn.get()),
+                    new VereinRepository(conn.get()),
+                    quelle, quelle).zeigen();
+        } catch (com.sun.star.uno.Exception | RuntimeException e) {
+            logger.error("Spieler-DB-Abgleich-Dialog (Vorlage) fehlgeschlagen", e);
         } finally {
             if (warSichtbar) {
                 pb.visible();
