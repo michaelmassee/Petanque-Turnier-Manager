@@ -129,7 +129,12 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
                 new AddConfigElementsToWindow(guiFactoryCreateParam, currentSpreadsheet, layout);
         AtomicInteger anzElementen = new AtomicInteger(0);
         if (konfigProperties != null) {
-            konfigProperties.stream().filter(getKonfigFieldFilter()).forEach(konfigprop -> {
+            var stream = konfigProperties.stream().filter(getKonfigFieldFilter());
+            var comparator = getKonfigFieldComparator();
+            if (comparator != null) {
+                stream = stream.sorted(comparator);
+            }
+            stream.forEach(konfigprop -> {
                 addConfigElementsToWindow.addPropToPanel(konfigprop);
                 anzElementen.addAndGet(1);
             });
@@ -187,4 +192,12 @@ abstract class BasePropertiesDialog extends AbstractUnoDialog {
     };
 
     protected abstract java.util.function.Predicate<ConfigProperty<?>> getKonfigFieldFilter();
+
+    /**
+     * Optionale Sortier-Reihenfolge der gefilterten Properties; {@code null} = Original-Reihenfolge
+     * der konfigurierten {@code KONFIG_PROPERTIES}-Liste beibehalten.
+     */
+    protected java.util.Comparator<ConfigProperty<?>> getKonfigFieldComparator() {
+        return null;
+    }
 }

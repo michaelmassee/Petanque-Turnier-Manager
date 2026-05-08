@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.konfigdialog.properties;
 
+import java.util.Comparator;
 import java.util.function.Predicate;
 
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +28,26 @@ public class KopfFusszeilenDialog extends BasePropertiesDialog {
 	@Override
 	protected Predicate<ConfigProperty<?>> getKonfigFieldFilter() {
 		return konfigprop -> konfigprop instanceof HeaderFooterConfigProperty;
+	}
+
+	/**
+	 * Reihenfolge im Dialog: Kopfzeilen oben, Fußzeilen unten — unabhängig davon, in welcher
+	 * Reihenfolge die einzelnen Turniersystem-Konfigurationen die Properties registrieren.
+	 * Innerhalb einer Gruppe bleibt die Original-Reihenfolge erhalten (stabile Sortierung).
+	 */
+	@Override
+	protected Comparator<ConfigProperty<?>> getKonfigFieldComparator() {
+		return Comparator.comparingInt(konfigprop -> {
+			String key = konfigprop.getKey();
+			if (key == null) {
+				return 1;
+			}
+			String lower = key.toLowerCase();
+			if (lower.startsWith("kopfzeile") || lower.startsWith("kopf zeile") || lower.startsWith("kopf-zeile")) {
+				return 0;
+			}
+			return 1;
+		});
 	}
 
 	@Override
