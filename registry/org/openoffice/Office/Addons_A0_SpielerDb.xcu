@@ -178,6 +178,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- A0A11: Spieler-DB in Base öffnen -->
+							<node oor:name="A0A11" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Spieler-DB in Base öffnen</value>
+									<value xml:lang="en">Open player DB in Base</value>
+									<value xml:lang="es">Abrir BD jugadores en Base</value>
+									<value xml:lang="fr">Ouvrir la base joueurs dans Base</value>
+									<value xml:lang="nl">Spelers-DB in Base openen</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_in_base_oeffnen</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

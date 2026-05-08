@@ -135,6 +135,12 @@ def extensionId = descriptionXml.identifier.@value.text()
 
 configurations {
     libreoffice
+    // Separater Treiber-JAR-Pfad für LibreOffice Base. Bewusst NICHT in
+    // implementation/runtimeClasspath, damit der OXT-Classloader (Plugin-Code)
+    // unverändert auf xerial sqlite-jdbc bleibt. Der Willena-Fork wird nur ins
+    // OXT-Verzeichnis "base-driver/" kopiert; LO Base lädt ihn isoliert über
+    // JavaDriverClassPath in einen eigenen URLClassLoader.
+    baseDriver
 }
 
 dependencies {
@@ -154,6 +160,17 @@ dependencies {
     // (POSIX-/Win32-Filelocks) und kollidiert nicht mit LO's eigenen Java-Libs
     // — daher kein Shading nötig.
     implementation 'org.xerial:sqlite-jdbc:3.53.1.0'
+
+    // Willena-Fork von sqlite-jdbc — wird NUR für LibreOffice Base benötigt.
+    // Der xerial-Treiber wirft "TYPE_FORWARD_ONLY cursors only" sobald Base
+    // eine Tabellenansicht öffnet; der Willena-Fork ergänzt scrollbare Cursor
+    // und CRUD-Support via ResultSet. Driver-Class bleibt org.sqlite.JDBC.
+    // Wird in buildOXT separat in das Verzeichnis "base-driver/" der OXT
+    // kopiert — bewusst außerhalb von "libs/", damit der Plugin-Classloader
+    // den xerial-Treiber unverändert verwendet.
+    baseDriver('io.github.willena:sqlite-jdbc:3.50.1.0') {
+        transitive = false
+    }
 
     // LibreOffice SDK dependencies - using local installation.
     // hsqldb.jar bleibt ausgeschlossen: LO bringt eine 1.8.0-Variante mit, die
@@ -205,6 +222,14 @@ tasks.register('copyRuntimeLibs', Sync) {
     into layout.buildDirectory.dir('runtime-libs')
 }
 
+tasks.register('copyBaseDriver', Sync) {
+    group = 'LibreOffice'
+    description = 'Kopiert den Willena-sqlite-jdbc-Fork (LibreOffice Base) in den OXT-Stagebereich.'
+    from configurations.baseDriver
+    into layout.buildDirectory.dir('base-driver')
+    rename { name -> "sqlite-jdbc-base-${name.replaceFirst(/^sqlite-jdbc-/, '')}" }
+}
+
 // Task zum Erstellen des JAR mit UNO Registration
 tasks.register('buildPluginJar', Jar) {
     group = 'LibreOffice'
@@ -253,7 +278,7 @@ tasks.register('compileIdl', Exec) {
 tasks.register('buildOXT', Zip) {
     group = 'LibreOffice'
     description = 'Erstellt die OXT-Datei (LibreOffice Extension)'
-    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'compileIdl', 'buildFrontend'
+    dependsOn 'buildPluginJar', 'copyRuntimeLibs', 'copyBaseDriver', 'compileIdl', 'buildFrontend'
     archiveFileName.set("${project.name}-${version}.oxt")
     destinationDirectory.set(layout.buildDirectory.dir('distributions'))
 
@@ -304,6 +329,13 @@ tasks.register('buildOXT', Zip) {
     // Runtime dependencies (libs)
     from(layout.buildDirectory.dir('runtime-libs')) {
         into 'libs'
+    }
+
+    // Separater Treiber-Pfad nur für LibreOffice Base (Willena-Fork von sqlite-jdbc).
+    // Bewusst außerhalb von libs/ — der OXT-Classloader sieht ihn nicht; LO Base
+    // lädt ihn isoliert über JavaDriverClassPath.
+    from(layout.buildDirectory.dir('base-driver')) {
+        into 'base-driver'
     }
 
     // IDL files

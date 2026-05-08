@@ -1,10 +1,17 @@
 package de.petanqueturniermanager.spielerdb.ui;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.lang.XComponent;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
@@ -18,6 +25,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.spielerdb.LabelRepository;
 import de.petanqueturniermanager.spielerdb.MeldelisteZiel;
 import de.petanqueturniermanager.spielerdb.MeldelisteZielFactory;
+import de.petanqueturniermanager.spielerdb.SpielerDbBaseDocument;
 import de.petanqueturniermanager.spielerdb.SpielerDbConnection;
 import de.petanqueturniermanager.spielerdb.SpielerDbException;
 import de.petanqueturniermanager.spielerdb.SpielerRepository;
@@ -222,6 +230,122 @@ public final class SpielerDbDispatcher {
             new SpielerDbImportDialog(ws.getxContext(), conn.get()).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("Spieler-DB-Import-Dialog fehlgeschlagen", e);
+        }
+    }
+
+    /**
+     * Öffnet die SQLite-Spieler-DB als {@code .odb} in LibreOffice Base.
+     * Erzeugt die {@code .odb} einmalig, falls sie noch nicht existiert. Bei
+     * korrupter Datei wird sie nach {@code spieler.odb.bak.<zeitstempel>}
+     * gesichert und neu erzeugt. User-Anpassungen (Queries, Reports, Forms)
+     * in einer intakten {@code .odb} bleiben erhalten — sie wird nie automatisch
+     * überschrieben.
+     */
+    public static void oeffneInBase(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        Optional<SpielerDbConnection> conn = oeffneOderMelde(ctx);
+        if (conn.isEmpty()) {
+            return;
+        }
+        Path sqliteDb = conn.get().dbDatei();
+        if (sqliteDb == null) {
+            MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("spielerdb.fehler.titel"))
+                    .message(I18n.get("spielerdb.base.fehler.odb_erzeugen",
+                            "DB ist nicht file-basiert"))
+                    .show();
+            return;
+        }
+        Path odbDatei = sqliteDb.resolveSibling("spieler.odb");
+
+        ProcessBox.from().info(I18n.get("spielerdb.base.prozessbox.start"));
+
+        boolean odbExistiertVorher = Files.exists(odbDatei);
+        if (!odbExistiertVorher) {
+            try {
+                SpielerDbBaseDocument.erzeugeOdb(sqliteDb, odbDatei, ctx);
+            } catch (com.sun.star.uno.Exception | RuntimeException e) {
+                logger.error(".odb-Datei konnte nicht erzeugt werden", e);
+                MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
+                        .caption(I18n.get("spielerdb.fehler.titel"))
+                        .message(I18n.get("spielerdb.base.fehler.odb_erzeugen",
+                                e.getMessage() == null ? e.getClass().getSimpleName()
+                                        : e.getMessage()))
+                        .show();
+                return;
+            }
+        }
+
+        XComponent doc = oeffneOdbStillschweigend(odbDatei, ctx);
+        if (doc != null) {
+            return;
+        }
+        // Erster Öffnungsversuch fehlgeschlagen. Wenn die .odb bereits vorher
+        // existierte, könnte sie defekt sein → Backup + Neuanlage + Retry.
+        if (odbExistiertVorher) {
+            Path backup = backupKorrupteOdb(odbDatei);
+            try {
+                SpielerDbBaseDocument.erzeugeOdb(sqliteDb, odbDatei, ctx);
+            } catch (com.sun.star.uno.Exception | RuntimeException e) {
+                logger.error("Neuerzeugung der .odb nach Backup fehlgeschlagen", e);
+                MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
+                        .caption(I18n.get("spielerdb.fehler.titel"))
+                        .message(I18n.get("spielerdb.base.fehler.odb_erzeugen",
+                                e.getMessage() == null ? e.getClass().getSimpleName()
+                                        : e.getMessage()))
+                        .show();
+                return;
+            }
+            doc = oeffneOdbStillschweigend(odbDatei, ctx);
+            if (doc != null) {
+                MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
+                        .caption(I18n.get("spielerdb.fehler.titel"))
+                        .message(I18n.get("spielerdb.base.fehler.odb_korrupt",
+                                backup == null ? odbDatei.toString() : backup.toString()))
+                        .show();
+                return;
+            }
+        }
+        // Auch der zweite Versuch hat nichts geliefert → Base nicht verfügbar.
+        MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
+                .caption(I18n.get("spielerdb.fehler.titel"))
+                .message(I18n.get("spielerdb.base.fehler.base_nicht_verfuegbar"))
+                .show();
+    }
+
+    @org.jspecify.annotations.Nullable
+    private static XComponent oeffneOdbStillschweigend(Path odbDatei, XComponentContext ctx) {
+        try {
+            return SpielerDbBaseDocument.oeffneInBase(odbDatei, ctx);
+        } catch (com.sun.star.uno.Exception | RuntimeException e) {
+            logger.warn("Öffnen der .odb fehlgeschlagen ({}): {}", odbDatei, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Verschiebt die defekte {@code .odb} auf einen Backup-Pfad mit Zeitstempel,
+     * sodass kein vorhandenes Backup überschrieben wird. Liefert den Backup-Pfad
+     * oder {@code null}, falls das Backup selbst fehlgeschlagen ist (Datei wird
+     * dann gelöscht, damit die Neuerzeugung freie Bahn hat).
+     */
+    @org.jspecify.annotations.Nullable
+    private static Path backupKorrupteOdb(Path odbDatei) {
+        String zeitstempel = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        Path backup = odbDatei.resolveSibling(odbDatei.getFileName() + ".bak." + zeitstempel);
+        try {
+            Files.move(odbDatei, backup, StandardCopyOption.ATOMIC_MOVE);
+            logger.warn("Defekte .odb gesichert nach {}", backup);
+            return backup;
+        } catch (IOException e) {
+            logger.error("Backup der defekten .odb fehlgeschlagen — versuche Löschung", e);
+            try {
+                Files.deleteIfExists(odbDatei);
+            } catch (IOException e2) {
+                logger.error("Defekte .odb konnte auch nicht gelöscht werden", e2);
+            }
+            return null;
         }
     }
 
