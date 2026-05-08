@@ -13,6 +13,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
+import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
@@ -50,6 +51,23 @@ public final class MeldelisteZielFactory {
     }
 
     /**
+     * Liefert das Turniersystem des aktiven Dokuments, sofern es überhaupt eines hat,
+     * aber die Spieler-DB-Übernahme nicht unterstützt (z.&nbsp;B. Liga). Für Dokumente
+     * ohne Turniersystem (Stammdaten o.&nbsp;ä.) und für unterstützte Systeme wird
+     * {@link Optional#empty()} zurückgegeben.
+     */
+    public static Optional<TurnierSystem> nichtUnterstuetztesSystem(WorkingSpreadsheet ws) {
+        TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+        if (ts == null || ts == TurnierSystem.KEIN) {
+            return Optional.empty();
+        }
+        return switch (ts) {
+            case LIGA -> Optional.of(ts);
+            default -> Optional.empty();
+        };
+    }
+
+    /**
      * Layout-Triplet aus dem system-spezifischen KonfigurationSheet.
      */
     private record MeldelisteLayout(Formation formation, boolean teamnameAktiv, boolean vereinsnameAktiv) {}
@@ -58,7 +76,7 @@ public final class MeldelisteZielFactory {
      * Liest das Meldeliste-Layout aus dem zum Turniersystem passenden Konfigurations-Sheet.
      * Supermelee hat keine konfigurierbare Formation — dort gilt immer
      * {@link Formation#MELEE} und es gibt keine Teamname-/Vereinsname-Spalten.
-     * Für Systeme ohne Spieler-DB-Übernahme-Unterstützung (Liga, Maastrichter)
+     * Für Systeme ohne Spieler-DB-Übernahme-Unterstützung (Liga)
      * liefert die Methode {@link Optional#empty()}.
      */
     private static Optional<MeldelisteLayout> leseLayout(TurnierSystem ts, WorkingSpreadsheet ws) {
@@ -72,6 +90,11 @@ public final class MeldelisteZielFactory {
                 }
                 case SCHWEIZER -> {
                     SchweizerKonfigurationSheet k = new SchweizerKonfigurationSheet(ws);
+                    yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
+                            k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
+                }
+                case MAASTRICHTER -> {
+                    MaastrichterKonfigurationSheet k = new MaastrichterKonfigurationSheet(ws);
                     yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
@@ -95,7 +118,7 @@ public final class MeldelisteZielFactory {
                     yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
-                case LIGA, MAASTRICHTER, KEIN -> Optional.empty();
+                case LIGA, KEIN -> Optional.empty();
             };
         } catch (RuntimeException e) {
             logger.warn("Konfig-Layout für {} konnte nicht gelesen werden", ts, e);

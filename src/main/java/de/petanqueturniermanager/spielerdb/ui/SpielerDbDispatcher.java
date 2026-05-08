@@ -24,6 +24,7 @@ import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.spielerdb.VereinRepository;
 import de.petanqueturniermanager.spielerdb.export.SpielerDbExportLoader;
 import de.petanqueturniermanager.spielerdb.vorlage.SheetVorlageAdapter;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.spielerdb.vorlage.SpielerDbVorlageSheet;
 import de.petanqueturniermanager.spielerdb.webview.SpielerDbWebViewServer;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -73,10 +74,7 @@ public final class SpielerDbDispatcher {
         XComponentContext ctx = ws.getxContext();
         Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerAktivesSheet(ws);
         if (ziel.isEmpty()) {
-            MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
-                    .caption(I18n.get("spielerdb.menu.toplevel"))
-                    .message(I18n.get("spielerdb.fehler.keine_meldeliste"))
-                    .show();
+            zeigeFehlerKeinZiel(ctx, ws);
             return;
         }
         Optional<SpielerDbConnection> conn = oeffneOderMelde(ctx);
@@ -108,10 +106,7 @@ public final class SpielerDbDispatcher {
         XComponentContext ctx = ws.getxContext();
         Optional<MeldelisteZiel> ziel = MeldelisteZielFactory.fuerAktivesSheet(ws);
         if (ziel.isEmpty()) {
-            MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
-                    .caption(I18n.get("spielerdb.menu.toplevel"))
-                    .message(I18n.get("spielerdb.fehler.keine_meldeliste"))
-                    .show();
+            zeigeFehlerKeinZiel(ctx, ws);
             return;
         }
         Optional<SpielerDbConnection> conn = oeffneOderMelde(ctx);
@@ -286,6 +281,23 @@ public final class SpielerDbDispatcher {
         } catch (com.sun.star.uno.Exception e) {
             logger.error("Label-Verwalten-Dialog fehlgeschlagen", e);
         }
+    }
+
+    /**
+     * Zeigt die passende Fehlermeldung, wenn {@link MeldelisteZielFactory#fuerAktivesSheet}
+     * kein Ziel liefern konnte: Bei einem erkannten, aber nicht unterstützten
+     * Turniersystem (z.&nbsp;B. Liga) wird der Systemname genannt; sonst der
+     * generische „keine Meldeliste"-Hinweis.
+     */
+    private static void zeigeFehlerKeinZiel(XComponentContext ctx, WorkingSpreadsheet ws) {
+        Optional<TurnierSystem> nichtUnterstuetzt = MeldelisteZielFactory.nichtUnterstuetztesSystem(ws);
+        String text = nichtUnterstuetzt
+                .map(ts -> I18n.get("spielerdb.fehler.system_nicht_unterstuetzt", ts.getBezeichnung()))
+                .orElseGet(() -> I18n.get("spielerdb.fehler.keine_meldeliste"));
+        MessageBox.from(ctx, MessageBoxTypeEnum.WARN_OK)
+                .caption(I18n.get("spielerdb.menu.toplevel"))
+                .message(text)
+                .show();
     }
 
     /**
