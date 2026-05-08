@@ -282,6 +282,25 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	// ---------------------------------------------------------------
 
 	/**
+	 * Berechnet die Bracket-Größe (Teilnehmer in Runde 1) für eine Gruppe mit
+	 * {@code teamCount} Teams.
+	 *
+	 * <p>Default: kleinste Zweierpotenz ≤ teamCount, der Rest spielt Cadrage in
+	 * eigener Spalte. Schaltet automatisch auf die <i>nächstgrößere</i>
+	 * Zweierpotenz um (Bye statt Cadrage), sobald mehr Cadrage-Matches als
+	 * Halbfinale-Slots benötigt würden — sonst kollidieren zwei Cadrages an den
+	 * gleichen Layout-Zellen.
+	 *
+	 * <p>Bedingung für Aufstockung: {@code teamCount - kleinerePow2 > kleinerePow2/2},
+	 * d.h. {@code teamCount > 1.5 × kleinerePow2}. Tritt z.B. ein bei
+	 * 7, 13–15, 25–31 Teams.
+	 */
+	static int berechneBracketGroesse(int teamCount) {
+		int klein = Integer.highestOneBit(teamCount);
+		return (teamCount - klein) > (klein / 2) ? klein * 2 : klein;
+	}
+
+	/**
 	 * Berechnet die Standard-Einzeleliminierung-Setzliste für n Teams (n muss Zweierpotenz sein).<br>
 	 * Für n=8: [1,8,4,5,2,7,3,6] → Matches [1v8, 4v5, 2v7, 3v6]<br>
 	 * Garantiert: Seed 1 und Seed 2 treffen sich erst im Finale.
@@ -358,7 +377,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (gruppeTeams.size() < 2) {
 			return;
 		}
-		int bracketGroesse = Integer.highestOneBit(gruppeTeams.size());
+		int bracketGroesse = berechneBracketGroesse(gruppeTeams.size());
 		int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
 		this.aktuellerGruppenSheetName = sheetName;
 		try {
@@ -515,7 +534,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			}
 			startIndex += groesse;
 
-			int bracketGroesse = Integer.highestOneBit(gruppenMeldungen.size());
+			int bracketGroesse = berechneBracketGroesse(gruppenMeldungen.size());
 			int numRunden = Integer.numberOfTrailingZeros(bracketGroesse);
 			String sheetName = sheetNameFuerGruppe(g, anzGruppen);
 
