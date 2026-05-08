@@ -178,6 +178,22 @@
 									<value>_self</value>
 								</prop>
 							</node>
+							<!-- A0A11: Web-Viewer (read-only Browser-Ansicht) -->
+							<node oor:name="A0A11" oor:op="replace">
+								<prop oor:name="Title">
+									<value xml:lang="de">Web-Viewer</value>
+									<value xml:lang="en">Web viewer</value>
+									<value xml:lang="es">Visor web</value>
+									<value xml:lang="fr">Visionneuse web</value>
+									<value xml:lang="nl">Web-viewer</value>
+								</prop>
+								<prop oor:name="URL">
+									<value>ptm:spielerdb_webview</value>
+								</prop>
+								<prop oor:name="Target" oor:type="xs:string">
+									<value>_self</value>
+								</prop>
+							</node>
 						</node>
 					</node>
 					<!-- ****************************************************************** -->

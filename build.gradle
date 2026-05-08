@@ -113,7 +113,7 @@ tasks.withType(JavaCompile).configureEach {
         // nur NullAway scharf schalten.
         options.errorprone.disableAllChecks = true
         options.errorprone.check('NullAway', CheckSeverity.ERROR)
-        options.errorprone.option('NullAway:AnnotatedPackages', 'de.petanqueturniermanager.helper.random')
+        options.errorprone.option('NullAway:AnnotatedPackages', 'de.petanqueturniermanager.helper.random,de.petanqueturniermanager.spielerdb.webview')
         options.errorprone.option('NullAway:JSpecifyMode', 'true')
     }
 }
@@ -627,7 +627,25 @@ tasks.register('buildFrontend', Exec) {
     outputs.dir('src/main/resources/de/petanqueturniermanager/webserver/static')
 }
 
+tasks.register('buildSpielerDbFrontend', Exec) {
+    group = 'LibreOffice'
+    description = 'Baut das Spieler-DB-React-Frontend (npm run build) und legt den Output in src/main/resources ab'
+    workingDir 'frontend-spielerdb'
+    def npmCmd = findProperty('npm.path') ?: 'npm'
+    def nodeDir = npmCmd != 'npm' ? new File(npmCmd).parentFile.absolutePath : null
+    if (nodeDir) {
+        environment 'PATH', "${nodeDir}:${System.getenv('PATH') ?: ''}"
+    }
+    commandLine npmCmd, 'run', 'build'
+    inputs.dir('frontend-spielerdb/src')
+    inputs.file('frontend-spielerdb/package.json')
+    inputs.file('frontend-spielerdb/vite.config.js')
+    inputs.file('frontend-spielerdb/index.html')
+    outputs.dir('src/main/resources/de/petanqueturniermanager/spielerdb/webview/static')
+}
+
 processResources.dependsOn 'buildFrontend'
+processResources.dependsOn 'buildSpielerDbFrontend'
 
 // Build-Task
 tasks.register('buildPlugin') {

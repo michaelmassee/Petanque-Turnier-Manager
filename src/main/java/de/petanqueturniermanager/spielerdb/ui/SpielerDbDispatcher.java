@@ -25,7 +25,12 @@ import de.petanqueturniermanager.spielerdb.VereinRepository;
 import de.petanqueturniermanager.spielerdb.export.SpielerDbExportLoader;
 import de.petanqueturniermanager.spielerdb.vorlage.SheetVorlageAdapter;
 import de.petanqueturniermanager.spielerdb.vorlage.SpielerDbVorlageSheet;
+import de.petanqueturniermanager.spielerdb.webview.SpielerDbWebViewServer;
 import de.petanqueturniermanager.exception.GenerateException;
+
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  * Bindeglied zwischen {@link de.petanqueturniermanager.comp.ProtocolHandler}
@@ -222,6 +227,51 @@ public final class SpielerDbDispatcher {
             new SpielerDbImportDialog(ws.getxContext(), conn.get()).zeigen();
         } catch (com.sun.star.uno.Exception | RuntimeException e) {
             logger.error("Spieler-DB-Import-Dialog fehlgeschlagen", e);
+        }
+    }
+
+    /**
+     * Startet (idempotent) den lokalen Web-Viewer und öffnet ihn im Standard-Browser.
+     * Server bindet stets auf {@code 127.0.0.1} mit dynamisch vergebenem Port.
+     */
+    public static void zeigeWebView(WorkingSpreadsheet ws) {
+        XComponentContext ctx = ws.getxContext();
+        Optional<SpielerDbConnection> conn = oeffneOderMelde(ctx);
+        if (conn.isEmpty()) {
+            return;
+        }
+        URI url;
+        try {
+            url = SpielerDbWebViewServer.starteOderHole(conn.get());
+        } catch (SpielerDbException e) {
+            logger.error("Web-Viewer konnte nicht gestartet werden", e);
+            MessageBox.from(ctx, MessageBoxTypeEnum.ERROR_OK)
+                    .caption(I18n.get("spielerdb.fehler.titel"))
+                    .message(I18n.get("spielerdb.webview.fehler.start",
+                            e.getMessage() == null ? "" : e.getMessage()))
+                    .show();
+            return;
+        }
+        oeffneImBrowser(ctx, url);
+    }
+
+    private static void oeffneImBrowser(XComponentContext ctx, URI url) {
+        if (!Desktop.isDesktopSupported()
+                || !Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+            MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                    .caption(I18n.get("spielerdb.menu.toplevel"))
+                    .message(I18n.get("spielerdb.webview.url_kopieren", url.toString()))
+                    .show();
+            return;
+        }
+        try {
+            Desktop.getDesktop().browse(url);
+        } catch (IOException | UnsupportedOperationException e) {
+            logger.warn("Browser konnte nicht geöffnet werden", e);
+            MessageBox.from(ctx, MessageBoxTypeEnum.INFO_OK)
+                    .caption(I18n.get("spielerdb.menu.toplevel"))
+                    .message(I18n.get("spielerdb.webview.url_kopieren", url.toString()))
+                    .show();
         }
     }
 
