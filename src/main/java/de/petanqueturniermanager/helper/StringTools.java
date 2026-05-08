@@ -21,10 +21,10 @@ public class StringTools {
 
 	/** Null-sicher: beide null → true; sonst {@code a.equalsIgnoreCase(b)}. */
 	public static boolean equalsIgnoreCase(String a, String b) {
-		if (a == b) {
-			return true;
+		if (a == null) {
+			return b == null;
 		}
-		if (a == null || b == null) {
+		if (b == null) {
 			return false;
 		}
 		return a.equalsIgnoreCase(b);

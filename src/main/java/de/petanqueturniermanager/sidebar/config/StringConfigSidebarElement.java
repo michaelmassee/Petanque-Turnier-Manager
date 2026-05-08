@@ -63,6 +63,7 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 
 		DocumentPropertiesHelper docPropHelper = new DocumentPropertiesHelper(workingSpreadsheet);
 		docPropHelper.setStringProperty(configProperty.getKey(), newVal);
+		configProperty.invokeNachSpeichernAktion(workingSpreadsheet);
 	}
 
 	String getPropertyValue() {

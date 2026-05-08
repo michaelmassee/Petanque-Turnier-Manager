@@ -3,22 +3,26 @@
  */
 package de.petanqueturniermanager.konfigdialog;
 
+import de.petanqueturniermanager.basesheet.konfiguration.SeitenstileDebouncer;
+
 /**
- * @author Michael Massee
+ * Konfig-Property für eine Kopf-/Fußzeile.
  *
+ * <p>Jede Instanz hängt automatisch eine {@code mitNachSpeichernAktion} an, die
+ * den {@link SeitenstileDebouncer} triggert: wenn der Anwender den Wert in
+ * Sidebar oder Dialog ändert, werden die PageStyles des Dokuments (debounced)
+ * aktualisiert, sodass die Änderung sofort in allen Sheets wirkt.
  */
 public class HeaderFooterConfigProperty extends ConfigProperty<String> {
 
-	/**
-	 * @param type
-	 * @param key
-	 */
 	protected HeaderFooterConfigProperty(String key) {
 		super(ConfigPropertyType.STRING, key);
 	}
 
 	public static HeaderFooterConfigProperty from(String key) {
-		return (HeaderFooterConfigProperty) new HeaderFooterConfigProperty(key).setDefaultVal("");
+		return (HeaderFooterConfigProperty) new HeaderFooterConfigProperty(key)
+				.setDefaultVal("")
+				.mitNachSpeichernAktion(SeitenstileDebouncer::aktualisiereSeitenstileDebounced);
 	}
 
 }
