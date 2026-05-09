@@ -91,12 +91,13 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 	}
 
 	public int getGruppenGroesse() {
-		int val = readIntProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE);
-		return val > 1 ? val : 16;
+		return KoPropertiesSpalte.normalisiereGruppenGroesse(
+				readStringProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE));
 	}
 
 	public void setGruppenGroesse(int gruppenGroesse) {
-		writeIntProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE, Math.max(2, gruppenGroesse));
+		setStringProperty(KoPropertiesSpalte.KONFIG_PROP_GRUPPEN_GROESSE,
+				Integer.toString(KoPropertiesSpalte.normalisiereGruppenGroesse(gruppenGroesse)));
 	}
 
 	public MaastrichterGruppenModus getMaastrichterGruppenModus() {

@@ -48,6 +48,14 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	public static final String KONFIG_PROP_GRUPPEN_GROESSE = "Turnierbaum Gruppen Größe";
 
+	/**
+	 * Erlaubte Werte für {@link #KONFIG_PROP_GRUPPEN_GROESSE}.
+	 * Ausschließlich Zweierpotenzen — nur dann benötigen volle Gruppen kein Cadrage.
+	 */
+	private static final List<Integer> ERLAUBTE_GRUPPEN_GROESSEN = List.of(4, 8, 16, 32, 64, 128, 256);
+
+	private static final int DEFAULT_GRUPPEN_GROESSE = 16;
+
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
 				.setDescription("config.desc.header.links").inSideBar());
@@ -108,9 +116,18 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TURNIERBAUM_COLOR_DRITTE_PLATZ)
 				.setDefaultVal(0xCD7F32).setDescription("config.desc.ko.turnierbaum.dritte.platz").inSideBar());
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
-				.setDefaultVal(16).setDescription("config.desc.ko.gruppen.groesse")
-				.inSideBar());
+		KONFIG_PROPERTIES.add(buildGruppenGroesseProperty());
+	}
+
+	private static AuswahlConfigProperty buildGruppenGroesseProperty() {
+		AuswahlConfigProperty prop = (AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_GRUPPEN_GROESSE)
+				.setDefaultVal(Integer.toString(DEFAULT_GRUPPEN_GROESSE))
+				.setDescription("config.desc.ko.gruppen.groesse");
+		for (Integer val : ERLAUBTE_GRUPPEN_GROESSEN) {
+			String s = val.toString();
+			prop.addAuswahl(s, s);
+		}
+		return (AuswahlConfigProperty) prop.inSideBar();
 	}
 
 	/**
@@ -139,10 +156,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 				.setDescription("Spiel um Platz 3 und 4 im Spielbaum anzeigen.\r\nJ=Ja\r\nN=Nein"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
-		props.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_GRUPPEN_GROESSE)
-				.setDefaultVal(16).setDescription(
-						"Maximale Teamanzahl pro Gruppe.\r\nBei mehr Teams werden mehrere Gruppen A, B, C … erstellt.\r\nEmpfehlung: Zweierpotenz (4, 8, 16, 32), damit volle Gruppen kein Cadrage benötigen.")
-				.inSideBar());
+		props.add(buildGruppenGroesseProperty());
 	}
 
 	/**
@@ -241,16 +255,49 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 	}
 
 	/**
-	 * Maximale Teamanzahl pro Gruppe (Default 16). Volle Gruppen benötigen kein Cadrage,
-	 * wenn dieser Wert eine Zweierpotenz ist. Die letzte Gruppe kann kleiner sein.
+	 * Maximale Teamanzahl pro Gruppe (Default 16). Erlaubte Werte sind ausschließlich
+	 * Zweierpotenzen aus {@link #ERLAUBTE_GRUPPEN_GROESSEN}; nur dann benötigen volle
+	 * Gruppen kein Cadrage. Die letzte Gruppe kann kleiner sein.
 	 */
 	public int getGruppenGroesse() {
-		int val = readIntProperty(KONFIG_PROP_GRUPPEN_GROESSE);
-		return val > 1 ? val : 16;
+		return normalisiereGruppenGroesse(readStringProperty(KONFIG_PROP_GRUPPEN_GROESSE));
 	}
 
 	public void setGruppenGroesse(int gruppenGroesse) {
-		writeIntProperty(KONFIG_PROP_GRUPPEN_GROESSE, Math.max(2, gruppenGroesse));
+		setStringProperty(KONFIG_PROP_GRUPPEN_GROESSE,
+				Integer.toString(normalisiereGruppenGroesse(gruppenGroesse)));
+	}
+
+	/**
+	 * Snapped einen beliebigen Integer auf die nächst-höhere erlaubte Gruppengröße
+	 * aus {@link #ERLAUBTE_GRUPPEN_GROESSEN}. Werte ≤ 0 ergeben den Default 16,
+	 * Werte über 256 werden auf 256 gekappt.
+	 */
+	public static int normalisiereGruppenGroesse(int wert) {
+		if (wert <= 0) {
+			return DEFAULT_GRUPPEN_GROESSE;
+		}
+		for (Integer erlaubt : ERLAUBTE_GRUPPEN_GROESSEN) {
+			if (wert <= erlaubt) {
+				return erlaubt;
+			}
+		}
+		return ERLAUBTE_GRUPPEN_GROESSEN.get(ERLAUBTE_GRUPPEN_GROESSEN.size() - 1);
+	}
+
+	/**
+	 * Robust gegen Alt-Werte: parst auch Float-Strings ("16.0"), tolerant gegenüber
+	 * leeren/ungültigen Eingaben (→ Default 16). Snapped anschließend auf erlaubte Werte.
+	 */
+	public static int normalisiereGruppenGroesse(String wert) {
+		if (wert == null || wert.isBlank()) {
+			return DEFAULT_GRUPPEN_GROESSE;
+		}
+		try {
+			return normalisiereGruppenGroesse((int) Math.round(Double.parseDouble(wert.trim())));
+		} catch (NumberFormatException e) {
+			return DEFAULT_GRUPPEN_GROESSE;
+		}
 	}
 
 	public int getKoTurnierbaumTabFarbe() {
