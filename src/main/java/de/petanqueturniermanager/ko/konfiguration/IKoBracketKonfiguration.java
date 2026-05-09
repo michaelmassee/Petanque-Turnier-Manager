@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.ko.konfiguration;
 
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 
 /**
@@ -16,6 +17,11 @@ public interface IKoBracketKonfiguration {
 	KoSpielbaumTeamAnzeige getSpielbaumTeamAnzeige();
 	SpielrundeSpielbahn getSpielbaumSpielbahn();
 	boolean isSpielbaumSpielUmPlatz3();
+
+	// Meldeliste-Struktur (für VLOOKUP-Formeln in den Bracket-Zellen)
+	boolean isMeldeListeTeamnameAnzeigen();
+	boolean isMeldeListeVereinsnameAnzeigen();
+	Formation getMeldeListeFormation();
 
 	// Tab-Farbe KO-Turnierbaum (konfigurierbar, Default aus SheetTabFarben)
 	default int getKoTurnierbaumTabFarbe() {

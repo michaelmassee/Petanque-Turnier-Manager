@@ -262,14 +262,43 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	/**
-	 * Erzeugt eine VLOOKUP-Formel, die den Teamnamen anhand der Teamnummer aus der Meldeliste liest.<br>
+	 * Erzeugt eine VLOOKUP-Formel, die den Anzeigenamen eines Teams anhand der Teamnummer
+	 * aus der Meldeliste liest.<br>
+	 * Bei aktivierter Teamname-Spalte wird der Teamname zurückgegeben (Spalte B). Andernfalls
+	 * werden alle Spielernamen ("Vorname Nachname") konkateniert und mit " / " getrennt – damit
+	 * z.B. eine Doublette ohne Teamname-Spalte beide Spieler vollständig anzeigt.<br>
 	 * Der Sheet-Name wird korrekt quotiert, damit lokalisierte Namen mit Leerzeichen funktionieren.
 	 *
-	 * @param nrAdresse Zell-Adresse oder Literal, das die Teamnummer enthält
-	 * @return VLOOKUP-Formel-String
+	 * @param nrAdresse           Zell-Adresse oder Literal, das die Teamnummer enthält
+	 * @param teamnameAnzeigen    {@code true} wenn die Meldeliste eine Teamname-Spalte hat
+	 * @param formation           Formation der Meldeliste (Anzahl Spieler pro Team)
+	 * @param vereinsnameAnzeigen {@code true} wenn die Meldeliste eine Vereinsname-Spalte pro Spieler hat
+	 * @return Formel-String (ODF/englisch)
 	 */
-	public static String teamNameVlookup(String nrAdresse) {
-		return "VLOOKUP(" + nrAdresse + ";$'" + SheetNamen.meldeliste() + "'.$A$1:$B$999;2;0)";
+	public static String teamNameFormel(String nrAdresse, boolean teamnameAnzeigen,
+			Formation formation, boolean vereinsnameAnzeigen) {
+		String range = "$'" + SheetNamen.meldeliste() + "'.$A$1:$Z$999";
+		if (teamnameAnzeigen) {
+			return "VLOOKUP(" + nrAdresse + ";" + range + ";2;0)";
+		}
+		int spaltenProSpieler = vereinsnameAnzeigen ? 3 : 2;
+		// Erste Spieler-Spalte ohne Teamname: Spalte B (1-basiert für VLOOKUP = 2)
+		int ersterSpielerVlookupIdx = 2;
+		int anzSpieler = formation.getAnzSpieler();
+		StringBuilder sb = new StringBuilder();
+		for (int s = 0; s < anzSpieler; s++) {
+			int vornameIdx = ersterSpielerVlookupIdx + s * spaltenProSpieler;
+			int nachnameIdx = vornameIdx + 1;
+			if (s > 0) {
+				sb.append(" & \" / \" & ");
+			}
+			sb.append("VLOOKUP(").append(nrAdresse).append(";").append(range)
+					.append(";").append(vornameIdx).append(";0)")
+					.append(" & \" \" & ")
+					.append("VLOOKUP(").append(nrAdresse).append(";").append(range)
+					.append(";").append(nachnameIdx).append(";0)");
+		}
+		return sb.toString();
 	}
 
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {

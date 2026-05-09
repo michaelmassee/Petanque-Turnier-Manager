@@ -22,6 +22,7 @@ import com.sun.star.uno.UnoRuntime;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.algorithmen.CadrageRechner;
 import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -131,6 +132,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 	private SpielrundeSpielbahn spielbahn = SpielrundeSpielbahn.X;
 	private KoSpielbaumTeamAnzeige teamAnzeige = KoSpielbaumTeamAnzeige.NR;
 	private boolean spielUmPlatz3 = false;
+
+	// Meldeliste-Struktur (für die VLOOKUP-Formeln auf Team-/Sieger-Zellen)
+	private volatile boolean meldeListeTeamnameAnzeigen = true;
+	private volatile boolean meldeListeVereinsnameAnzeigen = false;
+	private volatile Formation meldeListeFormation = Formation.DOUBLETTE;
 
 	// Aktuell in Erstellung befindlicher Gruppen-Sheet-Name (für getXSpreadSheet())
 	private String aktuellerGruppenSheetName = null;
@@ -613,6 +619,9 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		this.siegerFarbe      = konfig.getTurnierbaumSiegerFarbe();
 		this.bahnFarbe        = konfig.getTurnierbaumBahnFarbe();
 		this.drittePlatzFarbe = konfig.getTurnierbaumDrittePlatzFarbe();
+		this.meldeListeTeamnameAnzeigen    = konfig.isMeldeListeTeamnameAnzeigen();
+		this.meldeListeVereinsnameAnzeigen = konfig.isMeldeListeVereinsnameAnzeigen();
+		this.meldeListeFormation           = konfig.getMeldeListeFormation();
 
 		// Spalten-Offsets je nach Bahn-Einstellung:
 		// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4
@@ -1076,7 +1085,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
 			// Teamname via SVERWEIS
-			String formel = MeldeListeHelper.teamNameVlookup(String.valueOf(nr));
+			String formel = MeldeListeHelper.teamNameFormel(String.valueOf(nr),
+					meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen);
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(teamSpalte(1), zeile), formel)
 							.setCellBackColor(farbe)
@@ -1234,7 +1244,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String siegerNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String siegerNameFormel = "WENN(ISTZAHL(" + siegerNrAddr + ")*(" + siegerNrAddr
-					+ ">0);" + MeldeListeHelper.teamNameVlookup(siegerNrAddr) + ";\"\")";
+					+ ">0);" + MeldeListeHelper.teamNameFormel(siegerNrAddr,
+							meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen) + ";\"\")";
 
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),
@@ -1344,7 +1355,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 			return;
 		}
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NAME) {
-			String formel = MeldeListeHelper.teamNameVlookup(String.valueOf(nr));
+			String formel = MeldeListeHelper.teamNameFormel(String.valueOf(nr),
+					meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen);
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(spalte, zeile), formel)
 							.setCellBackColor(farbe)
@@ -1514,7 +1526,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		if (teamAnzeige == KoSpielbaumTeamAnzeige.NR) {
 			String drittePlatzNrAddr = Position.from(siegerSp, siegerZeile).getAddressWith$();
 			String drittePlatzNameFormel = "WENN(ISTZAHL(" + drittePlatzNrAddr + ")*(" + drittePlatzNrAddr
-					+ ">0);" + MeldeListeHelper.teamNameVlookup(drittePlatzNrAddr) + ";\"\")";
+					+ ">0);" + MeldeListeHelper.teamNameFormel(drittePlatzNrAddr,
+						meldeListeTeamnameAnzeigen, meldeListeFormation, meldeListeVereinsnameAnzeigen) + ";\"\")";
 
 			getSheetHelper().setFormulaInCell(
 					StringCellValue.from(xSheet, Position.from(siegerNameSpalte(numRunden), siegerZeile),

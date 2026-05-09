@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.poule.ko;
 
+import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
@@ -46,6 +47,10 @@ public class PouleKoConfigAdapter implements IKoBracketKonfiguration {
     public boolean isSpielbaumSpielUmPlatz3() {
         return false;
     }
+
+    @Override public boolean isMeldeListeTeamnameAnzeigen()    { return konfigurationSheet.isMeldeListeTeamnameAnzeigen(); }
+    @Override public boolean isMeldeListeVereinsnameAnzeigen() { return konfigurationSheet.isMeldeListeVereinsnameAnzeigen(); }
+    @Override public Formation getMeldeListeFormation()        { return konfigurationSheet.getMeldeListeFormation(); }
 
     @Override public int getKoTurnierbaumTabFarbe()       { return konfigurationSheet.getKoTurnierbaumTabFarbe(); }
     @Override public int getTurnierbaumHeaderFarbe()      { return konfigurationSheet.getTurnierbaumHeaderFarbe(); }
