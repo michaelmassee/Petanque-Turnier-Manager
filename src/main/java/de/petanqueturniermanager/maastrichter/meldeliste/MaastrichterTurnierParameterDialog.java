@@ -31,6 +31,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.ko.konfiguration.KoPropertiesSpalte;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterGruppenModus;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerRankingModus;
@@ -165,9 +166,10 @@ public class MaastrichterTurnierParameterDialog {
 				(short) (defaultGruppenModus == MaastrichterGruppenModus.NACH_GROESSE ? 1 : 0),
 				92, 157, 60, 12);
 		addFixedLine(xMSF, cont, "sep7", 5, 173, 150, 2);
-		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 177, 100,
+		addLabel(xMSF, cont, "lblGruppenGroesse", I18n.get("dialog.maastrichter.gruppen.groesse.label"), 8, 177, 80,
 				10);
-		addNumericField(xMSF, cont, "nfGruppenGroesse", defaultGruppenGroesse, 2, 256, 112, 175, 40, 12);
+		addListBox(xMSF, cont, "lstGruppenGroesse", erlaubteGruppenGroessenAlsStrings(),
+				(short) KoPropertiesSpalte.indexAusGruppenGroesse(defaultGruppenGroesse), 92, 175, 60, 12);
 
 		addButton(xMSF, cont, "btnOk", I18n.get("dialog.ok"), 22, 195, 50, 14);
 		addButton(xMSF, cont, "btnCancel", I18n.get("dialog.abbrechen"), 88, 195, 60, 14);
@@ -219,7 +221,8 @@ public class MaastrichterTurnierParameterDialog {
 			boolean spielUmPlatz3 = readCheckBoxState(xcc, "cbSpielUmPlatz3");
 			MaastrichterGruppenModus gruppenModus = readListBoxSelected(xcc, "lstGruppenModus") == 1
 					? MaastrichterGruppenModus.NACH_GROESSE : MaastrichterGruppenModus.NACH_SIEGEN;
-			int gruppenGroesse = readNumericField(xcc, "nfGruppenGroesse", defaultGruppenGroesse);
+			int gruppenGroesse = KoPropertiesSpalte.getErlaubteGruppenGroessen()
+					.get(readListBoxSelected(xcc, "lstGruppenGroesse"));
 			result = Optional.of(new TurnierParameter(formation, teamnameAnzeigen, vereinsnameAnzeigen,
 					spielplanAnzeige, rankingModus, anzVorrunden, spielbaumTeamAnzeige,
 					SpielrundeSpielbahn.X, spielUmPlatz3, gruppenGroesse, gruppenModus));
@@ -234,6 +237,11 @@ public class MaastrichterTurnierParameterDialog {
 	// ---------------------------------------------------------------
 	// Hilfsmethoden – Zustand auslesen
 	// ---------------------------------------------------------------
+
+	private static String[] erlaubteGruppenGroessenAlsStrings() {
+		return KoPropertiesSpalte.getErlaubteGruppenGroessen().stream()
+				.map(String::valueOf).toArray(String[]::new);
+	}
 
 	private Formation readFormation(XControlContainer xcc) {
 		return switch (readListBoxSelected(xcc, "lstFormation")) {

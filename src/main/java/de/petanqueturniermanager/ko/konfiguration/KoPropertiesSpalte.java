@@ -56,6 +56,23 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 	private static final int DEFAULT_GRUPPEN_GROESSE = 16;
 
+	/**
+	 * Liste der für {@link #KONFIG_PROP_GRUPPEN_GROESSE} erlaubten Werte (Zweierpotenzen).
+	 * Wird von Dialog-Komponenten benötigt, die eine ListBox mit denselben Werten füllen.
+	 */
+	public static List<Integer> getErlaubteGruppenGroessen() {
+		return ERLAUBTE_GRUPPEN_GROESSEN;
+	}
+
+	/**
+	 * Liefert den Index in {@link #getErlaubteGruppenGroessen()}, der dem gegebenen Wert
+	 * (nach Normalisierung) entspricht. Für ListBox-Vorauswahl.
+	 */
+	public static int indexAusGruppenGroesse(int wert) {
+		int snapped = normalisiereGruppenGroesse(wert);
+		return ERLAUBTE_GRUPPEN_GROESSEN.indexOf(snapped);
+	}
+
 	static {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
 				.setDescription("config.desc.header.links").inSideBar());
