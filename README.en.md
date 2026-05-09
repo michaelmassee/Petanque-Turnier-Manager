@@ -23,6 +23,7 @@ The software was specifically designed to make the organization and execution of
 * **Free & Open Source:** No license fees, no advertising.
 * **Resource Efficient:** Perfectly suited for older hardware.
 * **Everything in one place:** No external database required; everything is calculated and stored directly in LibreOffice Calc.
+* **Integrated Player Database:** Manage players and clubs centrally and pull them straight into the registration list via search and filter – including import/export and a built-in web viewer.
 * **Built-in Web Server:** Display all tournament data live on TVs, tablets, or phones – directly from LibreOffice, no external software needed.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
@@ -66,6 +67,20 @@ The extension already offers a wide selection of proven tournament modes suitabl
   Extends the classic ABCD knockout system with any number of additional levels (E, F, G, H …). Instead of early elimination, losing teams cascade step by step into lower consolation brackets. After a configurable minimum number of rounds, each level switches to pure knockout format – with its own cadrage if needed. Suitable for medium to large tournaments (16+ teams).
 * **Formule X:**
   A modern points-based round system from French pétanque – ideal for large fields and time-limited tournaments. All teams play the same number of rounds; no one is eliminated. The ranking is determined by a clear cumulative score (win bonus + own points + point difference) – no Buchholz needed. Round 1 is drawn randomly; from Round 2 onwards, pairings follow the ranking: Rank 1 vs. 2, Rank 3 vs. 4, etc.
+
+---
+
+## 👥 Integrated Player Database – maintain once, reuse forever
+
+Instead of retyping the participant list for every tournament, the Pétanque Tournament Manager comes with an **integrated player database** built right into the extension. Players, clubs and labels are entered once and are immediately available for every new tournament.
+
+* 🧑‍🤝‍🧑 **Maintain players & clubs centrally** – first name, last name, club, license number and arbitrary labels (e.g. "Women", "Youth", "Home Club").
+* 🔍 **Fast search & filter** – type-ahead search from 2 characters, combinable with club and label filters.
+* ➕ **Direct import into the registration list** – double-click adds a single player; multiple players can be collected as a team and written to the registration list together. Already-registered players can optionally be hidden to avoid duplicates.
+* 📥 **Import / Export** – CSV format and a dedicated DB file format. Share your club roster between tournaments or import existing lists.
+* 🌐 **Built-in Web Viewer** – a read-only browser frontend for the player database, ideal for the registration desk or tournament office.
+
+> **💡 Great for club tournaments:** Capture all active members once – from the next tournament onwards, just type the first letters of the surname and the player lands in the registration list with club and license number filled in.
 
 ---
 

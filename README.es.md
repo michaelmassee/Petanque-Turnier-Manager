@@ -23,6 +23,7 @@ El software fue diseñado específicamente para hacer que la organización y eje
 * **Gratuito y de Código Abierto:** Sin costes de licencia, sin publicidad.
 * **Eficiente en recursos:** Perfectamente adecuado para hardware antiguo.
 * **Todo en un solo lugar:** No se necesita una base de datos externa; todo se calcula y almacena directamente en LibreOffice Calc.
+* **Base de datos de jugadores integrada:** Gestiona jugadores y clubes de forma centralizada y pásalos directamente a la lista de inscripción mediante búsqueda/filtro – con importación/exportación y un visor web propio.
 * **Servidor web integrado:** Muestra todos los datos del torneo en vivo en televisores, tabletas o móviles – directamente desde LibreOffice, sin software externo.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
@@ -54,6 +55,20 @@ El mayor punto de venta único de este gestor de torneos es su base: **LibreOffi
 * **Sistema Poule A/B:** Modo clásico con fase de grupos (Poules) según el principio de doble eliminación ligera, seguido de una división en Torneo A (cuadro principal) y Torneo B (consolación).
 * **Sistema de KO en Cascada (Sistema ABCD Extendido):** Amplía el sistema clásico ABCD de eliminación directa con tantos niveles adicionales como se desee (E, F, G, H …). En lugar de ser eliminados temprano, los equipos perdedores descienden progresivamente hacia consolaciones de nivel inferior. Tras un número mínimo configurable de rondas, cada nivel pasa al formato de eliminación directa pura, con cadrage propio si es necesario. Adecuado para torneos medianos y grandes (desde 16 equipos).
 * **Formule X:** Sistema moderno de rondas del pétanque francés – ideal para campos grandes y torneos con límite de tiempo. Todos los equipos juegan el mismo número de rondas, nadie queda eliminado. La clasificación se obtiene mediante una puntuación acumulada clara (bono de victoria + puntos propios + diferencia de puntos) – sin necesidad de Buchholz. La 1.ª ronda se sortea libremente; a partir de la 2.ª, los emparejamientos siguen la clasificación: 1.º vs. 2.º, 3.º vs. 4.º, etc.
+
+---
+
+## 👥 Base de datos de jugadores integrada – mantén una vez, reutiliza siempre
+
+En lugar de volver a teclear la lista de participantes en cada torneo, el Pétanque Tournament Manager incluye una **base de datos de jugadores integrada** dentro de la propia extensión. Jugadores, clubes y etiquetas se introducen una sola vez y quedan disponibles de inmediato para cada nuevo torneo.
+
+* 🧑‍🤝‍🧑 **Gestión centralizada de jugadores y clubes** – nombre, apellido, club, número de licencia y etiquetas libres (p. ej. „Femenino", „Juvenil", „Club de origen").
+* 🔍 **Búsqueda y filtros rápidos** – búsqueda a partir de 2 caracteres, combinable con filtros por club y etiqueta.
+* ➕ **Traspaso directo a la lista de inscripción** – doble clic añade un jugador; se pueden agrupar varios jugadores como equipo y escribirlos juntos en la lista. Los jugadores ya inscritos pueden ocultarse opcionalmente para evitar duplicados.
+* 📥 **Importación / Exportación** – formato CSV y un formato de archivo DB propio. Comparte el censo del club entre torneos o importa listas existentes.
+* 🌐 **Visor web propio** – un frontend en navegador de solo lectura para la base de datos de jugadores, ideal para la mesa de inscripción o la oficina del torneo.
+
+> **💡 Práctico para torneos de club:** Registra una sola vez a todos los socios activos – a partir del siguiente torneo basta con teclear las primeras letras del apellido y el jugador entra en la lista con su club y número de licencia.
 
 ---
 

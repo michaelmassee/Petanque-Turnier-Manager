@@ -24,6 +24,7 @@ De software is speciaal ontwikkeld om de organisatie en uitvoering van jeu-de-bo
 * **Gratis & Open Source:** Geen licentiekosten, geen reclame.
 * **Efficiënt:** Perfect geschikt voor oudere hardware.
 * **Alles op één plek:** Geen externe database nodig; alles wordt direct berekend en opgeslagen in LibreOffice Calc.
+* **Geïntegreerde spelersdatabase:** Beheer spelers en clubs centraal en zet ze via zoeken/filteren rechtstreeks in de aanmeldlijst – inclusief import/export en een eigen webviewer.
 * **Ingebouwde webserver:** Toon alle toernooigegevens live op tv, tablet of smartphone – rechtstreeks vanuit LibreOffice, zonder externe software.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
@@ -55,6 +56,20 @@ Het grootste unieke verkoopargument van deze toernooimanager is waarschijnlijk d
 * **Poule-A/B-systeem:** Klassieke modus met groepsfase (Poules) volgens het principe van dubbele eliminatie (light), gevolgd door een verdeling in A-toernooi (hoofdtoernooi) en B-toernooi (troosttoernooi).
 * **Cascaderend Knock-out Systeem (Uitgebreid ABCD-systeem):** Breidt het klassieke ABCD-knock-outsysteem uit met zoveel extra niveaus als gewenst (E, F, G, H …). In plaats van vroeg uitgeschakeld te worden, zakken verliezende teams stap voor stap door naar lagere troosttoernooien. Na een configureerbaar minimum aantal rondes schakelt elk niveau over naar zuiver knock-outformaat – met een eigen cadrage indien nodig. Geschikt voor middelgrote tot grote toernooien (vanaf 16 teams).
 * **Formule X:** Modern rondesysteem uit de Franse pétanque – ideaal voor grote velden en toernooien met tijdlimiet. Alle teams spelen evenveel rondes; niemand valt af. De rangschikking wordt bepaald door een duidelijke cumulatieve score (overwinningsbonus + eigen punten + puntenverschil) – zonder Buchholz. Ronde 1 wordt vrij geloot; vanaf ronde 2 worden koppels bepaald op basis van de ranglijst: 1e vs. 2e, 3e vs. 4e, enz.
+
+---
+
+## 👥 Geïntegreerde spelersdatabase – één keer onderhouden, altijd opnieuw gebruiken
+
+In plaats van bij elk toernooi de deelnemerslijst opnieuw in te tikken, biedt de Pétanque Toernooi Manager een **geïntegreerde spelersdatabase** binnen de extensie. Spelers, clubs en labels worden één keer ingevoerd en zijn meteen klaar voor elk volgend toernooi.
+
+* 🧑‍🤝‍🧑 **Centraal beheer van spelers & clubs** – voornaam, achternaam, club, licentienummer en vrije labels (bijv. „Dames", „Jeugd", „Eigen club").
+* 🔍 **Snelle zoekfunctie & filters** – zoek vanaf 2 tekens, te combineren met club- en labelfilters.
+* ➕ **Direct overnemen in de aanmeldlijst** – dubbelklik voegt een speler toe; meerdere spelers kun je verzamelen tot een team en samen in de aanmeldlijst schrijven. Reeds aangemelde spelers kunnen optioneel verborgen worden om dubbele inschrijvingen te voorkomen.
+* 📥 **Import / Export** – CSV-formaat en een eigen DB-bestandsformaat. Geef het clubbestand door tussen toernooien of importeer bestaande lijsten.
+* 🌐 **Eigen webviewer** – een read-only browserfrontend voor de spelersdatabase, ideaal voor de inschrijftafel of het toernooibureau.
+
+> **💡 Handig voor clubtoernooien:** Leg eenmalig alle actieve leden vast – vanaf het volgende toernooi is een snelle zoekopdracht op de eerste letters van de achternaam genoeg, en de speler komt mét club en licentienummer in de aanmeldlijst.
 
 ---
 

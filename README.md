@@ -24,6 +24,7 @@ Die Software wurde speziell dafür entwickelt, die Organisation und Durchführun
 * **Kostenlos & Open Source:** Keine Lizenzgebühren, keine Werbung.
 * **Ressourcenschonend:** Perfekt für ältere Hardware geeignet.
 * **Alles an einem Ort:** Keine externe Datenbank nötig; alles wird direkt in LibreOffice Calc berechnet und gespeichert.
+* **Integrierte Spieler-Datenbank:** Spieler und Vereine zentral verwalten, per Suche/Filter direkt in die Meldeliste übernehmen – inklusive Import/Export und eigenem Web-Viewer.
 * **Eingebauter Webserver:** Alle Turnierdaten live auf Fernseher, Tablet oder Handy anzeigen – direkt aus LibreOffice, ohne externe Software.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
@@ -66,6 +67,20 @@ Die Erweiterung bietet bereits eine breite Auswahl an bewährten Turniermodi, di
   Erweitert das klassische ABCD-KO-System um beliebig viele Ebenen (E, F, G, H …). Anstatt früh auszuscheiden, kaskadieren unterlegene Teams schrittweise in tieferliegende Consolante-Turniere. Nach einer konfigurierbaren Mindestanzahl von Runden wechselt jede Ebene in den reinen K.-o.-Modus – mit eigener Cadrage falls nötig. Geeignet für mittlere bis große Turniere (ab 16 Teams).
 * **Formule X:**
   Modernes Rundensystem aus dem französischen Pétanque-Turnierbetrieb – ideal für große Teilnehmerfelder und Turniere mit Zeitlimit. Alle Teams spielen gleich viele Runden, niemand scheidet aus. Die Rangliste entsteht durch eine klare Summenwertung (Siegaufschlag + eigene Punkte + Differenzpunkte) – ganz ohne Buchholz. Runde 1 wird frei gelost, danach werden jeweils Platz 1 vs. 2, 3 vs. 4 usw. gepaart.
+
+---
+
+## 👥 Integrierte Spieler-Datenbank – einmal pflegen, immer wieder nutzen
+
+Statt für jedes Turnier die Teilnehmerliste neu abzutippen, bietet der Pétanque-Turnier-Manager eine **integrierte Spieler-Datenbank** direkt in der Erweiterung. Spieler, Vereine und Labels werden einmal gepflegt und stehen für jedes neue Turnier sofort bereit.
+
+* 🧑‍🤝‍🧑 **Spieler & Vereine zentral pflegen** – Vorname, Nachname, Verein, Lizenznummer und beliebige Labels (z.B. „Damen", „Jugend", „Stammverein").
+* 🔍 **Schnelle Suche & Filter** – Tippsuche ab 2 Zeichen, kombinierbar mit Verein- und Label-Filter.
+* ➕ **Direkte Übernahme in die Meldeliste** – Doppelklick übernimmt einen Spieler; mehrere Spieler lassen sich zu einem Team sammeln und gemeinsam in die Meldeliste schreiben. Bereits gemeldete Spieler werden auf Wunsch ausgeblendet, damit es keine Doppel-Eintragungen gibt.
+* 📥 **Import / Export** – CSV-Format und ein eigenes DB-Dateiformat. So kannst du den Vereinsbestand zwischen Turnieren weitergeben oder aus bestehenden Listen importieren.
+* 🌐 **Eigener Web-Viewer** – ein read-only Browser-Frontend zur Spieler-Datenbank, ideal für den Anmeldetisch oder das Turnierbüro.
+
+> **💡 Praktisch für Vereinsturniere:** Einmal alle aktiven Mitglieder erfassen – ab dem nächsten Turnier reicht die Suche nach den ersten Buchstaben des Nachnamens, und der Spieler ist mit Verein und Lizenznummer in der Meldeliste.
 
 ---
 
