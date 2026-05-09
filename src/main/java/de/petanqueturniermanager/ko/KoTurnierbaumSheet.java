@@ -1238,6 +1238,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setCellBackColor(siegerFarbe)
 						.setBorder(BorderFactory.from().allBold().toBorder())
 						.setCharWeight(FontWeight.BOLD)
+						.setShrinkToFit(true)
 						.setHoriJustify(justify));
 
 		// Im NR-Modus: zusätzlich Teamname via SVERWEIS in der Nebenspalte
@@ -1253,6 +1254,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCellBackColor(siegerFarbe)
 							.setBorder(BorderFactory.from().allBold().toBorder())
 							.setCharWeight(FontWeight.BOLD)
+							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
 		}
 	}
@@ -1520,6 +1522,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 						.setCellBackColor(drittePlatzFarbe)
 						.setBorder(BorderFactory.from().allBold().toBorder())
 						.setCharWeight(FontWeight.BOLD)
+						.setShrinkToFit(true)
 						.setHoriJustify(justify));
 
 		// Im NR-Modus: Teamname via SVERWEIS in der Nebenspalte
@@ -1535,6 +1538,7 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 							.setCellBackColor(drittePlatzFarbe)
 							.setBorder(BorderFactory.from().allBold().toBorder())
 							.setCharWeight(FontWeight.BOLD)
+							.setShrinkToFit(true)
 							.setHoriJustify(CellHoriJustify.LEFT));
 		}
 	}

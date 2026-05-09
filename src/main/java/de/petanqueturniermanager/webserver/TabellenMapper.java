@@ -485,6 +485,12 @@ public class TabellenMapper {
                 int absSpalte = bereich.StartColumn + c;
                 try {
                     XPropertySet colProps = Lo.qi(XPropertySet.class, columns.getByIndex(absSpalte));
+                    Object visObj = colProps.getPropertyValue("IsVisible");
+                    if (visObj instanceof Boolean vis && !vis) {
+                        // Versteckte Spalte → Width=0, damit das Frontend sie ausblenden kann
+                        breiten.put(c, 0);
+                        continue;
+                    }
                     Object brObj = colProps.getPropertyValue("Width");
                     if (brObj instanceof Integer br) {
                         breiten.put(c, br);

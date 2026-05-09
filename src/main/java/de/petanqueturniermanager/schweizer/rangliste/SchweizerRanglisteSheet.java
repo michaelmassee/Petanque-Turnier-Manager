@@ -397,16 +397,22 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 				{ TEAM_NR_SPALTE,      COL_WIDTH_NR   },
 				{ TEAM_NAME_SPALTE,    COL_WIDTH_NAME  },
 				{ SIEGE_SPALTE,        COL_WIDTH_DATA  },
-				{ BHZ_SPALTE,          ohneBuchholz ? 0 : COL_WIDTH_DATA },
-				{ FBHZ_SPALTE,         ohneBuchholz ? 0 : COL_WIDTH_DATA },
+				{ BHZ_SPALTE,          COL_WIDTH_DATA  },
+				{ FBHZ_SPALTE,         COL_WIDTH_DATA  },
 				{ PUNKTE_PLUS_SPALTE,  COL_WIDTH_DATA  },
 				{ PUNKTE_MINUS_SPALTE, COL_WIDTH_DATA  },
 				{ PUNKTE_DIFF_SPALTE,  COL_WIDTH_DATA  },
 		};
 		for (int[] sw : spaltenBreiten) {
-			getSheetHelper().setColumnProperties(sheet, sw[0],
-					ColumnProperties.from().setWidth(sw[1])
-							.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER));
+			ColumnProperties props = ColumnProperties.from().setWidth(sw[1])
+					.setHoriJustify(CellHoriJustify.CENTER).setVertJustify(CellVertJustify2.CENTER);
+			// LO ignoriert Width=0 — BHZ/FBHZ müssen via IsVisible=false ausgeblendet werden
+			if (ohneBuchholz && (sw[0] == BHZ_SPALTE || sw[0] == FBHZ_SPALTE)) {
+				props.isVisible(false);
+			} else {
+				props.isVisible(true);
+			}
+			getSheetHelper().setColumnProperties(sheet, sw[0], props);
 		}
 
 		// ── Zeile 0: Einzel-Spalten, vertikal über beide Header-Zeilen zusammengeführt ──

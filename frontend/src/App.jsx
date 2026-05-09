@@ -357,9 +357,15 @@ export default function App() {
             )}
             <table>
               <colgroup>
-                {Array.from({ length: table.spalten }, (_, c) => (
-                  <col key={c} style={{ width: toPx(table.spaltenBreiten[c] || 2000) }} />
-                ))}
+                {Array.from({ length: table.spalten }, (_, c) => {
+                  const breite = table.spaltenBreiten[c];
+                  const versteckt = breite === 0;
+                  return (
+                    <col key={c} style={versteckt
+                      ? { display: 'none' }
+                      : { width: toPx(breite ?? 2000) }} />
+                  );
+                })}
               </colgroup>
               <tbody>
                 {table.gitter.map((row, r) => (
@@ -367,7 +373,7 @@ export default function App() {
                       className={r < table.kopfZeilenAnzahl ? 'zeile-kopf' : undefined}
                       style={{ height: toPx(table.zeilenHoehen[r] || 600) }}>
                     {row.map((id, c) =>
-                      id
+                      id && table.spaltenBreiten[c] !== 0
                         ? <Cell key={id} data={table.zellen[id]} />
                         : null
                     )}
