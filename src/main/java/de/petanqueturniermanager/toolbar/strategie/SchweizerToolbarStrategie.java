@@ -19,12 +19,12 @@ public class SchweizerToolbarStrategie implements ITurnierSystemToolbarStrategie
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        new SchweizerSpielrundeSheetNaechste(ws).testTurnierVorhanden().start();
+        new SchweizerSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
-        new SchweizerRanglisteSheet(ws).testTurnierVorhanden().start();
+        new SchweizerRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override

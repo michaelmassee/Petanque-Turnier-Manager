@@ -48,8 +48,8 @@ public class BackUp extends AbstractStore<BackUp> {
 			logger.info("Speichern :" + getLocation());
 			try {
 				getxStorable().store();
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
+			} catch (IOException | RuntimeException e) {
+				logger.error("Speichern fehlgeschlagen: " + e.getMessage(), e);
 			}
 		}
 		return this;
@@ -70,8 +70,8 @@ public class BackUp extends AbstractStore<BackUp> {
 				// stores the object's persistent data to a URL and continues to be a representation of the old URL
 				getxStorable().storeToURL(newLocation.toString(), PropertyValueHelper.map2Proplist(savprops));
 			}
-		} catch (MalformedURLException | URISyntaxException | IOException e) {
-			logger.error(e.getMessage(), e);
+		} catch (MalformedURLException | URISyntaxException | IOException | RuntimeException e) {
+			logger.error("Backup fehlgeschlagen: " + e.getMessage(), e);
 		}
 
 		return this;

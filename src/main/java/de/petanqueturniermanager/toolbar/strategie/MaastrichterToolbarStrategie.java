@@ -18,12 +18,12 @@ public class MaastrichterToolbarStrategie implements ITurnierSystemToolbarStrate
 
     @Override
     public void weiter(WorkingSpreadsheet ws) throws Exception {
-        new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().start();
+        new MaastrichterSpielrundeSheetNaechste(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
     }
 
     @Override
     public void vorrundenRangliste(WorkingSpreadsheet ws) throws Exception {
-        new MaastrichterVorrundenRanglisteSheet(ws).testTurnierVorhanden().start();
+        new MaastrichterVorrundenRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
     }
 
     @Override
