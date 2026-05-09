@@ -156,13 +156,13 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 		props.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_SPIELBAUM_TEAM_ANZEIGE)
 				.setDefaultVal(KoSpielbaumTeamAnzeige.NR.name())
-				.setDescription("Team-Anzeige im Spielbaum.\r\nNR=Teamnummer\r\nNAME=Teamname"))
+				.setDescription("config.desc.ko.spielbaum.team.anzeige"))
 				.addAuswahl(KoSpielbaumTeamAnzeige.NR.name(), "Teamnummer")
 				.addAuswahl(KoSpielbaumTeamAnzeige.NAME.name(), "Teamname").inSideBar());
 
 		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_SPIELBAHN)
 				.setDefaultVal(SpielrundeSpielbahn.X.name())
-				.setDescription("Spielbahn im Spielbaum.\r\nX=Keine Spalte\r\nL=Leere Spalte\r\nN=Durchnummerieren (1-n)\r\nR=Zufällig vergeben"))
+				.setDescription("config.desc.ko.spielbaum.spielbahn"))
 				.addAuswahl(SpielrundeSpielbahn.X.name(), "Keine Spalte")
 				.addAuswahl(SpielrundeSpielbahn.L.name(), "Leere Spalte")
 				.addAuswahl(SpielrundeSpielbahn.N.name(), "Durchnummerieren (1-n)")
@@ -170,7 +170,7 @@ public class KoPropertiesSpalte extends BasePropertiesSpalte {
 
 		props.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_SPIELBAUM_PLATZ3)
 				.setDefaultVal("N")
-				.setDescription("Spiel um Platz 3 und 4 im Spielbaum anzeigen.\r\nJ=Ja\r\nN=Nein"))
+				.setDescription("config.desc.ko.spielbaum.platz3"))
 				.addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
 
 		props.add(buildGruppenGroesseProperty());

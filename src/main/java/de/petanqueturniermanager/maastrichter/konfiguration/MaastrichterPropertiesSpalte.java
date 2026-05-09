@@ -34,11 +34,11 @@ public class MaastrichterPropertiesSpalte extends SchweizerPropertiesSpalte {
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_CADRAGE)
 				.setDefaultVal(SheetTabFarben.FORME_CADRAGE).tabFarbe());
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_ANZ_VORRUNDEN)
-				.setDefaultVal(3).setDescription("Anzahl Vorrunden im Schweizer System (2-5)").inSideBar());
+				.setDefaultVal(3).setDescription("config.desc.maastrichter.anz.vorrunden").inSideBar());
 		KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty
 				.from(KONFIG_PROP_GRUPPEN_MODUS)
 				.setDefaultVal(MaastrichterGruppenModus.NACH_GROESSE.name())
-				.setDescription("Wie Teams in Finalgruppen eingeteilt werden"))
+				.setDescription("config.desc.maastrichter.gruppen.modus"))
 				.addAuswahl(MaastrichterGruppenModus.NACH_GROESSE.name(), "Nach Gruppengröße (Standard)")
 				.addAuswahl(MaastrichterGruppenModus.NACH_SIEGEN.name(), "Nach Siegen (Alternative)")
 				.inSideBar());
