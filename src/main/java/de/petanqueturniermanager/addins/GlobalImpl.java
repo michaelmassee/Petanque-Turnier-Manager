@@ -128,18 +128,22 @@ public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 				if (hlpr.isEmpty() && hlpr.isFirstLoad()) {
 					// ist dann der fall wenn das Turnier dokument als erstes neu aus dem Menue geladen wird,
 					// oder das Dokument hat keine properties aber PTM Funktionen.
-					logger.debug("properties isFirstLoad and isEmpty=true");
-					GlobalImpl.isDirty.set(true);
+					if (!GlobalImpl.isDirty.getAndSet(true)) {
+						logger.debug("properties isFirstLoad and isEmpty=true");
+					}
 					return null;
 				}
 				return hlpr;
 			}
 			// das hat nicht funktioniert
-			GlobalImpl.isDirty.set(true);
-			logger.debug("XSpreadsheetDocument = null");
+			// Beim Doc-Dispose ruft LO alle PTM-Formel-Zellen einzeln auf -> nur 1x pro Dirty-Übergang loggen
+			if (!GlobalImpl.isDirty.getAndSet(true)) {
+				logger.debug("XSpreadsheetDocument = null");
+			}
 		} catch (Exception e) {
-			logger.error("getDocumentPropertiesHelper", e);
-			GlobalImpl.isDirty.set(true);
+			if (!GlobalImpl.isDirty.getAndSet(true)) {
+				logger.error("getDocumentPropertiesHelper", e);
+			}
 		}
 		return null;
 	}
