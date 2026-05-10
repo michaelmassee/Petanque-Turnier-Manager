@@ -232,6 +232,8 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         }
         try {
             label.setText(turnierSchrittAnzeige());
+        } catch (com.sun.star.lang.DisposedException e) {
+            logger.debug("Dokument bereits disposed beim TurnierSchritt-Label-Update – ignoriert");
         } catch (Exception e) {
             logger.error("Fehler beim Aktualisieren des TurnierSchritt-Labels nach Runner-Stop", e);
         }
