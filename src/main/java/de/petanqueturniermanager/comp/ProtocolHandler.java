@@ -964,7 +964,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_WEBSERVER_KONFIGURATION -> new WebserverKonfigDialog(xContext).zeigen();
 			case CMD_WEBSERVER_COMPOSITE_VIEWS -> new CompositeViewListeDialog(xContext).zeigen(null);
 			case CMD_WEBSERVER_STARTEN -> {
-				if (GlobalProperties.get().getPortKonfigurationen().isEmpty()) {
+				var props = GlobalProperties.get();
+				if (props.getPortKonfigurationen().isEmpty()
+						&& props.getCompositeViewKonfigurationen().isEmpty()) {
 					MessageBox.from(xContext, MessageBoxTypeEnum.INFO_OK)
 							.caption(I18n.get("webserver.starten"))
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
