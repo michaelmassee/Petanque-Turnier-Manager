@@ -140,13 +140,13 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 
 		endRanglisteFormatter.formatDaten();
 		rangListeSpalte.insertHeaderInSheet(headerColor);
+		rangListeSpalte.upDateRanglisteSpalte();
 
 		formatDatenGeradeUngeradeMitStreichSpieltag();
 		formatSchlechtesteSpieltagSpaltenRahmen();
 		anzSpieltageSpaltenRahmen();
 		getxCalculatable().calculate();
 		rangListeSorter.doSort();
-		rangListeSpalte.upDateRanglisteSpalte();
 		Position footerPos = endRanglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
 		processBoxinfo("processbox.header.festsetzen");

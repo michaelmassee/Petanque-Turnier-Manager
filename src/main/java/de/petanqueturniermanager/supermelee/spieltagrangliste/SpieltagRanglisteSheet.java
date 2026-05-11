@@ -193,6 +193,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		berechnungUndSchreiben(getXSpreadSheet(), anzSpielRunden);
 		getSpielerSpalte().formatSpielrNrUndNamenspalten(false);
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
+		getRangListeSpalte().upDateRanglisteSpalte();
 		ranglisteFormatter.formatDaten();
 		ranglisteFormatter.formatDatenErrorGeradeUngerade(validateSpalte());
 		int nichtGespieltGeradeFarbe = getKonfigurationSheet().getNichtGespieltHintergrundFarbeGerade();
@@ -200,7 +201,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		formatNichtGespieltRunden(anzSpielRunden, nichtGespieltGeradeFarbe, nichtGespieltUnGeradeFarbe);
 		getxCalculatable().calculate();
 		rangListeSorter.doSort();
-		getRangListeSpalte().upDateRanglisteSpalte();
 		Position footerPos = ranglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
 		processBoxinfo("processbox.header.festsetzen");
