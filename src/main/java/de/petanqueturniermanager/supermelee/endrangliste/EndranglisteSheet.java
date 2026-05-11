@@ -44,6 +44,7 @@ import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.ControllerLock;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
@@ -122,38 +123,46 @@ public class EndranglisteSheet extends SheetRunner implements IEndRangliste {
 			return;
 		}
 
-		Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
+		// Repaint-Lock unterdrückt View-Updates während des gesamten Aufbaus –
+		// massiver Speedup, da LO sonst nach jedem setPropertyValue neu zeichnet.
+		try (ControllerLock _ = ControllerLock
+				.lock(getWorkingSpreadsheet().getWorkingSpreadsheetDocument())) {
 
-		spielerEinfuegen();
-		spielerSpalte.insertHeaderInSheet(headerColor);
-		spielerSpalte.formatSpielrNrUndNamenspalten(false);
-		endRanglisteFormatter.updateHeader();
+			Integer headerColor = getKonfigurationSheet().getRanglisteHeaderFarbe();
 
-		rangListeSorter.insertSortValidateSpalte(false);
-		rangListeSorter.insertManuelsortSpalten(false);
+			spielerEinfuegen();
+			spielerSpalte.insertHeaderInSheet(headerColor);
+			spielerSpalte.formatSpielrNrUndNamenspalten(false);
+			endRanglisteFormatter.updateHeader();
 
-		streichspieltagSpalteHeader();
-		anzSpieltageSpalteHeader();
+			rangListeSorter.insertSortValidateSpalte(false);
+			rangListeSorter.insertManuelsortSpalten(false);
 
-		berechnungUndSchreiben(getXSpreadSheet());
+			streichspieltagSpalteHeader();
+			anzSpieltageSpalteHeader();
 
-		endRanglisteFormatter.formatDaten();
-		rangListeSpalte.insertHeaderInSheet(headerColor);
+			berechnungUndSchreiben(getXSpreadSheet());
 
-		formatDatenGeradeUngeradeMitStreichSpieltag();
-		formatSchlechtesteSpieltagSpaltenRahmen();
-		anzSpieltageSpaltenRahmen();
-		getxCalculatable().calculate();
-		rangListeSorter.doSort();
-		rangListeSpalte.upDateRanglisteSpalte();
-		getxCalculatable().calculate();
-		Position footerPos = endRanglisteFormatter.addFooter().getPos();
-		printBereichDefinieren(footerPos);
-		processBoxinfo("processbox.header.festsetzen");
-		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
-					k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+			endRanglisteFormatter.formatDaten();
+			rangListeSpalte.insertHeaderInSheet(headerColor);
+
+			formatDatenGeradeUngeradeMitStreichSpieltag();
+			formatSchlechtesteSpieltagSpaltenRahmen();
+			anzSpieltageSpaltenRahmen();
+			// Werte sind direkt geschrieben (keine Formeln in Sort-Range);
+			// Sort braucht keinen vorherigen Recalc. Ein abschließendes
+			// calculate() reicht für die Footer-/CF-Formeln.
+			rangListeSorter.doSort();
+			rangListeSpalte.upDateRanglisteSpalte();
+			getxCalculatable().calculate();
+			Position footerPos = endRanglisteFormatter.addFooter().getPos();
+			printBereichDefinieren(footerPos);
+			processBoxinfo("processbox.header.festsetzen");
+			SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
+			if (TurnierModus.get().istAktiv()) {
+				BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
+						k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
+			}
 		}
 	}
 

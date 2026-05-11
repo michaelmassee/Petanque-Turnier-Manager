@@ -25,10 +25,14 @@ import com.sun.star.container.XNamed;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.IndexOutOfBoundsException;
 import com.sun.star.lang.WrappedTargetException;
+import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.sheet.FillDirection;
 import com.sun.star.sheet.XCellAddressable;
+import com.sun.star.sheet.XCellRangeAddressable;
 import com.sun.star.sheet.XCellSeries;
 import com.sun.star.sheet.XFunctionAccess;
+import com.sun.star.sheet.XSheetCellRangeContainer;
+import com.sun.star.sheet.XSheetCellRanges;
 import com.sun.star.sheet.XSheetAnnotations;
 import com.sun.star.sheet.XSheetAnnotationsSupplier;
 import com.sun.star.sheet.XSpreadsheet;
@@ -36,6 +40,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheets;
 import com.sun.star.table.CellAddress;
 import com.sun.star.table.CellHoriJustify;
+import com.sun.star.table.CellRangeAddress;
 import com.sun.star.table.XCell;
 import com.sun.star.table.XCellRange;
 import com.sun.star.table.XColumnRowRange;
@@ -751,6 +756,65 @@ public class SheetHelper {
 	}
 
 	/**
+	 * Setzt eine Property auf mehrere Bereiche in einem einzigen UNO-Call.
+	 * <p>
+	 * Wird intern als {@code com.sun.star.sheet.SheetCellRanges}-Multi-Range
+	 * zusammengefasst – statt N Einzelaufrufe gibt es genau eins.
+	 * Für {@code TableBorder2} u.ä. wirkt die Property pro Sub-Range
+	 * (jeder Sub-Range erhält Außen-/Innenrahmen separat).
+	 */
+	public void setPropertyInMultipleRanges(ISheet iSheet, List<RangePosition> ranges, String key, Object val)
+			throws GenerateException {
+		checkNotNull(iSheet);
+		checkNotNull(ranges);
+		checkNotNull(key);
+		checkNotNull(val);
+		if (ranges.isEmpty()) {
+			return;
+		}
+
+		XSpreadsheet xSheet = iSheet.getXSpreadSheet();
+		short sheetIdx;
+		try {
+			RangePosition any = ranges.get(0);
+			XCellRange rng = xSheet.getCellRangeByPosition(any.getStartSpalte(), any.getStartZeile(),
+					any.getEndeSpalte(), any.getEndeZeile());
+			sheetIdx = Lo.qi(XCellRangeAddressable.class, rng).getRangeAddress().Sheet;
+		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
+			logger.error(e.getMessage(), e);
+			return;
+		}
+
+		XSpreadsheetDocument doc = iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XMultiServiceFactory factory = Lo.qi(XMultiServiceFactory.class, doc);
+		if (factory == null) {
+			logger.error("XMultiServiceFactory==null in setPropertyInMultipleRanges");
+			return;
+		}
+
+		XSheetCellRanges multiRange;
+		try {
+			multiRange = Lo.qi(XSheetCellRanges.class,
+					factory.createInstance("com.sun.star.sheet.SheetCellRanges"));
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return;
+		}
+		XSheetCellRangeContainer container = Lo.qi(XSheetCellRangeContainer.class, multiRange);
+		for (RangePosition pos : ranges) {
+			container.addRangeAddress(new CellRangeAddress(sheetIdx, pos.getStartSpalte(),
+					pos.getStartZeile(), pos.getEndeSpalte(), pos.getEndeZeile()), false);
+		}
+
+		try {
+			Lo.qi(XPropertySet.class, multiRange).setPropertyValue(key, val);
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
+			logger.error(MessageFormat.format("Property ''{0}'' = ''{1}''\r{2}", key, val, e.getMessage()), e);
+		}
+	}
+
+	/**
 	 * Färbt Zeilen im angegebenen Bereich abwechselnd direkt (nicht via bedingte Formatierung).<br>
 	 * Gerade Zeilen (ROW()-basiert, 1-indiziert) erhalten {@code geradeFarbe}, ungerade {@code ungeradeFarbe}.
 	 *
@@ -762,15 +826,62 @@ public class SheetHelper {
 	public static void faerbeZeilenAbwechselnd(ISheet iSheet, RangePosition range,
 			int geradeFarbe, int ungeradeFarbe) throws GenerateException {
 		var xSheet = iSheet.getXSpreadSheet();
-		var sheetHelper = iSheet.getSheetHelper();
 		int startSpalte = range.getStartSpalte();
 		int endSpalte = range.getEndeSpalte();
-		for (int zeile = range.getStartZeile(); zeile <= range.getEndeZeile(); zeile++) {
+		int startZeile = range.getStartZeile();
+		int endZeile = range.getEndeZeile();
+		if (endZeile < startZeile) {
+			return;
+		}
+
+		// Sheet-Index aus dem Zielbereich ermitteln
+		short sheetIdx;
+		try {
+			XCellRange fullRange = xSheet.getCellRangeByPosition(startSpalte, startZeile, endSpalte, endZeile);
+			sheetIdx = Lo.qi(XCellRangeAddressable.class, fullRange).getRangeAddress().Sheet;
+		} catch (IndexOutOfBoundsException | IllegalArgumentException e) {
+			logger.error(e.getMessage(), e);
+			return;
+		}
+
+		// Multi-Range-Container über den Service "com.sun.star.sheet.SheetCellRanges"
+		XSpreadsheetDocument doc = iSheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		XMultiServiceFactory factory = Lo.qi(XMultiServiceFactory.class, doc);
+		if (factory == null) {
+			logger.error("XMultiServiceFactory==null beim faerbeZeilenAbwechselnd");
+			return;
+		}
+
+		XSheetCellRanges geradeRanges;
+		XSheetCellRanges ungeradeRanges;
+		try {
+			geradeRanges = Lo.qi(XSheetCellRanges.class,
+					factory.createInstance("com.sun.star.sheet.SheetCellRanges"));
+			ungeradeRanges = Lo.qi(XSheetCellRanges.class,
+					factory.createInstance("com.sun.star.sheet.SheetCellRanges"));
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return;
+		}
+
+		XSheetCellRangeContainer geradeContainer = Lo.qi(XSheetCellRangeContainer.class, geradeRanges);
+		XSheetCellRangeContainer ungeradeContainer = Lo.qi(XSheetCellRangeContainer.class, ungeradeRanges);
+		for (int zeile = startZeile; zeile <= endZeile; zeile++) {
 			// zeile ist 0-basiert; ROW()-Formel wäre zeile+1 (1-basiert)
-			int farbe = ((zeile & 1) == 1) ? geradeFarbe : ungeradeFarbe;
-			sheetHelper.setPropertyInRange(xSheet,
-					RangePosition.from(startSpalte, zeile, endSpalte, zeile),
-					"CellBackColor", farbe);
+			CellRangeAddress addr = new CellRangeAddress(sheetIdx, startSpalte, zeile, endSpalte, zeile);
+			if ((zeile & 1) == 1) {
+				geradeContainer.addRangeAddress(addr, false);
+			} else {
+				ungeradeContainer.addRangeAddress(addr, false);
+			}
+		}
+
+		try {
+			Lo.qi(XPropertySet.class, geradeRanges).setPropertyValue("CellBackColor", geradeFarbe);
+			Lo.qi(XPropertySet.class, ungeradeRanges).setPropertyValue("CellBackColor", ungeradeFarbe);
+		} catch (IllegalArgumentException | UnknownPropertyException | PropertyVetoException
+				| WrappedTargetException e) {
+			logger.error(e.getMessage(), e);
 		}
 	}
 
