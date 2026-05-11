@@ -24,10 +24,12 @@ import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public class SpielrundeSheet_Naechste extends SheetRunner
@@ -191,6 +193,33 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 
 		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(),
 				neueSpielrunde - 1);
+
+		if (neueSpielrunde >= 2) {
+			vorNaechsterRunde();
+		}
+
 		return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrunde));
+	}
+
+	/**
+	 * Hook vor dem Anlegen der nächsten Spielrunde: aktualisiert die Tagesrangliste
+	 * des aktuellen Spieltags und – sofern mindestens zwei Spieltage existieren –
+	 * auch die Endrangliste. Wird nur aufgerufen, wenn schon mindestens eine
+	 * Spielrunde gespielt wurde (siehe Aufrufkontext).
+	 * <p>
+	 * Existenzprüfung pro Rangliste: ein nicht angelegtes Sheet wird hier
+	 * absichtlich <em>nicht</em> erstellt – der Hook spiegelt nur den bisherigen
+	 * Stand wider.
+	 */
+	protected void vorNaechsterRunde() throws GenerateException {
+		SpieltagRanglisteSheet probe = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
+		String tagName = probe.getSheetName(getSpielTag());
+		if (getSheetHelper().findByName(tagName) != null) {
+			new SpieltagRanglisteSheetUpdate(getWorkingSpreadsheet(), getSpielTag()).doRun();
+		}
+		EndranglisteSheetUpdate endUpdate = new EndranglisteSheetUpdate(getWorkingSpreadsheet());
+		if (endUpdate.getXSpreadSheet() != null && endUpdate.getAnzahlSpieltage() >= 2) {
+			endUpdate.doRun();
+		}
 	}
 }

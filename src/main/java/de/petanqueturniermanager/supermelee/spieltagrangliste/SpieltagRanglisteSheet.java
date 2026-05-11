@@ -87,6 +87,10 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 	/** Wenn gesetzt, wird dieser Spieltag in doRun() verwendet statt getAktiveSpieltag(). */
 	private final SpielTagNr spieltagNrFuerRefresh;
 
+	protected SpielTagNr getSpielTagFuerRefresh() {
+		return spieltagNrFuerRefresh;
+	}
+
 	public SpieltagRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		this(workingSpreadsheet, null);
 	}

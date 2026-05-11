@@ -44,7 +44,7 @@ public class EndranglisteSheetUpdate extends EndranglisteSheet {
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
+	public void doRun() throws GenerateException {
 		XSpreadsheetDocument doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		ReentrancyState state = STATES.computeIfAbsent(doc, k -> new ReentrancyState());
 		if (!state.running.compareAndSet(false, true)) {

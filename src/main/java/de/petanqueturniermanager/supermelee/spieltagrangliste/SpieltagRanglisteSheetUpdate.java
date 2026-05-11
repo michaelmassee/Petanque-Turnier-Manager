@@ -45,7 +45,7 @@ public class SpieltagRanglisteSheetUpdate extends SpieltagRanglisteSheet {
 	}
 
 	@Override
-	protected void doRun() throws GenerateException {
+	public void doRun() throws GenerateException {
 		XSpreadsheetDocument doc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
 		ReentrancyState state = STATES.computeIfAbsent(doc, k -> new ReentrancyState());
 		if (!state.running.compareAndSet(false, true)) {
@@ -64,6 +64,15 @@ public class SpieltagRanglisteSheetUpdate extends SpieltagRanglisteSheet {
 	}
 
 	private void updateIntern() throws GenerateException {
+		// SpielTagNr aus dem Refresh-Parameter ins Delegate übertragen –
+		// sonst NPE in getSpieltagNr() (delegate.spielTagNr wird sonst nur
+		// via generate() gesetzt, und das überspringen wir im Update-Pfad).
+		SpielTagNr spielTagNr = getSpielTagFuerRefresh();
+		if (spielTagNr == null) {
+			spielTagNr = getKonfigurationSheet().getAktiveSpieltag();
+		}
+		setSpieltagNr(spielTagNr);
+
 		if (TurnierModus.get().istAktiv()) {
 			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
 					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
