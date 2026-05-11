@@ -9,6 +9,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +64,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final int meldungNrSpalte; // Spalte A=0, B=1
 	private final int ersteMeldungNameSpalte; // spalte der erste Spieler im Team
 	private final int letzteMeldungNameSpalte; // spalte der letze Spieler im Team
+	private final int anzNamenSpalten; // tatsächliche Anzahl Namens-Spalten (Default: formation.getAnzSpieler())
+	private final List<String> headerKeysProSpieler; // i18n-Keys für die Namens-Spalten
 	private final int anzZeilenInHeader; // wie viele Zeilen sollen in header verwendet werden
 	private final int spalteMeldungNameWidth;
 	private final int minAnzZeilen;
@@ -71,7 +74,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	private final ISheet iSheet;
 
 	MeldungenSpalte(int ersteDatenZiele, int spielerNrSpalte, ISheet iSheet, Formation formation, int anzZeilenInHeader,
-			int spalteMeldungNameWidth, int minAnzZeilen, int ersteMeldungNameSpalteOffset) {
+			int spalteMeldungNameWidth, int minAnzZeilen, int ersteMeldungNameSpalteOffset,
+			Integer anzNamenSpaltenOverride, List<String> headerKeysProSpielerOverride) {
 		checkNotNull(iSheet);
 		checkArgument(ersteDatenZiele > -1);
 		checkArgument(spielerNrSpalte > -1);
@@ -85,7 +89,17 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		this.spalteMeldungNameWidth = spalteMeldungNameWidth;
 		this.meldungNrSpalte = spielerNrSpalte;
 		this.ersteMeldungNameSpalte = spielerNrSpalte + ersteMeldungNameSpalteOffset;
-		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.formation.getAnzSpieler() - 1;
+		this.anzNamenSpalten = (anzNamenSpaltenOverride != null && anzNamenSpaltenOverride > 0)
+				? anzNamenSpaltenOverride
+				: this.formation.getAnzSpieler();
+		this.letzteMeldungNameSpalte = this.ersteMeldungNameSpalte + this.anzNamenSpalten - 1;
+		if (headerKeysProSpielerOverride != null && !headerKeysProSpielerOverride.isEmpty()) {
+			checkArgument(headerKeysProSpielerOverride.size() == this.anzNamenSpalten,
+					"headerKeysProSpieler.size() muss anzNamenSpalten entsprechen");
+			this.headerKeysProSpieler = List.copyOf(headerKeysProSpielerOverride);
+		} else {
+			this.headerKeysProSpieler = Collections.nCopies(this.anzNamenSpalten, HEADER_SPIELER_NAME_KEY);
+		}
 		this.iSheet = iSheet;
 		this.minAnzZeilen = minAnzZeilen;
 	}
@@ -103,7 +117,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 	}
 
 	public int getAnzahlSpielerNamenSpalten() {
-		return formation.getAnzSpieler();
+		return anzNamenSpalten;
 	}
 
 	/**
@@ -163,7 +177,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		// --------------------------------------------------------------------------------------------
 
 		celVal.addColumnProperties(columnProperties.setWidth(spalteMeldungNameWidth)).setComment(null)
-				.spalte(ersteMeldungNameSpalte).setValue(I18n.get(HEADER_SPIELER_NAME_KEY))
+				.spalte(ersteMeldungNameSpalte)
 				.setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder()).setCellBackColor(headerColor);
 
 		if (anzZeilenInHeader > 1) {
@@ -172,6 +186,7 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		}
 
 		for (int anzSpieler = 0; anzSpieler < getAnzahlSpielerNamenSpalten(); anzSpieler++) {
+			celVal.setValue(I18n.get(headerKeysProSpieler.get(anzSpieler)));
 			getSheetHelper().setStringValueInCell(celVal);
 			celVal.spaltePlusEins();
 		}
@@ -368,11 +383,9 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		int letzteZeile = getLetzteMitDatenZeileInSpielerNrSpalte();
 		XSpreadsheet sheet = getXSpreadsheet();
 
-		Position posSpielerName = Position.from(getErsteMeldungNameSpalte(), ersteDatenZiele);
-
 		if (letzteZeile >= ersteDatenZiele) {
 			for (int spielerZeile = ersteDatenZiele; spielerZeile <= letzteZeile; spielerZeile++) {
-				String spielerName = getSheetHelper().getTextFromCell(sheet, posSpielerName.zeile(spielerZeile));
+				String spielerName = leseSpielerNameZeile(sheet, spielerZeile);
 				if (StringUtils.isNotBlank(spielerName)) {
 					spielerNamen.add(spielerName);
 				}
@@ -382,6 +395,42 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		java.util.Collections.sort(spielerNamen);
 
 		return spielerNamen;
+	}
+
+	/**
+	 * Liest den Spielernamen einer Zeile zusammengesetzt aus allen Namens-Spalten.
+	 * 1 Spalte: unverändert. 2 Spalten: {@code "Nachname, Vorname"}. >2 Spalten: durch Leerzeichen verbunden.
+	 */
+	public String leseSpielerNameZeile(XSpreadsheet sheet, int zeile) throws GenerateException {
+		if (anzNamenSpalten == 1) {
+			return StringUtils.trimToEmpty(
+					getSheetHelper().getTextFromCell(sheet, Position.from(ersteMeldungNameSpalte, zeile)));
+		}
+		if (anzNamenSpalten == 2) {
+			String vorname = StringUtils.trimToEmpty(
+					getSheetHelper().getTextFromCell(sheet, Position.from(ersteMeldungNameSpalte, zeile)));
+			String nachname = StringUtils.trimToEmpty(
+					getSheetHelper().getTextFromCell(sheet, Position.from(letzteMeldungNameSpalte, zeile)));
+			if (nachname.isEmpty()) {
+				return vorname;
+			}
+			if (vorname.isEmpty()) {
+				return nachname;
+			}
+			return nachname + ", " + vorname;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int sp = ersteMeldungNameSpalte; sp <= letzteMeldungNameSpalte; sp++) {
+			String wert = StringUtils.trimToEmpty(
+					getSheetHelper().getTextFromCell(sheet, Position.from(sp, zeile)));
+			if (!wert.isEmpty()) {
+				if (sb.length() > 0) {
+					sb.append(' ');
+				}
+				sb.append(wert);
+			}
+		}
+		return sb.toString();
 	}
 
 	public String getSpielrNrAddressNachZeile(int zeile) throws GenerateException {
@@ -443,6 +492,8 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 		private int spalteMeldungNameWidth = DEFAULT_MELDUNG_NAME_WIDTH;
 		private int minAnzZeilen = 1;
 		private int ersteMeldungNameSpalteOffset = 1; // default offset
+		private Integer anzNamenSpalten = null; // null = aus Formation
+		private List<String> headerKeysProSpieler = null; // null = Default ("column.header.name" je Spalte)
 
 		private ISheet iSheet;
 
@@ -486,9 +537,27 @@ public class MeldungenSpalte<MLD_LIST_TYPE, MLDTYPE> { // <MLDTYPE> = meldeliste
 			return this;
 		}
 
+		/** Überschreibt die aus {@link Formation#getAnzSpieler()} abgeleitete Anzahl Namens-Spalten. */
+		public Bldr anzNamenSpalten(int anz) {
+			checkArgument(anz > 0);
+			this.anzNamenSpalten = anz;
+			return this;
+		}
+
+		/**
+		 * Setzt individuelle i18n-Keys für die Namens-Spalten (Größe muss
+		 * {@link #anzNamenSpalten(int)} entsprechen). Default: {@code column.header.name} je Spalte.
+		 */
+		public Bldr headerKeysProSpieler(List<String> keys) {
+			checkNotNull(keys);
+			this.headerKeysProSpieler = List.copyOf(keys);
+			return this;
+		}
+
 		public <TL, T> MeldungenSpalte<TL, T> build() {
 			return new MeldungenSpalte<>(ersteDatenZiele, spielerNrSpalte, iSheet, formation, anzZeilenInHeader,
-					spalteMeldungNameWidth, minAnzZeilen, ersteMeldungNameSpalteOffset);
+					spalteMeldungNameWidth, minAnzZeilen, ersteMeldungNameSpalteOffset, anzNamenSpalten,
+					headerKeysProSpieler);
 		}
 	}
 

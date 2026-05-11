@@ -170,6 +170,8 @@ public class MeldeListeHelperTest {
 					eq(Position.from(spielerNrPos.zeile(zeile))))).thenReturn(spielerNrName.nr);
 			Mockito.when(sheetHelperMock.getTextFromCell(any(XSpreadsheet.class),
 					eq(Position.from(spielerNamePos.zeile(zeile))))).thenReturn(spielerNrName.name);
+			Mockito.when(meldungenSpalteMock.leseSpielerNameZeile(any(XSpreadsheet.class), eq(zeile)))
+					.thenReturn(spielerNrName.name);
 			zeileCntr++;
 		}
 

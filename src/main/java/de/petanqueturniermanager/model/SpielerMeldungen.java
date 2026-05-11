@@ -23,16 +23,30 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 
+	/** Default-Index der Setzpositions-Spalte (Layout mit einer Namensspalte: nr, name, sp, ...). */
+	private static final int DEFAULT_SETZ_POS_INDEX = 2;
+
 	private final ArrayList<Spieler> spielerList;
 	private final boolean setzPostionAktiv; // Aus der Konfiguration properties.
+	private final int setzPosIndex;
 
 	public SpielerMeldungen() {
 		this(true);
 	}
 
 	public SpielerMeldungen(boolean setzPostionAktiv) {
+		this(setzPostionAktiv, DEFAULT_SETZ_POS_INDEX);
+	}
+
+	/**
+	 * @param setzPosIndex Spaltenindex der Setzpositions-Zelle im {@link RowData}
+	 *                     (Layout-abhängig, z.B. 2 bei einer Namensspalte, 3 bei Vorname+Nachname).
+	 */
+	public SpielerMeldungen(boolean setzPostionAktiv, int setzPosIndex) {
+		checkArgument(setzPosIndex >= 0);
 		spielerList = new ArrayList<>();
 		this.setzPostionAktiv = setzPostionAktiv;
+		this.setzPosIndex = setzPosIndex;
 	}
 
 	@Override
@@ -40,9 +54,11 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 		int spielerNr = meldungZeile.get(0).getIntVal(-1);
 		if (spielerNr > 0) {
 			Spieler spieler = Spieler.from(spielerNr);
-			int nichtzusammen = meldungZeile.get(2).getIntVal(-1);
-			if (setzPostionAktiv && nichtzusammen > 0) {
-				spieler.setSetzPos(nichtzusammen);
+			if (setzPostionAktiv && setzPosIndex < meldungZeile.size()) {
+				int nichtzusammen = meldungZeile.get(setzPosIndex).getIntVal(-1);
+				if (nichtzusammen > 0) {
+					spieler.setSetzPos(nichtzusammen);
+				}
 			}
 			this.addSpielerWennNichtVorhanden(spieler);
 		}

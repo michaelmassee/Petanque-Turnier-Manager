@@ -97,7 +97,10 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		this.konfigurationSheet = konfigurationSheet;
 		meldungenSpalte = MeldungenSpalte.builder().ersteDatenZiele(ERSTE_DATEN_ZEILE)
 				.minAnzZeilen(MIN_ANZAHL_SPIELER_ZEILEN).spielerNrSpalte(SPIELER_NR_SPALTE).sheet(sheet)
-				.formation(Formation.MELEE).build();
+				.formation(Formation.MELEE)
+				.anzNamenSpalten(2)
+				.headerKeysProSpieler(List.of("column.header.vorname", "column.header.nachname"))
+				.build();
 		meldeListeHelper = new MeldeListeHelper<>(sheet, metadatenSchluessel);
 	}
 
@@ -162,7 +165,7 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		meldeListeHelper.zeileOhneSpielerNamenEntfernen();
 		meldeListeHelper.updateMeldungenNr();
 
-		doSort(meldungenSpalte.getErsteMeldungNameSpalte(), true); // nach namen sortieren
+		doSort(meldungenSpalte.getLetzteMeldungNameSpalte(), true); // nach Nachname sortieren
 		updateSpieltageSummenSpalten();
 		insertInfoBlock();
 		formatDaten();
@@ -585,8 +588,10 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 	private SpielerMeldungen meldeListeHelperGetMeldungen(SpielTagNr spieltag,
 			List<SpielrundeGespielt> spielrundeGespielt) throws GenerateException {
 		boolean setzPositionenAktiv = konfigurationSheet.getSetzPositionenAktiv();
+		// Setzpositions-Index im RowData = letzte Namensspalte + 1 (relativ zur Spieler-Nr-Spalte).
+		int setzPosIndex = meldungenSpalte.getLetzteMeldungNameSpalte() - SPIELER_NR_SPALTE + 1;
 		return (SpielerMeldungen) meldeListeHelper.getMeldungen(spieltag, spielrundeGespielt,
-				new SpielerMeldungen(setzPositionenAktiv));
+				new SpielerMeldungen(setzPositionenAktiv, setzPosIndex));
 	}
 
 	void setAktiveSpielRunde(SpielRundeNr spielRundeNr) throws GenerateException {

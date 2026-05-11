@@ -44,7 +44,6 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
 
     private static final int MELDELISTE_ERSTE_DATEN_ZEILE = 2;
     private static final int MELDELISTE_NR_SPALTE = 0;
-    private static final int MELDELISTE_NAME_SPALTE = 1;
 
     private final SuperMeleeKonfigurationSheet konfigurationSheet;
     private final MeldeListeSheet_Update meldeliste;
@@ -155,9 +154,13 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
             return result;
         }
         var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+        var spalte = meldeliste.getMeldungenSpalte();
+        int ersteNameSpalte = spalte.getErsteMeldungNameSpalte();
+        int letzteNameSpalte = spalte.getLetzteMeldungNameSpalte();
+
         RangeData data = RangeHelper.from(xMeldeliste, xDoc,
                 RangePosition.from(MELDELISTE_NR_SPALTE, MELDELISTE_ERSTE_DATEN_ZEILE,
-                        MELDELISTE_NAME_SPALTE, MELDELISTE_ERSTE_DATEN_ZEILE + 999)).getDataFromRange();
+                        letzteNameSpalte, MELDELISTE_ERSTE_DATEN_ZEILE + 999)).getDataFromRange();
         for (RowData row : data) {
             if (row.isEmpty()) {
                 break;
@@ -166,10 +169,29 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
             if (nr <= 0) {
                 break;
             }
-            String name = row.size() > 1 ? row.get(1).getStringVal() : "";
-            result.put(nr, name != null ? name : "");
+            String name = kombiniereName(row, ersteNameSpalte, letzteNameSpalte);
+            result.put(nr, name);
         }
         return result;
+    }
+
+    /** Liest die Namens-Spalten aus {@code row} und liefert "Nachname, Vorname" (bzw. ein Name bei 1 Spalte). */
+    private static String kombiniereName(RowData row, int ersteNameSpalte, int letzteNameSpalte) {
+        if (ersteNameSpalte == letzteNameSpalte) {
+            String name = row.size() > ersteNameSpalte ? row.get(ersteNameSpalte).getStringVal() : "";
+            return name != null ? name.trim() : "";
+        }
+        String vorname = row.size() > ersteNameSpalte && row.get(ersteNameSpalte).getStringVal() != null
+                ? row.get(ersteNameSpalte).getStringVal().trim() : "";
+        String nachname = row.size() > letzteNameSpalte && row.get(letzteNameSpalte).getStringVal() != null
+                ? row.get(letzteNameSpalte).getStringVal().trim() : "";
+        if (nachname.isEmpty()) {
+            return vorname;
+        }
+        if (vorname.isEmpty()) {
+            return nachname;
+        }
+        return nachname + ", " + vorname;
     }
 
     public String getSheetName(SpielTagNr spieltagNr) {

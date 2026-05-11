@@ -16,6 +16,7 @@ import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.TestnamenLoader;
+import de.petanqueturniermanager.helper.TestnamenLoader.SpielerTestname;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;
@@ -147,28 +148,34 @@ public class MeldeListeSheet_TestDaten extends SheetRunner implements ISheet {
 		XSpreadsheet meldelisteSheet = meldeListe.getXSpreadSheet();
 		getSheetHelper().setActiveSheet(meldelisteSheet);
 
-		List<String> testNamen = testnamenLoader.listeMitTestNamen(ANZ_TESTNAMEN);
+		List<SpielerTestname> testNamen = testnamenLoader.listeMitSpielerTestNamen(ANZ_TESTNAMEN);
 
-		Position posSpielerName = Position.from(meldeListe.getSpielerNameErsteSpalte(),
-				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
+		int vornameSpalte = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+		int nachnameSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
+		Position posVorname = Position.from(vornameSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
+		Position posNachname = Position.from(nachnameSpalte, MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		Position posSpielerNr = Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE,
 				MeldeListeKonstanten.ERSTE_DATEN_ZEILE - 1);
 		NumberCellValue spielrNr = NumberCellValue.from(meldelisteSheet, posSpielerNr);
-		StringCellValue spielrNamen = StringCellValue.from(meldelisteSheet, posSpielerName);
+		StringCellValue nameCelVal = StringCellValue.from(meldelisteSheet, posVorname);
 
 		for (int spielerCntr = 0; spielerCntr < testNamen.size(); spielerCntr++) {
 			SheetRunner.testDoCancelTask();
-			posSpielerName.zeilePlusEins();
-			String textFromCell = getSheetHelper().getTextFromCell(meldelisteSheet, posSpielerName);
+			posVorname.zeilePlusEins();
+			posNachname.zeile(posVorname.getZeile());
+			String textFromCell = getSheetHelper().getTextFromCell(meldelisteSheet, posVorname);
 
 			if (StringUtils.isNotEmpty(textFromCell)) {
 				throw new GenerateException(I18n.get("error.testdaten.daten.vorhanden"));
 			}
 
-			getSheetHelper()
-					.setStringValueInCell(spielrNamen.setPos(posSpielerName).setValue(testNamen.get(spielerCntr)));
+			SpielerTestname tn = testNamen.get(spielerCntr);
+			getSheetHelper().setStringValueInCell(nameCelVal.setPos(posVorname).setValue(tn.vorname()));
+			if (vornameSpalte != nachnameSpalte) {
+				getSheetHelper().setStringValueInCell(nameCelVal.setPos(posNachname).setValue(tn.nachname()));
+			}
 
-			spielrNr.zeile(posSpielerName.getZeile());
+			spielrNr.zeile(posVorname.getZeile());
 			int randomNum = RandomSource.nextInt(0, 3);
 			if (randomNum == 1) { // nur die einser eintragen
 				// zum test spielrnr vorgeben, mix in nr erreichen

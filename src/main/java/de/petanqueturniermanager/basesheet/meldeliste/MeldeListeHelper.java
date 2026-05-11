@@ -85,8 +85,27 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 		// -----------------------------------------------
 		RangePosition nameSetPosRange = RangePosition.from(erstNameSpalte, ERSTE_DATEN_ZEILE, letzteNamespalte,
 				letzteDatenZeile);
-		String conditionfindDoppeltNamen = "COUNTIF(" + Position.from(erstNameSpalte, 0).getSpalteAddressWith$() + ";"
-				+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		String conditionfindDoppeltNamen;
+		if (erstNameSpalte == letzteNamespalte) {
+			conditionfindDoppeltNamen = "COUNTIF(" + Position.from(erstNameSpalte, 0).getSpalteAddressWith$() + ";"
+					+ ConditionalFormatHelper.FORMULA_CURRENT_CELL + ")>1";
+		} else {
+			// Mehrere Namens-Spalten (z.B. Vorname+Nachname): Kombination per COUNTIFS prüfen.
+			// Spalten absolut, Zeile relativ ($B3 / $C3) damit die Formel pro Zeile mitläuft.
+			final int ankerZeile = ERSTE_DATEN_ZEILE + 1; // 1-basiert für Zell-Adresse
+			final int endZeile = MeldungenSpalte.MAX_ANZ_MELDUNGEN + 1;
+			StringBuilder sb = new StringBuilder("COUNTIFS(");
+			for (int sp = erstNameSpalte; sp <= letzteNamespalte; sp++) {
+				if (sp > erstNameSpalte) {
+					sb.append(';');
+				}
+				String spalteAbs = Position.from(sp, 0).getSpalteAddressWith$();
+				sb.append(spalteAbs).append(ankerZeile).append(":").append(spalteAbs).append(endZeile).append(';')
+						.append(spalteAbs).append(ankerZeile);
+			}
+			sb.append(")>1");
+			conditionfindDoppeltNamen = sb.toString();
+		}
 		ConditionalFormatHelper.from(sheet, nameSetPosRange).clear()
 				.formula1(conditionfindDoppeltNamen).operator(ConditionOperator.FORMULA).styleIsFehler()
 				.applyAndDoReset();
@@ -167,6 +186,8 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 						Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), ERSTE_DATEN_ZEILE))
 				.setCharColor(ColorHelper.CHAR_COLOR_RED);
 
+		int letzteNamensSpalte = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
+
 		for (int spielerZeilecntr = ERSTE_DATEN_ZEILE; spielerZeilecntr <= letzteSpielZeile; spielerZeilecntr++) {
 			// -------------------
 			// Spieler nr testen
@@ -189,16 +210,19 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 			// -------------------
 			// spieler namen testen
 			// -------------------
-			// Supermelee hat nur ein name spalte
-			// wird trim gemacht
-			spielerName = meldeListe.getSheetHelper().getTextFromCell(xSheet,
-					Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), spielerZeilecntr));
+			// Bei 2 Namens-Spalten (Supermelee Vorname+Nachname) Kombination als Dup-Schlüssel.
+			spielerName = meldeListe.getMeldungenSpalte().leseSpielerNameZeile(xSheet, spielerZeilecntr);
 
 			if (StringUtils.isNotEmpty(spielerName)) {
 				if (spielrNamenInSheet.contains(cleanUpSpielerName(spielerName))) {
-					// RED Color
-					meldeListe.getSheetHelper()
-							.setStringValueInCell(errStrCelVal.setValue(spielerName).zeile(spielerZeilecntr));
+					// RED Color in alle Namens-Spalten
+					for (int sp = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+							sp <= letzteNamensSpalte; sp++) {
+						String zellValue = meldeListe.getSheetHelper().getTextFromCell(xSheet,
+								Position.from(sp, spielerZeilecntr));
+						meldeListe.getSheetHelper().setStringValueInCell(
+								errStrCelVal.spalte(sp).setValue(zellValue).zeile(spielerZeilecntr));
+					}
 					throw new GenerateException(I18n.get("error.meldeliste.spieler.name", spielerName, spielerZeilecntr));
 				}
 				spielrNamenInSheet.add(cleanUpSpielerName(spielerName));
@@ -302,11 +326,21 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public String formulaSverweisSpielernamen(String spielrNrAdresse) {
+		int ersteName = meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte();
+		int letzteName = meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte();
 		String ersteZelleAddress = Position.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE).getAddressWith$();
-		String letzteZelleAddress = Position.from(meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte(), 999)
-				.getAddressWith$();
-		return "VLOOKUP(" + spielrNrAdresse + ";$'" + SheetNamen.meldeliste() + "'." + ersteZelleAddress + ":" + letzteZelleAddress
-				+ ";2;0)";
+		String letzteZelleAddress = Position.from(letzteName, 999).getAddressWith$();
+		String range = "$'" + SheetNamen.meldeliste() + "'." + ersteZelleAddress + ":" + letzteZelleAddress;
+
+		if (ersteName == letzteName) {
+			return "VLOOKUP(" + spielrNrAdresse + ";" + range + ";2;0)";
+		}
+		// 2 Namens-Spalten (Supermelee): "Nachname, Vorname" zusammensetzen.
+		int vornameIdx = ersteName - SPIELER_NR_SPALTE + 1;
+		int nachnameIdx = letzteName - SPIELER_NR_SPALTE + 1;
+		return "VLOOKUP(" + spielrNrAdresse + ";" + range + ";" + nachnameIdx + ";0)"
+				+ " & \", \" & "
+				+ "VLOOKUP(" + spielrNrAdresse + ";" + range + ";" + vornameIdx + ";0)";
 	}
 
 	/**
@@ -350,7 +384,7 @@ public class MeldeListeHelper<MLD_LIST_TYPE, MLDTYPE> implements MeldeListeKonst
 	}
 
 	public int setzPositionSpalte() {
-		return meldeListe.getMeldungenSpalte().getErsteMeldungNameSpalte() + 1;
+		return meldeListe.getMeldungenSpalte().getLetzteMeldungNameSpalte() + 1;
 	}
 
 	public int ersteSpieltagSpalte() {
