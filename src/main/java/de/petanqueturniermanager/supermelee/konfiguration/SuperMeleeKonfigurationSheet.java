@@ -132,6 +132,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public boolean getSpieltagRanglisteRundensummenAnzeigen() {
+		return propertiesSpalte.getSpieltagRanglisteRundensummenAnzeigen();
+	}
+
+	@Override
 	protected IKonfigurationSheet getKonfigurationSheet() {
 		return this;
 	}

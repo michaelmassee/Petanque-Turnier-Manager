@@ -63,6 +63,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_SPIELTAG_KOPFZEILE = "Kopfzeile Spieltag"; // plus spieltagNr
 	public static final String KONFIG_PROP_ENDRANGLISTE_SORT_MODE = "Endrangliste Sortiermodus"; //
 	private static final String KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN = "Tab-Farbe Team-Paarungen";
+	private static final String KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN = "Spieltagrangliste Rundensummen anzeigen";
 
 	static {
 
@@ -148,6 +149,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 				.setDefaultVal(SuprMleEndranglisteSortMode.DEFAULT.getKey()).setDescription("config.desc.supermelee.endrangliste.sort.modus"))
 				.addAuswahl(SuprMleEndranglisteSortMode.DEFAULT.getKey(), "Default,Sp+,SpΔ,PktΔ,Pkt+")
 				.addAuswahl(SuprMleEndranglisteSortMode.ANZTAGE.getKey(), "Sp+,AnzTage,SpΔ,PktΔ,Pkt+"));
+
+		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN)
+				.setDefaultVal(true).inSideBar()
+				.setDescription("config.desc.supermelee.spieltagrangliste.rundensummen"));
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.COLOR, KONFIG_PROP_TAB_COLOR_SUPERMELEE_TEAM_PAARUNGEN)
 				.setDefaultVal(SheetTabFarben.SUPERMELEE_TEAM_PAARUNGEN)
@@ -325,6 +330,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		}
 		return SuprMleEndranglisteSortMode.DEFAULT;
 
+	}
+
+	@Override
+	public boolean getSpieltagRanglisteRundensummenAnzeigen() {
+		return readBooleanProperty(KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN);
 	}
 
 	@Override

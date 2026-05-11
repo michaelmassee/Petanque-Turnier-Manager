@@ -75,4 +75,6 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 
 	int getSupermeleeTeamPaarungenTabFarbe();
 
+	boolean getSpieltagRanglisteRundensummenAnzeigen();
+
 }

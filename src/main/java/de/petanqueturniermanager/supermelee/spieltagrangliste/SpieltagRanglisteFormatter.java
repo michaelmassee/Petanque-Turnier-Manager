@@ -54,8 +54,10 @@ public class SpieltagRanglisteFormatter extends AbstractSuperMeleeRanglisteForma
 		// -------------------------
 		// spielrunden spalten
 		// -------------------------
+		boolean rundensummenAnzeigen = getPropertiesSpalte().getSpieltagRanglisteRundensummenAnzeigen();
 		ColumnProperties columnProperties = ColumnProperties.from()
-				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER);
+				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH).setHoriJustify(CellHoriJustify.CENTER)
+				.isVisible(rundensummenAnzeigen);
 		StringCellValue headerPlus = StringCellValue
 				.from(sheet, Position.from(ersteSpielRundeSpalte, DRITTE_KOPFDATEN_ZEILE), "+")
 				.addColumnProperties(columnProperties).setCellBackColor(getHeaderFarbe()).setShrinkToFit(true);
