@@ -97,11 +97,17 @@ public class StringConfigSidebarElement implements ConfigSidebarElement, XTextLi
 
 			try {
 				if (ObjectUtils.allNotNull(textAreaDialog, labelPlusTextPlusTextareaBox)) {
-					// btn Klicked
+					String alterWert = getPropertyValue();
 					textAreaDialog.initTextArea(configProperty.getKey(), configProperty.getKey(), labelPlusTextPlusTextareaBox.getFieldText());
 					textAreaDialog.createDialog();
-					// update
-					labelPlusTextPlusTextareaBox.fieldText(getPropertyValue());
+					String neuerWert = getPropertyValue();
+					labelPlusTextPlusTextareaBox.fieldText(neuerWert);
+					// TextAreaDialog.save() schreibt die Doc-Property direkt und umgeht
+					// damit den textChanged-Pfad; nachSpeichernAktion (z.B. PageStyle-
+					// Live-Update) muss hier explizit angestoßen werden.
+					if (!Objects.equals(alterWert, neuerWert)) {
+						configProperty.invokeNachSpeichernAktion(workingSpreadsheet);
+					}
 				}
 			} catch (Exception e) {
 				logger.error(e.getMessage(), e);
