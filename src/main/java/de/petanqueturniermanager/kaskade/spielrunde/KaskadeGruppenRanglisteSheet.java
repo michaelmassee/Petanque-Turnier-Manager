@@ -114,15 +114,8 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
         processBoxinfo("processbox.kaskade.gruppenrangliste.erstellen");
         getxCalculatable().enableAutomaticCalculation(false);
 
-        meldeListe.upDateSheet();
-        int gesamtTeams = meldeListe.getMeldungenSortiertNachSetzposition().size();
-
-        boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
-                > konfigurationSheet.getFreispielPunkteMinus();
-        var plan = KaskadenKoRundenPlaner.berechne(
-                gesamtTeams, konfigurationSheet.getAnzahlKaskaden(), freispielGewonnen);
-
-        var belegungen = new KaskadeRundenErgebnisLeser(getWorkingSpreadsheet()).ladeFeldBelegungen(plan);
+        var plan = ermittlePlan();
+        var belegungen = ermittleBelegungen(plan);
         if (belegungen.isEmpty()) {
             LOGGER.info("Keine Feldbelegungen vorhanden – Gruppenrangliste wird nicht erstellt.");
             return;
@@ -150,6 +143,35 @@ public class KaskadeGruppenRanglisteSheet extends SheetRunner implements ISheet 
         datenSchreiben(belegungen);
         formatieren(belegungen);
         druckBereichSetzen(plan, belegungen);
+    }
+
+    /**
+     * Berechnet den aktuellen Kaskaden-KO-Plan auf Basis der gemeldeten Teams
+     * und der Freispiel-Konfiguration.
+     */
+    protected KaskadenKoRundenPlan ermittlePlan() throws GenerateException {
+        meldeListe.upDateSheet();
+        int gesamtTeams = meldeListe.getMeldungenSortiertNachSetzposition().size();
+        boolean freispielGewonnen = konfigurationSheet.getFreispielPunktePlus()
+                > konfigurationSheet.getFreispielPunkteMinus();
+        return KaskadenKoRundenPlaner.berechne(
+                gesamtTeams, konfigurationSheet.getAnzahlKaskaden(), freispielGewonnen);
+    }
+
+    /**
+     * Liest die aktuellen Feld-Belegungen aus den Kaskadenrunden-Sheets.
+     */
+    protected List<KaskadenFeldBelegung> ermittleBelegungen(KaskadenKoRundenPlan plan) throws GenerateException {
+        return new KaskadeRundenErgebnisLeser(getWorkingSpreadsheet()).ladeFeldBelegungen(plan);
+    }
+
+    /**
+     * Schreibt nur den Datenbereich (Pos + Team-Nr pro Gruppe) ohne Sheet-Neuaufbau
+     * oder Header-/Formatierungs-Änderungen. Für das inkrementelle Update aus
+     * {@link KaskadeGruppenRanglisteSheetUpdate}.
+     */
+    protected void aktualisiereDatenblock(List<KaskadenFeldBelegung> belegungen) throws GenerateException {
+        datenSchreiben(belegungen);
     }
 
     // ---------------------------------------------------------------

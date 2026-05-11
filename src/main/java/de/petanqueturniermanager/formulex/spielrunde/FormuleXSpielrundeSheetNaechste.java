@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.rangliste.IRanglistenAktualisierer;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
@@ -113,11 +114,19 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
     }
 
     /**
-     * Hook: aktualisiert die FormuleX-Rangliste vor dem Anlegen der nächsten
-     * Runde. Wird nur ab neuer Rundennummer >= 2 aufgerufen.
+     * Hook: aktualisiert vor dem Anlegen der nächsten Runde die Rangliste über
+     * den {@link IRanglistenAktualisierer}. Wird nur ab neuer Rundennummer >= 2
+     * aufgerufen.
      */
-    protected void vorNaechsterRunde() throws GenerateException {
-        new FormuleXRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
+    protected final void vorNaechsterRunde() throws GenerateException {
+        getRanglistenAktualisierer().aktualisiereRanglisten();
+    }
+
+    /**
+     * Liefert die für FormuleX zuständige Rangliste-Update-Strategie.
+     */
+    protected IRanglistenAktualisierer getRanglistenAktualisierer() {
+        return () -> new FormuleXRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
     }
 
     private boolean alleErgebnisseEingetragen(SpielRundeNr spielRundeNr) throws GenerateException {

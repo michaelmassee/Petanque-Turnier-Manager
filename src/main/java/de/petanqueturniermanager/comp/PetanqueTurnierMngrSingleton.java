@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
+import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheetUpdate;
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
@@ -135,6 +136,10 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
+		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
+				TurnierSystem.KASKADE,
+				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
 				(ws, xSheet) -> {

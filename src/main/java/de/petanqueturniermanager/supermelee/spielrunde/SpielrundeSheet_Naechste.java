@@ -13,6 +13,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.rangliste.IRanglistenAktualisierer;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxResult;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -202,24 +203,34 @@ public class SpielrundeSheet_Naechste extends SheetRunner
 	}
 
 	/**
-	 * Hook vor dem Anlegen der nächsten Spielrunde: aktualisiert die Tagesrangliste
-	 * des aktuellen Spieltags und – sofern mindestens zwei Spieltage existieren –
-	 * auch die Endrangliste. Wird nur aufgerufen, wenn schon mindestens eine
+	 * Hook vor dem Anlegen der nächsten Spielrunde – delegiert an den
+	 * {@link IRanglistenAktualisierer}. Aufruf nur, wenn schon mindestens eine
 	 * Spielrunde gespielt wurde (siehe Aufrufkontext).
+	 */
+	protected final void vorNaechsterRunde() throws GenerateException {
+		getRanglistenAktualisierer().aktualisiereRanglisten();
+	}
+
+	/**
+	 * Liefert die für Supermelee zuständige Update-Strategie: aktualisiert die
+	 * Tagesrangliste des aktuellen Spieltags und – ab mindestens zwei Spieltagen –
+	 * auch die Endrangliste.
 	 * <p>
 	 * Existenzprüfung pro Rangliste: ein nicht angelegtes Sheet wird hier
 	 * absichtlich <em>nicht</em> erstellt – der Hook spiegelt nur den bisherigen
 	 * Stand wider.
 	 */
-	protected void vorNaechsterRunde() throws GenerateException {
-		SpieltagRanglisteSheet probe = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
-		String tagName = probe.getSheetName(getSpielTag());
-		if (getSheetHelper().findByName(tagName) != null) {
-			new SpieltagRanglisteSheetUpdate(getWorkingSpreadsheet(), getSpielTag()).doRun();
-		}
-		EndranglisteSheetUpdate endUpdate = new EndranglisteSheetUpdate(getWorkingSpreadsheet());
-		if (endUpdate.getXSpreadSheet() != null && endUpdate.getAnzahlSpieltage() >= 2) {
-			endUpdate.doRun();
-		}
+	protected IRanglistenAktualisierer getRanglistenAktualisierer() {
+		return () -> {
+			SpieltagRanglisteSheet probe = new SpieltagRanglisteSheet(getWorkingSpreadsheet());
+			String tagName = probe.getSheetName(getSpielTag());
+			if (getSheetHelper().findByName(tagName) != null) {
+				new SpieltagRanglisteSheetUpdate(getWorkingSpreadsheet(), getSpielTag()).doRun();
+			}
+			EndranglisteSheetUpdate endUpdate = new EndranglisteSheetUpdate(getWorkingSpreadsheet());
+			if (endUpdate.getXSpreadSheet() != null && endUpdate.getAnzahlSpieltage() >= 2) {
+				endUpdate.doRun();
+			}
+		};
 	}
 }

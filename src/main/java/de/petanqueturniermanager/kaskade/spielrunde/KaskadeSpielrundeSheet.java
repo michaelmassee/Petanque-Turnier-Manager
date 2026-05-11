@@ -160,6 +160,12 @@ public class KaskadeSpielrundeSheet extends SheetRunner implements ISheet {
             return;
         }
 
+        // Hook: Gruppen-Rangliste auf den Stand der gerade beendeten Runde bringen,
+        // bevor die nächste Kaskadenrunde generiert wird (analog Maastrichter/Supermelee).
+        if (aktiveRunde >= 1) {
+            new KaskadenRanglistenAktualisierer(getWorkingSpreadsheet(), getSheetHelper()).aktualisiereRanglisten();
+        }
+
         var naechsteRundeNr = aktiveRunde + 1;
         processBoxinfo("processbox.kaskade.naechste.runde", naechsteRundeNr);
 

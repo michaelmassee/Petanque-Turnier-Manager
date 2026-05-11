@@ -6,6 +6,7 @@ package de.petanqueturniermanager.maastrichter.spielrunde;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.rangliste.IRanglistenAktualisierer;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -65,8 +66,8 @@ public class MaastrichterSpielrundeSheetNaechste extends SchweizerSpielrundeShee
 	}
 
 	@Override
-	protected void vorNaechsterRunde() throws GenerateException {
-		new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
+	protected IRanglistenAktualisierer getRanglistenAktualisierer() {
+		return () -> new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet()).doRun();
 	}
 
 	/** Öffentlicher Einstiegspunkt für Testdaten-Generatoren. */
