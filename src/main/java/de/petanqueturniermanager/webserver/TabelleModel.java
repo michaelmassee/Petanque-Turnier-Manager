@@ -23,7 +23,9 @@ import java.util.Map;
  * ob der Druckbereich verschoben wurde, auch wenn Größe und Inhalt unverändert sind.
  * <p>
  * Kopf- und Fußzeile (je links/mitte/rechts) stammen aus dem PageStyle des Sheets;
- * {@code null} bedeutet: kein Inhalt oder deaktiviert.
+ * leerer String bedeutet: kein Inhalt oder deaktiviert. Niemals {@code null}, damit Gson
+ * die Felder serialisiert und das Frontend ein „Löschen" der Kopf-/Fußzeile als
+ * solches erkennt (fehlender JSON-Schlüssel wird im Frontend als „unverändert" behandelt).
  */
 public class TabelleModel {
 
@@ -46,17 +48,17 @@ public class TabelleModel {
     private final Map<Integer, Integer> spaltenBreiten;
     /** Zeilenindex (0-basiert) → Höhe in 1/100 mm. */
     private final Map<Integer, Integer> zeilenHoehen;
-    /** Seitenkopfzeile links, null = nicht vorhanden. */
+    /** Seitenkopfzeile links, leerer String = nicht vorhanden / gelöscht. */
     private final String kopfzeileLinks;
-    /** Seitenkopfzeile mitte, null = nicht vorhanden. */
+    /** Seitenkopfzeile mitte, leerer String = nicht vorhanden / gelöscht. */
     private final String kopfzeileMitte;
-    /** Seitenkopfzeile rechts, null = nicht vorhanden. */
+    /** Seitenkopfzeile rechts, leerer String = nicht vorhanden / gelöscht. */
     private final String kopfzeileRechts;
-    /** Seitenfußzeile links, null = nicht vorhanden. */
+    /** Seitenfußzeile links, leerer String = nicht vorhanden / gelöscht. */
     private final String fusszeileLinks;
-    /** Seitenfußzeile mitte, null = nicht vorhanden. */
+    /** Seitenfußzeile mitte, leerer String = nicht vorhanden / gelöscht. */
     private final String fusszeileMitte;
-    /** Seitenfußzeile rechts, null = nicht vorhanden. */
+    /** Seitenfußzeile rechts, leerer String = nicht vorhanden / gelöscht. */
     private final String fusszeileRechts;
 
     public TabelleModel(

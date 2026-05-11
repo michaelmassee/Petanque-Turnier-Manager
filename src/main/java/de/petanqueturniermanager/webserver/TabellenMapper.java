@@ -206,10 +206,15 @@ public class TabellenMapper {
      * <p>
      * Gibt ein Array der Länge 6 zurück:
      * [kopfLinks, kopfMitte, kopfRechts, fussLinks, fussMitte, fussRechts].
-     * Nicht aktivierte Bereiche werden als {@code null} zurückgegeben.
+     * Nicht aktivierte oder leere Bereiche werden als leerer String zurückgegeben.
+     * Wichtig: niemals {@code null}, damit das Frontend beim Löschen einer Zeile
+     * den geleerten Wert übernimmt statt am alten Wert hängen zu bleiben
+     * (Gson serialisiert {@code null}-Felder nicht, das Frontend würde den fehlenden Schlüssel
+     * als „unverändert" interpretieren).
      */
     private String[] ermittleKopfUndFusszeile(XSpreadsheet sheet, XSpreadsheetDocument doc) {
         var ergebnis = new String[6];
+        Arrays.fill(ergebnis, "");
         try {
             var sheetProps = Lo.qi(XPropertySet.class, sheet);
             if (sheetProps == null || doc == null) {
@@ -261,10 +266,10 @@ public class TabellenMapper {
 
     private String leseText(com.sun.star.text.XText text) {
         if (text == null) {
-            return null;
+            return "";
         }
         var inhalt = text.getString();
-        return (inhalt == null || inhalt.isBlank()) ? null : inhalt;
+        return (inhalt == null || inhalt.isBlank()) ? "" : inhalt;
     }
 
     /**
