@@ -207,7 +207,7 @@ public class WebServerInstanz implements SseElternInstanz, WebServerSlot {
 
         // Reconnect-Intervall und sofortiger Init-State
         try {
-            os.write("retry: 30000\n\n".getBytes(StandardCharsets.UTF_8));
+            os.write("retry: 3000\n\n".getBytes(StandardCharsets.UTF_8));
             os.flush();
         } catch (IOException e) {
             verbindungEntfernen(verbindung);

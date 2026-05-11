@@ -215,37 +215,55 @@ export default function App() {
   const versionRef = useRef(0);
 
   useEffect(() => {
-    const src = new EventSource('/events');
+    let src = null;
+    let reconnectTimer = null;
+    let abgebrochen = false;
 
-    src.onmessage = (e) => {
-      const msg = JSON.parse(e.data);
+    const verbinden = () => {
+      src = new EventSource('/events');
 
-      if (msg.typ === 'hinweis') {
-        dispatch({ type: 'HINWEIS', payload: msg });
-        return;
-      }
+      src.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
 
-      if (msg.version <= versionRef.current) {
-        return;
-      }
-      versionRef.current = msg.version;
+        if (msg.typ === 'hinweis') {
+          dispatch({ type: 'HINWEIS', payload: msg });
+          return;
+        }
 
-      if (msg.typ === 'composite_init') {
-        dispatch({ type: 'COMPOSITE_INIT', payload: msg });
-      } else if (msg.typ === 'composite_diff') {
-        dispatch({ type: 'COMPOSITE_PATCH', payload: msg });
-      } else if (msg.typ === 'init') {
-        dispatch({ type: 'INIT', payload: msg });
-      } else if (msg.typ === 'diff') {
-        dispatch({ type: 'PATCH', payload: msg });
-      }
+        if (msg.version <= versionRef.current) {
+          return;
+        }
+        versionRef.current = msg.version;
+
+        if (msg.typ === 'composite_init') {
+          dispatch({ type: 'COMPOSITE_INIT', payload: msg });
+        } else if (msg.typ === 'composite_diff') {
+          dispatch({ type: 'COMPOSITE_PATCH', payload: msg });
+        } else if (msg.typ === 'init') {
+          dispatch({ type: 'INIT', payload: msg });
+        } else if (msg.typ === 'diff') {
+          dispatch({ type: 'PATCH', payload: msg });
+        }
+      };
+
+      src.onerror = () => {
+        // Falls Browser den Stream als endgültig geschlossen markiert,
+        // selbst neu öffnen — der Auto-Reconnect greift sonst nicht mehr.
+        if (src && src.readyState === EventSource.CLOSED && !abgebrochen) {
+          src.close();
+          src = null;
+          reconnectTimer = setTimeout(verbinden, 3000);
+        }
+      };
     };
 
-    src.onerror = () => {
-      // EventSource reconnectet automatisch; nach Reconnect sendet der Server init
-    };
+    verbinden();
 
-    return () => src.close();
+    return () => {
+      abgebrochen = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (src) src.close();
+    };
   }, []);
 
   const { table, hinweis, composite } = state;
@@ -298,7 +316,7 @@ export default function App() {
       p && (p.fusszeileLinks?.trim() || p.fusszeileMitte?.trim() || p.fusszeileRechts?.trim())
     );
     return (
-      <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {kopfzeilenPanel && (
           <div className="seitenzeile">
             <span className="links">{kopfzeilenPanel.kopfzeileLinks}</span>

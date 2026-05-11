@@ -193,7 +193,7 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
                 konfiguration.port(), sseVerbindungen.size());
 
         try {
-            os.write("retry: 30000\n\n".getBytes(StandardCharsets.UTF_8));
+            os.write("retry: 3000\n\n".getBytes(StandardCharsets.UTF_8));
             os.flush();
         } catch (IOException e) {
             verbindungEntfernen(verbindung);
