@@ -66,7 +66,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private static final int DIALOG_HOEHE = 330;
     private static final int ZEILE_H = 14;
     private static final int KOPF_Y = 5;
-    private static final int TRENN_Y1 = 22;
+    private static final int KOPF_Y2 = 21;
+    private static final int TRENN_Y1 = 38;
     private static final int AKTIONS_BTN_Y_OFFSET = 18;
     private static final int FOOTER_Y = 312;
     private static final int UEBERNEHMEN_X = 155;
@@ -237,6 +238,12 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         fuegeCheckBoxEin("cbAktiv", I18n.get("webserver.konfig.tabelle.kopf.aktiv"), 150, KOPF_Y, 60, ZEILE_H, aktiv == 1);
         fuegeCheckBoxEin("cbMitHeaderFooter", I18n.get("webserver.komposit.mit.header.footer"),
                 215, KOPF_Y, 195, ZEILE_H, mitHeaderFooter == 1);
+
+        // Zweite Kopfzeile: Name (optional)
+        String name = initialerEintrag != null ? initialerEintrag.name() : "";
+        fuegeFixedTextEin("lblName", I18n.get("webserver.composite.konfig.name.label"),
+                5, KOPF_Y2, 30, ZEILE_H);
+        fuegeEditEin("txtName", name, 36, KOPF_Y2, 374, ZEILE_H);
 
         // Übernehmen / OK / Abbrechen
         fuegeButtonEin("btnUebernehmen", I18n.get("webserver.composite.dialog.detail.uebernehmen"),
@@ -509,6 +516,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         XControl aktivCtrl = xcc.getControl("cbAktiv");
         boolean aktiv = aktivCtrl != null && Lo.qi(XCheckBox.class, aktivCtrl).getState() == 1;
 
+        // Name (optional, leer erlaubt)
+        XControl nameCtrl = xcc.getControl("txtName");
+        String name = nameCtrl != null ? Lo.qi(XTextComponent.class, nameCtrl).getText().trim() : "";
+
         // Header/Footer global rendern – Default true (auch bei fehlendem Control)
         XControl mitHeaderFooterCtrl = xcc.getControl("cbMitHeaderFooter");
         boolean mitHeaderFooter = mitHeaderFooterCtrl == null
@@ -546,7 +557,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 .create();
         String layoutJson = gson.toJson(wurzel, SplitKnoten.class);
 
-        return new CompositeViewEintragRoh(port, aktiv, zoom, mitHeaderFooter, layoutJson, panels);
+        return new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels);
     }
 
     // ---- Baum-Operationen (statisch für Testbarkeit) ----

@@ -480,7 +480,7 @@ public final class WebServerManager implements TimerListener {
                                     : cachedJson;
                         }
                         instanz.setKonfiguration(
-                                new CompositeViewKonfiguration(port, e.zoom(), neueWurzel, neuePanelKonfigs, e.mitHeaderFooter()),
+                                new CompositeViewKonfiguration(port, e.name(), e.zoom(), neueWurzel, neuePanelKonfigs, e.mitHeaderFooter()),
                                 cachedJson, pushJson);
                     });
         }

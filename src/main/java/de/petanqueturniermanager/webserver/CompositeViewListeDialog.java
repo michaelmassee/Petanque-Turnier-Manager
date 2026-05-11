@@ -139,8 +139,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         fuegeFixedTextEin("lblKopfPort",
                 I18n.get("webserver.konfig.tabelle.kopf.port"),
                 PORT_X, 20, PORT_W, 10);
-        fuegeFixedTextEin("lblKopfPanel0",
-                I18n.get("webserver.composite.konfig.tabelle.kopf.panel0"),
+        fuegeFixedTextEin("lblKopfName",
+                I18n.get("webserver.composite.konfig.tabelle.kopf.name"),
                 LAYOUT_X, 20, LAYOUT_W, 10);
         fuegeFixedTextEin("lblKopfZoom",
                 I18n.get("webserver.konfig.tabelle.kopf.zoom"),
@@ -167,9 +167,14 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         for (int i = 0; i < eintraege.size(); i++) {
             int y = ZEILE_Y_START + i * ZEILE_ABSTAND;
             var e = eintraege.get(i);
-            String panel0Sheet = e.panels().isEmpty() ? "" : e.panels().get(0).sheetConfig();
+            String anzeigeText;
+            if (!e.name().isBlank()) {
+                anzeigeText = e.name();
+            } else {
+                anzeigeText = e.panels().isEmpty() ? "" : e.panels().get(0).sheetConfig();
+            }
             fuegeFixedTextEinDyn("portRow_" + i, String.valueOf(e.port()), PORT_X, y, PORT_W, ZEILE_H);
-            fuegeFixedTextEinDyn("panel0Row_" + i, panel0Sheet, LAYOUT_X, y, LAYOUT_W, ZEILE_H);
+            fuegeFixedTextEinDyn("nameRow_" + i, anzeigeText, LAYOUT_X, y, LAYOUT_W, ZEILE_H);
             fuegeFixedTextEinDyn("zoomRow_" + i, String.valueOf(e.zoom()), ZOOM_X, y, ZOOM_W, ZEILE_H);
             fuegeCheckBoxEinDyn("aktivRow_" + i, "", AKTIV_X, y, AKTIV_W, ZEILE_H, e.aktiv());
             fuegeButtonEinDyn("editRow_" + i,
@@ -294,7 +299,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
             if (aktivCtrl == null) break;
             boolean aktiv = Lo.qi(XCheckBox.class, aktivCtrl).getState() == 1;
             var alt = eintraege.get(i);
-            eintraege.set(i, new CompositeViewEintragRoh(alt.port(), aktiv, alt.zoom(), alt.mitHeaderFooter(), alt.layoutJson(), alt.panels()));
+            eintraege.set(i, new CompositeViewEintragRoh(alt.port(), alt.name(), aktiv, alt.zoom(), alt.mitHeaderFooter(), alt.layoutJson(), alt.panels()));
         }
     }
 

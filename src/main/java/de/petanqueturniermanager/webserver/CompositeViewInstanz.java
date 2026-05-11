@@ -114,6 +114,10 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
 
     @Override
     public String getAnzeigeName() {
+        var name = konfiguration.name();
+        if (name != null && !name.isBlank()) {
+            return name.trim();
+        }
         return I18n.get("webserver.compositeview.anzeigename");
     }
 

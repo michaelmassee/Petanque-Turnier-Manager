@@ -47,6 +47,7 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PORTS_PROP = "webserver_composite_ports";
 	private static final String WEBSERVER_COMPOSITE_PREFIX = "webserver_composite_";
 	private static final String WEBSERVER_COMPOSITE_AKTIV_SUFFIX = "_aktiv";
+	private static final String WEBSERVER_COMPOSITE_NAME_SUFFIX = "_name";
 	private static final String WEBSERVER_COMPOSITE_ZOOM_SUFFIX = "_zoom";
 	private static final String WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX = "_mit_header_footer";
 	private static final String WEBSERVER_COMPOSITE_LAYOUT_SUFFIX = "_layout";
@@ -107,6 +108,7 @@ public class GlobalProperties {
 	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
 	 *
 	 * @param port            TCP-Port
+	 * @param name            optionaler Anzeigename des Views (leer = ohne Name)
 	 * @param aktiv           ob dieser View aktiv ist
 	 * @param zoom            globaler Zoom-Faktor in % (10–500)
 	 * @param mitHeaderFooter ob Header/Footer (aus Panel 0) global einmal gerendert werden sollen
@@ -114,9 +116,13 @@ public class GlobalProperties {
 	 * @param panels          Liste der Panel-Konfigurationen (Reihenfolge = panelIndex)
 	 */
 	public record CompositeViewEintragRoh(
-			int port, boolean aktiv, int zoom, boolean mitHeaderFooter,
+			int port, String name, boolean aktiv, int zoom, boolean mitHeaderFooter,
 			String layoutJson,
 			List<PanelEintragRoh> panels) {
+		public CompositeViewEintragRoh {
+			name = name == null ? "" : name;
+		}
+
 		@Override
 		public String toString() {
 			return port + " [composite, panels=" + panels.size() + "]";
@@ -347,6 +353,7 @@ public class GlobalProperties {
 				try {
 					int port = Integer.parseInt(portStr);
 					boolean aktiv = getBoolean(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_AKTIV_SUFFIX);
+					String name = propMap.getOrDefault(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_NAME_SUFFIX, "").trim();
 					int zoom = parseZoom(propMap.get(WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_ZOOM_SUFFIX));
 					boolean mitHeaderFooter = getBooleanMitDefault(
 							WEBSERVER_COMPOSITE_PREFIX + port + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX, true);
@@ -374,7 +381,7 @@ public class GlobalProperties {
 						panels.add(new PanelEintragRoh(panelTyp, sheetConfig, panelZoom, panelZentriert, panelBlattnameAnzeigen, externeUrl));
 					}
 					if (!panels.isEmpty()) {
-						eintraege.add(new CompositeViewEintragRoh(port, aktiv, zoom, mitHeaderFooter, layoutJson, panels));
+						eintraege.add(new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels));
 					}
 				} catch (Exception e) {
 					logger.warn("Ungültiger Composite-Port-Eintrag '{}'", portStr, e);
@@ -421,7 +428,7 @@ public class GlobalProperties {
 					panels.add(new PanelKonfiguration(PanelTyp.BLATT, p.sheetConfig(), resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen(), ""));
 				}
 				if (!panels.isEmpty()) {
-					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.zoom(), wurzel, panels, eintrag.mitHeaderFooter()));
+					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.name(), eintrag.zoom(), wurzel, panels, eintrag.mitHeaderFooter()));
 				}
 			} catch (Exception e) {
 				logger.error("Fehler bei Composite-View-Konfiguration {}", eintrag, e);
@@ -440,6 +447,7 @@ public class GlobalProperties {
 			for (var alt : getCompositeViewEintraege()) {
 				String prefix = WEBSERVER_COMPOSITE_PREFIX + alt.port();
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX);
+				propMap.remove(prefix + WEBSERVER_COMPOSITE_NAME_SUFFIX);
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX);
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_MIT_HEADER_FOOTER_SUFFIX);
 				propMap.remove(prefix + WEBSERVER_COMPOSITE_LAYOUT_SUFFIX);
@@ -464,6 +472,8 @@ public class GlobalProperties {
 					String prefix = WEBSERVER_COMPOSITE_PREFIX + eintrag.port();
 					if (eintrag.aktiv())
 						propMap.put(prefix + WEBSERVER_COMPOSITE_AKTIV_SUFFIX, "true");
+					if (!eintrag.name().isBlank())
+						propMap.put(prefix + WEBSERVER_COMPOSITE_NAME_SUFFIX, eintrag.name().trim());
 					if (eintrag.zoom() != DEFAULT_ZOOM)
 						propMap.put(prefix + WEBSERVER_COMPOSITE_ZOOM_SUFFIX, String.valueOf(eintrag.zoom()));
 					// Default = true → nur explizit "false" persistieren (migrationssicher).
