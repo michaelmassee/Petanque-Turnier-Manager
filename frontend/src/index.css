@@ -109,6 +109,35 @@ td {
   line-height: 1.5;
 }
 
+/* ── Verbindungs-Status (nur bei Trennung sichtbar) ────────────────────────── */
+#verbindungs-status {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 9999;
+  padding: 4px 10px;
+  background: #fdecea;
+  border: 1px solid #d32f2f;
+  border-radius: 12px;
+  font-size: 0.85em;
+  color: #b71c1c;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+#verbindungs-status .punkt {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d32f2f;
+  animation: ptm-blink 1s ease-in-out infinite alternate;
+}
+@keyframes ptm-blink {
+  from { opacity: 0.4; }
+  to   { opacity: 1; }
+}
+
 /* ── Timer-Panel ───────────────────────────────────────────────────────────── */
 .timer-panel {
   width: 100%;

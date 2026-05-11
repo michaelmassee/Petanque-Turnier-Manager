@@ -199,6 +199,8 @@ function reducer(state, action) {
     }
     case 'HINWEIS':
       return { ...state, hinweis: action.payload };
+    case 'VERBINDUNG_STATUS':
+      return { ...state, verbunden: action.payload.verbunden };
     default:
       return state;
   }
@@ -210,6 +212,7 @@ export default function App() {
     ui: {},
     hinweis: null,
     composite: null,
+    verbunden: true,
   });
 
   const versionRef = useRef(0);
@@ -222,6 +225,10 @@ export default function App() {
     const verbinden = () => {
       src = new EventSource('/events');
 
+      src.onopen = () => {
+        dispatch({ type: 'VERBINDUNG_STATUS', payload: { verbunden: true } });
+      };
+
       src.onmessage = (e) => {
         const msg = JSON.parse(e.data);
 
@@ -230,23 +237,37 @@ export default function App() {
           return;
         }
 
+        // Init-Nachrichten umgehen den Versions-Filter und setzen ihn hart auf den
+        // neuen Wert. Damit funktioniert auch ein Reconnect nach Server-Restart, bei dem
+        // die Server-Versions-Zähler wieder bei 1 starten und sonst alle Diffs verworfen
+        // würden, weil sie scheinbar älter sind als der zuletzt gesehene Stand.
+        if (msg.typ === 'init') {
+          versionRef.current = msg.version ?? 0;
+          dispatch({ type: 'INIT', payload: msg });
+          return;
+        }
+        if (msg.typ === 'composite_init') {
+          versionRef.current = msg.version ?? 0;
+          dispatch({ type: 'COMPOSITE_INIT', payload: msg });
+          return;
+        }
+
         if (msg.version <= versionRef.current) {
           return;
         }
         versionRef.current = msg.version;
 
-        if (msg.typ === 'composite_init') {
-          dispatch({ type: 'COMPOSITE_INIT', payload: msg });
-        } else if (msg.typ === 'composite_diff') {
+        if (msg.typ === 'composite_diff') {
           dispatch({ type: 'COMPOSITE_PATCH', payload: msg });
-        } else if (msg.typ === 'init') {
-          dispatch({ type: 'INIT', payload: msg });
         } else if (msg.typ === 'diff') {
           dispatch({ type: 'PATCH', payload: msg });
         }
       };
 
       src.onerror = () => {
+        // Stream ist faktisch unterbrochen, egal ob Browser-Auto-Reconnect läuft
+        // oder der Stream endgültig geschlossen wurde.
+        dispatch({ type: 'VERBINDUNG_STATUS', payload: { verbunden: false } });
         // Falls Browser den Stream als endgültig geschlossen markiert,
         // selbst neu öffnen — der Auto-Reconnect greift sonst nicht mehr.
         if (src && src.readyState === EventSource.CLOSED && !abgebrochen) {
@@ -266,7 +287,7 @@ export default function App() {
     };
   }, []);
 
-  const { table, hinweis, composite } = state;
+  const { table, hinweis, composite, verbunden } = state;
 
   useEffect(() => {
     if (composite) {
@@ -291,6 +312,7 @@ export default function App() {
           <div className="hinweis-text">{hinweis.hinweisText}</div>
         </div>
         <Signatur />
+        <VerbindungsStatus verbunden={verbunden} />
       </>
     );
   }
@@ -339,6 +361,7 @@ export default function App() {
           </div>
         )}
         <Signatur />
+        <VerbindungsStatus verbunden={verbunden} />
       </div>
     );
   }
@@ -410,7 +433,19 @@ export default function App() {
         </div>
       </div>
       <Signatur />
+      <VerbindungsStatus verbunden={verbunden} />
     </>
+  );
+}
+
+function VerbindungsStatus({ verbunden }) {
+  if (verbunden) {
+    return null;
+  }
+  return (
+    <div id="verbindungs-status" role="status" aria-live="polite">
+      <span className="punkt" /> Verbindung getrennt
+    </div>
   );
 }
 
