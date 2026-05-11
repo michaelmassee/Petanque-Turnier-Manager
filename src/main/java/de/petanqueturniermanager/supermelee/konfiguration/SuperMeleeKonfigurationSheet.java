@@ -11,6 +11,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeGeradeStyle;
 import de.petanqueturniermanager.helper.cellstyle.SpielrundeHintergrundFarbeUnGeradeStyle;
+import de.petanqueturniermanager.helper.pagestyle.PageStyle;
 import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
@@ -178,6 +179,12 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 
 	@Override
 	protected void initPageStylesTurnierSystem() {
+		PageStyleHelper.from(this, PageStyle.PETTURNMNGR).initDefaultFooter()
+				.setFooterCenter(getFusszeileMitte()).setFooterLeft(getFusszeileLinks())
+				.setHeaderLeft(getKopfZeileLinks())
+				.setHeaderCenter(getKopfZeileMitte())
+				.setHeaderRight(getKopfZeileRechts()).create();
+
 		for (int spieltagCntr = 1; spieltagCntr <= MAX_SPIELTAG; spieltagCntr++) {
 			String propNameKey = SuperMeleePropertiesSpalte.PROP_SPIELTAG_KOPFZEILE(spieltagCntr);
 			String spielTagKopfzeile = propertiesSpalte.readStringProperty(propNameKey);
@@ -187,6 +194,18 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 						.setHeaderCenter(spielTagKopfzeile).create();
 			}
 		}
+	}
+
+	public String getKopfZeileLinks() {
+		return propertiesSpalte.getKopfZeileLinks();
+	}
+
+	public String getKopfZeileMitte() {
+		return propertiesSpalte.getKopfZeileMitte();
+	}
+
+	public String getKopfZeileRechts() {
+		return propertiesSpalte.getKopfZeileRechts();
 	}
 
 	@Override

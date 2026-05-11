@@ -32,6 +32,10 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	public static final String KONFIG_PROP_NAME_SPIELTAG = "Spieltag";
 	public static final String KONFIG_PROP_NAME_SPIELRUNDE = "Spielrunde";
 
+	private static final String KONFIG_PROP_KOPF_ZEILE_LINKS = "Kopfzeile Links";
+	private static final String KONFIG_PROP_KOPF_ZEILE_MITTE = "Kopfzeile Mitte";
+	private static final String KONFIG_PROP_KOPF_ZEILE_RECHTS = "Kopfzeile Rechts";
+
 	private static final String KONFIG_PROP_NAME_SPIELRUNDE_NEU_AUSLOSEN = "Neu Auslosen ab Runde";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_GERADE = "Spielrunde Hintergrund Gerade";
 	private static final String KONFIG_PROP_SPIELRUNDE_COLOR_BACK_UNGERADE = "Spielrunde Hintergrund Ungerade";
@@ -66,6 +70,13 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	private static final String KONFIG_PROP_SPIELTAGRANGLISTE_RUNDENSUMMEN = "Spieltagrangliste Rundensummen anzeigen";
 
 	static {
+
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
+				.setDescription("config.desc.header.links").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_MITTE)
+				.setDescription("config.desc.header.mitte").inSideBar());
+		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_RECHTS)
+				.setDescription("config.desc.header.rechts").inSideBar());
 
 		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_NAME_SPIELTAG)
 				.setDefaultVal(1).setDescription("config.desc.supermelee.spieltag").inSideBarInfoPanel());
@@ -177,6 +188,21 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	 */
 	SuperMeleePropertiesSpalte(ISheet sheet) {
 		super(sheet);
+	}
+
+	@Override
+	public String getKopfZeileLinks() {
+		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_LINKS);
+	}
+
+	@Override
+	public String getKopfZeileMitte() {
+		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_MITTE);
+	}
+
+	@Override
+	public String getKopfZeileRechts() {
+		return readStringProperty(KONFIG_PROP_KOPF_ZEILE_RECHTS);
 	}
 
 	@Override

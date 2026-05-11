@@ -59,6 +59,12 @@ public interface ISuperMeleePropertiesSpalte extends IPropertiesSpalte {
 	@Override
 	String getFusszeileMitte();
 
+	String getKopfZeileLinks();
+
+	String getKopfZeileMitte();
+
+	String getKopfZeileRechts();
+
 	boolean getSpielrunde1Header();
 
 	SuperMeleeMode getSuperMeleeMode();
