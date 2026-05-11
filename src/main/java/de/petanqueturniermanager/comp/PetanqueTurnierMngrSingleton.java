@@ -21,6 +21,9 @@ import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpda
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
+import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
 import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
@@ -132,18 +135,18 @@ public class PetanqueTurnierMngrSingleton {
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
-		/**
-		 * TODO erst dann aktivieren wenn die ranglisten auf das minimum entschlakt sind, auuser die validerungen alle formal raus
-		 * TODO nicht nur die Spieltage sonder auch die Endrangliste
 		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
 				(ws, xSheet) -> {
 					SpielTagNr nr = SheetMetadataHelper
 							.findeSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)
 							.orElse(null);
-					return new SpieltagRanglisteSheet(ws, nr);
+					return new SpieltagRanglisteSheetUpdate(ws, nr);
 				}));
-		 **/
+		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
+				TurnierSystem.SUPERMELEE,
+				(ws, ignored) -> new EndranglisteSheetUpdate(ws)));
 	}
 
 	// register global EventListener

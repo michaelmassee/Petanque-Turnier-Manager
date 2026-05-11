@@ -9,7 +9,7 @@ import static de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten.PUNKT
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 
 
@@ -28,7 +28,6 @@ import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.position.FillAutoPosition;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.print.PrintArea;
@@ -51,7 +50,11 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.AbstractSuperMeleeRanglisteFormatter;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
+import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser;
+import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.RundenErgebnis;
+import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.SpieltagErgebnisse;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
@@ -182,11 +185,9 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 
 		rangListeSorter.insertSortValidateSpalte(false);
 		rangListeSorter.insertManuelsortSpalten(false);
-		ergebnisseFormulaEinfuegen();
-		nichtGespieltFormulaEinfuegen();
-		updateSummenSpalten();
+		nichtGespieltSpalteHeader();
+		berechnungUndSchreiben(getXSpreadSheet(), anzSpielRunden);
 		getSpielerSpalte().formatSpielrNrUndNamenspalten(false);
-		getRangListeSpalte().upDateRanglisteSpalte();
 		getRangListeSpalte().insertHeaderInSheet(headerColor);
 		ranglisteFormatter.formatDaten();
 		ranglisteFormatter.formatDatenErrorGeradeUngerade(validateSpalte());
@@ -195,6 +196,7 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		formatNichtGespieltRunden(anzSpielRunden, nichtGespieltGeradeFarbe, nichtGespieltUnGeradeFarbe);
 		getxCalculatable().calculate();
 		rangListeSorter.doSort();
+		getRangListeSpalte().upDateRanglisteSpalte();
 		Position footerPos = ranglisteFormatter.addFooter().getPos();
 		printBereichDefinieren(footerPos);
 		processBoxinfo("processbox.header.festsetzen");
@@ -225,185 +227,127 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		return ranglisteFormatter.countAnzahlRunden();
 	}
 
-	protected void updateSummenSpalten() throws GenerateException {
+	/**
+	 * Schreibt alle Spielrunden-Ergebnisse, Summen und Nicht-Gespielt-Flags als
+	 * Werte (keine Formeln) per Block-Write in das Sheet. Liest die Ergebnisse
+	 * der Spielrunden einmalig über {@link SpielrundeErgebnisLeser} ein.
+	 * <p>
+	 * Gemeinsame Methode für Vollaufbau {@link #generate(SpielTagNr)} und
+	 * inkrementelles Update aus {@code SpieltagRanglisteSheetUpdate}.
+	 */
+	protected void berechnungUndSchreiben(XSpreadsheet sheet, int anzSpielRunden) throws GenerateException {
+		processBoxinfo("processbox.spieltage.ergebnisse.einfuegen");
 
-		processBoxinfo("processbox.summenspalten.aktualisieren");
-
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
 		if (anzSpielRunden < 1) {
 			return;
 		}
-		XSpreadsheet sheet = getXSpreadSheet();
-		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
-		List<Position> plusPunktPos = new ArrayList<>();
-		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
-			SheetRunner.testDoCancelTask();
-			plusPunktPos.add(Position.from(ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * 2), ERSTE_DATEN_ZEILE - 1));
+
+		List<Integer> spielerNrList = leseSpielerNrInSheetOrdnung();
+		if (spielerNrList.isEmpty()) {
+			return;
 		}
 
-		//@formatter:off
-			// =WENN(D4>E4;1;0) + .....
-			String formulaSpielePlus = plusPunktPos.stream()
-					.map(posPlus -> "IF(" +
-									// +1 auf die aktuelle zeile
-									posPlus.zeilePlusEins().getAddress() +
-									">" +
-									// position minus punkte
-									Position.from(posPlus).spaltePlusEins().getAddress() +
-									";1;0)")
-					.collect(Collectors.joining(" + "));
+		// Die vertikalen Ergebnisspalten der Spielrunde-Sheets sind formel-gestützte
+		// Views auf die horizontalen Ergebnisse. Bei deaktiviertem AutoCalc können
+		// sie veraltete Werte zeigen, wenn unmittelbar zuvor Ergebnisse geändert
+		// wurden. Vor dem Block-Read einmal recalculaten.
+		getxCalculatable().calculate();
 
-			String formulaSpieleMinus = plusPunktPos.stream()
-					.map(posPlus -> "IF(" +
-									// position minus punkte
-									Position.from(posPlus).spaltePlusEins().getAddress() +
-									">" +
-									posPlus.getAddress() +
-									";1;0)")
-					.collect(Collectors.joining(" + "));
-
-			String formulaPunktePlus = plusPunktPos.stream()
-					.map(posPlus -> posPlus.getAddress())
-					.collect(Collectors.joining(" + "));
-
-			String formulaPunkteMinus = plusPunktPos.stream()
-					.map(posPlus -> Position.from(posPlus).spaltePlusEins().getAddress())
-					.collect(Collectors.joining(" + "));
-
-			//@formatter:on
-
-		FillAutoPosition fillAutoPosition = FillAutoPosition.from(getErsteSummeSpalte(), letzteDatenzeile);
-		StringCellValue valspielSumme = StringCellValue
-				.from(sheet, Position.from(getErsteSummeSpalte(), ERSTE_DATEN_ZEILE), formulaSpielePlus)
-				.setFillAuto(fillAutoPosition);
-		getSheetHelper().setFormulaInCell(valspielSumme);
-
-		getSheetHelper().setFormulaInCell(valspielSumme.spaltePlusEins().setValue(formulaSpieleMinus)
-				.setFillAuto(fillAutoPosition.spaltePlusEins()));
-		// div spalte
-		String spieleDivFormula = Position.from(valspielSumme.getPos()).spaltePlus(-1).getAddress() + "-"
-				+ Position.from(valspielSumme.getPos()).getAddress();
-		getSheetHelper().setFormulaInCell(valspielSumme.spaltePlusEins().setValue(spieleDivFormula)
-				.setFillAuto(fillAutoPosition.spaltePlusEins()));
-
-		getSheetHelper().setFormulaInCell(valspielSumme.spaltePlusEins().setValue(formulaPunktePlus)
-				.setFillAuto(fillAutoPosition.spaltePlusEins()));
-		getSheetHelper().setFormulaInCell(valspielSumme.spaltePlusEins().setValue(formulaPunkteMinus)
-				.setFillAuto(fillAutoPosition.spaltePlusEins()));
-		// div spalte
-		String punkteDivFormula = Position.from(valspielSumme.getPos()).spaltePlus(-1).getAddress() + "-"
-				+ Position.from(valspielSumme.getPos()).getAddress();
-		getSheetHelper().setFormulaInCell(valspielSumme.spaltePlusEins().setValue(punkteDivFormula)
-				.setFillAuto(fillAutoPosition.spaltePlusEins()));
-	}
-
-	private void ergebnisseFormulaEinfuegen() throws GenerateException {
-
-		processBoxinfo("processbox.spieltage.ergebnisse.einfuegen");
-
-		XSpreadsheet sheet = getXSpreadSheet();
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
+		SpieltagErgebnisse ergebnisse = new SpielrundeErgebnisLeser(getWorkingSpreadsheet(), getSpieltagNr())
+				.lese(anzSpielRunden);
 
 		int nichtgespieltPlus = getKonfigurationSheet().getNichtGespielteRundePlus();
 		int nichtgespieltMinus = getKonfigurationSheet().getNichtGespielteRundeMinus();
-		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
+		int ersteSummeSpalte = getErsteSummeSpalte();
+		int letzteSummenSpalte = ersteSummeSpalte + SuperMeleeSummenSpalten.PUNKTE_DIV_OFFS;
+		int ngSpalte = nichtGespieltSpalteNr();
+		int ersteDatenzeile = ERSTE_DATEN_ZEILE;
+		int letzteDatenzeile = ersteDatenzeile + spielerNrList.size() - 1;
 
-		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
+		RangeData runden = new RangeData();
+		RangeData nichtGespielt = new RangeData();
 
-		// VLOOKUP Matrix fuer plus Punkte
-		// $M$4:$O$1004
-		int ersteSpalteVertikaleErgebnisse = SpielrundeSheetKonstanten.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
-		int spielrundeSheetErsteDatenzeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
-		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
-		Position letztePosPlusPunkte = Position.from(SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_PLUS,
-				1000 + spielrundeSheetErsteDatenzeile);
-		Position letztePosMinusPunkte = Position.from(SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_MINUS + 2,
-				1000 + spielrundeSheetErsteDatenzeile);
-		String suchMatrixPlusPunkte = erstePos.getAddressWith$() + ":" + letztePosPlusPunkte.getAddressWith$();
-		String suchMatrixMinusPunkte = erstePos.getAddressWith$() + ":" + letztePosMinusPunkte.getAddressWith$();
+		for (Integer spielerNr : spielerNrList) {
+			SheetRunner.testDoCancelTask();
+			RowData rundenRow = runden.addNewRow();
+			int spielePlus = 0;
+			int spieleMinus = 0;
+			int punktePlus = 0;
+			int punkteMinus = 0;
+			boolean hatLuecke = false;
 
-		// IFNA(VLOOKUP)
-		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
-			// $ = absolute wegen sortieren
-			String formulaSheetName = "$'"
-					+ aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
-			{
-				// plus spalte
-				// =WENNNV(SVERWEIS(INDIREKT(ADRESSE(ZEILE();1;8));$'1.1. Spielrunde'.$S$3:$T$1003;2;0);0)
-				Position posPunktePlus = Position.from(
-						ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * ANZAHL_SPALTEN_IN_SPIELRUNDE), ERSTE_DATEN_ZEILE);
-				String formulaPlusPunkte = "IFNA(VLOOKUP(" + verweisAufSpalteSpielerNr + ";" + formulaSheetName
-						+ suchMatrixPlusPunkte + ";2;0);" + nichtgespieltPlus + ")";
-				StringCellValue spielerPlus = StringCellValue.from(sheet, posPunktePlus).setValue(formulaPlusPunkte)
-						.setFillAutoDown(letzteDatenzeile);
-				getSheetHelper().setFormulaInCell(spielerPlus);
+			for (int rundeNr = 1; rundeNr <= anzSpielRunden; rundeNr++) {
+				Optional<RundenErgebnis> erg = ergebnisse.ergebnis(rundeNr, spielerNr);
+				int plus;
+				int minus;
+				if (erg.isPresent()) {
+					plus = erg.get().plus();
+					minus = erg.get().minus();
+				} else {
+					plus = nichtgespieltPlus;
+					minus = nichtgespieltMinus;
+					hatLuecke = true;
+				}
+				if (ergebnisse.istRundeNichtGespielt(rundeNr)) {
+					// Runde komplett leer – die Vertikalen liefern zwar 0/0, semantisch
+					// hat dieser Spieler aber nicht gespielt.
+					hatLuecke = true;
+				}
+				rundenRow.newInt(plus);
+				rundenRow.newInt(minus);
+				punktePlus += plus;
+				punkteMinus += minus;
+				if (plus > minus) {
+					spielePlus++;
+				} else if (minus > plus) {
+					spieleMinus++;
+				}
 			}
+			rundenRow.newInt(spielePlus);
+			rundenRow.newInt(spieleMinus);
+			rundenRow.newInt(spielePlus - spieleMinus);
+			rundenRow.newInt(punktePlus);
+			rundenRow.newInt(punkteMinus);
+			rundenRow.newInt(punktePlus - punkteMinus);
 
-			{
-				// minus spalte
-				// =WENNNV(SVERWEIS(INDIREKT(ADRESSE(ZEILE();1;8));$'1.1. Spielrunde'.$S$3:$U$1003;3;0);13)
-				Position minusPunktePlus = Position.from(
-						ERSTE_SPIELRUNDE_SPALTE + ((spielRunde - 1) * ANZAHL_SPALTEN_IN_SPIELRUNDE) + 1,
-						ERSTE_DATEN_ZEILE);
-				String formulaMinusPunkte = "IFNA(VLOOKUP(" + verweisAufSpalteSpielerNr + ";" + formulaSheetName
-						+ suchMatrixMinusPunkte + ";3;0);" + nichtgespieltMinus + ")";
-				StringCellValue spielerMinus = StringCellValue.from(sheet, minusPunktePlus).setValue(formulaMinusPunkte)
-						.setFillAutoDown(letzteDatenzeile);
-				getSheetHelper().setFormulaInCell(spielerMinus);
-			}
-
+			nichtGespielt.addNewRow().newString(hatLuecke ? "x" : "");
 		}
+
+		RangeHelper.from(this,
+				RangePosition.from(ERSTE_SPIELRUNDE_SPALTE, ersteDatenzeile, letzteSummenSpalte, letzteDatenzeile))
+				.setDataInRange(runden);
+		RangeHelper.from(this,
+				RangePosition.from(ngSpalte, ersteDatenzeile, ngSpalte, letzteDatenzeile))
+				.setDataInRange(nichtGespielt);
 	}
 
-	private void nichtGespieltFormulaEinfuegen() throws GenerateException {
-
-		int anzSpielRunden = aktuelleSpielrundeSheet.countNumberOfSpielRundenSheets(getSpieltagNr());
-		if (anzSpielRunden < 1) {
-			return;
-		}
-
-		XSpreadsheet sheet = getXSpreadSheet();
+	private List<Integer> leseSpielerNrInSheetOrdnung() throws GenerateException {
 		int letzteDatenzeile = getSpielerSpalte().getLetzteMitDatenZeileInSpielerNrSpalte();
-		int ersteSpalteVertikaleErgebnisse = SpielrundeSheetKonstanten.ERSTE_SPALTE_VERTIKALE_ERGEBNISSE;
-		int spielrundeSheetErsteDatenzeile = SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE;
-		Position erstePos = Position.from(ersteSpalteVertikaleErgebnisse, spielrundeSheetErsteDatenzeile);
-		Position letztePosPlusPunkte = Position.from(SpielrundeSheetKonstanten.SPALTE_VERTIKALE_ERGEBNISSE_PLUS,
-				1000 + spielrundeSheetErsteDatenzeile);
-		String suchMatrixPlusPunkte = erstePos.getAddressWith$() + ":" + letztePosPlusPunkte.getAddressWith$();
-
-		// Ergebnisspalte für COUNTA-Check – leere Runde hat keine eingetragenen Ergebnisse
-		Position ersteErgPos = Position.from(SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, spielrundeSheetErsteDatenzeile);
-		Position letzteErgPos = Position.from(SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE, 1000 + spielrundeSheetErsteDatenzeile);
-		String ergebnisseSpalteRange = ersteErgPos.getAddressWith$() + ":" + letzteErgPos.getAddressWith$();
-
-		String verweisAufSpalteSpielerNr = "INDIRECT(ADDRESS(ROW();" + (SPIELER_NR_SPALTE + 1) + ";4))";
-
-		List<String> nichtGespieltBedingungen = new ArrayList<>();
-		for (int spielRunde = 1; spielRunde <= anzSpielRunden; spielRunde++) {
-			String formulaSheetName = "$'"
-					+ aktuelleSpielrundeSheet.getSheetName(getSpieltagNr(), SpielRundeNr.from(spielRunde)) + "'.";
-			String isnaCheck = "ISNA(VLOOKUP(" + verweisAufSpalteSpielerNr + ";" + formulaSheetName
-					+ suchMatrixPlusPunkte + ";2;0))";
-			// COUNTA=0 erkennt Runden ohne eingetragene Ergebnisse (Spieler wurden zugeteilt, aber nichts eingetragen)
-			String keineErgebnisseCheck = "COUNTA(" + formulaSheetName + ergebnisseSpalteRange + ")=0";
-			nichtGespieltBedingungen.add("OR(" + isnaCheck + ";" + keineErgebnisseCheck + ")");
+		if (letzteDatenzeile < ERSTE_DATEN_ZEILE) {
+			return new ArrayList<>();
 		}
+		RangeData data = RangeHelper.from(this,
+				RangePosition.from(SPIELER_NR_SPALTE, ERSTE_DATEN_ZEILE, SPIELER_NR_SPALTE, letzteDatenzeile))
+				.getDataFromRange();
+		List<Integer> result = new ArrayList<>();
+		for (RowData row : data) {
+			int nr = row.get(0).getIntVal(-1);
+			if (nr < 1) {
+				break;
+			}
+			result.add(nr);
+		}
+		return result;
+	}
 
-		String nichtGespieltFormula = "IF(OR(" + nichtGespieltBedingungen.stream().collect(Collectors.joining(";")) + ");\"x\";\"\")";
-
+	private void nichtGespieltSpalteHeader() throws GenerateException {
 		int nichtGespieltSpalte = nichtGespieltSpalteNr();
-		StringCellValue cellValue = StringCellValue.from(sheet, Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE))
-				.setValue(nichtGespieltFormula)
-				.setFillAutoDown(letzteDatenzeile);
-		getSheetHelper().setFormulaInCell(cellValue);
-
-		// Spalten-Header + Sichtbarkeit (analog zu insertSortValidateSpalte)
 		ColumnProperties columnProperties = ColumnProperties.from()
 				.setWidth(MeldungenSpalte.DEFAULT_SPALTE_NUMBER_WIDTH)
 				.setHoriJustify(CellHoriJustify.CENTER)
 				.isVisible(false);
 		StringCellValue header = StringCellValue
-				.from(sheet, Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE - 1))
+				.from(getXSpreadSheet(), Position.from(nichtGespieltSpalte, ERSTE_DATEN_ZEILE - 1))
 				.addColumnProperties(columnProperties)
 				.setValue("NG");
 		getSheetHelper().setStringValueInCell(header);
