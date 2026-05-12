@@ -1,32 +1,43 @@
+/*
+  Layout-Prinzip:
+  - Drei Grid-Reihen: Kopf (auto) | Zahlen (1fr, füllt Rest) | Fuß (auto).
+  - Jeder Bereich hat `min-height: 0`, sodass Flex/Grid-Items wirklich schrumpfen
+    und der Fuß-Bereich (PTM-Logo) garantiert sichtbar bleibt.
+  - `overflow: hidden` am Root verhindert Scrollbalken — Inhalte werden über
+    clamp()-Schriftgrößen klein genug skaliert.
+*/
+
 .startseite {
   position: fixed;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4vh 4vw;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  row-gap: 2vh;
+  padding: 2vh 3vw;
   background: #fff;
   text-align: center;
   font-family: 'Segoe UI', system-ui, sans-serif;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .startseite-kopf {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2vh;
-  margin-top: 4vh;
+  justify-content: center;
+  gap: 1.5vh;
+  min-height: 0;
 }
 
 .startseite-turnierlogo {
-  max-height: 30vh;
+  max-height: 22vh;
   max-width: 80vw;
   object-fit: contain;
 }
 
 .startseite-turnierbeschreibung {
-  font-size: clamp(1.5rem, 5vw, 4.5rem);
+  font-size: clamp(1.2rem, 4vw, 3.5rem);
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.2;
@@ -34,12 +45,18 @@
   color: #222;
   white-space: pre-wrap;
   max-width: 90vw;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
 }
 
 .startseite-zahlen {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: clamp(1rem, 4vw, 4rem);
+  min-height: 0;
 }
 
 .zahl-block {
@@ -49,14 +66,14 @@
 }
 
 .zahl-wert {
-  font-size: clamp(4rem, 18vw, 16rem);
+  font-size: clamp(3rem, 14vw, 11rem);
   font-weight: 800;
   line-height: 1;
   color: #1a3a6e;
 }
 
 .zahl-label {
-  font-size: clamp(1rem, 2.5vw, 2.2rem);
+  font-size: clamp(0.9rem, 2vw, 1.8rem);
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: #888;
@@ -64,12 +81,18 @@
 }
 
 .zahl-trenner {
-  font-size: clamp(4rem, 12vw, 10rem);
+  font-size: clamp(3rem, 10vw, 8rem);
   color: #bbb;
   font-weight: 300;
 }
 
+.startseite-fuss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .startseite-fuss img {
-  max-height: 80px;
+  max-height: clamp(40px, 7vh, 70px);
   opacity: 0.75;
 }
