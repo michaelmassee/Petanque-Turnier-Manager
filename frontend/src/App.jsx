@@ -218,6 +218,8 @@ function reducer(state, action) {
           turnierbeschreibung: msg.turnierbeschreibung ?? '',
           anzahlAngemeldet: msg.anzahlAngemeldet ?? 0,
           anzahlAktiv: msg.anzahlAktiv ?? 0,
+          labelAngemeldet: msg.labelAngemeldet ?? '',
+          labelAktiv: msg.labelAktiv ?? '',
         },
       };
     }

@@ -6,7 +6,8 @@ import './Startseite.css';
  * Teilnehmerzahl (angemeldet/aktiv). PTM-Branding als Footer.
  */
 export default function StartseiteApp({ startseite }) {
-  const { turnierlogo, turnierbeschreibung, anzahlAngemeldet, anzahlAktiv } = startseite;
+  const { turnierlogo, turnierbeschreibung, anzahlAngemeldet, anzahlAktiv,
+          labelAngemeldet, labelAktiv } = startseite;
   return (
     <div className="startseite">
       <div className="startseite-kopf">
@@ -25,12 +26,12 @@ export default function StartseiteApp({ startseite }) {
       <div className="startseite-zahlen">
         <div className="zahl-block">
           <div className="zahl-wert">{anzahlAngemeldet}</div>
-          <div className="zahl-label">angemeldet</div>
+          <div className="zahl-label">{labelAngemeldet}</div>
         </div>
         <div className="zahl-trenner" aria-hidden="true">/</div>
         <div className="zahl-block">
           <div className="zahl-wert">{anzahlAktiv}</div>
-          <div className="zahl-label">aktiv</div>
+          <div className="zahl-label">{labelAktiv}</div>
         </div>
       </div>
       <div className="startseite-fuss">

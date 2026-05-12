@@ -14,18 +14,23 @@ public record StartseiteSseNachricht(
         String turnierlogo,
         String turnierbeschreibung,
         int anzahlAngemeldet,
-        int anzahlAktiv) {
+        int anzahlAktiv,
+        String labelAngemeldet,
+        String labelAktiv) {
 
     public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
-            int anzahlAngemeldet, int anzahlAktiv) {
+            int anzahlAngemeldet, int anzahlAktiv,
+            String labelAngemeldet, String labelAktiv) {
         return new StartseiteSseNachricht("startseite_init", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
-                anzahlAngemeldet, anzahlAktiv);
+                anzahlAngemeldet, anzahlAktiv,
+                labelAngemeldet == null ? "" : labelAngemeldet,
+                labelAktiv == null ? "" : labelAktiv);
     }
 
     public static StartseiteSseNachricht update(int version, int anzahlAngemeldet, int anzahlAktiv) {
         return new StartseiteSseNachricht("startseite_update", version, null, null,
-                anzahlAngemeldet, anzahlAktiv);
+                anzahlAngemeldet, anzahlAktiv, null, null);
     }
 }

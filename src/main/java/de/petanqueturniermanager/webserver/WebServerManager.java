@@ -213,7 +213,9 @@ public final class WebServerManager implements TimerListener {
             letzterStartseiteStatus = null;
             // Init-Cache vorläufig leer befüllen; sseRefreshSendenIntern liefert sofort konkrete Werte nach.
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    startseiteVersion.incrementAndGet(), "", "", 0, 0)));
+                    startseiteVersion.incrementAndGet(), "", "", 0, 0,
+                    I18n.get("startseite.label.angemeldet"),
+                    I18n.get("startseite.label.aktiv"))));
             logger.info("Turnier-Startseite-Server gestartet auf Port {}", port);
             safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(port)));
         } catch (IOException e) {
@@ -647,7 +649,9 @@ public final class WebServerManager implements TimerListener {
             String logoUrl = logoQuelle.isBlank() ? "" : "/turnierlogo?v=" + version;
             // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    version, logoUrl, beschreibung, status.angemeldet(), status.aktiv())));
+                    version, logoUrl, beschreibung, status.angemeldet(), status.aktiv(),
+                    I18n.get("startseite.label.angemeldet"),
+                    I18n.get("startseite.label.aktiv"))));
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
