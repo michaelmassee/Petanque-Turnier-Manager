@@ -38,9 +38,10 @@ import de.petanqueturniermanager.helper.Lo;
  * {@code vcl/source/components/ColorPicker.cxx::execute()} — dort fehlt ein
  * {@code aColorDialog.SetColor(m_aColor)} vor {@code Execute()}. Patch für upstream liegt
  * im Projekt unter {@code upstream/libreoffice/tdf172054-colorpicker-seed-initial-color.patch}.
- * Bugzilla: https://bugs.documentfoundation.org/show_bug.cgi?id=172054. Sobald der Fix in
- * einer freigegebenen LO-Version landet, kann dieser Hinweis entfernt werden — am Helper
- * selbst ist nichts zu ändern.
+ * Bugzilla: https://bugs.documentfoundation.org/show_bug.cgi?id=172054.
+ * Gerrit-Patch: https://gerrit.libreoffice.org/c/core/+/205146. Sobald der Fix in einer
+ * freigegebenen LO-Version landet, kann dieser Hinweis entfernt werden — am Helper selbst
+ * ist nichts zu ändern.
  */
 public final class FarbwahlDialog {
 
