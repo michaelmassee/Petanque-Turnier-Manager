@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.webserver;
 
+import java.util.Map;
+
 /**
  * SSE-Nachricht für die Turnier-Startseite. Zwei Typen:
  * <ul>
@@ -17,7 +19,8 @@ public record StartseiteSseNachricht(
         int anzahlAktiv,
         String labelAngemeldet,
         String labelAktiv,
-        String tagline) {
+        String tagline,
+        Map<String, String> i18n) {
 
     public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
             int anzahlAngemeldet, int anzahlAktiv,
@@ -28,7 +31,8 @@ public record StartseiteSseNachricht(
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,
-                tagline == null ? "" : tagline);
+                tagline == null ? "" : tagline,
+                UiTexte.aktuelle());
     }
 
     /**
@@ -45,6 +49,7 @@ public record StartseiteSseNachricht(
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,
-                tagline == null ? "" : tagline);
+                tagline == null ? "" : tagline,
+                null);
     }
 }

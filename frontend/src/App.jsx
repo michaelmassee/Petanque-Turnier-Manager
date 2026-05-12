@@ -249,6 +249,8 @@ function reducer(state, action) {
       return { ...state, hinweis: action.payload };
     case 'VERBINDUNG_STATUS':
       return { ...state, verbunden: action.payload.verbunden };
+    case 'I18N':
+      return { ...state, i18n: { ...state.i18n, ...action.payload } };
     default:
       return state;
   }
@@ -262,6 +264,7 @@ export default function App() {
     composite: null,
     startseite: null,
     verbunden: true,
+    i18n: {},
   });
 
   const versionRef = useRef(0);
@@ -280,6 +283,12 @@ export default function App() {
 
       src.onmessage = (e) => {
         const msg = JSON.parse(e.data);
+
+        // Übersetzte Frontend-UI-Texte vom Backend (z.B. „Verbindung getrennt")
+        // — sind ggf. in jeder Init-Nachricht enthalten und werden in state.i18n gemerged.
+        if (msg.i18n && typeof msg.i18n === 'object') {
+          dispatch({ type: 'I18N', payload: msg.i18n });
+        }
 
         if (msg.typ === 'hinweis') {
           dispatch({ type: 'HINWEIS', payload: msg });
@@ -343,7 +352,7 @@ export default function App() {
     };
   }, []);
 
-  const { table, hinweis, composite, startseite, verbunden } = state;
+  const { table, hinweis, composite, startseite, verbunden, i18n } = state;
 
   useEffect(() => {
     if (startseite) {
@@ -373,7 +382,7 @@ export default function App() {
           <div className="hinweis-text">{hinweis.hinweisText}</div>
         </div>
         <Signatur />
-        <VerbindungsStatus verbunden={verbunden} />
+        <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
       </>
     );
   }
@@ -387,7 +396,7 @@ export default function App() {
     <>
       {ViewComponent ? <ViewComponent state={state} /> : <LeereAnsicht />}
       {mitSignatur && <Signatur />}
-      <VerbindungsStatus verbunden={verbunden} />
+      <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
     </>
   );
 }
@@ -396,13 +405,14 @@ function LeereAnsicht() {
   return null;
 }
 
-function VerbindungsStatus({ verbunden }) {
+function VerbindungsStatus({ verbunden, i18n }) {
   if (verbunden) {
     return null;
   }
+  const text = i18n?.verbindungGetrennt || 'Verbindung getrennt';
   return (
     <div id="verbindungs-status" role="status" aria-live="polite">
-      <span className="punkt" /> Verbindung getrennt
+      <span className="punkt" /> {text}
     </div>
   );
 }
