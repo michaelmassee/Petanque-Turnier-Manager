@@ -1,5 +1,5 @@
 From: Michael Massee <michael.massee@gmail.com>
-Subject: [PATCH] tdf#XXXXXX vcl: seed initial color in UNO ColorPicker
+Subject: [PATCH] tdf#172054 vcl: seed initial color in UNO ColorPicker
 
 The com.sun.star.cui.ColorPicker / com.sun.star.ui.dialogs.ColorPicker
 service stores an initial color via setPropertyValues("Color", ...) into

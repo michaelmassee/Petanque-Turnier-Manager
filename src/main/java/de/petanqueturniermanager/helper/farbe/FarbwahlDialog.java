@@ -31,15 +31,16 @@ import de.petanqueturniermanager.helper.Lo;
  * <p>Aufrufer-seitig wird nichts deaktiviert/synchronisiert — Modality und Re-Entry-Schutz
  * sind in LO's nativem Modal-Stack erledigt.
  *
- * <p><b>Bekannter LO-Bug (ab 26.2):</b> Der Service ignoriert die per
+ * <p><b>Bekannter LO-Bug (ab 26.2, tdf#172054):</b> Der Service ignoriert die per
  * {@code setPropertyValues("Color", …)} gesetzte Initialfarbe — der Dialog öffnet immer
  * mit Default (Schwarz). Regression durch Drop+Reintroduce in den Commits 5ba0ccb (Jun 2025)
  * und 9d6ade1 (Nov 2025), siehe
  * {@code vcl/source/components/ColorPicker.cxx::execute()} — dort fehlt ein
  * {@code aColorDialog.SetColor(m_aColor)} vor {@code Execute()}. Patch für upstream liegt
- * im Projekt unter {@code upstream/libreoffice/tdf-…-colorpicker-seed-initial-color.patch}.
- * Sobald der Fix in einer freigegebenen LO-Version landet, kann dieser Hinweis entfernt
- * werden — am Helper selbst ist nichts zu ändern.
+ * im Projekt unter {@code upstream/libreoffice/tdf172054-colorpicker-seed-initial-color.patch}.
+ * Bugzilla: https://bugs.documentfoundation.org/show_bug.cgi?id=172054. Sobald der Fix in
+ * einer freigegebenen LO-Version landet, kann dieser Hinweis entfernt werden — am Helper
+ * selbst ist nichts zu ändern.
  */
 public final class FarbwahlDialog {
 
