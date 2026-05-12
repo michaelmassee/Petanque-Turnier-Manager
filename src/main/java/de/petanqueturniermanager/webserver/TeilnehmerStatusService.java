@@ -20,14 +20,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Meldeliste-Klassen — damit der Live-Push der Turnier-Startseite vom Heavy-Refresh-Pfad
  * der Composite-Views entkoppelt bleibt.
  *
- * <p>Heuristik:
- * <ul>
- *   <li><b>angemeldet</b> = Anzahl Zeilen mit nicht-leerer Spieler-Nr in Spalte
- *       {@link MeldeListeKonstanten#SPIELER_NR_SPALTE}, ab
- *       {@link MeldeListeKonstanten#ERSTE_DATEN_ZEILE}.</li>
- *   <li><b>aktiv</b> = Anzahl Zeilen mit Spieler-Nr {@code > 0} (negative Werte sind
- *       inaktive/ausgesetzte Spieler).</li>
- * </ul>
+ * <p>Heuristik (V1): Beide Zahlen ermitteln sich aus der Spieler-Nr-Spalte
+ * ({@link MeldeListeKonstanten#SPIELER_NR_SPALTE}, ab
+ * {@link MeldeListeKonstanten#ERSTE_DATEN_ZEILE}) — gezählt werden Zeilen mit
+ * einer positiven Spielernummer. Eine differenzierte „aktiv vs. angemeldet"-
+ * Logik (system-spezifisch über {@code IMeldeliste.getAktiveMeldungen()}) bleibt
+ * einer V2 vorbehalten.
  */
 public final class TeilnehmerStatusService {
 
@@ -69,23 +67,32 @@ public final class TeilnehmerStatusService {
     }
 
     private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet) {
-        int angemeldet = 0;
-        int aktiv = 0;
+        int treffer = 0;
         int leereZeilenInFolge = 0;
         for (int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeile < MAX_ZEILEN; zeile++) {
-            Integer nr = sh.getIntFromCell(sheet, Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeile));
-            if (nr == null || nr == 0) {
+            // getTextFromCell liefert null für leere Zellen; getIntFromCell würde -1
+            // zurückgeben und damit jede leere Zeile als „vorhanden" fehlinterpretieren.
+            String text = sh.getTextFromCell(sheet, Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeile));
+            Integer nr = parsePositiv(text);
+            if (nr == null) {
                 if (++leereZeilenInFolge >= MAX_LEERE_ZEILEN_IN_FOLGE) {
                     break;
                 }
                 continue;
             }
             leereZeilenInFolge = 0;
-            angemeldet++;
-            if (nr > 0) {
-                aktiv++;
-            }
+            treffer++;
         }
-        return new TeilnehmerStatus(angemeldet, aktiv);
+        return new TeilnehmerStatus(treffer, treffer);
+    }
+
+    private static Integer parsePositiv(String text) {
+        if (text == null || text.isBlank()) return null;
+        try {
+            int n = Integer.parseInt(text.trim());
+            return n > 0 ? n : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
