@@ -60,6 +60,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final int ZEILE3_Y  = 55;
     private static final int ZEILE4_Y  = 80;
     private static final int FOOTER_Y  = 195;
+    private static final int BTN_UEBERN_X  = 125;
     private static final int BTN_OK_X      = 200;
     private static final int BTN_ABBRUCH_X = 275;
     private static final int BTN_ACTION_W  = 70;
@@ -75,6 +76,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private XMultiServiceFactory xMSF;
     private XNameContainer cont;
     private XControlContainer xcc;
+    private XDialog xDialog;
 
     public TurnierStartseiteDialog(WorkingSpreadsheet currentSpreadsheet) {
         super(currentSpreadsheet.getxContext());
@@ -109,6 +111,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         this.xMSF = xMSF;
         this.cont = cont;
         this.xcc  = Lo.qi(XControlContainer.class, xDialog);
+        this.xDialog = xDialog;
 
         var gp = GlobalProperties.get();
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
@@ -135,14 +138,31 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
                 docProps.getStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, ""),
                 FIELD_X, ZEILE4_Y, FIELD_W, BESCHREIBUNG_H);
 
+        fuegeButton("btnUebernehmen", I18n.get("dialog.uebernehmen"),
+                BTN_UEBERN_X, FOOTER_Y, BTN_ACTION_W, BTN_H, (short) PushButtonType.STANDARD_value);
         fuegeButton("btnOk", I18n.get("dialog.ok"),
-                BTN_OK_X, FOOTER_Y, BTN_ACTION_W, BTN_H, (short) PushButtonType.OK_value);
+                BTN_OK_X, FOOTER_Y, BTN_ACTION_W, BTN_H, (short) PushButtonType.STANDARD_value);
         fuegeButton("btnAbbrechen", I18n.get("dialog.abbrechen"),
                 BTN_ABBRUCH_X, FOOTER_Y, BTN_ACTION_W, BTN_H, (short) PushButtonType.CANCEL_value);
+        registriereButtonAktion("btnUebernehmen", this::beimUebernehmenKlick);
+        registriereButtonAktion("btnOk", () -> {
+            if (speichernUndAnwenden()) {
+                this.xDialog.endExecute();
+            }
+        });
     }
 
-    @Override
-    protected void beiOkGeklickt() {
+    private void beimUebernehmenKlick() {
+        // Übernehmen: Speichern + sofort sichtbar machen, Dialog bleibt offen.
+        speichernUndAnwenden();
+    }
+
+    /**
+     * Liest, validiert und speichert die Eingaben und benachrichtigt den WebServer
+     * über die geänderte Konfiguration. Bei Validierungsfehler wird eine Fehlerbox
+     * gezeigt und {@code false} zurückgegeben.
+     */
+    private boolean speichernUndAnwenden() {
         boolean aktiv = leseCheckBox();
         String portText = leseFeld(CTRL_PORT);
         String logo = leseFeld(CTRL_LOGO);
@@ -156,7 +176,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
             }
         } catch (NumberFormatException e) {
             zeigeFehler(I18n.get("konfiguration.startseite.fehler.port"));
-            return;
+            return false;
         }
 
         GlobalProperties.get().speichernStartseite(port, aktiv);
@@ -165,6 +185,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         docProps.setStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, beschreibung);
         WebServerManager.get().konfigurationGeaendert();
         logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}", aktiv, port);
+        return true;
     }
 
     // ── UNO-Helper ────────────────────────────────────────────────────────────
