@@ -637,13 +637,17 @@ public final class WebServerManager implements TimerListener {
             var status = TeilnehmerStatusService.ermitteln(ws);
             boolean unverändert = status.equals(letzterStartseiteStatus);
             var docProps = new de.petanqueturniermanager.helper.DocumentPropertiesHelper(ws);
-            String logo = docProps.getStringProperty("Turnierlogo Url", "");
+            String logoQuelle = docProps.getStringProperty("Turnierlogo Url", "");
             String name = docProps.getStringProperty("Turniername", "");
+            startseiteInstanz.setLogoQuelle(logoQuelle);
 
             int version = startseiteVersion.incrementAndGet();
+            // Frontend referenziert immer den lokalen Endpunkt /turnierlogo (Browser darf
+            // file:// nicht direkt laden). Version als Cache-Buster bei Logo-Wechsel.
+            String logoUrl = logoQuelle.isBlank() ? "" : "/turnierlogo?v=" + version;
             // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    version, logo, name, status.angemeldet(), status.aktiv())));
+                    version, logoUrl, name, status.angemeldet(), status.aktiv())));
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(

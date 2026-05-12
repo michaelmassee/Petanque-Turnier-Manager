@@ -3,7 +3,9 @@ package de.petanqueturniermanager.konfigdialog.properties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.PushButtonType;
+import com.sun.star.awt.XButton;
 import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
@@ -13,6 +15,7 @@ import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.XNameContainer;
+import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 
@@ -40,27 +43,31 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     public static final String DOC_PROP_TURNIERLOGO_URL = "Turnierlogo Url";
     public static final String DOC_PROP_TURNIERNAME     = "Turniername";
 
-    private static final int DIALOG_BREITE = 320;
+    private static final int DIALOG_BREITE = 360;
     private static final int DIALOG_HOEHE  = 150;
 
     private static final int LBL_X     = 5;
     private static final int LBL_W     = 80;
     private static final int FIELD_X   = 90;
     private static final int FIELD_W   = 220;
+    private static final int LOGO_FIELD_W   = 195;
+    private static final int LOGO_PICK_W    = 20;
+    private static final int LOGO_PICK_GAP  = 5;
     private static final int CTRL_H    = 12;
     private static final int ZEILE1_Y  = 10;
     private static final int ZEILE2_Y  = 30;
     private static final int ZEILE3_Y  = 55;
     private static final int ZEILE4_Y  = 80;
     private static final int FOOTER_Y  = 125;
-    private static final int BTN_OK_X      = 160;
-    private static final int BTN_ABBRUCH_X = 235;
+    private static final int BTN_OK_X      = 200;
+    private static final int BTN_ABBRUCH_X = 275;
     private static final int BTN_ACTION_W  = 70;
     private static final int BTN_H         = 14;
 
     private static final String CTRL_AKTIV       = "cbAktiv";
     private static final String CTRL_PORT        = "editPort";
     private static final String CTRL_LOGO        = "editLogo";
+    private static final String CTRL_LOGO_PICK   = "btnLogoPick";
     private static final String CTRL_TURNIERNAME = "editTurniername";
 
     private final WorkingSpreadsheet currentSpreadsheet;
@@ -116,7 +123,10 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         fuegeLabel("lblLogo", I18n.get("konfiguration.startseite.logo.label"),
                 LBL_X, ZEILE3_Y, LBL_W, CTRL_H);
         fuegeEdit(CTRL_LOGO, docProps.getStringProperty(DOC_PROP_TURNIERLOGO_URL, ""),
-                FIELD_X, ZEILE3_Y, FIELD_W, CTRL_H);
+                FIELD_X, ZEILE3_Y, LOGO_FIELD_W, CTRL_H);
+        fuegeButton(CTRL_LOGO_PICK, "…",
+                FIELD_X + LOGO_FIELD_W + LOGO_PICK_GAP, ZEILE3_Y - 1, LOGO_PICK_W, CTRL_H + 2, (short) 0);
+        registriereButtonAktion(CTRL_LOGO_PICK, this::oeffneDateiAuswahl);
 
         fuegeLabel("lblTurniername", I18n.get("konfiguration.startseite.turniername.label"),
                 LBL_X, ZEILE4_Y, LBL_W, CTRL_H);
@@ -220,6 +230,58 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         if (ctrl == null) return "";
         var tc = Lo.qi(XTextComponent.class, ctrl);
         return tc != null ? tc.getText().trim() : "";
+    }
+
+    private void setzeFeld(String name, String text) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) return;
+        var tc = Lo.qi(XTextComponent.class, ctrl);
+        if (tc != null) {
+            tc.setText(text == null ? "" : text);
+        }
+    }
+
+    private void registriereButtonAktion(String name, Runnable aktion) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) return;
+        Lo.qi(XButton.class, ctrl).addActionListener(new com.sun.star.awt.XActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                aktion.run();
+            }
+            @Override
+            public void disposing(EventObject e) {
+                // kein Aufräumen nötig
+            }
+        });
+    }
+
+    private void oeffneDateiAuswahl() {
+        try {
+            var chooser = new javax.swing.JFileChooser();
+            var aktuell = leseFeld(CTRL_LOGO);
+            if (aktuell != null && !aktuell.isBlank() && !aktuell.startsWith("http")) {
+                try {
+                    var f = new java.io.File(aktuell);
+                    if (f.exists()) {
+                        chooser.setCurrentDirectory(f.getParentFile());
+                        chooser.setSelectedFile(f);
+                    }
+                } catch (RuntimeException ignored) {
+                    // ungültiger Pfad → Default-Verzeichnis
+                }
+            }
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                    "Bilder (png, jpg, gif, svg, webp)", "png", "jpg", "jpeg", "gif", "svg", "webp"));
+            var frame = de.petanqueturniermanager.helper.msgbox.ProcessBox.from()
+                    .moveInsideTopWindow().toFront().getFrame();
+            int result = chooser.showOpenDialog(frame);
+            if (result == javax.swing.JFileChooser.APPROVE_OPTION) {
+                setzeFeld(CTRL_LOGO, chooser.getSelectedFile().getAbsolutePath());
+            }
+        } catch (RuntimeException e) {
+            logger.error("Fehler bei Datei-Auswahl", e);
+        }
     }
 
     private void zeigeFehler(String meldung) {

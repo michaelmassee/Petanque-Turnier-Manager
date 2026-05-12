@@ -4,7 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -40,12 +44,15 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
 
     private volatile String cachedInitJson;
     private volatile boolean laeuft = false;
+    /** Aktuell konfigurierter Logo-Pfad oder -URL (leer = kein Logo). */
+    private volatile String logoQuelle = "";
 
     public TurnierStartseiteWebServerInstanz(int port) throws IOException {
         this.port = port;
         httpServer = HttpServer.create(new InetSocketAddress(port), 10);
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/events", this::handleEvents);
+        httpServer.createContext("/turnierlogo", this::handleTurnierlogo);
         httpServer.createContext("/", this::handleStatischOderRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "PTM-Startseite-WebServer-KeepAlive-" + port);
@@ -91,6 +98,11 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
 
     public synchronized void setCachedInitJson(String json) {
         this.cachedInitJson = json;
+    }
+
+    /** Aktualisiert die für {@code /turnierlogo} ausgelieferte Quelle. */
+    public void setLogoQuelle(String quelle) {
+        this.logoQuelle = quelle == null ? "" : quelle.trim();
     }
 
     @Override
@@ -151,6 +163,49 @@ public class TurnierStartseiteWebServerInstanz implements SseElternInstanz, WebS
             return;
         }
         verbindung.sendeInitNachricht();
+    }
+
+    private void handleTurnierlogo(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        String quelle = logoQuelle;
+        if (quelle.isEmpty()) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        // Externe http(s)-URL: Weiterleiten an den Browser.
+        if (quelle.startsWith("http://") || quelle.startsWith("https://")) {
+            exchange.getResponseHeaders().set("Location", quelle);
+            exchange.sendResponseHeaders(302, -1);
+            return;
+        }
+        // Lokale Datei: file:// oder absoluter Pfad.
+        Path datei;
+        try {
+            datei = quelle.startsWith("file:")
+                    ? Paths.get(URI.create(quelle))
+                    : Paths.get(quelle);
+        } catch (IllegalArgumentException e) {
+            logger.warn("Ungültige Logo-Quelle: {}", quelle, e);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        if (!Files.isRegularFile(datei) || !Files.isReadable(datei)) {
+            logger.warn("Turnierlogo-Datei nicht lesbar: {}", datei);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        byte[] body = Files.readAllBytes(datei);
+        var headers = exchange.getResponseHeaders();
+        headers.set("Content-Type", ermittleContentType(datei.getFileName().toString()));
+        headers.set("Cache-Control", "no-cache");
+        headers.set("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(200, body.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(body);
+        }
     }
 
     private void serviereRessource(HttpExchange exchange, String relativerPfad, String contentType)
