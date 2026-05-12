@@ -972,7 +972,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 							.message(I18n.get("webserver.keine.ports.konfiguriert")).show();
 					new WebserverKonfigDialog(xContext).zeigen();
 				} else {
-					ProcessBox.init(xContext).visible().clear().run();
+					ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
 					try {
 						WebServerManager.get().starten(xContext);
 						notifyAllListeners();
@@ -982,7 +982,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				}
 			}
 			case CMD_WEBSERVER_STOPPEN -> {
-				ProcessBox.init(xContext).visible().clear().run();
+				ProcessBox.init(xContext).visibleWennAutomatisch().clear().run();
 				try {
 					WebServerManager.get().stoppen();
 					notifyAllListeners();
@@ -1015,7 +1015,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 * Loggt die Aktion in der ProcessBox.
 	 */
 	private void oeffneBrowserUrlFuerSlot(int slot) {
-		ProcessBox.init(xContext).visible();
+		ProcessBox.init(xContext).visibleWennAutomatisch();
 		var url = WebServerManager.get().getUrlFuerSlot(slot);
 		if (url != null) {
 			oeffneBrowserUrl(url);

@@ -22,6 +22,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
@@ -36,14 +37,14 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
     private static final String CTL_CB_AUTOSAVE    = "cbAutosave";
     private static final String CTL_CB_BACKUP      = "cbBackup";
     private static final String CTL_CB_NEW_VERSION = "cbNewVersion";
-    private static final String CTL_CB_PROZESSBOX_VORDERGRUND = "cbProzessBoxVordergrund";
+    private static final String CTL_CB_PROZESSBOX_AUTOMATISCH = "cbProzessBoxAutomatisch";
     private static final String CTL_CMB_LOGLEVEL   = "cmbLogLevel";
 
     // Gespeicherte Control-Referenzen für beiOkGeklickt()
     private XCheckBox      cbAutosave;
     private XCheckBox      cbBackup;
     private XCheckBox      cbNewVersion;
-    private XCheckBox      cbProzessBoxVordergrund;
+    private XCheckBox      cbProzessBoxAutomatisch;
     private XTextComponent cmbLogLevel;
 
     public GlobalPropertiesDialog(XComponentContext xContext) {
@@ -88,9 +89,9 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
         fuegeCheckBoxEin(xMSF, cont, CTL_CB_NEW_VERSION,
                 "Neue-Version-Prüfung immer aktiv (Entwicklungsmodus)", 5, 35, 188, 12,
                 gp.isNewVersionCheckImmerTrue());
-        fuegeCheckBoxEin(xMSF, cont, CTL_CB_PROZESSBOX_VORDERGRUND,
-                "ProzessBox im Vordergrund halten", 5, 50, 188, 12,
-                gp.isProzessBoxImVordergrund());
+        fuegeCheckBoxEin(xMSF, cont, CTL_CB_PROZESSBOX_AUTOMATISCH,
+                I18n.get("konfig.prozessbox.automatisch.anzeigen"), 5, 50, 188, 12,
+                gp.isProzessBoxAutomatischAnzeigen());
 
         // --- Log-Level ---
         fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 67, 60, 10);
@@ -108,7 +109,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
         cbAutosave              = leseCheckBox(xcc, CTL_CB_AUTOSAVE);
         cbBackup                = leseCheckBox(xcc, CTL_CB_BACKUP);
         cbNewVersion            = leseCheckBox(xcc, CTL_CB_NEW_VERSION);
-        cbProzessBoxVordergrund = leseCheckBox(xcc, CTL_CB_PROZESSBOX_VORDERGRUND);
+        cbProzessBoxAutomatisch = leseCheckBox(xcc, CTL_CB_PROZESSBOX_AUTOMATISCH);
         cmbLogLevel             = leseTextComponent(xcc, CTL_CMB_LOGLEVEL);
     }
 
@@ -116,14 +117,11 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
     protected void beiOkGeklickt() throws Exception {
         GlobalProperties gp = GlobalProperties.get();
         String gewaehlterLevel = (cmbLogLevel != null) ? cmbLogLevel.getText() : "";
-        // Default für ProzessBox-Vordergrund ist true → bei nicht gesetzter Checkbox wie unverändert lassen
-        boolean prozessBoxImVordergrund = cbProzessBoxVordergrund == null
-                || cbProzessBoxVordergrund.getState() == 1;
         gp.speichern(
-                cbAutosave   != null && cbAutosave.getState()   == 1,
-                cbBackup     != null && cbBackup.getState()     == 1,
-                cbNewVersion != null && cbNewVersion.getState() == 1,
-                prozessBoxImVordergrund,
+                cbAutosave              != null && cbAutosave.getState()              == 1,
+                cbBackup                != null && cbBackup.getState()                == 1,
+                cbNewVersion            != null && cbNewVersion.getState()            == 1,
+                cbProzessBoxAutomatisch != null && cbProzessBoxAutomatisch.getState() == 1,
                 gewaehlterLevel
         );
         NewReleaseChecker.callbacksAusloesen();

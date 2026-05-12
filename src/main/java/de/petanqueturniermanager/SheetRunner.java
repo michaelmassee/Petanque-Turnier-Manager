@@ -173,7 +173,7 @@ public abstract class SheetRunner extends Thread {
 					if (isFehler) {
 						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
 					} else {
-						processBox().visible().info(I18n.get("processbox.fertig.status")).ready();
+						processBox().visibleWennAutomatisch().info(I18n.get("processbox.fertig.status")).ready();
 					}
 				} else {
 					// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen

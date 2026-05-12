@@ -85,7 +85,7 @@ public class ProcessBox implements TimerListener {
             return;
         }
         frame = new JFrame();
-        frame.setAlwaysOnTop(GlobalProperties.get().isProzessBoxImVordergrund());
+        frame.setAlwaysOnTop(GlobalProperties.get().isProzessBoxAutomatischAnzeigen());
         dialogTools = DialogTools.from(xContext, frame);
         inworkIcons = new ArrayList<>();
         spinnerTimer = new Timer(100, _ -> {
@@ -533,7 +533,7 @@ public class ProcessBox implements TimerListener {
 
     public ProcessBox toFront() {
         if (disposed || frame == null) return this;
-        if (!GlobalProperties.get().isProzessBoxImVordergrund()) return this;
+        if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return this;
         SwingUtilities.invokeLater(() -> {
             if (disposed) return;
             frame.toFront();
@@ -542,16 +542,31 @@ public class ProcessBox implements TimerListener {
     }
 
     /**
-     * Wendet die aktuelle Plugin-Einstellung „ProzessBox im Vordergrund halten" sofort
-     * auf das Fenster an (Always-on-Top). Aufruf z.B. nach OK im GlobalPropertiesDialog.
+     * Macht die ProzessBox sichtbar, sofern die Plugin-Einstellung
+     * „ProzessBox automatisch anzeigen" aktiv ist. Andernfalls bleibt die Box
+     * unsichtbar – Logs werden trotzdem geschrieben.
+     */
+    public ProcessBox visibleWennAutomatisch() {
+        if (disposed || frame == null) return this;
+        if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return this;
+        return visible();
+    }
+
+    /**
+     * Wendet die aktuelle Plugin-Einstellung „ProzessBox automatisch anzeigen" sofort
+     * auf das Fenster an: Sichtbarkeit und Always-on-Top. Aufruf z.B. nach OK im GlobalPropertiesDialog.
      */
     public static void applyVordergrundEinstellung() {
         var pb = processBox;
         if (pb == null || pb.disposed || pb.frame == null) return;
-        boolean immerOben = GlobalProperties.get().isProzessBoxImVordergrund();
+        boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
         SwingUtilities.invokeLater(() -> {
             if (pb.disposed || pb.frame == null) return;
-            pb.frame.setAlwaysOnTop(immerOben);
+            pb.frame.setAlwaysOnTop(automatisch);
+            pb.frame.setVisible(automatisch);
+            if (automatisch) {
+                pb.moveInsideTopWindow();
+            }
         });
     }
 
@@ -566,10 +581,12 @@ public class ProcessBox implements TimerListener {
             return this;
         }
 
-        boolean immerOben = GlobalProperties.get().isProzessBoxImVordergrund();
+        boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
         SwingUtilities.invokeLater(() -> {
             if (disposed) return;
-            if (immerOben) {
+            if (automatisch) {
+                frame.setVisible(true);
+                moveInsideTopWindow();
                 frame.toFront();
             }
             if (cancelBtn != null) {
@@ -587,13 +604,14 @@ public class ProcessBox implements TimerListener {
             return this;
         }
 
-        boolean immerOben = GlobalProperties.get().isProzessBoxImVordergrund();
+        boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
         SwingUtilities.invokeLater(() -> {
             if (disposed) return;
             if (spinnerTimer != null) {
                 spinnerTimer.stop();
             }
-            if (immerOben) {
+            if (automatisch) {
+                frame.setVisible(true);
                 frame.toFront();
             }
             if (cancelBtn != null) {

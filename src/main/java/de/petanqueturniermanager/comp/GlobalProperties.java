@@ -33,7 +33,7 @@ public class GlobalProperties {
 	private static final String CREATE_BACKUP_PROP = "backup";
 	private static final String AUTOSAVE_PROP = "autosave";
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
-	private static final String PROZESSBOX_IM_VORDERGRUND_PROP = "prozessbox.im.vordergrund";
+	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
 	private static final String WEBSERVER_PORTS_PROP = "webserver_ports";
@@ -241,8 +241,8 @@ public class GlobalProperties {
 		return getBoolean(NEW_VERSION_CHECK_PROP);
 	}
 
-	public boolean isProzessBoxImVordergrund() {
-		return getBooleanMitDefault(PROZESSBOX_IM_VORDERGRUND_PROP, true);
+	public boolean isProzessBoxAutomatischAnzeigen() {
+		return getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, false);
 	}
 
 	public boolean isWebserverAktiv() {
@@ -511,17 +511,12 @@ public class GlobalProperties {
 	// ----------------------------------------------------
 
 	public void speichern(boolean autosave, boolean backup, boolean newVersionCheck,
-			boolean prozessBoxImVordergrund, String logLevel) {
+			boolean prozessBoxAutomatischAnzeigen, String logLevel) {
 		try {
 			setBooleanProp(AUTOSAVE_PROP, autosave);
 			setBooleanProp(CREATE_BACKUP_PROP, backup);
 			setBooleanProp(NEW_VERSION_CHECK_PROP, newVersionCheck);
-			// Default true: nur explizit "false" persistieren, sonst Eintrag entfernen.
-			if (prozessBoxImVordergrund) {
-				propMap.remove(PROZESSBOX_IM_VORDERGRUND_PROP);
-			} else {
-				propMap.put(PROZESSBOX_IM_VORDERGRUND_PROP, "false");
-			}
+			setBooleanProp(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, prozessBoxAutomatischAnzeigen);
 
 			if (logLevel != null && !logLevel.isBlank()) {
 				propMap.put(LOG_LEVEL_PROP, logLevel.trim().toLowerCase());
