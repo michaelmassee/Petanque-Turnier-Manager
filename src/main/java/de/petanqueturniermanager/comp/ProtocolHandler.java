@@ -492,7 +492,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			if (behandleWebserverBefehl(command)) {
 				return;
 			}
-			ProcessBox.from().visible().clearWennNotRunning().info("Start " + command);
+			ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + command);
 			WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext);
 			switch (command) {
 			// ------------------------------
@@ -1288,15 +1288,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					&& WebServerManager.get().istOwnerDocument(document);
 			case CMD_WEBSERVER_URL_10 -> WebServerManager.get().hatInstanzFuerSlot(9)
 					&& WebServerManager.get().istOwnerDocument(document);
-			// Release-Infos, Download, Direkt-Aktualisieren, Stop: immer aktiv
+			// Release-Infos, Download, Direkt-Aktualisieren etc.: immer aktiv
 			case CMD_RELEASE_INFOS_ANZEIGEN,
 				 CMD_DOWNLOAD_EXTENSION,
 				 CMD_DIREKT_AKTUALISIEREN,
 				 CMD_LOGFILE_ANZEIGEN,
 				 CMD_PLUGIN_KONFIGURATION,
 				 CMD_PROCESSBOX_ANZEIGEN,
-				 CMD_PROJEKT_SEITE_OEFFNEN,
-				 CMD_ABBRUCH                                -> true;
+				 CMD_PROJEKT_SEITE_OEFFNEN                  -> true;
+			// Abbruch: nur aktiv solange ein SheetRunner-Prozess läuft
+			// (der laufende Zweig oben liefert dafür bereits true; hier kein Prozess ⇒ false)
+			case CMD_ABBRUCH                                -> false;
 			// Symbolleiste
 			case CMD_TOOLBAR_START                          -> ts == TurnierSystem.KEIN;
 			case CMD_TOOLBAR_WEITER                         -> ts != TurnierSystem.KEIN;

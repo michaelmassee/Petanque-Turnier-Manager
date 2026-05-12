@@ -65,7 +65,7 @@ public final class SpielerDbDispatcher {
             logger.error("Spieler-Suche-Dialog fehlgeschlagen", e);
         } finally {
             if (warSichtbar) {
-                pb.visible();
+                pb.visibleWennAutomatisch();
             }
         }
     }
@@ -97,7 +97,7 @@ public final class SpielerDbDispatcher {
             logger.error("Spieler-Suche-Dialog fehlgeschlagen", e);
         } finally {
             if (warSichtbar) {
-                pb.visible();
+                pb.visibleWennAutomatisch();
             }
         }
     }
@@ -127,7 +127,7 @@ public final class SpielerDbDispatcher {
             logger.error("Spieler-DB-Abgleich-Dialog fehlgeschlagen", e);
         } finally {
             if (warSichtbar) {
-                pb.visible();
+                pb.visibleWennAutomatisch();
             }
         }
     }
@@ -179,7 +179,7 @@ public final class SpielerDbDispatcher {
             logger.error("Spieler-DB-Abgleich-Dialog (Vorlage) fehlgeschlagen", e);
         } finally {
             if (warSichtbar) {
-                pb.visible();
+                pb.visibleWennAutomatisch();
             }
         }
     }

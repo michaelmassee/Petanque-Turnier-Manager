@@ -423,6 +423,36 @@
                     </prop>
                 </node>
                 <!-- ****************************************************************** -->
+                <!-- Trennlinie -->
+                <node oor:name="m24" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>private:separator</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- Schaltfläche: Verarbeitung abbrechen
+                     (gleiche Aktion wie Menü "Verarbeitung abbrechen" und Stop-Button in der ProzessBox:
+                      ruft SheetRunner.cancelRunner() über CMD_ABBRUCH) -->
+                <node oor:name="m25" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:abbruch</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Verarbeitung abbrechen</value>
+                        <value xml:lang="en">Cancel Processing</value>
+                        <value xml:lang="es">Cancelar procesamiento</value>
+                        <value xml:lang="fr">Annuler le traitement</value>
+                        <value xml:lang="nl">Verwerking annuleren</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+                <!-- ****************************************************************** -->
 
             </node>
 
@@ -625,6 +655,20 @@
                     </prop>
                     <prop oor:name="ImageBigURL" oor:type="xs:string">
                         <value>%origin%/images/toolbar-spielerdb-meldungen.png</value>
+                    </prop>
+                </node>
+            </node>
+
+            <node oor:name="de.petanqueturniermanager.toolbar.abbruch" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>ptm:abbruch</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-abbruch.png</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL" oor:type="xs:string">
+                        <value>%origin%/images/toolbar-abbruch.png</value>
                     </prop>
                 </node>
             </node>

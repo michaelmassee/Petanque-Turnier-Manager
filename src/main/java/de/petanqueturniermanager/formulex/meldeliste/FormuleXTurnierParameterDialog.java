@@ -154,7 +154,7 @@ class FormuleXTurnierParameterDialog {
         }
 
         Lo.qi(XComponent.class, dialog).dispose();
-        ProcessBox.from().visible();
+        ProcessBox.from().visibleWennAutomatisch();
 
         return ergebnis;
     }
