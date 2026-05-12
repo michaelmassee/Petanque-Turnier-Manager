@@ -242,7 +242,7 @@ public class GlobalProperties {
 	}
 
 	public boolean isProzessBoxAutomatischAnzeigen() {
-		return getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, false);
+		return getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, true);
 	}
 
 	public boolean isWebserverAktiv() {
