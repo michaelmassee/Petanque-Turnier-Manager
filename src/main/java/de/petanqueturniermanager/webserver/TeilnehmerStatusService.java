@@ -20,8 +20,8 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Meldeliste-Klassen — damit der Live-Push der Turnier-Startseite vom Heavy-Refresh-Pfad
  * der Composite-Views entkoppelt bleibt.
  *
- * <p>Heuristik (V1): Gezählt werden Zeilen, in denen die erste Namens-Spalte
- * (Spalte B, Index&nbsp;1) nicht leer ist — die Spieler-Nr-Spalte (A) ist bei
+ * <p>Heuristik (V1): Gezählt werden Zeilen, in denen Vorname (Spalte&nbsp;B) ODER
+ * Nachname (Spalte&nbsp;C) nicht leer ist — die Spieler-Nr-Spalte (A) ist bei
  * Supermelee oft erst nach dem ersten Sortieren befüllt und kann daher nicht als
  * Trigger genommen werden. „Aktiv" und „angemeldet" liefern in V1 denselben
  * Wert; eine differenzierte System-spezifische Aktiv-Logik bleibt einer V2
@@ -66,23 +66,31 @@ public final class TeilnehmerStatusService {
         }
     }
 
-    /** Spalte mit der ersten Namens-Information (Vorname bzw. Teamname). */
-    private static final int NAMEN_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 1;
+    /** Vorname-Spalte (B) — direkt nach der Spieler-Nr-Spalte. */
+    private static final int VORNAME_SPALTE  = MeldeListeKonstanten.SPIELER_NR_SPALTE + 1;
+    /** Nachname-Spalte (C). */
+    private static final int NACHNAME_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 2;
 
     private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet) {
         int treffer = 0;
         int leereZeilenInFolge = 0;
         for (int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeile < MAX_ZEILEN; zeile++) {
-            String text = sh.getTextFromCell(sheet, Position.from(NAMEN_SPALTE, zeile));
-            if (text == null || text.isBlank()) {
-                if (++leereZeilenInFolge >= MAX_LEERE_ZEILEN_IN_FOLGE) {
-                    break;
-                }
-                continue;
+            if (zeileHatNamen(sh, sheet, zeile)) {
+                leereZeilenInFolge = 0;
+                treffer++;
+            } else if (++leereZeilenInFolge >= MAX_LEERE_ZEILEN_IN_FOLGE) {
+                break;
             }
-            leereZeilenInFolge = 0;
-            treffer++;
         }
         return new TeilnehmerStatus(treffer, treffer);
+    }
+
+    private static boolean zeileHatNamen(SheetHelper sh, XSpreadsheet sheet, int zeile) {
+        return !istLeer(sh.getTextFromCell(sheet, Position.from(VORNAME_SPALTE,  zeile)))
+                || !istLeer(sh.getTextFromCell(sheet, Position.from(NACHNAME_SPALTE, zeile)));
+    }
+
+    private static boolean istLeer(String text) {
+        return text == null || text.isBlank();
     }
 }
