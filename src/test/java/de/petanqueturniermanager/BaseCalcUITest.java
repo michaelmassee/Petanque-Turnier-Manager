@@ -4,15 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.swing.JOptionPane;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import com.sun.star.sheet.XCalculatable;
 import de.petanqueturniermanager.helper.Lo;
@@ -41,9 +37,7 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
-import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 
 /**
  * Erstellung 13.07.2022 / Michael Massee<br>
@@ -210,25 +204,7 @@ public abstract class BaseCalcUITest {
 	}
 
 	protected void validateWithJson(RangeData rangeData, InputStream jsonFile) {
-
-		assertThat(jsonFile).isNotNull();
-		assertThat(rangeData).isNotNull().isNotEmpty();
-
-		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		RangeData refRangeData = gson.fromJson(new BufferedReader(new InputStreamReader(jsonFile)), RangeData.class);
-
-		assertThat(refRangeData).isNotNull().isNotEmpty();
-		assertThat(rangeData).hasSameSizeAs(refRangeData);
-
-		int idx = 0;
-		// jede zeile vergleichen, wegen fehlermeldung
-		for (RowData data : rangeData) {
-			List<String> expected = refRangeData.get(idx).stream().map(c -> c.getStringVal())
-					.collect(Collectors.toList());
-			logger.info("Validate Zeile :" + expected);
-			assertThat(data).extracting(CellData::getStringVal).containsExactlyElementsOf(expected);
-			idx++;
-		}
+		RangeJsonAssert.validate(rangeData, jsonFile);
 	}
 
 	public void writeToJson(String fileName, RangePosition rangePosition, XSpreadsheet xSpreadsheet,
