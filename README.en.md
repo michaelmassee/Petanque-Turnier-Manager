@@ -12,6 +12,8 @@
 
 ---
 
+> *Developed with the precision of a software engineer and the passion of a pétanque player.*
+
 ## 🎯 Introduction
 The **Pétanque Tournament Manager** is a powerful, open-source tournament management software that integrates seamlessly as an extension into **LibreOffice Calc**.
 
