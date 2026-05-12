@@ -220,6 +220,7 @@ function reducer(state, action) {
           anzahlAktiv: msg.anzahlAktiv ?? 0,
           labelAngemeldet: msg.labelAngemeldet ?? '',
           labelAktiv: msg.labelAktiv ?? '',
+          tagline: msg.tagline ?? '',
         },
       };
     }

@@ -7,7 +7,7 @@ import './Startseite.css';
  */
 export default function StartseiteApp({ startseite }) {
   const { turnierlogo, turnierbeschreibung, anzahlAngemeldet, anzahlAktiv,
-          labelAngemeldet, labelAktiv } = startseite;
+          labelAngemeldet, labelAktiv, tagline } = startseite;
   return (
     <div className="startseite">
       <div className="startseite-kopf">
@@ -45,6 +45,7 @@ export default function StartseiteApp({ startseite }) {
             alt="Pétanque-Turnier-Manager"
           />
         </a>
+        {tagline && <div className="startseite-tagline">{tagline}</div>}
       </div>
     </div>
   );
