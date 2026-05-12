@@ -226,14 +226,22 @@ function reducer(state, action) {
     }
     case 'STARTSEITE_PATCH': {
       const msg = action.payload;
-      const vorher = state.startseite ?? { turnierlogo: '', turnierbeschreibung: '' };
+      const vorher = state.startseite ?? {};
+      // Update-Nachricht trägt alle Felder; "" überschreibt vorhandene Werte
+      // (z.B. wenn das Logo gelöscht wurde). Nur undefined bleibt vorher-Wert.
+      const mergeStr = (n, v) => (n !== undefined && n !== null ? n : v ?? '');
+      const mergeNum = (n, v) => (n !== undefined && n !== null ? n : v ?? 0);
       return {
         ...state,
         hinweis: null,
         startseite: {
-          ...vorher,
-          anzahlAngemeldet: msg.anzahlAngemeldet ?? vorher.anzahlAngemeldet ?? 0,
-          anzahlAktiv: msg.anzahlAktiv ?? vorher.anzahlAktiv ?? 0,
+          turnierlogo:         mergeStr(msg.turnierlogo,         vorher.turnierlogo),
+          turnierbeschreibung: mergeStr(msg.turnierbeschreibung, vorher.turnierbeschreibung),
+          anzahlAngemeldet:    mergeNum(msg.anzahlAngemeldet,    vorher.anzahlAngemeldet),
+          anzahlAktiv:         mergeNum(msg.anzahlAktiv,         vorher.anzahlAktiv),
+          labelAngemeldet:     mergeStr(msg.labelAngemeldet,     vorher.labelAngemeldet),
+          labelAktiv:          mergeStr(msg.labelAktiv,          vorher.labelAktiv),
+          tagline:             mergeStr(msg.tagline,             vorher.tagline),
         },
       };
     }

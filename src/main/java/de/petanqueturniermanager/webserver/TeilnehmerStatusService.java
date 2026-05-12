@@ -20,12 +20,12 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Meldeliste-Klassen — damit der Live-Push der Turnier-Startseite vom Heavy-Refresh-Pfad
  * der Composite-Views entkoppelt bleibt.
  *
- * <p>Heuristik (V1): Beide Zahlen ermitteln sich aus der Spieler-Nr-Spalte
- * ({@link MeldeListeKonstanten#SPIELER_NR_SPALTE}, ab
- * {@link MeldeListeKonstanten#ERSTE_DATEN_ZEILE}) — gezählt werden Zeilen mit
- * einer positiven Spielernummer. Eine differenzierte „aktiv vs. angemeldet"-
- * Logik (system-spezifisch über {@code IMeldeliste.getAktiveMeldungen()}) bleibt
- * einer V2 vorbehalten.
+ * <p>Heuristik (V1): Gezählt werden Zeilen, in denen die erste Namens-Spalte
+ * (Spalte B, Index&nbsp;1) nicht leer ist — die Spieler-Nr-Spalte (A) ist bei
+ * Supermelee oft erst nach dem ersten Sortieren befüllt und kann daher nicht als
+ * Trigger genommen werden. „Aktiv" und „angemeldet" liefern in V1 denselben
+ * Wert; eine differenzierte System-spezifische Aktiv-Logik bleibt einer V2
+ * vorbehalten.
  */
 public final class TeilnehmerStatusService {
 
@@ -66,15 +66,15 @@ public final class TeilnehmerStatusService {
         }
     }
 
+    /** Spalte mit der ersten Namens-Information (Vorname bzw. Teamname). */
+    private static final int NAMEN_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 1;
+
     private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet) {
         int treffer = 0;
         int leereZeilenInFolge = 0;
         for (int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeile < MAX_ZEILEN; zeile++) {
-            // getTextFromCell liefert null für leere Zellen; getIntFromCell würde -1
-            // zurückgeben und damit jede leere Zeile als „vorhanden" fehlinterpretieren.
-            String text = sh.getTextFromCell(sheet, Position.from(MeldeListeKonstanten.SPIELER_NR_SPALTE, zeile));
-            Integer nr = parsePositiv(text);
-            if (nr == null) {
+            String text = sh.getTextFromCell(sheet, Position.from(NAMEN_SPALTE, zeile));
+            if (text == null || text.isBlank()) {
                 if (++leereZeilenInFolge >= MAX_LEERE_ZEILEN_IN_FOLGE) {
                     break;
                 }
@@ -84,15 +84,5 @@ public final class TeilnehmerStatusService {
             treffer++;
         }
         return new TeilnehmerStatus(treffer, treffer);
-    }
-
-    private static Integer parsePositiv(String text) {
-        if (text == null || text.isBlank()) return null;
-        try {
-            int n = Integer.parseInt(text.trim());
-            return n > 0 ? n : null;
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 }

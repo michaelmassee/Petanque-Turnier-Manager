@@ -657,7 +657,10 @@ public final class WebServerManager implements TimerListener {
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
-                        version, status.angemeldet(), status.aktiv())));
+                        version, logoUrl, beschreibung, status.angemeldet(), status.aktiv(),
+                        I18n.get("startseite.label.angemeldet"),
+                        I18n.get("startseite.label.aktiv"),
+                        I18n.get("startseite.tagline"))));
                 letzterStartseiteStatus = status;
             }
         } catch (RuntimeException e) {
