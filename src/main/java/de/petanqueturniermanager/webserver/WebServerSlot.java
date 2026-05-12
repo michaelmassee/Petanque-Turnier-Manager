@@ -2,7 +2,7 @@ package de.petanqueturniermanager.webserver;
 
 /**
  * Gemeinsame Abstraktion für Webserver-Einträge im Menü (URL-Slots).
- * Implementiert von {@link CompositeViewInstanz}.
+ * Implementiert von {@link CompositeViewInstanz} und {@link TurnierStartseiteWebServerInstanz}.
  */
 public interface WebServerSlot {
 

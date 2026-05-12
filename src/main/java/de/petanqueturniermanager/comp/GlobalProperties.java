@@ -61,6 +61,11 @@ public class GlobalProperties {
 
 	private static final String STARTUP_TURNIER_MODUS_PROP = "startup.turnier.modus";
 
+	// Turnier-Startseite (dedizierter Webserver, läuft parallel zu den Composite-Views)
+	private static final String STARTSEITE_PORT_PROP  = "startseite_port";
+	private static final String STARTSEITE_AKTIV_PROP = "startseite_aktiv";
+	public static final int STARTSEITE_DEFAULT_PORT = 9200;
+
 	// Timer
 	private static final String TIMER_DAUER_PROP            = "timer_letzte_dauer";
 	private static final String TIMER_PORT_PROP             = "timer_letzter_port";
@@ -262,6 +267,28 @@ public class GlobalProperties {
 
 	public boolean isWebserverAktiv() {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
+	}
+
+	public boolean isStartseiteAktiv() {
+		return getBoolean(STARTSEITE_AKTIV_PROP);
+	}
+
+	public int getStartseitePort() {
+		var val = propMap.get(STARTSEITE_PORT_PROP);
+		if (val == null || val.isBlank()) return STARTSEITE_DEFAULT_PORT;
+		try {
+			int port = Integer.parseInt(val.trim());
+			if (port >= 1 && port <= 65535) return port;
+		} catch (NumberFormatException e) {
+			logger.warn("Ungültiger Startseite-Port '{}', verwende Default {}", val, STARTSEITE_DEFAULT_PORT);
+		}
+		return STARTSEITE_DEFAULT_PORT;
+	}
+
+	public void speichernStartseite(int port, boolean aktiv) {
+		propMap.put(STARTSEITE_PORT_PROP, String.valueOf(port));
+		setBooleanProp(STARTSEITE_AKTIV_PROP, aktiv);
+		speichernDatei();
 	}
 
 	public boolean isStartupTurnierModus() {

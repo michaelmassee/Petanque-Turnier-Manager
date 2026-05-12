@@ -83,6 +83,7 @@ import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJTurnierTestDaten;
 import de.petanqueturniermanager.konfigdialog.properties.FarbenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.KopfFusszeilenDialog;
 import de.petanqueturniermanager.konfigdialog.properties.TurnierDialog;
+import de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetExport;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetNew;
 import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
@@ -310,6 +311,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_KONFIGURATION_TURNIER = "konfiguration_turnier";
 	public static final String CMD_KONFIGURATION_KOPFFUSSZEILEN = "konfiguration_kopffusszeilen";
 	public static final String CMD_KONFIGURATION_FARBEN = "konfiguration_farben";
+	public static final String CMD_KONFIGURATION_TURNIER_STARTSEITE = "konfiguration_turnier_startseite";
 	public static final String CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION = "konfiguration_update_erstellt_mit_version";
 	// Sonstige
 	public static final String CMD_DOWNLOAD_EXTENSION = "downloadExtension";
@@ -818,6 +820,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_FARBEN:
 				handleKonfiguration(command, ws);
 				break;
+			case CMD_KONFIGURATION_TURNIER_STARTSEITE:
+				handleKonfiguration(command, ws);
+				break;
 			// ------------------------------
 			// Spieler-DB
 			case CMD_SPIELERDB_OEFFNEN:
@@ -1090,6 +1095,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_FARBEN:
 				new FarbenDialog(ws).createDialog();
 				break;
+			case CMD_KONFIGURATION_TURNIER_STARTSEITE:
+				new TurnierStartseiteDialog(ws).zeigen();
+				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				DocumentHelper.setDocErstelltMitVersion(ws);
 				break;
@@ -1256,6 +1264,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_TURNIER,
 				 CMD_KONFIGURATION_KOPFFUSSZEILEN,
 				 CMD_KONFIGURATION_FARBEN,
+				 CMD_KONFIGURATION_TURNIER_STARTSEITE,
 				 CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION -> ts != TurnierSystem.KEIN;
 			// Webserver: Konfiguration immer aktiv; starten/stoppen je nach Zustand
 			case CMD_WEBSERVER_KONFIGURATION                -> true;

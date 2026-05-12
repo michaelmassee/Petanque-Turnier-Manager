@@ -82,8 +82,9 @@ public abstract class BasePropertiesSpalte implements IPropertiesSpalte {
 		KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_FUSSZEILE_MITTE)
 				.setDescription("config.desc.footer.mitte").inSideBar());
 
-		KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.STRING, KONFIG_PROP_TURNIERLOGO_URL)
-				.setDefaultVal("").setDescription("config.desc.turnierlogo.url").inSideBar());
+		// Hinweis: KONFIG_PROP_TURNIERLOGO_URL wird nicht mehr als Sidebar/Konfig-Sheet-Property
+		// gepflegt. Der Wert wird nun direkt im Dialog „Turnier Startseite" als
+		// Document-Custom-Property gesetzt und bei Bedarf über getTurnierlogoUrl() gelesen.
 
 		KONFIG_PROPERTIES.add(ConfigProperty.<Boolean>from(ConfigPropertyType.BOOLEAN, KONFIG_PROP_EDITIERBARE_FELDER_HERVORHEBEN)
 				.setDefaultVal(true)

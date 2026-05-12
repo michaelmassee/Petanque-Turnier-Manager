@@ -91,6 +91,15 @@ public final class WebServerManager implements TimerListener {
     private XSpreadsheetDocument registriertesDocument = null;
     private boolean laeuft = false;
     private TimerWebServerInstanz timerInstanz;
+
+    /** Dedizierter Webserver für die Turnier-Startseite (separater Port, kein Composite).
+     *  {@code volatile}, weil aus dem nicht-synchronisierten Push-Pfad
+     *  {@link #pushStartseiteFallsAktiv(WorkingSpreadsheet)} gelesen wird. */
+    private volatile TurnierStartseiteWebServerInstanz startseiteInstanz;
+    /** Monoton steigende Version für Startseite-SSE-Nachrichten. */
+    private final AtomicInteger startseiteVersion = new AtomicInteger(0);
+    /** Zuletzt gepushter Teilnehmer-Status (Diff-Cache, vermeidet unnötige Pushes). */
+    private volatile TeilnehmerStatusService.TeilnehmerStatus letzterStartseiteStatus;
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
     private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
@@ -126,7 +135,8 @@ public final class WebServerManager implements TimerListener {
             return;
         }
         var compositeKonfigs = new ArrayList<>(GlobalProperties.get().getCompositeViewKonfigurationen());
-        if (compositeKonfigs.isEmpty()) {
+        boolean startseiteAktiv = GlobalProperties.get().isStartseiteAktiv();
+        if (compositeKonfigs.isEmpty() && !startseiteAktiv) {
             logger.info("Keine Webserver-Ports konfiguriert, kein Start");
             return;
         }
@@ -157,13 +167,20 @@ public final class WebServerManager implements TimerListener {
             }
         }
 
-        compositeInstanzen.stream()
+        startseiteAusKonfigurationStarten();
+
+        var alleSlots = new ArrayList<WebServerSlot>(compositeInstanzen.size() + 1);
+        alleSlots.addAll(compositeInstanzen);
+        if (startseiteInstanz != null) {
+            alleSlots.add(startseiteInstanz);
+        }
+        alleSlots.stream()
                 .filter(WebServerSlot::laeuft)
                 .sorted(Comparator.comparingInt(WebServerSlot::getPort))
                 .limit(MAX_URL_SLOTS)
                 .forEach(slots::add);
 
-        if (!compositeInstanzen.isEmpty()) {
+        if (!compositeInstanzen.isEmpty() || startseiteInstanz != null) {
             laeuft = true;
             ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
             logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
@@ -176,6 +193,33 @@ public final class WebServerManager implements TimerListener {
                         I18n.get("webserver.hinweis.kein.dokument.titel"),
                         I18n.get("webserver.hinweis.kein.dokument.text"));
             }
+        }
+    }
+
+    /**
+     * Startet die dedizierte Turnier-Startseite, falls in {@link GlobalProperties} aktiviert.
+     * Bei Port-Konflikt/Fehler wird das Feld {@code null} gelassen — die übrigen Webserver
+     * laufen weiter.
+     */
+    private void startseiteAusKonfigurationStarten() {
+        if (!GlobalProperties.get().isStartseiteAktiv()) {
+            return;
+        }
+        int port = GlobalProperties.get().getStartseitePort();
+        try {
+            startseiteInstanz = new TurnierStartseiteWebServerInstanz(port);
+            startseiteInstanz.starten();
+            startseiteVersion.set(0);
+            letzterStartseiteStatus = null;
+            // Init-Cache vorläufig leer befüllen; sseRefreshSendenIntern liefert sofort konkrete Werte nach.
+            startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
+                    startseiteVersion.incrementAndGet(), "", "", 0, 0)));
+            logger.info("Turnier-Startseite-Server gestartet auf Port {}", port);
+            safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(port)));
+        } catch (IOException e) {
+            logger.error("Fehler beim Starten der Turnier-Startseite auf Port {}: {}", port, e.getMessage(), e);
+            safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", port, e.getMessage()));
+            startseiteInstanz = null;
         }
     }
 
@@ -253,6 +297,11 @@ public final class WebServerManager implements TimerListener {
         for (var instanz : compositeInstanzen) {
             instanz.stoppen();
         }
+        if (startseiteInstanz != null) {
+            startseiteInstanz.stoppen();
+            startseiteInstanz = null;
+        }
+        letzterStartseiteStatus = null;
         slots.clear();
         compositeInstanzen.clear();
         letzteCompositeModelle.clear();
@@ -409,6 +458,49 @@ public final class WebServerManager implements TimerListener {
         }
 
         reconciliereCompositeInstanzen(compositeEintraege);
+        reconciliereStartseiteInstanz();
+    }
+
+    /**
+     * Gleicht die laufende Startseite-Instanz mit den aktuellen GlobalProperties ab:
+     * - aktiviert: nicht laufend → neu starten
+     * - aktiviert: laufend auf anderem Port → stoppen + neu starten
+     * - deaktiviert: laufend → stoppen
+     */
+    private void reconciliereStartseiteInstanz() {
+        boolean sollAktiv = GlobalProperties.get().isStartseiteAktiv();
+        int sollPort = GlobalProperties.get().getStartseitePort();
+        boolean laeuftSchon = startseiteInstanz != null && startseiteInstanz.laeuft();
+        boolean portStimmt = laeuftSchon && startseiteInstanz.getPort() == sollPort;
+
+        if (!sollAktiv) {
+            if (laeuftSchon) {
+                startseiteInstanz.stoppen();
+                startseiteInstanz = null;
+                letzterStartseiteStatus = null;
+                logger.info("Turnier-Startseite gestoppt (deaktiviert)");
+            }
+        } else if (!portStimmt) {
+            if (laeuftSchon) {
+                startseiteInstanz.stoppen();
+                startseiteInstanz = null;
+                letzterStartseiteStatus = null;
+            }
+            startseiteAusKonfigurationStarten();
+        }
+
+        // Slots ggf. neu aufbauen, falls sich die Startseite-Existenz geändert hat.
+        slots.clear();
+        var alle = new ArrayList<WebServerSlot>(compositeInstanzen.size() + 1);
+        alle.addAll(compositeInstanzen);
+        if (startseiteInstanz != null) {
+            alle.add(startseiteInstanz);
+        }
+        alle.stream()
+                .filter(WebServerSlot::laeuft)
+                .sorted(Comparator.comparingInt(WebServerSlot::getPort))
+                .limit(MAX_URL_SLOTS)
+                .forEach(slots::add);
     }
 
     /**
@@ -524,6 +616,42 @@ public final class WebServerManager implements TimerListener {
         registriereModifyListenerFallsNoetig(ws);
         for (var instanz : compositeInstanzen) {
             renderUndPushenComposite(instanz, ws);
+        }
+        // Entkoppelter Mini-Push-Pfad für die Startseite — kein Tabellen-Mapping,
+        // keine Diff-Engine, nur zwei Integer + Diff-Cache.
+        pushStartseiteFallsAktiv(ws);
+    }
+
+    /**
+     * Entkoppelter Push-Pfad für die Turnier-Startseite. Ermittelt die aktuelle
+     * Teilnehmer-/Aktiv-Zahl und pusht eine {@code startseite_update}-Nachricht,
+     * aber nur wenn sich die Zahlen seit dem letzten Push tatsächlich geändert haben.
+     * Aktualisiert zusätzlich den Init-Cache (vollständige Nachricht inkl. Logo + Name),
+     * damit reconnectende Clients sofort den korrekten Zustand sehen.
+     */
+    private void pushStartseiteFallsAktiv(WorkingSpreadsheet ws) {
+        if (startseiteInstanz == null || !startseiteInstanz.laeuft()) {
+            return;
+        }
+        try {
+            var status = TeilnehmerStatusService.ermitteln(ws);
+            boolean unverändert = status.equals(letzterStartseiteStatus);
+            var docProps = new de.petanqueturniermanager.helper.DocumentPropertiesHelper(ws);
+            String logo = docProps.getStringProperty("Turnierlogo Url", "");
+            String name = docProps.getStringProperty("Turniername", "");
+
+            int version = startseiteVersion.incrementAndGet();
+            // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
+            startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
+                    version, logo, name, status.angemeldet(), status.aktiv())));
+
+            if (!unverändert) {
+                startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
+                        version, status.angemeldet(), status.aktiv())));
+                letzterStartseiteStatus = status;
+            }
+        } catch (RuntimeException e) {
+            logger.warn("Push der Turnier-Startseite fehlgeschlagen: {}", e.getMessage(), e);
         }
     }
 
