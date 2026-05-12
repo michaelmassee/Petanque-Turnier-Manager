@@ -21,7 +21,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 /**
  * Kapselt einen HTTP-Server für einen Composite View (mehrere Panels auf einer Seite).
  * <p>
- * Stellt dieselben Endpunkte wie {@link WebServerInstanz} bereit:
+ * Stellt folgende Endpunkte bereit:
  * <ul>
  *   <li>{@code GET /} – React-App ({@code static/index.html} aus Classpath)</li>
  *   <li>{@code GET /assets/*} und {@code GET /images/*} – statische Ressourcen</li>

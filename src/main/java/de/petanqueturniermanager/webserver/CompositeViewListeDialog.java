@@ -64,7 +64,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private static final int EDIT_W = 60;
     private static final int DEL_X = 265;
     private static final int DEL_W = 18;
-    private static final int ZEILE_Y_START = 33;
+    private static final int KOPFZEILE_Y = 22;
+    private static final int ZEILE_Y_START = 35;
     private static final int ZEILE_ABSTAND = 16;
     private static final int FOOTER_Y = 230;
     private static final int OK_X = 215;
@@ -83,6 +84,7 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     private List<CompositeViewEintragRoh> eintraege = new ArrayList<>();
     private final List<String> dynamischeControlNamen = new ArrayList<>();
     private String[] komboBoxItems;
+    private XCheckBox cbAktiv;
 
     /** Interne Exception für Validierungsfehler. */
     private static final class UngueltigeEingabeException extends Exception {
@@ -136,18 +138,23 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     }
 
     private void erstelleStatischeControls() throws com.sun.star.uno.Exception {
+        fuegeCheckBoxEin("cbAktiv",
+                I18n.get("webserver.konfig.cb.aktiv"),
+                5, 5, 200, 12, GlobalProperties.get().isWebserverAktiv());
+        cbAktiv = leseCheckBox("cbAktiv");
+
         fuegeFixedTextEin("lblKopfPort",
                 I18n.get("webserver.konfig.tabelle.kopf.port"),
-                PORT_X, 20, PORT_W, 10);
+                PORT_X, KOPFZEILE_Y, PORT_W, 10);
         fuegeFixedTextEin("lblKopfName",
                 I18n.get("webserver.composite.konfig.tabelle.kopf.name"),
-                LAYOUT_X, 20, LAYOUT_W, 10);
+                LAYOUT_X, KOPFZEILE_Y, LAYOUT_W, 10);
         fuegeFixedTextEin("lblKopfZoom",
                 I18n.get("webserver.konfig.tabelle.kopf.zoom"),
-                ZOOM_X, 20, ZOOM_W, 10);
+                ZOOM_X, KOPFZEILE_Y, ZOOM_W, 10);
         fuegeFixedTextEin("lblKopfAktiv",
                 I18n.get("webserver.konfig.tabelle.kopf.aktiv"),
-                AKTIV_X, 20, AKTIV_W + EDIT_W + DEL_W, 10);
+                AKTIV_X, KOPFZEILE_Y, AKTIV_W + EDIT_W + DEL_W, 10);
     }
 
     private void aktualisiereZeilenArea() throws com.sun.star.uno.Exception {
@@ -263,7 +270,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
     }
 
     private void speichernUndAktualisieren() {
-        GlobalProperties.get().speichernCompositeViews(eintraege);
+        boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
+        GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
         WebServerManager.get().konfigurationGeaendert();
     }
 
@@ -281,7 +289,8 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         leseZeilenDatenAusControls();
         try {
             validiereEintraege();
-            GlobalProperties.get().speichernCompositeViews(eintraege);
+            boolean aktiv = cbAktiv != null && cbAktiv.getState() == 1;
+            GlobalProperties.get().speichernCompositeViews(aktiv, eintraege);
             WebServerManager.get().konfigurationGeaendert();
             logger.info("Composite Views gespeichert: {} Einträge", eintraege.size());
             xDialog.endExecute();
@@ -334,10 +343,6 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         for (var e : eintraege) {
             belegt.add(e.port());
         }
-        // Auch bestehende Einzel-Ports berücksichtigen
-        for (var p : GlobalProperties.get().getPortEintraege()) {
-            belegt.add(p.port());
-        }
         int kandidat = 9100;
         while (belegt.contains(kandidat)) {
             kandidat++;
@@ -367,6 +372,12 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
 
     private void fuegeCheckBoxEinDyn(String name, String label, int x, int y, int w, int h, boolean checked)
             throws com.sun.star.uno.Exception {
+        fuegeCheckBoxEin(name, label, x, y, w, h, checked);
+        dynamischeControlNamen.add(name);
+    }
+
+    private void fuegeCheckBoxEin(String name, String label, int x, int y, int w, int h, boolean checked)
+            throws com.sun.star.uno.Exception {
         var model = xMSF.createInstance("com.sun.star.awt.UnoControlCheckBoxModel");
         var props = Lo.qi(XPropertySet.class, model);
         props.setPropertyValue("Label",     label);
@@ -376,7 +387,11 @@ public class CompositeViewListeDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height",    h);
         props.setPropertyValue("State",     (short) (checked ? 1 : 0));
         cont.insertByName(name, model);
-        dynamischeControlNamen.add(name);
+    }
+
+    private XCheckBox leseCheckBox(String name) {
+        XControl ctrl = xcc.getControl(name);
+        return ctrl != null ? Lo.qi(XCheckBox.class, ctrl) : null;
     }
 
     private void fuegeButtonEinDyn(String name, String label, int x, int y, int w, int h, short pushButtonType)

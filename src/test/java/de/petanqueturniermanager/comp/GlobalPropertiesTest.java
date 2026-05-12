@@ -58,13 +58,34 @@ class GlobalPropertiesTest {
     }
 
     @Test
-    void testPortEintraegeLeer() {
+    void testCompositeEintraegeLeer() {
         var gp = GlobalProperties.get();
 
-        List<GlobalProperties.PortEintragRoh> ports = gp.getPortEintraege();
+        var eintraege = gp.getCompositeViewEintraege();
 
-        assertNotNull(ports);
-        assertTrue(ports.isEmpty());
+        assertNotNull(eintraege);
+        assertTrue(eintraege.isEmpty());
+    }
+
+    @Test
+    void testLegacyEinzelPortPropertiesWerdenBeimStartEntfernt() throws Exception {
+        var file = tempDir.resolve("PetanqueTurnierManager.properties");
+        java.nio.file.Files.writeString(file,
+                "webserver_ports=9001\n"
+                        + "webserver_port_9001_sheet=rangliste\n"
+                        + "webserver_port_9001_aktiv=true\n"
+                        + "webserver_sheetnamen_anzeigen=true\n"
+                        + "loglevel=info\n");
+
+        var gp = GlobalProperties.get();
+        assertNotNull(gp);
+        assertEquals("info", gp.getLogLevel());
+
+        // Datei darf die Legacy-Keys nicht mehr enthalten.
+        var inhalt = java.nio.file.Files.readString(file);
+        assertFalse(inhalt.contains("webserver_ports"));
+        assertFalse(inhalt.contains("webserver_port_9001"));
+        assertFalse(inhalt.contains("webserver_sheetnamen_anzeigen"));
     }
 
     @Test
@@ -89,60 +110,16 @@ class GlobalPropertiesTest {
     }
 
     @Test
-    void testSpeichernWebserver() {
+    void testSpeichernCompositeViewsMitFlags() {
         var gp = GlobalProperties.get();
-        var eintraege = List.of(
-                new GlobalProperties.PortEintragRoh(9001, "rangliste", true, 120, false),
-                new GlobalProperties.PortEintragRoh(9002, "spielrunde", false, 100, true));
 
-        gp.speichernWebserver(true, true, eintraege);
+        gp.speichernCompositeViews(true, List.of());
 
         GlobalProperties.resetForTest();
         var gp2 = GlobalProperties.get();
 
         assertTrue(gp2.isWebserverAktiv());
-        assertTrue(gp2.isSheetnamenKopfzeileAnzeigen());
-        var geladen = gp2.getPortEintraege();
-        assertEquals(2, geladen.size());
-        assertEquals(9001, geladen.get(0).port());
-        assertEquals("rangliste", geladen.get(0).sheetConfig());
-        assertTrue(geladen.get(0).aktiv());
-        assertEquals(120, geladen.get(0).zoom());
-        assertFalse(geladen.get(0).zentrieren());
-        assertEquals(9002, geladen.get(1).port());
-        assertFalse(geladen.get(1).aktiv());
-        assertTrue(geladen.get(1).zentrieren());
-    }
-
-    @Test
-    void testUngueltigerZoomWert() throws Exception {
-        var file = tempDir.resolve("PetanqueTurnierManager.properties");
-        java.nio.file.Files.writeString(file,
-                "webserver_ports=9001\n" +
-                "webserver_port_9001_sheet=rangliste\n" +
-                "webserver_port_9001_aktiv=true\n" +
-                "webserver_port_9001_zoom=abc\n");
-
-        var gp = GlobalProperties.get();
-        var eintraege = gp.getPortEintraege();
-
-        assertFalse(eintraege.isEmpty());
-        assertEquals(GlobalProperties.DEFAULT_ZOOM, eintraege.get(0).zoom());
-    }
-
-    @Test
-    void testUngueltigerPortNummer() throws Exception {
-        var file = tempDir.resolve("PetanqueTurnierManager.properties");
-        java.nio.file.Files.writeString(file,
-                "webserver_ports=KAPUTT,9001\n" +
-                "webserver_port_9001_sheet=rangliste\n" +
-                "webserver_port_9001_aktiv=true\n");
-
-        var gp = GlobalProperties.get();
-        var eintraege = gp.getPortEintraege();
-
-        assertEquals(1, eintraege.size());
-        assertEquals(9001, eintraege.get(0).port());
+        assertTrue(gp2.getCompositeViewEintraege().isEmpty());
     }
 
     @Test
@@ -174,7 +151,7 @@ class GlobalPropertiesTest {
         Runnable lesend = () -> {
             for (int i = 0; i < 100; i++) {
                 gp.isAutoSave();
-                gp.getPortEintraege();
+                gp.getCompositeViewEintraege();
                 gp.getLogLevel();
             }
         };

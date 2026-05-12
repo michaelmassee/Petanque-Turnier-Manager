@@ -3,7 +3,7 @@ package de.petanqueturniermanager.webserver;
 /**
  * Abstraktion der Eltern-Instanz einer {@link SseVerbindung}.
  * <p>
- * Ermöglicht sowohl {@link WebServerInstanz} als auch {@link CompositeViewInstanz},
+ * Ermöglicht {@link CompositeViewInstanz} und {@link de.petanqueturniermanager.timer.TimerWebServerInstanz},
  * SSE-Verbindungen über dieselbe {@link SseVerbindung}-Klasse zu verwalten.
  */
 public interface SseElternInstanz {

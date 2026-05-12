@@ -18,7 +18,6 @@ import org.apache.logging.log4j.core.config.Configurator;
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
 import de.petanqueturniermanager.webserver.PanelTyp;
-import de.petanqueturniermanager.webserver.PortKonfiguration;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
 import de.petanqueturniermanager.webserver.SplitKnoten;
 import de.petanqueturniermanager.webserver.SplitKnotenAdapter;
@@ -36,13 +35,13 @@ public class GlobalProperties {
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
 
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
-	private static final String WEBSERVER_PORTS_PROP = "webserver_ports";
-	private static final String WEBSERVER_PORT_SHEET_PREFIX = "webserver_port_";
-	private static final String WEBSERVER_PORT_SHEET_SUFFIX = "_sheet";
-	private static final String WEBSERVER_PORT_AKTIV_SUFFIX = "_aktiv";
-	private static final String WEBSERVER_PORT_ZOOM_SUFFIX = "_zoom";
-	private static final String WEBSERVER_PORT_ZENTRIEREN_SUFFIX = "_zentrieren";
-	private static final String WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
+
+	/** Legacy-Property-Präfix der entfernten Einzel-Port-Konfiguration (nur für Cleanup beim Start). */
+	private static final String LEGACY_WEBSERVER_PORTS_PROP = "webserver_ports";
+	/** Legacy-Präfix für Einzel-Port-Einträge (nur für Cleanup beim Start). */
+	private static final String LEGACY_WEBSERVER_PORT_PREFIX = "webserver_port_";
+	/** Legacy-Property der entfernten globalen „Blattnamen anzeigen"-Option (nur für Cleanup beim Start). */
+	private static final String LEGACY_WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP = "webserver_sheetnamen_anzeigen";
 
 	private static final String WEBSERVER_COMPOSITE_PORTS_PROP = "webserver_composite_ports";
 	private static final String WEBSERVER_COMPOSITE_PREFIX = "webserver_composite_";
@@ -78,13 +77,6 @@ public class GlobalProperties {
 	private static final ReentrantLock fileLock = new ReentrantLock();
 
 	private static final String TABFARBE_PRAEFIX = "tabfarbe.";
-
-	public record PortEintragRoh(int port, String sheetConfig, boolean aktiv, int zoom, boolean zentrieren) {
-		@Override
-		public String toString() {
-			return port + "=" + sheetConfig;
-		}
-	}
 
 	/**
 	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
@@ -147,7 +139,30 @@ public class GlobalProperties {
 
 	private GlobalProperties() {
 		readProperties();
+		bereinigeLegacyEinzelPortProperties();
 		safeSetLogLevel();
+	}
+
+	/**
+	 * Entfernt einmalig alle Legacy-Properties der entfernten Einzel-Port-Webserver-Konfiguration
+	 * ({@code webserver_ports}, {@code webserver_port_*}) aus {@link #propMap} und persistiert,
+	 * falls etwas zu löschen war. Keine Migration – Altdaten werden stillschweigend verworfen.
+	 */
+	private static void bereinigeLegacyEinzelPortProperties() {
+		var zuLoeschen = new ArrayList<String>();
+		for (var key : propMap.keySet()) {
+			if (key.equals(LEGACY_WEBSERVER_PORTS_PROP)
+					|| key.startsWith(LEGACY_WEBSERVER_PORT_PREFIX)
+					|| key.equals(LEGACY_WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP)) {
+				zuLoeschen.add(key);
+			}
+		}
+		if (zuLoeschen.isEmpty()) {
+			return;
+		}
+		zuLoeschen.forEach(propMap::remove);
+		logger.info("{} Legacy-Einzel-Port-Property/-ies entfernt", zuLoeschen.size());
+		speichernDatei();
 	}
 
 	private GlobalProperties(boolean fallback) {
@@ -249,10 +264,6 @@ public class GlobalProperties {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
 	}
 
-	public boolean isSheetnamenKopfzeileAnzeigen() {
-		return getBoolean(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP);
-	}
-
 	public boolean isStartupTurnierModus() {
 		return getBoolean(STARTUP_TURNIER_MODUS_PROP);
 	}
@@ -264,74 +275,6 @@ public class GlobalProperties {
 
 	public String getLogLevel() {
 		return propMap.getOrDefault(LOG_LEVEL_PROP, "").trim();
-	}
-
-	// ----------------------------------------------------
-	// Port-Konfiguration
-	// ----------------------------------------------------
-
-	public List<PortKonfiguration> getPortKonfigurationen() {
-		List<PortKonfiguration> konfigs = new ArrayList<>();
-
-		for (var eintrag : getPortEintraege()) {
-			if (!eintrag.aktiv()) continue;
-
-			try {
-				var resolver = SheetResolverFactory.erstellen(eintrag.sheetConfig());
-				if (resolver == null) {
-					logger.warn("Resolver null für {}", eintrag);
-					continue;
-				}
-
-				konfigs.add(new PortKonfiguration(
-						eintrag.port(),
-						resolver,
-						eintrag.zoom(),
-						eintrag.zentrieren()));
-
-			} catch (Exception e) {
-				logger.error("Fehler bei Port-Konfiguration {}", eintrag, e);
-			}
-		}
-
-		return konfigs;
-	}
-
-	public List<PortEintragRoh> getPortEintraege() {
-		List<PortEintragRoh> eintraege = new ArrayList<>();
-
-		try {
-			var portsStr = propMap.getOrDefault(WEBSERVER_PORTS_PROP, "").trim();
-			if (portsStr.isEmpty()) return eintraege;
-
-			for (var portStr : portsStr.split(",")) {
-				try {
-					portStr = portStr.trim();
-					if (portStr.isEmpty()) continue;
-
-					int port = Integer.parseInt(portStr);
-
-					var sheetConfig = propMap.getOrDefault(
-							WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_SHEET_SUFFIX, "").trim();
-
-					if (sheetConfig.isEmpty()) continue;
-
-					boolean aktiv = getBoolean(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_AKTIV_SUFFIX);
-					int zoom = parseZoom(propMap.get(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZOOM_SUFFIX));
-					boolean zentrieren = getBoolean(WEBSERVER_PORT_SHEET_PREFIX + port + WEBSERVER_PORT_ZENTRIEREN_SUFFIX);
-
-					eintraege.add(new PortEintragRoh(port, sheetConfig, aktiv, zoom, zentrieren));
-
-				} catch (Exception e) {
-					logger.warn("Ungültiger Port-Eintrag '{}'", portStr, e);
-				}
-			}
-
-		} catch (Exception e) {
-			logger.warn("Fehler beim Lesen der Port-Einträge", e);
-		}
-
-		return eintraege;
 	}
 
 	// ----------------------------------------------------
@@ -438,11 +381,12 @@ public class GlobalProperties {
 	}
 
 	/**
-	 * Speichert alle Composite View-Einträge in der Properties-Datei.
-	 * Löscht zuvor alle alten Composite-Einträge.
+	 * Speichert alle Composite View-Einträge sowie das globale Webserver-Aktiv-Flag
+	 * in der Properties-Datei. Löscht zuvor alle alten Composite-Einträge.
 	 */
-	public void speichernCompositeViews(List<CompositeViewEintragRoh> eintraege) {
+	public void speichernCompositeViews(boolean aktiv, List<CompositeViewEintragRoh> eintraege) {
 		try {
+			setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
 			// Alte Einträge löschen
 			for (var alt : getCompositeViewEintraege()) {
 				String prefix = WEBSERVER_COMPOSITE_PREFIX + alt.port();
@@ -529,49 +473,6 @@ public class GlobalProperties {
 
 		} catch (Exception e) {
 			logger.error("Fehler beim Speichern", e);
-		}
-	}
-
-	public void speichernWebserver(boolean aktiv, boolean sheetnamenAnzeigen, List<PortEintragRoh> eintraege) {
-		try {
-			for (var alt : getPortEintraege()) {
-				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_SHEET_SUFFIX);
-				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_AKTIV_SUFFIX);
-				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZOOM_SUFFIX);
-				propMap.remove(WEBSERVER_PORT_SHEET_PREFIX + alt.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX);
-			}
-
-			propMap.remove(WEBSERVER_PORTS_PROP);
-
-			setBooleanProp(WEBSERVER_AKTIV_PROP, aktiv);
-			setBooleanProp(WEBSERVER_SHEETNAMEN_ANZEIGEN_PROP, sheetnamenAnzeigen);
-
-			if (!eintraege.isEmpty()) {
-				var ports = new StringBuilder();
-
-				for (var eintrag : eintraege) {
-					if (!ports.isEmpty()) ports.append(",");
-					ports.append(eintrag.port());
-
-					propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_SHEET_SUFFIX, eintrag.sheetConfig());
-
-					if (eintrag.aktiv())
-						propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_AKTIV_SUFFIX, "true");
-
-					if (eintrag.zoom() != DEFAULT_ZOOM)
-						propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZOOM_SUFFIX, String.valueOf(eintrag.zoom()));
-
-					if (eintrag.zentrieren())
-						propMap.put(WEBSERVER_PORT_SHEET_PREFIX + eintrag.port() + WEBSERVER_PORT_ZENTRIEREN_SUFFIX, "true");
-				}
-
-				propMap.put(WEBSERVER_PORTS_PROP, ports.toString());
-			}
-
-			speichernDatei();
-
-		} catch (Exception e) {
-			logger.error("Fehler beim Speichern Webserver", e);
 		}
 	}
 

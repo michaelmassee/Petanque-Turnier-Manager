@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -63,23 +62,14 @@ public final class WebServerManager implements TimerListener {
     /** Maximale Anzahl URL-Slots im Menü. */
     private static final int MAX_URL_SLOTS = 10;
 
-    /** Alle laufenden Einzel-Instanzen (alle konfigurierten Ports). */
-    private final List<WebServerInstanz> instanzen = new ArrayList<>();
     /** Alle laufenden Composite-View-Instanzen. */
     private final List<CompositeViewInstanz> compositeInstanzen = new ArrayList<>();
-    /** Die ersten MAX_URL_SLOTS Instanzen (Einzel + Composite, nach Port sortiert) für Menü-URL-Anzeige. */
+    /** Die ersten MAX_URL_SLOTS Composite-Instanzen (nach Port sortiert) für Menü-URL-Anzeige. */
     private final List<WebServerSlot> slots = new ArrayList<>(MAX_URL_SLOTS);
 
     private final TabellenMapper mapper = new TabellenMapper();
     private final DiffEngine diffEngine = new DiffEngine();
     private final WebserverModifyListener modifyListener = new WebserverModifyListener();
-
-    /** Letztes Modell pro Port (port → TabelleModel). */
-    private final Map<Integer, TabelleModel> letzteModelle = new ConcurrentHashMap<>();
-    /** Letzter Seitentitel pro Port (port → Titel). */
-    private final Map<Integer, String> letzteTitel = new ConcurrentHashMap<>();
-    /** Monoton steigende Version pro Port (port → AtomicInteger). */
-    private final Map<Integer, AtomicInteger> versionen = new ConcurrentHashMap<>();
 
     /** Letzte Panel-Modelle pro Composite-Port und Panel-ID (port → panelId → TabelleModel). */
     private final Map<Integer, Map<Integer, TabelleModel>> letzteCompositeModelle = new ConcurrentHashMap<>();
@@ -100,7 +90,6 @@ public final class WebServerManager implements TimerListener {
     private XSpreadsheetDocument ownerDocument = null;
     private XSpreadsheetDocument registriertesDocument = null;
     private boolean laeuft = false;
-    private boolean letzterSheetnamenAnzeigen = false;
     private TimerWebServerInstanz timerInstanz;
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
@@ -136,37 +125,14 @@ public final class WebServerManager implements TimerListener {
             logger.debug("WebServerManager läuft bereits");
             return;
         }
-        var portKonfigs = new ArrayList<>(GlobalProperties.get().getPortKonfigurationen());
         var compositeKonfigs = new ArrayList<>(GlobalProperties.get().getCompositeViewKonfigurationen());
-        if (portKonfigs.isEmpty() && compositeKonfigs.isEmpty()) {
+        if (compositeKonfigs.isEmpty()) {
             logger.info("Keine Webserver-Ports konfiguriert, kein Start");
             return;
         }
-        instanzen.clear();
         slots.clear();
         compositeInstanzen.clear();
-        portKonfigs.sort(Comparator.comparingInt(PortKonfiguration::port));
         safeProcessBoxInfo(I18n.get("webserver.prozessbox.starten"));
-
-        for (var konfig : portKonfigs) {
-            try {
-                var instanz = new WebServerInstanz(konfig);
-                instanz.starten();
-                // Sofort Initial-Hinweis setzen, damit Clients die sich vor dem ersten Rendering
-                // verbinden i18n-Text erhalten statt einer leeren Antwort.
-                instanz.setCachedInitJson(GSON.toJson(SseNachricht.hinweis(
-                        I18n.get("webserver.hinweis.kein.dokument.titel"),
-                        I18n.get("webserver.hinweis.kein.dokument.text"))));
-                instanzen.add(instanz);
-                versionen.put(konfig.port(), new AtomicInteger(0));
-                logger.info("Webserver gestartet auf Port {}", konfig.port());
-                safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(konfig.port())));
-            } catch (IOException e) {
-                logger.error("Fehler beim Starten des WebServers auf Port {}: {}",
-                        konfig.port(), e.getMessage(), e);
-                safeProcessBoxFehler(I18n.get("webserver.prozessbox.fehler.port", konfig.port(), e.getMessage()));
-            }
-        }
 
         for (var konfig : compositeKonfigs) {
             try {
@@ -191,17 +157,13 @@ public final class WebServerManager implements TimerListener {
             }
         }
 
-        // Slots (Einzel + Composite) nach Port sortiert befüllen
-        var alleInstanzen = new ArrayList<WebServerSlot>(instanzen.size() + compositeInstanzen.size());
-        alleInstanzen.addAll(instanzen);
-        alleInstanzen.addAll(compositeInstanzen);
-        alleInstanzen.stream()
+        compositeInstanzen.stream()
                 .filter(WebServerSlot::laeuft)
                 .sorted(Comparator.comparingInt(WebServerSlot::getPort))
                 .limit(MAX_URL_SLOTS)
                 .forEach(slots::add);
 
-        if (!instanzen.isEmpty() || !compositeInstanzen.isEmpty()) {
+        if (!compositeInstanzen.isEmpty()) {
             laeuft = true;
             ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
             logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
@@ -288,18 +250,11 @@ public final class WebServerManager implements TimerListener {
             return;
         }
         deregistriereModifyListener();
-        for (var instanz : instanzen) {
-            instanz.stoppen();
-        }
         for (var instanz : compositeInstanzen) {
             instanz.stoppen();
         }
-        instanzen.clear();
         slots.clear();
         compositeInstanzen.clear();
-        letzteModelle.clear();
-        letzteTitel.clear();
-        versionen.clear();
         letzteCompositeModelle.clear();
         letzteCompositeTitel.clear();
         compositeVersionen.clear();
@@ -307,7 +262,6 @@ public final class WebServerManager implements TimerListener {
         initialisiertePanels.clear();
         fehlendePanels.clear();
         laeuft = false;
-        letzterSheetnamenAnzeigen = false;
         ownerDocument = null;
         statusListenerBenachrichtigen();
         logger.info("Webserver gestoppt");
@@ -340,44 +294,13 @@ public final class WebServerManager implements TimerListener {
      * Aktualisiert Zoom und Zentrieren aller laufenden Instanzen aus den gespeicherten GlobalProperties
      * und pusht den neuen Zustand sofort an alle verbundenen Browser-Clients.
      * <p>
-     * Muss nach {@link GlobalProperties#speichernWebserver} aufgerufen werden.
+     * Muss nach {@link GlobalProperties#speichernCompositeViews(boolean, java.util.List)} aufgerufen werden.
      * Kein UNO-Zugriff erforderlich – verwendet ausschließlich gecachte Modelle.
      */
     public synchronized void konfigurationGeaendert() {
         if (!laeuft) {
             return;
         }
-        boolean neuerSheetnamenAnzeigen = GlobalProperties.get().isSheetnamenKopfzeileAnzeigen();
-        boolean globalGeaendert = neuerSheetnamenAnzeigen != letzterSheetnamenAnzeigen;
-        if (globalGeaendert) {
-            letzterSheetnamenAnzeigen = neuerSheetnamenAnzeigen;
-        }
-        var eintraege = GlobalProperties.get().getPortEintraege();
-        for (var instanz : instanzen) {
-            int port = instanz.getKonfiguration().port();
-            eintraege.stream()
-                    .filter(e -> e.port() == port)
-                    .findFirst()
-                    .ifPresent(e -> {
-                        if (!globalGeaendert
-                                && e.zoom() == instanz.getKonfiguration().zoom()
-                                && e.zentrieren() == instanz.getKonfiguration().zentrieren()) {
-                            return; // keine Änderung, kein Push
-                        }
-                        var neueKonfig = new PortKonfiguration(
-                                port, instanz.getKonfiguration().resolver(), e.zoom(), e.zentrieren());
-                        TabelleModel modell = letzteModelle.get(port);
-                        String neuesJson = null;
-                        if (modell != null) {
-                            String titel = letzteTitel.getOrDefault(port, "");
-                            int version = versionen.get(port).incrementAndGet();
-                            neuesJson = GSON.toJson(SseNachricht.init(version, modell, titel,
-                                    e.zoom(), e.zentrieren(), neuerSheetnamenAnzeigen));
-                        }
-                        instanz.setKonfiguration(neueKonfig, neuesJson);
-                    });
-        }
-
         var compositeEintraege = GlobalProperties.get().getCompositeViewEintraege();
         for (var instanz : compositeInstanzen) {
             int port = instanz.getKonfiguration().port();
@@ -553,10 +476,7 @@ public final class WebServerManager implements TimerListener {
         // Slots nach Änderungen neu aufbauen
         if (!zuStoppen.isEmpty() || aktivePorte.stream().anyMatch(p -> !laufendePorte.contains(p))) {
             slots.clear();
-            var alleInstanzen = new ArrayList<WebServerSlot>(instanzen.size() + compositeInstanzen.size());
-            alleInstanzen.addAll(instanzen);
-            alleInstanzen.addAll(compositeInstanzen);
-            alleInstanzen.stream()
+            compositeInstanzen.stream()
                     .filter(WebServerSlot::laeuft)
                     .sorted(Comparator.comparingInt(WebServerSlot::getPort))
                     .limit(MAX_URL_SLOTS)
@@ -602,9 +522,6 @@ public final class WebServerManager implements TimerListener {
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
         registriereModifyListenerFallsNoetig(ws);
-        for (var instanz : instanzen) {
-            renderUndPushen(instanz, ws);
-        }
         for (var instanz : compositeInstanzen) {
             renderUndPushenComposite(instanz, ws);
         }
@@ -643,64 +560,6 @@ public final class WebServerManager implements TimerListener {
         modifyListener.setWs(null);
         registriertesDocument = null;
         logger.debug("WebserverModifyListener deregistriert");
-    }
-
-    private void renderUndPushen(WebServerInstanz instanz, WorkingSpreadsheet ws) {
-        var resolver = instanz.getKonfiguration().resolver();
-        int port = instanz.getKonfiguration().port();
-        try {
-            Optional<XSpreadsheet> sheetOpt = resolver.resolve(ws);
-            if (sheetOpt.isEmpty()) {
-                sendeHinweis(instanz,
-                        I18n.get("webserver.hinweis.sheet.nicht.gefunden.titel"),
-                        I18n.get("webserver.hinweis.sheet.nicht.gefunden.text",
-                                resolver.getAnzeigeName()));
-                return;
-            }
-
-            var sheet = sheetOpt.get();
-            String neuerTitel = baueSeitenTitel(resolver, sheet);
-            TabelleModel neuesModell = mapper.map(sheet, ws.getWorkingSpreadsheetDocument());
-            TabelleModel altesModell = letzteModelle.get(port);
-            String alterTitel = letzteTitel.get(port);
-            int zoom = instanz.getKonfiguration().zoom();
-            boolean zentrieren = instanz.getKonfiguration().zentrieren();
-            boolean sheetnamenAnzeigen = GlobalProperties.get().isSheetnamenKopfzeileAnzeigen();
-
-            // Layout-Änderung (Größe oder Startversatz) → vollständiges Init erzwingen
-            if (altesModell != null && layoutGeaendert(altesModell, neuesModell)) {
-                altesModell = null;
-            }
-
-            TabelleModel diffModell = diffEngine.diff(altesModell, neuesModell);
-
-            boolean keineDiffNoetig = altesModell != null
-                    && diffModell.getZellen().isEmpty()
-                    && !kopfFusszeileGeaendert(altesModell, neuesModell)
-                    && java.util.Objects.equals(alterTitel, neuerTitel);
-            if (keineDiffNoetig) {
-                return; // nichts geändert, kein Push
-            }
-
-            int version = versionen.get(port).incrementAndGet();
-            letzteModelle.put(port, neuesModell);
-            letzteTitel.put(port, neuerTitel);
-
-            // Init-Cache immer mit vollem State aktualisieren (für neue/reconnectende Verbindungen)
-            SseNachricht initNachricht = SseNachricht.init(version, neuesModell, neuerTitel,
-                    zoom, zentrieren, sheetnamenAnzeigen);
-            instanz.setCachedInitJson(GSON.toJson(initNachricht));
-
-            // Push: "init" beim ersten Mal, sonst "diff"
-            SseNachricht push = (altesModell == null)
-                    ? initNachricht
-                    : SseNachricht.diff(version, diffModell, neuerTitel, zoom, zentrieren, sheetnamenAnzeigen);
-            instanz.sseNachrichtPushen(GSON.toJson(push));
-
-        } catch (Exception e) {
-            logger.error("Fehler beim Rendern für Port {}: {}", port, e.getMessage(), e);
-            safeProcessBoxFehler(I18n.get("webserver.prozessbox.render.fehler", port, e.getMessage()));
-        }
     }
 
     private void renderUndPushenComposite(CompositeViewInstanz instanz, WorkingSpreadsheet ws) {
@@ -856,16 +715,7 @@ public final class WebServerManager implements TimerListener {
                 .orElse(name);
     }
 
-    private void sendeHinweis(WebServerInstanz instanz, String titel, String text) {
-        String json = GSON.toJson(SseNachricht.hinweis(titel, text));
-        instanz.setCachedInitJson(json);
-        instanz.sseNachrichtPushen(json);
-    }
-
     private void sendeHinweisAnAlle(String titel, String text) {
-        for (var instanz : instanzen) {
-            sendeHinweis(instanz, titel, text);
-        }
         for (var instanz : compositeInstanzen) {
             sendeCompositeHinweis(instanz, titel, text);
         }
