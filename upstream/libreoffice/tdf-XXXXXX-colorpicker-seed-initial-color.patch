@@ -1,0 +1,43 @@
+From: Michael Massee <michael.massee@gmail.com>
+Subject: [PATCH] tdf#XXXXXX vcl: seed initial color in UNO ColorPicker
+
+The com.sun.star.cui.ColorPicker / com.sun.star.ui.dialogs.ColorPicker
+service stores an initial color via setPropertyValues("Color", ...) into
+m_aColor, but ColorPicker::execute() never propagates that value to the
+ColorDialog instance. As a result, the picker always opens with the
+default color, regardless of what the caller set.
+
+The pre-2025-06 implementation in cui/source/dialogs/colorpicker.cxx did
+pass mnColor to ColorPickerDialog's constructor:
+
+    std::unique_ptr<ColorPickerDialog> xDlg(new ColorPickerDialog(
+        Application::GetFrameWeld(mxParent), mnColor, mnMode));
+
+The reintroduction in commit 9d6ade1f3b8e (Nov 2025) and the subsequent
+refactor in commit 86a04e193376 / cbfae1c3be2d (Dec 2025) lost that
+behavior.
+
+Fix: call ColorDialog::SetColor(m_aColor) before Execute().
+
+This restores parity with the pre-drop implementation and makes the
+service usable for non-trivial callers (e.g. extensions that need to
+edit an existing color).
+
+---
+ vcl/source/components/ColorPicker.cxx | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/vcl/source/components/ColorPicker.cxx b/vcl/source/components/ColorPicker.cxx
+index 4ddba4fed433..xxxxxxxxxxxx 100644
+--- a/vcl/source/components/ColorPicker.cxx
++++ b/vcl/source/components/ColorPicker.cxx
+@@ -105,6 +105,7 @@ void SAL_CALL ColorPicker::setTitle(const OUString&) {}
+ sal_Int16 SAL_CALL ColorPicker::execute()
+ {
+     ColorDialog aColorDialog(Application::GetFrameWeld(m_xParent));
++    aColorDialog.SetColor(m_aColor);
+     const int nRet = aColorDialog.Execute();
+     if (nRet == RET_OK)
+         m_aColor = aColorDialog.GetColor();
+--
+2.43.0
