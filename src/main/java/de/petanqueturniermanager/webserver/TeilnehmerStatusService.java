@@ -8,9 +8,12 @@ import com.sun.star.sheet.XSpreadsheet;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeKonstanten;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
@@ -20,12 +23,20 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  * Meldeliste-Klassen — damit der Live-Push der Turnier-Startseite vom Heavy-Refresh-Pfad
  * der Composite-Views entkoppelt bleibt.
  *
- * <p>Heuristik (V1): Gezählt werden Zeilen, in denen Vorname (Spalte&nbsp;B) ODER
- * Nachname (Spalte&nbsp;C) nicht leer ist — die Spieler-Nr-Spalte (A) ist bei
- * Supermelee oft erst nach dem ersten Sortieren befüllt und kann daher nicht als
- * Trigger genommen werden. „Aktiv" und „angemeldet" liefern in V1 denselben
- * Wert; eine differenzierte System-spezifische Aktiv-Logik bleibt einer V2
- * vorbehalten.
+ * <p><b>Angemeldet</b>: Zeilen, in denen Vorname (Spalte&nbsp;B) ODER Nachname (Spalte&nbsp;C)
+ * nicht leer ist — die Spieler-Nr-Spalte (A) ist bei Supermelee oft erst nach dem
+ * ersten Sortieren befüllt und kann daher nicht als Trigger genommen werden.
+ *
+ * <p><b>Aktiv</b>: Wert {@code 1} in der „Aktiv"-Spalte. Spalte wird über den Header in
+ * Zeile&nbsp;2 (zweite Header-Zeile) lokalisiert:
+ * <ul>
+ *   <li>Supermelee: Spalte mit Header {@code column.header.spieltag.nr} für den
+ *       aktuell eingestellten Spieltag (aus {@link SuperMeleeKonfigurationSheet}) —
+ *       Supermelee hat pro Spieltag eine eigene Status-Spalte.</li>
+ *   <li>Alle anderen Systeme: Spalte mit Header {@code column.header.aktiv}.</li>
+ * </ul>
+ * Findet keine Aktiv-Spalte zugeordnet werden, wird {@code aktiv = angemeldet} als
+ * Fallback geliefert.
  */
 public final class TeilnehmerStatusService {
 
@@ -35,6 +46,15 @@ public final class TeilnehmerStatusService {
     private static final int MAX_LEERE_ZEILEN_IN_FOLGE = 10;
     /** Hartes Limit gegen Endlosschleifen bei beschädigten Sheets. */
     private static final int MAX_ZEILEN = 10_000;
+    /** Maximale Anzahl Spalten, die beim Header-Scan durchsucht werden. */
+    private static final int MAX_HEADER_SPALTEN = 200;
+    /** Wert in der Aktiv-Spalte, der „nimmt teil" bedeutet (SpielrundeGespielt.JA / AKTIV_WERT_NIMMT_TEIL). */
+    private static final int WERT_AKTIV = 1;
+
+    /** Vorname-Spalte (B) — direkt nach der Spieler-Nr-Spalte. */
+    private static final int VORNAME_SPALTE  = MeldeListeKonstanten.SPIELER_NR_SPALTE + 1;
+    /** Nachname-Spalte (C). */
+    private static final int NACHNAME_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 2;
 
     public record TeilnehmerStatus(int angemeldet, int aktiv) {}
 
@@ -59,30 +79,69 @@ public final class TeilnehmerStatusService {
             if (sheet == null) {
                 return new TeilnehmerStatus(0, 0);
             }
-            return zaehlen(sh, sheet);
+            int aktivSpalte = ermittleAktivSpalte(sh, sheet, ts, ws);
+            return zaehlen(sh, sheet, aktivSpalte);
         } catch (RuntimeException e) {
             logger.warn("Teilnehmerzahl konnte nicht ermittelt werden", e);
             return new TeilnehmerStatus(0, 0);
         }
     }
 
-    /** Vorname-Spalte (B) — direkt nach der Spieler-Nr-Spalte. */
-    private static final int VORNAME_SPALTE  = MeldeListeKonstanten.SPIELER_NR_SPALTE + 1;
-    /** Nachname-Spalte (C). */
-    private static final int NACHNAME_SPALTE = MeldeListeKonstanten.SPIELER_NR_SPALTE + 2;
+    /**
+     * Sucht die Aktiv-Spalte (für Supermelee die Spalte des aktuell eingestellten Spieltags,
+     * sonst die als „Aktiv" beschriftete Spalte) über die Header-Zeile.
+     *
+     * @return Spaltenindex oder {@code -1} falls nicht gefunden — in dem Fall fällt die
+     *         Zählung auf {@code aktiv = angemeldet} zurück.
+     */
+    private static int ermittleAktivSpalte(SheetHelper sh, XSpreadsheet sheet, TurnierSystem ts,
+            WorkingSpreadsheet ws) {
+        String gesuchterHeader = gesuchterHeader(ts, ws);
+        if (gesuchterHeader == null || gesuchterHeader.isBlank()) {
+            return -1;
+        }
+        for (int spalte = 0; spalte < MAX_HEADER_SPALTEN; spalte++) {
+            String headerText = sh.getTextFromCell(sheet,
+                    Position.from(spalte, MeldeListeKonstanten.ZWEITE_HEADER_ZEILE));
+            if (headerText != null && headerText.equals(gesuchterHeader)) {
+                return spalte;
+            }
+        }
+        return -1;
+    }
 
-    private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet) {
-        int treffer = 0;
+    private static String gesuchterHeader(TurnierSystem ts, WorkingSpreadsheet ws) {
+        if (ts == TurnierSystem.SUPERMELEE) {
+            try {
+                SpielTagNr spieltagNr = new SuperMeleeKonfigurationSheet(ws).getAktiveSpieltag();
+                return I18n.get("column.header.spieltag.nr", spieltagNr.getNr());
+            } catch (RuntimeException e) {
+                logger.debug("Aktiver Spieltag (Supermelee) konnte nicht ermittelt werden: {}", e.getMessage());
+                return null;
+            }
+        }
+        return I18n.get("column.header.aktiv");
+    }
+
+    private static TeilnehmerStatus zaehlen(SheetHelper sh, XSpreadsheet sheet, int aktivSpalte) {
+        int angemeldet = 0;
+        int aktiv = 0;
         int leereZeilenInFolge = 0;
         for (int zeile = MeldeListeKonstanten.ERSTE_DATEN_ZEILE; zeile < MAX_ZEILEN; zeile++) {
             if (zeileHatNamen(sh, sheet, zeile)) {
                 leereZeilenInFolge = 0;
-                treffer++;
+                angemeldet++;
+                if (aktivSpalte >= 0
+                        && sh.getIntFromCell(sheet, Position.from(aktivSpalte, zeile)) == WERT_AKTIV) {
+                    aktiv++;
+                }
             } else if (++leereZeilenInFolge >= MAX_LEERE_ZEILEN_IN_FOLGE) {
                 break;
             }
         }
-        return new TeilnehmerStatus(treffer, treffer);
+        // Fallback wenn Aktiv-Spalte nicht gefunden: Aktiv = Angemeldet (verhindert „0"-Anzeige bei
+        // ungewöhnlichem Header-Layout / Sprachwechsel im Dokument).
+        return new TeilnehmerStatus(angemeldet, aktivSpalte >= 0 ? aktiv : angemeldet);
     }
 
     private static boolean zeileHatNamen(SheetHelper sh, XSpreadsheet sheet, int zeile) {
