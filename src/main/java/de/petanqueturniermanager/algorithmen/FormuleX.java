@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -99,6 +100,14 @@ public class FormuleX {
 	/**
 	 * Sortiert eine Liste von Teamergebnissen nach den Wertungspunkten des Formule X Systems.
 	 * <p>
+	 * <b>Wichtig:</b> Diese Variante ruft {@link #berechneWertung(FormuleXErgebnis, int)} auf
+	 * jedem Eintrag auf und ist deshalb nur korrekt, wenn jeder {@link FormuleXErgebnis} die
+	 * Daten <b>eines einzelnen Spiels</b> enthält. Für aggregierte Mehrspiel-Daten (Σ eigene
+	 * Punkte, Σ kassierte Punkte über mehrere Runden) liefert sie eine falsche Sortierung,
+	 * weil {@code istSieger()} dort die Summen vergleicht statt der einzelnen Spielergebnisse.
+	 * In diesem Fall {@link #sortiereNachWertung(List, java.util.function.ToIntFunction)}
+	 * mit einer pro Team vorab aufsummierten Wertung nutzen.
+	 * <p>
 	 * <b>Sortierreihenfolge:</b>
 	 * <ol>
 	 *   <li>Wertungsscore (absteigend)</li>
@@ -107,14 +116,34 @@ public class FormuleX {
 	 *   <li>TeamNr (aufsteigend, für stabile Sortierung)</li>
 	 * </ol>
 	 *
-	 * @param ergebnisse die Teamergebnisse
+	 * @param ergebnisse die Teamergebnisse (Einzelspiel-Records)
 	 * @param runden     Anzahl der Runden (für Wertungsberechnung)
 	 * @return neue Liste, sortiert nach Wertungspunkten (bestes Team zuerst)
 	 */
 	public List<FormuleXErgebnis> sortiereNachWertung(List<FormuleXErgebnis> ergebnisse, int runden) {
+		return sortiereNachWertung(ergebnisse, e -> berechneWertung(e, runden));
+	}
+
+	/**
+	 * Sortiert Teamergebnisse anhand einer vorab pro Team berechneten Wertungssumme.
+	 * <p>
+	 * Diese Variante muss verwendet werden, wenn die {@link FormuleXErgebnis}-Records
+	 * <b>aggregierte</b> Werte über mehrere Runden enthalten: dann darf die Wertung nicht
+	 * mehr aus den Aggregaten rekonstruiert werden (siehe Klassen-Doku), sondern muss
+	 * spielweise aufsummiert sein. Der Aufrufer liefert die fertige Wertungssumme als
+	 * {@link java.util.function.ToIntFunction}.
+	 * <p>
+	 * Tie-Breaker bleiben (Punktedifferenz desc, eigene Punkte desc, TeamNr asc).
+	 *
+	 * @param ergebnisse      die Teamergebnisse
+	 * @param wertungProTeam  Funktion, die pro Ergebnis die Wertungssumme liefert
+	 * @return neue Liste, sortiert nach Wertungspunkten (bestes Team zuerst)
+	 */
+	public List<FormuleXErgebnis> sortiereNachWertung(List<FormuleXErgebnis> ergebnisse,
+			ToIntFunction<FormuleXErgebnis> wertungProTeam) {
 		return ergebnisse.stream()
 				.sorted(Comparator
-						.comparingInt((FormuleXErgebnis e) -> berechneWertung(e, runden)).reversed()
+						.comparingInt(wertungProTeam).reversed()
 						.thenComparing(Comparator.comparingInt(FormuleXErgebnis::punktedifferenz).reversed())
 						.thenComparing(Comparator.comparingInt(FormuleXErgebnis::eigenePunkte).reversed())
 						.thenComparingInt(FormuleXErgebnis::teamNr))

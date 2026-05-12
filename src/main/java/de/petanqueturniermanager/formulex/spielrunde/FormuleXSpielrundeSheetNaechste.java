@@ -3,11 +3,8 @@
  */
 package de.petanqueturniermanager.formulex.spielrunde;
 
-import java.util.List;
-
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.algorithmen.FormuleXErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
@@ -108,9 +105,9 @@ public class FormuleXSpielrundeSheetNaechste extends FormuleXAbstractSpielrundeS
 
         getKonfigurationSheet().setAktiveSpielRunde(SpielRundeNr.from(neueSpielrundeNr));
 
-        List<FormuleXErgebnis> ergebnisse = gespieltenRundenEinlesen(aktiveMeldungen, 1, neueSpielrundeNr - 1);
+        SpielrundenAkkumulation akkumulierung = gespieltenRundenEinlesen(aktiveMeldungen, 1, neueSpielrundeNr - 1);
 
-        return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrundeNr), ergebnisse);
+        return neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(neueSpielrundeNr), akkumulierung);
     }
 
     /**

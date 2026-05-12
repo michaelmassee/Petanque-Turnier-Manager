@@ -120,6 +120,26 @@ public class FormuleXTest {
 	}
 
 	@Test
+	public void testSortiereMitExterneWertungSummeKorrigiertAggregatBug() {
+		// Aggregierter Datensatz: Team mit 3 Siegen, aber Σ eigene Punkte < Σ kassierte Punkte
+		// (knappe Siege + eine hohe Niederlage). Die alte Variante mit `runden` rief
+		// berechneWertung auf dem Aggregat auf → istSieger() == false → Verlierer-Formel.
+		// Mit pro-Runde aufsummierter Wertung muss das Team korrekt vor reinen Verlierern
+		// einsortiert werden.
+		FormuleXErgebnis aggregat = new FormuleXErgebnis(1, 39, 41, List.of(2, 3, 4), false);
+		FormuleXErgebnis verlierer = new FormuleXErgebnis(2, 20, 39, List.of(1, 3, 4), false);
+		Map<Integer, Integer> wertung = Map.of(
+				1, 3 * 200 + 39 + 6,  // 3 Siege bei 5+ Runden Siegaufschlag, plus eigene + Σ Diff bei Siegen
+				2, 20                  // reine Verlierer-Wertung
+		);
+
+		List<FormuleXErgebnis> sortiert = formuleX.sortiereNachWertung(
+				List.of(aggregat, verlierer), e -> wertung.getOrDefault(e.teamNr(), 0));
+
+		assertThat(sortiert).extracting(FormuleXErgebnis::teamNr).containsExactly(1, 2);
+	}
+
+	@Test
 	public void testSortiereNachWertungStabil() {
 		// Gleicher Score + gleiche Differenz → TeamNr entscheidet (aufsteigend)
 		List<FormuleXErgebnis> ergebnisse = List.of(

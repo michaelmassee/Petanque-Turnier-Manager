@@ -175,25 +175,42 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
     }
 
     /**
+     * Trägt das Ergebnis des Einlesens gespielter Runden: pro Team einen
+     * {@link FormuleXErgebnis} mit aggregierten eigene/kassierte Punkte und Gegnern,
+     * sowie die spielweise aufsummierte Formule-X-Wertung. Die Wertungssumme muss
+     * <b>außerhalb</b> der aggregierten Records geführt werden, weil
+     * {@link FormuleX#berechneWertung(FormuleXErgebnis, int)} pro Einzelspiel
+     * konzipiert ist und auf Aggregaten ({@code Σ eigenePunkte > Σ kassiertePunkte})
+     * falsche Sieger-/Verlierer-Entscheidungen trifft.
+     */
+    protected record SpielrundenAkkumulation(List<FormuleXErgebnis> ergebnisse,
+            Map<Integer, Integer> wertungProTeam) {}
+
+    /**
      * Liest alle gespielten Runden ein und akkumuliert pro Team:
-     * eigenePunkte (Summe), kassiertePunkte (Summe), alle Gegner und Freilos-Flag.
+     * eigenePunkte (Summe), kassiertePunkte (Summe), alle Gegner, Freilos-Flag
+     * sowie die spielweise berechnete Formule-X-Wertung.
      *
      * @param aktiveMeldungen aktive Teams
      * @param abSpielrunde    erste einzulesende Runde (inkl.)
      * @param bisSpielrunde   letzte einzulesende Runde (inkl.)
-     * @return akkumulierte Ergebnisdaten je Team
+     * @return Akkumulation mit Ergebnis-Liste und Wertung pro Team
      */
-    protected List<FormuleXErgebnis> gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
+    protected SpielrundenAkkumulation gespieltenRundenEinlesen(TeamMeldungen aktiveMeldungen, int abSpielrunde,
             int bisSpielrunde) throws GenerateException {
 
         Map<Integer, int[]> rawPointsMap = new HashMap<>(); // teamNr → [0]=eigenePunkte, [1]=kassiertePunkte
         Map<Integer, List<Integer>> gegnerMap = new HashMap<>();
         Set<Integer> freilosTeams = new HashSet<>();
+        Map<Integer, Integer> wertungProTeam = new HashMap<>();
 
         for (Team team : aktiveMeldungen.teams()) {
             rawPointsMap.put(team.getNr(), new int[2]);
             gegnerMap.put(team.getNr(), new ArrayList<>());
+            wertungProTeam.put(team.getNr(), 0);
         }
+
+        int siegaufschlag = new FormuleX().getSiegaufschlag(Math.max(bisSpielrunde, 1));
 
         if (bisSpielrunde >= abSpielrunde && bisSpielrunde >= 1) {
             int spielrunde = Math.max(abSpielrunde, 1);
@@ -207,7 +224,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
                 if (sheet == null) {
                     continue;
                 }
-                leseRundeEin(sheet, aktiveMeldungen, rawPointsMap, gegnerMap, freilosTeams);
+                leseRundeEin(sheet, aktiveMeldungen, rawPointsMap, gegnerMap, freilosTeams,
+                        wertungProTeam, siegaufschlag);
             }
         }
 
@@ -218,11 +236,12 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
             boolean hatteFreilos = freilosTeams.contains(team.getNr());
             ergebnisse.add(new FormuleXErgebnis(team.getNr(), pts[0], pts[1], gegnerNrn, hatteFreilos));
         }
-        return ergebnisse;
+        return new SpielrundenAkkumulation(ergebnisse, wertungProTeam);
     }
 
     private void leseRundeEin(XSpreadsheet sheet, TeamMeldungen aktiveMeldungen, Map<Integer, int[]> rawPointsMap,
-            Map<Integer, List<Integer>> gegnerMap, Set<Integer> freilosTeams) throws GenerateException {
+            Map<Integer, List<Integer>> gegnerMap, Set<Integer> freilosTeams,
+            Map<Integer, Integer> wertungProTeam, int siegaufschlag) throws GenerateException {
         RangePosition readRange = RangePosition.from(TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE,
                 ERSTE_DATEN_ZEILE + 999);
         RangeData rowsData = RangeHelper
@@ -244,6 +263,7 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
             int nrB = row.get(1).getIntVal(0); // TEAM_B (relativ: 1)
             if (nrB <= 0) {
                 freilosTeams.add(nrA);
+                wertungProTeam.merge(nrA, 126, Integer::sum);
                 continue;
             }
             Team teamB = aktiveMeldungen.getTeam(nrB);
@@ -261,16 +281,28 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
             rawPointsMap.computeIfAbsent(nrA, k -> new int[2])[1] += ergB;
             rawPointsMap.computeIfAbsent(nrB, k -> new int[2])[0] += ergB;
             rawPointsMap.computeIfAbsent(nrB, k -> new int[2])[1] += ergA;
+
+            if (ergA > ergB) {
+                wertungProTeam.merge(nrA, siegaufschlag + ergA + (ergA - ergB), Integer::sum);
+                wertungProTeam.merge(nrB, ergB, Integer::sum);
+            } else if (ergB > ergA) {
+                wertungProTeam.merge(nrB, siegaufschlag + ergB + (ergB - ergA), Integer::sum);
+                wertungProTeam.merge(nrA, ergA, Integer::sum);
+            } else if (ergA > 0) {
+                // Unentschieden mit erfassten Punkten: beide bekommen Verlierer-Formel
+                wertungProTeam.merge(nrA, ergA, Integer::sum);
+                wertungProTeam.merge(nrB, ergB, Integer::sum);
+            }
         }
     }
 
     protected boolean neueSpielrunde(TeamMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
-            List<FormuleXErgebnis> ergebnisse) throws GenerateException {
-        return neueSpielrunde(meldungen, neueSpielrundeNr, ergebnisse, isForceOk());
+            SpielrundenAkkumulation akkumulierung) throws GenerateException {
+        return neueSpielrunde(meldungen, neueSpielrundeNr, akkumulierung, isForceOk());
     }
 
     protected boolean neueSpielrunde(TeamMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
-            List<FormuleXErgebnis> ergebnisse, boolean force) throws GenerateException {
+            SpielrundenAkkumulation akkumulierung, boolean force) throws GenerateException {
         checkNotNull(meldungen);
 
         processBoxinfo("processbox.neue.spielrunde", neueSpielrundeNr.getNr());
@@ -291,8 +323,9 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         if (neueSpielrundeNr.getNr() == 1) {
             paarungen = formuleX.ersteRunde(meldungen.teams());
         } else {
-            List<FormuleXErgebnis> sortiert = formuleX.sortiereNachWertung(ergebnisse,
-                    neueSpielrundeNr.getNr() - 1);
+            Map<Integer, Integer> wertungProTeam = akkumulierung.wertungProTeam();
+            List<FormuleXErgebnis> sortiert = formuleX.sortiereNachWertung(akkumulierung.ergebnisse(),
+                    e -> wertungProTeam.getOrDefault(e.teamNr(), 0));
             paarungen = formuleX.weitereRunde(sortiert);
         }
 

@@ -3,9 +3,6 @@
  */
 package de.petanqueturniermanager.formulex.spielrunde;
 
-import java.util.List;
-
-import de.petanqueturniermanager.algorithmen.FormuleXErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
@@ -45,10 +42,10 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
             return;
         }
 
-        List<FormuleXErgebnis> ergebnisse = gespieltenRundenEinlesen(aktiveMeldungen, 1,
+        SpielrundenAkkumulation akkumulierung = gespieltenRundenEinlesen(aktiveMeldungen, 1,
                 aktuelleSpielrunde.getNr() - 1);
 
-        neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde, ergebnisse);
+        neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde, akkumulierung);
 
         if (TurnierModus.get().istAktiv()) {
             BlattschutzRegistry.fuer(getTurnierSystem())
