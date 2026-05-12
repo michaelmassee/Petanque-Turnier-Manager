@@ -40,11 +40,11 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
 
     private static final Logger logger = LogManager.getLogger(TurnierStartseiteDialog.class);
 
-    public static final String DOC_PROP_TURNIERLOGO_URL = "Turnierlogo Url";
-    public static final String DOC_PROP_TURNIERNAME     = "Turniername";
+    public static final String DOC_PROP_TURNIERLOGO_URL  = "Turnierlogo Url";
+    public static final String DOC_PROP_TURNIERBESCHREIBUNG = "Turnierbeschreibung";
 
     private static final int DIALOG_BREITE = 360;
-    private static final int DIALOG_HOEHE  = 150;
+    private static final int DIALOG_HOEHE  = 220;
 
     private static final int LBL_X     = 5;
     private static final int LBL_W     = 80;
@@ -54,21 +54,22 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final int LOGO_PICK_W    = 20;
     private static final int LOGO_PICK_GAP  = 5;
     private static final int CTRL_H    = 12;
+    private static final int BESCHREIBUNG_H = 70;
     private static final int ZEILE1_Y  = 10;
     private static final int ZEILE2_Y  = 30;
     private static final int ZEILE3_Y  = 55;
     private static final int ZEILE4_Y  = 80;
-    private static final int FOOTER_Y  = 125;
+    private static final int FOOTER_Y  = 195;
     private static final int BTN_OK_X      = 200;
     private static final int BTN_ABBRUCH_X = 275;
     private static final int BTN_ACTION_W  = 70;
     private static final int BTN_H         = 14;
 
-    private static final String CTRL_AKTIV       = "cbAktiv";
-    private static final String CTRL_PORT        = "editPort";
-    private static final String CTRL_LOGO        = "editLogo";
-    private static final String CTRL_LOGO_PICK   = "btnLogoPick";
-    private static final String CTRL_TURNIERNAME = "editTurniername";
+    private static final String CTRL_AKTIV         = "cbAktiv";
+    private static final String CTRL_PORT          = "editPort";
+    private static final String CTRL_LOGO          = "editLogo";
+    private static final String CTRL_LOGO_PICK     = "btnLogoPick";
+    private static final String CTRL_BESCHREIBUNG  = "editBeschreibung";
 
     private final WorkingSpreadsheet currentSpreadsheet;
     private XMultiServiceFactory xMSF;
@@ -128,10 +129,11 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
                 FIELD_X + LOGO_FIELD_W + LOGO_PICK_GAP, ZEILE3_Y - 1, LOGO_PICK_W, CTRL_H + 2, (short) 0);
         registriereButtonAktion(CTRL_LOGO_PICK, this::oeffneDateiAuswahl);
 
-        fuegeLabel("lblTurniername", I18n.get("konfiguration.startseite.turniername.label"),
+        fuegeLabel("lblBeschreibung", I18n.get("konfiguration.startseite.beschreibung.label"),
                 LBL_X, ZEILE4_Y, LBL_W, CTRL_H);
-        fuegeEdit(CTRL_TURNIERNAME, docProps.getStringProperty(DOC_PROP_TURNIERNAME, ""),
-                FIELD_X, ZEILE4_Y, FIELD_W, CTRL_H);
+        fuegeMehrzeiligesEdit(CTRL_BESCHREIBUNG,
+                docProps.getStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, ""),
+                FIELD_X, ZEILE4_Y, FIELD_W, BESCHREIBUNG_H);
 
         fuegeButton("btnOk", I18n.get("dialog.ok"),
                 BTN_OK_X, FOOTER_Y, BTN_ACTION_W, BTN_H, (short) PushButtonType.OK_value);
@@ -144,7 +146,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         boolean aktiv = leseCheckBox();
         String portText = leseFeld(CTRL_PORT);
         String logo = leseFeld(CTRL_LOGO);
-        String turniername = leseFeld(CTRL_TURNIERNAME);
+        String beschreibung = leseFeld(CTRL_BESCHREIBUNG);
 
         int port;
         try {
@@ -160,7 +162,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         GlobalProperties.get().speichernStartseite(port, aktiv);
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
         docProps.setStringProperty(DOC_PROP_TURNIERLOGO_URL, logo);
-        docProps.setStringProperty(DOC_PROP_TURNIERNAME, turniername);
+        docProps.setStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, beschreibung);
         WebServerManager.get().konfigurationGeaendert();
         logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}", aktiv, port);
     }
@@ -189,6 +191,21 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         props.setPropertyValue("Width",     w);
         props.setPropertyValue("Height",    h);
         props.setPropertyValue("MultiLine", Boolean.FALSE);
+        cont.insertByName(name, model);
+    }
+
+    private void fuegeMehrzeiligesEdit(String name, String text, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlEditModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("Text",      text != null ? text : "");
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width",     w);
+        props.setPropertyValue("Height",    h);
+        props.setPropertyValue("MultiLine",  Boolean.TRUE);
+        props.setPropertyValue("VScroll",    Boolean.TRUE);
+        props.setPropertyValue("AutoVScroll", Boolean.TRUE);
         cont.insertByName(name, model);
     }
 

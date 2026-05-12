@@ -215,7 +215,7 @@ function reducer(state, action) {
         composite: null,
         startseite: {
           turnierlogo: msg.turnierlogo ?? '',
-          turniername: msg.turniername ?? '',
+          turnierbeschreibung: msg.turnierbeschreibung ?? '',
           anzahlAngemeldet: msg.anzahlAngemeldet ?? 0,
           anzahlAktiv: msg.anzahlAktiv ?? 0,
         },
@@ -223,7 +223,7 @@ function reducer(state, action) {
     }
     case 'STARTSEITE_PATCH': {
       const msg = action.payload;
-      const vorher = state.startseite ?? { turnierlogo: '', turniername: '' };
+      const vorher = state.startseite ?? { turnierlogo: '', turnierbeschreibung: '' };
       return {
         ...state,
         hinweis: null,
@@ -336,8 +336,10 @@ export default function App() {
 
   useEffect(() => {
     if (startseite) {
-      document.title = startseite.turniername
-        ? `${startseite.turniername} – PTM Live`
+      // Erste Zeile der Beschreibung als Tab-Titel verwenden
+      const ersteZeile = startseite.turnierbeschreibung?.split('\n', 1)[0]?.trim();
+      document.title = ersteZeile
+        ? `${ersteZeile} – PTM Live`
         : 'PTM Live';
     } else if (composite) {
       const erstesPanel = composite.panels[0];

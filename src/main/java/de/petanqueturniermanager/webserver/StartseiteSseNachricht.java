@@ -12,15 +12,15 @@ public record StartseiteSseNachricht(
         String typ,
         int version,
         String turnierlogo,
-        String turniername,
+        String turnierbeschreibung,
         int anzahlAngemeldet,
         int anzahlAktiv) {
 
-    public static StartseiteSseNachricht init(int version, String turnierlogo, String turniername,
+    public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
             int anzahlAngemeldet, int anzahlAktiv) {
         return new StartseiteSseNachricht("startseite_init", version,
                 turnierlogo == null ? "" : turnierlogo,
-                turniername == null ? "" : turniername,
+                turnierbeschreibung == null ? "" : turnierbeschreibung,
                 anzahlAngemeldet, anzahlAktiv);
     }
 

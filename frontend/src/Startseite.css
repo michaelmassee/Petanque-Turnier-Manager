@@ -25,12 +25,15 @@
   object-fit: contain;
 }
 
-.startseite-turniername {
-  font-size: clamp(2rem, 7vw, 6rem);
+.startseite-turnierbeschreibung {
+  font-size: clamp(1.5rem, 5vw, 4.5rem);
   font-weight: 700;
   letter-spacing: 0.02em;
+  line-height: 1.2;
   margin: 0;
   color: #222;
+  white-space: pre-wrap;
+  max-width: 90vw;
 }
 
 .startseite-zahlen {
