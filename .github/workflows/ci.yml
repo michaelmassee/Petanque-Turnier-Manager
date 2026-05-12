@@ -40,9 +40,11 @@ jobs:
         # — kein volles libreoffice-Meta-Paket (~500 MB) nötig. Reduziert Install-Zeit
         # und Mirror-Last drastisch. Pro Versuch ein eigenes 4-min-Timeout via `timeout`,
         # kein Step-Timeout (sonst killt es den Retry vorzeitig).
+        # 5 Versuche mit exponentiellem Backoff (15/30/60/120 s) gegen Mirror-Flakyness.
         run: |
           set -e
-          for attempt in 1 2 3; do
+          backoffs=(15 30 60 120)
+          for attempt in 1 2 3 4 5; do
             echo "::group::apt update + install (Versuch $attempt)"
             if timeout 240 sudo apt-get update && \
                timeout 240 sudo apt-get install -y --no-install-recommends \
@@ -53,10 +55,13 @@ jobs:
               exit 0
             fi
             echo "::endgroup::"
-            echo "Versuch $attempt fehlgeschlagen, neuer Versuch in 15 s …"
-            sleep 15
+            if [ "$attempt" -lt 5 ]; then
+              wait="${backoffs[$((attempt-1))]}"
+              echo "Versuch $attempt fehlgeschlagen, neuer Versuch in ${wait} s …"
+              sleep "$wait"
+            fi
           done
-          echo "Alle 3 apt-Versuche fehlgeschlagen."
+          echo "Alle 5 apt-Versuche fehlgeschlagen."
           exit 1
 
       - name: Install frontend dependencies
