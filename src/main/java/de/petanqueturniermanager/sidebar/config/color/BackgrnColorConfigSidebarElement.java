@@ -5,21 +5,17 @@ package de.petanqueturniermanager.sidebar.config.color;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.awt.Color;
-
-import javax.swing.JColorChooser;
-import javax.swing.JFrame;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.XActionListener;
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.lang.EventObject;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
 import de.petanqueturniermanager.sidebar.GuiFactoryCreateParam;
 import de.petanqueturniermanager.sidebar.config.ConfigSidebarElement;
@@ -37,10 +33,14 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 	LabelPlusBackgrColorAndColorChooser labelPlusBackgrColorAndColorChooser;
 	ConfigProperty<?> configProperty;
 	WorkingSpreadsheet workingSpreadsheet;
+	/** Peer des aufrufenden Fensters (Sidebar oder modaler Konfig-Dialog). Wird als
+	 *  Parent für den UNO-ColorPicker benötigt — sonst öffnet er hinter dem Dialog. */
+	XWindowPeer parentPeer;
 
 	public BackgrnColorConfigSidebarElement(GuiFactoryCreateParam guiFactoryCreateParam, ConfigProperty<Integer> configProperty, WorkingSpreadsheet workingSpreadsheet) {
 		this.configProperty = checkNotNull(configProperty);
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet);
+		this.parentPeer = guiFactoryCreateParam.getWindowPeer();
 		var labelText = configProperty.getDescription() != null ? configProperty.getDescription() : configProperty.getKey();
 		labelPlusBackgrColorAndColorChooser = LabelPlusBackgrColorAndColorChooser.from(guiFactoryCreateParam).labelText(labelText)
 				.helpText(labelText).addXActionListener(btnXActionListener).color(getPropertyValue());
@@ -73,27 +73,23 @@ public class BackgrnColorConfigSidebarElement implements ConfigSidebarElement {
 			workingSpreadsheet = null;
 			configProperty = null;
 			labelPlusBackgrColorAndColorChooser = null;
+			parentPeer = null;
 		}
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// btn Klicked
-			try {
-				Color color = new Color(getPropertyValue());
-				JFrame frame = ProcessBox.from().moveInsideTopWindow().toFront().getFrame();
-				Color newColor = JColorChooser.showDialog(frame, configProperty.getKey(), color);
-				if (newColor != null) {
-					// farbe ausgewaehlt
-					int red = newColor.getRed();
-					int green = newColor.getGreen();
-					int blue = newColor.getBlue();
-					String hex = String.format("%02x%02x%02x", red, green, blue);
-					int rgbColor = Integer.valueOf(hex, 16);
-					setPropertyValue(rgbColor);
-					labelPlusBackgrColorAndColorChooser.color(rgbColor);
-				}
-			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
+			if (workingSpreadsheet == null) {
+				return;
+			}
+			var ergebnis = FarbwahlDialog.waehle(workingSpreadsheet.getxContext(), parentPeer,
+					getPropertyValue());
+			if (ergebnis.isEmpty()) {
+				return;
+			}
+			int rgbColor = ergebnis.getAsInt();
+			setPropertyValue(rgbColor);
+			if (labelPlusBackgrColorAndColorChooser != null) {
+				labelPlusBackgrColorAndColorChooser.color(rgbColor);
 			}
 		}
 	};

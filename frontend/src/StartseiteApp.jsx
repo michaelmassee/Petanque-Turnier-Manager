@@ -6,10 +6,12 @@ import './Startseite.css';
  * Teilnehmerzahl (angemeldet/aktiv). PTM-Branding als Footer.
  */
 export default function StartseiteApp({ startseite }) {
-  const { turnierlogo, turnierbeschreibung, anzahlAngemeldet, anzahlAktiv,
+  const { turnierlogo, turnierbeschreibung, hintergrundfarbe,
+          anzahlAngemeldet, anzahlAktiv,
           labelAngemeldet, labelAktiv, tagline } = startseite;
+  const stil = hintergrundfarbe ? { background: hintergrundfarbe } : undefined;
   return (
-    <div className="startseite">
+    <div className="startseite" style={stil}>
       <div className="startseite-kopf">
         {turnierlogo && (
           <img

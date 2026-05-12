@@ -15,6 +15,7 @@ public record StartseiteSseNachricht(
         int version,
         String turnierlogo,
         String turnierbeschreibung,
+        String hintergrundfarbe,
         int anzahlAngemeldet,
         int anzahlAktiv,
         String labelAngemeldet,
@@ -23,11 +24,13 @@ public record StartseiteSseNachricht(
         Map<String, String> i18n) {
 
     public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
+            String hintergrundfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
             String labelAngemeldet, String labelAktiv, String tagline) {
         return new StartseiteSseNachricht("startseite_init", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
+                hintergrundfarbe == null ? "" : hintergrundfarbe,
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,
@@ -37,15 +40,17 @@ public record StartseiteSseNachricht(
 
     /**
      * Update-Nachricht trägt alle Felder mit — Reducer im Frontend mergt sie, sodass
-     * Beschreibung/Logo/Tagline auch dann erhalten bleiben, wenn die initiale Verbindung
-     * vor einer späteren Property-Änderung aufgebaut wurde.
+     * Beschreibung/Logo/Tagline/Hintergrundfarbe auch dann erhalten bleiben, wenn die
+     * initiale Verbindung vor einer späteren Property-Änderung aufgebaut wurde.
      */
     public static StartseiteSseNachricht update(int version, String turnierlogo, String turnierbeschreibung,
+            String hintergrundfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
             String labelAngemeldet, String labelAktiv, String tagline) {
         return new StartseiteSseNachricht("startseite_update", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
+                hintergrundfarbe == null ? "" : hintergrundfarbe,
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,

@@ -89,6 +89,10 @@ public final class WebServerManager implements TimerListener {
     /** Dokument, das den WebServer gestartet hat – nur dieses darf ihn wieder stoppen. */
     private XSpreadsheetDocument ownerDocument = null;
     private XSpreadsheetDocument registriertesDocument = null;
+    /** Kontext, der beim {@link #starten(XComponentContext) Start} übergeben wurde –
+     *  benötigt, um in {@link #konfigurationGeaendert()} ohne externes Sheet ein
+     *  {@link WorkingSpreadsheet} für den Live-Push bauen zu können. */
+    private XComponentContext gespeicherterCtx = null;
     private boolean laeuft = false;
     private TimerWebServerInstanz timerInstanz;
 
@@ -182,6 +186,7 @@ public final class WebServerManager implements TimerListener {
 
         if (!compositeInstanzen.isEmpty() || startseiteInstanz != null) {
             laeuft = true;
+            gespeicherterCtx = ctx;
             ownerDocument = new WorkingSpreadsheet(ctx).getWorkingSpreadsheetDocument();
             logger.info("Webserver Owner-Dokument gesetzt: {}", ownerDocument != null ? "ja" : "null");
             statusListenerBenachrichtigen();
@@ -213,7 +218,7 @@ public final class WebServerManager implements TimerListener {
             letzterStartseiteStatus = null;
             // Init-Cache vorläufig leer befüllen; sseRefreshSendenIntern liefert sofort konkrete Werte nach.
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    startseiteVersion.incrementAndGet(), "", "", 0, 0,
+                    startseiteVersion.incrementAndGet(), "", "", "", 0, 0,
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"))));
@@ -462,6 +467,17 @@ public final class WebServerManager implements TimerListener {
 
         reconciliereCompositeInstanzen(compositeEintraege);
         reconciliereStartseiteInstanz();
+        // Logo/Beschreibung sind nicht Teil des Diff-Cache (letzterStartseiteStatus enthält nur
+        // angemeldet/aktiv). Deshalb Diff-Cache zurücksetzen und sofort pushen, damit Änderungen
+        // ohne Spielerzahl-Wechsel die Live-Clients erreichen.
+        letzterStartseiteStatus = null;
+        if (startseiteInstanz != null && startseiteInstanz.laeuft() && gespeicherterCtx != null) {
+            try {
+                pushStartseiteFallsAktiv(new WorkingSpreadsheet(gespeicherterCtx));
+            } catch (RuntimeException e) {
+                logger.warn("Live-Push der Startseite nach Konfig-Änderung fehlgeschlagen: {}", e.getMessage(), e);
+            }
+        }
     }
 
     /**
@@ -642,6 +658,8 @@ public final class WebServerManager implements TimerListener {
             var docProps = new de.petanqueturniermanager.helper.DocumentPropertiesHelper(ws);
             String logoQuelle = docProps.getStringProperty("Turnierlogo Url", "");
             String beschreibung = docProps.getStringProperty("Turnierbeschreibung", "");
+            int hintergrundFarbeInt = docProps.getIntProperty("Turnierhintergrund Farbe", 0xFFFFFF);
+            String hintergrundFarbe = String.format("#%06x", hintergrundFarbeInt & 0xFFFFFF);
             startseiteInstanz.setLogoQuelle(logoQuelle);
 
             int version = startseiteVersion.incrementAndGet();
@@ -650,14 +668,14 @@ public final class WebServerManager implements TimerListener {
             String logoUrl = logoQuelle.isBlank() ? "" : "/turnierlogo?v=" + version;
             // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    version, logoUrl, beschreibung, status.angemeldet(), status.aktiv(),
+                    version, logoUrl, beschreibung, hintergrundFarbe, status.angemeldet(), status.aktiv(),
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"))));
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
-                        version, logoUrl, beschreibung, status.angemeldet(), status.aktiv(),
+                        version, logoUrl, beschreibung, hintergrundFarbe, status.angemeldet(), status.aktiv(),
                         I18n.get("startseite.label.angemeldet"),
                         I18n.get("startseite.label.aktiv"),
                         I18n.get("startseite.tagline"))));

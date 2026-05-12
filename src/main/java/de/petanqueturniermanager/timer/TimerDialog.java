@@ -1,9 +1,5 @@
 package de.petanqueturniermanager.timer;
 
-import java.awt.Color;
-
-import javax.swing.JColorChooser;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,10 +20,10 @@ import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
-import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.konfigdialog.AbstractUnoDialog;
 
 /**
@@ -78,6 +74,7 @@ public class TimerDialog extends AbstractUnoDialog {
     private XControlContainer xcc;
     private XMultiServiceFactory xMSF;
     private XNameContainer cont;
+    private XWindowPeer dialogPeer;
 
     private int hintergrundFarbeInt;
     private XPropertySet vorschauProps;
@@ -119,6 +116,7 @@ public class TimerDialog extends AbstractUnoDialog {
         this.xMSF = xMSF;
         this.cont = cont;
         this.xcc  = Lo.qi(XControlContainer.class, xDialog);
+        this.dialogPeer = peer;
         this.hintergrundFarbeInt = TimerEinstellungen.letzteHintergrundFarbe();
 
         // ── Zeile 1: Dauer ──────────────────────────────────────────────────────
@@ -200,19 +198,18 @@ public class TimerDialog extends AbstractUnoDialog {
         setzeFeld(CTRL_DAUER, TimerManager.formatiere(neueZeit));
     }
 
-    // ── Farbwahl per JColorChooser ────────────────────────────────────────────
+    // ── Farbwahl ──────────────────────────────────────────────────────────────
 
     private void oeffneFarbwahl() {
+        var ergebnis = FarbwahlDialog.waehle(xContext, dialogPeer, hintergrundFarbeInt);
+        if (ergebnis.isEmpty()) {
+            return;
+        }
+        hintergrundFarbeInt = ergebnis.getAsInt();
         try {
-            var aktuell = new Color(hintergrundFarbeInt);
-            var frame = ProcessBox.from().moveInsideTopWindow().toFront().getFrame();
-            var neu = JColorChooser.showDialog(frame, I18n.get("timer.dialog.hintergrundfarbe.label"), aktuell);
-            if (neu != null) {
-                hintergrundFarbeInt = neu.getRGB() & 0xFFFFFF;
-                vorschauProps.setPropertyValue("BackgroundColor", hintergrundFarbeInt);
-            }
-        } catch (Exception e) {
-            logger.error("Fehler bei Farbwahl", e);
+            vorschauProps.setPropertyValue("BackgroundColor", hintergrundFarbeInt);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.error("Fehler beim Setzen der Farb-Vorschau", e);
         }
     }
 
