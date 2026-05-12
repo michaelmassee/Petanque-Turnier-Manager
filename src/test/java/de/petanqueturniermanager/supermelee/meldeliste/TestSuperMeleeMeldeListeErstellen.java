@@ -103,6 +103,40 @@ public class TestSuperMeleeMeldeListeErstellen {
 		return meldeListeSheetNew.ersteSummeSpalte();
 	}
 
+	/**
+	 * Splittet einen Namens-String "Nachname, Vorname" in [Vorname, Nachname].
+	 * Wenn kein Komma enthalten ist, landet alles in Vorname (Nachname leer).
+	 */
+	private static String[] splitVornameNachname(String name) {
+		int komma = name.indexOf(',');
+		if (komma < 0) {
+			return new String[] { name.trim(), "" };
+		}
+		String nachname = name.substring(0, komma).trim();
+		String vorname = name.substring(komma + 1).trim();
+		return new String[] { vorname, nachname };
+	}
+
+	/** Baut die 4 Datenspalten für die Supermelee-Meldeliste:
+	 *  Vorname | Nachname | setzPos | alle_spielen — initial mit alle_spielen=1. */
+	private static RangeData baueMeldungenData(List<String> namen) {
+		List<String> vornamen = new ArrayList<>(namen.size());
+		List<String> nachnamen = new ArrayList<>(namen.size());
+		for (String name : namen) {
+			String[] splitted = splitVornameNachname(name);
+			vornamen.add(splitted[0]);
+			nachnamen.add(splitted[1]);
+		}
+		RangeData data = new RangeData(vornamen);     // [0] Vorname
+		data.addNewEmptySpalte();                     // [1] Nachname (gleich überschreiben)
+		for (int i = 0; i < data.size(); i++) {
+			data.get(i).get(1).setVal(nachnamen.get(i));
+		}
+		data.addNewEmptySpalte();                     // [2] setzPos
+		data.addNewSpalte(1);                         // [3] alle spielen
+		return data;
+	}
+
 	private int testMeldungenEinfuegenAllepielen(int anzMeldungen, int skip) throws GenerateException {
 
 		int ersteDatenZeile = getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
@@ -111,9 +145,7 @@ public class TestSuperMeleeMeldeListeErstellen {
 		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
 
 		List<String> listeMitTestNamen = testnamenLoader.listeMitTestNamen(anzMeldungen, skip);
-		RangeData data = new RangeData(listeMitTestNamen);
-		data.addNewEmptySpalte(); // setz position
-		data.addNewSpalte(1); // alle spielen
+		RangeData data = baueMeldungenData(listeMitTestNamen);
 
 		Position startPos = Position.from(spielerNameErsteSpalte, ersteDatenZeile);
 		RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).setDataInRange(data, true);
@@ -128,36 +160,47 @@ public class TestSuperMeleeMeldeListeErstellen {
 		XSpreadsheet sheet = getMeldeListeSheetNew().getXSpreadSheet();
 
 		List<String> listeMitTestNamen = listeMitTestNamen();
-		RangeData data = new RangeData(listeMitTestNamen);
-		data.addNewEmptySpalte(); // setz position
-		data.addNewSpalte(1); // alle spielen
+		RangeData data = baueMeldungenData(listeMitTestNamen);
 
 		// ------------------------------------------------------------------------------------------
+		// Filter-Helper: rekonstruiert "Nachname, Vorname" aus den geteilten Spalten.
+		java.util.function.Function<de.petanqueturniermanager.helper.sheet.rangedata.RowData, String> fullName = r -> {
+			String vorname = r.get(0).getStringVal() == null ? "" : r.get(0).getStringVal();
+			String nachname = r.get(1).getStringVal() == null ? "" : r.get(1).getStringVal();
+			if (nachname.isEmpty()) {
+				return vorname;
+			}
+			if (vorname.isEmpty()) {
+				return nachname;
+			}
+			return nachname + ", " + vorname;
+		};
+
 		// setzPosition 1
-		data.stream().filter(rData -> setzPos1.contains(rData.get(0).getStringVal())).forEach(r -> {
-			r.get(1).setVal(1);
+		data.stream().filter(rData -> setzPos1.contains(fullName.apply(rData))).forEach(r -> {
+			r.get(2).setVal(1);
 		});
 
 		// setzPosition 2
-		data.stream().filter(rData -> setzPos2.contains(rData.get(0).getStringVal())).forEach(r -> {
-			r.get(1).setVal(2);
+		data.stream().filter(rData -> setzPos2.contains(fullName.apply(rData))).forEach(r -> {
+			r.get(2).setVal(2);
 		});
 		// ------------------------------------------------------------------------------------------
 		// die spielen nicht mit
-		data.stream().filter(rData -> nichtmitspielen.contains(rData.get(0).getStringVal())).forEach(r -> {
-			r.get(2).setVal(null);
+		data.stream().filter(rData -> nichtmitspielen.contains(fullName.apply(rData))).forEach(r -> {
+			r.get(3).setVal(null);
 		});
 
 		// ausgestiegen
-		data.stream().filter(rData -> ausgestiegen.contains(rData.get(0).getStringVal())).forEach(r -> {
-			r.get(2).setVal(2);
+		data.stream().filter(rData -> ausgestiegen.contains(fullName.apply(rData))).forEach(r -> {
+			r.get(3).setVal(2);
 		});
 		// ------------------------------------------------------------------------------------------
 
 		Position startPos = Position.from(spielerNameErsteSpalte, ersteDatenZeile);
 		RangePosition rangePos = RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).setDataInRange(data)
 				.getRangePos();
-		assertThat(rangePos.getAddress()).isEqualTo("B3:D" + (2 + listeMitTestNamen.size()));
+		assertThat(rangePos.getAddress()).isEqualTo("B3:E" + (2 + listeMitTestNamen.size()));
 		return listeMitTestNamen.size();
 	}
 

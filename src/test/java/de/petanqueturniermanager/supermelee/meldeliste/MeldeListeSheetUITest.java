@@ -35,13 +35,13 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 				.getErsteMeldungNameSpalte();
 		int erstDatenZeile = testMeldeListeErstellen.getMeldeListeSheetNew().getMeldungenSpalte().getErsteDatenZiele();
 
-		// daten einlesen
+		// daten einlesen — Layout: Nr(-1) | Vorname(+0) | Nachname(+1) | setzPos(+2) | alle_spielen(+3)
 		RangeHelper raHlp = RangeHelper.from(testMeldeListeErstellen.getXSpreadSheet(), doc,
 				RangePosition.from(spielerNameErsteSpalte - 1, // nr
-						erstDatenZeile, spielerNameErsteSpalte + 2, (erstDatenZeile + anzMeldungen) - 1));
+						erstDatenZeile, spielerNameErsteSpalte + 3, (erstDatenZeile + anzMeldungen) - 1));
 		RangeData dataFromRange = raHlp.getDataFromRange();
 
-		assertThat(raHlp.getRangePos().getAddress()).isEqualTo("A3:D" + (2 + anzMeldungen));
+		assertThat(raHlp.getRangePos().getAddress()).isEqualTo("A3:E" + (2 + anzMeldungen));
 		assertThat(dataFromRange.size()).isEqualTo(anzMeldungen);
 
 		// nr pruefen
@@ -145,39 +145,48 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 
 	private void validateMeldungen(RangeData dataFromRange, int anzMeldungen, List<String> listeMitTestNamen) {
 
+		// Namen liegen in Vorname(col 1) + Nachname(col 2). Im Test-Datenformat "Nachname, Vorname".
 		HashSet<String> pruefListe = new HashSet<>();
-		dataFromRange.stream().map(r -> {
-			return r.get(1); // 2 spalte mit Namen
-		}).forEach(celData -> {
-			// name muss vorhanden sein
-			assertThat(celData.getData()).isNotNull().isInstanceOf(String.class);
-			String cellVal = celData.getStringVal();
-			// nr darf nur einmal in der liste sein
-			assertThat(pruefListe).doesNotContain(cellVal);
-			assertThat(listeMitTestNamen).contains(cellVal);
-			pruefListe.add(cellVal);
+		dataFromRange.stream().forEach(r -> {
+			String vorname = r.get(1).getStringVal();
+			String nachname = r.get(2).getStringVal();
+			assertThat(vorname).isNotNull();
+			String fullName = (nachname == null || nachname.isEmpty()) ? vorname : nachname + ", " + vorname;
+			assertThat(pruefListe).doesNotContain(fullName);
+			assertThat(listeMitTestNamen).contains(fullName);
+			pruefListe.add(fullName);
 		});
 		assertThat(pruefListe.size()).isEqualTo(anzMeldungen);
 
 	}
 
+	// Spalten-Indizes im RangeData: Nr(0) | Vorname(1) | Nachname(2) | setzPos(3) | alle_spielen(4)
+	// Test-Datennamen liegen im Format "Nachname, Vorname" — rekonstruieren für Filter.
+	private static String fullName(de.petanqueturniermanager.helper.sheet.rangedata.RowData r) {
+		String vorname = r.get(1).getStringVal() == null ? "" : r.get(1).getStringVal();
+		String nachname = r.get(2).getStringVal() == null ? "" : r.get(2).getStringVal();
+		if (nachname.isEmpty()) return vorname;
+		if (vorname.isEmpty()) return nachname;
+		return nachname + ", " + vorname;
+	}
+
 	private void validateSetzPos(RangeData dataFromRange) {
 		long anzSpielermitSetzpos1 = dataFromRange.stream()
-				.filter(rData -> TestSuperMeleeMeldeListeErstellen.setzPos1.contains(rData.get(1).getStringVal())
-						&& rData.get(2).getIntVal(-1) == 1)
+				.filter(rData -> TestSuperMeleeMeldeListeErstellen.setzPos1.contains(fullName(rData))
+						&& rData.get(3).getIntVal(-1) == 1)
 				.count();
 		assertThat(anzSpielermitSetzpos1).isEqualTo(TestSuperMeleeMeldeListeErstellen.setzPos1.size());
 
-		anzSpielermitSetzpos1 = dataFromRange.stream().filter(rData -> rData.get(2).getIntVal(-1) == 1).count();
+		anzSpielermitSetzpos1 = dataFromRange.stream().filter(rData -> rData.get(3).getIntVal(-1) == 1).count();
 		assertThat(anzSpielermitSetzpos1).isEqualTo(TestSuperMeleeMeldeListeErstellen.setzPos1.size());
 
 		long anzSpielermitSetzpos2 = dataFromRange.stream()
-				.filter(rData -> TestSuperMeleeMeldeListeErstellen.setzPos2.contains(rData.get(1).getStringVal())
-						&& rData.get(2).getIntVal(-1) == 2)
+				.filter(rData -> TestSuperMeleeMeldeListeErstellen.setzPos2.contains(fullName(rData))
+						&& rData.get(3).getIntVal(-1) == 2)
 				.count();
 		assertThat(anzSpielermitSetzpos2).isEqualTo(TestSuperMeleeMeldeListeErstellen.setzPos2.size());
 
-		anzSpielermitSetzpos2 = dataFromRange.stream().filter(rData -> rData.get(2).getIntVal(-1) == 2).count();
+		anzSpielermitSetzpos2 = dataFromRange.stream().filter(rData -> rData.get(3).getIntVal(-1) == 2).count();
 		assertThat(anzSpielermitSetzpos2).isEqualTo(TestSuperMeleeMeldeListeErstellen.setzPos2.size());
 
 	}
@@ -185,24 +194,24 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 	private void validateAktivSpalte(RangeData dataFromRange, int anzMeldungen) {
 
 		long anzSpielernichtmitspielen = dataFromRange.stream()
-				.filter(rData -> TestSuperMeleeMeldeListeErstellen.nichtmitspielen.contains(rData.get(1).getStringVal())
-						&& rData.get(3).getIntVal(-1) == -1)
+				.filter(rData -> TestSuperMeleeMeldeListeErstellen.nichtmitspielen.contains(fullName(rData))
+						&& rData.get(4).getIntVal(-1) == -1)
 				.count();
 		assertThat(anzSpielernichtmitspielen).isEqualTo(TestSuperMeleeMeldeListeErstellen.nichtmitspielen.size());
 
-		anzSpielernichtmitspielen = dataFromRange.stream().filter(rData -> rData.get(3).getIntVal(-1) == -1).count();
+		anzSpielernichtmitspielen = dataFromRange.stream().filter(rData -> rData.get(4).getIntVal(-1) == -1).count();
 		assertThat(anzSpielernichtmitspielen).isEqualTo(TestSuperMeleeMeldeListeErstellen.nichtmitspielen.size());
 
 		long anzSpielerAusgestiegen = dataFromRange.stream()
-				.filter(rData -> TestSuperMeleeMeldeListeErstellen.ausgestiegen.contains(rData.get(1).getStringVal())
-						&& rData.get(3).getIntVal(-1) == 2)
+				.filter(rData -> TestSuperMeleeMeldeListeErstellen.ausgestiegen.contains(fullName(rData))
+						&& rData.get(4).getIntVal(-1) == 2)
 				.count();
 		assertThat(anzSpielerAusgestiegen).isEqualTo(TestSuperMeleeMeldeListeErstellen.ausgestiegen.size());
 
-		anzSpielerAusgestiegen = dataFromRange.stream().filter(rData -> rData.get(3).getIntVal(-1) == 2).count();
+		anzSpielerAusgestiegen = dataFromRange.stream().filter(rData -> rData.get(4).getIntVal(-1) == 2).count();
 		assertThat(anzSpielerAusgestiegen).isEqualTo(TestSuperMeleeMeldeListeErstellen.ausgestiegen.size());
 
-		long anzSpielerSpielen = dataFromRange.stream().filter(rData -> rData.get(3).getIntVal(-1) == 1).count();
+		long anzSpielerSpielen = dataFromRange.stream().filter(rData -> rData.get(4).getIntVal(-1) == 1).count();
 		assertThat(anzSpielerSpielen).isEqualTo(anzMeldungen - TestSuperMeleeMeldeListeErstellen.ausgestiegen.size()
 				- TestSuperMeleeMeldeListeErstellen.nichtmitspielen.size());
 

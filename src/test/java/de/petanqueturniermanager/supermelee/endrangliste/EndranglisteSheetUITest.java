@@ -96,7 +96,7 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		RangeHelper rngHlpr = endranglisteRange(endranglisteSheet.getXSpreadSheet());
 		RangeHelper rngHlprValidate = endranglisteRangeValidateSpalten(endranglisteSheet.getXSpreadSheet());
 
-		// save ref file 
+		// save ref file
 		// writeToJson(ENDRANGLISTESHEETUITEST_REFFILE, rngHlpr.getDataFromRange());
 		// writeToJson(ENDRANGLISTESHEETUITEST_REFFILE_VALIDATE, rngHlprValidate.getDataFromRange());
 
@@ -132,9 +132,9 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 		RangeHelper rngHlprValidateSortByDay = endranglisteRangeValidateSpaltenSortByDay(
 				endranglisteSheet.getXSpreadSheet());
 
-		// save ref files 
-		//		writeToJson(ENDRANGLISTESHEETUITEST_ANZ_TAGE_REFFILE, rngHlpr.getDataFromRange());
-		//		writeToJson(ENDRANGLISTESHEETUITEST_ANZ_TAGE_REFFILE_VALIDATE, rngHlprValidateSortByDay.getDataFromRange());
+		// save ref files
+		// writeToJson(ENDRANGLISTESHEETUITEST_ANZ_TAGE_REFFILE, rngHlpr.getDataFromRange());
+		// writeToJson(ENDRANGLISTESHEETUITEST_ANZ_TAGE_REFFILE_VALIDATE, rngHlprValidateSortByDay.getDataFromRange());
 
 		// compare ref file für daten
 		try (InputStream jsonFile = EndranglisteSheetUITest.class
@@ -158,22 +158,23 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 	@Test
 	@Disabled("Capture-Helper, nur manuell aktivieren")
 	public void captureJsonReferenceFiles() throws IOException, GenerateException {
-		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
-
-		// testrunden erstellen
-		for (int i = 1; i <= 1; i++) {
-			SpielTagNr spieltag = SpielTagNr.from(i);
-			testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
-			if (i == 1) { // 2 mit 1 spieltag weniger
-				Position clear = Position.from(3, 10); // D:11  Gerhard Niko 
-				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear).setValue(""));
-				Position clear2 = Position.from(3, 11); // D:12  Grau Franka  
-				sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear2).setValue(""));
+		de.petanqueturniermanager.helper.random.RandomSource.setSeed(99L);
+		try {
+			testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+			for (int i = 1; i <= ANZ_SPIELTAGE; i++) {
+				SpielTagNr spieltag = SpielTagNr.from(i);
+				testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+				if (i == 1) {
+					Position clear = Position.from(3, 10);
+					sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear).setValue(""));
+					Position clear2 = Position.from(3, 11);
+					sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, clear2).setValue(""));
+				}
+				ranglisteTestDaten.generateSpielrundenJsonFilesIntmp(ANZ_RUNDEN, spieltag);
 			}
-			ranglisteTestDaten.generateSpielrundenJsonFilesIntmp(ANZ_RUNDEN, spieltag); // json dateien erstellen
+		} finally {
+			de.petanqueturniermanager.helper.random.RandomSource.reset();
 		}
-
-		waitEnter();
 	}
 
 	private RangeHelper endranglisteRange(XSpreadsheet endRangliste) {

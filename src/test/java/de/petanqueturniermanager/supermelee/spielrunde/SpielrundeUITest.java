@@ -130,7 +130,8 @@ public class SpielrundeUITest extends BaseCalcUITest {
 		// erste 2 Meldungen auf inaktiv damit nur doublette paarungen moeglich
 		int ersteDatenZeile = meldeListeSheetNew.getMeldungenSpalte().getErsteDatenZiele();
 		int spielerNameErsteSpalte = meldeListeSheetNew.getMeldungenSpalte().getErsteMeldungNameSpalte();
-		int aktivSpalte = spielerNameErsteSpalte + 2;
+		// Layout: Vorname(+0) | Nachname(+1) | setzPos(+2) | alle_spielen(+3)
+		int aktivSpalte = spielerNameErsteSpalte + 3;
 		sheetHlp.clearValInCell(meldeListeSheetNew.getXSpreadSheet(), Position.from(aktivSpalte, ersteDatenZeile));
 		sheetHlp.clearValInCell(meldeListeSheetNew.getXSpreadSheet(), Position.from(aktivSpalte, ersteDatenZeile + 1));
 

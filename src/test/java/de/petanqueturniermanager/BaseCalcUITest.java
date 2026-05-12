@@ -221,8 +221,8 @@ public abstract class BaseCalcUITest {
 		assertThat(rangeData).hasSameSizeAs(refRangeData);
 
 		int idx = 0;
-		// jede zeile vergleichen, wegen fehlermeldung 
-		for (RowData data : refRangeData) {
+		// jede zeile vergleichen, wegen fehlermeldung
+		for (RowData data : rangeData) {
 			List<String> expected = refRangeData.get(idx).stream().map(c -> c.getStringVal())
 					.collect(Collectors.toList());
 			logger.info("Validate Zeile :" + expected);

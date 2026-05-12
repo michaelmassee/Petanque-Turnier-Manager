@@ -18,7 +18,7 @@
       "data": ""
     },
     {
-      "data": "Team 1"
+      "data": ""
     },
     {
       "data": "Vorname"
@@ -32,13 +32,13 @@
       "data": 1.0
     },
     {
-      "data": "Team 2"
+      "data": "Team 1"
     },
     {
-      "data": "Burmeister, Selma"
+      "data": "Otbert"
     },
     {
-      "data": "Radde, Engelbert"
+      "data": "Dold"
     }
   ],
   [
@@ -46,13 +46,13 @@
       "data": 2.0
     },
     {
-      "data": "Team 3"
+      "data": "Team 2"
     },
     {
-      "data": "Tafel, Rosa"
+      "data": "Muthild"
     },
     {
-      "data": "Stabel, Sophie"
+      "data": "Döll"
     }
   ],
   [
@@ -60,13 +60,13 @@
       "data": 3.0
     },
     {
-      "data": "Team 4"
+      "data": "Team 3"
     },
     {
-      "data": "Molz, Kornelia"
+      "data": "Selma"
     },
     {
-      "data": "Kamps, Felix"
+      "data": "Burmeister"
     }
   ],
   [
@@ -74,13 +74,13 @@
       "data": 4.0
     },
     {
-      "data": "Team 5"
+      "data": "Team 4"
     },
     {
-      "data": "Husmann, Isedore"
+      "data": "Franka"
     },
     {
-      "data": "Bohnet, Collin"
+      "data": "Grau"
     }
   ],
   [
@@ -88,13 +88,13 @@
       "data": 5.0
     },
     {
-      "data": "Team 6"
+      "data": "Team 5"
     },
     {
-      "data": "Karch, Erhardt"
+      "data": "Rosa"
     },
     {
-      "data": "Stocker, Benjamin"
+      "data": "Tafel"
     }
   ],
   [
@@ -102,13 +102,13 @@
       "data": 6.0
     },
     {
-      "data": "Team 7"
+      "data": "Team 6"
     },
     {
-      "data": "Staub, Irmintraud"
+      "data": "Maria"
     },
     {
-      "data": "Meiners, Borwin"
+      "data": "Bieder"
     }
   ],
   [
@@ -116,13 +116,13 @@
       "data": 7.0
     },
     {
-      "data": "Team 8"
+      "data": "Team 7"
     },
     {
-      "data": "Krischer, Max"
+      "data": "Kornelia"
     },
     {
-      "data": "Görgens, Gerlach"
+      "data": "Molz"
     }
   ],
   [
@@ -130,13 +130,13 @@
       "data": 8.0
     },
     {
-      "data": "Team 9"
+      "data": "Team 8"
     },
     {
-      "data": "Herget, Diethmar"
+      "data": "Joana"
     },
     {
-      "data": "Romero, Imke"
+      "data": "Nuber"
     }
   ],
   [
@@ -144,27 +144,27 @@
       "data": 9.0
     },
     {
-      "data": "Team 10"
+      "data": "Team 9"
     },
     {
-      "data": "Steinbrink, Diethelm"
+      "data": "Isedore"
     },
     {
-      "data": "Bäder, Rita"
+      "data": "Husmann"
     }
   ],
   [
     {
-      "data": ""
+      "data": 10.0
     },
     {
-      "data": ""
+      "data": "Team 10"
     },
     {
-      "data": ""
+      "data": "Annkatrin"
     },
     {
-      "data": ""
+      "data": "Eisenhardt"
     }
   ],
   [
