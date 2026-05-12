@@ -1,10 +1,15 @@
 import { useReducer, useEffect, useRef } from 'react';
-import Cell from './Cell';
-import Panel from './Panel';
-import SplitPaneComposite from './SplitPaneComposite';
+import CompositeApp from './CompositeApp';
+import EinzelApp from './EinzelApp';
+import StartseiteApp from './StartseiteApp';
+import { viewKeyFromState } from './viewResolver';
 
-// 1/100 mm → Pixel (gerundet, verhindert Sub-Pixel-Layout-Drift)
-const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
+// Renderer-Map: hier neue Top-Level-Views ergänzen, App.jsx bleibt sonst unverändert.
+const VIEW_RENDERERS = {
+  einzel:     ({ state }) => <EinzelApp     table={state.table} />,
+  composite:  ({ state }) => <CompositeApp  composite={state.composite} />,
+  startseite: ({ state }) => <StartseiteApp startseite={state.startseite} />,
+};
 
 const leererZustand = {
   zeilen: 0,
@@ -108,6 +113,7 @@ function reducer(state, action) {
         ...state,
         hinweis: null,
         composite: null,
+        startseite: null,
         table: {
           zeilen: msg.zeilen || 0,
           spalten: msg.spalten || 0,
@@ -139,6 +145,7 @@ function reducer(state, action) {
         ...state,
         hinweis: null,
         composite: null,
+        startseite: null,
         table: {
           zeilen: msg.zeilen || state.table.zeilen,
           spalten: msg.spalten || state.table.spalten,
@@ -170,6 +177,7 @@ function reducer(state, action) {
         ...state,
         hinweis: null,
         table: leererZustand,
+        startseite: null,
         composite: {
           layout: msg.layout,
           zoom: msg.zoom ?? 100,
@@ -189,11 +197,40 @@ function reducer(state, action) {
       return {
         ...state,
         hinweis: null,
+        startseite: null,
         composite: {
           layout: msg.layout ?? state.composite?.layout,
           zoom: msg.zoom ?? state.composite?.zoom ?? 100,
           mitHeaderFooter: msg.mitHeaderFooter ?? state.composite?.mitHeaderFooter ?? true,
           panels: neuerePanels,
+        },
+      };
+    }
+    case 'STARTSEITE_INIT': {
+      const msg = action.payload;
+      return {
+        ...state,
+        hinweis: null,
+        table: leererZustand,
+        composite: null,
+        startseite: {
+          turnierlogo: msg.turnierlogo ?? '',
+          turniername: msg.turniername ?? '',
+          anzahlAngemeldet: msg.anzahlAngemeldet ?? 0,
+          anzahlAktiv: msg.anzahlAktiv ?? 0,
+        },
+      };
+    }
+    case 'STARTSEITE_PATCH': {
+      const msg = action.payload;
+      const vorher = state.startseite ?? { turnierlogo: '', turniername: '' };
+      return {
+        ...state,
+        hinweis: null,
+        startseite: {
+          ...vorher,
+          anzahlAngemeldet: msg.anzahlAngemeldet ?? vorher.anzahlAngemeldet ?? 0,
+          anzahlAktiv: msg.anzahlAktiv ?? vorher.anzahlAktiv ?? 0,
         },
       };
     }
@@ -212,6 +249,7 @@ export default function App() {
     ui: {},
     hinweis: null,
     composite: null,
+    startseite: null,
     verbunden: true,
   });
 
@@ -251,6 +289,11 @@ export default function App() {
           dispatch({ type: 'COMPOSITE_INIT', payload: msg });
           return;
         }
+        if (msg.typ === 'startseite_init') {
+          versionRef.current = msg.version ?? 0;
+          dispatch({ type: 'STARTSEITE_INIT', payload: msg });
+          return;
+        }
 
         if (msg.version <= versionRef.current) {
           return;
@@ -261,6 +304,8 @@ export default function App() {
           dispatch({ type: 'COMPOSITE_PATCH', payload: msg });
         } else if (msg.typ === 'diff') {
           dispatch({ type: 'PATCH', payload: msg });
+        } else if (msg.typ === 'startseite_update') {
+          dispatch({ type: 'STARTSEITE_PATCH', payload: msg });
         }
       };
 
@@ -287,11 +332,14 @@ export default function App() {
     };
   }, []);
 
-  const { table, hinweis, composite, verbunden } = state;
+  const { table, hinweis, composite, startseite, verbunden } = state;
 
   useEffect(() => {
-    if (composite) {
-      // Titel aus erstem Panel nehmen
+    if (startseite) {
+      document.title = startseite.turniername
+        ? `${startseite.turniername} – PTM Live`
+        : 'PTM Live';
+    } else if (composite) {
       const erstesPanel = composite.panels[0];
       document.title = erstesPanel?.seitenTitel
         ? `${erstesPanel.seitenTitel} – PTM Live`
@@ -301,7 +349,7 @@ export default function App() {
         ? `${table.seitenTitel} – PTM Live`
         : 'PTM Live';
     }
-  }, [table.seitenTitel, composite]);
+  }, [table.seitenTitel, composite, startseite]);
 
   if (hinweis) {
     return (
@@ -317,125 +365,22 @@ export default function App() {
     );
   }
 
-  // Composite View
-  if (composite && composite.layout) {
-    const compositeMitHeaderFooter = composite.mitHeaderFooter !== false;
-    // Globalen Header/Footer aus dem ERSTEN Panel mit nicht-leeren Kopf-/Fußzeilen wählen.
-    // Panel 0 darf ein Timer/URL/fehlend-Panel sein – dort sind die Felder null und würden
-    // sonst dazu führen, dass GAR KEIN Header/Footer angezeigt wird, obwohl andere Sheet-Panels
-    // welche hätten. Kopfzeile und Fußzeile werden separat gesucht (können aus verschiedenen
-    // Panels stammen).
-    const panelsSortiert = compositeMitHeaderFooter
-      ? Object.keys(composite.panels)
-          .map((k) => Number(k))
-          .sort((a, b) => a - b)
-          .map((id) => composite.panels[id])
-      : [];
-    const kopfzeilenPanel = panelsSortiert.find((p) =>
-      p && (p.kopfzeileLinks?.trim() || p.kopfzeileMitte?.trim() || p.kopfzeileRechts?.trim())
-    );
-    const fusszeilenPanel = panelsSortiert.find((p) =>
-      p && (p.fusszeileLinks?.trim() || p.fusszeileMitte?.trim() || p.fusszeileRechts?.trim())
-    );
-    return (
-      <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {kopfzeilenPanel && (
-          <div className="seitenzeile">
-            <span className="links">{kopfzeilenPanel.kopfzeileLinks}</span>
-            <span className="mitte">{kopfzeilenPanel.kopfzeileMitte}</span>
-            <span className="rechts">{kopfzeilenPanel.kopfzeileRechts}</span>
-          </div>
-        )}
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <SplitPaneComposite
-            knoten={composite.layout}
-            panels={composite.panels}
-            headerFooterUnterdruecken
-          />
-        </div>
-        {fusszeilenPanel && (
-          <div className="seitenzeile">
-            <span className="links">{fusszeilenPanel.fusszeileLinks}</span>
-            <span className="mitte">{fusszeilenPanel.fusszeileMitte}</span>
-            <span className="rechts">{fusszeilenPanel.fusszeileRechts}</span>
-          </div>
-        )}
-        <Signatur />
-        <VerbindungsStatus verbunden={verbunden} />
-      </div>
-    );
-  }
-
-  // Einzel-Ansicht (bestehend, unverändert)
-  const hatKopfzeile = table.kopfzeileLinks?.trim()
-    || table.kopfzeileMitte?.trim()
-    || table.kopfzeileRechts?.trim();
-
-  const hatFusszeile = table.fusszeileLinks?.trim()
-    || table.fusszeileMitte?.trim()
-    || table.fusszeileRechts?.trim();
+  const viewKey = viewKeyFromState(state);
+  const ViewComponent = VIEW_RENDERERS[viewKey];
+  // StartseiteApp bringt eigene PTM-Signatur mit; sonst die globale verwenden.
+  const mitSignatur = viewKey !== 'startseite';
 
   return (
     <>
-      <div style={{ paddingBottom: '24px' }}>
-        <div style={{
-          width: 'fit-content',
-          margin: table.zentrieren ? '0 auto' : undefined,
-        }}>
-          <div style={{
-            transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
-            transformOrigin: table.zentrieren ? 'top center' : 'top left',
-          }}>
-            {table.sheetnamenAnzeigen && table.seitenTitel && (
-              <div className="seiten-titel">{table.seitenTitel}</div>
-            )}
-            {hatKopfzeile && (
-              <div className="seitenzeile">
-                <span className="links">{table.kopfzeileLinks}</span>
-                <span className="mitte">{table.kopfzeileMitte}</span>
-                <span className="rechts">{table.kopfzeileRechts}</span>
-              </div>
-            )}
-            <table>
-              <colgroup>
-                {Array.from({ length: table.spalten }, (_, c) => {
-                  const breite = table.spaltenBreiten[c];
-                  const versteckt = breite === 0;
-                  return (
-                    <col key={c} style={versteckt
-                      ? { display: 'none' }
-                      : { width: toPx(breite ?? 2000) }} />
-                  );
-                })}
-              </colgroup>
-              <tbody>
-                {table.gitter.map((row, r) => (
-                  <tr key={r}
-                      className={r < table.kopfZeilenAnzahl ? 'zeile-kopf' : undefined}
-                      style={{ height: toPx(table.zeilenHoehen[r] || 600) }}>
-                    {row.map((id, c) =>
-                      id && table.spaltenBreiten[c] !== 0
-                        ? <Cell key={id} data={table.zellen[id]} />
-                        : null
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {hatFusszeile && (
-              <div className="seitenzeile">
-                <span className="links">{table.fusszeileLinks}</span>
-                <span className="mitte">{table.fusszeileMitte}</span>
-                <span className="rechts">{table.fusszeileRechts}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <Signatur />
+      {ViewComponent ? <ViewComponent state={state} /> : <LeereAnsicht />}
+      {mitSignatur && <Signatur />}
       <VerbindungsStatus verbunden={verbunden} />
     </>
   );
+}
+
+function LeereAnsicht() {
+  return null;
 }
 
 function VerbindungsStatus({ verbunden }) {

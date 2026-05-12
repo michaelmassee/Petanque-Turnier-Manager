@@ -1,0 +1,72 @@
+.startseite {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4vh 4vw;
+  background: #fff;
+  text-align: center;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.startseite-kopf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+  margin-top: 4vh;
+}
+
+.startseite-turnierlogo {
+  max-height: 30vh;
+  max-width: 80vw;
+  object-fit: contain;
+}
+
+.startseite-turniername {
+  font-size: clamp(2rem, 7vw, 6rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: #222;
+}
+
+.startseite-zahlen {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 4vw, 4rem);
+}
+
+.zahl-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.zahl-wert {
+  font-size: clamp(4rem, 18vw, 16rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #1a3a6e;
+}
+
+.zahl-label {
+  font-size: clamp(1rem, 2.5vw, 2.2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #888;
+  margin-top: 0.4em;
+}
+
+.zahl-trenner {
+  font-size: clamp(4rem, 12vw, 10rem);
+  color: #bbb;
+  font-weight: 300;
+}
+
+.startseite-fuss img {
+  max-height: 80px;
+  opacity: 0.75;
+}
