@@ -1,5 +1,6 @@
 package de.petanqueturniermanager.webserver;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,12 +23,16 @@ public record StartseiteSseNachricht(
         String labelAngemeldet,
         String labelAktiv,
         String tagline,
+        String turniersystem,
+        String turnierStatus,
+        List<String> sprueche,
         Map<String, String> i18n) {
 
     public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
             String beschreibungAnimation, String beschreibungTextfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
-            String labelAngemeldet, String labelAktiv, String tagline) {
+            String labelAngemeldet, String labelAktiv, String tagline,
+            String turniersystem, String turnierStatus, List<String> sprueche) {
         return new StartseiteSseNachricht("startseite_init", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
@@ -37,6 +42,9 @@ public record StartseiteSseNachricht(
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,
                 tagline == null ? "" : tagline,
+                turniersystem == null ? "" : turniersystem,
+                turnierStatus == null ? "" : turnierStatus,
+                sprueche == null ? List.of() : List.copyOf(sprueche),
                 UiTexte.aktuelle());
     }
 
@@ -48,7 +56,8 @@ public record StartseiteSseNachricht(
     public static StartseiteSseNachricht update(int version, String turnierlogo, String turnierbeschreibung,
             String beschreibungAnimation, String beschreibungTextfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
-            String labelAngemeldet, String labelAktiv, String tagline) {
+            String labelAngemeldet, String labelAktiv, String tagline,
+            String turniersystem, String turnierStatus, List<String> sprueche) {
         return new StartseiteSseNachricht("startseite_update", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
@@ -58,6 +67,9 @@ public record StartseiteSseNachricht(
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,
                 tagline == null ? "" : tagline,
+                turniersystem == null ? "" : turniersystem,
+                turnierStatus == null ? "" : turnierStatus,
+                sprueche == null ? List.of() : List.copyOf(sprueche),
                 null);
     }
 }

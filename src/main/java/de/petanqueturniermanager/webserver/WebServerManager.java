@@ -104,6 +104,10 @@ public final class WebServerManager implements TimerListener {
     private final AtomicInteger startseiteVersion = new AtomicInteger(0);
     /** Zuletzt gepushter Teilnehmer-Status (Diff-Cache, vermeidet unnötige Pushes). */
     private volatile TeilnehmerStatusService.TeilnehmerStatus letzterStartseiteStatus;
+    /** Zuletzt gepushte Turniersystem-Bezeichnung (Diff-Cache). */
+    private volatile String letztesStartseiteTurniersystem = "";
+    /** Zuletzt gepushter Turnier-Status-Text (Diff-Cache). */
+    private volatile String letzterStartseiteTurnierStatus = "";
     private volatile TimerState letzterTimerZustand = TimerState.inaktiv();
 
     private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
@@ -215,13 +219,14 @@ public final class WebServerManager implements TimerListener {
             startseiteInstanz = new TurnierStartseiteWebServerInstanz(port);
             startseiteInstanz.starten();
             startseiteVersion.set(0);
-            letzterStartseiteStatus = null;
+            startseiteDiffCacheZuruecksetzen();
             // Init-Cache vorläufig leer befüllen; sseRefreshSendenIntern liefert sofort konkrete Werte nach.
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
                     startseiteVersion.incrementAndGet(), "", "", "keine", "", 0, 0,
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
-                    I18n.get("startseite.tagline"))));
+                    I18n.get("startseite.tagline"),
+                    "", "", StartseiteSprueche.alle())));
             logger.info("Turnier-Startseite-Server gestartet auf Port {}", port);
             safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(port)));
         } catch (IOException e) {
@@ -309,7 +314,7 @@ public final class WebServerManager implements TimerListener {
             startseiteInstanz.stoppen();
             startseiteInstanz = null;
         }
-        letzterStartseiteStatus = null;
+        startseiteDiffCacheZuruecksetzen();
         slots.clear();
         compositeInstanzen.clear();
         letzteCompositeModelle.clear();
@@ -470,7 +475,7 @@ public final class WebServerManager implements TimerListener {
         // Logo/Beschreibung sind nicht Teil des Diff-Cache (letzterStartseiteStatus enthält nur
         // angemeldet/aktiv). Deshalb Diff-Cache zurücksetzen und sofort pushen, damit Änderungen
         // ohne Spielerzahl-Wechsel die Live-Clients erreichen.
-        letzterStartseiteStatus = null;
+        startseiteDiffCacheZuruecksetzen();
         if (startseiteInstanz != null && startseiteInstanz.laeuft() && gespeicherterCtx != null) {
             try {
                 pushStartseiteFallsAktiv(new WorkingSpreadsheet(gespeicherterCtx));
@@ -496,14 +501,14 @@ public final class WebServerManager implements TimerListener {
             if (laeuftSchon) {
                 startseiteInstanz.stoppen();
                 startseiteInstanz = null;
-                letzterStartseiteStatus = null;
+                startseiteDiffCacheZuruecksetzen();
                 logger.info("Turnier-Startseite gestoppt (deaktiviert)");
             }
         } else if (!portStimmt) {
             if (laeuftSchon) {
                 startseiteInstanz.stoppen();
                 startseiteInstanz = null;
-                letzterStartseiteStatus = null;
+                startseiteDiffCacheZuruecksetzen();
             }
             startseiteAusKonfigurationStarten();
         }
@@ -654,7 +659,11 @@ public final class WebServerManager implements TimerListener {
         }
         try {
             var status = TeilnehmerStatusService.ermitteln(ws);
-            boolean unverändert = status.equals(letzterStartseiteStatus);
+            String turniersystem = TurnierStatusErmittler.turniersystemBezeichnung(ws);
+            String turnierStatus = TurnierStatusErmittler.ermitteln(ws);
+            boolean unverändert = status.equals(letzterStartseiteStatus)
+                    && turniersystem.equals(letztesStartseiteTurniersystem)
+                    && turnierStatus.equals(letzterStartseiteTurnierStatus);
             var docProps = new de.petanqueturniermanager.helper.DocumentPropertiesHelper(ws);
             String logoQuelle = docProps.getStringProperty("Turnierlogo Url", "");
             String beschreibung = docProps.getStringProperty("Turnierbeschreibung", "");
@@ -674,13 +683,15 @@ public final class WebServerManager implements TimerListener {
             // Frontend referenziert immer den lokalen Endpunkt /turnierlogo (Browser darf
             // file:// nicht direkt laden). Version als Cache-Buster bei Logo-Wechsel.
             String logoUrl = logoQuelle.isBlank() ? "" : "/turnierlogo?v=" + version;
+            var sprueche = StartseiteSprueche.alle();
             // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
                     version, logoUrl, beschreibung, beschreibungAnimation, textfarbe,
                     status.angemeldet(), status.aktiv(),
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
-                    I18n.get("startseite.tagline"))));
+                    I18n.get("startseite.tagline"),
+                    turniersystem, turnierStatus, sprueche)));
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
@@ -688,12 +699,22 @@ public final class WebServerManager implements TimerListener {
                         status.angemeldet(), status.aktiv(),
                         I18n.get("startseite.label.angemeldet"),
                         I18n.get("startseite.label.aktiv"),
-                        I18n.get("startseite.tagline"))));
+                        I18n.get("startseite.tagline"),
+                        turniersystem, turnierStatus, sprueche)));
                 letzterStartseiteStatus = status;
+                letztesStartseiteTurniersystem = turniersystem;
+                letzterStartseiteTurnierStatus = turnierStatus;
             }
         } catch (RuntimeException e) {
             logger.warn("Push der Turnier-Startseite fehlgeschlagen: {}", e.getMessage(), e);
         }
+    }
+
+    /** Setzt alle Diff-Cache-Felder der Startseite zurück, sodass der nächste Push erzwungen wird. */
+    private void startseiteDiffCacheZuruecksetzen() {
+        letzterStartseiteStatus = null;
+        letztesStartseiteTurniersystem = "";
+        letzterStartseiteTurnierStatus = "";
     }
 
     private void registriereModifyListenerFallsNoetig(WorkingSpreadsheet ws) {

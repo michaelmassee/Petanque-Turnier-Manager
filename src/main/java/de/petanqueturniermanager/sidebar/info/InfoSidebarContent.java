@@ -19,25 +19,15 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
 import de.petanqueturniermanager.SheetRunner;
+import de.petanqueturniermanager.webserver.TurnierStatusErmittler;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
-import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.formulex.FormuleXStatusLeser;
-import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
-import de.petanqueturniermanager.kaskade.KaskadeStatusLeser;
-import de.petanqueturniermanager.ko.KoStatusLeser;
-import de.petanqueturniermanager.liga.spielplan.LigaStatusLeser;
-import de.petanqueturniermanager.maastrichter.MaastrichterStatusLeser;
-import de.petanqueturniermanager.poule.PouleStatusLeser;
-import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.sidebar.BaseSidebarContent;
 import de.petanqueturniermanager.sidebar.GuiFactory;
 import de.petanqueturniermanager.sidebar.layout.ControlLayout;
 import de.petanqueturniermanager.sidebar.layout.HorizontalLayout;
-import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.timer.TimerState;
@@ -273,113 +263,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
     }
 
     String turnierSchrittAnzeige() {
-        var system = getTurnierSystemAusDocument();
-        if (system == null) {
-            return "";
-        }
-        var docPropHelper = new DocumentPropertiesHelper(getCurrentSpreadsheet());
-        return switch (system) {
-            case SUPERMELEE -> {
-                int spieltag = docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 1);
-                int runde = docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 1);
-                yield I18n.get("sidebar.info.supermelee.schritt", spieltag, runde);
-            }
-            case SCHWEIZER -> {
-                int runde = docPropHelper.getIntProperty(SchweizerPropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 1);
-                yield I18n.get("sidebar.info.spielrunde", runde);
-            }
-            case LIGA -> {
-                var status = LigaStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.spielplanVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.alleGespielt()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                yield I18n.get("sidebar.info.liga.schritt",
-                        status.hrGespielt(), status.hrGesamt(),
-                        status.rrGespielt(), status.rrGesamt());
-            }
-            case JGJ -> {
-                var status = JGJStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.spielplanVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.alleGespielt()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                yield I18n.get("sidebar.info.jgj.schritt",
-                        status.hrGespielt(), status.hrGesamt(),
-                        status.rrGespielt(), status.rrGesamt());
-            }
-            case POULE -> {
-                var status = PouleStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.vorrundeVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.beendet()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                if (status.koVorhanden()) {
-                    yield I18n.get("sidebar.poule.ko");
-                }
-                yield I18n.get("sidebar.info.poule.vorrunde",
-                        status.vorrundeGespielt(), status.vorrundeGesamt());
-            }
-            case MAASTRICHTER -> {
-                var status = MaastrichterStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.vorrundeVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.beendet()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                if (status.finalrundeVorhanden()) {
-                    yield I18n.get("sidebar.maastrichter.finalrunde");
-                }
-                yield I18n.get("sidebar.info.maastrichter.vorrunde",
-                        status.aktuelleVorrundeNr(),
-                        status.vorrundeGespielt(), status.vorrundeGesamt());
-            }
-            case KASKADE -> {
-                var status = KaskadeStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.rundeVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.beendet()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                if (status.koPhaseVorhanden()) {
-                    yield I18n.get("sidebar.kaskade.ko.felder");
-                }
-                yield I18n.get("sidebar.info.kaskade.runde",
-                        status.aktuelleRundeNr(),
-                        status.rundeGespielt(), status.rundeGesamt());
-            }
-            case KO -> {
-                var status = KoStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.turnierbaumVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.beendet()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                yield I18n.get("sidebar.info.ko.laeuft");
-            }
-            case FORMULEX -> {
-                var status = FormuleXStatusLeser.von(getCurrentSpreadsheet()).liesStatus();
-                if (!status.spielrundeVorhanden()) {
-                    yield I18n.get("sidebar.info.meldungen.erfassen");
-                }
-                if (status.beendet()) {
-                    yield I18n.get("sidebar.info.turnier.beendet");
-                }
-                yield I18n.get("sidebar.info.formulex.schritt",
-                        status.aktuelleRundeNr(), status.anzahlRunden(),
-                        status.rundeGespielt(), status.rundeGesamt());
-            }
-            default -> "";
-        };
+        return TurnierStatusErmittler.ermitteln(getCurrentSpreadsheet());
     }
 
     private String timerAnzeige(TimerState state) {

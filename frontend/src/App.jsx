@@ -224,6 +224,9 @@ function reducer(state, action) {
           labelAngemeldet: msg.labelAngemeldet ?? '',
           labelAktiv: msg.labelAktiv ?? '',
           tagline: msg.tagline ?? '',
+          turniersystem: msg.turniersystem ?? '',
+          turnierStatus: msg.turnierStatus ?? '',
+          sprueche: Array.isArray(msg.sprueche) ? msg.sprueche : [],
         },
       };
     }
@@ -234,6 +237,7 @@ function reducer(state, action) {
       // (z.B. wenn das Logo gelöscht wurde). Nur undefined bleibt vorher-Wert.
       const mergeStr = (n, v) => (n !== undefined && n !== null ? n : v ?? '');
       const mergeNum = (n, v) => (n !== undefined && n !== null ? n : v ?? 0);
+      const mergeArr = (n, v) => (Array.isArray(n) ? n : (Array.isArray(v) ? v : []));
       return {
         ...state,
         hinweis: null,
@@ -248,6 +252,9 @@ function reducer(state, action) {
           labelAngemeldet:     mergeStr(msg.labelAngemeldet,     vorher.labelAngemeldet),
           labelAktiv:          mergeStr(msg.labelAktiv,          vorher.labelAktiv),
           tagline:             mergeStr(msg.tagline,             vorher.tagline),
+          turniersystem:       mergeStr(msg.turniersystem,       vorher.turniersystem),
+          turnierStatus:       mergeStr(msg.turnierStatus,       vorher.turnierStatus),
+          sprueche:            mergeArr(msg.sprueche,            vorher.sprueche),
         },
       };
     }

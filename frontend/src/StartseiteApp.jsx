@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './Startseite.css';
 
 /**
@@ -9,7 +9,8 @@ import './Startseite.css';
 export default function StartseiteApp({ startseite }) {
   const { turnierlogo, turnierbeschreibung, beschreibungAnimation, beschreibungTextfarbe,
           anzahlAngemeldet, anzahlAktiv,
-          labelAngemeldet, labelAktiv } = startseite;
+          labelAngemeldet, labelAktiv,
+          turniersystem, turnierStatus, sprueche } = startseite;
   const animation = beschreibungAnimation || 'keine';
   const beschreibungStil = beschreibungTextfarbe ? { color: beschreibungTextfarbe } : undefined;
   return (
@@ -45,11 +46,55 @@ export default function StartseiteApp({ startseite }) {
           <span className="zahl-label-strich" aria-hidden="true" />
         </div>
       </div>
+      <StatusLeiste
+        turniersystem={turniersystem}
+        turnierStatus={turnierStatus}
+        sprueche={sprueche}
+      />
       <img
         className="startseite-footer-bild"
         src="/images/start-background-footer.png"
         alt=""
       />
+    </div>
+  );
+}
+
+function StatusLeiste({ turniersystem, turnierStatus, sprueche }) {
+  const liste = Array.isArray(sprueche) ? sprueche : [];
+  const [spruchIndex, setSpruchIndex] = useState(() =>
+    liste.length > 0 ? Math.floor(Math.random() * liste.length) : 0,
+  );
+
+  useEffect(() => {
+    if (liste.length <= 1) return undefined;
+    const id = setInterval(() => {
+      setSpruchIndex((i) => (i + 1) % liste.length);
+    }, 30000);
+    return () => clearInterval(id);
+  }, [liste.length]);
+
+  if (!turniersystem && !turnierStatus && liste.length === 0) {
+    return null;
+  }
+  const aktuellerSpruch = liste.length > 0 ? liste[spruchIndex % liste.length] : '';
+  return (
+    <div className="startseite-status">
+      {turniersystem && (
+        <span className="status-segment status-system">{turniersystem}</span>
+      )}
+      {turniersystem && turnierStatus && (
+        <span className="status-trenner" aria-hidden="true" />
+      )}
+      {turnierStatus && (
+        <span className="status-segment status-fortschritt">{turnierStatus}</span>
+      )}
+      {(turniersystem || turnierStatus) && aktuellerSpruch && (
+        <span className="status-trenner" aria-hidden="true" />
+      )}
+      {aktuellerSpruch && (
+        <span key={spruchIndex} className="status-segment status-spruch">{aktuellerSpruch}</span>
+      )}
     </div>
   );
 }

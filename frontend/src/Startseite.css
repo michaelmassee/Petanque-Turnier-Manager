@@ -11,8 +11,8 @@
   position: fixed;
   inset: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  row-gap: 2vh;
+  grid-template-rows: auto 1fr auto auto;
+  row-gap: 1.6vh;
   padding: 2vh 3vw;
   background-color: #fff;
   background-image: url('/images/start-background.png');
@@ -139,8 +139,8 @@
   flex-direction: column;
   align-items: center;
   background: linear-gradient(135deg, #2a5da8 0%, #1a3a6e 100%);
-  border-radius: clamp(0.8rem, 1.5vw, 1.4rem);
-  padding: clamp(2.2rem, 5vw, 3.4rem) clamp(1.8rem, 5vw, 4rem) clamp(1.2rem, 3vw, 2rem);
+  border-radius: clamp(0.7rem, 1.3vw, 1.2rem);
+  padding: clamp(1.6rem, 3.8vw, 2.6rem) clamp(1.4rem, 4vw, 3.2rem) clamp(0.9rem, 2.3vw, 1.5rem);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
   min-width: clamp(8rem, 18vw, 16rem);
   color: #fff;
@@ -169,7 +169,7 @@
 }
 
 .zahl-wert {
-  font-size: clamp(3rem, 14vw, 11rem);
+  font-size: clamp(2.4rem, 11vw, 9rem);
   font-weight: 800;
   line-height: 1;
   color: #fff;
@@ -196,8 +196,61 @@
 .startseite-footer-bild {
   display: block;
   width: 100%;
-  max-height: 20vh;
+  max-height: 14vh;
   object-fit: contain;
   justify-self: center;
+  border-radius: 16px;
+}
+
+/* ── Status-Leiste (Pill zwischen Counter und Footer) ───────────────────── */
+.startseite-status {
+  justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.8rem, 2vw, 1.6rem);
+  padding: clamp(0.6rem, 1.2vw, 1rem) clamp(1.2rem, 2.4vw, 2rem);
+  background: rgba(26, 58, 110, 0.78);
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  color: #fff;
+  max-width: 92vw;
+}
+
+.status-segment {
+  font-size: clamp(0.95rem, 1.8vw, 1.5rem);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-system {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.status-fortschritt {
+  font-weight: 500;
+}
+
+.status-spruch {
+  font-weight: 400;
+  font-style: italic;
+  opacity: 0.95;
+  animation: ptm-status-spruch-fade 0.6s ease-in;
+  max-width: 50vw;
+}
+
+@keyframes ptm-status-spruch-fade {
+  from { opacity: 0; transform: translateY(0.2em); }
+  to   { opacity: 0.95; transform: translateY(0); }
+}
+
+.status-trenner {
+  display: inline-block;
+  width: 1px;
+  height: clamp(1rem, 1.6vw, 1.6rem);
+  background: rgba(255, 255, 255, 0.45);
+  flex: 0 0 auto;
 }
 
