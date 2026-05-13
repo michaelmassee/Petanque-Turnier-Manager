@@ -226,7 +226,8 @@ public final class WebServerManager implements TimerListener {
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"),
-                    "", "", StartseiteSprueche.alle())));
+                    "", "", StartseiteSprueche.alle(),
+                    GlobalProperties.get().getStartseiteZoom())));
             logger.info("Turnier-Startseite-Server gestartet auf Port {}", port);
             safeProcessBoxInfo(I18n.get("webserver.prozessbox.gestartet.url", buildUrl(port)));
         } catch (IOException e) {
@@ -677,6 +678,7 @@ public final class WebServerManager implements TimerListener {
                     de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
                             .DEFAULT_BESCHREIBUNG_TEXTFARBE);
             String textfarbe = String.format("#%06x", textfarbeInt & 0xFFFFFF);
+            int zoom = GlobalProperties.get().getStartseiteZoom();
             startseiteInstanz.setLogoQuelle(logoQuelle);
 
             int version = startseiteVersion.incrementAndGet();
@@ -691,7 +693,7 @@ public final class WebServerManager implements TimerListener {
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"),
-                    turniersystem, turnierStatus, sprueche)));
+                    turniersystem, turnierStatus, sprueche, zoom)));
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
@@ -700,7 +702,7 @@ public final class WebServerManager implements TimerListener {
                         I18n.get("startseite.label.angemeldet"),
                         I18n.get("startseite.label.aktiv"),
                         I18n.get("startseite.tagline"),
-                        turniersystem, turnierStatus, sprueche)));
+                        turniersystem, turnierStatus, sprueche, zoom)));
                 letzterStartseiteStatus = status;
                 letztesStartseiteTurniersystem = turniersystem;
                 letzterStartseiteTurnierStatus = turnierStatus;

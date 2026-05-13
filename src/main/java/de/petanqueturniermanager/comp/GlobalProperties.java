@@ -64,6 +64,7 @@ public class GlobalProperties {
 	// Turnier-Startseite (dedizierter Webserver, läuft parallel zu den Composite-Views)
 	private static final String STARTSEITE_PORT_PROP  = "startseite_port";
 	private static final String STARTSEITE_AKTIV_PROP = "startseite_aktiv";
+	private static final String STARTSEITE_ZOOM_PROP  = "startseite_zoom";
 	public static final int STARTSEITE_DEFAULT_PORT = 9200;
 
 	// Timer
@@ -285,9 +286,14 @@ public class GlobalProperties {
 		return STARTSEITE_DEFAULT_PORT;
 	}
 
-	public void speichernStartseite(int port, boolean aktiv) {
+	public int getStartseiteZoom() {
+		return parseZoom(propMap.get(STARTSEITE_ZOOM_PROP));
+	}
+
+	public void speichernStartseite(int port, boolean aktiv, int zoom) {
 		propMap.put(STARTSEITE_PORT_PROP, String.valueOf(port));
 		setBooleanProp(STARTSEITE_AKTIV_PROP, aktiv);
+		propMap.put(STARTSEITE_ZOOM_PROP, String.valueOf(zoom));
 		speichernDatei();
 	}
 

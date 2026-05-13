@@ -10,11 +10,18 @@ export default function StartseiteApp({ startseite }) {
   const { turnierlogo, turnierbeschreibung, beschreibungAnimation, beschreibungTextfarbe,
           anzahlAngemeldet, anzahlAktiv,
           labelAngemeldet, labelAktiv,
-          turniersystem, turnierStatus, sprueche } = startseite;
+          turniersystem, turnierStatus, sprueche, zoom } = startseite;
   const animation = beschreibungAnimation || 'keine';
   const beschreibungStil = beschreibungTextfarbe ? { color: beschreibungTextfarbe } : undefined;
+  const z = zoom ?? 100;
+  const skalierungsStil = z !== 100 ? {
+    transform: `scale(${z / 100})`,
+    transformOrigin: 'top center',
+  } : undefined;
   return (
-    <div className="startseite">
+    <>
+    <div className="startseite-hintergrund" aria-hidden="true" />
+    <div className="startseite" style={skalierungsStil}>
       <div className="startseite-kopf">
         {turnierlogo && (
           <img
@@ -57,6 +64,7 @@ export default function StartseiteApp({ startseite }) {
         alt=""
       />
     </div>
+    </>
   );
 }
 

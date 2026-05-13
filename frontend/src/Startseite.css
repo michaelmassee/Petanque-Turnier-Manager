@@ -7,6 +7,18 @@
     clamp()-Schriftgrößen klein genug skaliert.
 */
 
+.startseite-hintergrund {
+  position: fixed;
+  inset: 0;
+  background-color: #fff;
+  background-image: url('/images/start-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+  pointer-events: none;
+}
+
 .startseite {
   position: fixed;
   inset: 0;
@@ -14,15 +26,11 @@
   grid-template-rows: auto 1fr auto auto;
   row-gap: 1.6vh;
   padding: 2vh 3vw;
-  background-color: #fff;
-  background-image: url('/images/start-background.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   text-align: center;
   font-family: 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
   box-sizing: border-box;
+  z-index: 1;
 }
 
 .startseite-kopf {

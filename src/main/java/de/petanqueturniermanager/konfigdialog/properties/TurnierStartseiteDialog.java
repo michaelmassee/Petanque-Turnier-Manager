@@ -82,6 +82,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
 
     private static final String CTRL_AKTIV          = "cbAktiv";
     private static final String CTRL_PORT           = "editPort";
+    private static final String CTRL_ZOOM           = "editZoom";
     private static final String CTRL_LOGO           = "editLogo";
     private static final String CTRL_LOGO_PICK      = "btnLogoPick";
     private static final String CTRL_BESCHREIBUNG   = "editBeschreibung";
@@ -144,6 +145,10 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
                 LBL_X, ZEILE2_Y, LBL_W, CTRL_H);
         fuegeEdit(CTRL_PORT, String.valueOf(gp.getStartseitePort()),
                 FIELD_X, ZEILE2_Y, 50, CTRL_H);
+        fuegeLabel("lblZoom", I18n.get("webserver.konfig.tabelle.kopf.zoom") + " (%)",
+                170, ZEILE2_Y, 60, CTRL_H);
+        fuegeEdit(CTRL_ZOOM, String.valueOf(gp.getStartseiteZoom()),
+                235, ZEILE2_Y, 40, CTRL_H);
 
         fuegeLabel("lblLogo", I18n.get("konfiguration.startseite.logo.label"),
                 LBL_X, ZEILE3_Y, LBL_W, CTRL_H);
@@ -203,6 +208,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private boolean speichernUndAnwenden() {
         boolean aktiv = leseCheckBox();
         String portText = leseFeld(CTRL_PORT);
+        String zoomText = leseFeld(CTRL_ZOOM);
         String logo = leseFeld(CTRL_LOGO);
         String beschreibung = leseFeld(CTRL_BESCHREIBUNG);
 
@@ -217,17 +223,28 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
             return false;
         }
 
+        int zoom;
+        try {
+            zoom = Integer.parseInt(zoomText.trim());
+            if (zoom < 10 || zoom > 500) {
+                throw new NumberFormatException("Zoom außerhalb des Bereichs");
+            }
+        } catch (NumberFormatException e) {
+            zeigeFehler(I18n.get("webserver.composite.konfig.fehler.zoom.ungueltig"));
+            return false;
+        }
+
         String animation = ANIMATION_KEYS[Math.max(0, leseListBoxIndex(CTRL_ANIMATION))];
 
-        GlobalProperties.get().speichernStartseite(port, aktiv);
+        GlobalProperties.get().speichernStartseite(port, aktiv, zoom);
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
         docProps.setStringProperty(DOC_PROP_TURNIERLOGO_URL, logo);
         docProps.setStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, beschreibung);
         docProps.setStringProperty(DOC_PROP_BESCHREIBUNG_ANIMATION, animation);
         docProps.setIntProperty(DOC_PROP_BESCHREIBUNG_TEXTFARBE, textfarbeInt);
         WebServerManager.get().konfigurationGeaendert();
-        logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}, Textfarbe=#{}",
-                aktiv, port, String.format("%06x", textfarbeInt & 0xFFFFFF));
+        logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}, Zoom={}%, Textfarbe=#{}",
+                aktiv, port, zoom, String.format("%06x", textfarbeInt & 0xFFFFFF));
         return true;
     }
 

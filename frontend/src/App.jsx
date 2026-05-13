@@ -227,6 +227,7 @@ function reducer(state, action) {
           turniersystem: msg.turniersystem ?? '',
           turnierStatus: msg.turnierStatus ?? '',
           sprueche: Array.isArray(msg.sprueche) ? msg.sprueche : [],
+          zoom: msg.zoom ?? 100,
         },
       };
     }
@@ -255,6 +256,7 @@ function reducer(state, action) {
           turniersystem:       mergeStr(msg.turniersystem,       vorher.turniersystem),
           turnierStatus:       mergeStr(msg.turnierStatus,       vorher.turnierStatus),
           sprueche:            mergeArr(msg.sprueche,            vorher.sprueche),
+          zoom:                mergeNum(msg.zoom,                vorher.zoom ?? 100),
         },
       };
     }
