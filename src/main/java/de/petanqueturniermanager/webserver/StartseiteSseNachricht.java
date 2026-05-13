@@ -16,6 +16,7 @@ public record StartseiteSseNachricht(
         String turnierlogo,
         String turnierbeschreibung,
         String beschreibungAnimation,
+        String beschreibungTextfarbe,
         int anzahlAngemeldet,
         int anzahlAktiv,
         String labelAngemeldet,
@@ -24,13 +25,14 @@ public record StartseiteSseNachricht(
         Map<String, String> i18n) {
 
     public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
-            String beschreibungAnimation,
+            String beschreibungAnimation, String beschreibungTextfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
             String labelAngemeldet, String labelAktiv, String tagline) {
         return new StartseiteSseNachricht("startseite_init", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
                 beschreibungAnimation == null || beschreibungAnimation.isBlank() ? "keine" : beschreibungAnimation,
+                beschreibungTextfarbe == null ? "" : beschreibungTextfarbe,
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,
@@ -44,13 +46,14 @@ public record StartseiteSseNachricht(
      * vor einer späteren Property-Änderung aufgebaut wurde.
      */
     public static StartseiteSseNachricht update(int version, String turnierlogo, String turnierbeschreibung,
-            String beschreibungAnimation,
+            String beschreibungAnimation, String beschreibungTextfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
             String labelAngemeldet, String labelAktiv, String tagline) {
         return new StartseiteSseNachricht("startseite_update", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
                 beschreibungAnimation == null || beschreibungAnimation.isBlank() ? "keine" : beschreibungAnimation,
+                beschreibungTextfarbe == null ? "" : beschreibungTextfarbe,
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
                 labelAktiv == null ? "" : labelAktiv,

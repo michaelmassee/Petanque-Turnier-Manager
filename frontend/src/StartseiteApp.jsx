@@ -7,10 +7,11 @@ import './Startseite.css';
  * Teilnehmerzahl (angemeldet/aktiv). PTM-Branding als Footer.
  */
 export default function StartseiteApp({ startseite }) {
-  const { turnierlogo, turnierbeschreibung, beschreibungAnimation,
+  const { turnierlogo, turnierbeschreibung, beschreibungAnimation, beschreibungTextfarbe,
           anzahlAngemeldet, anzahlAktiv,
           labelAngemeldet, labelAktiv } = startseite;
   const animation = beschreibungAnimation || 'keine';
+  const beschreibungStil = beschreibungTextfarbe ? { color: beschreibungTextfarbe } : undefined;
   return (
     <div className="startseite">
       <div className="startseite-kopf">
@@ -23,18 +24,25 @@ export default function StartseiteApp({ startseite }) {
           />
         )}
         {turnierbeschreibung && (
-          <Beschreibung text={turnierbeschreibung} animation={animation} />
+          <Beschreibung text={turnierbeschreibung} animation={animation} stil={beschreibungStil} />
         )}
       </div>
       <div className="startseite-zahlen">
         <div className="zahl-block">
+          <div className="zahl-icon" aria-hidden="true">
+            <IconAngemeldet />
+          </div>
           <div className="zahl-wert">{anzahlAngemeldet}</div>
           <div className="zahl-label">{labelAngemeldet}</div>
+          <span className="zahl-label-strich" aria-hidden="true" />
         </div>
-        <div className="zahl-trenner" aria-hidden="true">/</div>
         <div className="zahl-block">
+          <div className="zahl-icon" aria-hidden="true">
+            <IconAktiv />
+          </div>
           <div className="zahl-wert">{anzahlAktiv}</div>
           <div className="zahl-label">{labelAktiv}</div>
+          <span className="zahl-label-strich" aria-hidden="true" />
         </div>
       </div>
       <img
@@ -46,28 +54,50 @@ export default function StartseiteApp({ startseite }) {
   );
 }
 
-function Beschreibung({ text, animation }) {
+function Beschreibung({ text, animation, stil }) {
   // `key` erzwingt Remount bei Text- oder Animations-Wechsel — sonst würden
   // einmalige CSS-Keyframes (fade/slide) bei Live-Updates nicht erneut starten.
   const key = `${animation}::${text}`;
   if (animation === 'typewriter') {
-    return <TypewriterText key={key} text={text} />;
+    return <TypewriterText key={key} text={text} stil={stil} />;
   }
   if (animation === 'marquee') {
     return (
-      <div key={key} className="startseite-turnierbeschreibung anim-marquee">
+      <div key={key} className="startseite-turnierbeschreibung anim-marquee" style={stil}>
         <span>{text}</span>
       </div>
     );
   }
   return (
-    <div key={key} className={`startseite-turnierbeschreibung anim-${animation}`}>
+    <div key={key} className={`startseite-turnierbeschreibung anim-${animation}`} style={stil}>
       {text}
     </div>
   );
 }
 
-function TypewriterText({ text }) {
+function IconAngemeldet() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <path d="M16 11a3 3 0 1 0-3-3" />
+      <circle cx="9" cy="8" r="3" />
+      <path d="M2 20c0-3 3-5 7-5s7 2 7 5" />
+      <path d="M16 14c3 0 6 2 6 5" />
+    </svg>
+  );
+}
+
+function IconAktiv() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.8 2.8L16.5 9.5" />
+    </svg>
+  );
+}
+
+function TypewriterText({ text, stil }) {
   const [angezeigt, setAngezeigt] = useState('');
   useEffect(() => {
     let index = 0;
@@ -97,7 +127,7 @@ function TypewriterText({ text }) {
     };
   }, [text]);
   return (
-    <div className="startseite-turnierbeschreibung anim-typewriter">
+    <div className="startseite-turnierbeschreibung anim-typewriter" style={stil}>
       {angezeigt}
       <span className="anim-typewriter-caret" aria-hidden="true">|</span>
     </div>
