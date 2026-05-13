@@ -19,6 +19,10 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.EventObject;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
+import com.sun.star.ui.dialogs.ExecutableDialogResults;
+import com.sun.star.ui.dialogs.FilePicker;
+import com.sun.star.ui.dialogs.TemplateDescription;
+import com.sun.star.ui.dialogs.XFilePicker3;
 
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -427,31 +431,56 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         });
     }
 
+    /**
+     * Öffnet den nativen LO-FilePicker zur Auswahl der Logo-Datei. Bewusst der
+     * UNO-Picker (kein {@code javax.swing.JFileChooser}) — der Swing-Dialog
+     * hängt innerhalb des UNO-Modal-Dialogs (Modal-/Z-Order-/Event-Loop-
+     * Konflikt mit weld-Modality, LO friert ein). Dasselbe Problem-Muster wie
+     * beim Farbwahl-Dialog (siehe {@link FarbwahlDialog}).
+     */
     private void oeffneDateiAuswahl() {
         try {
-            var chooser = new javax.swing.JFileChooser();
-            var aktuell = leseFeld(CTRL_LOGO);
+            XFilePicker3 picker = FilePicker.createWithMode(xContext,
+                    TemplateDescription.FILEOPEN_SIMPLE);
+            picker.setTitle(I18n.get("konfiguration.startseite.logo.picker.titel"));
+            picker.appendFilter(I18n.get("konfiguration.startseite.logo.picker.filter"),
+                    "*.png;*.jpg;*.jpeg;*.gif;*.svg;*.webp");
+
+            String aktuell = leseFeld(CTRL_LOGO);
             if (aktuell != null && !aktuell.isBlank() && !aktuell.startsWith("http")) {
                 try {
-                    var f = new java.io.File(aktuell);
-                    if (f.exists()) {
-                        chooser.setCurrentDirectory(f.getParentFile());
-                        chooser.setSelectedFile(f);
+                    var pfad = java.nio.file.Path.of(aktuell);
+                    var eltern = pfad.getParent();
+                    if (eltern != null && java.nio.file.Files.isDirectory(eltern)) {
+                        picker.setDisplayDirectory(eltern.toUri().toURL().toExternalForm());
                     }
-                } catch (RuntimeException ignored) {
+                    var dateiname = pfad.getFileName();
+                    if (dateiname != null) {
+                        picker.setDefaultName(dateiname.toString());
+                    }
+                } catch (java.net.MalformedURLException | RuntimeException ignored) {
                     // ungültiger Pfad → Default-Verzeichnis
                 }
             }
-            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
-                    "Bilder (png, jpg, gif, svg, webp)", "png", "jpg", "jpeg", "gif", "svg", "webp"));
-            var frame = de.petanqueturniermanager.helper.msgbox.ProcessBox.from()
-                    .moveInsideTopWindow().toFront().getFrame();
-            int result = chooser.showOpenDialog(frame);
-            if (result == javax.swing.JFileChooser.APPROVE_OPTION) {
-                setzeFeld(CTRL_LOGO, chooser.getSelectedFile().getAbsolutePath());
+
+            if (picker.execute() != ExecutableDialogResults.OK) {
+                return;
             }
+            String[] dateien = picker.getFiles();
+            if (dateien.length == 0) {
+                return;
+            }
+            setzeFeld(CTRL_LOGO, urlAlsPfad(dateien[0]));
         } catch (RuntimeException e) {
             logger.error("Fehler bei Datei-Auswahl", e);
+        }
+    }
+
+    private static String urlAlsPfad(String url) {
+        try {
+            return java.nio.file.Path.of(java.net.URI.create(url)).toString();
+        } catch (IllegalArgumentException | java.nio.file.FileSystemNotFoundException e) {
+            return url;
         }
     }
 
