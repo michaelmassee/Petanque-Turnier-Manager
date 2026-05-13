@@ -24,7 +24,6 @@ import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.farbe.FarbwahlDialog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -44,17 +43,15 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
 
     public static final String DOC_PROP_TURNIERLOGO_URL          = "Turnierlogo Url";
     public static final String DOC_PROP_TURNIERBESCHREIBUNG      = "Turnierbeschreibung";
-    public static final String DOC_PROP_HINTERGRUNDFARBE         = "Turnierhintergrund Farbe";
     public static final String DOC_PROP_BESCHREIBUNG_ANIMATION   = "Turnierbeschreibung Animation";
     public static final String ANIMATION_DEFAULT                 = "keine";
     /** Reihenfolge der Animations-Optionen in der ListBox (auch Frontend-CSS-Klassen-Suffix). */
     public static final String[] ANIMATION_KEYS = {
             "keine", "fade", "slide", "typewriter", "marquee", "pulse", "blink"
     };
-    private static final int DEFAULT_HINTERGRUNDFARBE = 0xFFFFFF;
 
     private static final int DIALOG_BREITE = 360;
-    private static final int DIALOG_HOEHE  = 270;
+    private static final int DIALOG_HOEHE  = 235;
 
     private static final int LBL_X     = 5;
     private static final int LBL_W     = 80;
@@ -70,10 +67,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final int ZEILE3_Y  = 55;
     private static final int ZEILE4_Y  = 80;
     private static final int ZEILE5_Y  = 160;
-    private static final int ZEILE6_Y  = 185;
-    private static final int COLOR_VORSCHAU_W = 30;
-    private static final int FARBE_PICK_GAP   = 5;
-    private static final int FOOTER_Y  = 245;
+    private static final int FOOTER_Y  = 210;
     private static final int BTN_UEBERN_X  = 125;
     private static final int BTN_OK_X      = 200;
     private static final int BTN_ABBRUCH_X = 275;
@@ -86,17 +80,12 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final String CTRL_LOGO_PICK      = "btnLogoPick";
     private static final String CTRL_BESCHREIBUNG   = "editBeschreibung";
     private static final String CTRL_ANIMATION      = "lstAnimation";
-    private static final String CTRL_FARBE_VORSCHAU = "lblFarbeVorschau";
-    private static final String CTRL_FARBE_PICK     = "btnFarbePick";
 
     private final WorkingSpreadsheet currentSpreadsheet;
     private XMultiServiceFactory xMSF;
     private XNameContainer cont;
     private XControlContainer xcc;
     private XDialog xDialog;
-    private XWindowPeer dialogPeer;
-    private XPropertySet farbeVorschauProps;
-    private int hintergrundFarbeInt;
 
     public TurnierStartseiteDialog(WorkingSpreadsheet currentSpreadsheet) {
         super(currentSpreadsheet.getxContext());
@@ -132,7 +121,6 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         this.cont = cont;
         this.xcc  = Lo.qi(XControlContainer.class, xDialog);
         this.xDialog = xDialog;
-        this.dialogPeer = peer;
 
         var gp = GlobalProperties.get();
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
@@ -164,17 +152,6 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         String aktuelleAnimation = docProps.getStringProperty(DOC_PROP_BESCHREIBUNG_ANIMATION, ANIMATION_DEFAULT);
         fuegeListBox(CTRL_ANIMATION, animationLabels(), animationIndex(aktuelleAnimation),
                 FIELD_X, ZEILE5_Y, FIELD_W, CTRL_H);
-
-        hintergrundFarbeInt = docProps.getIntProperty(DOC_PROP_HINTERGRUNDFARBE, DEFAULT_HINTERGRUNDFARBE)
-                & 0xFFFFFF;
-        fuegeLabel("lblFarbe", I18n.get("konfiguration.startseite.hintergrundfarbe.label"),
-                LBL_X, ZEILE6_Y, LBL_W, CTRL_H);
-        farbeVorschauProps = fuegeColorVorschau(CTRL_FARBE_VORSCHAU, hintergrundFarbeInt,
-                FIELD_X, ZEILE6_Y, COLOR_VORSCHAU_W, CTRL_H);
-        fuegeButton(CTRL_FARBE_PICK, "…",
-                FIELD_X + COLOR_VORSCHAU_W + FARBE_PICK_GAP, ZEILE6_Y - 1,
-                LOGO_PICK_W, CTRL_H + 2, (short) 0);
-        registriereButtonAktion(CTRL_FARBE_PICK, this::oeffneFarbwahl);
 
         fuegeButton("btnUebernehmen", I18n.get("dialog.uebernehmen"),
                 BTN_UEBERN_X, FOOTER_Y, BTN_ACTION_W, BTN_H, (short) PushButtonType.STANDARD_value);
@@ -223,41 +200,10 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
         docProps.setStringProperty(DOC_PROP_TURNIERLOGO_URL, logo);
         docProps.setStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, beschreibung);
-        docProps.setIntProperty(DOC_PROP_HINTERGRUNDFARBE, hintergrundFarbeInt);
         docProps.setStringProperty(DOC_PROP_BESCHREIBUNG_ANIMATION, animation);
         WebServerManager.get().konfigurationGeaendert();
-        logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}, Farbe=#{}",
-                aktiv, port, String.format("%06x", hintergrundFarbeInt & 0xFFFFFF));
+        logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}", aktiv, port);
         return true;
-    }
-
-    private void oeffneFarbwahl() {
-        var ergebnis = FarbwahlDialog.waehle(xContext, dialogPeer, hintergrundFarbeInt);
-        if (ergebnis.isEmpty()) {
-            return;
-        }
-        hintergrundFarbeInt = ergebnis.getAsInt();
-        try {
-            farbeVorschauProps.setPropertyValue("BackgroundColor", hintergrundFarbeInt);
-        } catch (com.sun.star.uno.Exception e) {
-            logger.error("Fehler beim Setzen der Farb-Vorschau", e);
-        }
-    }
-
-    private XPropertySet fuegeColorVorschau(String name, int farbe, int x, int y, int w, int h)
-            throws com.sun.star.uno.Exception {
-        var model = xMSF.createInstance("com.sun.star.awt.UnoControlFixedTextModel");
-        var props = Lo.qi(XPropertySet.class, model);
-        props.setPropertyValue("Label",           "");
-        props.setPropertyValue("PositionX",       x);
-        props.setPropertyValue("PositionY",       y);
-        props.setPropertyValue("Width",           w);
-        props.setPropertyValue("Height",          h);
-        props.setPropertyValue("BackgroundColor", farbe);
-        props.setPropertyValue("Border",          (short) 2);
-        props.setPropertyValue("BorderColor",     0x000000);
-        cont.insertByName(name, model);
-        return props;
     }
 
     // ── UNO-Helper ────────────────────────────────────────────────────────────

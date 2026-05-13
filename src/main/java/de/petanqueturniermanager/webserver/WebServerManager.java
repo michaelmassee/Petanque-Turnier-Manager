@@ -218,7 +218,7 @@ public final class WebServerManager implements TimerListener {
             letzterStartseiteStatus = null;
             // Init-Cache vorläufig leer befüllen; sseRefreshSendenIntern liefert sofort konkrete Werte nach.
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    startseiteVersion.incrementAndGet(), "", "", "keine", "", 0, 0,
+                    startseiteVersion.incrementAndGet(), "", "", "keine", 0, 0,
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
                     I18n.get("startseite.tagline"))));
@@ -662,8 +662,6 @@ public final class WebServerManager implements TimerListener {
                     de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog
                             .DOC_PROP_BESCHREIBUNG_ANIMATION,
                     de.petanqueturniermanager.konfigdialog.properties.TurnierStartseiteDialog.ANIMATION_DEFAULT);
-            int hintergrundFarbeInt = docProps.getIntProperty("Turnierhintergrund Farbe", 0xFFFFFF);
-            String hintergrundFarbe = String.format("#%06x", hintergrundFarbeInt & 0xFFFFFF);
             startseiteInstanz.setLogoQuelle(logoQuelle);
 
             int version = startseiteVersion.incrementAndGet();
@@ -672,7 +670,7 @@ public final class WebServerManager implements TimerListener {
             String logoUrl = logoQuelle.isBlank() ? "" : "/turnierlogo?v=" + version;
             // Init-Cache immer mit voller Nachricht (für neue Verbindungen).
             startseiteInstanz.setCachedInitJson(GSON.toJson(StartseiteSseNachricht.init(
-                    version, logoUrl, beschreibung, beschreibungAnimation, hintergrundFarbe,
+                    version, logoUrl, beschreibung, beschreibungAnimation,
                     status.angemeldet(), status.aktiv(),
                     I18n.get("startseite.label.angemeldet"),
                     I18n.get("startseite.label.aktiv"),
@@ -680,7 +678,7 @@ public final class WebServerManager implements TimerListener {
 
             if (!unverändert) {
                 startseiteInstanz.sseNachrichtPushen(GSON.toJson(StartseiteSseNachricht.update(
-                        version, logoUrl, beschreibung, beschreibungAnimation, hintergrundFarbe,
+                        version, logoUrl, beschreibung, beschreibungAnimation,
                         status.angemeldet(), status.aktiv(),
                         I18n.get("startseite.label.angemeldet"),
                         I18n.get("startseite.label.aktiv"),
