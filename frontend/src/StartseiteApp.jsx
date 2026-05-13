@@ -78,19 +78,32 @@ function Beschreibung({ text, animation }) {
 
 function TypewriterText({ text }) {
   const [angezeigt, setAngezeigt] = useState('');
-  const indexRef = useRef(0);
   useEffect(() => {
-    indexRef.current = 0;
+    let index = 0;
+    let intervalId = null;
+    let pauseTimeoutId = null;
+    const tippen = () => {
+      intervalId = setInterval(() => {
+        index += 1;
+        if (index > text.length) {
+          clearInterval(intervalId);
+          intervalId = null;
+          pauseTimeoutId = setTimeout(() => {
+            index = 0;
+            setAngezeigt('');
+            tippen();
+          }, 2500);
+          return;
+        }
+        setAngezeigt(text.slice(0, index));
+      }, 60);
+    };
     setAngezeigt('');
-    const id = setInterval(() => {
-      indexRef.current += 1;
-      if (indexRef.current > text.length) {
-        clearInterval(id);
-        return;
-      }
-      setAngezeigt(text.slice(0, indexRef.current));
-    }, 60);
-    return () => clearInterval(id);
+    tippen();
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      if (pauseTimeoutId) clearTimeout(pauseTimeoutId);
+    };
   }, [text]);
   return (
     <div className="startseite-turnierbeschreibung anim-typewriter">
