@@ -9,8 +9,8 @@ import './Startseite.css';
 export default function StartseiteApp({ startseite }) {
   const { turnierlogo, turnierbeschreibung, beschreibungAnimation, hintergrundfarbe,
           anzahlAngemeldet, anzahlAktiv,
-          labelAngemeldet, labelAktiv, tagline } = startseite;
-  const stil = hintergrundfarbe ? { background: hintergrundfarbe } : undefined;
+          labelAngemeldet, labelAktiv } = startseite;
+  const stil = hintergrundfarbe ? { backgroundColor: hintergrundfarbe } : undefined;
   const animation = beschreibungAnimation || 'keine';
   return (
     <div className="startseite" style={stil}>
@@ -38,19 +38,11 @@ export default function StartseiteApp({ startseite }) {
           <div className="zahl-label">{labelAktiv}</div>
         </div>
       </div>
-      <div className="startseite-fuss">
-        <a
-          href="https://michaelmassee.github.io/Petanque-Turnier-Manager/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <img
-            src="/images/petanqueturniermanager-logo-256px.png"
-            alt="Pétanque-Turnier-Manager"
-          />
-        </a>
-        {tagline && <div className="startseite-tagline">{tagline}</div>}
-      </div>
+      <img
+        className="startseite-footer-bild"
+        src="/images/start-background-footer.png"
+        alt=""
+      />
     </div>
   );
 }

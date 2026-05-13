@@ -14,7 +14,11 @@
   grid-template-rows: auto 1fr auto;
   row-gap: 2vh;
   padding: 2vh 3vw;
-  background: #fff;
+  background-color: #fff;
+  background-image: url('/images/start-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   text-align: center;
   font-family: 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
@@ -150,28 +154,17 @@
   margin-top: 0.4em;
 }
 
+.startseite-footer-bild {
+  display: block;
+  width: 100%;
+  max-height: 20vh;
+  object-fit: contain;
+  justify-self: center;
+}
+
 .zahl-trenner {
   font-size: clamp(3rem, 10vw, 8rem);
   color: #bbb;
   font-weight: 300;
 }
 
-.startseite-fuss {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6vh;
-}
-
-.startseite-fuss img {
-  max-height: clamp(40px, 7vh, 70px);
-  opacity: 0.75;
-}
-
-.startseite-tagline {
-  font-size: clamp(0.75rem, 1.4vw, 1.1rem);
-  font-style: italic;
-  color: #999;
-  letter-spacing: 0.02em;
-}
