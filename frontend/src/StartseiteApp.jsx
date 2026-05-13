@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import './Startseite.css';
 
 /**
@@ -6,10 +7,11 @@ import './Startseite.css';
  * Teilnehmerzahl (angemeldet/aktiv). PTM-Branding als Footer.
  */
 export default function StartseiteApp({ startseite }) {
-  const { turnierlogo, turnierbeschreibung, hintergrundfarbe,
+  const { turnierlogo, turnierbeschreibung, beschreibungAnimation, hintergrundfarbe,
           anzahlAngemeldet, anzahlAktiv,
           labelAngemeldet, labelAktiv, tagline } = startseite;
   const stil = hintergrundfarbe ? { background: hintergrundfarbe } : undefined;
+  const animation = beschreibungAnimation || 'keine';
   return (
     <div className="startseite" style={stil}>
       <div className="startseite-kopf">
@@ -22,7 +24,7 @@ export default function StartseiteApp({ startseite }) {
           />
         )}
         {turnierbeschreibung && (
-          <div className="startseite-turnierbeschreibung">{turnierbeschreibung}</div>
+          <Beschreibung text={turnierbeschreibung} animation={animation} />
         )}
       </div>
       <div className="startseite-zahlen">
@@ -49,6 +51,51 @@ export default function StartseiteApp({ startseite }) {
         </a>
         {tagline && <div className="startseite-tagline">{tagline}</div>}
       </div>
+    </div>
+  );
+}
+
+function Beschreibung({ text, animation }) {
+  // `key` erzwingt Remount bei Text- oder Animations-Wechsel — sonst würden
+  // einmalige CSS-Keyframes (fade/slide) bei Live-Updates nicht erneut starten.
+  const key = `${animation}::${text}`;
+  if (animation === 'typewriter') {
+    return <TypewriterText key={key} text={text} />;
+  }
+  if (animation === 'marquee') {
+    return (
+      <div key={key} className="startseite-turnierbeschreibung anim-marquee">
+        <span>{text}</span>
+      </div>
+    );
+  }
+  return (
+    <div key={key} className={`startseite-turnierbeschreibung anim-${animation}`}>
+      {text}
+    </div>
+  );
+}
+
+function TypewriterText({ text }) {
+  const [angezeigt, setAngezeigt] = useState('');
+  const indexRef = useRef(0);
+  useEffect(() => {
+    indexRef.current = 0;
+    setAngezeigt('');
+    const id = setInterval(() => {
+      indexRef.current += 1;
+      if (indexRef.current > text.length) {
+        clearInterval(id);
+        return;
+      }
+      setAngezeigt(text.slice(0, indexRef.current));
+    }, 60);
+    return () => clearInterval(id);
+  }, [text]);
+  return (
+    <div className="startseite-turnierbeschreibung anim-typewriter">
+      {angezeigt}
+      <span className="anim-typewriter-caret" aria-hidden="true">|</span>
     </div>
   );
 }

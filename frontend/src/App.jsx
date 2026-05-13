@@ -216,6 +216,7 @@ function reducer(state, action) {
         startseite: {
           turnierlogo: msg.turnierlogo ?? '',
           turnierbeschreibung: msg.turnierbeschreibung ?? '',
+          beschreibungAnimation: msg.beschreibungAnimation ?? 'keine',
           hintergrundfarbe: msg.hintergrundfarbe ?? '',
           anzahlAngemeldet: msg.anzahlAngemeldet ?? 0,
           anzahlAktiv: msg.anzahlAktiv ?? 0,
@@ -238,6 +239,7 @@ function reducer(state, action) {
         startseite: {
           turnierlogo:         mergeStr(msg.turnierlogo,         vorher.turnierlogo),
           turnierbeschreibung: mergeStr(msg.turnierbeschreibung, vorher.turnierbeschreibung),
+          beschreibungAnimation: mergeStr(msg.beschreibungAnimation, vorher.beschreibungAnimation || 'keine'),
           hintergrundfarbe:    mergeStr(msg.hintergrundfarbe,    vorher.hintergrundfarbe),
           anzahlAngemeldet:    mergeNum(msg.anzahlAngemeldet,    vorher.anzahlAngemeldet),
           anzahlAktiv:         mergeNum(msg.anzahlAktiv,         vorher.anzahlAktiv),

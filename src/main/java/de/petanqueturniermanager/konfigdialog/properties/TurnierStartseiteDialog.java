@@ -10,6 +10,7 @@ import com.sun.star.awt.XCheckBox;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XListBox;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.XWindowPeer;
@@ -41,13 +42,19 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
 
     private static final Logger logger = LogManager.getLogger(TurnierStartseiteDialog.class);
 
-    public static final String DOC_PROP_TURNIERLOGO_URL      = "Turnierlogo Url";
-    public static final String DOC_PROP_TURNIERBESCHREIBUNG  = "Turnierbeschreibung";
-    public static final String DOC_PROP_HINTERGRUNDFARBE     = "Turnierhintergrund Farbe";
+    public static final String DOC_PROP_TURNIERLOGO_URL          = "Turnierlogo Url";
+    public static final String DOC_PROP_TURNIERBESCHREIBUNG      = "Turnierbeschreibung";
+    public static final String DOC_PROP_HINTERGRUNDFARBE         = "Turnierhintergrund Farbe";
+    public static final String DOC_PROP_BESCHREIBUNG_ANIMATION   = "Turnierbeschreibung Animation";
+    public static final String ANIMATION_DEFAULT                 = "keine";
+    /** Reihenfolge der Animations-Optionen in der ListBox (auch Frontend-CSS-Klassen-Suffix). */
+    public static final String[] ANIMATION_KEYS = {
+            "keine", "fade", "slide", "typewriter", "marquee", "pulse", "blink"
+    };
     private static final int DEFAULT_HINTERGRUNDFARBE = 0xFFFFFF;
 
     private static final int DIALOG_BREITE = 360;
-    private static final int DIALOG_HOEHE  = 245;
+    private static final int DIALOG_HOEHE  = 270;
 
     private static final int LBL_X     = 5;
     private static final int LBL_W     = 80;
@@ -63,9 +70,10 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final int ZEILE3_Y  = 55;
     private static final int ZEILE4_Y  = 80;
     private static final int ZEILE5_Y  = 160;
+    private static final int ZEILE6_Y  = 185;
     private static final int COLOR_VORSCHAU_W = 30;
     private static final int FARBE_PICK_GAP   = 5;
-    private static final int FOOTER_Y  = 220;
+    private static final int FOOTER_Y  = 245;
     private static final int BTN_UEBERN_X  = 125;
     private static final int BTN_OK_X      = 200;
     private static final int BTN_ABBRUCH_X = 275;
@@ -77,6 +85,7 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
     private static final String CTRL_LOGO           = "editLogo";
     private static final String CTRL_LOGO_PICK      = "btnLogoPick";
     private static final String CTRL_BESCHREIBUNG   = "editBeschreibung";
+    private static final String CTRL_ANIMATION      = "lstAnimation";
     private static final String CTRL_FARBE_VORSCHAU = "lblFarbeVorschau";
     private static final String CTRL_FARBE_PICK     = "btnFarbePick";
 
@@ -150,14 +159,20 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
                 docProps.getStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, ""),
                 FIELD_X, ZEILE4_Y, FIELD_W, BESCHREIBUNG_H);
 
+        fuegeLabel("lblAnimation", I18n.get("konfiguration.startseite.beschreibung.animation.label"),
+                LBL_X, ZEILE5_Y, LBL_W, CTRL_H);
+        String aktuelleAnimation = docProps.getStringProperty(DOC_PROP_BESCHREIBUNG_ANIMATION, ANIMATION_DEFAULT);
+        fuegeListBox(CTRL_ANIMATION, animationLabels(), animationIndex(aktuelleAnimation),
+                FIELD_X, ZEILE5_Y, FIELD_W, CTRL_H);
+
         hintergrundFarbeInt = docProps.getIntProperty(DOC_PROP_HINTERGRUNDFARBE, DEFAULT_HINTERGRUNDFARBE)
                 & 0xFFFFFF;
         fuegeLabel("lblFarbe", I18n.get("konfiguration.startseite.hintergrundfarbe.label"),
-                LBL_X, ZEILE5_Y, LBL_W, CTRL_H);
+                LBL_X, ZEILE6_Y, LBL_W, CTRL_H);
         farbeVorschauProps = fuegeColorVorschau(CTRL_FARBE_VORSCHAU, hintergrundFarbeInt,
-                FIELD_X, ZEILE5_Y, COLOR_VORSCHAU_W, CTRL_H);
+                FIELD_X, ZEILE6_Y, COLOR_VORSCHAU_W, CTRL_H);
         fuegeButton(CTRL_FARBE_PICK, "…",
-                FIELD_X + COLOR_VORSCHAU_W + FARBE_PICK_GAP, ZEILE5_Y - 1,
+                FIELD_X + COLOR_VORSCHAU_W + FARBE_PICK_GAP, ZEILE6_Y - 1,
                 LOGO_PICK_W, CTRL_H + 2, (short) 0);
         registriereButtonAktion(CTRL_FARBE_PICK, this::oeffneFarbwahl);
 
@@ -202,11 +217,14 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
             return false;
         }
 
+        String animation = ANIMATION_KEYS[Math.max(0, leseListBoxIndex(CTRL_ANIMATION))];
+
         GlobalProperties.get().speichernStartseite(port, aktiv);
         var docProps = new DocumentPropertiesHelper(currentSpreadsheet);
         docProps.setStringProperty(DOC_PROP_TURNIERLOGO_URL, logo);
         docProps.setStringProperty(DOC_PROP_TURNIERBESCHREIBUNG, beschreibung);
         docProps.setIntProperty(DOC_PROP_HINTERGRUNDFARBE, hintergrundFarbeInt);
+        docProps.setStringProperty(DOC_PROP_BESCHREIBUNG_ANIMATION, animation);
         WebServerManager.get().konfigurationGeaendert();
         logger.info("Turnier-Startseite gespeichert: aktiv={}, Port={}, Farbe=#{}",
                 aktiv, port, String.format("%06x", hintergrundFarbeInt & 0xFFFFFF));
@@ -295,6 +313,50 @@ public class TurnierStartseiteDialog extends AbstractUnoDialog {
         props.setPropertyValue("Height",    h);
         props.setPropertyValue("State",     (short) (checked ? 1 : 0));
         cont.insertByName(name, model);
+    }
+
+    private void fuegeListBox(String name, String[] items, int selectedIndex, int x, int y, int w, int h)
+            throws com.sun.star.uno.Exception {
+        var model = xMSF.createInstance("com.sun.star.awt.UnoControlListBoxModel");
+        var props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX",      x);
+        props.setPropertyValue("PositionY",      y);
+        props.setPropertyValue("Width",          w);
+        props.setPropertyValue("Height",         h);
+        props.setPropertyValue("Dropdown",       Boolean.TRUE);
+        props.setPropertyValue("StringItemList", items);
+        if (selectedIndex >= 0 && selectedIndex < items.length) {
+            props.setPropertyValue("SelectedItems", new short[] { (short) selectedIndex });
+        }
+        cont.insertByName(name, model);
+    }
+
+    private int leseListBoxIndex(String name) {
+        XControl ctrl = xcc.getControl(name);
+        if (ctrl == null) return -1;
+        var lb = Lo.qi(XListBox.class, ctrl);
+        return lb != null ? lb.getSelectedItemPos() : -1;
+    }
+
+    private static String[] animationLabels() {
+        // Schlüssel bewusst als Literale aufgeführt, damit der I18n-Referenzdatei-Test
+        // sie als verwendet erkennt (Pattern matched nur vollständige String-Literale).
+        return new String[] {
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.keine"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.fade"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.slide"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.typewriter"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.marquee"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.pulse"),
+                I18n.get("konfiguration.startseite.beschreibung.animation.option.blink")
+        };
+    }
+
+    private static int animationIndex(String key) {
+        for (int i = 0; i < ANIMATION_KEYS.length; i++) {
+            if (ANIMATION_KEYS[i].equals(key)) return i;
+        }
+        return 0;
     }
 
     private void fuegeButton(String name, String label, int x, int y, int w, int h, short typ)

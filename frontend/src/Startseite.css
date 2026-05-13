@@ -51,6 +51,74 @@
   -webkit-box-orient: vertical;
 }
 
+/* ── Animationen für die Turnierbeschreibung ──────────────────────────── */
+.anim-fade {
+  animation: ptm-fade 0.8s ease-in both;
+}
+@keyframes ptm-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.anim-slide {
+  animation: ptm-slide 0.8s ease-out both;
+}
+@keyframes ptm-slide {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+.anim-pulse {
+  animation: ptm-pulse 2s ease-in-out infinite;
+}
+@keyframes ptm-pulse {
+  0%, 100% { transform: scale(1);    }
+  50%      { transform: scale(1.04); }
+}
+
+.anim-blink {
+  animation: ptm-blink 1.4s steps(2, start) infinite;
+}
+@keyframes ptm-blink {
+  0%, 49%   { opacity: 1;   }
+  50%, 100% { opacity: 0.3; }
+}
+
+.anim-marquee {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+.anim-marquee > span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: ptm-marquee 15s linear infinite;
+}
+@keyframes ptm-marquee {
+  from { transform: translateX(0);      }
+  to   { transform: translateX(-100%);  }
+}
+
+.anim-typewriter {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  white-space: pre-wrap;
+}
+.anim-typewriter-caret {
+  display: inline-block;
+  margin-left: 0.05em;
+  animation: ptm-caret 0.9s steps(2, start) infinite;
+}
+@keyframes ptm-caret {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
 .startseite-zahlen {
   display: flex;
   align-items: center;

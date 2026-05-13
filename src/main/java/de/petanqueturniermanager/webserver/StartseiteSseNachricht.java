@@ -15,6 +15,7 @@ public record StartseiteSseNachricht(
         int version,
         String turnierlogo,
         String turnierbeschreibung,
+        String beschreibungAnimation,
         String hintergrundfarbe,
         int anzahlAngemeldet,
         int anzahlAktiv,
@@ -24,12 +25,14 @@ public record StartseiteSseNachricht(
         Map<String, String> i18n) {
 
     public static StartseiteSseNachricht init(int version, String turnierlogo, String turnierbeschreibung,
+            String beschreibungAnimation,
             String hintergrundfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
             String labelAngemeldet, String labelAktiv, String tagline) {
         return new StartseiteSseNachricht("startseite_init", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
+                beschreibungAnimation == null || beschreibungAnimation.isBlank() ? "keine" : beschreibungAnimation,
                 hintergrundfarbe == null ? "" : hintergrundfarbe,
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
@@ -44,12 +47,14 @@ public record StartseiteSseNachricht(
      * initiale Verbindung vor einer späteren Property-Änderung aufgebaut wurde.
      */
     public static StartseiteSseNachricht update(int version, String turnierlogo, String turnierbeschreibung,
+            String beschreibungAnimation,
             String hintergrundfarbe,
             int anzahlAngemeldet, int anzahlAktiv,
             String labelAngemeldet, String labelAktiv, String tagline) {
         return new StartseiteSseNachricht("startseite_update", version,
                 turnierlogo == null ? "" : turnierlogo,
                 turnierbeschreibung == null ? "" : turnierbeschreibung,
+                beschreibungAnimation == null || beschreibungAnimation.isBlank() ? "keine" : beschreibungAnimation,
                 hintergrundfarbe == null ? "" : hintergrundfarbe,
                 anzahlAngemeldet, anzahlAktiv,
                 labelAngemeldet == null ? "" : labelAngemeldet,
