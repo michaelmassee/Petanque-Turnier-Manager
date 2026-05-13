@@ -207,7 +207,6 @@
   max-height: 14vh;
   object-fit: contain;
   justify-self: center;
-  border-radius: 16px;
 }
 
 /* ── Status-Leiste (Pill zwischen Counter und Footer) ───────────────────── */
