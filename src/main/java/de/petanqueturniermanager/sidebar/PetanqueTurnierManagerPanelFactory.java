@@ -6,10 +6,14 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.awt.XWindow;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.container.NoSuchElementException;
+import com.sun.star.frame.XController;
+import com.sun.star.frame.XFrame;
+import com.sun.star.frame.XModel;
 import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.registry.XRegistryKey;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.ui.XSidebar;
 import com.sun.star.ui.XUIElement;
 import com.sun.star.ui.XUIElementFactory;
@@ -68,11 +72,14 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 
 		XWindow xParentWindow = null;
 		XSidebar xSidebar = null;
+		XFrame xFrame = null;
 		for (PropertyValue aValue : aArgumentList) {
 			if (aValue.Name.equals("ParentWindow")) {
 				xParentWindow = Lo.qi(XWindow.class, aValue.Value);
 			} else if (aValue.Name.equals("Sidebar")) {
 				xSidebar = Lo.qi(XSidebar.class, aValue.Value);
+			} else if (aValue.Name.equals("Frame")) {
+				xFrame = Lo.qi(XFrame.class, aValue.Value);
 			}
 		}
 
@@ -82,7 +89,7 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 					logger.error("createUIElement: URL zu kurz: {}", sResourceURL);
 					throw new NoSuchElementException(sResourceURL, this);
 				}
-				WorkingSpreadsheet currentSpreadsheet = new WorkingSpreadsheet(xContext);
+				WorkingSpreadsheet currentSpreadsheet = erzeugeWorkingSpreadsheetFuerFrame(xFrame);
 				String panelId = sResourceURL.substring(URL_PREFIX.length() + 1);
 				logger.debug("createUIElement: panelId={}", panelId);
 				return switch (panelId) {
@@ -105,6 +112,30 @@ public class PetanqueTurnierManagerPanelFactory implements XUIElementFactory, XS
 		}
 
 		return null;
+	}
+
+	/**
+	 * Erzeugt das {@link WorkingSpreadsheet} aus dem Frame, an dem die Sidebar tatsächlich hängt.
+	 * <p>
+	 * Wichtig: Der no-arg-Konstruktor von {@link WorkingSpreadsheet} ermittelt das Desktop-aktive
+	 * Dokument – das ist beim Erzeugen des Sidebar-Panels für ein NEU geöffnetes Calc-Fenster
+	 * oft noch das zuvor aktive (Turnier-)Dokument. LibreOffice gibt uns aber das Argument
+	 * {@code "Frame"} mit (siehe {@code sfx2/source/sidebar/SidebarController.cxx}), woraus wir
+	 * Doc und View für genau dieses Fenster ableiten.
+	 */
+	private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerFrame(XFrame xFrame) {
+		if (xFrame != null) {
+			XController controller = xFrame.getController();
+			if (controller != null) {
+				XModel xModel = controller.getModel();
+				XSpreadsheetDocument xDoc = Lo.qi(XSpreadsheetDocument.class, xModel);
+				if (xDoc != null) {
+					return new WorkingSpreadsheet(xContext, xDoc);
+				}
+			}
+			logger.debug("erzeugeWorkingSpreadsheetFuerFrame: Frame ohne Spreadsheet-Controller – Fallback");
+		}
+		return new WorkingSpreadsheet(xContext);
 	}
 
 	@Override
