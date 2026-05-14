@@ -55,6 +55,9 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 
 		validiereMeldelistePerJson();
 		validiereSpieltagRanglistePerJson(1, "supermelee-spieltagrangliste-1.json");
+		validiereSpieltagRanglistePerJson(2, "supermelee-spieltagrangliste-2.json");
+		validiereSpieltagRanglistePerJson(3, "supermelee-spieltagrangliste-3.json");
+		validiereSpieltagRanglistePerJson(4, "supermelee-spieltagrangliste-4.json");
 		validiereSpieltagRanglistePerJson(5, "supermelee-spieltagrangliste-5.json");
 	}
 
