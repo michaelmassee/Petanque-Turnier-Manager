@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <path d="M 14 10 L 38 10 L 50 22 L 50 56 L 14 56 Z" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M 38 10 L 38 22 L 50 22" fill="#F3F4F6" stroke="#1F2937" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- Kleine Boule-Markierung innerhalb -->
+  <circle cx="24" cy="38" r="4" fill="#B0B7C0" stroke="#1F2937" stroke-width="1.0499999999999998"/>
+  <circle cx="34" cy="38" r="4" fill="#B0B7C0" stroke="#1F2937" stroke-width="1.0499999999999998"/>
+  <circle cx="29" cy="46" r="2" fill="#F59E0B"/>
+  <!-- Plus-Badge -->
+  <circle cx="48" cy="48" r="11" fill="#16A34A" stroke="#1F2937" stroke-width="1.5"/>
+  <path d="M 48 42 L 48 54 M 42 48 L 54 48" stroke="#FFFFFF" stroke-width="2.7" stroke-linecap="round"/>
+
+</svg>

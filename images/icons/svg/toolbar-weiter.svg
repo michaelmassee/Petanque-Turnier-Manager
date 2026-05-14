@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Liste hinter dem Pfeil (deutet "Runde" an) -->
+  <rect x="8" y="14" width="28" height="36" rx="2" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.5"/>
+  <line x1="13" y1="22" x2="31" y2="22" stroke="#D1D5DB" stroke-width="1.7999999999999998" stroke-linecap="round"/>
+  <line x1="13" y1="29" x2="31" y2="29" stroke="#D1D5DB" stroke-width="1.7999999999999998" stroke-linecap="round"/>
+  <line x1="13" y1="36" x2="31" y2="36" stroke="#D1D5DB" stroke-width="1.7999999999999998" stroke-linecap="round"/>
+  <line x1="13" y1="43" x2="25" y2="43" stroke="#D1D5DB" stroke-width="1.7999999999999998" stroke-linecap="round"/>
+  <!-- Großer Pfeil rechts -->
+  <path d="M 36 32 L 56 32 M 48 24 L 58 32 L 48 40"
+        fill="none" stroke="#16A34A" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+</svg>

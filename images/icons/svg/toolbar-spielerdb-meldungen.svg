@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Datenbank-Zylinder links -->
+  <path d="M 4 18 L 4 42 Q 4 47 16 47 Q 28 47 28 42 L 28 18" fill="#2563EB" stroke="#1F2937" stroke-width="1.5" stroke-linejoin="round"/>
+  <ellipse cx="16" cy="18" rx="12" ry="4" fill="#1D4ED8" stroke="#1F2937" stroke-width="1.5"/>
+  <path d="M 4 26 Q 16 30 28 26" fill="none" stroke="#1F2937" stroke-width="0.8999999999999999" opacity="0.6"/>
+  <path d="M 4 34 Q 16 38 28 34" fill="none" stroke="#1F2937" stroke-width="0.8999999999999999" opacity="0.6"/>
+  <!-- Pfeil von DB nach Liste -->
+  <path d="M 30 32 L 38 32" stroke="#16A34A" stroke-width="3.3000000000000003" stroke-linecap="round"/>
+  <path d="M 35 28 L 39 32 L 35 36" fill="none" stroke="#16A34A" stroke-width="3.3000000000000003" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Liste rechts -->
+  <rect x="40" y="14" width="20" height="36" rx="2" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.5"/>
+  <circle cx="44" cy="22" r="1.6" fill="#1F2937"/>
+  <line x1="48" y1="22" x2="57" y2="22" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="44" cy="30" r="1.6" fill="#1F2937"/>
+  <line x1="48" y1="30" x2="57" y2="30" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="44" cy="38" r="1.6" fill="#1F2937"/>
+  <line x1="48" y1="38" x2="57" y2="38" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="44" cy="46" r="1.6" fill="#16A34A"/>
+  <line x1="48" y1="46" x2="55" y2="46" stroke="#16A34A" stroke-width="1.5" stroke-linecap="round"/>
+
+</svg>

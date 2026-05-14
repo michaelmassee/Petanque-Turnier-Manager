@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+
+  <!-- Monitor / Bildschirm -->
+  <rect x="6" y="10" width="52" height="34" rx="3" fill="#3B82F6" stroke="#1F2937" stroke-width="1.5"/>
+  <rect x="9" y="13" width="46" height="28" rx="1" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.0499999999999998"/>
+  <!-- Standfuß -->
+  <rect x="26" y="44" width="12" height="6" fill="#1E40AF" stroke="#1F2937" stroke-width="1.5"/>
+  <rect x="18" y="50" width="28" height="4" rx="1" fill="#1E40AF" stroke="#1F2937" stroke-width="1.5"/>
+  <!-- Vollbild-Pfeile (4 Ecken nach außen) -->
+  <path d="M 16 19 L 12 16 L 12 21 M 12 16 L 17 16" fill="none" stroke="#1F2937" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 48 19 L 52 16 L 52 21 M 52 16 L 47 16" fill="none" stroke="#1F2937" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 16 34 L 12 38 L 12 33 M 12 38 L 17 38" fill="none" stroke="#1F2937" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 48 34 L 52 38 L 52 33 M 52 38 L 47 38" fill="none" stroke="#1F2937" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Inhalt: kleines Boule-Symbol (signalisiert: Turnier-Ansicht) -->
+  <circle cx="32" cy="27" r="3" fill="#7C8591"/>
+
+</svg>
