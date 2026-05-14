@@ -62,6 +62,17 @@ public abstract class BaseSidebarContent extends ComponentBase
 	private static final Logger logger = LogManager.getLogger(BaseSidebarContent.class);
 
 	private WorkingSpreadsheet currentSpreadsheet;
+	/**
+	 * Das Dokument, an dessen Frame dieses Panel gebunden ist. Wird im Konstruktor gesetzt
+	 * (sofern bereits ein Doc vorhanden ist) bzw. beim ersten passenden {@code onLoad}/{@code onNew}.
+	 * <p>
+	 * Hintergrund: {@code OnNew}/{@code OnLoad} werden vom {@code XGlobalEventBroadcaster} global
+	 * gefeuert und vom {@link SidebarPanelDelegator} an ALLE Panels verteilt – auch an die
+	 * Sidebars anderer Calc-Fenster. Ohne diesen Filter würde z.B. ein zusätzlich geöffnetes
+	 * leeres Calc-Dokument das Turnier-Sidebar im Turnier-Fenster auf das leere Doc umschalten
+	 * (Sheet-Liste leer, Turniersystem „kein").
+	 */
+	private XSpreadsheetDocument eigenesDokument;
 	private XWindow parentWindow;
 	private XSidebar xSidebar;
 	private XWindow window;
@@ -99,6 +110,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 	 */
 	public BaseSidebarContent(WorkingSpreadsheet workingSpreadsheet, XWindow parentWindow, XSidebar xSidebar) {
 		currentSpreadsheet = checkNotNull(workingSpreadsheet);
+		eigenesDokument = workingSpreadsheet.getWorkingSpreadsheetDocument();
 		this.xSidebar = checkNotNull(xSidebar);
 		this.parentWindow = checkNotNull(parentWindow);
 
@@ -381,6 +393,12 @@ public abstract class BaseSidebarContent extends ComponentBase
 		XSpreadsheetDocument xSpreadsheetDocument = Lo.qi(XSpreadsheetDocument.class, xModel);
 		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
 		if (xSpreadsheetDocument != null && xSpreadsheetView != null) {
+			// Globale OnNew/OnLoad-Events werden an alle Sidebars aller Calc-Fenster verteilt.
+			// Nur reagieren, wenn das Event zu UNSEREM Dokument gehört.
+			if (eigenesDokument != null && !eigenesDokument.equals(xSpreadsheetDocument)) {
+				return;
+			}
+			eigenesDokument = xSpreadsheetDocument;
 			currentSpreadsheet = new WorkingSpreadsheet(currentSpreadsheet.getxContext(), xSpreadsheetDocument);
 			onSpreadsheetGewechselt(currentSpreadsheet);
 			var event = new OnProperiesChangedEvent(currentSpreadsheet.getWorkingSpreadsheetDocument());
