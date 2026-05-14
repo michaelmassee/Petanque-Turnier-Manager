@@ -502,6 +502,48 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		}
 	}
 
+	/**
+	 * Schreibt deterministische Test-Ergebnisse in alle Folgerunden (ab Runde 2 bis zum Finale).
+	 * Voraussetzung: {@link #schreibeRunde1TestErgebnisse(String)} wurde bereits aufgerufen und
+	 * eine globale Neuberechnung ist erfolgt, sodass die Team-Namen über die Sieger-Formeln in
+	 * den Folgerunden propagiert sind. Score-Zellen sind bisher leer und werden hier pro Match
+	 * mit einer 13:x-Paarung gefüllt (Sieger und Verlierer-Punkte via {@link RandomSource}).
+	 */
+	public void schreibeFolgerundenTestErgebnisse(String sheetName) throws GenerateException {
+		XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
+		if (xSheet == null) {
+			return;
+		}
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		int numRunden = Integer.numberOfTrailingZeros(aktuelleBracketGroesse);
+		for (int runde = 2; runde <= numRunden; runde++) {
+			int anzMatches = aktuelleBracketGroesse / (1 << runde);
+			int spalte = scoreSpalte(runde);
+			for (int m = 0; m < anzMatches; m++) {
+				int rowA = teamAZeile(runde, m);
+				int rowB = teamBZeile(runde, m);
+				int insideStride = rowB - rowA;
+				int siegerSeite = RandomSource.nextInt(2);
+				int verliererPunkte = RandomSource.nextInt(13);
+				int scoreA = siegerSeite == 0 ? 13 : verliererPunkte;
+				int scoreB = siegerSeite == 0 ? verliererPunkte : 13;
+
+				RangeData data = new RangeData();
+				for (int offset = 0; offset <= insideStride; offset++) {
+					if (offset == 0) {
+						data.addNewRow().newInt(scoreA);
+					} else if (offset == insideStride) {
+						data.addNewRow().newInt(scoreB);
+					} else {
+						data.addNewRow().newEmpty();
+					}
+				}
+				Position start = Position.from(spalte, rowA);
+				RangeHelper.from(xSheet, xDoc, data.getRangePosition(start)).setDataInRange(data);
+			}
+		}
+	}
+
 	@Override
 	protected void doRun() throws GenerateException {
 		if (TurnierModus.get().istAktiv()) {

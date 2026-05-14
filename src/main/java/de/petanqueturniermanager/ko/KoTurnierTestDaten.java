@@ -114,6 +114,16 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 		if (xCal != null) {
 			xCal.calculateAll();
 		}
+		// Nach Propagation der Runde-1-Sieger in die Folgerunden zusätzlich Scores für
+		// Halbfinale, Finale etc. eintragen, damit der Bracket vollständig "gespielt" wird.
+		for (String sheetName : xDoc.getSheets().getElementNames()) {
+			if (sheetName.startsWith(praefix)) {
+				turnierbaumSheet.schreibeFolgerundenTestErgebnisse(sheetName);
+			}
+		}
+		if (xCal != null) {
+			xCal.calculateAll();
+		}
 	}
 
 }
