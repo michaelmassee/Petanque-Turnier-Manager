@@ -101,10 +101,13 @@
       "data": ""
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "BC-Linden 1"
     },
     {
-      "data": "PC Petterweil"
+      "data": "Freispiel"
+    },
+    {
+      "data": 0.0
     },
     {
       "data": 1.0
@@ -113,13 +116,10 @@
       "data": 0.0
     },
     {
-      "data": 3.0
+      "data": 5.0
     },
     {
-      "data": 2.0
-    },
-    {
-      "data": 57.0
+      "data": 28.0
     }
   ],
   [
@@ -142,13 +142,10 @@
       "data": ""
     },
     {
-      "data": "Boulodromedare Fulda 2"
+      "data": "Boule Biebertal"
     },
     {
-      "data": "Boule-Freunde Fernwald"
-    },
-    {
-      "data": 0.0
+      "data": "PC Petterweil"
     },
     {
       "data": 1.0
@@ -157,10 +154,13 @@
       "data": 0.0
     },
     {
-      "data": 5.0
+      "data": 3.0
     },
     {
-      "data": 28.0
+      "data": 2.0
+    },
+    {
+      "data": 43.0
     }
   ],
   [
@@ -183,25 +183,25 @@
       "data": ""
     },
     {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
       "data": "DFG Wettenberg 1"
-    },
-    {
-      "data": "Boule Biebertal"
-    },
-    {
-      "data": 1.0
     },
     {
       "data": 0.0
     },
     {
-      "data": 3.0
+      "data": 1.0
     },
     {
       "data": 2.0
     },
     {
-      "data": 43.0
+      "data": 3.0
+    },
+    {
+      "data": 35.0
     }
   ],
   [
@@ -224,25 +224,25 @@
       "data": ""
     },
     {
-      "data": "PC Petterweil"
+      "data": "Boulefreunde Marburg"
     },
     {
       "data": "Boulodromedare Fulda 2"
     },
     {
+      "data": 1.0
+    },
+    {
       "data": 0.0
+    },
+    {
+      "data": 4.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 2.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 35.0
+      "data": 57.0
     }
   ],
   [
@@ -265,10 +265,10 @@
       "data": ""
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Boule-Freunde Fernwald"
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "Freispiel"
     },
     {
       "data": 1.0
@@ -277,13 +277,13 @@
       "data": 0.0
     },
     {
-      "data": 4.0
+      "data": 3.0
     },
     {
-      "data": 1.0
+      "data": 2.0
     },
     {
-      "data": 57.0
+      "data": 46.0
     }
   ],
   [
@@ -306,10 +306,10 @@
       "data": ""
     },
     {
-      "data": "Boule Biebertal"
+      "data": "Boulefreunde Marburg"
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "Boule Biebertal"
     },
     {
       "data": 1.0
@@ -318,13 +318,13 @@
       "data": 0.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 46.0
+      "data": 53.0
     }
   ],
   [
@@ -347,10 +347,10 @@
       "data": ""
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Boulodromedare Fulda 2"
     },
     {
-      "data": "PC Petterweil"
+      "data": "BC-Linden 1"
     },
     {
       "data": 1.0
@@ -359,10 +359,10 @@
       "data": 0.0
     },
     {
-      "data": 4.0
+      "data": 3.0
     },
     {
-      "data": 1.0
+      "data": 2.0
     },
     {
       "data": 53.0
@@ -388,25 +388,25 @@
       "data": ""
     },
     {
-      "data": "Boule Biebertal"
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": "Boulodromedare Fulda 2"
-    },
-    {
-      "data": 1.0
+      "data": "PC Petterweil"
     },
     {
       "data": 0.0
     },
     {
-      "data": 3.0
+      "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 53.0
+      "data": 4.0
+    },
+    {
+      "data": 38.0
     }
   ],
   [
@@ -429,10 +429,10 @@
       "data": ""
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "Freispiel"
     },
     {
       "data": 0.0
@@ -441,13 +441,13 @@
       "data": 1.0
     },
     {
-      "data": 1.0
+      "data": 2.0
     },
     {
-      "data": 4.0
+      "data": 3.0
     },
     {
-      "data": 38.0
+      "data": 44.0
     }
   ],
   [
@@ -473,7 +473,7 @@
       "data": "PC Petterweil"
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "Boulodromedare Fulda 2"
     },
     {
       "data": 0.0
@@ -488,7 +488,7 @@
       "data": 3.0
     },
     {
-      "data": 44.0
+      "data": 33.0
     }
   ],
   [
@@ -511,25 +511,25 @@
       "data": ""
     },
     {
+      "data": "BC-Linden 1"
+    },
+    {
       "data": "Boulefreunde Marburg"
-    },
-    {
-      "data": "Boule Biebertal"
-    },
-    {
-      "data": 0.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 0.0
     },
     {
-      "data": 3.0
+      "data": 5.0
     },
     {
-      "data": 33.0
+      "data": 0.0
+    },
+    {
+      "data": 65.0
     }
   ],
   [
@@ -552,25 +552,25 @@
       "data": ""
     },
     {
-      "data": "Boulodromedare Fulda 2"
+      "data": "Boule Biebertal"
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": 0.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 0.0
+      "data": 2.0
     },
     {
-      "data": 5.0
+      "data": 3.0
     },
     {
-      "data": 0.0
-    },
-    {
-      "data": 65.0
+      "data": 48.0
     }
   ],
   [
@@ -593,10 +593,10 @@
       "data": ""
     },
     {
-      "data": "Boule Biebertal"
+      "data": "PC Petterweil"
     },
     {
-      "data": "PC Petterweil"
+      "data": "Freispiel"
     },
     {
       "data": 0.0
@@ -605,13 +605,13 @@
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 48.0
+      "data": 42.0
     }
   ],
   [
@@ -634,25 +634,25 @@
       "data": ""
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "BC-Linden 1"
     },
     {
       "data": "DFG Wettenberg 1"
     },
     {
+      "data": 1.0
+    },
+    {
       "data": 0.0
     },
     {
-      "data": 1.0
+      "data": 3.0
     },
     {
-      "data": 1.0
+      "data": 2.0
     },
     {
-      "data": 4.0
-    },
-    {
-      "data": 42.0
+      "data": 51.0
     }
   ],
   [
@@ -675,7 +675,7 @@
       "data": ""
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "Boule Biebertal"
     },
     {
       "data": "Boulodromedare Fulda 2"
@@ -687,13 +687,546 @@
       "data": 0.0
     },
     {
-      "data": 3.0
+      "data": 4.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 64.0
+    }
+  ],
+  [
+    {
+      "data": "HR-16"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": "Boulefreunde Marburg"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 55.0
+    }
+  ],
+  [
+    {
+      "data": "HR-17"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boulefreunde Marburg"
+    },
+    {
+      "data": "Freispiel"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
     },
     {
       "data": 2.0
     },
     {
-      "data": 51.0
+      "data": 3.0
+    },
+    {
+      "data": 49.0
+    }
+  ],
+  [
+    {
+      "data": "HR-18"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boulodromedare Fulda 2"
+    },
+    {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 33.0
+    }
+  ],
+  [
+    {
+      "data": "HR-19"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "DFG Wettenberg 1"
+    },
+    {
+      "data": "Boule Biebertal"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 39.0
+    }
+  ],
+  [
+    {
+      "data": "HR-20"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "PC Petterweil"
+    },
+    {
+      "data": "BC-Linden 1"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 41.0
+    }
+  ],
+  [
+    {
+      "data": "HR-21"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boulodromedare Fulda 2"
+    },
+    {
+      "data": "Freispiel"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 61.0
+    }
+  ],
+  [
+    {
+      "data": "HR-22"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "DFG Wettenberg 1"
+    },
+    {
+      "data": "Boulefreunde Marburg"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 34.0
+    }
+  ],
+  [
+    {
+      "data": "HR-23"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "PC Petterweil"
+    },
+    {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 53.0
+    }
+  ],
+  [
+    {
+      "data": "HR-24"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "BC-Linden 1"
+    },
+    {
+      "data": "Boule Biebertal"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 48.0
+    }
+  ],
+  [
+    {
+      "data": "HR-25"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boule Biebertal"
+    },
+    {
+      "data": "Freispiel"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 42.0
+    }
+  ],
+  [
+    {
+      "data": "HR-26"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": "BC-Linden 1"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 52.0
+    }
+  ],
+  [
+    {
+      "data": "HR-27"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boulefreunde Marburg"
+    },
+    {
+      "data": "PC Petterweil"
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 31.0
+    }
+  ],
+  [
+    {
+      "data": "HR-28"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boulodromedare Fulda 2"
+    },
+    {
+      "data": "DFG Wettenberg 1"
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 52.0
     }
   ],
   [
@@ -716,10 +1249,10 @@
       "data": ""
     },
     {
-      "data": "PC Petterweil"
+      "data": "BC-Linden 1"
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "Freispiel"
     },
     {
       "data": 1.0
@@ -734,7 +1267,7 @@
       "data": 1.0
     },
     {
-      "data": 64.0
+      "data": 57.0
     }
   ],
   [
@@ -757,25 +1290,25 @@
       "data": ""
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "PC Petterweil"
     },
     {
-      "data": "Boulodromedare Fulda 2"
-    },
-    {
-      "data": 1.0
+      "data": "Boule Biebertal"
     },
     {
       "data": 0.0
     },
     {
-      "data": 4.0
-    },
-    {
       "data": 1.0
     },
     {
-      "data": 55.0
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 45.0
     }
   ],
   [
@@ -798,10 +1331,10 @@
       "data": ""
     },
     {
-      "data": "Boule Biebertal"
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Boule-Freunde Fernwald"
     },
     {
       "data": 0.0
@@ -810,13 +1343,13 @@
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 49.0
+      "data": 43.0
     }
   ],
   [
@@ -842,7 +1375,7 @@
       "data": "Boulodromedare Fulda 2"
     },
     {
-      "data": "PC Petterweil"
+      "data": "Boulefreunde Marburg"
     },
     {
       "data": 0.0
@@ -851,13 +1384,13 @@
       "data": 1.0
     },
     {
-      "data": 1.0
+      "data": 2.0
     },
     {
-      "data": 4.0
+      "data": 3.0
     },
     {
-      "data": 33.0
+      "data": 48.0
     }
   ],
   [
@@ -880,10 +1413,10 @@
       "data": ""
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "Boule-Freunde Fernwald"
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Freispiel"
     },
     {
       "data": 0.0
@@ -892,13 +1425,13 @@
       "data": 1.0
     },
     {
-      "data": 1.0
+      "data": 2.0
     },
     {
-      "data": 4.0
+      "data": 3.0
     },
     {
-      "data": 39.0
+      "data": 51.0
     }
   ],
   [
@@ -921,10 +1454,10 @@
       "data": ""
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "Boule Biebertal"
     },
     {
-      "data": "Boule Biebertal"
+      "data": "Boulefreunde Marburg"
     },
     {
       "data": 0.0
@@ -933,13 +1466,13 @@
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 41.0
+      "data": 35.0
     }
   ],
   [
@@ -962,10 +1495,10 @@
       "data": ""
     },
     {
-      "data": "PC Petterweil"
+      "data": "BC-Linden 1"
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Boulodromedare Fulda 2"
     },
     {
       "data": 0.0
@@ -974,13 +1507,13 @@
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 61.0
+      "data": 45.0
     }
   ],
   [
@@ -1003,10 +1536,10 @@
       "data": ""
     },
     {
-      "data": "Boulodromedare Fulda 2"
+      "data": "PC Petterweil"
     },
     {
-      "data": "Boule Biebertal"
+      "data": "DFG Wettenberg 1"
     },
     {
       "data": 0.0
@@ -1015,13 +1548,13 @@
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 34.0
+      "data": 29.0
     }
   ],
   [
@@ -1044,25 +1577,25 @@
       "data": ""
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "Freispiel"
+    },
+    {
+      "data": 1.0
     },
     {
       "data": 0.0
     },
     {
-      "data": 1.0
-    },
-    {
-      "data": 1.0
-    },
-    {
       "data": 4.0
     },
     {
-      "data": 53.0
+      "data": 1.0
+    },
+    {
+      "data": 61.0
     }
   ],
   [
@@ -1085,7 +1618,7 @@
       "data": ""
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "Boulodromedare Fulda 2"
     },
     {
       "data": "PC Petterweil"
@@ -1097,13 +1630,13 @@
       "data": 1.0
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 4.0
     },
     {
-      "data": 48.0
+      "data": 34.0
     }
   ],
   [
@@ -1126,13 +1659,10 @@
       "data": ""
     },
     {
-      "data": "Boule Biebertal"
-    },
-    {
       "data": "Boulefreunde Marburg"
     },
     {
-      "data": 0.0
+      "data": "BC-Linden 1"
     },
     {
       "data": 1.0
@@ -1141,10 +1671,13 @@
       "data": 0.0
     },
     {
-      "data": 5.0
+      "data": 3.0
     },
     {
-      "data": 42.0
+      "data": 2.0
+    },
+    {
+      "data": 50.0
     }
   ],
   [
@@ -1167,10 +1700,10 @@
       "data": ""
     },
     {
-      "data": "DFG Wettenberg 1"
+      "data": "Boule-Freunde Fernwald"
     },
     {
-      "data": "Boulodromedare Fulda 2"
+      "data": "Boule Biebertal"
     },
     {
       "data": 0.0
@@ -1185,7 +1718,7 @@
       "data": 3.0
     },
     {
-      "data": 52.0
+      "data": 47.0
     }
   ],
   [
@@ -1211,7 +1744,7 @@
       "data": "PC Petterweil"
     },
     {
-      "data": "Boule Biebertal"
+      "data": "Freispiel"
     },
     {
       "data": 0.0
@@ -1226,7 +1759,7 @@
       "data": 3.0
     },
     {
-      "data": 31.0
+      "data": 47.0
     }
   ],
   [
@@ -1252,7 +1785,7 @@
       "data": "DFG Wettenberg 1"
     },
     {
-      "data": "Boule-Freunde Fernwald"
+      "data": "BC-Linden 1"
     },
     {
       "data": 1.0
@@ -1293,7 +1826,7 @@
       "data": "Boulodromedare Fulda 2"
     },
     {
-      "data": "Boulefreunde Marburg"
+      "data": "Boule Biebertal"
     },
     {
       "data": 1.0
@@ -1302,18 +1835,65 @@
       "data": 0.0
     },
     {
-      "data": 4.0
+      "data": 3.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 49.0
+    }
+  ],
+  [
+    {
+      "data": "RR-16"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": "Boulefreunde Marburg"
+    },
+    {
+      "data": "Boule-Freunde Fernwald"
+    },
+    {
+      "data": 0.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 57.0
+      "data": 2.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 45.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-17"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1325,36 +1905,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boulefreunde Marburg"
     },
     {
-      "data": ""
+      "data": "Freispiel"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 4.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 41.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-18"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1366,36 +1946,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boule-Freunde Fernwald"
     },
     {
-      "data": ""
+      "data": "Boulodromedare Fulda 2"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 4.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 40.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-19"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1407,36 +1987,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boule Biebertal"
     },
     {
-      "data": ""
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 37.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-20"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1448,36 +2028,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "BC-Linden 1"
     },
     {
-      "data": ""
+      "data": "PC Petterweil"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 58.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-21"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1489,36 +2069,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boulodromedare Fulda 2"
     },
     {
-      "data": ""
+      "data": "Freispiel"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 35.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-22"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1530,36 +2110,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boulefreunde Marburg"
     },
     {
-      "data": ""
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 4.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 48.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-23"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1571,36 +2151,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boule-Freunde Fernwald"
     },
     {
-      "data": ""
+      "data": "PC Petterweil"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 4.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 29.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-24"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1612,36 +2192,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boule Biebertal"
     },
     {
-      "data": ""
+      "data": "BC-Linden 1"
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 5.0
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 65.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-25"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1653,36 +2233,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "Boule Biebertal"
     },
     {
-      "data": ""
+      "data": "Freispiel"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 44.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-26"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1694,36 +2274,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "BC-Linden 1"
     },
     {
-      "data": ""
+      "data": "Boule-Freunde Fernwald"
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 44.0
     }
   ],
   [
     {
-      "data": ""
+      "data": "RR-27"
+    },
+    {
+      "data": 52.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": ""
@@ -1735,616 +2315,36 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "PC Petterweil"
     },
     {
-      "data": ""
+      "data": "Boulefreunde Marburg"
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 48.0
     }
   ],
   [
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": "RR-28"
     },
     {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    },
-    {
-      "data": ""
-    }
-  ],
-  [
-    {
-      "data": ""
-    },
-    {
-      "data": ""
+      "data": 52.0
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
       "data": ""
@@ -2356,25 +2356,25 @@
       "data": ""
     },
     {
-      "data": ""
+      "data": "DFG Wettenberg 1"
     },
     {
-      "data": ""
+      "data": "Boulodromedare Fulda 2"
     },
     {
-      "data": ""
+      "data": 1.0
     },
     {
-      "data": ""
+      "data": 0.0
     },
     {
-      "data": ""
+      "data": 3.0
     },
     {
-      "data": ""
+      "data": 2.0
     },
     {
-      "data": ""
+      "data": 53.0
     }
   ],
   [
