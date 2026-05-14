@@ -41,7 +41,7 @@ export default function StartseiteApp({ startseite }) {
             <IconAngemeldet />
           </div>
           <div className="zahl-wert">{anzahlAngemeldet}</div>
-          <div className="zahl-label">{labelAngemeldet}</div>
+          <ZahlLabel sichtbar={labelAngemeldet} anker={labelAktiv} />
           <span className="zahl-label-strich" aria-hidden="true" />
         </div>
         <div className="zahl-block">
@@ -49,7 +49,7 @@ export default function StartseiteApp({ startseite }) {
             <IconAktiv />
           </div>
           <div className="zahl-wert">{anzahlAktiv}</div>
-          <div className="zahl-label">{labelAktiv}</div>
+          <ZahlLabel sichtbar={labelAktiv} anker={labelAngemeldet} />
           <span className="zahl-label-strich" aria-hidden="true" />
         </div>
       </div>
@@ -124,6 +124,20 @@ function Beschreibung({ text, animation, stil }) {
   return (
     <div key={key} className={`startseite-turnierbeschreibung anim-${animation}`} style={stil}>
       {text}
+    </div>
+  );
+}
+
+/**
+ * Label-Komponente mit unsichtbarem Anker-Text: zwingt beide Boxen
+ * (Angemeldet/Aktiv) auf identische Breite, indem in jeder Box beide
+ * Label-Texte gestapelt gerendert werden — das längere bestimmt die Größe.
+ */
+function ZahlLabel({ sichtbar, anker }) {
+  return (
+    <div className="zahl-label">
+      <span className="zahl-label-text">{sichtbar}</span>
+      <span className="zahl-label-anker" aria-hidden="true">{anker}</span>
     </div>
   );
 }

@@ -135,7 +135,7 @@
 
 .startseite-zahlen {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   gap: clamp(1.5rem, 5vw, 5rem);
   min-height: 0;
@@ -184,12 +184,27 @@
 }
 
 .zahl-label {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   font-size: clamp(0.9rem, 2vw, 1.8rem);
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: #fff;
   opacity: 0.92;
   margin-top: 0.4em;
+  white-space: nowrap;
+}
+
+.zahl-label > .zahl-label-text,
+.zahl-label > .zahl-label-anker {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.zahl-label-anker {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .zahl-label-strich {

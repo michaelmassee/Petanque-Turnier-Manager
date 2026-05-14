@@ -4,6 +4,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.formulex.FormuleXStatusLeser;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJStatusLeser;
 import de.petanqueturniermanager.kaskade.KaskadeStatusLeser;
 import de.petanqueturniermanager.ko.KoStatusLeser;
@@ -36,6 +37,14 @@ public final class TurnierStatusErmittler {
         return switch (system) {
             case SUPERMELEE -> {
                 int spieltag = docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 1);
+                var xDoc = ws.getWorkingSpreadsheetDocument();
+                String spielrundeSheetName = I18n.get("sheet.name.supermelee.spielrunde.muster", spieltag, 1);
+                var spielrundeSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc,
+                        SheetMetadataHelper.schluesselSupermeleeSpielrunde(spieltag, 1),
+                        spielrundeSheetName);
+                if (spielrundeSheet == null) {
+                    yield I18n.get("sidebar.info.meldungen.erfassen");
+                }
                 int runde = docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELRUNDE, 1);
                 yield I18n.get("sidebar.info.supermelee.schritt", spieltag, runde);
             }
