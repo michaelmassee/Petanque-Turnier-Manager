@@ -28,6 +28,7 @@ Die Software wurde speziell dafür entwickelt, die Organisation und Durchführun
 * **Alles an einem Ort:** Keine externe Datenbank nötig; alles wird direkt in LibreOffice Calc berechnet und gespeichert.
 * **Integrierte Spieler-Datenbank:** Spieler und Vereine zentral verwalten, per Suche/Filter direkt in die Meldeliste übernehmen – inklusive Import/Export und eigenem Web-Viewer.
 * **Eingebauter Webserver:** Alle Turnierdaten live auf Fernseher, Tablet oder Handy anzeigen – direkt aus LibreOffice, ohne externe Software.
+* **Turnier-Startseite:** Frei konfigurierbare Begrüßungs-Webseite für Beamer oder Fernseher mit Logo, Hintergrundbild, Animationen, Live-Countern und Statuszeile – perfekt für die Anmeldung am Turniertag.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
@@ -104,6 +105,20 @@ Während das Turnier läuft, können alle Sheets per Browser auf **Fernseher, La
 * Bis zu **10 URLs gleichzeitig** konfigurierbar
 * Zoom, Zentrierung und Kopf-/Fußzeilen pro Port einstellbar
 * Alle Turniersysteme unterstützt: Supermêlée, Schweizer System, Jeder-gegen-Jeden, K.-O., Maastrichter System, Formule X
+
+---
+
+## 🎬 Turnier-Startseite – die Begrüßungs-Webseite für deinen Turniertag
+
+Neben den Datentabellen bringt der eingebaute Webserver eine eigene **Turnier-Startseite** mit, die du dem Publikum am Anmeldetisch, auf dem Beamer oder auf dem Vereinsfernseher zeigen kannst. Sie wird über einen eigenen Konfig-Dialog gepflegt und braucht keine externe Software.
+
+* 🖼️ **Logo & Hintergrund:** Vereinslogo, eigenes Hintergrund- und Footer-Bild, frei wählbare Hintergrund- und Textfarbe (nativer LibreOffice-Color-Picker).
+* ✍️ **Mehrzeilige Turnierbeschreibung:** Turniername plus Tagline plus Beschreibungstext mit Fade-, Slide- oder Typewriter-Animation als Endlosschleife.
+* 🔢 **Live-Counter:** „Angemeldet" und „Aktiv" werden in animierten Karten hochgezählt – direkt aus der Meldeliste.
+* 🧭 **Statuszeile:** Aktuelles Turniersystem, Fortschritt und rotierende Sprüche.
+* 🔍 **Zoom 10–500 %:** Layout an jede Bildschirmgröße anpassbar, das Hintergrundbild bleibt dabei unskaliert.
+
+> **💡 Schnell aufgesetzt:** Konfig-Dialog im PétTurnMngr-Menü öffnen → Logo wählen, Beschreibung eintragen → Webserver starten → URL auf dem Beamer oder Fernseher öffnen.
 
 ---
 

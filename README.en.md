@@ -27,6 +27,7 @@ The software was specifically designed to make the organization and execution of
 * **Everything in one place:** No external database required; everything is calculated and stored directly in LibreOffice Calc.
 * **Integrated Player Database:** Manage players and clubs centrally and pull them straight into the registration list via search and filter – including import/export and a built-in web viewer.
 * **Built-in Web Server:** Display all tournament data live on TVs, tablets, or phones – directly from LibreOffice, no external software needed.
+* **Tournament Splash Page:** Fully configurable welcome page for projectors or TVs with logo, background image, animations, live counters and a status bar – perfect for the registration desk on tournament day.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
@@ -104,6 +105,20 @@ While the tournament is running, all sheets can be viewed in a browser on **TVs,
 * Up to **10 URLs simultaneously** configurable
 * Zoom, centering and headers/footers configurable per port
 * All tournament systems supported: Supermêlée, Swiss System, Round Robin, Knockout, Maastricht System, Formule X
+
+---
+
+## 🎬 Tournament Splash Page – the welcome screen for tournament day
+
+In addition to the data tables, the built-in web server brings its own **Tournament Splash Page** that you can show to spectators at the registration desk, on a projector, or on the club TV. It is configured through its own dialog and requires no external software.
+
+* 🖼️ **Logo & background:** Club logo, custom background and footer image, freely chosen background and text colour (native LibreOffice colour picker).
+* ✍️ **Multi-line tournament description:** Tournament name plus tagline plus description text with fade, slide or typewriter animation, looping endlessly.
+* 🔢 **Live counters:** "Registered" and "Active" are counted up in animated cards – straight from the registration list.
+* 🧭 **Status bar:** Current tournament system, progress and rotating quips.
+* 🔍 **Zoom 10–500 %:** Layout adapts to any screen size, while the background image stays unscaled.
+
+> **💡 Quick to set up:** Open the config dialog in the PétTurnMngr menu → pick a logo, enter the description → start the web server → open the URL on a projector or TV.
 
 ---
 

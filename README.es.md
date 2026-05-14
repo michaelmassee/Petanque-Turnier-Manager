@@ -27,6 +27,7 @@ El software fue diseñado específicamente para hacer que la organización y eje
 * **Todo en un solo lugar:** No se necesita una base de datos externa; todo se calcula y almacena directamente en LibreOffice Calc.
 * **Base de datos de jugadores integrada:** Gestiona jugadores y clubes de forma centralizada y pásalos directamente a la lista de inscripción mediante búsqueda/filtro – con importación/exportación y un visor web propio.
 * **Servidor web integrado:** Muestra todos los datos del torneo en vivo en televisores, tabletas o móviles – directamente desde LibreOffice, sin software externo.
+* **Página de bienvenida del torneo:** Página de bienvenida totalmente configurable para proyector o televisor con logotipo, imagen de fondo, animaciones, contadores en vivo y barra de estado – ideal para la mesa de inscripción el día del torneo.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
@@ -92,6 +93,20 @@ Mientras se desarrolla el torneo, todas las hojas se pueden ver en un navegador 
 * Hasta **10 URLs simultáneas** configurables
 * Zoom, centrado y encabezados/pies de página configurables por puerto
 * Todos los sistemas de torneo compatibles: Supermêlée, Sistema suizo, Todos contra todos, K.-O., Sistema de Maastricht, Formule X
+
+---
+
+## 🎬 Página de bienvenida del torneo – la pantalla de bienvenida para el día del torneo
+
+Además de las tablas de datos, el servidor web integrado incluye su propia **página de bienvenida del torneo**, que puedes mostrar al público en la mesa de inscripción, en el proyector o en el televisor del club. Se configura mediante su propio diálogo y no requiere software externo.
+
+* 🖼️ **Logotipo y fondo:** Logotipo del club, imagen de fondo y pie de página propios, colores de fondo y texto a elección (selector de color nativo de LibreOffice).
+* ✍️ **Descripción del torneo en varias líneas:** Nombre del torneo, eslogan y texto descriptivo con animación de fundido, deslizamiento o máquina de escribir en bucle infinito.
+* 🔢 **Contadores en vivo:** «Inscritos» y «Activos» se cuentan en tarjetas animadas – directamente desde la lista de inscripción.
+* 🧭 **Barra de estado:** Sistema de torneo actual, progreso y frases rotativas.
+* 🔍 **Zoom 10–500 %:** El diseño se adapta a cualquier tamaño de pantalla; la imagen de fondo permanece sin escalar.
+
+> **💡 Configuración rápida:** Abre el diálogo de configuración en el menú PétTurnMngr → elige un logotipo, introduce la descripción → inicia el servidor web → abre la URL en el proyector o televisor.
 
 ---
 

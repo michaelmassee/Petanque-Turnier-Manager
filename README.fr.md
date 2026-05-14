@@ -27,6 +27,7 @@ Ce logiciel a été spécialement conçu pour rendre l'organisation et le dérou
 * **Tout en un seul endroit :** Aucune base de données externe n'est nécessaire ; tout est calculé et enregistré directement dans LibreOffice Calc.
 * **Base de joueurs intégrée :** Gérez joueurs et clubs de manière centralisée et reprenez-les directement dans la liste d'inscription via la recherche/filtre – avec import/export et un visualiseur web intégré.
 * **Serveur web intégré :** Affichez toutes les données du tournoi en direct sur un téléviseur, une tablette ou un smartphone – directement depuis LibreOffice, sans logiciel externe.
+* **Page d'accueil du tournoi :** Page de bienvenue entièrement configurable pour vidéoprojecteur ou téléviseur, avec logo, image de fond, animations, compteurs en direct et barre de statut – idéale pour la table d'inscription le jour du tournoi.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
@@ -95,6 +96,20 @@ Pendant le déroulement du tournoi, toutes les feuilles peuvent être affichées
 * Jusqu'à **10 URLs simultanées** configurables
 * Zoom, centrage et en-têtes/pieds de page configurables par port
 * Tous les systèmes de tournoi pris en charge : Supermêlée, Système suisse, Chacun contre chacun, K.-O., Système maastrichtois, Formule X
+
+---
+
+## 🎬 Page d'accueil du tournoi – la page de bienvenue pour le jour J
+
+En plus des tableaux de données, le serveur web intégré propose sa propre **page d'accueil du tournoi**, que vous pouvez montrer au public à la table d'inscription, sur le vidéoprojecteur ou sur le téléviseur du club. Elle se configure via son propre dialogue et ne nécessite aucun logiciel externe.
+
+* 🖼️ **Logo & arrière-plan :** Logo du club, image de fond et image de pied de page personnalisées, couleurs de fond et de texte au choix (sélecteur de couleur natif LibreOffice).
+* ✍️ **Description multi-lignes du tournoi :** Nom du tournoi, accroche et texte descriptif avec animation fondu, glissement ou machine à écrire en boucle infinie.
+* 🔢 **Compteurs en direct :** « Inscrits » et « Actifs » défilent dans des cartes animées – directement depuis la liste d'inscription.
+* 🧭 **Barre de statut :** Système de tournoi actuel, progression et phrases rotatives.
+* 🔍 **Zoom 10–500 % :** Mise en page adaptable à toute taille d'écran, l'image de fond reste non mise à l'échelle.
+
+> **💡 Mise en place rapide :** Ouvrir le dialogue de configuration dans le menu PétTurnMngr → choisir un logo, saisir la description → démarrer le serveur web → ouvrir l'URL sur le vidéoprojecteur ou le téléviseur.
 
 ---
 

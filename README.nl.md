@@ -28,6 +28,7 @@ De software is speciaal ontwikkeld om de organisatie en uitvoering van jeu-de-bo
 * **Alles op één plek:** Geen externe database nodig; alles wordt direct berekend en opgeslagen in LibreOffice Calc.
 * **Geïntegreerde spelersdatabase:** Beheer spelers en clubs centraal en zet ze via zoeken/filteren rechtstreeks in de aanmeldlijst – inclusief import/export en een eigen webviewer.
 * **Ingebouwde webserver:** Toon alle toernooigegevens live op tv, tablet of smartphone – rechtstreeks vanuit LibreOffice, zonder externe software.
+* **Toernooi-startpagina:** Volledig configureerbare welkomstpagina voor beamer of tv met logo, achtergrondafbeelding, animaties, live tellers en een statusbalk – perfect voor de aanmeldtafel op toernooidag.
 
 Available in Languages: 🇩🇪 DE | 🇬🇧 EN | 🇫🇷 FR | 🇪🇸 ES | 🇳🇱 NL
 
@@ -93,6 +94,20 @@ Terwijl het toernooi bezig is, kunnen alle sheets in een browser worden bekeken 
 * Tot **10 URL's tegelijkertijd** configureerbaar
 * Zoom, centrering en kopteksten/voetteksten instelbaar per poort
 * Alle toernooisystemen ondersteund: Supermêlée, Zwitsers systeem, Iedereen tegen iedereen, K.-O., Maastrichts systeem, Formule X
+
+---
+
+## 🎬 Toernooi-startpagina – het welkomstscherm voor toernooidag
+
+Naast de gegevenstabellen biedt de ingebouwde webserver een eigen **toernooi-startpagina** die je aan het publiek bij de aanmeldtafel, op de beamer of op de clubtelevisie kunt tonen. Hij wordt geconfigureerd via een eigen dialoog en heeft geen externe software nodig.
+
+* 🖼️ **Logo & achtergrond:** Clublogo, eigen achtergrond- en footerafbeelding, vrij te kiezen achtergrond- en tekstkleur (native LibreOffice-kleurkiezer).
+* ✍️ **Meerregelige toernooibeschrijving:** Toernooinaam plus tagline plus beschrijvende tekst met fade-, slide- of typemachine-animatie als eindeloze lus.
+* 🔢 **Live tellers:** "Aangemeld" en "Actief" worden in geanimeerde kaarten opgeteld – rechtstreeks vanuit de aanmeldlijst.
+* 🧭 **Statusbalk:** Huidig toernooisysteem, voortgang en roterende uitspraken.
+* 🔍 **Zoom 10–500 %:** Lay-out past zich aan elke schermgrootte aan; de achtergrondafbeelding blijft ongeschaald.
+
+> **💡 Snel opgezet:** Open de configuratiedialoog in het PétTurnMngr-menu → kies een logo, voer de beschrijving in → start de webserver → open de URL op de beamer of tv.
 
 ---
 
