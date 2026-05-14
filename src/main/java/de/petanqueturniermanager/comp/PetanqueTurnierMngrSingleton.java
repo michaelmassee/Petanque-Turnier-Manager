@@ -29,7 +29,7 @@ import de.petanqueturniermanager.timer.TimerManager;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.adapter.GlobalEventListener;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.sidebar.SidebarAnzeigenListener;
 import de.petanqueturniermanager.sidebar.SidebarPanelDelegator;
 import de.petanqueturniermanager.toolbar.TimerToolbarSteuerung;
@@ -108,7 +108,7 @@ public class PetanqueTurnierMngrSingleton {
 		TimerManager.get().addListener(new TimerToolbarSteuerung(context));
 		TimerManager.get().addListener(state -> ProtocolHandler.notifyAllListeners());
 		TerminateListener.addThisListenerOnce(context);
-		new NewReleaseChecker().runUpdateCache();
+		ReleaseUpdateService.init(context);
 		if (GlobalProperties.get().isWebserverAktiv()) {
 			WebServerManager.get().starten(context);
 		}
@@ -200,6 +200,11 @@ public class PetanqueTurnierMngrSingleton {
 	public static void dispose() {
 		TimerManager.dispose();
 		WebServerManager.get().stoppen();
+		try {
+			ReleaseUpdateService.get().dispose();
+		} catch (IllegalStateException e) {
+			// Service nie initialisiert – ok.
+		}
 		if (globalEventListener != null) {
 			globalEventListener.disposing(null);
 		}

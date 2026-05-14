@@ -20,7 +20,7 @@ import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -124,7 +124,11 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
                 cbProzessBoxAutomatisch != null && cbProzessBoxAutomatisch.getState() == 1,
                 gewaehlterLevel
         );
-        NewReleaseChecker.callbacksAusloesen();
+        try {
+            ReleaseUpdateService.get().loeseListenerAus();
+        } catch (IllegalStateException e) {
+            // Service nie initialisiert – ok.
+        }
         ProcessBox.applyVordergrundEinstellung();
         logger.info("Plugin-Konfiguration gespeichert");
     }

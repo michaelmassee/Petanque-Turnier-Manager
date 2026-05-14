@@ -15,9 +15,10 @@ import com.sun.star.ui.XSidebar;
 
 import com.sun.star.beans.XPropertySet;
 
+import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.webserver.TurnierStatusErmittler;
 import de.petanqueturniermanager.webserver.WebServerManager;
@@ -56,7 +57,11 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         super(workingSpreadsheet, parentWindow, xSidebar);
         SheetRunner.addStateChangeListener(runnerZustandListener);
         WebServerManager.get().addStatusListener(webserverStatusListener);
-        NewReleaseChecker.addCacheUpdateCallback(versionUpdateCallback);
+        try {
+            ReleaseUpdateService.get().addStatusListener(versionUpdateCallback);
+        } catch (IllegalStateException e) {
+            logger.debug("ReleaseUpdateService nicht initialisiert – Sidebar-Version statisch");
+        }
     }
 
     @Override
@@ -209,7 +214,11 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         }
         SheetRunner.removeStateChangeListener(runnerZustandListener);
         WebServerManager.get().removeStatusListener(webserverStatusListener);
-        NewReleaseChecker.removeCacheUpdateCallback(versionUpdateCallback);
+        try {
+            ReleaseUpdateService.get().removeStatusListener(versionUpdateCallback);
+        } catch (IllegalStateException e) {
+            // Service nie initialisiert worden – ok.
+        }
     }
 
     private void runnerZustandAktualisieren() {
@@ -231,16 +240,26 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
 
     String getPluginVersion() {
         var context = getCurrentSpreadsheet().getxContext();
-        var installiert = ExtensionsHelper.from(context).getVersionNummer();
+        String installiert;
+        boolean updateVerfuegbar = false;
+        String neu = null;
+        try {
+            var service = ReleaseUpdateService.get();
+            installiert = service.getInstallierteVersion()
+                    .orElse(ExtensionsHelper.from(context).getVersionNummer());
+            updateVerfuegbar = service.isUpdateVerfuegbar()
+                    || GlobalProperties.get().isNewVersionCheckImmerTrue();
+            if (updateVerfuegbar) {
+                neu = service.getNeuesteVersionTag().orElse(null);
+            }
+        } catch (IllegalStateException e) {
+            installiert = ExtensionsHelper.from(context).getVersionNummer();
+        }
         if (installiert == null) {
             return "–";
         }
-        var checker = new NewReleaseChecker();
-        if (checker.checkForNewRelease(context)) {
-            var neu = checker.latestVersionFromCacheFile();
-            if (neu != null) {
-                return I18n.get("sidebar.info.version.neu", installiert, neu);
-            }
+        if (updateVerfuegbar && neu != null) {
+            return I18n.get("sidebar.info.version.neu", installiert, neu);
         }
         return I18n.get("sidebar.info.version", installiert);
     }

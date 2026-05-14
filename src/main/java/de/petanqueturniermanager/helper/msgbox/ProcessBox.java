@@ -24,8 +24,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.Log4J;
-import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerState;
@@ -77,6 +76,7 @@ public class ProcessBox implements TimerListener {
     private final AtomicBoolean laeuft = new AtomicBoolean(false);
     private boolean isFehler = false;
     private final XComponentContext xContext;
+    private final Runnable versionsStatusListener = this::aktualisiereNeueVersionLabel;
 
     private ProcessBox(XComponentContext xContext) {
         this.xContext = checkNotNull(xContext);
@@ -129,6 +129,11 @@ public class ProcessBox implements TimerListener {
     private void _dispose() {
         disposed = true; // sofort: alle anderen Threads schlagen ab
         laeuft.set(false);
+        try {
+            ReleaseUpdateService.get().removeStatusListener(versionsStatusListener);
+        } catch (IllegalStateException e) {
+            // Service wurde nie initialisiert – ok.
+        }
         SwingUtilities.invokeLater(() -> {
             if (spinnerTimer != null) {
                 spinnerTimer.stop();
@@ -189,7 +194,14 @@ public class ProcessBox implements TimerListener {
         title(TITLE);
 
         // Callback registrieren: Neue-Version-Label einblenden sobald Cache-Thread fertig
-        NewReleaseChecker.addCacheUpdateCallback(this::aktualisiereNeueVersionLabel);
+        try {
+            ReleaseUpdateService.get().addStatusListener(versionsStatusListener);
+            // Erstaufruf nicht abwarten: aktueller Status sofort anwenden, falls bereits ermittelt.
+            aktualisiereNeueVersionLabel();
+        } catch (IllegalStateException e) {
+            // Service noch nicht initialisiert (z.B. im Test). Stillschweigend überspringen.
+            logger.debug("ReleaseUpdateService noch nicht initialisiert – Versions-Label inaktiv");
+        }
     }
 
     private void initNeueVersionZeile() {
@@ -266,10 +278,18 @@ public class ProcessBox implements TimerListener {
         if (neueVersionLabel == null) {
             return;
         }
-        var checker = new NewReleaseChecker();
-        boolean neueVersion = checker.checkForNewRelease(xContext);
-        String installierteVersion = ExtensionsHelper.from(xContext).getVersionNummer();
-        String neueVersionNummer = checker.latestVersionFromCacheFile();
+        boolean neueVersion;
+        String installierteVersion;
+        String neueVersionNummer;
+        try {
+            var service = ReleaseUpdateService.get();
+            neueVersion = service.isUpdateVerfuegbar()
+                    || GlobalProperties.get().isNewVersionCheckImmerTrue();
+            installierteVersion = service.getInstallierteVersion().orElse(null);
+            neueVersionNummer = service.getNeuesteVersionTag().orElse(null);
+        } catch (IllegalStateException e) {
+            return;
+        }
         SwingUtilities.invokeLater(() -> {
             if (disposed) return;
             if (neueVersion) {
@@ -278,7 +298,9 @@ public class ProcessBox implements TimerListener {
                         neueVersionNummer != null ? neueVersionNummer : "?"));
             }
             neueVersionLabel.setVisible(neueVersion);
-            frame.revalidate();
+            if (frame != null) {
+                frame.revalidate();
+            }
         });
     }
 

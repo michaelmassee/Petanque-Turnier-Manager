@@ -113,7 +113,7 @@ tasks.withType(JavaCompile).configureEach {
         // nur NullAway scharf schalten.
         options.errorprone.disableAllChecks = true
         options.errorprone.check('NullAway', CheckSeverity.ERROR)
-        options.errorprone.option('NullAway:AnnotatedPackages', 'de.petanqueturniermanager.helper.random,de.petanqueturniermanager.spielerdb.webview')
+        options.errorprone.option('NullAway:AnnotatedPackages', 'de.petanqueturniermanager.helper.random,de.petanqueturniermanager.spielerdb.webview,de.petanqueturniermanager.comp.newrelease')
         options.errorprone.option('NullAway:JSpecifyMode', 'true')
     }
 }

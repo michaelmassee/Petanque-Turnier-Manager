@@ -3,7 +3,9 @@
  */
 package de.petanqueturniermanager.comp.newrelease;
 
-import org.kohsuke.github.GHRelease;
+import java.util.Optional;
+
+import org.jspecify.annotations.Nullable;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -19,35 +21,34 @@ import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
  */
 public class ReleaseInfosAnzeigen extends SheetRunner {
 
-	public ReleaseInfosAnzeigen(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.KEIN, "Release-Infos");
-	}
+    public ReleaseInfosAnzeigen(WorkingSpreadsheet workingSpreadsheet) {
+        super(workingSpreadsheet, TurnierSystem.KEIN, "Release-Infos");
+    }
 
-	@Override
-	protected IKonfigurationSheet getKonfigurationSheet() {
-		// kein, weil TurnierSystem.KEIN
-		return null;
-	}
+    @Override
+    protected @Nullable IKonfigurationSheet getKonfigurationSheet() {
+        return null;
+    }
 
-	/**
-	 * Factory-Methode – kann in Tests überschrieben werden.
-	 */
-	NewReleaseChecker newReleaseChecker() {
-		return new NewReleaseChecker();
-	}
+    /** Factory-Methode – kann in Tests überschrieben werden. */
+    Optional<ReleaseInfo> aktuellesReleaseLesen() {
+        try {
+            return ReleaseUpdateService.get().getAktuellesRelease();
+        } catch (IllegalStateException e) {
+            return Optional.empty();
+        }
+    }
 
-	@Override
-	protected void doRun() throws GenerateException {
-		NewReleaseChecker checker = newReleaseChecker();
-		GHRelease rel = checker.readLatestReleaseFromCacheFile();
-		if (rel == null) {
-			processBox().fehler("Keine Release-Informationen verfügbar.");
-			return;
-		}
-		String name = rel.getName() != null ? rel.getName() : rel.getTagName();
-		processBoxinfo("processbox.release.info", (name != null ? name : "?"));
-		processBoxinfo("processbox.release.infos");
-		String body = rel.getBody();
-		processBoxinfo(body != null && !body.isBlank() ? body : I18n.get("processbox.keine.beschreibung"));
-	}
+    @Override
+    protected void doRun() throws GenerateException {
+        var release = aktuellesReleaseLesen().orElse(null);
+        if (release == null) {
+            processBox().fehler("Keine Release-Informationen verfügbar.");
+            return;
+        }
+        processBoxinfo("processbox.release.info", release.name());
+        processBoxinfo("processbox.release.infos");
+        var body = release.body();
+        processBoxinfo(body != null && !body.isBlank() ? body : I18n.get("processbox.keine.beschreibung"));
+    }
 }

@@ -41,7 +41,7 @@ import de.petanqueturniermanager.webserver.CompositeViewListeDialog;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.comp.newrelease.DirectUpdate;
 import de.petanqueturniermanager.comp.newrelease.DownloadExtension;
-import de.petanqueturniermanager.comp.newrelease.NewReleaseChecker;
+import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
 import de.petanqueturniermanager.comp.newrelease.ReleaseInfosAnzeigen;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
@@ -360,7 +360,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			logger.debug("ProtocolHandler Konstruktor: Druckvorschau aktiv – Toolbar-Initialisierung übersprungen");
 		}
 		if (REGISTERED.compareAndSet(false, true)) {
-			NewReleaseChecker.addCacheUpdateCallback(ProtocolHandler::notifyAllListeners);
+			try {
+				ReleaseUpdateService.get().addStatusListener(ProtocolHandler::notifyAllListeners);
+			} catch (IllegalStateException e) {
+				logger.debug("ReleaseUpdateService noch nicht initialisiert – Listener wird übersprungen");
+			}
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
 				@Override
 				public void onFocus(Object source) {

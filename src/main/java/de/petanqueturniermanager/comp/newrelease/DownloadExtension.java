@@ -12,8 +12,7 @@ import java.net.URL;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.kohsuke.github.GHAsset;
-import org.kohsuke.github.GHRelease;
+import org.jspecify.annotations.Nullable;
 
 import com.sun.star.ui.dialogs.ExecutableDialogResults;
 import com.sun.star.ui.dialogs.FolderPicker;
@@ -30,87 +29,95 @@ import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 
 /**
- * @author Michael Massee
+ * Lädt das aktuellste OXT-Release in ein vom Nutzer gewähltes Verzeichnis.
  *
+ * @author Michael Massee
  */
 public class DownloadExtension extends SheetRunner {
-	private static final Logger logger = LogManager.getLogger(DownloadExtension.class);
 
-	/**
-	 * @param workingSpreadsheet
-	 * @param spielSystem
-	 */
-	public DownloadExtension(WorkingSpreadsheet workingSpreadsheet) {
-		super(workingSpreadsheet, TurnierSystem.KEIN, "Download");
-	}
+    public static final String EXTENSION_FILE_PREFIX = "petanqueturniermanager";
+    public static final String EXTENSION_FILE_SUFFIX = "oxt";
 
-	@Override
-	protected IKonfigurationSheet getKonfigurationSheet() {
-		// kein, weil TurnierSystem.KEIN
-		return null;
-	}
+    private static final Logger logger = LogManager.getLogger(DownloadExtension.class);
 
-	@Override
-	protected void doRun() throws GenerateException {
+    public DownloadExtension(WorkingSpreadsheet workingSpreadsheet) {
+        super(workingSpreadsheet, TurnierSystem.KEIN, "Download");
+    }
 
-		NewReleaseChecker newReleaseChecker = new NewReleaseChecker();
-		ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
+    @Override
+    protected @Nullable IKonfigurationSheet getKonfigurationSheet() {
+        return null;
+    }
 
-		processBoxinfo("processbox.download.start");
-		processBoxinfo("processbox.installierte.version", extensionsHelper.getVersionNummer());
+    @Override
+    protected void doRun() throws GenerateException {
+        ExtensionsHelper extensionsHelper = ExtensionsHelper.from(getxContext());
+        processBoxinfo("processbox.download.start");
+        processBoxinfo("processbox.installierte.version", extensionsHelper.getVersionNummer());
 
-		GHRelease latest = newReleaseChecker.readLatestReleaseFromCacheFile();
-		if (latest == null) {
-			processBox().fehler("Keine Version verfügbar.");
-			return;
-		}
+        ReleaseInfo release;
+        try {
+            release = ReleaseUpdateService.get().getAktuellesRelease().orElse(null);
+        } catch (IllegalStateException e) {
+            release = null;
+        }
+        if (release == null) {
+            processBox().fehler("Keine Version verfügbar.");
+            return;
+        }
 
-		GHAsset oxtAsset = newReleaseChecker.getDownloadGHAsset();
-		URL downloadURL = newReleaseChecker.getDownloadURL(oxtAsset);
-		if (downloadURL == null || oxtAsset == null) {
-			processBox().fehler("keine " + NewReleaseChecker.EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
-			return;
-		}
-		processBoxinfo("processbox.github.version", latest.getName());
-		processBox().info(latest.getBody()); // Release Infos
-		processBox().info(downloadURL.toString());
+        var oxtAsset = release.findeAsset(EXTENSION_FILE_PREFIX, EXTENSION_FILE_SUFFIX).orElse(null);
+        if (oxtAsset == null) {
+            processBox().fehler("keine " + EXTENSION_FILE_SUFFIX + " Datei zum Download vorhanden.");
+            return;
+        }
+        URL downloadURL;
+        try {
+            downloadURL = URI.create(oxtAsset.downloadUrl()).toURL();
+        } catch (IllegalArgumentException | java.net.MalformedURLException e) {
+            processBox().fehler("Ungültige Download-URL: " + e.getMessage());
+            return;
+        }
 
-		XFolderPicker2 picker = FolderPicker.create(getWorkingSpreadsheet().getxContext());
+        processBoxinfo("processbox.github.version", release.name());
+        processBox().info(downloadURL.toString());
 
-		picker.setTitle("Download Verzeichnis");
-		short res = picker.execute();
-		if (res == ExecutableDialogResults.OK) {
-			try {
-				String directoryUrl = picker.getDirectory();
-				URI dirURL = new URI(directoryUrl);
-				File selectedPath = new File(dirURL);
-				File targetFile = new File(selectedPath, oxtAsset.getName());
-				if (targetFile.exists()) {
-					processBoxinfo("processbox.datei.bereits.vorhanden", targetFile);
-					MessageBoxResult answerBereitsVorhanden = MessageBox
-							.from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO).caption(I18n.get("msg.caption.datei.vorhanden"))
-							.message(I18n.get("msg.text.datei.vorhanden.ueberschreiben", targetFile)).show();
-					if (answerBereitsVorhanden == MessageBoxResult.NO) {
-						processBoxinfo("processbox.abbruch");
-						return;
-					}
-					processBoxinfo("processbox.ueberschreiben");
-				}
+        XFolderPicker2 picker = FolderPicker.create(getWorkingSpreadsheet().getxContext());
+        picker.setTitle("Download Verzeichnis");
+        short res = picker.execute();
+        if (res != ExecutableDialogResults.OK) {
+            processBoxinfo("processbox.abbruch");
+            return;
+        }
+        try {
+            String directoryUrl = picker.getDirectory();
+            URI dirURL = new URI(directoryUrl);
+            File selectedPath = new File(dirURL);
+            File targetFile = new File(selectedPath, oxtAsset.name());
+            if (targetFile.exists()) {
+                processBoxinfo("processbox.datei.bereits.vorhanden", targetFile);
+                MessageBoxResult answer = MessageBox
+                        .from(getxContext(), MessageBoxTypeEnum.QUESTION_YES_NO)
+                        .caption(I18n.get("msg.caption.datei.vorhanden"))
+                        .message(I18n.get("msg.text.datei.vorhanden.ueberschreiben", targetFile))
+                        .show();
+                if (answer == MessageBoxResult.NO) {
+                    processBoxinfo("processbox.abbruch");
+                    return;
+                }
+                processBoxinfo("processbox.ueberschreiben");
+            }
 
-				processBoxinfo("processbox.speichern.in", selectedPath.getPath());
-				if (selectedPath.canWrite()) {
-					FileUtils.copyURLToFile(downloadURL, targetFile, 10000, 10000);
-				} else {
-					processBox().fehler("keine Schreibrechte");
-				}
-				processBox().infoText("");
-			} catch (IOException | URISyntaxException e) {
-				logger.error(e);
-				processBox().fehler(e.getMessage());
-			}
-		} else {
-			processBoxinfo("processbox.abbruch");
-		}
-	}
-
+            processBoxinfo("processbox.speichern.in", selectedPath.getPath());
+            if (selectedPath.canWrite()) {
+                FileUtils.copyURLToFile(downloadURL, targetFile, 10000, 10000);
+            } else {
+                processBox().fehler("keine Schreibrechte");
+            }
+            processBox().infoText("");
+        } catch (IOException | URISyntaxException e) {
+            logger.error(e);
+            processBox().fehler(e.getMessage());
+        }
+    }
 }
