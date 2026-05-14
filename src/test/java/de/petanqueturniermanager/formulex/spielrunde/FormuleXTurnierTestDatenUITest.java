@@ -19,7 +19,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
  * UITest für das vollständige Formule-X-Beispielturnier (39 Teams, 5 Spielrunden):
- * Meldeliste, erste Spielrunde mit Zufallsergebnissen, Rangliste und Teilnehmerliste.
+ * Meldeliste, alle fünf Spielrunden mit Zufallsergebnissen, Rangliste und Teilnehmerliste.
  *
  * <p>Reproduzierbarkeit über {@link RandomSource#setSeed(long)}; bei Algorithmen-
  * Änderungen Referenz-JSONs neu erfassen (writeToJson temporär aktivieren).
@@ -55,6 +55,10 @@ public class FormuleXTurnierTestDatenUITest extends BaseCalcUITest {
 
 		validiereMeldelistePerJson();
 		validiereSpielrundePerJson(1, "formulex-spielrunde-1.json");
+		validiereSpielrundePerJson(2, "formulex-spielrunde-2.json");
+		validiereSpielrundePerJson(3, "formulex-spielrunde-3.json");
+		validiereSpielrundePerJson(4, "formulex-spielrunde-4.json");
+		validiereSpielrundePerJson(5, "formulex-spielrunde-5.json");
 		validiereRanglistePerJson();
 	}
 
@@ -75,9 +79,7 @@ public class FormuleXTurnierTestDatenUITest extends BaseCalcUITest {
 	}
 
 	private void validiereSpielrundePerJson(int rundeNr, String referenzDatei) throws GenerateException {
-		// Spielrunden-Sheet via gleicher Naming-Logik wie FormuleXAbstractSpielrundeSheet.getSheetName
-		// (Locale-stabil, gleiche Form wie Schweizer-Vorrunde).
-		String sheetName = rundeNr + ". Spielrunde";
+		String sheetName = SheetNamen.formulexSpielrunde(rundeNr);
 		XSpreadsheet sheet = sheetHlp.findByName(sheetName);
 		assertThat(sheet).as("Spielrunde-Sheet '%s' muss existieren", sheetName).isNotNull();
 
