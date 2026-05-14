@@ -1,0 +1,1598 @@
+[
+  [
+    {
+      "data": 1.0
+    },
+    {
+      "data": "Team 1"
+    },
+    {
+      "data": "Otbert Dold / Rigobert Asmus"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Team 2"
+    },
+    {
+      "data": "Roseliese Petter / Muthild Döll"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Team 3"
+    },
+    {
+      "data": "Niko Gerhard / Theodeline Rentschler"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Team 4"
+    },
+    {
+      "data": "Selma Burmeister / Engelbert Radde"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Team 5"
+    },
+    {
+      "data": "Kreszenzia Thielmann / Franka Grau"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Team 6"
+    },
+    {
+      "data": "Hartwig Ney / Angelika Elsen"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Team 7"
+    },
+    {
+      "data": "Rosa Tafel / Sophie Stabel"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Team 8"
+    },
+    {
+      "data": "Rotraut Gentsch / Maria Bieder"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Team 9"
+    },
+    {
+      "data": "Siska Erl / Danny Witschel"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 10.0
+    },
+    {
+      "data": "Team 10"
+    },
+    {
+      "data": "Kornelia Molz / Felix Kamps"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 11.0
+    },
+    {
+      "data": "Team 11"
+    },
+    {
+      "data": "Eustachius Goetze / Joana Nuber"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 12.0
+    },
+    {
+      "data": "Team 12"
+    },
+    {
+      "data": "Birk Reuß / Anett Jakobs"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 13.0
+    },
+    {
+      "data": "Team 13"
+    },
+    {
+      "data": "Isedore Husmann / Collin Bohnet"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 14.0
+    },
+    {
+      "data": "Team 14"
+    },
+    {
+      "data": "Ehrentraut Murphy / Annkatrin Eisenhardt"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 15.0
+    },
+    {
+      "data": "Team 15"
+    },
+    {
+      "data": "Helfrid Siegrist / Collin Knöpfle"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 16.0
+    },
+    {
+      "data": "Team 16"
+    },
+    {
+      "data": "Erhardt Karch / Benjamin Stocker"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 17.0
+    },
+    {
+      "data": "Team 17"
+    },
+    {
+      "data": "Gesine Enzmann / Sieghardt Bitsch"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 18.0
+    },
+    {
+      "data": "Team 18"
+    },
+    {
+      "data": "Michaela Thielemann / Annika Härle"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 19.0
+    },
+    {
+      "data": "Team 19"
+    },
+    {
+      "data": "Irmintraud Staub / Borwin Meiners"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 20.0
+    },
+    {
+      "data": "Team 20"
+    },
+    {
+      "data": "Annika Runkel / Detmar Ciftci"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 21.0
+    },
+    {
+      "data": "Team 21"
+    },
+    {
+      "data": "Manfried Ott / Joana Steinborn"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 22.0
+    },
+    {
+      "data": "Team 22"
+    },
+    {
+      "data": "Max Krischer / Gerlach Görgens"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 23.0
+    },
+    {
+      "data": "Team 23"
+    },
+    {
+      "data": "Berndt Meinzer / Eveline Schneeweiß"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 24.0
+    },
+    {
+      "data": "Team 24"
+    },
+    {
+      "data": "Sibylla Panitz / Willhart Hempel"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 25.0
+    },
+    {
+      "data": "Team 25"
+    },
+    {
+      "data": "Diethmar Herget / Imke Romero"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 26.0
+    },
+    {
+      "data": "Team 26"
+    },
+    {
+      "data": "Wernhard Scheld / Gaby Puls"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 27.0
+    },
+    {
+      "data": "Team 27"
+    },
+    {
+      "data": "Brandolf Knuth / Evi Doege"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 28.0
+    },
+    {
+      "data": "Team 28"
+    },
+    {
+      "data": "Diethelm Steinbrink / Rita Bäder"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 29.0
+    },
+    {
+      "data": "Team 29"
+    },
+    {
+      "data": "Zoé Kieslich / Ehrentraut Bremen"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 30.0
+    },
+    {
+      "data": "Team 30"
+    },
+    {
+      "data": "Gretchen Hüttel / Ingelotte Quadt"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 31.0
+    },
+    {
+      "data": "Team 31"
+    },
+    {
+      "data": "Adolf Bulut / Conrad Steck"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 32.0
+    },
+    {
+      "data": "Team 32"
+    },
+    {
+      "data": "Ilsetraud Wetzig / Wiegand Steuermann"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 33.0
+    },
+    {
+      "data": "Team 33"
+    },
+    {
+      "data": "Mark Drewitz / Chantall Knöchel"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 34.0
+    },
+    {
+      "data": "Team 34"
+    },
+    {
+      "data": "Margund Quick / Anneke Wonneberger"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 35.0
+    },
+    {
+      "data": "Team 35"
+    },
+    {
+      "data": "Theodore Baake / Mariegret Erickson"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 36.0
+    },
+    {
+      "data": "Team 36"
+    },
+    {
+      "data": "Irmgardt Prüfer / Nadine Nienaber"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 37.0
+    },
+    {
+      "data": "Team 37"
+    },
+    {
+      "data": "Arabella Käding / Arne Mühlmann"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 38.0
+    },
+    {
+      "data": "Team 38"
+    },
+    {
+      "data": "Marina Gehrig / Berndt Böhme"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 39.0
+    },
+    {
+      "data": "Team 39"
+    },
+    {
+      "data": "Eik Pfefferle / Marielene Heering"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": 40.0
+    },
+    {
+      "data": "Team 40"
+    },
+    {
+      "data": "Leander Fessler / Bianka Wels"
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": "57 Teilnehmer"
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ],
+  [
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    },
+    {
+      "data": ""
+    }
+  ]
+]

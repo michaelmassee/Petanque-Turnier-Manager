@@ -1,0 +1,629 @@
+[
+  [
+    {
+      "data": 1.0
+    },
+    {
+      "data": "Team 1"
+    },
+    {
+      "data": "Otbert"
+    }
+  ],
+  [
+    {
+      "data": 2.0
+    },
+    {
+      "data": "Team 2"
+    },
+    {
+      "data": "Roseliese"
+    }
+  ],
+  [
+    {
+      "data": 3.0
+    },
+    {
+      "data": "Team 3"
+    },
+    {
+      "data": "Niko"
+    }
+  ],
+  [
+    {
+      "data": 4.0
+    },
+    {
+      "data": "Team 4"
+    },
+    {
+      "data": "Selma"
+    }
+  ],
+  [
+    {
+      "data": 5.0
+    },
+    {
+      "data": "Team 5"
+    },
+    {
+      "data": "Kreszenzia"
+    }
+  ],
+  [
+    {
+      "data": 6.0
+    },
+    {
+      "data": "Team 6"
+    },
+    {
+      "data": "Hartwig"
+    }
+  ],
+  [
+    {
+      "data": 7.0
+    },
+    {
+      "data": "Team 7"
+    },
+    {
+      "data": "Rosa"
+    }
+  ],
+  [
+    {
+      "data": 8.0
+    },
+    {
+      "data": "Team 8"
+    },
+    {
+      "data": "Rotraut"
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Team 9"
+    },
+    {
+      "data": "Siska"
+    }
+  ],
+  [
+    {
+      "data": 10.0
+    },
+    {
+      "data": "Team 10"
+    },
+    {
+      "data": "Kornelia"
+    }
+  ],
+  [
+    {
+      "data": 11.0
+    },
+    {
+      "data": "Team 11"
+    },
+    {
+      "data": "Eustachius"
+    }
+  ],
+  [
+    {
+      "data": 12.0
+    },
+    {
+      "data": "Team 12"
+    },
+    {
+      "data": "Birk"
+    }
+  ],
+  [
+    {
+      "data": 13.0
+    },
+    {
+      "data": "Team 13"
+    },
+    {
+      "data": "Isedore"
+    }
+  ],
+  [
+    {
+      "data": 14.0
+    },
+    {
+      "data": "Team 14"
+    },
+    {
+      "data": "Ehrentraut"
+    }
+  ],
+  [
+    {
+      "data": 15.0
+    },
+    {
+      "data": "Team 15"
+    },
+    {
+      "data": "Helfrid"
+    }
+  ],
+  [
+    {
+      "data": 16.0
+    },
+    {
+      "data": "Team 16"
+    },
+    {
+      "data": "Erhardt"
+    }
+  ],
+  [
+    {
+      "data": 17.0
+    },
+    {
+      "data": "Team 17"
+    },
+    {
+      "data": "Gesine"
+    }
+  ],
+  [
+    {
+      "data": 18.0
+    },
+    {
+      "data": "Team 18"
+    },
+    {
+      "data": "Michaela"
+    }
+  ],
+  [
+    {
+      "data": 19.0
+    },
+    {
+      "data": "Team 19"
+    },
+    {
+      "data": "Irmintraud"
+    }
+  ],
+  [
+    {
+      "data": 20.0
+    },
+    {
+      "data": "Team 20"
+    },
+    {
+      "data": "Annika"
+    }
+  ],
+  [
+    {
+      "data": 21.0
+    },
+    {
+      "data": "Team 21"
+    },
+    {
+      "data": "Manfried"
+    }
+  ],
+  [
+    {
+      "data": 22.0
+    },
+    {
+      "data": "Team 22"
+    },
+    {
+      "data": "Max"
+    }
+  ],
+  [
+    {
+      "data": 23.0
+    },
+    {
+      "data": "Team 23"
+    },
+    {
+      "data": "Berndt"
+    }
+  ],
+  [
+    {
+      "data": 24.0
+    },
+    {
+      "data": "Team 24"
+    },
+    {
+      "data": "Sibylla"
+    }
+  ],
+  [
+    {
+      "data": 25.0
+    },
+    {
+      "data": "Team 25"
+    },
+    {
+      "data": "Diethmar"
+    }
+  ],
+  [
+    {
+      "data": 26.0
+    },
+    {
+      "data": "Team 26"
+    },
+    {
+      "data": "Wernhard"
+    }
+  ],
+  [
+    {
+      "data": 27.0
+    },
+    {
+      "data": "Team 27"
+    },
+    {
+      "data": "Brandolf"
+    }
+  ],
+  [
+    {
+      "data": 28.0
+    },
+    {
+      "data": "Team 28"
+    },
+    {
+      "data": "Diethelm"
+    }
+  ],
+  [
+    {
+      "data": 29.0
+    },
+    {
+      "data": "Team 29"
+    },
+    {
+      "data": "Zoé"
+    }
+  ],
+  [
+    {
+      "data": 30.0
+    },
+    {
+      "data": "Team 30"
+    },
+    {
+      "data": "Gretchen"
+    }
+  ],
+  [
+    {
+      "data": 31.0
+    },
+    {
+      "data": "Team 31"
+    },
+    {
+      "data": "Adolf"
+    }
+  ],
+  [
+    {
+      "data": 32.0
+    },
+    {
+      "data": "Team 32"
+    },
+    {
+      "data": "Ilsetraud"
+    }
+  ],
+  [
+    {
+      "data": 33.0
+    },
+    {
+      "data": "Team 33"
+    },
+    {
+      "data": "Mark"
+    }
+  ],
+  [
+    {
+      "data": 34.0
+    },
+    {
+      "data": "Team 34"
+    },
+    {
+      "data": "Margund"
+    }
+  ],
+  [
+    {
+      "data": 35.0
+    },
+    {
+      "data": "Team 35"
+    },
+    {
+      "data": "Theodore"
+    }
+  ],
+  [
+    {
+      "data": 36.0
+    },
+    {
+      "data": "Team 36"
+    },
+    {
+      "data": "Irmgardt"
+    }
+  ],
+  [
+    {
+      "data": 37.0
+    },
+    {
+      "data": "Team 37"
+    },
+    {
+      "data": "Arabella"
+    }
+  ],
+  [
+    {
+      "data": 38.0
+    },
+    {
+      "data": "Team 38"
+    },
+    {
+      "data": "Marina"
+    }
+  ],
+  [
+    {
+      "data": 39.0
+    },
+    {
+      "data": "Team 39"
+    },
+    {
+      "data": "Eik"
+    }
+  ],
+  [
+    {
+      "data": 40.0
+    },
+    {
+      "data": "Team 40"
+    },
+    {
+      "data": "Leander"
+    }
+  ],
+  [
+    {
+      "data": 41.0
+    },
+    {
+      "data": "Team 41"
+    },
+    {
+      "data": "Anika"
+    }
+  ],
+  [
+    {
+      "data": 42.0
+    },
+    {
+      "data": "Team 42"
+    },
+    {
+      "data": "Dietmar"
+    }
+  ],
+  [
+    {
+      "data": 43.0
+    },
+    {
+      "data": "Team 43"
+    },
+    {
+      "data": "Roger"
+    }
+  ],
+  [
+    {
+      "data": 44.0
+    },
+    {
+      "data": "Team 44"
+    },
+    {
+      "data": "Siegulf"
+    }
+  ],
+  [
+    {
+      "data": 45.0
+    },
+    {
+      "data": "Team 45"
+    },
+    {
+      "data": "Evchen"
+    }
+  ],
+  [
+    {
+      "data": 46.0
+    },
+    {
+      "data": "Team 46"
+    },
+    {
+      "data": "Kristine"
+    }
+  ],
+  [
+    {
+      "data": 47.0
+    },
+    {
+      "data": "Team 47"
+    },
+    {
+      "data": "Rupertus"
+    }
+  ],
+  [
+    {
+      "data": 48.0
+    },
+    {
+      "data": "Team 48"
+    },
+    {
+      "data": "Petra"
+    }
+  ],
+  [
+    {
+      "data": 49.0
+    },
+    {
+      "data": "Team 49"
+    },
+    {
+      "data": "Rosmarie"
+    }
+  ],
+  [
+    {
+      "data": 50.0
+    },
+    {
+      "data": "Team 50"
+    },
+    {
+      "data": "Kurth"
+    }
+  ],
+  [
+    {
+      "data": 51.0
+    },
+    {
+      "data": "Team 51"
+    },
+    {
+      "data": "Diemut"
+    }
+  ],
+  [
+    {
+      "data": 52.0
+    },
+    {
+      "data": "Team 52"
+    },
+    {
+      "data": "Harro"
+    }
+  ],
+  [
+    {
+      "data": 53.0
+    },
+    {
+      "data": "Team 53"
+    },
+    {
+      "data": "Lidwina"
+    }
+  ],
+  [
+    {
+      "data": 54.0
+    },
+    {
+      "data": "Team 54"
+    },
+    {
+      "data": "Jörgfried"
+    }
+  ],
+  [
+    {
+      "data": 55.0
+    },
+    {
+      "data": "Team 55"
+    },
+    {
+      "data": "Karl"
+    }
+  ],
+  [
+    {
+      "data": 56.0
+    },
+    {
+      "data": "Team 56"
+    },
+    {
+      "data": "Kathrin"
+    }
+  ],
+  [
+    {
+      "data": 57.0
+    },
+    {
+      "data": "Team 57"
+    },
+    {
+      "data": "Holmer"
+    }
+  ]
+]
