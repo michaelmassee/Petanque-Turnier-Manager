@@ -49,7 +49,9 @@ import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
+import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.toolbar.TurnierModus;
@@ -157,6 +159,10 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	/** Sammelt Score-Zell-Positionen während einer Bracket-Erstellung für den Blattschutz. */
 	private List<Position> aktuelleScorePositionen = null;
+
+	/** Bracketgröße der zuletzt erzeugten Gruppe – wird von Testhilfen wie
+	 *  {@link #schreibeRunde1TestErgebnisse(String)} ausgelesen. */
+	private volatile int aktuelleBracketGroesse = 0;
 
 	private final KoMeldeListeSheetUpdate meldeliste;
 
@@ -439,6 +445,63 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse);
 	}
 
+	/**
+	 * Schreibt deterministische Test-Ergebnisse in Runde 1 (und ggf. Cadrage) eines bereits
+	 * erstellten Turnierbaum-Sheets. Pro Match wird ein Sieger via {@link RandomSource} gewählt,
+	 * 13 in dessen Score-Zelle geschrieben und {@code RandomSource.nextInt(13)} in die Score-Zelle
+	 * des Verlierers. Die {@code WENN}-Sieger-Formeln in Runden 2+ lösen die Folgerunden danach
+	 * automatisch auf, sobald LO neu rechnet.
+	 *
+	 * <p>Voraussetzung: Der Layout-State (bracketGroesse, mitCadrage, anzFreilose, Offsets) muss
+	 * zur Übergabe-Sheet passen — typischer Aufruf direkt nach {@link #erstelleTurnierbaumOhneDialog()},
+	 * Iteration über alle erzeugten Gruppen-Sheets bei gleicher Gruppengröße.
+	 */
+	public void schreibeRunde1TestErgebnisse(String sheetName) throws GenerateException {
+		XSpreadsheet xSheet = getSheetHelper().findByName(sheetName);
+		if (xSheet == null) {
+			return;
+		}
+		int anzMatchesR1 = aktuelleBracketGroesse / 2;
+		int[] setzliste = berechneSetzliste(aktuelleBracketGroesse);
+
+		RangeData scoresR1 = new RangeData();
+		RangeData scoresCadrage = mitCadrage ? new RangeData() : null;
+
+		for (int m = 0; m < anzMatchesR1; m++) {
+			int seedA = setzliste[2 * m];
+			int seedB = setzliste[2 * m + 1];
+			boolean cadrageMatch = mitCadrage && (seedA > anzFreilose || seedB > anzFreilose);
+
+			if (scoresCadrage != null) {
+				if (cadrageMatch) {
+					int siegerSeite = RandomSource.nextInt(2);
+					int verliererPunkte = RandomSource.nextInt(13);
+					scoresCadrage.addNewRow().newInt(siegerSeite == 0 ? 13 : verliererPunkte);
+					scoresCadrage.addNewRow().newInt(siegerSeite == 0 ? verliererPunkte : 13);
+				} else {
+					scoresCadrage.addNewRow().newEmpty();
+					scoresCadrage.addNewRow().newEmpty();
+				}
+				scoresCadrage.addNewRow().newEmpty();
+			}
+
+			int siegerR1 = RandomSource.nextInt(2);
+			int verliererR1 = RandomSource.nextInt(13);
+			scoresR1.addNewRow().newInt(siegerR1 == 0 ? 13 : verliererR1);
+			scoresR1.addNewRow().newInt(siegerR1 == 0 ? verliererR1 : 13);
+			scoresR1.addNewRow().newEmpty();
+		}
+
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		Position startR1 = Position.from(scoreSpalte(1), ersteZeile());
+		RangeHelper.from(xSheet, xDoc, scoresR1.getRangePosition(startR1)).setDataInRange(scoresR1);
+
+		if (scoresCadrage != null) {
+			Position startCad = Position.from(cadrageScoreSpalte(), ersteZeile());
+			RangeHelper.from(xSheet, xDoc, scoresCadrage.getRangePosition(startCad)).setDataInRange(scoresCadrage);
+		}
+	}
+
 	@Override
 	protected void doRun() throws GenerateException {
 		if (TurnierModus.get().istAktiv()) {
@@ -622,6 +685,8 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 		this.meldeListeTeamnameAnzeigen    = konfig.isMeldeListeTeamnameAnzeigen();
 		this.meldeListeVereinsnameAnzeigen = konfig.isMeldeListeVereinsnameAnzeigen();
 		this.meldeListeFormation           = konfig.getMeldeListeFormation();
+
+		this.aktuelleBracketGroesse = bracketGroesse;
 
 		// Spalten-Offsets je nach Bahn-Einstellung:
 		// Mit Bahn:    Bahn(0) | Team(1) | Score(2) | Connector(3)  → colGroupSize = 4

@@ -3,6 +3,7 @@
  */
 package de.petanqueturniermanager.ko;
 
+import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -11,6 +12,7 @@ import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
@@ -86,9 +88,32 @@ public class KoTurnierTestDaten extends SheetRunner implements ISheet, MeldeList
 		// 3. Turnierbaum ohne Dialog erstellen
 		turnierbaumSheet.erstelleTurnierbaumOhneDialog();
 
-		// 4. Kopfzeile und Werbefußzeile setzen
+		// 4. Runde-1 + Cadrage-Ergebnisse in jeden Gruppen-Turnierbaum eintragen.
+		//    Folgerunden lösen sich danach automatisch via WENN-Sieger-Formeln auf.
+		ergebnisseInAlleTurnierbaeumeEintragen();
+
+		// 5. Kopfzeile und Werbefußzeile setzen
 		konfig.setKopfZeileMitte(getTurnierSystem().getBezeichnung());
 		konfig.seitenstileAktualisieren();
+	}
+
+	/**
+	 * Iteriert alle erzeugten Turnierbaum-Sheets (Einzel- oder Gruppen-Variante) und füllt
+	 * Runde-1- und Cadrage-Scores. Anschließend wird global neu gerechnet, damit die
+	 * Sieger-Formeln in den Folgerunden propagieren.
+	 */
+	private void ergebnisseInAlleTurnierbaeumeEintragen() throws GenerateException {
+		var xDoc = getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		String praefix = SheetNamen.koTurnierbaumEinzel();
+		for (String sheetName : xDoc.getSheets().getElementNames()) {
+			if (sheetName.startsWith(praefix)) {
+				turnierbaumSheet.schreibeRunde1TestErgebnisse(sheetName);
+			}
+		}
+		XCalculatable xCal = Lo.qi(XCalculatable.class, xDoc);
+		if (xCal != null) {
+			xCal.calculateAll();
+		}
 	}
 
 }
