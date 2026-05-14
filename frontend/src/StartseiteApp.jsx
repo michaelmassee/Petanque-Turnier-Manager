@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './Startseite.css';
 
 /**
@@ -13,6 +13,8 @@ export default function StartseiteApp({ startseite }) {
           turniersystem, turnierStatus, sprueche, zoom } = startseite;
   const animation = beschreibungAnimation || 'keine';
   const beschreibungStil = beschreibungTextfarbe ? { color: beschreibungTextfarbe } : undefined;
+  const angezeigtAngemeldet = useZahlAnimation(anzahlAngemeldet);
+  const angezeigtAktiv = useZahlAnimation(anzahlAktiv);
   const z = zoom ?? 100;
   const skalierungsStil = z !== 100 ? {
     transform: `scale(${z / 100})`,
@@ -40,7 +42,7 @@ export default function StartseiteApp({ startseite }) {
           <div className="zahl-icon" aria-hidden="true">
             <IconAngemeldet />
           </div>
-          <div className="zahl-wert">{anzahlAngemeldet}</div>
+          <div className="zahl-wert">{angezeigtAngemeldet}</div>
           <ZahlLabel sichtbar={labelAngemeldet} anker={labelAktiv} />
           <span className="zahl-label-strich" aria-hidden="true" />
         </div>
@@ -48,7 +50,7 @@ export default function StartseiteApp({ startseite }) {
           <div className="zahl-icon" aria-hidden="true">
             <IconAktiv />
           </div>
-          <div className="zahl-wert">{anzahlAktiv}</div>
+          <div className="zahl-wert">{angezeigtAktiv}</div>
           <ZahlLabel sichtbar={labelAktiv} anker={labelAngemeldet} />
           <span className="zahl-label-strich" aria-hidden="true" />
         </div>
@@ -162,6 +164,40 @@ function IconAktiv() {
       <path d="M8 12.5l2.8 2.8L16.5 9.5" />
     </svg>
   );
+}
+
+function useZahlAnimation(zielWert, dauerMs = 2000) {
+  const istZahl = Number.isFinite(Number(zielWert));
+  const ziel = istZahl ? Number(zielWert) : 0;
+  const [angezeigt, setAngezeigt] = useState(0);
+  const startWertRef = useRef(0);
+  useEffect(() => {
+    if (!istZahl) { setAngezeigt(0); startWertRef.current = 0; return undefined; }
+    const start = startWertRef.current;
+    if (start === ziel) { setAngezeigt(ziel); return undefined; }
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { setAngezeigt(ziel); startWertRef.current = ziel; return undefined; }
+    let rafId = null;
+    const startZeit = performance.now();
+    const tick = (jetzt) => {
+      const t = Math.min(1, (jetzt - startZeit) / dauerMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setAngezeigt(Math.round(start + (ziel - start) * eased));
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        startWertRef.current = ziel;
+      }
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      startWertRef.current = ziel;
+    };
+  }, [ziel, istZahl, dauerMs]);
+  return istZahl ? angezeigt : zielWert;
 }
 
 function TypewriterText({ text, stil }) {
