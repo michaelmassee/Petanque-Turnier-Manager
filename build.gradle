@@ -622,6 +622,7 @@ tasks.register('buildFrontend', Exec) {
     }
     commandLine npmCmd, 'run', 'build'
     inputs.dir('frontend/src')
+    inputs.dir('frontend/public')
     inputs.file('frontend/package.json')
     inputs.file('frontend/vite.config.js')
     outputs.dir('src/main/resources/de/petanqueturniermanager/webserver/static')

@@ -1,0 +1,21 @@
+Bilder für die Webserver-Startseite liegen NICHT hier, sondern in:
+
+    frontend/public/images/
+
+Build-Pipeline:
+
+    frontend/public/images/  --(npm run build / Vite)-->  src/main/resources/de/petanqueturniermanager/webserver/static/images/
+
+Vite kopiert beim Build den kompletten Inhalt von frontend/public/ in den
+outDir (siehe frontend/vite.config.js). Die Dateien unter static/images/
+sind also reine Build-Outputs und dürfen nicht von Hand geändert werden.
+
+Gradle:
+
+Der Task `buildFrontend` (build.gradle) hat `frontend/public` als Input
+registriert. Änderungen an den Bildern in frontend/public/images/ lösen
+beim nächsten `./gradlew startCalc` (oder buildOXT/buildPlugin/processResources)
+automatisch einen Vite-Rebuild aus und die neuen Bilder landen im OXT.
+
+Hier (images/) liegen ausschließlich OXT-Toolbar- und Sidebar-Icons sowie
+Logo-Dateien, die direkt aus der LO-Extension referenziert werden.
