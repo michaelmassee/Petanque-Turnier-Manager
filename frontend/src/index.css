@@ -7,7 +7,14 @@
 body {
   margin: 0;
   padding: 8px;
-  background: #f5f5f5;
+  background-color: #ffffff;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)),
+    url('/images/start-background.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #111;
   font-family: sans-serif;
   min-height: 100vh;
@@ -33,7 +40,7 @@ td {
   padding: 4px 10px;
   font-size: 0.75em;
   color: #888;
-  background: #f5f5f5;
+  background: #ffffff;
   border-top: 1px solid #ddd;
 }
 
@@ -42,7 +49,7 @@ td {
   bottom: 0;
   right: 0;
   padding: 4px 8px;
-  background: #f5f5f5;
+  background: #ffffff;
   border-top: 1px solid #ddd;
 }
 

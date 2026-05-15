@@ -1,10 +1,11 @@
 /*
   Layout-Prinzip:
-  - Drei Grid-Reihen: Kopf (auto) | Zahlen (1fr, füllt Rest) | Fuß (auto).
-  - Jeder Bereich hat `min-height: 0`, sodass Flex/Grid-Items wirklich schrumpfen
-    und der Fuß-Bereich (PTM-Logo) garantiert sichtbar bleibt.
-  - `overflow: hidden` am Root verhindert Scrollbalken — Inhalte werden über
-    clamp()-Schriftgrößen klein genug skaliert.
+  - `.startseite` ist Positionierungs-Container (fixed, full-viewport).
+  - `.startseite-footer-bild` ist absolut am unteren Rand verankert und immer
+    sichtbar; der Inhaltsbereich liegt darüber.
+  - `.startseite-inhalt` enthält Kopf + Zahlen + Status und wird per JS
+    (transform: scale) auf die verfügbare Fläche zwischen Top und Footer
+    heruntergerechnet, sodass nichts überlappt — unabhängig vom Seitenverhältnis.
 */
 
 .startseite-hintergrund {
@@ -22,15 +23,27 @@
 .startseite {
   position: fixed;
   inset: 0;
-  display: grid;
-  grid-template-rows: auto 1fr auto auto;
-  row-gap: 1.6vh;
-  padding: 2vh 3vw;
   text-align: center;
   font-family: 'Segoe UI', system-ui, sans-serif;
   overflow: hidden;
   box-sizing: border-box;
   z-index: 1;
+}
+
+.startseite-inhalt {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: top center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 1.6vh;
+  padding: 0 3vw;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 100vw;
+  will-change: transform;
 }
 
 .startseite-kopf {
@@ -139,6 +152,7 @@
   justify-content: center;
   gap: clamp(1.5rem, 5vw, 5rem);
   min-height: 0;
+  margin-top: clamp(2rem, 4vh, 4rem);
 }
 
 .zahl-block {
@@ -217,11 +231,15 @@
 }
 
 .startseite-footer-bild {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: block;
   width: 100%;
   max-height: 14vh;
   object-fit: contain;
-  justify-self: center;
+  pointer-events: none;
 }
 
 /* ── Status-Leiste (Pill zwischen Counter und Footer) ───────────────────── */

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './Startseite.css';
 
 /**
@@ -16,51 +16,55 @@ export default function StartseiteApp({ startseite }) {
   const angezeigtAngemeldet = useZahlAnimation(anzahlAngemeldet);
   const angezeigtAktiv = useZahlAnimation(anzahlAktiv);
   const z = zoom ?? 100;
-  const skalierungsStil = z !== 100 ? {
-    transform: `scale(${z / 100})`,
-    transformOrigin: 'top center',
-  } : undefined;
+  const benutzerZoom = z / 100;
+  const wurzelRef = useRef(null);
+  const inhaltRef = useRef(null);
+  const footerRef = useRef(null);
+  useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom);
   return (
     <>
     <div className="startseite-hintergrund" aria-hidden="true" />
-    <div className="startseite" style={skalierungsStil}>
-      <div className="startseite-kopf">
-        {turnierlogo && (
-          <img
-            className="startseite-turnierlogo"
-            src={turnierlogo}
-            alt=""
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        )}
-        {turnierbeschreibung && (
-          <Beschreibung text={turnierbeschreibung} animation={animation} stil={beschreibungStil} />
-        )}
-      </div>
-      <div className="startseite-zahlen">
-        <div className="zahl-block">
-          <div className="zahl-icon" aria-hidden="true">
-            <IconAngemeldet />
-          </div>
-          <div className="zahl-wert">{angezeigtAngemeldet}</div>
-          <ZahlLabel sichtbar={labelAngemeldet} anker={labelAktiv} />
-          <span className="zahl-label-strich" aria-hidden="true" />
+    <div className="startseite" ref={wurzelRef}>
+      <div className="startseite-inhalt" ref={inhaltRef}>
+        <div className="startseite-kopf">
+          {turnierlogo && (
+            <img
+              className="startseite-turnierlogo"
+              src={turnierlogo}
+              alt=""
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+          )}
+          {turnierbeschreibung && (
+            <Beschreibung text={turnierbeschreibung} animation={animation} stil={beschreibungStil} />
+          )}
         </div>
-        <div className="zahl-block">
-          <div className="zahl-icon" aria-hidden="true">
-            <IconAktiv />
+        <div className="startseite-zahlen">
+          <div className="zahl-block">
+            <div className="zahl-icon" aria-hidden="true">
+              <IconAngemeldet />
+            </div>
+            <div className="zahl-wert">{angezeigtAngemeldet}</div>
+            <ZahlLabel sichtbar={labelAngemeldet} anker={labelAktiv} />
+            <span className="zahl-label-strich" aria-hidden="true" />
           </div>
-          <div className="zahl-wert">{angezeigtAktiv}</div>
-          <ZahlLabel sichtbar={labelAktiv} anker={labelAngemeldet} />
-          <span className="zahl-label-strich" aria-hidden="true" />
+          <div className="zahl-block">
+            <div className="zahl-icon" aria-hidden="true">
+              <IconAktiv />
+            </div>
+            <div className="zahl-wert">{angezeigtAktiv}</div>
+            <ZahlLabel sichtbar={labelAktiv} anker={labelAngemeldet} />
+            <span className="zahl-label-strich" aria-hidden="true" />
+          </div>
         </div>
+        <StatusLeiste
+          turniersystem={turniersystem}
+          turnierStatus={turnierStatus}
+          sprueche={sprueche}
+        />
       </div>
-      <StatusLeiste
-        turniersystem={turniersystem}
-        turnierStatus={turnierStatus}
-        sprueche={sprueche}
-      />
       <img
+        ref={footerRef}
         className="startseite-footer-bild"
         src="/images/start-background-footer.png"
         alt=""
@@ -68,6 +72,66 @@ export default function StartseiteApp({ startseite }) {
     </div>
     </>
   );
+}
+
+/**
+ * Misst den Inhalts-Wrapper bei scale(1) und rechnet ihn per transform: scale
+ * auf die verfügbare Fläche zwischen oberem Rand und Footer-Bild herunter,
+ * sodass nichts überlappt. Skaliert nur nach unten (max 1 × Benutzer-Zoom).
+ */
+function useAutoFit(wurzelRef, inhaltRef, footerRef, benutzerZoom) {
+  useLayoutEffect(() => {
+    const wurzel = wurzelRef.current;
+    const inhalt = inhaltRef.current;
+    if (!wurzel || !inhalt) return undefined;
+
+    let rafId = null;
+    const anwenden = () => {
+      rafId = null;
+      inhalt.style.transform = 'translateX(-50%)';
+      const natuerlicheBreite = inhalt.offsetWidth;
+      const natuerlicheHoehe = inhalt.offsetHeight;
+      if (natuerlicheBreite === 0 || natuerlicheHoehe === 0) return;
+
+      const wurzelHoehe = wurzel.clientHeight;
+      const wurzelBreite = wurzel.clientWidth;
+      const footerHoehe = footerRef.current ? footerRef.current.offsetHeight : 0;
+      const minTop = 16;
+      const sicherheitsabstand = 8;
+      const verfuegbareHoehe = Math.max(0, wurzelHoehe - minTop - footerHoehe - sicherheitsabstand);
+      const verfuegbareBreite = Math.max(0, wurzelBreite);
+
+      const fitScale = Math.min(
+        verfuegbareBreite / natuerlicheBreite,
+        verfuegbareHoehe / natuerlicheHoehe,
+        1,
+      );
+      const skala = Math.max(0.1, fitScale) * benutzerZoom;
+      const skalierteHoehe = natuerlicheHoehe * skala;
+      const zentrum = (minTop + (wurzelHoehe - footerHoehe)) / 2;
+      const top = Math.max(minTop, zentrum - skalierteHoehe / 2);
+      inhalt.style.top = `${top}px`;
+      inhalt.style.transform = `translateX(-50%) scale(${skala})`;
+    };
+
+    const planen = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(anwenden);
+    };
+
+    planen();
+    const ro = new ResizeObserver(planen);
+    ro.observe(wurzel);
+    ro.observe(inhalt);
+    if (footerRef.current) ro.observe(footerRef.current);
+    window.addEventListener('resize', planen);
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      ro.disconnect();
+      window.removeEventListener('resize', planen);
+    };
+  }, [wurzelRef, inhaltRef, footerRef, benutzerZoom]);
 }
 
 function StatusLeiste({ turniersystem, turnierStatus, sprueche }) {
