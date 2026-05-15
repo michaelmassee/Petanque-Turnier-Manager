@@ -89,6 +89,7 @@ public class PetanqueTurnierMngrSingleton {
 			return;
 		}
 		sharedContext = context;
+		StartupInfoLogger.logStartupInfo(context);
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
