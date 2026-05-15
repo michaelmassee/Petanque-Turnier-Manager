@@ -46,7 +46,7 @@ class GlobalPropertiesTest {
     void testSpeichernUndLesen() {
         var gp = GlobalProperties.get();
 
-        gp.speichern(true, true, false, true, "debug");
+        gp.speichern(true, true, false, true, true, "debug");
 
         GlobalProperties.resetForTest();
         var gp2 = GlobalProperties.get();
@@ -158,7 +158,7 @@ class GlobalPropertiesTest {
 
         Runnable schreibend = () -> {
             for (int i = 0; i < 20; i++) {
-                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, "info");
+                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, true, "info");
             }
         };
 

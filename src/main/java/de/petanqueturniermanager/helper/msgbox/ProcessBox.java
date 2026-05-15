@@ -40,6 +40,7 @@ public class ProcessBox implements TimerListener {
 
     private static final int MIN_HEIGHT = 200;
     private static final int MIN_WIDTH = 600;
+    private static final int AUTO_CLOSE_DELAY_MS = 5000;
     private static final String TITLE = "Pétanque Turnier Manager";
     private static volatile ProcessBox processBox;
     private static volatile boolean headlessMode = false;
@@ -70,6 +71,7 @@ public class ProcessBox implements TimerListener {
 
     private DialogTools dialogTools;
     private Timer spinnerTimer;
+    private Timer autoCloseTimer;
     private int inWorkImgIdx = 0;
 
     private volatile boolean disposed = false;
@@ -137,6 +139,9 @@ public class ProcessBox implements TimerListener {
         SwingUtilities.invokeLater(() -> {
             if (spinnerTimer != null) {
                 spinnerTimer.stop();
+            }
+            if (autoCloseTimer != null) {
+                autoCloseTimer.stop();
             }
             if (frame != null) {
                 frame.dispose();
@@ -496,6 +501,10 @@ public class ProcessBox implements TimerListener {
                 if (disposed) return;
                 logOut.append(msgToAppend);
             });
+            // Auto-Close auch für Aufrufer, die nicht über run()/ready() laufen
+            // (z.B. „Logdatei anzeigen" in Log4J.openLogFile()). Während eines aktiven
+            // SheetRunner-Laufs (laeuft==true) bleibt der Timer untätig.
+            planeAutoCloseFallsMoeglich();
             return this;
         } finally {
             threadLocalPrefix.remove();
@@ -606,6 +615,9 @@ public class ProcessBox implements TimerListener {
         boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
         SwingUtilities.invokeLater(() -> {
             if (disposed) return;
+            if (autoCloseTimer != null) {
+                autoCloseTimer.stop();
+            }
             if (automatisch) {
                 frame.setVisible(true);
                 moveInsideTopWindow();
@@ -650,8 +662,38 @@ public class ProcessBox implements TimerListener {
                     statusLabel.setToolTipText("Fertig");
                 }
             }
+            planeAutoCloseFallsMoeglich();
         });
         return this;
+    }
+
+    /**
+     * Startet (bzw. resettet) den Auto-Close-Timer, sofern alle Bedingungen erfüllt sind:
+     * keine aktive Verarbeitung, kein Fehler, beide Plugin-Properties aktiv. Wird aus {@link #ready()}
+     * UND aus {@link #info(String)} aufgerufen, damit auch Direkt-Aktionen ohne run()/ready()-Lifecycle
+     * (z.B. „Logdatei anzeigen") die Box wieder zuklappen lassen.
+     */
+    private void planeAutoCloseFallsMoeglich() {
+        if (disposed || frame == null || headlessMode) return;
+        if (laeuft.get()) return;
+        if (isFehler) return;
+        if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return;
+        if (!GlobalProperties.get().isProzessBoxAutomatischSchliessen()) return;
+
+        SwingUtilities.invokeLater(() -> {
+            if (disposed || frame == null) return;
+            if (autoCloseTimer != null) {
+                autoCloseTimer.stop();
+            }
+            autoCloseTimer = new Timer(AUTO_CLOSE_DELAY_MS, _ -> {
+                if (disposed || frame == null) return;
+                if (!laeuft.get() && !isFehler) {
+                    frame.setVisible(false);
+                }
+            });
+            autoCloseTimer.setRepeats(false);
+            autoCloseTimer.start();
+        });
     }
 
     // ── TimerListener ──────────────────────────────────────────────────────────

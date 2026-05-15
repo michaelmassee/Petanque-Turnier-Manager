@@ -33,6 +33,7 @@ public class GlobalProperties {
 	private static final String AUTOSAVE_PROP = "autosave";
 	private static final String NEW_VERSION_CHECK_PROP = "newversioncheck";
 	private static final String PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP = "prozessbox.automatisch.anzeigen";
+	private static final String PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP = "prozessbox.automatisch.schliessen";
 
 	private static final String WEBSERVER_AKTIV_PROP = "webserver_aktiv";
 
@@ -266,6 +267,10 @@ public class GlobalProperties {
 		return getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, true);
 	}
 
+	public boolean isProzessBoxAutomatischSchliessen() {
+		return getBooleanMitDefault(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, true);
+	}
+
 	public boolean isWebserverAktiv() {
 		return getBoolean(WEBSERVER_AKTIV_PROP);
 	}
@@ -488,12 +493,14 @@ public class GlobalProperties {
 	// ----------------------------------------------------
 
 	public void speichern(boolean autosave, boolean backup, boolean newVersionCheck,
-			boolean prozessBoxAutomatischAnzeigen, String logLevel) {
+			boolean prozessBoxAutomatischAnzeigen, boolean prozessBoxAutomatischSchliessen, String logLevel) {
 		try {
 			setBooleanProp(AUTOSAVE_PROP, autosave);
 			setBooleanProp(CREATE_BACKUP_PROP, backup);
 			setBooleanProp(NEW_VERSION_CHECK_PROP, newVersionCheck);
-			setBooleanProp(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, prozessBoxAutomatischAnzeigen);
+			// Default-true-Properties: explizit "false" persistieren, sonst greift beim Lesen wieder der Default.
+			propMap.put(PROZESSBOX_AUTOMATISCH_ANZEIGEN_PROP, Boolean.toString(prozessBoxAutomatischAnzeigen));
+			propMap.put(PROZESSBOX_AUTOMATISCH_SCHLIESSEN_PROP, Boolean.toString(prozessBoxAutomatischSchliessen));
 
 			if (logLevel != null && !logLevel.isBlank()) {
 				propMap.put(LOG_LEVEL_PROP, logLevel.trim().toLowerCase());
