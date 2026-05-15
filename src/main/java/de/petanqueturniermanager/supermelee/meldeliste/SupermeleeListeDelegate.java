@@ -4,6 +4,7 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
@@ -157,6 +158,12 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 				.setCellBackColor(headerBackColor).setBorder(BorderFactory.from().allThin().boldLn().forTop().toBorder())
 				.addColumnProperties(columnProp).setVertJustify(CellVertJustify2.CENTER);
 		sheet.getSheetHelper().setStringValueInCell(bezCelVal);
+		// Zelle direkt über dem SP-Header leeren: ein historisch fehlgeleiteter
+		// formatSpielTagSpalte-Aufruf mit Spieltag-Nr 0 konnte hier die
+		// IF(PTM_SPIELTAG=0;"Aktiv";"")-Formel hinterlassen, die niemand wieder aufräumt.
+		var spZeile1Cleanup = RangePosition.from(meldeListeHelper.setzPositionSpalte(), ERSTE_HEADER_ZEILE,
+				meldeListeHelper.setzPositionSpalte(), ERSTE_HEADER_ZEILE);
+		RangeHelper.from(sheet, spZeile1Cleanup).clearRange();
 		// ------
 
 		formatSpielTagSpalte(getSpielTag());
@@ -211,6 +218,8 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 
 	void formatSpielTagSpalte(SpielTagNr spieltag) throws GenerateException {
 		checkNotNull(spieltag);
+		checkArgument(spieltag.getNr() >= 1,
+				"Spieltag-Nr muss >= 1 sein, sonst landet die Aktiv-Formel in der SP-Spalte (D1).");
 		sheet.processBoxinfo("processbox.supermelee.meldeliste.sortieren");
 
 		var xSheet = sheet.getXSpreadSheet();
