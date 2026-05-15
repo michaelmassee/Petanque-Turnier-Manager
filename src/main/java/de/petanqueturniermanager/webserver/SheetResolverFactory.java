@@ -22,9 +22,9 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
  *   SUPERMELEE_ENDRANGLISTE      → Supermêlée Endrangliste (exakter Schlüssel)
  *   SUPERMELEE_SPIELRUNDE        → aktuelle Supermelee-Spielrunde (aus Properties: Spieltag + Spielrunde)
  *   SPIELTAG_RANGLISTE           → aktuellste Spieltag-Rangliste (höchste Nummer)
- *   SPIELTAG_TEILNEHMER          → Supermelee-Teilnehmerliste des aktiven Spieltags (aus KonfigurationSheet)
  *   SPIELTAG_AKTUELLE_SPIELRUNDE → aktuelle Spielrunde des aktiven Spieltags (Supermelee)
- *   TEILNEHMER                   → Teilnehmer-Sheet (exakter Schlüssel, alle Turniersysteme außer Supermelee)
+ *   TEILNEHMER                   → Teilnehmer-Sheet des aktiven Spieltags (alle Turniersysteme;
+ *                                  Supermelee per Spieltag, sonst Single-Sheet)
  *   SPIELTAG_ANMELDUNGEN         → aktuellste Spieltag-Anmeldungen (höchste Nummer, nur Supermelee)
  *   JGJ_RANGLISTE                → Jeder-gegen-Jeden Rangliste (exakter Schlüssel)
  *   JGJ_SPIELPLAN                → Jeder-gegen-Jeden Spielplan (exakter Schlüssel)
@@ -59,6 +59,15 @@ public final class SheetResolverFactory {
      */
     private static final Map<String, Supplier<SheetResolver>> RESOLVER_MAP = new LinkedHashMap<>();
 
+    /**
+     * Veraltete Resolver-Schlüssel, die per Migration auf einen aktuellen Schlüssel
+     * abgebildet werden. So bleiben persistierte User-Konfigurationen aus älteren
+     * Plugin-Versionen funktionsfähig, ohne dass die alten Schlüssel in der
+     * ComboBox erscheinen.
+     */
+    private static final Map<String, String> LEGACY_ALIASE = Map.of(
+            "SPIELTAG_TEILNEHMER", "TEILNEHMER");
+
     static {
         // Resolver-Factories definieren – Reihenfolge bestimmt ComboBox-Reihenfolge
         RESOLVER_MAP.put("SCHWEIZER_RANGLISTE", () ->
@@ -86,23 +95,10 @@ public final class SheetResolverFactory {
                         SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_PREFIX,
                         SheetMetadataHelper.SCHLUESSEL_SPIELTAG_RANGLISTE_SUFFIX,
                         I18n.get("webserver.resolver.spieltag")));
-        RESOLVER_MAP.put("SPIELTAG_TEILNEHMER", () ->
-                new SupermeleeAktiverSpieltagSheetResolver());
         RESOLVER_MAP.put("SPIELTAG_AKTUELLE_SPIELRUNDE", () ->
                 new SupermeleeAktiverSpielrundeSheetResolver());
         RESOLVER_MAP.put("TEILNEHMER", () ->
-                new TeilnehmerSheetResolver(
-                        SheetMetadataHelper.SCHLUESSEL_TEILNEHMER,
-                        I18n.get("webserver.resolver.teilnehmer"),
-                        new String[]{
-                                "Schweizer Teilnehmer", "Schweizer Participants",
-                                "Participants", "Participantes", "Deelnemers",
-                                "JGJ Teilnehmer", "JGJ Participants",
-                                "KO Teilnehmer", "KO Participants",
-                                "Maastrichter Teilnehmer", "Maastrichter Participants",
-                                "Kaskaden Teilnehmer", "Kaskaden Participants",
-                                "Ligas Teilnehmer", "Ligas Participants"
-                        }));
+                new TeilnehmerSheetResolver(I18n.get("webserver.resolver.teilnehmer")));
         RESOLVER_MAP.put("SPIELTAG_ANMELDUNGEN", () ->
                 new MetadatenPrefixSheetResolver(
                         SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ANMELDUNGEN_PREFIX,
@@ -235,7 +231,8 @@ public final class SheetResolverFactory {
      */
     public static SheetResolver erstellen(String configWert) {
         var key = configWert.toUpperCase();
-        var factory = RESOLVER_MAP.get(key);
+        var aufgeloesterKey = LEGACY_ALIASE.getOrDefault(key, key);
+        var factory = RESOLVER_MAP.get(aufgeloesterKey);
         if (factory != null) {
             return factory.get();
         }
