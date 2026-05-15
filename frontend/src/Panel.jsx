@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Cell from './Cell';
+import { horizontalAlignItems, vertikalJustifyContent, transformOrigin } from './alignment';
 
 // 1/100 mm → Pixel (gerundet, verhindert Sub-Pixel-Layout-Drift)
 const toPx = (v) => Math.round((v || 0) / 37.795) + 'px';
@@ -51,7 +52,7 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
         <div className={`timer-panel ${cls}`} style={{
           ...hintergrundStyle,
           transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
-          transformOrigin: table.zentrieren ? 'top center' : 'top left',
+          transformOrigin: transformOrigin(table.hAlign, table.vAlign),
         }}>
           {table.timerBezeichnung && (
             <div className="timer-bezeichnung">{table.timerBezeichnung}</div>
@@ -103,14 +104,16 @@ export default function Panel({ table, sheetnamenAnzeigen, headerFooterUnterdrue
   );
 
   return (
-    <div style={{ paddingBottom: '8px', overflow: 'auto', height: '100%', boxSizing: 'border-box' }}>
-      <div style={{
-        width: 'fit-content',
-        margin: table.zentrieren ? '0 auto' : undefined,
-      }}>
+    <div style={{
+      paddingBottom: '8px', overflow: 'auto', height: '100%', boxSizing: 'border-box',
+      display: 'flex', flexDirection: 'column',
+      alignItems: horizontalAlignItems(table.hAlign),
+      justifyContent: vertikalJustifyContent(table.vAlign),
+    }}>
+      <div style={{ width: 'fit-content' }}>
         <div style={{
           transform: table.zoom !== 100 ? `scale(${table.zoom / 100})` : undefined,
-          transformOrigin: table.zentrieren ? 'top center' : 'top left',
+          transformOrigin: transformOrigin(table.hAlign, table.vAlign),
         }}>
           {sheetnamenAnzeigen && table.seitenTitel && (
             <div className="seiten-titel">{table.seitenTitel}</div>

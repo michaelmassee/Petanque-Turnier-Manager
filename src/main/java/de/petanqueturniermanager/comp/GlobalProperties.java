@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 
 import de.petanqueturniermanager.webserver.CompositeViewKonfiguration;
+import de.petanqueturniermanager.webserver.PanelAusrichtung;
 import de.petanqueturniermanager.webserver.PanelKonfiguration;
 import de.petanqueturniermanager.webserver.PanelTyp;
 import de.petanqueturniermanager.webserver.SheetResolverFactory;
@@ -55,7 +56,10 @@ public class GlobalProperties {
 	private static final String WEBSERVER_COMPOSITE_PANEL_INFIX = "_panel_";
 	private static final String WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX = "_sheet";
 	private static final String WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX = "_zoom";
-	private static final String WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX = "_zentriert";
+	/** Legacy-Suffix der entfernten boolean-Property „zentriert" (nur für Migration / Cleanup). */
+	private static final String LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX = "_zentriert";
+	private static final String WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX = "_halign";
+	private static final String WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX = "_valign";
 	private static final String WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX = "_blattname";
 	private static final String WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX = "_typ";
 	private static final String WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX = "_url";
@@ -88,20 +92,27 @@ public class GlobalProperties {
 	/**
 	 * Rohdaten eines einzelnen Panels in einem Composite View (vor Resolver-Erstellung).
 	 *
-	 * @param typ               Anzeigemodus: {@link PanelTyp#BLATT} oder {@link PanelTyp#URL}
-	 * @param sheetConfig       Sheet-Konfigurations-String (nur relevant wenn typ == BLATT)
-	 * @param zoom              Zoom-Faktor in %
-	 * @param zentriert         ob der Inhalt horizontal zentriert dargestellt wird
-	 * @param blattnameAnzeigen ob der Blattname als Kopfzeile angezeigt wird
-	 * @param externeUrl        externe URL (nur relevant wenn typ == URL)
+	 * @param typ                   Anzeigemodus: {@link PanelTyp#BLATT} oder {@link PanelTyp#URL}
+	 * @param sheetConfig           Sheet-Konfigurations-String (nur relevant wenn typ == BLATT)
+	 * @param zoom                  Zoom-Faktor in %
+	 * @param horizontalAusrichtung horizontale Ausrichtung: {@code "kein"} / {@code "links"} / {@code "mitte"} / {@code "rechts"}
+	 * @param vertikalAusrichtung   vertikale Ausrichtung:   {@code "kein"} / {@code "oben"} / {@code "mitte"} / {@code "unten"}
+	 * @param blattnameAnzeigen     ob der Blattname als Kopfzeile angezeigt wird
+	 * @param externeUrl            externe URL (nur relevant wenn typ == URL)
 	 */
 	public record PanelEintragRoh(
 			PanelTyp typ,
 			String sheetConfig,
 			int zoom,
-			boolean zentriert,
+			String horizontalAusrichtung,
+			String vertikalAusrichtung,
 			boolean blattnameAnzeigen,
-			String externeUrl) {}
+			String externeUrl) {
+		public PanelEintragRoh {
+			horizontalAusrichtung = PanelAusrichtung.normiereHorizontal(horizontalAusrichtung);
+			vertikalAusrichtung   = PanelAusrichtung.normiereVertikal(vertikalAusrichtung);
+		}
+	}
 
 	/**
 	 * Rohdaten eines Composite View (vor Resolver-Erstellung).
@@ -357,9 +368,15 @@ public class GlobalProperties {
 						if (panelTyp == PanelTyp.BLATT && sheetConfig.isEmpty()) continue;
 						if (panelTyp == PanelTyp.URL && externeUrl.isEmpty()) continue;
 						int panelZoom = parseZoom(propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX));
-						boolean panelZentriert = getBoolean(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
+						String panelHAlign = propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX);
+						String panelVAlign = propMap.get(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX);
+						if (panelHAlign == null && panelVAlign == null
+								&& getBoolean(panelPrefix + LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX)) {
+							// Migration: alte boolean-Property "_zentriert" → Horizontal=Mitte
+							panelHAlign = PanelAusrichtung.H_MITTE;
+						}
 						boolean panelBlattnameAnzeigen = getBoolean(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
-						panels.add(new PanelEintragRoh(panelTyp, sheetConfig, panelZoom, panelZentriert, panelBlattnameAnzeigen, externeUrl));
+						panels.add(new PanelEintragRoh(panelTyp, sheetConfig, panelZoom, panelHAlign, panelVAlign, panelBlattnameAnzeigen, externeUrl));
 					}
 					if (!panels.isEmpty()) {
 						eintraege.add(new CompositeViewEintragRoh(port, name, aktiv, zoom, mitHeaderFooter, layoutJson, panels));
@@ -394,11 +411,13 @@ public class GlobalProperties {
 				List<PanelKonfiguration> panels = new ArrayList<>();
 				for (var p : eintrag.panels()) {
 					if (p.typ() == PanelTyp.TIMER) {
-						panels.add(new PanelKonfiguration(PanelTyp.TIMER, "", null, p.zoom(), p.zentriert(), false, ""));
+						panels.add(new PanelKonfiguration(PanelTyp.TIMER, "", null, p.zoom(),
+								p.horizontalAusrichtung(), p.vertikalAusrichtung(), false, ""));
 						continue;
 					}
 					if (p.typ() == PanelTyp.URL) {
-						panels.add(new PanelKonfiguration(PanelTyp.URL, "", null, p.zoom(), p.zentriert(), p.blattnameAnzeigen(), p.externeUrl()));
+						panels.add(new PanelKonfiguration(PanelTyp.URL, "", null, p.zoom(),
+								p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), p.externeUrl()));
 						continue;
 					}
 					var resolver = SheetResolverFactory.erstellen(p.sheetConfig());
@@ -406,7 +425,8 @@ public class GlobalProperties {
 						logger.warn("Resolver null für Panel-Config '{}'", p.sheetConfig());
 						continue;
 					}
-					panels.add(new PanelKonfiguration(PanelTyp.BLATT, p.sheetConfig(), resolver, p.zoom(), p.zentriert(), p.blattnameAnzeigen(), ""));
+					panels.add(new PanelKonfiguration(PanelTyp.BLATT, p.sheetConfig(), resolver, p.zoom(),
+							p.horizontalAusrichtung(), p.vertikalAusrichtung(), p.blattnameAnzeigen(), ""));
 				}
 				if (!panels.isEmpty()) {
 					konfigs.add(new CompositeViewKonfiguration(eintrag.port(), eintrag.name(), eintrag.zoom(), wurzel, panels, eintrag.mitHeaderFooter()));
@@ -438,7 +458,9 @@ public class GlobalProperties {
 					String panelPrefix = prefix + WEBSERVER_COMPOSITE_PANEL_INFIX + i;
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_SHEET_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX);
-					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
+					propMap.remove(panelPrefix + LEGACY_WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX);
+					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_TYP_SUFFIX);
 					propMap.remove(panelPrefix + WEBSERVER_COMPOSITE_PANEL_URL_SUFFIX);
@@ -474,8 +496,10 @@ public class GlobalProperties {
 						}
 						if (panel.zoom() != DEFAULT_ZOOM)
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZOOM_SUFFIX, String.valueOf(panel.zoom()));
-						if (panel.zentriert())
-							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_ZENTRIERT_SUFFIX, "true");
+						if (!PanelAusrichtung.KEIN.equals(panel.horizontalAusrichtung()))
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_HALIGN_SUFFIX, panel.horizontalAusrichtung());
+						if (!PanelAusrichtung.KEIN.equals(panel.vertikalAusrichtung()))
+							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_VALIGN_SUFFIX, panel.vertikalAusrichtung());
 						if (panel.blattnameAnzeigen())
 							propMap.put(panelPrefix + WEBSERVER_COMPOSITE_PANEL_BLATTNAME_SUFFIX, "true");
 					}

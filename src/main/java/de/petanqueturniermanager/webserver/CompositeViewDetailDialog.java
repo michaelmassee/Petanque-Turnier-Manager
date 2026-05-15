@@ -103,8 +103,10 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private final List<String> panelSheets = new ArrayList<>();
     /** Zoom pro Panel (Index = Panel-ID). */
     private final List<Integer> panelZooms = new ArrayList<>();
-    /** Zentriert-Flag pro Panel (Index = Panel-ID). */
-    private final List<Boolean> panelZentriert = new ArrayList<>();
+    /** Horizontale Ausrichtung pro Panel (Index = Panel-ID); siehe {@link PanelAusrichtung}. */
+    private final List<String> panelHAlign = new ArrayList<>();
+    /** Vertikale Ausrichtung pro Panel (Index = Panel-ID); siehe {@link PanelAusrichtung}. */
+    private final List<String> panelVAlign = new ArrayList<>();
     /** Blattname-Anzeigen-Flag pro Panel (Index = Panel-ID). */
     private final List<Boolean> panelBlattnameAnzeigen = new ArrayList<>();
     /** Anzeigemodus pro Panel (Index = Panel-ID): BLATT oder URL. */
@@ -184,7 +186,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
     private void initialisiereZustand() {
         panelSheets.clear();
         panelZooms.clear();
-        panelZentriert.clear();
+        panelHAlign.clear();
+        panelVAlign.clear();
         panelBlattnameAnzeigen.clear();
         panelTypen.clear();
         panelUrls.clear();
@@ -206,7 +209,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             for (var p : initialerEintrag.panels()) {
                 panelSheets.add(p.sheetConfig());
                 panelZooms.add(p.zoom());
-                panelZentriert.add(p.zentriert());
+                panelHAlign.add(p.horizontalAusrichtung());
+                panelVAlign.add(p.vertikalAusrichtung());
                 panelBlattnameAnzeigen.add(p.blattnameAnzeigen());
                 panelTypen.add(p.typ() != null ? p.typ() : PanelTyp.BLATT);
                 panelUrls.add(p.externeUrl() != null ? p.externeUrl() : "");
@@ -216,7 +220,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             wurzel = new SplitBlatt(0);
             panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
             panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
-            panelZentriert.add(Boolean.FALSE);
+            panelHAlign.add(PanelAusrichtung.KEIN);
+            panelVAlign.add(PanelAusrichtung.KEIN);
             panelBlattnameAnzeigen.add(Boolean.FALSE);
             panelTypen.add(PanelTyp.BLATT);
             panelUrls.add("");
@@ -298,8 +303,7 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
             fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 5, konfFelderY, 25, ZEILE_H);
             fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 33, konfFelderY, 35, ZEILE_H);
-            boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
-            fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 75, konfFelderY, 80, ZEILE_H, aktuellZentriert);
+            fuegeAusrichtungsComboBoxen(75, konfFelderY);
             fuegeFixedTextEinDyn("lblTimerHinweis", I18n.get("webserver.composite.konfig.panel.timer.hinweis"), 5, konfFelderY2, 400, ZEILE_H);
         } else if (istUrlModus) {
             // ---- URL-Modus ----
@@ -311,14 +315,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             // ---- Blatt-Modus ----
             String aktuellesSheet = ausgewaehlterPanelIndex < panelSheets.size() ? panelSheets.get(ausgewaehlterPanelIndex) : "";
             fuegeFixedTextEinDyn("lblPanelSheet", I18n.get("webserver.composite.konfig.panel.sheet.label"), 5, konfFelderY, 25, ZEILE_H);
-            fuegeComboBoxEinDyn("cbPanelSheet", ladeComboBoxItems(), 33, konfFelderY, 150, ZEILE_H, aktuellesSheet);
+            fuegeComboBoxEinDyn("cbPanelSheet", ladeComboBoxItems(), 33, konfFelderY, 130, ZEILE_H, aktuellesSheet);
 
             int aktuellerZoom = ausgewaehlterPanelIndex < panelZooms.size() ? panelZooms.get(ausgewaehlterPanelIndex) : GlobalProperties.DEFAULT_ZOOM;
-            fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 190, konfFelderY, 25, ZEILE_H);
-            fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 218, konfFelderY, 35, ZEILE_H);
+            fuegeFixedTextEinDyn("lblPanelZoom", I18n.get("webserver.composite.konfig.panel.zoom.label"), 170, konfFelderY, 25, ZEILE_H);
+            fuegeEditEinDyn("txtPanelZoom", String.valueOf(aktuellerZoom), 198, konfFelderY, 30, ZEILE_H);
 
-            boolean aktuellZentriert = ausgewaehlterPanelIndex < panelZentriert.size() && panelZentriert.get(ausgewaehlterPanelIndex);
-            fuegeCheckBoxEinDyn("cbPanelZentriert", I18n.get("webserver.composite.konfig.panel.zentriert.label"), 258, konfFelderY, 80, ZEILE_H, aktuellZentriert);
+            fuegeAusrichtungsComboBoxen(232, konfFelderY);
 
             boolean aktuellBlattnameAnzeigen = ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(ausgewaehlterPanelIndex);
             fuegeCheckBoxEinDyn("cbPanelBlattnameAnzeigen", I18n.get("webserver.composite.konfig.panel.blattname.label"), 5, konfFelderY2, 150, ZEILE_H, aktuellBlattnameAnzeigen);
@@ -349,7 +352,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int neuerPanelIndex = panelSheets.size();
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
-        panelZentriert.add(Boolean.FALSE);
+        panelHAlign.add(PanelAusrichtung.KEIN);
+        panelVAlign.add(PanelAusrichtung.KEIN);
         panelBlattnameAnzeigen.add(Boolean.FALSE);
         panelTypen.add(PanelTyp.BLATT);
         panelUrls.add("");
@@ -364,7 +368,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         int neuerPanelIndex = panelSheets.size();
         panelSheets.add(SheetResolverFactory.DEFAULT_SHEET_TYP);
         panelZooms.add(GlobalProperties.DEFAULT_ZOOM);
-        panelZentriert.add(Boolean.FALSE);
+        panelHAlign.add(PanelAusrichtung.KEIN);
+        panelVAlign.add(PanelAusrichtung.KEIN);
         panelBlattnameAnzeigen.add(Boolean.FALSE);
         panelTypen.add(PanelTyp.BLATT);
         panelUrls.add("");
@@ -382,7 +387,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         // Panel-Config entfernen und Indizes im Baum anpassen
         panelSheets.remove(zuLoeschenderIndex);
         panelZooms.remove(zuLoeschenderIndex);
-        panelZentriert.remove(zuLoeschenderIndex);
+        panelHAlign.remove(zuLoeschenderIndex);
+        panelVAlign.remove(zuLoeschenderIndex);
         panelBlattnameAnzeigen.remove(zuLoeschenderIndex);
         panelTypen.remove(zuLoeschenderIndex);
         panelUrls.remove(zuLoeschenderIndex);
@@ -454,7 +460,8 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         // Blatt-Felder lesen und speichern
         XControl sheetCtrl = xcc.getControl("cbPanelSheet");
         XControl zoomCtrl = xcc.getControl("txtPanelZoom");
-        XControl zentriertCtrl = xcc.getControl("cbPanelZentriert");
+        XControl hAlignCtrl = xcc.getControl("cbPanelHAlign");
+        XControl vAlignCtrl = xcc.getControl("cbPanelVAlign");
         XControl blattnameCtrl = xcc.getControl("cbPanelBlattnameAnzeigen");
         if (sheetCtrl != null && ausgewaehlterPanelIndex < panelSheets.size()) {
             panelSheets.set(ausgewaehlterPanelIndex,
@@ -466,8 +473,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                 panelZooms.set(ausgewaehlterPanelIndex, z);
             } catch (NumberFormatException ignored) {}
         }
-        if (zentriertCtrl != null && ausgewaehlterPanelIndex < panelZentriert.size()) {
-            panelZentriert.set(ausgewaehlterPanelIndex, Lo.qi(XCheckBox.class, zentriertCtrl).getState() == 1);
+        if (hAlignCtrl != null && ausgewaehlterPanelIndex < panelHAlign.size()) {
+            String label = Lo.qi(XTextComponent.class, hAlignCtrl).getText().trim();
+            panelHAlign.set(ausgewaehlterPanelIndex, hAlignLabelZuKey(label));
+        }
+        if (vAlignCtrl != null && ausgewaehlterPanelIndex < panelVAlign.size()) {
+            String label = Lo.qi(XTextComponent.class, vAlignCtrl).getText().trim();
+            panelVAlign.set(ausgewaehlterPanelIndex, vAlignLabelZuKey(label));
         }
         if (blattnameCtrl != null && ausgewaehlterPanelIndex < panelBlattnameAnzeigen.size()) {
             panelBlattnameAnzeigen.set(ausgewaehlterPanelIndex, Lo.qi(XCheckBox.class, blattnameCtrl).getState() == 1);
@@ -532,22 +544,23 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
         List<PanelEintragRoh> panels = new ArrayList<>();
         for (int i = 0; i < panelSheets.size(); i++) {
             PanelTyp panelTyp = i < panelTypen.size() ? panelTypen.get(i) : PanelTyp.BLATT;
+            String pHAlign = i < panelHAlign.size() ? panelHAlign.get(i) : PanelAusrichtung.KEIN;
+            String pVAlign = i < panelVAlign.size() ? panelVAlign.get(i) : PanelAusrichtung.KEIN;
             if (panelTyp == PanelTyp.TIMER) {
                 int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
-                boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
-                panels.add(new PanelEintragRoh(PanelTyp.TIMER, "", pZoom, pZentriert, false, ""));
+                panels.add(new PanelEintragRoh(PanelTyp.TIMER, "", pZoom, pHAlign, pVAlign, false, ""));
             } else if (panelTyp == PanelTyp.URL) {
                 String url = i < panelUrls.size() ? panelUrls.get(i) : "";
                 String urlFehler = validiereUrl(url);
                 if (urlFehler != null) {
                     throw new UngueltigeEingabeException(urlFehler);
                 }
-                panels.add(new PanelEintragRoh(PanelTyp.URL, "", GlobalProperties.DEFAULT_ZOOM, false, false, url));
+                panels.add(new PanelEintragRoh(PanelTyp.URL, "", GlobalProperties.DEFAULT_ZOOM,
+                        PanelAusrichtung.KEIN, PanelAusrichtung.KEIN, false, url));
             } else {
                 int pZoom = i < panelZooms.size() ? panelZooms.get(i) : GlobalProperties.DEFAULT_ZOOM;
-                boolean pZentriert = i < panelZentriert.size() && panelZentriert.get(i);
                 boolean pBlattnameAnzeigen = i < panelBlattnameAnzeigen.size() && panelBlattnameAnzeigen.get(i);
-                panels.add(new PanelEintragRoh(PanelTyp.BLATT, panelSheets.get(i), pZoom, pZentriert, pBlattnameAnzeigen, ""));
+                panels.add(new PanelEintragRoh(PanelTyp.BLATT, panelSheets.get(i), pZoom, pHAlign, pVAlign, pBlattnameAnzeigen, ""));
             }
         }
 
@@ -638,6 +651,97 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
             return I18n.get("webserver.composite.konfig.panel.url.fehler.ungueltig");
         }
         return null;
+    }
+
+    // ---- Ausrichtungs-ComboBoxen ----
+
+    /**
+     * Baut die beiden Ausrichtungs-ComboBoxen (horizontal + vertikal) für das aktuelle Panel
+     * an Position {@code (xStart, y)}. Beide ComboBoxen sind 60 dp breit und folgen jeweils
+     * einem kurzen Label.
+     */
+    private void fuegeAusrichtungsComboBoxen(int xStart, int y) throws com.sun.star.uno.Exception {
+        String aktuellH = ausgewaehlterPanelIndex < panelHAlign.size()
+                ? panelHAlign.get(ausgewaehlterPanelIndex) : PanelAusrichtung.KEIN;
+        String aktuellV = ausgewaehlterPanelIndex < panelVAlign.size()
+                ? panelVAlign.get(ausgewaehlterPanelIndex) : PanelAusrichtung.KEIN;
+
+        fuegeFixedTextEinDyn("lblPanelHAlign", I18n.get("webserver.composite.konfig.panel.halign.label"),
+                xStart, y, 12, ZEILE_H);
+        fuegeComboBoxEinDyn("cbPanelHAlign", H_ALIGN_LABELS, xStart + 14, y, 55, ZEILE_H, hAlignKeyZuLabel(aktuellH));
+
+        int xV = xStart + 75;
+        fuegeFixedTextEinDyn("lblPanelVAlign", I18n.get("webserver.composite.konfig.panel.valign.label"),
+                xV, y, 12, ZEILE_H);
+        fuegeComboBoxEinDyn("cbPanelVAlign", V_ALIGN_LABELS, xV + 14, y, 55, ZEILE_H, vAlignKeyZuLabel(aktuellV));
+    }
+
+    private String[] hAlignLabels() {
+        return new String[] {
+                I18n.get("webserver.composite.konfig.panel.align.kein"),
+                I18n.get("webserver.composite.konfig.panel.halign.links"),
+                I18n.get("webserver.composite.konfig.panel.halign.mitte"),
+                I18n.get("webserver.composite.konfig.panel.halign.rechts"),
+        };
+    }
+
+    private String[] vAlignLabels() {
+        return new String[] {
+                I18n.get("webserver.composite.konfig.panel.align.kein"),
+                I18n.get("webserver.composite.konfig.panel.valign.oben"),
+                I18n.get("webserver.composite.konfig.panel.valign.mitte"),
+                I18n.get("webserver.composite.konfig.panel.valign.unten"),
+        };
+    }
+
+    private final String[] H_ALIGN_LABELS = hAlignLabels();
+    private final String[] V_ALIGN_LABELS = vAlignLabels();
+
+    private String hAlignKeyZuLabel(String key) {
+        return switch (PanelAusrichtung.normiereHorizontal(key)) {
+            case PanelAusrichtung.H_LINKS  -> H_ALIGN_LABELS[1];
+            case PanelAusrichtung.H_MITTE  -> H_ALIGN_LABELS[2];
+            case PanelAusrichtung.H_RECHTS -> H_ALIGN_LABELS[3];
+            default -> H_ALIGN_LABELS[0];
+        };
+    }
+
+    private String vAlignKeyZuLabel(String key) {
+        return switch (PanelAusrichtung.normiereVertikal(key)) {
+            case PanelAusrichtung.V_OBEN  -> V_ALIGN_LABELS[1];
+            case PanelAusrichtung.V_MITTE -> V_ALIGN_LABELS[2];
+            case PanelAusrichtung.V_UNTEN -> V_ALIGN_LABELS[3];
+            default -> V_ALIGN_LABELS[0];
+        };
+    }
+
+    private String hAlignLabelZuKey(String label) {
+        if (label == null) return PanelAusrichtung.KEIN;
+        if (label.equals(H_ALIGN_LABELS[1])) return PanelAusrichtung.H_LINKS;
+        if (label.equals(H_ALIGN_LABELS[2])) return PanelAusrichtung.H_MITTE;
+        if (label.equals(H_ALIGN_LABELS[3])) return PanelAusrichtung.H_RECHTS;
+        return PanelAusrichtung.KEIN;
+    }
+
+    private String vAlignLabelZuKey(String label) {
+        if (label == null) return PanelAusrichtung.KEIN;
+        if (label.equals(V_ALIGN_LABELS[1])) return PanelAusrichtung.V_OBEN;
+        if (label.equals(V_ALIGN_LABELS[2])) return PanelAusrichtung.V_MITTE;
+        if (label.equals(V_ALIGN_LABELS[3])) return PanelAusrichtung.V_UNTEN;
+        return PanelAusrichtung.KEIN;
+    }
+
+    /** Liefert das kompakte Vorschau-Suffix für die Ausrichtung, z.B. {@code " H:m V:o"} – leer wenn beide „kein". */
+    private String ausrichtungsSuffix(int panelIndex) {
+        String h = panelIndex < panelHAlign.size() ? panelHAlign.get(panelIndex) : PanelAusrichtung.KEIN;
+        String v = panelIndex < panelVAlign.size() ? panelVAlign.get(panelIndex) : PanelAusrichtung.KEIN;
+        boolean hAktiv = !PanelAusrichtung.KEIN.equals(h);
+        boolean vAktiv = !PanelAusrichtung.KEIN.equals(v);
+        if (!hAktiv && !vAktiv) return "";
+        StringBuilder sb = new StringBuilder();
+        if (hAktiv) sb.append(" H:").append(h.charAt(0));
+        if (vAktiv) sb.append(" V:").append(v.charAt(0));
+        return sb.toString();
     }
 
     // ---- ComboBox-Items ----
@@ -837,15 +941,13 @@ public class CompositeViewDetailDialog extends AbstractUnoDialog {
                     kurzName = I18n.get("webserver.composite.konfig.panel.modus.timer");
                     tooltip = kurzName;
                     int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
-                    boolean pZentriert = blatt.panel() < panelZentriert.size() && panelZentriert.get(blatt.panel());
-                    suffix = " [" + pZoom + "%" + (pZentriert ? " Z" : "") + "]";
+                    suffix = " [" + pZoom + "%" + ausrichtungsSuffix(blatt.panel()) + "]";
                 } else {
                     String sheetName = blatt.panel() < panelSheets.size() ? panelSheets.get(blatt.panel()) : "?";
                     tooltip = sheetName;
                     kurzName = sheetName != null && sheetName.length() > 20 ? sheetName.substring(0, 18) + "…" : sheetName;
                     int pZoom = blatt.panel() < panelZooms.size() ? panelZooms.get(blatt.panel()) : GlobalProperties.DEFAULT_ZOOM;
-                    boolean pZentriert = blatt.panel() < panelZentriert.size() && panelZentriert.get(blatt.panel());
-                    suffix = " [" + pZoom + "%" + (pZentriert ? " Z" : "") + "]";
+                    suffix = " [" + pZoom + "%" + ausrichtungsSuffix(blatt.panel()) + "]";
                 }
                 String label = "P" + blatt.panel() + ": " + kurzName + suffix;
                 boolean istAktiv = blatt.panel() == ausgewaehlterPanelIndex;

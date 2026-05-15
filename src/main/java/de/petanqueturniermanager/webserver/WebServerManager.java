@@ -286,7 +286,7 @@ public final class WebServerManager implements TimerListener {
         for (int i = 0; i < konfig.panels().size(); i++) {
             if (konfig.panels().get(i).typ() == PanelTyp.TIMER) {
                 var panelKonfig = konfig.panels().get(i);
-                panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.zentriert(), state));
+                panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), state));
             }
         }
         if (panelNachrichten.isEmpty()) {
@@ -411,14 +411,14 @@ public final class WebServerManager implements TimerListener {
                             if (neuerPanelEintrag.typ() == PanelTyp.TIMER) {
                                 neuePanelKonfigs.add(new PanelKonfiguration(
                                         PanelTyp.TIMER, "", null,
-                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), false, ""));
-                                alleInitPanels.add(CompositePanelNachricht.timer(i, neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), letzterTimerZustand));
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), false, ""));
+                                alleInitPanels.add(CompositePanelNachricht.timer(i, neuerPanelEintrag.zoom(), neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), letzterTimerZustand));
                                 continue;
                             }
                             if (neuerPanelEintrag.typ() == PanelTyp.URL) {
                                 neuePanelKonfigs.add(new PanelKonfiguration(
                                         PanelTyp.URL, "", null,
-                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen(),
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), neuerPanelEintrag.blattnameAnzeigen(),
                                         neuerPanelEintrag.externeUrl()));
                                 neueUrlCache.put(i, neuerPanelEintrag.externeUrl());
                                 alleInitPanels.add(CompositePanelNachricht.url(i, neuerPanelEintrag.externeUrl()));
@@ -430,7 +430,7 @@ public final class WebServerManager implements TimerListener {
                                     : SheetResolverFactory.erstellen(neuerPanelEintrag.sheetConfig());
                             neuePanelKonfigs.add(new PanelKonfiguration(
                                     PanelTyp.BLATT, neuerPanelEintrag.sheetConfig(), resolver,
-                                    neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen(), ""));
+                                    neuerPanelEintrag.zoom(), neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), neuerPanelEintrag.blattnameAnzeigen(), ""));
                             var vollModell = altIndex != null ? panelModelle.get(altIndex) : null;
                             if (vollModell != null) {
                                 neuePanelModelle.put(i, vollModell);
@@ -439,7 +439,7 @@ public final class WebServerManager implements TimerListener {
                                 neuePanelTitel.put(i, titel);
                                 alleInitPanels.add(CompositePanelNachricht.init(
                                         i, vollModell, titel,
-                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.zentriert(), neuerPanelEintrag.blattnameAnzeigen()));
+                                        neuerPanelEintrag.zoom(), neuerPanelEintrag.horizontalAusrichtung(), neuerPanelEintrag.vertikalAusrichtung(), neuerPanelEintrag.blattnameAnzeigen()));
                             }
                         }
 
@@ -618,7 +618,7 @@ public final class WebServerManager implements TimerListener {
             var panelKonfig = konfig.panels().get(i);
             if (panelKonfig.typ() == PanelTyp.TIMER) {
                 alleInitPanels.add(CompositePanelNachricht.timer(
-                        i, panelKonfig.zoom(), panelKonfig.zentriert(), letzterTimerZustand));
+                        i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
             } else if (panelKonfig.typ() == PanelTyp.URL) {
                 alleInitPanels.add(CompositePanelNachricht.url(i, panelKonfig.externeUrl()));
                 letzteCompositeUrls.get(konfig.port()).put(i, panelKonfig.externeUrl());
@@ -771,7 +771,7 @@ public final class WebServerManager implements TimerListener {
 
                 // TIMER-Panel: kein Sheet-Lookup, Timer-Zustand aus letzterTimerZustand
                 if (panelKonfig.typ() == PanelTyp.TIMER) {
-                    panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.zentriert(), letzterTimerZustand));
+                    panelNachrichten.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
                     // irgendeineAenderung nur beim ersten Rendering setzen – laufende Timer-Updates
                     // kommen über onChange() direkt als diff-Push ohne Sheet-Refresh
                     var timerPanels = initialisiertePanels.computeIfAbsent(port, p -> ConcurrentHashMap.newKeySet());
@@ -841,7 +841,7 @@ public final class WebServerManager implements TimerListener {
                 // Beim ersten Rendering (altesModell == null) oder beim Wechsel fehlend→OK
                 // vollständiges Modell senden, sonst nur Diff wenn nötig
                 TabelleModel zuSendendesModell = (altesModell == null) ? neuesModell : diffModell;
-                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom(), panelKonfig.zentriert(), panelKonfig.blattnameAnzeigen()));
+                panelNachrichten.add(CompositePanelNachricht.init(i, zuSendendesModell, neuerTitel, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), panelKonfig.blattnameAnzeigen()));
             }
 
             if (!irgendeineAenderung) {
@@ -855,7 +855,7 @@ public final class WebServerManager implements TimerListener {
             for (int i = 0; i < konfig.panels().size(); i++) {
                 var panelKonfig = konfig.panels().get(i);
                 if (panelKonfig.typ() == PanelTyp.TIMER) {
-                    alleInitPanels.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.zentriert(), letzterTimerZustand));
+                    alleInitPanels.add(CompositePanelNachricht.timer(i, panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), letzterTimerZustand));
                     continue;
                 }
                 if (panelKonfig.typ() == PanelTyp.URL) {
@@ -867,7 +867,7 @@ public final class WebServerManager implements TimerListener {
                 }
                 var vollModell = panelModelle.get(i);
                 if (vollModell != null) {
-                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom(), panelKonfig.zentriert(), panelKonfig.blattnameAnzeigen()));
+                    alleInitPanels.add(CompositePanelNachricht.init(i, vollModell, panelTitel.getOrDefault(i, ""), panelKonfig.zoom(), panelKonfig.horizontalAusrichtung(), panelKonfig.vertikalAusrichtung(), panelKonfig.blattnameAnzeigen()));
                 } else if (fehlendCache.contains(i)) {
                     alleInitPanels.add(CompositePanelNachricht.fehlend(i,
                             I18n.get("webserver.hinweis.sheet.nicht.gefunden.titel"),
