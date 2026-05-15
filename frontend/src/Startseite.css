@@ -135,7 +135,7 @@
 
 .startseite-zahlen {
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
   gap: clamp(1.5rem, 5vw, 5rem);
   min-height: 0;
