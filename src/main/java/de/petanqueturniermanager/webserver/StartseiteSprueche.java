@@ -7,17 +7,12 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 
 /**
  * Liest die rotierenden Boule-Sprüche für die Turnier-Startseite aus den i18n-Properties.
- * Konvention: {@code startseite.spruch.1}, {@code .2}, … bis zum ersten fehlenden Schlüssel.
- * Damit lassen sich Sprüche pro Sprache pflegen, ohne den Code anzufassen.
+ * Die Liste {@link #BEKANNTE_SCHLUESSEL} ist die Wahrheit – sie muss synchron zu den
+ * in {@code messages.properties} gepflegten Schlüsseln bleiben (vom I18n-Referenzdatei-Test
+ * abgesichert).
  */
 public final class StartseiteSprueche {
 
-    private static final String KEY_PREFIX = "startseite.spruch.";
-    private static final int MAX_SPRUECHE = 200;
-
-    // Statische Referenz für den I18n-Referenzdatei-Test: die Sprüche werden dynamisch
-    // über KEY_PREFIX + Index geladen und sind sonst im Code unsichtbar. Diese Liste
-    // muss synchron zu den in messages.properties gepflegten Schlüsseln bleiben.
     static final String[] BEKANNTE_SCHLUESSEL = {
             "startseite.spruch.1",
             "startseite.spruch.2",
@@ -45,13 +40,11 @@ public final class StartseiteSprueche {
     }
 
     public static List<String> alle() {
-        var result = new ArrayList<String>();
-        for (int i = 1; i <= MAX_SPRUECHE; i++) {
-            String key = KEY_PREFIX + i;
+        var result = new ArrayList<String>(BEKANNTE_SCHLUESSEL.length);
+        for (String key : BEKANNTE_SCHLUESSEL) {
             String text = I18n.get(key);
-            // I18n.get gibt den Schlüssel selbst zurück, wenn keine Übersetzung existiert
             if (text == null || text.equals(key) || text.isBlank()) {
-                break;
+                continue;
             }
             result.add(text);
         }

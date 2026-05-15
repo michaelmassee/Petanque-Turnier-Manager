@@ -17,6 +17,7 @@ public class ConfigProperty<V> {
 	private final String key;
 	private V defaultVal;
 	private String description;
+	private Object[] descriptionArgs;
 	private boolean inSideBar; // uebergang properties nach sidebar
 	private boolean inSideBarInfoPanel; // obere Panel, read only felder
 	private boolean tabFarbe; // Tab-Farben-Dialog
@@ -56,11 +57,17 @@ public class ConfigProperty<V> {
 
 	public String getDescription() {
 		if (this.description == null) return null;
-		return I18n.get(this.description);
+		return descriptionArgs == null ? I18n.get(this.description) : I18n.get(this.description, descriptionArgs);
 	}
 
 	public ConfigProperty<V> setDescription(String description) {
 		this.description = description;
+		return this;
+	}
+
+	public ConfigProperty<V> setDescription(String description, Object... args) {
+		this.description = description;
+		this.descriptionArgs = args;
 		return this;
 	}
 

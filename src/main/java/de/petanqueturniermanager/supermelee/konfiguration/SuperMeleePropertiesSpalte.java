@@ -172,7 +172,7 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 		// Spieltag Header
 		for (int spieltagcntr = 1; spieltagcntr <= SuperMeleeKonfigurationSheet.MAX_SPIELTAG; spieltagcntr++) {
 			KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(PROP_SPIELTAG_KOPFZEILE(spieltagcntr))
-					.setDefaultVal(spieltagcntr + ". Spieltag").setDescription("Kopfzeile für Spieltag " + spieltagcntr)
+					.setDefaultVal(spieltagcntr + ". Spieltag").setDescription("config.desc.supermelee.spieltag.kopfzeile", spieltagcntr)
 					.inSideBar());
 		}
 	}
