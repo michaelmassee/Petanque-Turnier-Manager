@@ -129,7 +129,7 @@ public final class TeilnehmerSheetBuilder {
 
         datenSchreiben(anzBloecke, spaltenProBlock, zeilenProBlock, totalSpalten);
         datenBorderSetzen(anzBloecke, spaltenProBlock, zeilenProBlock);
-        zebraFarbenSetzen(totalSpalten, zeilenProBlock);
+        zebraFarbenSetzen(anzBloecke, spaltenProBlock, zeilenProBlock);
 
         this.letzteDatenZeile = ERSTE_DATEN_ZEILE + zeilenProBlock - 1;
         this.letzteDatenSpalte = totalSpalten;
@@ -274,9 +274,18 @@ public final class TeilnehmerSheetBuilder {
         }
     }
 
-    private void zebraFarbenSetzen(int totalSpalten, int zeilenProBlock) throws GenerateException {
-        SheetHelper.faerbeZeilenAbwechselnd(sheet,
-                RangePosition.from(0, ERSTE_DATEN_ZEILE, totalSpalten, ERSTE_DATEN_ZEILE + zeilenProBlock - 1),
-                geradeFarbe, ungeradeFarbe);
+    /**
+     * Zebra-Färbung pro Block separat, damit die Leer-Trennspalten zwischen den Blöcken
+     * weiß bleiben und nicht in das Streifenmuster gezogen werden.
+     */
+    private void zebraFarbenSetzen(int anzBloecke, int spaltenProBlock, int zeilenProBlock) throws GenerateException {
+        for (int b = 0; b < anzBloecke; b++) {
+            int base = b * spaltenProBlock;
+            int letzteSpalteImBlock = teamnameAktiv ? base + 2 : base + 1;
+            SheetHelper.faerbeZeilenAbwechselnd(sheet,
+                    RangePosition.from(base, ERSTE_DATEN_ZEILE, letzteSpalteImBlock,
+                            ERSTE_DATEN_ZEILE + zeilenProBlock - 1),
+                    geradeFarbe, ungeradeFarbe);
+        }
     }
 }
