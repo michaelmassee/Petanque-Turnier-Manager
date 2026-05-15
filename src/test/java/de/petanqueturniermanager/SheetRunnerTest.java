@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 
 import com.sun.star.frame.XStorable;
 import com.sun.star.sheet.XCalculatable;
+import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
@@ -45,6 +46,10 @@ public class SheetRunnerTest {
 		var xStorableMock = Mockito.mock(XStorable.class);
 		Mockito.when(xStorableMock.getLocation()).thenReturn("");
 		Mockito.when(workingSpreadsheetMock.getXStorable()).thenReturn(xStorableMock);
+		// Dokument mocken: SheetRunner.isDocumentAlive() prüft != null + getSheets()
+		// (Mock liefert null → kein DisposedException → gilt als „alive")
+		var xDocMock = Mockito.mock(XSpreadsheetDocument.class);
+		Mockito.when(workingSpreadsheetMock.getWorkingSpreadsheetDocument()).thenReturn(xDocMock);
 
 		testRunner = new TestSheetRunner(workingSpreadsheetMock, TurnierSystem.KEIN, "TestPrefix", processBoxMock);
 	}
