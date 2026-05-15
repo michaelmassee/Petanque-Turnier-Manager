@@ -10,6 +10,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.lang.DisposedException;
+import com.sun.star.lang.EventObject;
+import com.sun.star.lang.XComponent;
+import com.sun.star.lang.XEventListener;
 import com.sun.star.sheet.XCalculatable;
 import com.sun.star.uno.XComponentContext;
 
@@ -19,6 +23,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -64,6 +69,21 @@ public abstract class SheetRunner extends Thread {
 	}
 
 	private volatile boolean backupDocumentAfterRun;
+
+	/**
+	 * Wird {@code true}, sobald das Dokument während der Laufzeit des Runners disposed wird
+	 * (entweder via UNO-Disposing-Listener oder durch eine gefangene {@link DisposedException}).
+	 * Verhindert weitere UNO-Aufrufe auf das tote Proxy-Objekt.
+	 */
+	private volatile boolean documentDisposed = false;
+
+	private final XEventListener disposingListener = new XEventListener() {
+		@Override
+		public void disposing(EventObject event) {
+			documentDisposed = true;
+			logger.debug("Dokument disposed während SheetRunner läuft");
+		}
+	};
 
 	protected SheetRunner(WorkingSpreadsheet workingSpreadsheet, TurnierSystem spielSystem, String logPrefix) {
 		this.workingSpreadsheet = checkNotNull(workingSpreadsheet, "WorkingSpreadsheet==null");
@@ -144,6 +164,7 @@ public abstract class SheetRunner extends Thread {
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
+			registerDisposingListener();
 			koordinator.setRunner(this);
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
@@ -152,11 +173,17 @@ public abstract class SheetRunner extends Thread {
 				if (koordinatorVorgekoppelt && !silentBackground) {
 					processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
 				}
-				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()) {
+				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
+						&& isDocumentAlive()) {
 					updateKonfigurationSheet();
 				}
-				doRun();
-				WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+				if (isDocumentAlive()) {
+					doRun();
+					WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+				}
+			} catch (DisposedException e) {
+				documentDisposed = true;
+				logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
 			} catch (GenerateException e) {
 				handleGenerateException(e);
 			} catch (Exception e) {
@@ -168,7 +195,9 @@ public abstract class SheetRunner extends Thread {
 				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
 				koordinator.setRunner(null);
 				koordinator.benachrichtigeListener(); // Menü reaktivieren
-				if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
+				if (documentDisposed) {
+					logger.debug("SheetRunner-Cleanup: Dokument bereits disposed, keine UI-Updates");
+				} else if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
 					// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
 					if (isFehler) {
 						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
@@ -179,16 +208,29 @@ public abstract class SheetRunner extends Thread {
 					// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
 					processBox().info(I18n.get("processbox.fertig.status"));
 				}
-				getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
-			}
-			try {
-				autoSave();
-				if (!isFehler && backupDocumentAfterRun) {
-					backUpDocument("2"); // after run
+				if (isDocumentAlive()) {
+					try {
+						getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
+					} catch (DisposedException e) {
+						documentDisposed = true;
+						logger.debug("Dokument disposed bei enableAutomaticCalculation", e);
+					}
 				}
-			} catch (Exception e) {
-				getLogger().warn("Fehler bei Post-Run-Operationen: " + e.getMessage(), e);
 			}
+			if (isDocumentAlive()) {
+				try {
+					autoSave();
+					if (!isFehler && backupDocumentAfterRun) {
+						backUpDocument("2"); // after run
+					}
+				} catch (DisposedException e) {
+					documentDisposed = true;
+					logger.debug("Dokument disposed während Post-Run-Operationen", e);
+				} catch (Exception e) {
+					getLogger().warn("Fehler bei Post-Run-Operationen: " + e.getMessage(), e);
+				}
+			}
+			unregisterDisposingListener();
 
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)
@@ -234,6 +276,55 @@ public abstract class SheetRunner extends Thread {
 	private void backUpDocument(String backupPrefix) {
 		if (GlobalProperties.get().isCreateBackup()) {
 			BackUp.from(workingSpreadsheet).prefix1(backupPrefix).prefix2(logPrefix).doBackUp();
+		}
+	}
+
+	/**
+	 * Prüft, ob das zugrundeliegende UNO-Dokument noch lebt. Kombiniert den intern via
+	 * Disposing-Listener gesetzten Flag mit einem leichten UNO-Probe-Aufruf, damit auch
+	 * Dispose-Ereignisse erkannt werden, die zwischen Listener-Registrierung und Lauf
+	 * passieren oder bei denen der Listener nicht zustande kam.
+	 */
+	private boolean isDocumentAlive() {
+		if (documentDisposed) {
+			return false;
+		}
+		try {
+			var doc = workingSpreadsheet.getWorkingSpreadsheetDocument();
+			if (doc == null) {
+				return false;
+			}
+			doc.getSheets();
+			return true;
+		} catch (DisposedException e) {
+			documentDisposed = true;
+			return false;
+		}
+	}
+
+	private void registerDisposingListener() {
+		try {
+			XComponent xComp = Lo.qi(XComponent.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+			if (xComp != null) {
+				xComp.addEventListener(disposingListener);
+			}
+		} catch (DisposedException e) {
+			documentDisposed = true;
+		} catch (Exception e) {
+			logger.debug("Konnte Disposing-Listener nicht registrieren", e);
+		}
+	}
+
+	private void unregisterDisposingListener() {
+		try {
+			XComponent xComp = Lo.qi(XComponent.class, workingSpreadsheet.getWorkingSpreadsheetDocument());
+			if (xComp != null) {
+				xComp.removeEventListener(disposingListener);
+			}
+		} catch (DisposedException e) {
+			// Dokument bereits weg – nichts zu tun
+		} catch (Exception e) {
+			logger.debug("Konnte Disposing-Listener nicht entfernen", e);
 		}
 	}
 
