@@ -64,6 +64,8 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         }
     }
 
+    private static final int VERSION_UPDATE_TEXT_COLOR = 0xFF0000;
+
     @Override
     protected void felderHinzufuegen() {
         XControl versionControl = GuiFactory.createLabel(getGuiFactoryCreateParam(), getPluginVersion(),
@@ -72,6 +74,7 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
             return;
         }
         versionLabel = Lo.qi(XFixedText.class, versionControl);
+        versionTextFarbeAktualisieren(versionControl);
         getLayout().addLayout(new ControlLayout(versionControl), 1);
 
         XControl turnierSystemControl = GuiFactory.createLabel(getGuiFactoryCreateParam(),
@@ -269,9 +272,42 @@ public class InfoSidebarContent extends BaseSidebarContent implements TimerListe
         if (label != null) {
             try {
                 label.setText(getPluginVersion());
+                versionTextFarbeAktualisieren(Lo.qi(XControl.class, label));
             } catch (Exception e) {
                 logger.error("Fehler beim Aktualisieren des Versions-Labels", e);
             }
+        }
+    }
+
+    private void versionTextFarbeAktualisieren(XControl control) {
+        if (control == null) {
+            return;
+        }
+        try {
+            var modell = control.getModel();
+            if (isVersionUpdateVerfuegbar()) {
+                var props = Lo.qi(XPropertySet.class, modell);
+                if (props != null) {
+                    props.setPropertyValue("TextColor", Integer.valueOf(VERSION_UPDATE_TEXT_COLOR));
+                }
+            } else {
+                var state = Lo.qi(com.sun.star.beans.XPropertyState.class, modell);
+                if (state != null) {
+                    state.setPropertyToDefault("TextColor");
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Fehler beim Setzen der Versions-Textfarbe", e);
+        }
+    }
+
+    private boolean isVersionUpdateVerfuegbar() {
+        try {
+            var service = ReleaseUpdateService.get();
+            return service.isUpdateVerfuegbar()
+                    || GlobalProperties.get().isNewVersionCheckImmerTrue();
+        } catch (IllegalStateException e) {
+            return false;
         }
     }
 

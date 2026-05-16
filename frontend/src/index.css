@@ -53,6 +53,11 @@ td {
   border-top: 1px solid #ddd;
 }
 
+#signatur.signatur--links {
+  right: auto;
+  left: 0;
+}
+
 #signatur img {
   display: block;
   height: 40px;

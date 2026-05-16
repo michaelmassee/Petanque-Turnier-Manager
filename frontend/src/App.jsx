@@ -415,7 +415,7 @@ export default function App() {
   return (
     <>
       {ViewComponent ? <ViewComponent state={state} /> : <LeereAnsicht />}
-      {mitSignatur && <Signatur />}
+      {mitSignatur && <Signatur links={viewKey === 'composite'} />}
       <VerbindungsStatus verbunden={verbunden} i18n={i18n} />
     </>
   );
@@ -437,9 +437,9 @@ function VerbindungsStatus({ verbunden, i18n }) {
   );
 }
 
-function Signatur() {
+function Signatur({ links = false }) {
   return (
-    <div id="signatur">
+    <div id="signatur" className={links ? 'signatur--links' : undefined}>
       <a
         href="https://michaelmassee.github.io/Petanque-Turnier-Manager/"
         target="_blank"
