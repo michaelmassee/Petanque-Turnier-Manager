@@ -35,7 +35,7 @@ public class StaticSheetResolver implements SheetResolver {
                 return Optional.empty();
             }
             XSpreadsheets sheets = doc.getSheets();
-            if (!sheets.hasByName(sheetName)) {
+            if (sheets == null || !sheets.hasByName(sheetName)) {
                 return Optional.empty();
             }
             return Optional.ofNullable(Lo.qi(XSpreadsheet.class, sheets.getByName(sheetName)));
