@@ -45,11 +45,13 @@ public class WorkingSpreadsheet {
 
 	public WorkingSpreadsheet(XComponentContext xContext, XSpreadsheetDocument xSpreadsheetDocument) {
 		XModel xModel = checkNotNull(Lo.qi(XModel.class, checkNotNull(xSpreadsheetDocument)), "XModel==null");
-		XSpreadsheetView xSpreadsheetView = Lo.qi(XSpreadsheetView.class, xModel.getCurrentController());
+		// Controller/View dürfen null sein – z.B. wenn die Sidebar auf einem Frame initialisiert
+		// wird, dessen aktueller Controller (noch) keine XSpreadsheetView ist (Druckvorschau,
+		// partiell initialisierte View). Konsistent mit dem no-arg-Konstruktor.
 		this.xContext = checkNotNull(xContext);
-		workingSpreadsheetDocument = checkNotNull(xSpreadsheetDocument);
-		workingSpreadsheetView = checkNotNull(xSpreadsheetView);
-		xController = checkNotNull(xModel.getCurrentController(), "Controller == null");
+		workingSpreadsheetDocument = xSpreadsheetDocument;
+		xController = xModel.getCurrentController();
+		workingSpreadsheetView = Lo.qi(XSpreadsheetView.class, xController);
 	}
 
 	/**
