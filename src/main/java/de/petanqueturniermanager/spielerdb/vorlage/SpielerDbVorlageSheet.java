@@ -7,8 +7,6 @@ import com.sun.star.awt.FontWeight;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.XCellRange;
-import com.sun.star.util.CellProtection;
-import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -84,10 +82,8 @@ public final class SpielerDbVorlageSheet {
         schreibeHeader(ws, sheet);
         formatiereHeader(sheet);
         setzeSpaltenbreiten(sh, sheet);
-        gebeDatenbereichFrei(sheet);
         sh.setActiveSheet(sheet);
         freezeKopfzeile(sheet, ws);
-        schuetzeSheet(sheet);
         return sheet;
     }
 
@@ -136,43 +132,11 @@ public final class SpielerDbVorlageSheet {
         sh.setColumnWidth(sheet, SPALTE_FEHLERURSACHE,  SPALTENBREITE_FEHLER);
     }
 
-    /**
-     * Gibt den Datenbereich (Zeilen ab 2) zur Bearbeitung frei, sodass nach
-     * dem anschließenden Sheet-Schutz nur die Header-Zeile gesperrt bleibt.
-     * Status- und Fehlerursache-Spalten werden mit freigegeben, damit das Tool
-     * sie nach dem Abgleich aktualisieren kann (Sheet-Schutz blockiert nur
-     * UI-seitiges Editieren, nicht das programmatische Schreiben — die
-     * Freigabe erlaubt dem User aber auch manuelle Korrekturen, falls nötig).
-     */
-    private static void gebeDatenbereichFrei(XSpreadsheet sheet) {
-        try {
-            XCellRange daten = sheet.getCellRangeByPosition(SPALTE_VORNAME, HEADER_ZEILE + 1,
-                    SPALTE_FEHLERURSACHE, MAX_DATEN_ZEILE);
-            XPropertySet props = Lo.qi(XPropertySet.class, daten);
-            CellProtection cp = new CellProtection();
-            cp.IsLocked = false;
-            props.setPropertyValue("CellProtection", cp);
-        } catch (com.sun.star.uno.Exception e) {
-            logger.warn("Zellschutz-Freigabe Datenbereich fehlgeschlagen: {}", e.getMessage());
-        }
-    }
-
     private static void freezeKopfzeile(XSpreadsheet sheet, WorkingSpreadsheet ws) {
         try {
             SheetFreeze.from(sheet, ws).anzZeilen(1).doFreeze();
         } catch (RuntimeException e) {
             logger.warn("Freeze Row 1 fehlgeschlagen: {}", e.getMessage());
-        }
-    }
-
-    private static void schuetzeSheet(XSpreadsheet sheet) {
-        try {
-            XProtectable prot = Lo.qi(XProtectable.class, sheet);
-            if (prot != null && !prot.isProtected()) {
-                prot.protect("");
-            }
-        } catch (RuntimeException e) {
-            logger.warn("Sheet-Schutz konnte nicht aktiviert werden: {}", e.getMessage());
         }
     }
 }

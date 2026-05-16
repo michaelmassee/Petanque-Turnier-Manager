@@ -11,17 +11,22 @@ import java.util.Objects;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.container.NoSuchElementException;
 import com.sun.star.container.XNameContainer;
+import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.lang.XMultiServiceFactory;
+import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.style.XStyleFamiliesSupplier;
 import com.sun.star.uno.Exception;
+import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
-import de.petanqueturniermanager.helper.sheet.SheetHelper;
 
 public class CellStyleHelper {
 
@@ -83,6 +88,12 @@ public class CellStyleHelper {
 	private void applyAufDokument(XSpreadsheetDocument currentSpreadsheetDocument) {
 		var styleName = cellStyleDef.getName();
 
+		// LO-Einschränkung (sc/source/ui/unoobj/styleuno.cxx): Zellstile können nicht
+		// geändert werden, solange irgendein Sheet im Doc tab-geschützt ist. Daher
+		// alle Sheets mit leerem Passwort temporär entsperren, Style schreiben,
+		// danach Schutz wiederherstellen. Passwortgeschützte Sheets (durch User)
+		// bleiben gesperrt – dort logged der Catch-Zweig wie zuvor.
+		var temporaerEntsperrt = entsperreAlleSheetsMitLeeremPasswort(currentSpreadsheetDocument);
 		try {
 			var xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			var xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
@@ -111,7 +122,7 @@ public class CellStyleHelper {
 				}
 			}
 		} catch (RuntimeException e) {
-			if (SheetHelper.istIrgendeinSheetGeschuetzt(currentSpreadsheetDocument)) {
+			if (!temporaerEntsperrt.isEmpty()) {
 				getLogger().warn(
 						"Zellstil '{}' konnte nicht gesetzt werden – LO-Einschränkung: " +
 						"Zellstile können nicht geändert werden, solange ein Sheet im Dokument " +
@@ -122,6 +133,48 @@ public class CellStyleHelper {
 			}
 		} catch (Exception e) {
 			getLogger().error(e.getMessage(), e);
+		} finally {
+			schuetzeWiederMitLeeremPasswort(temporaerEntsperrt);
+		}
+	}
+
+	/**
+	 * Entsperrt alle aktuell mit leerem Passwort geschützten Sheets im Dokument
+	 * und gibt sie zur Wiederherstellung des Schutzes zurück.
+	 * Sheets mit echtem Passwort bleiben unverändert gesperrt.
+	 */
+	private List<XProtectable> entsperreAlleSheetsMitLeeremPasswort(XSpreadsheetDocument doc) {
+		List<XProtectable> entsperrt = new ArrayList<>();
+		var sheets = doc.getSheets();
+		for (var name : sheets.getElementNames()) {
+			try {
+				var xSheet = Lo.qi(XSpreadsheet.class, sheets.getByName(name));
+				var xProt = Lo.qi(XProtectable.class, xSheet);
+				if (xProt != null && xProt.isProtected()) {
+					try {
+						xProt.unprotect("");
+						// Verifizieren: bei Passwortschutz schlägt unprotect("") still fehl
+						if (!xProt.isProtected()) {
+							entsperrt.add(xProt);
+						}
+					} catch (RuntimeException e) {
+						// Sheet mit Passwort – überspringen, bleibt geschützt
+					}
+				}
+			} catch (NoSuchElementException | WrappedTargetException e) {
+				// Sheet nicht zugreifbar – überspringen
+			}
+		}
+		return entsperrt;
+	}
+
+	private void schuetzeWiederMitLeeremPasswort(List<XProtectable> sheets) {
+		for (var xProt : sheets) {
+			try {
+				xProt.protect("");
+			} catch (RuntimeException e) {
+				getLogger().warn("Sheet-Schutz konnte nicht wiederhergestellt werden: {}", e.getMessage());
+			}
 		}
 	}
 
