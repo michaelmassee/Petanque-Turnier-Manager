@@ -455,7 +455,9 @@ public final class WebServerManager implements TimerListener {
                         String cachedJson = null;
                         String pushJson = null;
                         if (!alleInitPanels.isEmpty()) {
-                            int version = compositeVersionen.get(port).incrementAndGet();
+                            int version = compositeVersionen
+                                    .computeIfAbsent(port, p -> new AtomicInteger(0))
+                                    .incrementAndGet();
                             cachedJson = GSON.toJson(CompositeSseNachricht.init(
                                     version, alleInitPanels, neueWurzel, e.zoom(), e.mitHeaderFooter()));
                             // Sind nicht alle Panels im Cache (geänderte sheetConfig), würde ein
@@ -848,7 +850,9 @@ public final class WebServerManager implements TimerListener {
                 return;
             }
 
-            int version = compositeVersionen.get(port).incrementAndGet();
+            int version = compositeVersionen
+                    .computeIfAbsent(port, p -> new AtomicInteger(0))
+                    .incrementAndGet();
 
             // Init-Cache mit vollem State aller Panels befüllen
             var alleInitPanels = new ArrayList<CompositePanelNachricht>();
