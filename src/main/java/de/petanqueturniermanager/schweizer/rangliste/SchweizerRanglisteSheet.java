@@ -28,10 +28,7 @@ import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.cellvalue.properties.CellProperties;
 import de.petanqueturniermanager.helper.cellvalue.properties.ColumnProperties;
@@ -173,15 +170,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	@Override
 	public void doRun() throws GenerateException {
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(getTurnierSystem())
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-		}
 		doRunIntern();
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(getTurnierSystem())
-					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-		}
 	}
 
 	private void doRunIntern() throws GenerateException {

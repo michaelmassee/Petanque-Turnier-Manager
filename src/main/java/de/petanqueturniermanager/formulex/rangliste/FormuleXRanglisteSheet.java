@@ -44,8 +44,6 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.RanglisteGeradeUngeradeFormatHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
@@ -53,7 +51,6 @@ import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Erstellt die Rangliste für das Formule X Turniersystem.
@@ -111,15 +108,7 @@ public class FormuleXRanglisteSheet extends SheetRunner implements IRangliste, I
 
     @Override
     public void doRun() throws GenerateException {
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-        }
         doRunIntern();
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-        }
     }
 
     private void doRunIntern() throws GenerateException {

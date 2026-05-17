@@ -17,13 +17,10 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Erstellung 26.03.2024 / Michael Massee
@@ -44,15 +41,7 @@ public class SchweizerSpielrundeSheetNaechste extends SchweizerAbstractSpielrund
 	public void doRun() throws GenerateException {
 		getxCalculatable().enableAutomaticCalculation(false); // speed up
 		processBoxinfo("processbox.naechste.spielrunde", getSpielRundeNr().getNr());
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(getTurnierSystem())
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-		}
 		naechsteSpielrundeEinfuegen();
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(getTurnierSystem())
-					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-		}
 	}
 
 	public boolean naechsteSpielrundeEinfuegen() throws GenerateException {

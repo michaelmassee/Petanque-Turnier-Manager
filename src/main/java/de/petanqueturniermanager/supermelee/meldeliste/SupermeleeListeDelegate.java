@@ -39,9 +39,6 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -292,11 +289,6 @@ class SupermeleeListeDelegate implements MeldeListeKonstanten {
 		sheet.getSheetHelper().setPropertiesInRange(xSpreadSheet, spRange, editierbareProps);
 		sheet.getSheetHelper().setPropertiesInRange(xSpreadSheet, spieltagRange, editierbareProps);
 
-		// Wenn Turnier-Modus aktiv: Blattschutz neu anwenden damit neue Bereiche korrekt freigegeben werden
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
-					k -> BlattschutzManager.get().schuetzen(k, sheet.getWorkingSpreadsheet()));
-		}
 	}
 
 	/** Liefert den Header-Text für den gegebenen Spieltag, z.B. "Spieltag 1". */

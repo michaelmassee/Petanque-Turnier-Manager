@@ -23,13 +23,10 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.SortHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements ISheet, MeldeListeKonstanten {
 
@@ -176,15 +173,7 @@ public class SchweizerMeldeListeSheetUpdate extends SheetRunner implements IShee
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(getTurnierSystem())
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-		}
 		vollstaendigAktualisieren();
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(getTurnierSystem())
-					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-		}
 	}
 
 	/**

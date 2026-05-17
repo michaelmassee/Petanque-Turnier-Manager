@@ -16,10 +16,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.algorithmen.KaskadenFeldBelegung;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert die Kaskade-Gruppenrangliste ohne Sheet-Neuaufbau: schreibt nur
@@ -62,10 +59,6 @@ public class KaskadeGruppenRanglisteSheetUpdate extends KaskadeGruppenRanglisteS
 	}
 
 	private void updateIntern() throws GenerateException {
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.KASKADE)
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-		}
 		try {
 			XSpreadsheet sheet = getXSpreadSheet();
 			if (sheet == null) {
@@ -83,10 +76,6 @@ public class KaskadeGruppenRanglisteSheetUpdate extends KaskadeGruppenRanglisteS
 			aktualisiereDatenblock(belegungen);
 			getxCalculatable().calculate();
 		} finally {
-			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.KASKADE)
-						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-			}
 		}
 	}
 

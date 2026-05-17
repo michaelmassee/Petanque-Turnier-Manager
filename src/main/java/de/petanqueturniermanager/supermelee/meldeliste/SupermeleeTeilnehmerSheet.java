@@ -29,8 +29,6 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.model.Spieler;
@@ -38,7 +36,6 @@ import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
 
@@ -77,16 +74,8 @@ public class SupermeleeTeilnehmerSheet extends SheetRunner implements ISheet {
     protected void doRun() throws GenerateException {
         setSpielTagNr(getKonfigurationSheet().getAktiveSpieltag());
         meldeliste.setSpielTag(getSpielTagNr());
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-        }
         meldeliste.upDateSheet();
         generate();
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-        }
     }
 
     public void generate() throws GenerateException {

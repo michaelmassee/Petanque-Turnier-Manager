@@ -15,11 +15,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert eine Supermelee Spieltag-Rangliste ohne das Sheet neu zu
@@ -73,37 +69,26 @@ public class SpieltagRanglisteSheetUpdate extends SpieltagRanglisteSheet {
 		}
 		setSpieltagNr(spielTagNr);
 
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		XSpreadsheet sheet = getXSpreadSheet();
+		if (sheet == null) {
+			logger.debug("Spieltag-Rangliste-Sheet fehlt – vollständiger Erstaufbau");
+			new SpieltagRanglisteSheet(getWorkingSpreadsheet(), getSpieltagNr()).doRun();
+			return;
 		}
-		try {
-			XSpreadsheet sheet = getXSpreadSheet();
-			if (sheet == null) {
-				logger.debug("Spieltag-Rangliste-Sheet fehlt – vollständiger Erstaufbau");
-				new SpieltagRanglisteSheet(getWorkingSpreadsheet(), getSpieltagNr()).doRun();
-				return;
-			}
-			processBoxinfo("processbox.rangliste.aktualisieren");
+		processBoxinfo("processbox.rangliste.aktualisieren");
 
-			int anzSpielRunden = getAktuelleSpielrundeSheet().countNumberOfSpielRundenSheets(getSpieltagNr());
-			if (anzSpielRunden < 1) {
-				return;
-			}
-
-			int spielerAnzahl = getSpielerSpalte().getSpielerNrList().size();
-			RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, spielerAnzahl);
-
-			berechnungUndSchreiben(sheet, anzSpielRunden);
-			getxCalculatable().calculate();
-			getRangListeSorter().doSort();
-			getRangListeSpalte().upDateRanglisteSpalte();
-		} finally {
-			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-			}
+		int anzSpielRunden = getAktuelleSpielrundeSheet().countNumberOfSpielRundenSheets(getSpieltagNr());
+		if (anzSpielRunden < 1) {
+			return;
 		}
+
+		int spielerAnzahl = getSpielerSpalte().getSpielerNrList().size();
+		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, spielerAnzahl);
+
+		berechnungUndSchreiben(sheet, anzSpielRunden);
+		getxCalculatable().calculate();
+		getRangListeSorter().doSort();
+		getRangListeSpalte().upDateRanglisteSpalte();
 	}
 
 	private static final class ReentrancyState {

@@ -53,8 +53,6 @@ import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.model.MeleeSpielRunde;
 import de.petanqueturniermanager.model.Spieler;
@@ -67,7 +65,6 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfiguratio
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
@@ -708,10 +705,5 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		sheet.getSheetHelper().setPropertiesInRange(xsheet, ergbenissRange,
 				CellProperties.from().setCellProtection(editierbar));
 
-		// Wenn Turnier-Modus aktiv: Blattschutz neu anwenden damit Ergebnis-Felder korrekt freigegeben werden
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
-					k -> BlattschutzManager.get().schuetzen(k, sheet.getWorkingSpreadsheet()));
-		}
 	}
 }

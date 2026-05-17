@@ -5,11 +5,8 @@ package de.petanqueturniermanager.formulex.spielrunde;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert die aktuelle Formule X Spielrunde (Formatierung und Paarungen neu aufbauen).
@@ -23,10 +20,6 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
     @Override
     protected void doRun() throws GenerateException {
         getxCalculatable().enableAutomaticCalculation(false);
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-        }
 
         SpielRundeNr aktuelleSpielrunde = getKonfigurationSheet().getAktiveSpielRunde();
         processBoxinfo("processbox.aktuelle.spielrunde", aktuelleSpielrunde.getNr());
@@ -35,10 +28,6 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
         TeamMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
 
         if (!canStart(aktiveMeldungen)) {
-            if (TurnierModus.get().istAktiv()) {
-                BlattschutzRegistry.fuer(getTurnierSystem())
-                        .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-            }
             return;
         }
 
@@ -47,9 +36,5 @@ public class FormuleXSpielrundeSheetUpdate extends FormuleXAbstractSpielrundeShe
 
         neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde, akkumulierung);
 
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-        }
     }
 }

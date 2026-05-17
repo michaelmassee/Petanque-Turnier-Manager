@@ -19,9 +19,6 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -176,10 +173,6 @@ public class MeldeListeSheet_NeuerSpieltag extends SheetRunner implements IMelde
 
 		// Blattschutz entfernen: clearContents wird von LO auf gesperrten Zellen lautlos ignoriert.
 		// upDateSheet() → formatDaten() setzt den Schutz danach korrekt neu.
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-		}
 
 		RangePosition cleanUpRange = RangePosition.from(aktuelleSpieltagSpalte(), ERSTE_HEADER_ZEILE,
 				aktuelleSpieltagSpalte(), MeldungenSpalte.MAX_ANZ_MELDUNGEN);

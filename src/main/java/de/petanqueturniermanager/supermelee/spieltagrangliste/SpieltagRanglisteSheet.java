@@ -56,13 +56,10 @@ import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.RundenErgebnis;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.SpieltagErgebnisse;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRangliste {
 
@@ -206,10 +203,6 @@ public class SpieltagRanglisteSheet extends SheetRunner implements ISpielTagRang
 		printBereichDefinieren(footerPos);
 		processBoxinfo("processbox.header.festsetzen");
 		SheetFreeze.from(getTurnierSheet()).anzZeilen(3).anzSpalten(3).doFreeze();
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
-					k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-		}
 	}
 
 	private void printBereichDefinieren(Position footerPos) throws GenerateException {

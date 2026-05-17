@@ -15,10 +15,6 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert die Supermelee Endrangliste ohne Sheet-Neuaufbau: nur der
@@ -63,37 +59,26 @@ public class EndranglisteSheetUpdate extends EndranglisteSheet {
 	}
 
 	private void updateIntern() throws GenerateException {
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
+		XSpreadsheet sheet = getXSpreadSheet();
+		if (sheet == null) {
+			logger.debug("Endrangliste-Sheet fehlt – vollständiger Erstaufbau");
+			new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
+			return;
 		}
-		try {
-			XSpreadsheet sheet = getXSpreadSheet();
-			if (sheet == null) {
-				logger.debug("Endrangliste-Sheet fehlt – vollständiger Erstaufbau");
-				new EndranglisteSheet(getWorkingSpreadsheet()).doRun();
-				return;
-			}
-			processBoxinfo("processbox.rangliste.aktualisieren");
+		processBoxinfo("processbox.rangliste.aktualisieren");
 
-			int anzSpieltage = getAnzahlSpieltage();
-			if (anzSpieltage < 2) {
-				return;
-			}
-
-			int spielerAnzahl = getSpielerSpalte().getSpielerNrList().size();
-			RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, spielerAnzahl);
-
-			berechnungUndSchreiben(sheet);
-			getxCalculatable().calculate();
-			getRangListeSorter().doSort();
-			getRangListeSpalte().upDateRanglisteSpalte();
-		} finally {
-			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE)
-						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-			}
+		int anzSpieltage = getAnzahlSpieltage();
+		if (anzSpieltage < 2) {
+			return;
 		}
+
+		int spielerAnzahl = getSpielerSpalte().getSpielerNrList().size();
+		RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, spielerAnzahl);
+
+		berechnungUndSchreiben(sheet);
+		getxCalculatable().calculate();
+		getRangListeSorter().doSort();
+		getRangListeSpalte().upDateRanglisteSpalte();
 	}
 
 	private static final class ReentrancyState {

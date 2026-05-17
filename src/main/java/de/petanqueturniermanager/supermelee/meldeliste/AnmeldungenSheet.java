@@ -36,10 +36,7 @@ import de.petanqueturniermanager.model.Spieler;
 import de.petanqueturniermanager.model.SpielerMeldungen;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public class AnmeldungenSheet extends SheetRunner implements ISheet {
 	public static final int ERSTE_DATEN_ZEILE = 0;
@@ -185,10 +182,6 @@ public class AnmeldungenSheet extends SheetRunner implements ISheet {
 		}
 
 		printBereichDefinieren(maxMeldungZeile, letzteSpalte);
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.SUPERMELEE).ifPresent(
-					k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-		}
 	}
 
 	private void printBereichDefinieren(int letzteZeile, int letzteSpalte) throws GenerateException {

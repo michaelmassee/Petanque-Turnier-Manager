@@ -52,9 +52,6 @@ import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.ko.konfiguration.IKoBracketKonfiguration;
 import de.petanqueturniermanager.ko.konfiguration.KoKonfigurationSheet;
 import de.petanqueturniermanager.ko.konfiguration.KoSpielbaumTeamAnzeige;
@@ -546,20 +543,12 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 
 	@Override
 	protected void doRun() throws GenerateException {
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.KO)
-					.ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-		}
 		XSpreadsheet meldelisteXSheet = meldeliste.getXSpreadSheet();
 		if (meldelisteXSheet == null) {
 			MessageBox.from(getWorkingSpreadsheet(), MessageBoxTypeEnum.ERROR_OK)
 					.caption(I18n.get("msg.caption.ko.turnierbaum"))
 					.message(I18n.get("msg.text.meldeliste.nicht.gefunden"))
 					.show();
-			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.KO)
-						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-			}
 			return;
 		}
 
@@ -571,10 +560,6 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					.caption(I18n.get("msg.caption.ko.rang.fehler"))
 					.message(rangFehler)
 					.show();
-			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.KO)
-						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-			}
 			return;
 		}
 
@@ -584,19 +569,11 @@ public class KoTurnierbaumSheet extends SheetRunner implements ISheet {
 					.caption(I18n.get("msg.caption.ko.turnierbaum"))
 					.message(I18n.get("msg.text.ko.mindestens.2.teams", alleMeldungen.size()))
 					.show();
-			if (TurnierModus.get().istAktiv()) {
-				BlattschutzRegistry.fuer(TurnierSystem.KO)
-						.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-			}
 			return;
 		}
 
 		int gruppenGroesse = getKonfigurationSheet().getGruppenGroesse();
 		erstelleAlleGruppenBaeume(alleMeldungen, gruppenGroesse);
-		if (TurnierModus.get().istAktiv()) {
-			BlattschutzRegistry.fuer(TurnierSystem.KO)
-					.ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-		}
 	}
 
 	private void pruefeUndFragObAlleAktivieren() throws GenerateException {

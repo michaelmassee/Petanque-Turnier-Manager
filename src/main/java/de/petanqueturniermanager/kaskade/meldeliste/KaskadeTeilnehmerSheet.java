@@ -26,13 +26,10 @@ import de.petanqueturniermanager.helper.sheet.DefaultSheetPos;
 import de.petanqueturniermanager.helper.sheet.NewSheet;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadeKonfigurationSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Bereinigte Teilnehmerliste für das Kaskaden-KO-Turniersystem – als Aushang und Webseite.
@@ -72,16 +69,8 @@ public class KaskadeTeilnehmerSheet extends SheetRunner implements ISheet {
 
     @Override
     protected void doRun() throws GenerateException {
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-        }
         meldeliste.upDateSheet();
         generate();
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-        }
     }
 
     public void generate() throws GenerateException {

@@ -12,10 +12,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetUpdate;
 import de.petanqueturniermanager.helper.rangliste.RanglisteUpdateHelper;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
-import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Aktualisiert die Formule X Rangliste ohne das Sheet neu zu erstellen.
@@ -36,10 +33,6 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
 
     @Override
     public void doRun() throws GenerateException {
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().entsperren(k, getWorkingSpreadsheet()));
-        }
 
         XSpreadsheet sheet = getXSpreadSheet();
         if (sheet == null) {
@@ -55,20 +48,12 @@ public class FormuleXRanglisteSheetUpdate extends FormuleXRanglisteSheet {
         TeamMeldungen aktiveMeldungen = meldeliste.getAktiveMeldungen();
         if (aktiveMeldungen == null || aktiveMeldungen.size() == 0) {
             processBoxinfo("processbox.abbruch");
-            if (TurnierModus.get().istAktiv()) {
-                BlattschutzRegistry.fuer(getTurnierSystem())
-                        .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-            }
             return;
         }
 
         RanglisteUpdateHelper.loescheDatenzeilen(this, sheet, aktiveMeldungen.size());
         berechnungUndSchreiben(sheet, meldeliste, aktiveMeldungen);
 
-        if (TurnierModus.get().istAktiv()) {
-            BlattschutzRegistry.fuer(getTurnierSystem())
-                    .ifPresent(k -> BlattschutzManager.get().schuetzen(k, getWorkingSpreadsheet()));
-        }
 
         // Bewusst KEIN setActiveSheet(sheet): Im Listener-Pfad ist der User schon auf der
         // Rangliste; ein zusätzliches setActiveSheet aus dem selectionChanged-Handler heraus
