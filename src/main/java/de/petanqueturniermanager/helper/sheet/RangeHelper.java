@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.cellvalue.properties.RangeProperties;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.i18n.I18n;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 
 /**
@@ -81,6 +82,9 @@ public class RangeHelper {
 		if (xRangetoClear != null) {
 			// --- Sheet operation. ---
 			XSheetOperation xSheetOp = Lo.qi(com.sun.star.sheet.XSheetOperation.class, xRangetoClear);
+			// clearContents mit CellFlags.STYLES löscht Cell-Styles – im Turnier-Modus
+			// muss das Sheet dafür entsperrt sein (Lazy-Trigger im offenen Scope).
+			BlattschutzManager.get().ensureUnprotectedInScope();
 			xSheetOp.clearContents(CellFlags.ANNOTATION | CellFlags.DATETIME | CellFlags.EDITATTR | CellFlags.FORMATTED
 					| CellFlags.FORMULA | CellFlags.HARDATTR | CellFlags.OBJECTS | CellFlags.STRING | CellFlags.STYLES
 					| CellFlags.VALUE);

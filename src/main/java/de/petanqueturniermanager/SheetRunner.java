@@ -29,8 +29,11 @@ import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
 import de.petanqueturniermanager.helper.sheet.io.BackUp;
 import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 public abstract class SheetRunner extends Thread {
 
@@ -177,6 +180,13 @@ public abstract class SheetRunner extends Thread {
 						&& isDocumentAlive()) {
 					updateKonfigurationSheet();
 				}
+				// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
+				// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
+				// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
+				if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
+					BlattschutzRegistry.fuer(turnierSystem)
+							.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
+				}
 				if (isDocumentAlive()) {
 					doRun();
 					WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
@@ -193,6 +203,9 @@ public abstract class SheetRunner extends Thread {
 				getLogger().error(e.getMessage(), e);
 			} finally {
 				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
+				// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
+				// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
+				BlattschutzManager.get().endCommandScope();
 				koordinator.setRunner(null);
 				koordinator.benachrichtigeListener(); // Menü reaktivieren
 				if (documentDisposed) {

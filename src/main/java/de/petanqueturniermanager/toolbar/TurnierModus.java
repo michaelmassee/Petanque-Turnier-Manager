@@ -65,6 +65,11 @@ public class TurnierModus {
         return aktiv;
     }
 
+    /** Nur für Tests: setzt das aktiv-Flag direkt ohne UI-Side-Effects. */
+    public void setAktivForTest(boolean wert) {
+        this.aktiv = wert;
+    }
+
     public void umschalten(WorkingSpreadsheet ws) {
         try {
             var lm = holeLayoutManager(ws);

@@ -25,6 +25,7 @@ import de.petanqueturniermanager.helper.cellstyle.AbstractCellStyleDef;
 import de.petanqueturniermanager.helper.cellstyle.CellStyleHelper;
 import de.petanqueturniermanager.helper.cellstyle.FehlerStyle;
 import de.petanqueturniermanager.helper.position.RangePosition;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 
 public class ConditionalFormatHelper extends BaseHelper {
 	private static final Logger logger = LogManager.getLogger(ConditionalFormatHelper.class);
@@ -162,6 +163,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper styleIsFehler() {
 		FehlerStyle fehlerStyle = new FehlerStyle();
+		BlattschutzManager.get().ensureUnprotectedInScope();
 		CellStyleHelper.from(getISheet(), fehlerStyle).apply();
 		styleName = fehlerStyle.getName();
 		return this;
@@ -169,6 +171,7 @@ public class ConditionalFormatHelper extends BaseHelper {
 
 	public ConditionalFormatHelper style(AbstractCellStyleDef cellStyleDef) {
 		// add/update Style
+		BlattschutzManager.get().ensureUnprotectedInScope();
 		CellStyleHelper.from(getISheet(), cellStyleDef).apply();
 		styleName = cellStyleDef.getName();
 		return this;
@@ -236,6 +239,9 @@ public class ConditionalFormatHelper extends BaseHelper {
 			aCondition[idx].Name = "StyleName";
 			aCondition[idx].Value = styleName;
 			xEntries.addNew(aCondition);
+			// LO verwirft setPropertyValue("ConditionalFormat") lautlos bei tab-geschütztem Sheet
+			// und löscht dabei den alten Eintrag – Scope sicherstellt dass Sheet entsperrt ist.
+			BlattschutzManager.get().ensureUnprotectedInScope();
 			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
 		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException
 				| PropertyVetoException e) {
