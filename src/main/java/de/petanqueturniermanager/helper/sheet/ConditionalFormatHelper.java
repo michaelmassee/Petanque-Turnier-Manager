@@ -68,6 +68,8 @@ public class ConditionalFormatHelper extends BaseHelper {
 					com.sun.star.sheet.XSheetConditionalEntries.class,
 					xPropSet.getPropertyValue("ConditionalFormat"));
 			xEntries.clear();
+			// LO verwirft setPropertyValue("ConditionalFormat") lautlos bei tab-geschütztem Sheet
+			BlattschutzManager.get().ensureUnprotectedInScope();
 			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
