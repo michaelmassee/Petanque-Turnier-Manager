@@ -68,12 +68,33 @@
       font-size: 0.7rem;
       color: #333;
     }
+
+    #snooze {
+      display: none;
+      margin-top: 1.5em;
+      padding: 0.6em 1.6em;
+      font-size: clamp(1rem, 2.5vw, 1.6rem);
+      font-family: inherit;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #883300;
+      border: 2px solid #ff6622;
+      border-radius: 0.4em;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    #snooze:hover  { background: #aa4400; }
+    #snooze:active { background: #662200; }
+    body.zustand-beendet #snooze { display: inline-block; }
+    body.snoozed #snooze         { display: none; }
   </style>
 </head>
 <body class="zustand-inaktiv">
   <div id="bezeichnung"></div>
   <div id="timer">--:--</div>
   <div id="status">Bereit</div>
+  <button id="snooze" type="button">Snooze</button>
   <div id="verbindung">⬤</div>
 
   <script>
@@ -81,8 +102,10 @@
     const statusEl      = document.getElementById('status');
     const bezeichnungEl = document.getElementById('bezeichnung');
     const verbindungEl  = document.getElementById('verbindung');
+    const snoozeEl      = document.getElementById('snooze');
 
-    let beepGespielt = false;
+    const GONG_INTERVAL_MS = 5000;
+    let gongTimer = null;
     let esQuelle = null;
 
     function verbinde() {
@@ -121,37 +144,41 @@
       }
 
       const zustand = (d.zustand || 'INAKTIV').toLowerCase();
-      document.body.className = 'zustand-' + zustand;
+      const klassen = ['zustand-' + zustand];
+      if (d.snoozed) klassen.push('snoozed');
+      document.body.className = klassen.join(' ');
 
-      if (zustand === 'beendet') {
-        if (!beepGespielt) {
-          beepGespielt = true;
-          spieleBeep();
-        }
+      if (zustand === 'beendet' && !d.snoozed) {
+        startGongLoop();
       } else {
-        beepGespielt = false;
+        stopGongLoop();
       }
     }
+
+    const gong = new Audio('gong.wav');
 
     function spieleBeep() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        for (let i = 0; i < 3; i++) {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.type = 'square';
-          osc.frequency.value = 880;
-          gain.gain.setValueAtTime(0.3, ctx.currentTime + i * 0.4);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.4 + 0.35);
-          osc.start(ctx.currentTime + i * 0.4);
-          osc.stop(ctx.currentTime + i * 0.4 + 0.35);
-        }
-      } catch (e) {
-        console.log('Audio nicht verfügbar:', e);
+      gong.currentTime = 0;
+      gong.play().catch(e => console.log('Audio nicht verfügbar:', e));
+    }
+
+    function startGongLoop() {
+      if (gongTimer !== null) return;
+      spieleBeep();
+      gongTimer = setInterval(spieleBeep, GONG_INTERVAL_MS);
+    }
+
+    function stopGongLoop() {
+      if (gongTimer !== null) {
+        clearInterval(gongTimer);
+        gongTimer = null;
       }
     }
+
+    snoozeEl.addEventListener('click', () => {
+      stopGongLoop();
+      fetch('/snooze', { method: 'POST' }).catch(e => console.log('Snooze-Request fehlgeschlagen:', e));
+    });
 
     verbinde();
   </script>

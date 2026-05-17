@@ -46,6 +46,7 @@ public class TimerManager {
     private volatile String bezeichnung = "";
     private volatile String hintergrundFarbeHex = "#000000";
     private volatile ScheduledFuture<?> tickTask;
+    private volatile boolean snoozed;
 
     private TimerManager(XComponentContext xContext) {
         this.xContext = xContext;
@@ -66,7 +67,9 @@ public class TimerManager {
         if (instanz == null) {
             synchronized (TimerManager.class) {
                 if (instanz == null) {
-                    instanz = new TimerManager(xContext);
+                    var tm = new TimerManager(xContext);
+                    tm.addListener(new TimerSoundPlayer());
+                    instanz = tm;
                     logger.debug("TimerManager initialisiert");
                 }
             }
@@ -137,6 +140,7 @@ public class TimerManager {
         stoppeTickTask();
         this.bezeichnung = bezeichnung != null ? bezeichnung : "";
         this.hintergrundFarbeHex = "#" + String.format("%06x", hintergrundFarbe & 0xFFFFFF);
+        this.snoozed = false;
         try {
             WebServerManager.get().timerServerBesorgen(port);
         } catch (IOException e) {
@@ -198,10 +202,25 @@ public class TimerManager {
         stoppeTickTask();
         zustand = TimerZustand.INAKTIV;
         bezeichnung = "";
+        snoozed = false;
         // hintergrundFarbeHex wird bewusst nicht zurückgesetzt –
         // die zuletzt gewählte Farbe bleibt im INAKTIV-Zustand sichtbar.
-        emittiere(new TimerState("--:--", 0, TimerZustand.INAKTIV, "", hintergrundFarbeHex));
+        emittiere(new TimerState("--:--", 0, TimerZustand.INAKTIV, "", hintergrundFarbeHex, false));
         logger.debug("Timer gestoppt");
+    }
+
+    /**
+     * Schaltet den wiederholten End-Gong stumm. Wirkt nur, solange der Zustand
+     * {@link TimerZustand#BEENDET} ist – beim nächsten {@link #starten} wird
+     * die Flagge automatisch wieder zurückgesetzt.
+     */
+    public synchronized void snooze() {
+        if (zustand != TimerZustand.BEENDET || snoozed) {
+            return;
+        }
+        snoozed = true;
+        emittiere(aktuellerState());
+        logger.debug("Timer-Snooze aktiviert");
     }
 
     /** Liefert den aktuellen {@link TimerZustand}. */
@@ -227,7 +246,7 @@ public class TimerManager {
             }
         }
 
-        emittiere(new TimerState(formatiere(verbleibend), verbleibend, neuerZustand, bezeichnung, hintergrundFarbeHex));
+        emittiere(new TimerState(formatiere(verbleibend), verbleibend, neuerZustand, bezeichnung, hintergrundFarbeHex, snoozed));
     }
 
     // ── Hilfsmethoden ─────────────────────────────────────────────────────────
@@ -254,7 +273,7 @@ public class TimerManager {
         long verbleibend = zustand == TimerZustand.PAUSIERT
                 ? restNanos / 1_000_000_000L
                 : Math.max(0, (endNanos - System.nanoTime()) / 1_000_000_000L);
-        return new TimerState(formatiere(verbleibend), verbleibend, zustand, bezeichnung, hintergrundFarbeHex);
+        return new TimerState(formatiere(verbleibend), verbleibend, zustand, bezeichnung, hintergrundFarbeHex, snoozed);
     }
 
     /**

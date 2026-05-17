@@ -141,6 +141,35 @@
                     </prop>
                 </node>
 
+                <!-- ****************************************************************** -->
+                <!-- m7: Separator -->
+                <node oor:name="m7" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>private:separator</value>
+                    </prop>
+                </node>
+
+                <!-- ****************************************************************** -->
+                <!-- m8: Snooze (Gong stummschalten) -->
+                <node oor:name="m8" oor:op="replace">
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>ptm:timer_snooze</value>
+                    </prop>
+                    <prop oor:name="Title">
+                        <value xml:lang="de">Snooze (Gong stumm)</value>
+                        <value xml:lang="en">Snooze (silence gong)</value>
+                        <value xml:lang="es">Snooze (silenciar gong)</value>
+                        <value xml:lang="fr">Snooze (couper le gong)</value>
+                        <value xml:lang="nl">Snooze (gong dempen)</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                </node>
+
             </node>
         </node>
 
@@ -217,6 +246,20 @@
                 </prop>
                 <prop oor:name="ImageBigURL" oor:type="xs:string">
                     <value>%origin%/images/toolbar-timer-minus1.png</value>
+                </prop>
+            </node>
+        </node>
+
+        <node oor:name="de.petanqueturniermanager.toolbar.timer.snooze" oor:op="replace">
+            <prop oor:name="URL" oor:type="xs:string">
+                <value>ptm:timer_snooze</value>
+            </prop>
+            <node oor:name="UserDefinedImages">
+                <prop oor:name="ImageSmallURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-snooze.png</value>
+                </prop>
+                <prop oor:name="ImageBigURL" oor:type="xs:string">
+                    <value>%origin%/images/toolbar-timer-snooze.png</value>
                 </prop>
             </node>
         </node>

@@ -296,6 +296,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TIMER_STOPPEN          = "timer_stoppen";
 	public static final String CMD_TIMER_PLUS_MINUTE      = "timer_plus_minute";
 	public static final String CMD_TIMER_MINUS_MINUTE     = "timer_minus_minute";
+	public static final String CMD_TIMER_SNOOZE           = "timer_snooze";
 	// Spieler-DB
 	public static final String CMD_SPIELERDB_OEFFNEN       = "spielerdb_oeffnen";
 	public static final String CMD_SPIELERDB_IN_MELDELISTE = "spielerdb_in_meldeliste";
@@ -957,6 +958,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TIMER_STOPPEN          -> TimerManager.get().stoppen();
 			case CMD_TIMER_PLUS_MINUTE      -> TimerManager.get().zeitAnpassen(+60);
 			case CMD_TIMER_MINUS_MINUTE     -> TimerManager.get().zeitAnpassen(-60);
+			case CMD_TIMER_SNOOZE           -> TimerManager.get().snooze();
 			default -> { return false; }
 		}
 		return true;
@@ -1343,6 +1345,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				 CMD_TIMER_STOPPEN,
 				 CMD_TIMER_PLUS_MINUTE,
 				 CMD_TIMER_MINUS_MINUTE                     -> timerLaeuftOderPausiert();
+			case CMD_TIMER_SNOOZE                           -> timerBeendetUndNichtSnoozed();
 			default -> false;
 			};
 		} catch (Exception e) {
@@ -1428,6 +1431,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private static boolean timerLaeuftOderPausiert() {
 		var zustand = TimerManager.get().getZustand();
 		return zustand == TimerZustand.LAEUFT || zustand == TimerZustand.PAUSIERT;
+	}
+
+	private static boolean timerBeendetUndNichtSnoozed() {
+		var tm = TimerManager.get();
+		return tm.getZustand() == TimerZustand.BEENDET && !tm.getAktuellerZustand().snoozed();
 	}
 
 	static void notifyAllListeners() {

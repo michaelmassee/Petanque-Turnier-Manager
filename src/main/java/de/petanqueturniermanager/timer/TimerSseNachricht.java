@@ -10,6 +10,8 @@ package de.petanqueturniermanager.timer;
  * @param statusText       lokalisierter Status-Text (z.B. "Läuft", "Pausiert", "Zeit abgelaufen!")
  * @param bezeichnung      optionaler Rundenname
  * @param hintergrundFarbe Hintergrundfarbe als Hex-String (z.B. "#1a2b3c")
+ * @param snoozed          {@code true} wenn der Web-Client das wiederholte
+ *                         Gong-Signal stummschalten soll
  */
 public record TimerSseNachricht(
         String anzeige,
@@ -17,5 +19,6 @@ public record TimerSseNachricht(
         String zustand,
         String statusText,
         String bezeichnung,
-        String hintergrundFarbe) {
+        String hintergrundFarbe,
+        boolean snoozed) {
 }

@@ -19,7 +19,7 @@ HAUPT = [
 SPIELTAG = ["toolbar-naechster-spieltag", "toolbar-gesamtrangliste"]
 TIMER = [
     "toolbar-timer-start", "toolbar-timer-pause", "toolbar-timer-stop",
-    "toolbar-timer-plus1", "toolbar-timer-minus1",
+    "toolbar-timer-plus1", "toolbar-timer-minus1", "toolbar-timer-snooze",
 ]
 
 ALL = HAUPT + SPIELTAG + TIMER
@@ -48,6 +48,7 @@ LABELS = {
     "toolbar-timer-stop":         ("Timer stoppen",       "ptm:timer_stoppen"),
     "toolbar-timer-plus1":        ("+1 Minute",           "ptm:timer_plus_minute"),
     "toolbar-timer-minus1":       ("-1 Minute",           "ptm:timer_minus_minute"),
+    "toolbar-timer-snooze":       ("Timer Snooze",        "ptm:timer_snooze"),
 }
 
 # 1. PNGs in allen Größen rendern

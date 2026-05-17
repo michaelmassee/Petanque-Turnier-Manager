@@ -40,8 +40,11 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
     private static final int KEEPALIVE_INTERVALL_SEKUNDEN = 15;
     private static final String CONTENT_TYPE_HTML = "text/html; charset=UTF-8";
     private static final String CONTENT_TYPE_SSE = "text/event-stream; charset=UTF-8";
+    private static final String CONTENT_TYPE_WAV = "audio/wav";
     private static final String TIMER_HTML_RESSOURCE =
             "de/petanqueturniermanager/timer/timer.html";
+    private static final String GONG_RESSOURCE =
+            "de/petanqueturniermanager/timer/gong.wav";
 
     private static final Gson GSON = new Gson();
 
@@ -64,6 +67,8 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
         httpServer = HttpServer.create(new InetSocketAddress(port), 10);
         httpServer.setExecutor(Executors.newCachedThreadPool());
         httpServer.createContext("/events", this::handleEvents);
+        httpServer.createContext("/gong.wav", this::handleGong);
+        httpServer.createContext("/snooze", this::handleSnooze);
         httpServer.createContext("/", this::handleRoot);
         keepAliveExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             var t = new Thread(r, "PTM-Timer-WebServer-KeepAlive-" + port);
@@ -154,6 +159,44 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
         }
     }
 
+    private void handleGong(HttpExchange exchange) throws IOException {
+        if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        InputStream ressource = getClass().getClassLoader().getResourceAsStream(GONG_RESSOURCE);
+        if (ressource == null) {
+            logger.warn("gong.wav nicht gefunden im Classpath: {}", GONG_RESSOURCE);
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+        try (InputStream in = ressource) {
+            byte[] body = in.readAllBytes();
+            exchange.getResponseHeaders().set("Content-Type", CONTENT_TYPE_WAV);
+            exchange.getResponseHeaders().set("Cache-Control", "public, max-age=3600");
+            exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+            exchange.sendResponseHeaders(200, body.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(body);
+            }
+        }
+    }
+
+    private void handleSnooze(HttpExchange exchange) throws IOException {
+        if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(405, -1);
+            return;
+        }
+        try {
+            TimerManager.get().snooze();
+        } catch (IllegalStateException e) {
+            logger.warn("Snooze ignoriert – TimerManager nicht initialisiert");
+        }
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(204, -1);
+        exchange.close();
+    }
+
     private void handleEvents(HttpExchange exchange) throws IOException {
         if (!"GET".equalsIgnoreCase(exchange.getRequestMethod())) {
             exchange.sendResponseHeaders(405, -1);
@@ -188,7 +231,8 @@ public class TimerWebServerInstanz implements TimerListener, SseElternInstanz {
                 state.zustand().name(),
                 statusText(state.zustand()),
                 state.bezeichnung(),
-                state.hintergrundFarbe());
+                state.hintergrundFarbe(),
+                state.snoozed());
         return GSON.toJson(nachricht);
     }
 

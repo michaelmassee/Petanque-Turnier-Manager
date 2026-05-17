@@ -390,6 +390,18 @@ ICONS["toolbar-timer-minus1"] = svg(f'''
   <path d="M 47 52 L 57 52" stroke="{C['paper']}" stroke-width="{S*1.8}" stroke-linecap="round"/>
 ''')
 
+# ============================================================
+# 24. TIMER SNOOZE — Stoppuhr mit blauem Z-Badge (Gong stummschalten)
+# ============================================================
+ICONS["toolbar-timer-snooze"] = svg(f'''
+  {stopwatch_base()}
+  <!-- Snooze-Badge rechts unten: weisses "Z" auf blauem Kreis -->
+  <circle cx="52" cy="52" r="10" fill="{C['info']}" stroke="{C['ink']}" stroke-width="{S}"/>
+  <path d="M 47.5 47.5 L 56.5 47.5 L 47.5 56.5 L 56.5 56.5"
+        fill="none" stroke="{C['paper']}" stroke-width="{S*1.8}"
+        stroke-linecap="round" stroke-linejoin="round"/>
+''')
+
 
 # ============================================================
 # SCHREIBEN
