@@ -16,6 +16,10 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.formulex.spielrunde.FormuleXAbstractSpielrundeSheet;
@@ -92,6 +96,7 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
      */
     private record Szenario(
             String bezeichnung,
+            TurnierSystem turnierSystem,
             TurnierGenerator generator,
             UpdaterAktion updaterAktion,
             String ranglisteSchluessel,
@@ -124,6 +129,7 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
         // 16 Teams, 3 Runden → 8 Spiele × 3 = 24 Siege
         return new Szenario(
                 "Schweizer",
+                TurnierSystem.SCHWEIZER,
                 ws -> new SchweizerTurnierTestDaten(ws).generate(),
                 ws -> new SchweizerRanglisteSheetUpdate(ws).doRun(),
                 SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
@@ -143,6 +149,7 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
         // 12 Teams, 3 Vorrunden → 6 Spiele × 3 = 18 Siege
         return new Szenario(
                 "Maastrichter",
+                TurnierSystem.MAASTRICHTER,
                 ws -> new MaastrichterTurnierTestDaten(ws).generate(),
                 ws -> new MaastrichterVorrundenRanglisteSheetUpdate(ws).doRun(),
                 SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
@@ -162,6 +169,7 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
         // 16 Teams, 4 Gruppen à 4 Teams → 5 Spiele × 4 Gruppen = 20 Siege
         return new Szenario(
                 "Poule",
+                TurnierSystem.POULE,
                 ws -> new PouleTurnierTestDaten(ws).generate(),
                 ws -> new PouleVorrundenRanglisteSheetUpdate(ws).doRun(),
                 SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
@@ -181,6 +189,7 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
         // 39 Teams, 5 Runden → (19 reguläre + 1 Freilos) × 5 = 100 Siege
         return new Szenario(
                 "FormuleX",
+                TurnierSystem.FORMULEX,
                 ws -> new FormuleXTurnierTestDaten(ws).generate(),
                 ws -> new FormuleXRanglisteSheetUpdate(ws).doRun(),
                 SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
@@ -265,6 +274,55 @@ class RanglisteUpdaterUITest extends BaseCalcUITest {
                 .as("[%s] Siegesumme nach Update (%d) muss kleiner sein als vorher (%d)",
                         s.bezeichnung(), siegeNachher, siegeVorher)
                 .isLessThan(siegeVorher);
+    }
+
+    /**
+     * Regression: Im Turnier-/Kiosk-Modus sind die Rangliste-Sheets vollständig
+     * gesperrt. Bei unveränderter Teilnehmeranzahl ruft {@code loescheDatenzeilen}
+     * kein {@code clearRange} auf, sodass der anschließende {@code setDataInRange}
+     * vor dem Fix mit einer UNO-RuntimeException ("setDataArray auf geschütztem
+     * Sheet") gekracht ist. Der Fix in {@code RangeHelper.setDataInRange} triggert
+     * jetzt auch dort den Lazy-Unprotect des aktiven {@code BlattschutzScope}.
+     * <p>
+     * Der Test simuliert den Produktionspfad: Erstaufbau → Ergebnis-Sheet auf 0
+     * setzen → Kiosk-Modus aktivieren → Sheets schützen → Scope wie in
+     * {@code SheetRunner.run()} öffnen → {@code doRun()} → Scope schließen.
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("szenarienProvider")
+    void kioskModus_ranglisteUpdateAufGesperrtemSheet_wirftNicht(Szenario s) throws GenerateException {
+        s.generator().generiere(wkingSpreadsheet);
+
+        var xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+        XSpreadsheet ergebnisSheet = SheetMetadataHelper.findeSheetUndHeile(xDoc, s.ergebnisSheetSchluessel(), null);
+        nulleErgebniszellen(ergebnisSheet, s);
+
+        var konfig = BlattschutzRegistry.fuer(s.turnierSystem()).orElseThrow(() ->
+                new IllegalStateException("Keine BlattschutzKonfiguration für " + s.turnierSystem()));
+        TurnierModus.get().setAktivForTest(true);
+        BlattschutzManager.get().schuetzen(konfig, wkingSpreadsheet);
+
+        try {
+            // SheetRunner.run() öffnet diesen Scope normalerweise selbst; weil der Test
+            // doRun() direkt aufruft, wird er hier manuell aufgespannt.
+            BlattschutzManager.get().beginCommandScope(konfig, wkingSpreadsheet);
+            try {
+                // Vor dem Fix: RuntimeException aus setDataArray, weil das Rangliste-Sheet
+                // voll gesperrt ist und berechnungUndSchreiben ohne vorheriges Entsperren schreibt.
+                s.updaterAktion().ausfuehren(wkingSpreadsheet);
+            } finally {
+                BlattschutzManager.get().endCommandScope();
+            }
+
+            XSpreadsheet rangliste = SheetMetadataHelper.findeSheetUndHeile(xDoc, s.ranglisteSchluessel(), null);
+            int siegeNachher = siegesumme(ladeVollständigeDaten(rangliste, s), s);
+            assertThat(siegeNachher)
+                    .as("[%s] Update unter Kiosk-Modus muss laufen und Siegesumme reduzieren", s.bezeichnung())
+                    .isLessThan(s.erwarteteSiegesumme());
+        } finally {
+            BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);
+            TurnierModus.get().setAktivForTest(false);
+        }
     }
 
     // -------------------------------------------------------------------------
