@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest fuer die Liga-Rangliste.<br>
@@ -357,4 +358,41 @@ public class LigaRanglisteSheetUITest extends BaseCalcUITest {
 	};
 
 	// @formatter:on
+
+	/**
+	 * Regression im Kiosk-Modus: nach Spielplan- und Ergebnis-Setup muss ein erneutes
+	 * {@link LigaRanglisteSheet#run()} unter aktivem TurnierModus + Liga-Blattschutz
+	 * sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_ranglisteUpdateUnterSchutz() throws GenerateException {
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+
+		RangeData paarungen = new RangeData(SPIELPAARUNGEN_HR);
+		paarungen.addData(SPIELPAARUNGEN_RR);
+		RangePosition rangePaarungen = RangePosition.from(LigaSpielPlanSheet.TEAM_A_NR_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				LigaSpielPlanSheet.TEAM_A_NR_SPALTE + paarungen.getAnzSpalten() - 1,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + paarungen.size() - 1);
+		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangePaarungen)
+				.setDataInRange(paarungen);
+
+		RangeData ergebnisse = new RangeData(ERGEBNISSE_HR);
+		ergebnisse.addData(ERGEBNISSE_RR);
+		RangePosition rangeErgebnisse = RangePosition.from(LigaSpielPlanSheet.PUNKTE_A_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				LigaSpielPlanSheet.SPIELPNKT_B_SPALTE,
+				LigaSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + ergebnisse.size() - 1);
+		RangeHelper.from(spielPlan.getXSpreadSheet(), wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeErgebnisse)
+				.setDataInRange(ergebnisse);
+
+		new LigaRanglisteSheet(wkingSpreadsheet).run();
+
+		mitKioskModus(TurnierSystem.LIGA, () -> new LigaRanglisteSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.rangliste()))
+				.as("Liga-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
+	}
 }

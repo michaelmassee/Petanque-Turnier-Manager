@@ -19,6 +19,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.beispielturnier.BeispielturnierRegistrierung.Eintrag;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;
@@ -90,6 +91,26 @@ class BeispielturnierUITest extends BaseCalcUITest {
         assertThat(sheetNamen)
                 .as("Turnier '%s': mindestens ein Sheet erwartet", eintrag.bezeichnung())
                 .hasSizeGreaterThan(0);
+    }
+
+    /**
+     * Regression im Kiosk-Modus: nach voller Generierung jedes Beispielturniers muss
+     * das anschließende Schützen über das im Dokument aktive Turniersystem sauber
+     * durchlaufen und die Schutz-Invariante (Sheets geschützt, editierbare Bereiche
+     * editierbar) erfüllt sein.
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("beispielturnierEintraege")
+    void kioskModus_schutzInvarianteNachGenerierung(Eintrag eintrag) throws GenerateException {
+        eintrag.generator().generiere(wkingSpreadsheet);
+        TurnierSystem ts = docPropHelper.getTurnierSystemAusDocument();
+        if (ts == TurnierSystem.KEIN) {
+            // Eintrag hat kein DocumentProperty gesetzt – Kiosk-Schutz nicht aussagekräftig.
+            return;
+        }
+        mitKioskModus(ts, () -> {
+            // Smoke: schuetzen() + Schutz-Invariante in mitKioskModus.
+        });
     }
 
     // -------------------------------------------------------------------------

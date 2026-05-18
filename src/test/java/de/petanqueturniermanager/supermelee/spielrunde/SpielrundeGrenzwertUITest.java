@@ -11,6 +11,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -103,5 +104,19 @@ public class SpielrundeGrenzwertUITest extends BaseCalcUITest {
             assertThat(zeile.get(4).getStringVal()).as("Zeile %d: Team B Spieler 2", i).isNotBlank();
             assertThat(zeile.get(5).getStringVal()).as("Zeile %d: Team B Spieler 3 muss leer sein (Doublette)", i).isBlank();
         }
+    }
+
+    /**
+     * Regression im Kiosk-Modus mit Grenzwert-Spieleranzahl (6 Spieler): Setup +
+     * Spielrunde funktionieren, anschließendes Kiosk-Schützen läuft sauber durch und
+     * die Schutz-Invariante (BaseCalcUITest) ist erfüllt.
+     */
+    @Test
+    public void kioskModus_grenzwertSetupMitSechsSpielern() throws GenerateException {
+        testMeldeListeErstellen.initMitAlleDieSpielen(6);
+        new SpielrundeSheet_Naechste(wkingSpreadsheet).run();
+        mitKioskModus(TurnierSystem.SUPERMELEE, () -> {
+            // Smoke: schuetzen() + Invariantenprüfung in mitKioskModus.
+        });
     }
 }

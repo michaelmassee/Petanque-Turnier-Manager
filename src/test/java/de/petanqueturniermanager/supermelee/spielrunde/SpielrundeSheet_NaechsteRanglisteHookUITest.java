@@ -30,6 +30,7 @@ import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUITest
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 import de.petanqueturniermanager.toolbar.strategie.SupermeleeToolbarStrategie;
 
@@ -345,5 +346,30 @@ public class SpielrundeSheet_NaechsteRanglisteHookUITest extends BaseCalcUITest 
 				.flatMap(List::stream)
 				.mapToInt(c -> c.getIntVal(0))
 				.sum();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Setup eines Spieltags mit Tagesrangliste muss
+	 * eine weitere {@link SpielrundeSheet_Naechste#run()}-Runde unter aktivem
+	 * TurnierModus durchlaufen und der Hook die Tagesrangliste aktualisieren können.
+	 */
+	@Test
+	public void kioskModus_naechsteRundeMitHookUnterSchutz() throws GenerateException {
+		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+		SpielTagNr spieltag = SpielTagNr.from(1);
+		meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag);
+		meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1));
+		testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+		deaktiviereSpielerZweiInSpieltagEins();
+		ranglisteTestDaten.erstelleTestSpielrunden(2, false, spieltag);
+
+		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
+		ranglist.run();
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> new SpielrundeSheet_Naechste(wkingSpreadsheet).run());
+
+		assertThat(ranglist.countNumberOfSpielrundenInSheet())
+				.as("Tagesrangliste muss nach Kiosk-Naechste eine weitere Runden-Spalte enthalten")
+				.isEqualTo(3);
 	}
 }

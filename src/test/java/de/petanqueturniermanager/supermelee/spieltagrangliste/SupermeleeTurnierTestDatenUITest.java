@@ -16,6 +16,8 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.supermelee.SpielTagNr;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest für das vollständige Supermelee-Beispielturnier (100 Spieler, 5 Spieltage):
@@ -91,5 +93,21 @@ public class SupermeleeTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = SupermeleeTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach voller Beispielturnier-Generierung (100 Spieler, 5 Spieltage)
+	 * muss ein erneutes Update der Spieltag-1-Rangliste unter aktivem TurnierModus durchlaufen
+	 * und die Schutz-Invariante erfüllt bleiben.
+	 */
+	@Test
+	public void kioskModus_spieltagRanglisteUpdateNach100SpielerTurnier() throws GenerateException {
+		new SupermeleeTurnierTestDaten(wkingSpreadsheet).generate();
+		mitKioskModus(TurnierSystem.SUPERMELEE, () ->
+				new SpieltagRanglisteSheet(wkingSpreadsheet, SpielTagNr.from(1)).run());
+
+		assertThat(sheetHlp.findByName(SheetNamen.spieltagRangliste(1)))
+				.as("Spieltag-Rangliste 1 muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
 	}
 }

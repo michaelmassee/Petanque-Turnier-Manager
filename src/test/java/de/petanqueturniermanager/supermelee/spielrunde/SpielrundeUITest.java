@@ -32,6 +32,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Mehrere Spielrunden testen + rangliste
@@ -320,6 +321,24 @@ public class SpielrundeUITest extends BaseCalcUITest {
 
 		// waitEnter();
 
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Anlegen einer Spielrunde muss
+	 * {@link SpielrundeSheet_Naechste#run()} unter aktivem TurnierModus + Supermelee-Blattschutz
+	 * eine weitere Runde produzieren (refCount-Scope-Nesting greift).
+	 */
+	@Test
+	public void kioskModus_naechsteSpielrundeUnterSchutz() throws Exception {
+		SpielrundeSheet_Naechste spielrundeSheetNaechste = new SpielrundeSheet_Naechste(wkingSpreadsheet);
+		spielrundeSheetNaechste.run(); // 1.1. Spielrunde
+		assertThat(sheetHlp.findByName("1.1. Spielrunde")).isNotNull();
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> spielrundeSheetNaechste.run());
+
+		assertThat(sheetHlp.findByName("1.2. Spielrunde"))
+				.as("Zweite Spielrunde muss unter Kiosk-Modus angelegt werden")
+				.isNotNull();
 	}
 
 }

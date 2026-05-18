@@ -17,7 +17,9 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.maastrichter.korunde.KoGruppeABSheet;
+import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest für die Maastrichter-Beispielturniere:
@@ -199,5 +201,21 @@ public class MaastrichterTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = MaastrichterTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Vollaufbau (12 Teams, 3 Vorrunden, A-Finale) muss ein
+	 * erneutes {@link MaastrichterVorrundenRanglisteSheetUpdate#doRun()} unter aktivem
+	 * TurnierModus + Maastrichter-Blattschutz sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_vorrundenRanglisteUpdateUnterSchutz() throws GenerateException {
+		new MaastrichterTurnierTestDaten(wkingSpreadsheet).generate();
+		mitKioskModus(TurnierSystem.MAASTRICHTER, () ->
+				new MaastrichterVorrundenRanglisteSheetUpdate(wkingSpreadsheet).doRun());
+
+		assertThat(sheetHlp.findByName(SheetNamen.maastrichterVorrundenRangliste()))
+				.as("Vorrunden-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
 	}
 }

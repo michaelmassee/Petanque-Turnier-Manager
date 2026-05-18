@@ -8,6 +8,7 @@ import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
@@ -51,5 +52,19 @@ public class NewSheetPageStyleUITest extends BaseCalcUITest {
 		} catch (Exception e) {
 			throw new GenerateException("PageStyle-Property konnte nicht gelesen werden: " + e.getMessage());
 		}
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: das Erstellen einer neuen Supermelee-Meldeliste
+	 * muss auch bei aktivem TurnierModus-Flag fehlerfrei durchlaufen und den
+	 * PageStyle korrekt setzen.
+	 */
+	@Test
+	void kioskModus_meldelisteErstellenLaeuftDurch() throws GenerateException {
+		mitKioskModus(TurnierSystem.SUPERMELEE, () ->
+				new MeldeListeSheet_New(wkingSpreadsheet).createMeldelisteWithParams(SuperMeleeMode.Triplette));
+
+		XSpreadsheet xSheet = sheetHlp.findByName(SheetNamen.meldeliste());
+		assertThat(xSheet).as("Meldeliste-Sheet muss auch im Kiosk-Modus erstellt werden").isNotNull();
 	}
 }

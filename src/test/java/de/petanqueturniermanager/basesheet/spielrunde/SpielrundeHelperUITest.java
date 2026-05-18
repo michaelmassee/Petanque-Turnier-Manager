@@ -20,7 +20,7 @@ import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellung 13.04.2024 / Michael Massee
@@ -102,6 +102,23 @@ public class SpielrundeHelperUITest extends BaseCalcUITest {
 		assertThat(bahnNrData).isNotNull().isNotEmpty().hasSize(10);
 		return bahnNrData;
 
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: SpielrundeHelper.datenErsteSpalte muss auch bei
+	 * aktivem TurnierModus-Flag auf einem Ad-hoc-Sheet laufen.
+	 */
+	@Test
+	public void kioskModus_datenErsteSpalteLaeuft() throws GenerateException {
+		SpielrundeHelper spielrundeHelper = new SpielrundeHelper(emptyISheet,
+				spielrundeHintergrundFarbeGeradeStyle, spielrundeHintergrundFarbeUnGeradeStyle);
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> spielrundeHelper.datenErsteSpalte(
+				SpielrundeSpielbahn.N, 2, 11, 0, 0, 1,
+				BasePropertiesSpalte.DEFAULT_HEADER_BACK_COLOR));
+
+		String headerVal = sheetHlp.getTextFromCell(emptyISheet.getXSpreadSheet(), Position.from(0, 0));
+		assertThat(headerVal).isEqualTo("Bahn");
 	}
 
 }

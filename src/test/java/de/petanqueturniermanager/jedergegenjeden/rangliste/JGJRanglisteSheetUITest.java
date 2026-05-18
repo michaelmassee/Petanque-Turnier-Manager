@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 
@@ -77,6 +78,45 @@ public class JGJRanglisteSheetUITest extends BaseCalcUITest {
 		validateJGJDirektVergleichToJson(direktVergleich);
 
 		// waitEnter();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Spielplan- und Ergebnis-Setup muss ein erneutes
+	 * {@link JGJRanglisteSheet#run()} unter aktivem TurnierModus + JGJ-Blattschutz
+	 * sauber durchlaufen (Lazy-Unprotect-Pfad).
+	 */
+	@Test
+	public void kioskModus_jgjRanglisteUpdateUnterSchutz() throws GenerateException, IOException {
+		JGJSpielPlanSheet spielPlan = new JGJSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+
+		RangeData spielpaarungen = new RangeData(SPIELPAARUNGEN_HR);
+		spielpaarungen.addData(SPIELPAARUNGEN_RR);
+		RangePosition rangeSpielPaarungen = RangePosition.from(JGJSpielPlanSheet.TEAM_A_NR_SPALTE,
+				JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				JGJSpielPlanSheet.TEAM_A_NR_SPALTE + spielpaarungen.getAnzSpalten() - 1,
+				JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + spielpaarungen.size() - 1);
+		RangeHelper.from(spielPlan.getXSpreadSheet(),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeSpielPaarungen)
+				.setDataInRange(spielpaarungen);
+
+		RangeData ergebnisse = new RangeData(TESTDATARUNDE1);
+		ergebnisse.addData(TESTDATARUNDE2);
+		RangePosition rangeErg = RangePosition.from(JGJSpielPlanSheet.SPIELPNKT_A_SPALTE,
+				JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE,
+				JGJSpielPlanSheet.SPIELPNKT_A_SPALTE + ergebnisse.getAnzSpalten() - 1,
+				JGJSpielPlanSheet.ERSTE_SPIELTAG_DATEN_ZEILE + ergebnisse.size() - 1);
+		RangeHelper.from(spielPlan.getXSpreadSheet(),
+				wkingSpreadsheet.getWorkingSpreadsheetDocument(), rangeErg)
+				.setDataInRange(ergebnisse);
+
+		new JGJRanglisteSheet(wkingSpreadsheet).run();
+
+		mitKioskModus(TurnierSystem.JGJ, () -> new JGJRanglisteSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.rangliste()))
+				.as("JGJ-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
 	}
 
 	private void validateJGJRanglisteToJson(JGJRanglisteSheet ranglist) throws GenerateException {

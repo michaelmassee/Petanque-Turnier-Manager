@@ -27,6 +27,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
@@ -201,5 +202,18 @@ class SupermeleeSignaturSkipPfadUITest extends BaseCalcUITest {
         Position start = Position.from(SpielrundeSheetKonstanten.ERSTE_SPALTE_ERGEBNISSE,
                 SpielrundeSheetKonstanten.ERSTE_DATEN_ZEILE);
         return RangePosition.from(start, start);
+    }
+
+    /**
+     * Regression im Kiosk-Modus: nach Vollaufbau (3 Spieltage + Endrangliste) muss ein erneutes
+     * {@link EndranglisteSheet#run()} unter aktivem TurnierModus + Supermelee-Blattschutz
+     * sauber durchlaufen (Signatur-Skip-Pfad darf nicht crashen).
+     */
+    @Test
+    void kioskModus_endranglisteUpdateUnterSchutz() throws GenerateException {
+        baueDreiSpieltageMitRanglisten();
+        endranglisteSheet.run();
+
+        mitKioskModus(TurnierSystem.SUPERMELEE, () -> endranglisteSheet.run());
     }
 }

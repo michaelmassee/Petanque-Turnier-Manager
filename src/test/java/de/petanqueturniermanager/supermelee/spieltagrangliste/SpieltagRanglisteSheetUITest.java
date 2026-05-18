@@ -36,6 +36,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.SuperMeleeSummenSpalten;
 import de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Naechste;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 
@@ -349,6 +350,25 @@ public class SpieltagRanglisteSheetUITest extends BaseCalcUITest {
 				.flatMap(List::stream)
 				.mapToInt(c -> c.getIntVal(0))
 				.sum();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Erstellung der Spieltag-Rangliste muss ein
+	 * erneutes {@link SpieltagRanglisteSheet#run()} unter aktivem TurnierModus
+	 * + Supermelee-Blattschutz sauber durchlaufen (Lazy-Unprotect-Pfad).
+	 */
+	@Test
+	public void kioskModus_spieltagRanglisteUpdateUnterSchutz() throws GenerateException, IOException {
+		ranglisteTestDaten.erstelleTestSpielrunden(2, false);
+		SpieltagRanglisteSheet ranglist = new SpieltagRanglisteSheet(wkingSpreadsheet);
+		ranglist.run();
+		assertThat(ranglist.countNumberOfSpielrundenInSheet()).isEqualTo(2);
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> new SpieltagRanglisteSheet(wkingSpreadsheet).run());
+
+		assertThat(ranglist.countNumberOfSpielrundenInSheet())
+				.as("Spielrunden-Spaltenzahl bleibt unter Kiosk-Update unverändert")
+				.isEqualTo(2);
 	}
 
 }

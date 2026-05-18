@@ -13,6 +13,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellung 04.03.2024 / Michael Massee
@@ -49,6 +50,21 @@ public class SchweizerMeldeListeSheetNewUITest extends BaseCalcUITest {
 
 		// 		waitEnter();
 
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: Nach erfolgreichem Aufbau der Schweizer-Meldeliste darf
+	 * das anschließende {@code schuetzen()} der {@link de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration}
+	 * nicht crashen und die Meldeliste muss editierbare Datenbereiche
+	 * ({@code CellProtection.IsLocked == false}) auch nach dem Sperren behalten. Diese
+	 * Invariante wird zentral durch {@code BaseCalcUITest#mitKioskModus} geprüft.
+	 */
+	@Test
+	public void kioskModus_meldelisteBleibtMitEditierbarenBereichenGesperrt() throws GenerateException {
+		schweizerMeldeListeSheetTestDaten.run();
+		mitKioskModus(TurnierSystem.SCHWEIZER, () -> {
+			// reines Smoke-Setup: schuetzen() läuft, Invariante wird durch mitKioskModus geprüft.
+		});
 	}
 
 }

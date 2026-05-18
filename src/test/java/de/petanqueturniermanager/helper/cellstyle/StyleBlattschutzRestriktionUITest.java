@@ -105,4 +105,24 @@ public class StyleBlattschutzRestriktionUITest extends BaseCalcUITest {
         return xProtectable;
     }
 
+    /**
+     * Regression im Kiosk-Modus: die LO-Restriktion (Fakt 1) muss auch dann
+     * gelten, wenn das TurnierModus-aktiv-Flag bereits gesetzt ist – die
+     * Restriktion stammt aus LO selbst, nicht aus dem Plugin.
+     */
+    @Test
+    void kioskModus_zellstilRestriktionBleibtGueltig() throws Exception {
+        XPropertySet zellstilPropSet = zellstilAnlegen("PTM_TestZellstilKiosk");
+        mitKioskModusOhneSchutz(() -> {
+            XProtectable xProtectable = sheetSchuetzen();
+            try {
+                assertThatThrownBy(() ->
+                        zellstilPropSet.setPropertyValue("CharColor", Integer.valueOf(0xFF0000)))
+                        .isInstanceOf(com.sun.star.uno.RuntimeException.class);
+            } finally {
+                xProtectable.unprotect("");
+            }
+        });
+    }
+
 }

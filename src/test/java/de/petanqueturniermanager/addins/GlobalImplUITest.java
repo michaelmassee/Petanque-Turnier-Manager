@@ -10,7 +10,7 @@ import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UI Test für die Plugin AddIn-Formeln (PTM.ALG.*)
@@ -303,5 +303,25 @@ public class GlobalImplUITest extends BaseCalcUITest {
 		// funktioniert dies korrekt (Auswertung via OnLoad/calculateAll auf dem Main-Thread).
 		// assertThat(sheetHlp.getIntFromCell(sheet, testPos1)).as("Spieltag").isEqualTo(1);
 		// assertThat(sheetHlp.getIntFromCell(sheet, testPos2)).as("Spielrunde").isEqualTo(7);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: AddIn-Formeln (PTM.ALG.*) müssen auch bei aktivem
+	 * TurnierModus-Flag in Zellen geschrieben und vom Plugin aufgelöst werden.
+	 */
+	@Test
+	public void kioskModus_addInFormelWirdAkzeptiert() throws Exception {
+		docPropHelper.setIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 2);
+		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				TurnierSystem.SUPERMELEE.getId());
+		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
+		Position pos = Position.from(0, 0);
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> sheetHlp.setFormulaInCell(sheet, pos,
+				"=PTM.ALG.INTPROPERTY(\"" + SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG + "\")"));
+
+		assertThat(sheetHlp.getFormulaFromCell(sheet, pos))
+				.as("AddIn-Formel muss auch im Kiosk-Modus geschrieben werden")
+				.containsIgnoringCase("INTPROPERTY");
 	}
 }

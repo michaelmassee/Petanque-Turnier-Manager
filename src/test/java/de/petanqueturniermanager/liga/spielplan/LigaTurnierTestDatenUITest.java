@@ -16,6 +16,8 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest für die Liga-Beispielturniere in zwei Konstellationen:
@@ -118,5 +120,20 @@ public class LigaTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = LigaTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach voller 6-Team-Turniergenerierung muss ein
+	 * erneutes {@link LigaRanglisteSheet#run()} unter aktivem TurnierModus +
+	 * Liga-Blattschutz sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_ranglisteUpdateNach6TeamTurnier() throws GenerateException {
+		new LigaTurnierTestDaten(wkingSpreadsheet).erzeugeBeispielturnier();
+		mitKioskModus(TurnierSystem.LIGA, () -> new LigaRanglisteSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(SheetNamen.rangliste()))
+				.as("Liga-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
 	}
 }

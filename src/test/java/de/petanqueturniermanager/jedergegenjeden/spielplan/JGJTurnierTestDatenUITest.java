@@ -17,6 +17,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteDirektvergleichSheet;
+import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheet;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest für die JGJ-Beispielturniere in zwei Konstellationen:
@@ -143,5 +145,20 @@ public class JGJTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = JGJTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach voller 10-Team-Turniergenerierung muss ein
+	 * erneutes {@link JGJRanglisteSheet#run()} unter aktivem TurnierModus +
+	 * JGJ-Blattschutz sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_ranglisteUpdateNach10TeamTurnier() throws GenerateException {
+		new JGJTurnierTestDaten(wkingSpreadsheet).generate();
+		mitKioskModus(TurnierSystem.JGJ, () -> new JGJRanglisteSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(SheetNamen.rangliste()))
+				.as("JGJ-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
 	}
 }

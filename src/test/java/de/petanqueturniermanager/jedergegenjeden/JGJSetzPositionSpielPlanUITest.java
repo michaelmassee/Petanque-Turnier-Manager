@@ -28,6 +28,7 @@ import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_N
 import de.petanqueturniermanager.jedergegenjeden.meldeliste.JGJMeldeListeSheet_Update;
 import de.petanqueturniermanager.jedergegenjeden.spielplan.JGJSpielPlanSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest für die Setzpositions-Logik der JGJ-Gruppenaufteilung.
@@ -78,6 +79,21 @@ public class JGJSetzPositionSpielPlanUITest extends BaseCalcUITest {
 
 		// Sanity-Check: Es muss überhaupt Paarungen geben, damit die Constraint-Prüfung aussagekräftig ist.
 		assertThat(mitspielerProTeam).as("Mindestens ein Team hat Mitspieler im Spielplan").isNotEmpty();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Meldeliste-Setup muss
+	 * {@link JGJSpielPlanSheet#run()} unter aktivem TurnierModus + JGJ-Blattschutz
+	 * den Spielplan weiterhin erzeugen.
+	 */
+	@Test
+	public void kioskModus_spielplanUnterSchutz() throws GenerateException {
+		meldeListeMitSetzPositionenAnlegen();
+		mitKioskModus(TurnierSystem.JGJ, () -> new JGJSpielPlanSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.spielplan()))
+				.as("Spielplan-Sheet muss nach Kiosk-Erstellung existieren")
+				.isNotNull();
 	}
 
 	// ─── Setup ───────────────────────────────────────────────────────────

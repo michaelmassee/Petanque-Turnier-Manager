@@ -16,6 +16,7 @@ import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJKonfigurationSheet;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJTestMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest fuer den JGJ-Spielplan (Jeder-gegen-Jeden).<br>
@@ -124,5 +125,23 @@ public class JGJSpielPlanSheetUITest extends BaseCalcUITest {
 		// Zeile 2: Team B gewinnt (4 < 13)
 		assertThat(siege.get(1).get(0).getIntVal()).as("Zeile 2: Siege A (Verlierer)").isEqualTo(0);
 		assertThat(siege.get(1).get(1).getIntVal()).as("Zeile 2: Siege B (Gewinner)").isEqualTo(1);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach erstmaligem Aufbau muss ein zweiter
+	 * {@link JGJSpielPlanSheet#run()} unter aktivem TurnierModus + JGJ-Blattschutz
+	 * den Spielplan unverändert behalten.
+	 */
+	@Test
+	public void kioskModus_spielplanRebuildUnterSchutz() throws GenerateException {
+		JGJSpielPlanSheet spielPlan = new JGJSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+		assertThat(spielPlan.getXSpreadSheet()).isNotNull();
+
+		mitKioskModus(TurnierSystem.JGJ, () -> new JGJSpielPlanSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.spielplan()))
+				.as("Spielplan muss nach Kiosk-Rebuild weiterhin existieren")
+				.isNotNull();
 	}
 }

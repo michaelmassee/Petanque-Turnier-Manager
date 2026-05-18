@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import de.petanqueturniermanager.BaseCalcUITest;
@@ -116,5 +118,22 @@ public class MeldeListeNeuerSpieltagUITest extends BaseCalcUITest {
         assertThat(sheetHlp.findByName("2.2. Spielrunde"))
                 .as("Spielrunde 2.2 darf nicht existieren")
                 .isNull();
+    }
+
+    /**
+     * Regression im Kiosk-Modus: {@link MeldeListeSheet_NeuerSpieltag#naechsteSpieltag()}
+     * muss auch bei aktivem TurnierModus + Supermelee-Blattschutz durchlaufen und den
+     * neuen Spieltag in der Meldeliste anlegen.
+     */
+    @Test
+    public void kioskModus_naechsterSpieltagFunktioniert() throws GenerateException {
+        mitKioskModus(TurnierSystem.SUPERMELEE, () -> meldeListeNeuerSpieltag.naechsteSpieltag());
+
+        assertThat(docPropHelper.getIntProperty(SuperMeleePropertiesSpalte.KONFIG_PROP_NAME_SPIELTAG, 999))
+                .as("Spieltag-Konfig muss nach Kiosk-Update auf 2 stehen")
+                .isEqualTo(2);
+        assertThat(meldeListeNeuerSpieltag.countAnzSpieltageInMeldeliste())
+                .as("Meldeliste muss nach Kiosk-Update 2 Spieltage enthalten")
+                .isEqualTo(2);
     }
 }

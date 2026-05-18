@@ -11,7 +11,9 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.random.RandomSource;
@@ -109,5 +111,21 @@ public class FormuleXTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = FormuleXTurnierTestDatenUITest.class.getResourceAsStream("formulex-rangliste.json");
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach voller 39-Team-Turniergenerierung muss ein
+	 * erneutes {@link FormuleXRanglisteSheetUpdate#doRun()} unter aktivem TurnierModus
+	 * + FormuleX-Blattschutz sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_ranglisteUpdateNach39TeamTurnier() throws GenerateException {
+		new FormuleXTurnierTestDaten(wkingSpreadsheet).generate();
+		mitKioskModus(TurnierSystem.FORMULEX, () ->
+				new FormuleXRanglisteSheetUpdate(wkingSpreadsheet).doRun());
+
+		assertThat(sheetHlp.findByName(SheetNamen.formulexRangliste()))
+				.as("FormuleX-Rangliste muss nach Kiosk-Update weiterhin existieren")
+				.isNotNull();
 	}
 }

@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest für das dynamische Enable/Disable der Schweizer-Menüpunkte.
@@ -86,5 +87,23 @@ public class SchweizerMenuEnableUITest extends BaseCalcUITest {
 		assertThat(ts).isEqualTo(TurnierSystem.KEIN);
 		assertThat(isStartEnabled(ts)).isTrue();
 		assertThat(isNeueMeldelisteEnabled(ts)).isFalse();
+	}
+
+	/**
+	 * Die Enable/Disable-Logik im {@code ProtocolHandler.isEnabled()} hängt nicht vom
+	 * Turnier-Modus ab – sie soll auch bei aktivem Kiosk-Modus weiterhin korrekt
+	 * funktionieren. Dieser Test setzt {@code TurnierModus.aktiv = true} und verifiziert
+	 * dass die Property-basierte Logik im Kiosk-Modus unverändert greift.
+	 */
+	@Test
+	public void kioskModus_enableLogikBleibtUnveraendert() throws GenerateException {
+		docPropHelper.setIntProperty(BasePropertiesSpalte.KONFIG_PROP_NAME_TURNIERSYSTEM,
+				TurnierSystem.SCHWEIZER.getId());
+		mitKioskModusOhneSchutz(() -> {
+			TurnierSystem ts = docPropHelper.getTurnierSystemAusDocument();
+			assertThat(ts).as("TurnierSystem im Kiosk-Modus").isEqualTo(TurnierSystem.SCHWEIZER);
+			assertThat(isStartEnabled(ts)).as("Start im Kiosk bei SCHWEIZER").isFalse();
+			assertThat(isNeueMeldelisteEnabled(ts)).as("NeueMeldeliste im Kiosk bei SCHWEIZER").isTrue();
+		});
 	}
 }

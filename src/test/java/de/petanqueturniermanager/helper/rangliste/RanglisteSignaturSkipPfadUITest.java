@@ -14,6 +14,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
@@ -186,5 +187,24 @@ class RanglisteSignaturSkipPfadUITest extends BaseCalcUITest {
                         SchweizerAbstractSpielrundeSheet.ERG_TEAM_A_SPALTE,
                         SchweizerAbstractSpielrundeSheet.ERSTE_DATEN_ZEILE))
                 .setDataInRange(daten);
+    }
+
+    /**
+     * Regression im Kiosk-Modus: die Hash-Berechnung der Signatur-Engine muss auch unter
+     * aktivem TurnierModus + Schweizer-Blattschutz deterministisch denselben Wert liefern.
+     */
+    @Test
+    void kioskModus_hashBerechnungIstDeterministisch() throws GenerateException {
+        new SchweizerTurnierTestDaten(wkingSpreadsheet).generate();
+        XSpreadsheetDocument xDoc = wkingSpreadsheet.getWorkingSpreadsheetDocument();
+        RanglisteEingabeSignatur engine = new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+        String hashVorher = berechneOk(engine, xDoc);
+
+        final String[] hashUnterKiosk = new String[1];
+        mitKioskModus(TurnierSystem.SCHWEIZER, () -> hashUnterKiosk[0] = berechneOk(engine, xDoc));
+
+        assertThat(hashUnterKiosk[0])
+                .as("Hash unter Kiosk-Modus muss identisch zum Hash davor sein")
+                .isEqualTo(hashVorher);
     }
 }

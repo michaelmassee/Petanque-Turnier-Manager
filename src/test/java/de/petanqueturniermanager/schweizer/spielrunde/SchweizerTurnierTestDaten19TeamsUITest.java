@@ -15,6 +15,8 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
+import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UI-Test für das Schweizer Testturnier mit 19 Teams (ungerade Anzahl).
@@ -146,5 +148,30 @@ public class SchweizerTurnierTestDaten19TeamsUITest extends BaseCalcUITest {
 				.as("Siege müssen zwischen 0 und " + ANZ_RUNDEN + " liegen")
 				.extracting(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(-1))
 				.allSatisfy(siege -> assertThat(siege).isBetween(0, ANZ_RUNDEN));
+	}
+
+	/**
+	 * Regression im Kiosk-Modus mit ungerader Teamzahl (19 Teams + Freilos): nach Generierung
+	 * muss das anschließende {@link SchweizerRanglisteSheetUpdate} unter aktivem TurnierModus
+	 * durchlaufen und der Blattschutz intakt bleiben (von {@code mitKioskModus} geprüft).
+	 */
+	@Test
+	public void kioskModus_ranglisteUpdateMit19Teams() throws GenerateException {
+		testDaten.generate();
+		mitKioskModus(TurnierSystem.SCHWEIZER, () ->
+				new SchweizerRanglisteSheetUpdate(wkingSpreadsheet).doRun());
+
+		XSpreadsheet rangliste = sheetHlp.findByName(SheetNamen.rangliste());
+		RangePosition ranglisteRange = RangePosition.from(
+				SchweizerRanglisteSheet.TEAM_NR_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE,
+				SchweizerRanglisteSheet.PUNKTE_DIFF_SPALTE,
+				SchweizerRanglisteSheet.ERSTE_DATEN_ZEILE + ANZ_TEAMS - 1);
+		RangeData ranglisteData = RangeHelper
+				.from(rangliste, wkingSpreadsheet.getWorkingSpreadsheetDocument(), ranglisteRange)
+				.getDataFromRange();
+		assertThat(ranglisteData)
+				.as("Rangliste muss nach Kiosk-Update " + ANZ_TEAMS + " Einträge haben")
+				.hasSize(ANZ_TEAMS);
 	}
 }

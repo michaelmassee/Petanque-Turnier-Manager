@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -130,5 +131,20 @@ public class KoTurnierTestDatenUITest extends BaseCalcUITest {
 
 		InputStream jsonFile = KoTurnierTestDatenUITest.class.getResourceAsStream(referenzDatei);
 		validateWithJson(rangeData, jsonFile);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Vollaufbau (8 Teams) muss ein erneutes
+	 * {@link KoTurnierbaumSheet#run()} unter aktivem TurnierModus + KO-Blattschutz
+	 * sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_turnierbaumRebuildUnterSchutz() throws GenerateException {
+		new KoTurnierTestDaten(wkingSpreadsheet, 8).generate();
+		mitKioskModus(TurnierSystem.KO, () -> new KoTurnierbaumSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(SheetNamen.koTurnierbaumEinzel()))
+				.as("Turnierbaum-Sheet muss nach Kiosk-Rebuild weiterhin existieren")
+				.isNotNull();
 	}
 }

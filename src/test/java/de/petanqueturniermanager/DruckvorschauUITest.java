@@ -75,4 +75,30 @@ class DruckvorschauUITest extends BaseCalcUITest {
                 .as("LibreOffice muss nach mehrfachem Druckvorschau-Zyklus noch reagieren")
                 .isNotNull();
     }
+
+    /**
+     * Regression im Kiosk-Modus: Druckvorschau öffnen/schließen muss auch bei aktivem
+     * TurnierModus-Flag funktionieren – Toolbar-Steuerung darf den Pfad nicht stören.
+     */
+    @Test
+    void kioskModus_druckvorschauOeffnenUndSchliessen() throws GenerateException, InterruptedException {
+        new MeldeListeSheet_New(wkingSpreadsheet).createMeldelisteWithParams(SuperMeleeMode.Doublette);
+        Thread.sleep(500);
+
+        mitKioskModusOhneSchutz(() -> {
+            try {
+                wkingSpreadsheet.executeDispatch(".uno:PrintPreview", "_self", 0, new PropertyValue[0]);
+                Thread.sleep(500);
+                wkingSpreadsheet.executeDispatch(".uno:ClosePreview", "_self", 0, new PropertyValue[0]);
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new GenerateException("Unterbrochen: " + e.getMessage());
+            }
+        });
+
+        assertThat(wkingSpreadsheet.getWorkingSpreadsheetDocument())
+                .as("LibreOffice muss nach Kiosk-Druckvorschau-Zyklus noch reagieren")
+                .isNotNull();
+    }
 }

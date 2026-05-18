@@ -1,5 +1,7 @@
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -65,6 +67,19 @@ public class MeldeListeSheetUITest extends BaseCalcUITest {
 
 		// waitEnter();
 
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Erstellen der Meldeliste muss das anschließende
+	 * Schützen der Supermelee-Sheets sauber durchlaufen und die Schutz-Invariante
+	 * (Sheets geschützt, editierbare Bereiche bleiben editierbar) erfüllt sein.
+	 */
+	@Test
+	public void kioskModus_meldelisteBleibtMitEditierbarenBereichenGesperrt() throws Exception {
+		new TestSuperMeleeMeldeListeErstellen(wkingSpreadsheet, doc).run();
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> {
+			// reines Smoke-Setup: schuetzen() läuft, Invariante wird durch mitKioskModus geprüft.
+		});
 	}
 
 	private void validateSpieltagSpielrunde(XSpreadsheet xSpreadsheet, int summeSpalte) throws GenerateException {

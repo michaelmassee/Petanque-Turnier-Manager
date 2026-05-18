@@ -18,6 +18,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 public class SpielrundePlanUITest extends BaseCalcUITest {
 
@@ -92,5 +93,23 @@ public class SpielrundePlanUITest extends BaseCalcUITest {
 
 		// waitEnter();
 
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Setup + Spielrunde muss
+	 * {@link SpielrundePlan#run()} unter aktivem TurnierModus + Blattschutz
+	 * den Spielrundeplan-Sheet weiterhin erzeugen.
+	 */
+	@Test
+	public void kioskModus_spielrundePlanUnterSchutz() throws Exception {
+		testMeldeListe.initMitAlleDieSpielen(28);
+		new SpielrundeSheet_Naechste(wkingSpreadsheet).run();
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> new SpielrundePlan(wkingSpreadsheet).run());
+
+		XSpreadsheet spielrundeplan1 = sheetHlp.findByName(SheetNamen.spielrundePlan(1, 1));
+		assertThat(spielrundeplan1)
+				.as("Spielrundeplan muss auch unter Kiosk-Modus erstellt werden")
+				.isNotNull();
 	}
 }

@@ -10,10 +10,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.sun.star.beans.XPropertySet;
 import com.sun.star.sheet.XCalculatable;
+import com.sun.star.util.CellProtection;
+import com.sun.star.util.XProtectable;
 import de.petanqueturniermanager.helper.Lo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
@@ -30,6 +34,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
@@ -37,7 +42,12 @@ import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
+import de.petanqueturniermanager.helper.sheet.blattschutz.IBlattschutzKonfiguration;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.toolbar.TurnierModus;
 
 /**
  * Erstellung 13.07.2022 / Michael Massee<br>
@@ -244,6 +254,126 @@ public abstract class BaseCalcUITest {
 		if (xCalc != null) {
 			xCalc.calculateAll();
 		}
+	}
+
+	/**
+	 * Aktion, die unter Kiosk-Modus laufen soll. Darf {@link GenerateException} werfen,
+	 * weil die meisten Produktiv-Pfade (doRun, generate, …) genau diese Checked Exception
+	 * deklarieren.
+	 */
+	@FunctionalInterface
+	protected interface KioskAktion {
+		void ausfuehren() throws GenerateException;
+	}
+
+	/**
+	 * Führt {@code aktion} unter aktivem TurnierModus + Blattschutz für das übergebene
+	 * Turniersystem aus. Vorbild ist der bestehende {@code kioskModus_…}-Test in
+	 * {@code RanglisteUpdaterUITest}. Schritte:
+	 * <ol>
+	 *   <li>{@link TurnierModus#setAktivForTest(boolean) setAktivForTest(true)}</li>
+	 *   <li>{@link BlattschutzManager#schuetzen schuetzen()} (legt Schutz an)</li>
+	 *   <li>{@link BlattschutzManager#beginCommandScope beginCommandScope()} (Lazy-Unprotect-Scope wie in {@code SheetRunner.run()})</li>
+	 *   <li>Aktion ausführen</li>
+	 *   <li>{@code endCommandScope()}</li>
+	 *   <li>{@link #pruefeSchutzInvariante Schutz-Invariante prüfen}: alle Sheets müssen noch geschützt sein,
+	 *       deklarierte editierbare Bereiche müssen weiterhin {@code IsLocked=false} aufweisen</li>
+	 *   <li>{@link BlattschutzManager#entsperren entsperren()} + {@code setAktivForTest(false)} im finally-Block</li>
+	 * </ol>
+	 */
+	protected void mitKioskModus(TurnierSystem ts, KioskAktion aktion) throws GenerateException {
+		IBlattschutzKonfiguration konfig = BlattschutzRegistry.fuer(ts).orElseThrow(() ->
+				new IllegalStateException("Keine BlattschutzKonfiguration für " + ts));
+		TurnierModus.get().setAktivForTest(true);
+		BlattschutzManager.get().schuetzen(konfig, wkingSpreadsheet);
+		// Snapshot der Sheet-Namen, die zum Schutzzeitpunkt in der Konfig waren.
+		// Operationen wie SpielrundePlan / EndranglisteSheet / JGJSpielPlanSheet legen
+		// während des Laufs neue Sheets an oder ersetzen bestehende; die Invariante
+		// soll nur über bereits initial vorhandene Schutz-Sheets greifen und die
+		// Sheets per Name re-resolven, damit stale XSpreadsheet-Referenzen nicht
+		// fälschlich fehlschlagen.
+		var initialeSheetNamen = sheetNamen(konfig.berechneSchutzInfos(wkingSpreadsheet));
+		try {
+			BlattschutzManager.get().beginCommandScope(konfig, wkingSpreadsheet);
+			try {
+				aktion.ausfuehren();
+			} finally {
+				BlattschutzManager.get().endCommandScope();
+			}
+			pruefeSchutzInvariante(konfig, initialeSheetNamen);
+		} finally {
+			BlattschutzManager.get().entsperren(konfig, wkingSpreadsheet);
+			TurnierModus.get().setAktivForTest(false);
+		}
+	}
+
+	private java.util.Set<String> sheetNamen(
+			java.util.List<de.petanqueturniermanager.helper.sheet.blattschutz.SheetSchutzInfo> infos) {
+		var namen = new java.util.HashSet<String>();
+		for (var info : infos) {
+			var named = Lo.qi(com.sun.star.container.XNamed.class, info.sheet());
+			if (named != null) {
+				namen.add(named.getName());
+			}
+		}
+		return namen;
+	}
+
+	/**
+	 * Variante ohne Blattschutz – nur das {@code aktiv}-Flag wird gesetzt. Für Tests
+	 * gedacht, deren Logik {@code TurnierModus.istAktiv()} abfragt, aber kein konkretes
+	 * Turniersystem mit Sheets zur Verfügung steht (Helper-, Sidebar-, AddIn-Tests etc.).
+	 */
+	protected void mitKioskModusOhneSchutz(KioskAktion aktion) throws GenerateException {
+		TurnierModus.get().setAktivForTest(true);
+		try {
+			aktion.ausfuehren();
+		} finally {
+			TurnierModus.get().setAktivForTest(false);
+		}
+	}
+
+	/**
+	 * Smoke-Check + Schutz-Invariante: für jedes Sheet, das beim Eintritt in den
+	 * Kiosk-Modus in der Konfig war (per Name identifiziert) und das nach der Aktion
+	 * noch im Dokument vorhanden ist, muss gelten: Sheet weiterhin geschützt,
+	 * deklarierte editierbare Bereiche noch editierbar.
+	 */
+	private void pruefeSchutzInvariante(IBlattschutzKonfiguration konfig,
+			java.util.Set<String> initialeSheetNamen) {
+		var aktuelleInfos = konfig.berechneSchutzInfos(wkingSpreadsheet);
+		SoftAssertions soft = new SoftAssertions();
+		for (var info : aktuelleInfos) {
+			var named = Lo.qi(com.sun.star.container.XNamed.class, info.sheet());
+			if (named == null || !initialeSheetNamen.contains(named.getName())) {
+				continue; // neu erzeugtes Sheet – nicht durch initiales schuetzen() abgedeckt
+			}
+			XProtectable prot = Lo.qi(XProtectable.class, info.sheet());
+			if (prot == null) {
+				soft.fail("Sheet ohne XProtectable angetroffen");
+				continue;
+			}
+			soft.assertThat(prot.isProtected())
+					.as("Sheet muss nach Operation noch geschützt sein")
+					.isTrue();
+			for (RangePosition bereich : info.editierbareBereich()) {
+				int spalte = bereich.getStartSpalte();
+				int zeile = bereich.getStartZeile();
+				try {
+					var cell = info.sheet().getCellByPosition(spalte, zeile);
+					XPropertySet props = Lo.qi(XPropertySet.class, cell);
+					CellProtection cellProt = (CellProtection) props.getPropertyValue("CellProtection");
+					soft.assertThat(cellProt.IsLocked)
+							.as("Editierbarer Bereich (Spalte=%d, Zeile=%d) muss IsLocked=false bleiben",
+									spalte, zeile)
+							.isFalse();
+				} catch (Exception e) {
+					soft.fail("Fehler beim Lesen von CellProtection (Spalte=%d, Zeile=%d): %s",
+							spalte, zeile, e.getMessage());
+				}
+			}
+		}
+		soft.assertAll();
 	}
 
 }

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -92,5 +93,21 @@ public class KaskadeGruppenRanglisteHookUITest extends BaseCalcUITest {
 		assertThat(sheetHlp.findByName(name))
 				.as("Aktualisierer darf Sheet nicht via Hintertür anlegen")
 				.isNull();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Vollaufbau muss ein erneutes
+	 * {@link KaskadeGruppenRanglisteSheetUpdate#doRun()} unter aktivem TurnierModus +
+	 * Kaskade-Blattschutz sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_gruppenranglisteUpdateUnterSchutz() throws GenerateException {
+		new KaskadeTurnierTestDaten(wkingSpreadsheet).generate();
+		mitKioskModus(TurnierSystem.KASKADE, () ->
+				new KaskadeGruppenRanglisteSheetUpdate(wkingSpreadsheet).doRun());
+
+		assertThat(sheetHlp.findByName(SheetNamen.kaskadeGruppenrangliste()))
+				.as("Kaskade-Gruppenrangliste muss nach Kiosk-Update existieren")
+				.isNotNull();
 	}
 }

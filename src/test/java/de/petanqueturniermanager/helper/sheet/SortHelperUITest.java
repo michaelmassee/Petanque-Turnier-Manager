@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
@@ -85,5 +86,28 @@ public class SortHelperUITest extends BaseCalcUITest {
 		// Lo.saveDoc(doc, "dataSort.ods");
 		// Lo.waitEnter();
 
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: SortHelper auf einem Ad-hoc-Sheet (kein Turniersystem)
+	 * darf auch mit aktiviertem TurnierModus-Flag laufen.
+	 */
+	@Test
+	public void kioskModus_sortAufAdHocSheet() throws Exception {
+		XSpreadsheet sheet = sheetHlp.getSheetByIdx(0);
+		Object[][] vals = { { "Header" }, { "B" }, { "A" }, { "C" } };
+		RangeData data = new RangeData(vals);
+		Position startPos = Position.from(0, 0);
+		RangePosition rangePos = RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).setDataInRange(data)
+				.getRangePos();
+
+		// Scope braucht ein registriertes Turniersystem, damit RangeHelper-Schreibops
+		// nicht IllegalStateException werfen. Ad-hoc-Sheet ist in keiner Konfig,
+		// daher hat das mitKioskModus(...) effektiv nur Scope-Effekt.
+		mitKioskModus(TurnierSystem.SUPERMELEE, () ->
+				SortHelper.from(sheet, doc, rangePos).aufSteigendSortieren().spaltenToSort(new int[]{0}).doSort());
+
+		RangeData out = RangeHelper.from(sheet, doc, data.getRangePosition(startPos)).getDataFromRange();
+		assertThat(out).hasSize(4);
 	}
 }

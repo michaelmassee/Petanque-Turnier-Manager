@@ -17,6 +17,7 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.liga.rangliste.LigaTestMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest fuer den Liga-Spielplan.<br>
@@ -160,5 +161,23 @@ public class LigaSpielPlanSheetUITest extends BaseCalcUITest {
 		// Zeile 2: Team B gewinnt
 		assertThat(punkte.get(1).get(0).getIntVal()).as("Zeile 2: Punkte A (Verlierer)").isEqualTo(0);
 		assertThat(punkte.get(1).get(1).getIntVal()).as("Zeile 2: Punkte B (Gewinner)").isEqualTo(1);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Erstaufbau muss ein erneuter
+	 * {@link LigaSpielPlanSheet#run()} unter aktivem TurnierModus + Liga-Blattschutz
+	 * sauber durchlaufen.
+	 */
+	@Test
+	public void kioskModus_spielplanRebuildUnterSchutz() throws GenerateException {
+		LigaSpielPlanSheet spielPlan = new LigaSpielPlanSheet(wkingSpreadsheet);
+		spielPlan.run();
+		assertThat(spielPlan.getXSpreadSheet()).isNotNull();
+
+		mitKioskModus(TurnierSystem.LIGA, () -> new LigaSpielPlanSheet(wkingSpreadsheet).run());
+
+		assertThat(sheetHlp.findByName(de.petanqueturniermanager.helper.i18n.SheetNamen.spielplan()))
+				.as("Spielplan muss nach Kiosk-Rebuild weiterhin existieren")
+				.isNotNull();
 	}
 }

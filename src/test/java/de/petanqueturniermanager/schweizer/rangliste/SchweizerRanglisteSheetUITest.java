@@ -24,6 +24,7 @@ import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerAbstractSpielrundeSheet;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerTurnierTestDaten;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UI-Tests für das Schweizer Rangliste-Sheet.
@@ -297,6 +298,37 @@ public class SchweizerRanglisteSheetUITest extends BaseCalcUITest {
 		assertThat(aktivesSheet())
 				.as("Direktes doRun() darf setActiveSheet() nicht aufrufen (würde RanglisteRefreshListener triggern)")
 				.isNotSameAs(ranglisteSheet);
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: Nach Ergebnis-Änderung in der 1. Spielrunde muss das
+	 * {@link SchweizerRanglisteSheetUpdate#doRun()} auch unter aktivem TurnierModus +
+	 * voll gesperrtem Rangliste-Sheet laufen, die Siegesumme reduzieren und den
+	 * Blattschutz danach intakt lassen. Stellt den Lazy-Unprotect-Pfad in
+	 * {@code RangeHelper.setDataInRange} pro UITest-Klasse sicher.
+	 */
+	@Test
+	public void kioskModus_ranglisteUpdateAufGesperrtemSheet_funktioniert() throws GenerateException {
+		testDaten.generate();
+
+		String rundeSheetName = "1. " + SchweizerAbstractSpielrundeSheet.SHEET_NAMEN;
+		XSpreadsheet runde1 = sheetHlp.findByName(rundeSheetName);
+		assertThat(runde1).as("1. Spielrunde muss existieren").isNotNull();
+		nulleErgebnisse(runde1);
+
+		int siegeVorher = ladeRanglisteDaten().stream()
+				.mapToInt(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
+				.sum();
+
+		mitKioskModus(TurnierSystem.SCHWEIZER, () ->
+				new SchweizerRanglisteSheetUpdate(wkingSpreadsheet).doRun());
+
+		int siegeNachher = ladeRanglisteDaten().stream()
+				.mapToInt(row -> row.get(SchweizerRanglisteSheet.SIEGE_SPALTE).getIntVal(0))
+				.sum();
+		assertThat(siegeNachher)
+				.as("Siegesumme nach Kiosk-Update muss kleiner sein als vorher (%d)", siegeVorher)
+				.isLessThan(siegeVorher);
 	}
 
 	/** Liefert das aktuell aktive Sheet des Dokuments über die UNO-View-API. */

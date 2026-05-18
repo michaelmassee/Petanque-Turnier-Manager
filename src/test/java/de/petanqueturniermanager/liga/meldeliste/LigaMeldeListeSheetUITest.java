@@ -9,6 +9,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.exception.GenerateException;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * UITest fuer LigaMeldeListeSheetTestDaten.<br>
@@ -42,5 +43,18 @@ public class LigaMeldeListeSheetUITest extends BaseCalcUITest {
 
 		XSpreadsheet sheet = testDaten.getXSpreadSheet();
 		assertThat(sheet).as("Meldelisten-Sheet muss nach testNamenEinfuegen existieren").isNotNull();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: das anschließende Schützen der Liga-Sheets muss
+	 * sauber durchlaufen und die Schutz-Invariante (Sheets geschützt, editierbare
+	 * Bereiche bleiben editierbar) ist erfüllt.
+	 */
+	@Test
+	public void kioskModus_meldelisteBleibtMitEditierbarenBereichenGesperrt() throws GenerateException {
+		new LigaMeldeListeSheetTestDaten(wkingSpreadsheet, true).testNamenEinfuegen();
+		mitKioskModus(TurnierSystem.LIGA, () -> {
+			// reines Smoke-Setup: schuetzen() läuft, Invariante wird durch mitKioskModus geprüft.
+		});
 	}
 }

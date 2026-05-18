@@ -100,4 +100,14 @@ public class SidebarUITest extends BaseCalcUITest {
 		panel = null; // AfterEach soll nicht nochmal disposen
 		assertThatCode(() -> Lo.qi(XComponent.class, p).dispose()).doesNotThrowAnyException();
 	}
+
+	@Test
+	@DisplayName("InfoPanel: Erstellung läuft auch unter Kiosk-Modus")
+	void kioskModus_panelLaesstSichErstellen() throws Exception {
+		mitKioskModusOhneSchutz(() -> {
+			InfoSidebarPanel p = neuesPanel();
+			InfoSidebarContent content = (InfoSidebarContent) p.getRealInterface();
+			assertThat(content.getPluginVersion()).isNotEmpty();
+		});
+	}
 }

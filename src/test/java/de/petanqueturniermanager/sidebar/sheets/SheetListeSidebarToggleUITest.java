@@ -82,6 +82,19 @@ public class SheetListeSidebarToggleUITest extends BaseCalcUITest {
     }
 
     @Test
+    @DisplayName("Sidebar-Panel-Erstellung läuft auch unter Kiosk-Modus")
+    void kioskModus_panelLaesstSichErstellen() throws Exception {
+        mitKioskModusOhneSchutz(() -> {
+            try {
+                panel = neuesPanel();
+                assertThat(sheetListBox(content(panel))).isNotNull();
+            } catch (Exception e) {
+                throw new de.petanqueturniermanager.exception.GenerateException(e.getMessage());
+            }
+        });
+    }
+
+    @Test
     @DisplayName("Toggle-Regression: Panel nach dispose() korrekt initialisiert (SIGSEGV-Fix)")
     void panelNachToggle_IstKorrektInitialisiert() throws Exception {
         // Erste Panel-Instanz (entspricht: Sidebar wird geöffnet)

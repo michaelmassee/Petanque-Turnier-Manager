@@ -30,6 +30,7 @@ import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSp
 import de.petanqueturniermanager.supermelee.konfiguration.SuprMleEndranglisteSortMode;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_NeuerSpieltag;
 import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeErstellen;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheet;
 
@@ -258,6 +259,31 @@ public class EndranglisteSheetUITest extends BaseCalcUITest {
 				.flatMap(List::stream)
 				.mapToInt(c -> c.getIntVal(0))
 				.sum();
+	}
+
+	/**
+	 * Regression im Kiosk-Modus: nach Aufbau eines vollständigen Spieltags (Meldeliste +
+	 * 3 Spielrunden + Spieltag-Rangliste + Endrangliste) muss ein erneutes
+	 * {@link EndranglisteSheet#run()} unter aktivem TurnierModus + Blattschutz durchlaufen.
+	 */
+	@Test
+	public void kioskModus_endranglisteUpdateUnterSchutz() throws GenerateException {
+		testMeldeListeErstellen.initMitAlleDieSpielen(ANZ_MELDUNGEN);
+		SpielTagNr spieltag = SpielTagNr.from(1);
+		meldeListeSheet_NeuerSpieltag.setAktiveSpieltag(spieltag);
+		meldeListeSheet_NeuerSpieltag.setAktiveSpielRunde(SpielRundeNr.from(1));
+		testMeldeListeErstellen.addMitAlleDieSpielenAktuelleSpieltag(spieltag);
+		sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, Position.from(3, 10)).setValue(""));
+		sheetHlp.setStringValueInCell(StringCellValue.from(meldeListeSheet_NeuerSpieltag, Position.from(3, 11)).setValue(""));
+		ranglisteTestDaten.erstelleTestSpielrunden(ANZ_RUNDEN, false, spieltag);
+		spieltagRangliste.run();
+		endranglisteSheet.run();
+
+		mitKioskModus(TurnierSystem.SUPERMELEE, () -> endranglisteSheet.run());
+
+		assertThat(endranglisteSheet.getXSpreadSheet())
+				.as("Endrangliste-Sheet muss nach Kiosk-Update weiterhin verfügbar sein")
+				.isNotNull();
 	}
 
 }

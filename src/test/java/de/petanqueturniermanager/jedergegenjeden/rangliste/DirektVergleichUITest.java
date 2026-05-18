@@ -146,6 +146,39 @@ public class DirektVergleichUITest extends BaseCalcUITest {
 
 	}
 
+	/**
+	 * Regression im Kiosk-Modus: die PTM.DIREKTVERGLEICH-Funktion soll auch unter
+	 * aktivem TurnierModus auf einem Ad-hoc-Sheet (kein registriertes Turniersystem)
+	 * weiterhin auswertbar sein.
+	 */
+	@Test
+	public void kioskModus_direktVergleichFormel() throws IOException, GenerateException {
+		XSpreadsheet testSheet = sheetHlp.newIfNotExist(TEST_SHEET_NAME, 0);
+		sheetHlp.setActiveSheet(testSheet);
+
+		RangePosition paarungenRangePos = RangeHelper
+				.from(testSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), SPIELPAARUNGEN_SPALTE, ERSTE_ZEILE)
+				.setDataInRange(new Object[][] { { 1, 2 }, { 2, 1 } }, true).getRangePos();
+		RangePosition siegeRangePos = RangeHelper
+				.from(testSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), SIEGE_SPALTE, ERSTE_ZEILE)
+				.setDataInRange(new Object[][] { { 1, 0 }, { 1, 0 } }, true).getRangePos();
+		RangePosition spielpunkteRangePos = RangeHelper
+				.from(testSheet, wkingSpreadsheet.getWorkingSpreadsheetDocument(), SPIELPUNKTE_SPALTE, ERSTE_ZEILE)
+				.setDataInRange(new Object[][] { { 13, 7 }, { 13, 7 } }, true).getRangePos();
+
+		mitKioskModusOhneSchutz(() -> {
+			String formulaStr = direktVergleichFormula(1, 2, paarungenRangePos.getAddress(),
+					siegeRangePos.getAddress(), spielpunkteRangePos.getAddress());
+			StringCellValue formula = StringCellValue.from(testSheet).setValue(formulaStr)
+					.setPos(Position.from(FORMULA_SPALTE, FORMULA_1_ZEILE));
+			sheetHlp.setFormulaInCell(formula);
+			Integer ergebnis = sheetHlp.getIntFromCell(testSheet, formula.getPos());
+			assertThat(ergebnis)
+					.as("Direktvergleich-Formel muss auch im Kiosk-Modus den GLEICH-Code liefern")
+					.isEqualTo(DirektvergleichResult.GLEICH.getCode());
+		});
+	}
+
 	private String direktVergleichFormula(int tmA, int tmB, String begegnungenVerweis, String spieleVerweis,
 			String spielPunkteVerweis) {
 		return GlobalImpl.PTM_DIREKTVERGLEICH + "(" + tmA + ";" + tmB + ";" + begegnungenVerweis + ";" + spieleVerweis
