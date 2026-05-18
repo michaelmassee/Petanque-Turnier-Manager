@@ -37,9 +37,16 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
  * thread-lokalen Scope. Innerhalb dieses Scopes wird {@link #entsperren} und
  * {@link #schuetzen} stillgelegt; das echte Entsperren passiert erst beim
  * ersten Aufruf von {@link #ensureUnprotectedInScope} (typischerweise aus
- * {@code ConditionalFormatHelper} oder {@code RangeHelper.clearRange}). Beim
- * {@link #endCommandScope} wird – falls überhaupt entsperrt wurde – einmalig
- * geschützt. Reine Daten-Operationen lösen damit gar kein Toggle aus.
+ * {@code ConditionalFormatHelper}, {@code RangeHelper.clearRange} oder
+ * {@code RangeHelper.setDataInRange}). Beim {@link #endCommandScope} wird –
+ * falls überhaupt entsperrt wurde – einmalig geschützt. Pro Kommando also
+ * höchstens ein entsperren/schützen-Paar, egal wie viele Sub-Operationen.
+ * <p>
+ * Hinweis: Auch {@code setDataInRange} triggert den Lazy-Unprotect. Auf Sheets
+ * mit editierbarem Datenbereich (Zellen mit {@code IsLocked=false}) wäre das
+ * UNO-seitig nicht zwingend nötig, vermeidet aber Sonderfall-Logik – Rangliste-
+ * Sheets sind im Turnier-Modus voll gesperrt und müssen für jeden Daten-Write
+ * entsperrt sein.
  */
 public class BlattschutzManager {
 

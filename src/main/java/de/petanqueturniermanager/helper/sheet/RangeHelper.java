@@ -165,6 +165,9 @@ public class RangeHelper {
 				throw new GenerateException(I18n.get("error.rangehelper.anzahl.spalten", rangePos.getAnzahlSpalten(), dataArray[0].length));
 			}
 
+			// setDataArray() wirft RuntimeException auf voll gesperrten Sheets (z.B. Rangliste-Sheets im
+			// Turnier-Modus). Lazy-Entsperren im aktiven Scope; außerhalb eines Scopes No-Op.
+			BlattschutzManager.get().ensureUnprotectedInScope();
 			xCellRangeData.setDataArray(dataArray);
 		}
 		return this;
