@@ -13,7 +13,7 @@
 
 ---
 
-> *Entwickelt mit der Präzision eines Informatikers und der Leidenschaft eines Boulers.*
+> *Gebaut mit der Präzision eines Informatikers und der Leidenschaft eines Boulers.*
 
 ## 🎯 Einleitung
 Der **Pétanque-Turnier-Manager** ist eine leistungsstarke, Open-Source-Turnierleitungssoftware, die nahtlos als Erweiterung (Extension) in **LibreOffice Calc** integriert wird.

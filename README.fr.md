@@ -12,7 +12,7 @@
 
 ---
 
-> *Developed with the precision of a software engineer and the passion of a pétanque player.*
+> *Built with the precision of a software engineer and the passion of a pétanque player.*
 
 ## 🎯 Introduction
 Le **Gestionnaire de tournois de Pétanque** (Pétanque-Turnier-Manager) est un logiciel open-source performant pour la gestion de tournois, qui s'intègre parfaitement comme extension dans **LibreOffice Calc**.

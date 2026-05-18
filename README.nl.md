@@ -13,7 +13,7 @@
 
 ---
 
-> *Developed with the precision of a software engineer and the passion of a pétanque player.*
+> *Built with the precision of a software engineer and the passion of a pétanque player.*
 
 ## 🎯 Inleiding
 De **Pétanque Toernooi Manager** is een krachtige, open-source toernooibeheersoftware die naadloos integreert als een extensie in **LibreOffice Calc**.
