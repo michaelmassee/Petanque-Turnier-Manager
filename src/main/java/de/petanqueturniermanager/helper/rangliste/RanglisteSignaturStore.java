@@ -143,6 +143,30 @@ public final class RanglisteSignaturStore {
         }
     }
 
+    /**
+     * Berechnet die aktuelle Eingabe-Signatur und schreibt sie nach einem Vollaufbau
+     * (forceCreate-Pfad) in den Store. Wird am Ende von
+     * {@code *RanglisteSheet.doRunIntern()} aufgerufen, damit der Listener beim
+     * nächsten Trigger erkennt: „Hash unverändert" – kein zweiter Rebuild.
+     * <p>
+     * Nur bei {@link SignaturErgebnis.Ok} wird geschrieben. Andere Fälle werden
+     * geloggt und ignoriert: der Vollaufbau bleibt erfolgreich; beim nächsten
+     * Listener-Trigger entscheidet die dann frische Signatur-Berechnung.
+     */
+    public static void commitVollaufbau(XSpreadsheetDocument xDoc, String schluessel,
+            RanglisteEingabeSignatur signatur) {
+        checkNotNull(xDoc);
+        checkNotNull(schluessel);
+        checkNotNull(signatur);
+        SignaturErgebnis ergebnis = signatur.berechne(xDoc, 1);
+        if (ergebnis instanceof SignaturErgebnis.Ok ok) {
+            speichereNachRebuild(xDoc, schluessel, ok.hash(), "fullBuild");
+        } else {
+            logger.debug("commitVollaufbau: Hash nicht gespeichert für '{}' (Signatur != Ok): {}",
+                    schluessel, ergebnis);
+        }
+    }
+
     public static void markiereRecoveryVersucht(XSpreadsheetDocument xDoc, String schluessel) {
         checkNotNull(xDoc);
         checkNotNull(schluessel);

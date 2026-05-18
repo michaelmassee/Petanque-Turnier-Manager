@@ -27,6 +27,9 @@ import de.petanqueturniermanager.helper.border.BorderFactory;
 import de.petanqueturniermanager.helper.rangliste.IRangliste;
 import de.petanqueturniermanager.helper.rangliste.RangListeSorter;
 import de.petanqueturniermanager.helper.rangliste.RangListeSpalte;
+import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
+import de.petanqueturniermanager.helper.rangliste.RanglisteSignaturStore;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.search.RangeSearchHelper;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
@@ -134,6 +137,15 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 	}
 
 	/**
+	 * Signatur-Engine für den Hash-Commit nach Vollaufbau (überschreibbar für Subklassen).
+	 * Muss die identischen Quellen liefern wie der zugehörige
+	 * {@link de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener}.
+	 */
+	protected RanglisteEingabeSignatur getRanglisteEingabeSignatur() {
+		return new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer);
+	}
+
+	/**
 	 * Named-Range-Schlüssel für ein einzelnes Spielrunden-Sheet.
 	 * Subklassen (z.B. Maastrichter) überschreiben dies, damit beim Lookup nicht
 	 * versehentlich ein systemfremder Schlüssel ins Dokument geheilt wird.
@@ -202,6 +214,10 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 			getSheetHelper().setActiveSheet(sheet);
 			SheetRunner.unterdrückeNaechstesSelectionChange();
 		}
+		RanglisteSignaturStore.commitVollaufbau(
+				getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+				getMetadatenSchluessel(),
+				getRanglisteEingabeSignatur());
 		logger.debug("doRunIntern ENDE – Thread='{}'", Thread.currentThread().getName());
 	}
 

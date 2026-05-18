@@ -5,6 +5,8 @@ package de.petanqueturniermanager.maastrichter.rangliste;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
+import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetUpdate;
@@ -53,6 +55,11 @@ public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet
 	@Override
 	protected SchweizerMeldeListeSheetUpdate erstelleMeldeListeSheet() {
 		return new MaastrichterMeldeListeSheetUpdate(getWorkingSpreadsheet());
+	}
+
+	@Override
+	protected RanglisteEingabeSignatur getRanglisteEingabeSignatur() {
+		return new RanglisteEingabeSignatur(SignaturQuellen::fuerMaastrichter);
 	}
 
 }
