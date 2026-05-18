@@ -154,6 +154,14 @@ Anschließend Sheets per `validateWithJson(rangeData, jsonFile)` (aus `BaseCalcU
 
 Beispiele: `KoTurnierTestDatenUITest`, `MaastrichterTurnierTestDatenUITest`, `JGJTurnierTestDatenUITest`, `FormuleXTurnierTestDatenUITest`.
 
+## tools/ – Standalone-Analyseskripte
+
+Unter `tools/` liegen Python-Skripte (nur Standard-Bibliothek), die unabhängig von LibreOffice eine ODS einlesen und Konsistenz prüfen. Sind nicht Teil der OXT.
+
+- `tools/analyse_supermelee_spieltag.py <datei.ods>` – Konsistenz-Analyse eines Supermelee-Spieltags: Mitspieler-/Gegner-Wiederholungen, Rangliste-Werte (inkl. Default-Buchung für nicht angetretene Spieler via Property `Nicht gespielte Runde, ± Punkte`) und Sortierung (`Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓`, **kein Direktvergleich**).
+
+Details: `tools/README.md`.
+
 ## Known Build Issues
 
 See `BUILD_ISSUES.md` for details on:
