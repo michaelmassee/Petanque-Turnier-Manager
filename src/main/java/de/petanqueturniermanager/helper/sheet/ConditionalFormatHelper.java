@@ -13,7 +13,6 @@ import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.PropertyVetoException;
 import com.sun.star.beans.UnknownPropertyException;
 import com.sun.star.beans.XPropertySet;
-import com.sun.star.lang.IllegalArgumentException;
 import com.sun.star.lang.WrappedTargetException;
 import com.sun.star.sheet.ConditionOperator;
 
@@ -245,8 +244,14 @@ public class ConditionalFormatHelper extends BaseHelper {
 			// und löscht dabei den alten Eintrag – Scope sicherstellt dass Sheet entsperrt ist.
 			BlattschutzManager.get().ensureUnprotectedInScope();
 			xPropSet.setPropertyValue("ConditionalFormat", xEntries);
-		} catch (UnknownPropertyException | WrappedTargetException | IllegalArgumentException
-				| PropertyVetoException e) {
+		} catch (RuntimeException e) {
+			// LO verwirft setPropertyValue("ConditionalFormat") bei tab-geschütztem Sheet
+			// teils lautlos, teils mit RuntimeException. Loggen, Verarbeitung weiterlaufen lassen.
+			logger.warn(
+					"Bedingte Formatierung konnte nicht gesetzt werden – ggf. LO-Einschränkung "
+							+ "bei tab-geschütztem Sheet (sc/source/ui/unoobj). Range: {}, Style: {}, Ursache: {}",
+					rangePos, styleName, e.getMessage());
+		} catch (UnknownPropertyException | WrappedTargetException | PropertyVetoException e) {
 			logger.error(e.getMessage(), e);
 		}
 		reset();
