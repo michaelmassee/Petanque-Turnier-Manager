@@ -5,7 +5,7 @@ package de.petanqueturniermanager.toolbar;
 
 import java.util.Map;
 
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.toolbar.strategie.FormuleXToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.JGJToolbarStrategie;
 import de.petanqueturniermanager.toolbar.strategie.KaskadeToolbarStrategie;

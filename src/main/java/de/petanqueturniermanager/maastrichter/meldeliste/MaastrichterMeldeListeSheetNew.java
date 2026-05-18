@@ -26,7 +26,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 import de.petanqueturniermanager.schweizer.konfiguration.SpielplanTeamAnzeige;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellt eine neue Maastrichter-Meldeliste samt Konfiguration.

@@ -60,7 +60,7 @@ import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.Run
 import de.petanqueturniermanager.supermelee.ergebnis.SpielrundeErgebnisLeser.SpieltagErgebnisse;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_Update;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheet_Update;
 import de.petanqueturniermanager.supermelee.spielrunde.SpielrundeSheetKonstanten;
 

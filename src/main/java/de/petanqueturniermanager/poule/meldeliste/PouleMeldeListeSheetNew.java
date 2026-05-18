@@ -26,7 +26,7 @@ import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.model.TeamMeldungen;
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellt eine neue Poule-A/B-Meldeliste nach Benutzereingabe im Parameter-Dialog.

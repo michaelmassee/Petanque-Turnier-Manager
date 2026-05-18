@@ -13,7 +13,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationS
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheet;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Aktualisiert die Maastrichter Vorrunden-Rangliste ohne das Sheet neu zu erstellen.

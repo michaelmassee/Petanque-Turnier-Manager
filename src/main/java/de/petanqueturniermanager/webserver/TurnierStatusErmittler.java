@@ -13,7 +13,7 @@ import de.petanqueturniermanager.maastrichter.MaastrichterStatusLeser;
 import de.petanqueturniermanager.poule.PouleStatusLeser;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Liefert pro Turniersystem einen kurzen Status-Text ("Spielrunde 3", "Turnier beendet", …).

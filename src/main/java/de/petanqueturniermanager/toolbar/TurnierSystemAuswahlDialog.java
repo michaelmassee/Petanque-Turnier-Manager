@@ -37,7 +37,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeS
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Modaler Dialog zur Auswahl des Turniersystems beim Start eines neuen Turniers.

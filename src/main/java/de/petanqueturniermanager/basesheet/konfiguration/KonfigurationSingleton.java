@@ -19,7 +19,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterProperti
 import de.petanqueturniermanager.poule.konfiguration.PoulePropertiesSpalte;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerPropertiesSpalte;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleePropertiesSpalte;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee

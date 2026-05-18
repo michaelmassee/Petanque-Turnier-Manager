@@ -4,6 +4,8 @@
 
 package de.petanqueturniermanager.supermelee.meldeliste;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
+
 import java.util.List;
 
 import com.google.common.annotations.VisibleForTesting;

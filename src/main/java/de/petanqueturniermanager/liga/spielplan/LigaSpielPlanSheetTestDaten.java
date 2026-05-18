@@ -15,7 +15,7 @@ import de.petanqueturniermanager.liga.meldeliste.LigaMeldeListeSheetTestDaten;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.model.SpielErgebnis;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * @author Michael Massee

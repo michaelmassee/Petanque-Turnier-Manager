@@ -26,7 +26,7 @@ import de.petanqueturniermanager.kaskade.meldeliste.KaskadeMeldeListeSheetUpdate
 import de.petanqueturniermanager.ko.KoTurnierbaumSheet;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellt für jedes Kaskaden-Endfeld (A, B, C, D …) einen visuellen KO-Turnierbaum.<br>

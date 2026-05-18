@@ -10,7 +10,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeS
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetUpdate;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Aktualisiert die aktuelle Vorrunde im Maastrichter Turnier (neu auslosen).

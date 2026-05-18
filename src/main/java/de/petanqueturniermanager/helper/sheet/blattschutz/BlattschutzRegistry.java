@@ -16,7 +16,7 @@ import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschut
 import de.petanqueturniermanager.poule.blattschutz.PouleBlattschutzKonfiguration;
 import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
 import de.petanqueturniermanager.supermelee.blattschutz.SupermeleeBlattschutzKonfiguration;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Registry für turniersystemspezifische {@link IBlattschutzKonfiguration}-Implementierungen.

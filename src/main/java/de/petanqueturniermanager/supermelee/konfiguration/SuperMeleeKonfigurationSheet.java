@@ -16,7 +16,7 @@ import de.petanqueturniermanager.helper.pagestyle.PageStyleHelper;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 		implements ISuperMeleePropertiesSpalte, IKonfigurationSheet {

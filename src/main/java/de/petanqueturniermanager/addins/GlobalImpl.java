@@ -29,7 +29,7 @@ import de.petanqueturniermanager.spielerdb.SpielerMitVerein;
 import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.supermelee.SuperMeleeTeamRechner;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeMode;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 public final class GlobalImpl extends AbstractAddInImpl implements XGlobal {
 	static final Logger logger = LogManager.getLogger(GlobalImpl.class);

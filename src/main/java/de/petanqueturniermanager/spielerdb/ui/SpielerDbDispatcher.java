@@ -24,7 +24,7 @@ import de.petanqueturniermanager.spielerdb.SpielerRepository;
 import de.petanqueturniermanager.spielerdb.VereinRepository;
 import de.petanqueturniermanager.spielerdb.export.SpielerDbExportLoader;
 import de.petanqueturniermanager.spielerdb.vorlage.SheetVorlageAdapter;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.spielerdb.vorlage.SpielerDbVorlageSheet;
 import de.petanqueturniermanager.spielerdb.webview.SpielerDbWebViewServer;
 import de.petanqueturniermanager.exception.GenerateException;

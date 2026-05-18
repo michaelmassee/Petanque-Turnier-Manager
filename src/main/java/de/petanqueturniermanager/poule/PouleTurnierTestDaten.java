@@ -26,7 +26,7 @@ import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleSpielplaeneSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleVorrundeSheet;
 import de.petanqueturniermanager.poule.vorrunde.PouleSeedingService;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Generiert ein vollständiges Poule-A/B-Beispielturnier ohne Dialoge:

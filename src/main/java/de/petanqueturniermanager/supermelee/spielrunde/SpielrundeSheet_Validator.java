@@ -27,7 +27,7 @@ import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
 import de.petanqueturniermanager.helper.i18n.I18n;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 // prüfen alle spielrunden für ein spieltag auf doppelte paarungen
 public class SpielrundeSheet_Validator extends SheetRunner implements ISheet, SpielrundeSheetKonstanten {

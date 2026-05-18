@@ -18,7 +18,7 @@ import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationS
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetUpdate;
 import de.petanqueturniermanager.schweizer.spielrunde.SchweizerSpielrundeSheetNaechste;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
-import de.petanqueturniermanager.supermelee.meldeliste.TurnierSystem;
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
  * Erstellt die nächste Vorrunde im Maastrichter Turnier (Schweizer Algorithmus,
