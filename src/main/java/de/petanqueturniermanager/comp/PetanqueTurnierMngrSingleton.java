@@ -14,7 +14,9 @@ import com.sun.star.document.XEventBroadcaster;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoad;
+import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
 import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
+import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
@@ -120,29 +122,37 @@ public class PetanqueTurnierMngrSingleton {
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				TurnierSystem.SCHWEIZER,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer),
 				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				TurnierSystem.MAASTRICHTER,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				TurnierSystem.POULE,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerPoule),
 				(ws, ignored) -> new PouleVorrundenRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
 				TurnierSystem.FORMULEX,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerFormuleX),
 				(ws, ignored) -> new FormuleXRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerKaskade),
 				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
+				spieltagNr -> new RanglisteEingabeSignatur(
+						xDoc -> SignaturQuellen.fuerSupermeleeSpieltag(xDoc, spieltagNr)),
 				(ws, xSheet) -> {
 					SpielTagNr nr = SheetMetadataHelper
 							.findeSpieltagNr(ws.getWorkingSpreadsheetDocument(), xSheet)
@@ -152,6 +162,7 @@ public class PetanqueTurnierMngrSingleton {
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
 				TurnierSystem.SUPERMELEE,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
 				(ws, ignored) -> new EndranglisteSheetUpdate(ws)));
 	}
 
