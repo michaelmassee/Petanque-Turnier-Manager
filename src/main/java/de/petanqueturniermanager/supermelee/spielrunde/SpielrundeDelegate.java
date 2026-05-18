@@ -277,8 +277,10 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			int maxcntr = 999;
 			while (!zeileIstLeer && maxcntr > 0) {
 				maxcntr--;
+				Team team1 = Team.from(1);
+				Team team2 = Team.from(2);
 				for (int teamCntr = 1; teamCntr <= 2; teamCntr++) {
-					Team team = Team.from(1);
+					Team team = (teamCntr == 1) ? team1 : team2;
 					for (int spielerCntr = 1; spielerCntr <= 3; spielerCntr++) {
 						pospielerNr.spalte(ERSTE_SPIELERNR_SPALTE + ((teamCntr - 1) * 3) + spielerCntr - 1);
 						int spielerNr = sheet.getSheetHelper().getIntFromCell(xsheet, pospielerNr);
@@ -293,6 +295,15 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 								}
 							}
 						}
+					}
+				}
+				// Gegner-Historie auf Spieler-Ebene gegenseitig eintragen — Pendant zu
+				// SuperMeleePaarungenV2.optimiereGegnerPaarung. Ohne diesen Schritt blieb
+				// nach Session-Neustart die Gegner-Historie leer und der Greedy-Optimizer
+				// konnte Gegner-Wiederholungen nicht mehr vermeiden.
+				for (Spieler sA : team1.spieler()) {
+					for (Spieler sB : team2.spieler()) {
+						sA.addGegner(sB);
 					}
 				}
 				pospielerNr.zeilePlusEins().spalte(PAARUNG_CNTR_SPALTE);
