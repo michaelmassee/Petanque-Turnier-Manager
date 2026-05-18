@@ -190,6 +190,10 @@ public abstract class SheetRunner extends Thread {
 				if (isDocumentAlive()) {
 					doRun();
 					WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+					// Während des Runners eingetroffene Modify-Events wurden vom Listener
+					// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
+					// damit kein Benutzer-Event verloren geht.
+					WebServerManager.get().getModifyListener().markDirtyAndSchedule();
 				}
 			} catch (DisposedException e) {
 				documentDisposed = true;

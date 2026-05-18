@@ -13,13 +13,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.star.sheet.XCalculatable;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.uno.XComponentContext;
@@ -92,8 +97,8 @@ public final class WebServerManager implements TimerListener {
     /** Kontext, der beim {@link #starten(XComponentContext) Start} übergeben wurde –
      *  benötigt, um in {@link #konfigurationGeaendert()} ohne externes Sheet ein
      *  {@link WorkingSpreadsheet} für den Live-Push bauen zu können. */
-    private XComponentContext gespeicherterCtx = null;
-    private boolean laeuft = false;
+    private volatile XComponentContext gespeicherterCtx = null;
+    private volatile boolean laeuft = false;
     private TimerWebServerInstanz timerInstanz;
 
     /** Dedizierter Webserver für die Turnier-Startseite (separater Port, kein Composite).
@@ -112,7 +117,25 @@ public final class WebServerManager implements TimerListener {
 
     private final List<Runnable> statusListener = new CopyOnWriteArrayList<>();
 
+    /** Serialisiert alle Render-/Push-Wellen. Niemals zwei parallele {@code renderUndPushenComposite}-Läufe. */
+    private final ReentrantLock refreshLock = new ReentrantLock();
+    /** Zeitstempel des letzten erfolgreich abgeschlossenen Refresh-Laufs (für Watchdog-Heuristik). */
+    private volatile long lastSuccessfulRefreshAt;
+    /** Schwelle, ab der der Watchdog auch ohne dirty-Flag einen Recovery-Refresh anstößt (Self-Healing). */
+    private static final long STILLE_SCHWELLE_MS = 10_000L;
+    /** Schwelle, ab der eine hängende Dirty-Welle als Race-Hänger interpretiert wird. */
+    private static final long DIRTY_HAENGT_SCHWELLE_MS = 2_000L;
+    /** Watchdog-Tick-Intervall. */
+    private static final long WATCHDOG_INTERVAL_MS = 5_000L;
+
+    private ScheduledExecutorService watchdog;
+
     private WebServerManager() {
+    }
+
+    /** Zugriff auf den Listener für externe Mark-Trigger (z.B. SheetRunner-Ende). */
+    public WebserverModifyListener getModifyListener() {
+        return modifyListener;
     }
 
     public void addStatusListener(Runnable listener) {
@@ -202,6 +225,59 @@ public final class WebServerManager implements TimerListener {
                         I18n.get("webserver.hinweis.kein.dokument.titel"),
                         I18n.get("webserver.hinweis.kein.dokument.text"));
             }
+            starteWatchdog();
+        }
+    }
+
+    /**
+     * Startet einen leichten Periodic-Watchdog, der nur dann eine Refresh-Welle anstößt,
+     * wenn entweder eine Dirty-Welle hängt (Race-Hänger) oder zu lange keine Aktualisierung
+     * stattfand (Self-Healing bei komplett verschluckten Modify-Events). Macht selbst nie
+     * ein Mapping – der Aufruf läuft über den normalen Listener-Pfad und respektiert damit
+     * Debounce und Refresh-Lock.
+     */
+    private void starteWatchdog() {
+        if (watchdog != null && !watchdog.isShutdown()) {
+            return;
+        }
+        watchdog = Executors.newSingleThreadScheduledExecutor(r -> {
+            var t = new Thread(r, "WebserverWatchdog");
+            t.setDaemon(true);
+            return t;
+        });
+        watchdog.scheduleWithFixedDelay(this::watchdogTick,
+                WATCHDOG_INTERVAL_MS, WATCHDOG_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void watchdogTick() {
+        try {
+            if (!laeuft || gespeicherterCtx == null) {
+                return;
+            }
+            if (de.petanqueturniermanager.SheetRunner.isRunning()) {
+                return;
+            }
+            if (compositeInstanzen.stream().noneMatch(CompositeViewInstanz::hatAktiveVerbindungen)) {
+                // Kein Browser offen – nichts zu tun.
+                return;
+            }
+            boolean dirtyHaengt = modifyListener.isDirty()
+                    && modifyListener.dirtySinceMs() > DIRTY_HAENGT_SCHWELLE_MS;
+            boolean stilleZuLang = lastSuccessfulRefreshAt > 0L
+                    && System.currentTimeMillis() - lastSuccessfulRefreshAt > STILLE_SCHWELLE_MS;
+            if (dirtyHaengt || stilleZuLang) {
+                logger.debug("Watchdog-Trigger: dirtyHaengt={}, stilleZuLang={}", dirtyHaengt, stilleZuLang);
+                modifyListener.markDirtyAndSchedule();
+            }
+        } catch (RuntimeException e) {
+            logger.debug("Watchdog-Tick fehlgeschlagen: {}", e.getMessage());
+        }
+    }
+
+    private void stoppeWatchdog() {
+        if (watchdog != null) {
+            watchdog.shutdownNow();
+            watchdog = null;
         }
     }
 
@@ -307,6 +383,7 @@ public final class WebServerManager implements TimerListener {
         if (!laeuft) {
             return;
         }
+        stoppeWatchdog();
         deregistriereModifyListener();
         for (var instanz : compositeInstanzen) {
             instanz.stoppen();
@@ -640,13 +717,51 @@ public final class WebServerManager implements TimerListener {
     }
 
     private void sseRefreshSendenIntern(WorkingSpreadsheet ws) {
-        registriereModifyListenerFallsNoetig(ws);
-        for (var instanz : compositeInstanzen) {
-            renderUndPushenComposite(instanz, ws);
+        // Serialisiert: niemals zwei parallele Render-/Push-Wellen. Konkurrierende Aufrufer
+        // signalisieren stattdessen "nochmal" über den Listener-Dirty-Flag.
+        if (!refreshLock.tryLock()) {
+            modifyListener.markDirty();
+            logger.debug("Refresh läuft bereits – markDirty()");
+            return;
         }
-        // Entkoppelter Mini-Push-Pfad für die Startseite — kein Tabellen-Mapping,
-        // keine Diff-Engine, nur zwei Integer + Diff-Cache.
-        pushStartseiteFallsAktiv(ws);
+        try {
+            registriereModifyListenerFallsNoetig(ws);
+            // Genau ein calculate() pro Refresh-Welle, vor der Composite-Schleife –
+            // spart bei N Compositen N-1 Recalc-Durchläufe und stellt sicher, dass
+            // abhängige Formelzellen (z.B. Rangliste) den aktuellen Stand spiegeln.
+            forceRecalc(ws);
+            for (var instanz : compositeInstanzen) {
+                renderUndPushenComposite(instanz, ws);
+            }
+            // Entkoppelter Mini-Push-Pfad für die Startseite — kein Tabellen-Mapping,
+            // keine Diff-Engine, nur zwei Integer + Diff-Cache.
+            pushStartseiteFallsAktiv(ws);
+            lastSuccessfulRefreshAt = System.currentTimeMillis();
+        } finally {
+            refreshLock.unlock();
+            // Livelock-Schutz: konkurrierende Aufrufer haben evtl. nur markDirty() gemacht
+            // und sind an tryLock() abgeprallt. Falls jetzt dirty noch true ist, garantiert
+            // der erfolgreiche Owner eine Folge-Welle.
+            if (modifyListener.isDirty()) {
+                modifyListener.scheduleIfNeededExternal();
+            }
+        }
+    }
+
+    private void forceRecalc(WorkingSpreadsheet ws) {
+        var doc = ws.getWorkingSpreadsheetDocument();
+        if (doc == null) {
+            return;
+        }
+        var calc = Lo.qi(XCalculatable.class, doc);
+        if (calc == null) {
+            return;
+        }
+        try {
+            calc.calculate();
+        } catch (RuntimeException ex) {
+            logger.debug("Recalc übersprungen: {}", ex.getMessage());
+        }
     }
 
     /**

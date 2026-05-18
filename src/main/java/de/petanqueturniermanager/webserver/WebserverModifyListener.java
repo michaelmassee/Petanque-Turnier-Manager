@@ -2,9 +2,8 @@ package de.petanqueturniermanager.webserver;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,12 +17,21 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 /**
  * Lauscht auf Zelländerungen im Calc-Dokument und löst bei Änderungen einen SSE-Refresh aus.
  * <p>
- * Wird direkt auf dem {@code XModifyBroadcaster} des Spreadsheet-Dokuments registriert.
- * {@code modified()} wird im UNO-Event-Dispatch-Thread aufgerufen – UNO-Zugriffe sind dort sicher.
+ * Wird auf dem {@code XModifyBroadcaster} des Spreadsheet-Dokuments registriert. {@code modified()}
+ * läuft im UNO-Event-Thread.
  * <p>
- * Eingebaut ist ein Debounce von {@value #DEBOUNCE_MS} ms: bei schnellen Eingabefolgen
- * (z.B. Tab von Zelle zu Zelle) wird der Timer bei jedem Event neu gestartet und erst nach
- * Ablauf der Stille-Periode ein einziger Update gesendet – immer mit dem aktuellen Zustand.
+ * Designprinzipien:
+ * <ul>
+ *   <li><strong>Dirty-Flag-Pattern, keine Cancel-Races:</strong> jedes {@code modified()} setzt
+ *       unbedingt {@link #dirty}. Genau ein Refresh-Lauf ist zu jedem Zeitpunkt geplant
+ *       ({@link #scheduled}).</li>
+ *   <li><strong>Self-Rescheduling-Loop:</strong> der Refresh-Task arbeitet in einer {@code do/while}-
+ *       Schleife, solange {@code dirty} zwischenzeitlich wieder gesetzt wurde – kein Timer-Loop,
+ *       kein Event-Verlust, exakt ein Owner.</li>
+ *   <li><strong>Externer Mark-Only-Pfad:</strong> {@link #markDirty()} setzt nur den Flag (ohne
+ *       Schedule), {@link #markDirtyAndSchedule()} markiert und triggert. Externe Aufrufer
+ *       manipulieren {@code dirty} niemals direkt.</li>
+ * </ul>
  */
 public class WebserverModifyListener implements XModifyListener {
 
@@ -36,7 +44,11 @@ public class WebserverModifyListener implements XModifyListener {
                 t.setDaemon(true);
                 return t;
             });
-    private final AtomicReference<ScheduledFuture<?>> pending = new AtomicReference<>();
+
+    private final AtomicBoolean dirty = new AtomicBoolean(false);
+    private final AtomicBoolean scheduled = new AtomicBoolean(false);
+    /** Zeitpunkt, zu dem die aktuelle Dirty-Welle begann ({@code 0} wenn nicht dirty). */
+    private volatile long dirtySeitMs;
 
     private volatile WorkingSpreadsheet ws;
 
@@ -44,52 +56,115 @@ public class WebserverModifyListener implements XModifyListener {
     public void setWs(WorkingSpreadsheet ws) {
         this.ws = ws;
         if (ws == null) {
-            abbrechen();
+            dirty.set(false);
+            dirtySeitMs = 0L;
         }
     }
 
     @Override
     public void modified(EventObject source) {
+        markiereDirty();
         if (SheetRunner.isRunning()) {
-            // SheetRunner ist aktiv – dessen Rendering hat Vorfahrt
+            // Während eines laufenden SheetRunners nicht selbst schedulen –
+            // der Runner ruft am Ende markDirtyAndSchedule() auf und übernimmt damit
+            // die aufgelaufene Welle. Dirty bleibt gesetzt, kein Event verloren.
             return;
         }
-        pending.getAndUpdate(prev -> {
-            if (prev != null && !prev.isDone()) {
-                prev.cancel(false);
-            }
-            return debounceScheduler.schedule(() -> {
-                try {
-                    var current = ws;
-                    if (current == null) {
-                        return;
-                    }
-                    if (Thread.currentThread().isInterrupted()) {
-                        return;
-                    }
-                    WebServerManager.get().sseRefreshSenden(current);
-                } catch (Exception e) {
-                    logger.debug("SSE-Refresh nach Zelländerung fehlgeschlagen: {}", e.getMessage());
-                }
-            }, DEBOUNCE_MS, TimeUnit.MILLISECONDS);
-        });
+        scheduleIfNeeded();
     }
 
     /**
-     * Storniert einen evtl. noch ausstehenden Debounce-Task, ohne den Executor zu beenden.
-     * Wird bei der Deregistrierung vom Dokument aufgerufen (via {@link #setWs(WorkingSpreadsheet)}).
+     * Markiert nur als dirty, ohne einen Refresh-Lauf einzuplanen.
+     * Vorgesehen für konkurrierende Aufrufer, die an einem Refresh-Lock abgeprallt sind
+     * und dem aktuellen Owner signalisieren, dass eine weitere Welle nachgeholt werden muss.
      */
-    public void abbrechen() {
-        var task = pending.getAndSet(null);
-        if (task != null) {
-            task.cancel(false);
+    public void markDirty() {
+        markiereDirty();
+    }
+
+    /**
+     * Markiert als dirty und plant einen Refresh-Lauf ein, falls nicht bereits einer pending ist.
+     * Wird vom SheetRunner-Ende aufgerufen, um während des Runners eingetroffene
+     * Modify-Events nicht zu verlieren.
+     */
+    public void markDirtyAndSchedule() {
+        markiereDirty();
+        scheduleIfNeeded();
+    }
+
+    /** Öffentlich für den Refresh-Lock-Owner, um nach Lock-Freigabe eine Folgewelle anzustoßen. */
+    public void scheduleIfNeededExternal() {
+        scheduleIfNeeded();
+    }
+
+    /** @return {@code true} wenn aktuell eine unverarbeitete Dirty-Welle aussteht. */
+    public boolean isDirty() {
+        return dirty.get();
+    }
+
+    /**
+     * @return Millisekunden seit Beginn der aktuellen Dirty-Welle; {@code 0} wenn nicht dirty.
+     *         Wird vom Watchdog zur Erkennung hängender Wellen verwendet.
+     */
+    public long dirtySinceMs() {
+        long start = dirtySeitMs;
+        return start == 0L ? 0L : Math.max(0L, System.currentTimeMillis() - start);
+    }
+
+    private void markiereDirty() {
+        if (dirty.compareAndSet(false, true)) {
+            dirtySeitMs = System.currentTimeMillis();
+        }
+    }
+
+    private void scheduleIfNeeded() {
+        if (!scheduled.compareAndSet(false, true)) {
+            return;
+        }
+        debounceScheduler.schedule(this::refreshTask, DEBOUNCE_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void refreshTask() {
+        try {
+            do {
+                dirty.set(false);
+                dirtySeitMs = 0L;
+                var current = ws;
+                if (current == null) {
+                    // ws kann zwischenzeitlich abgemeldet worden sein – Welle als verarbeitet markieren.
+                    break;
+                }
+                try {
+                    WebServerManager.get().sseRefreshSenden(current);
+                } catch (RuntimeException e) {
+                    logger.debug("SSE-Refresh fehlgeschlagen: {}", e.getMessage());
+                }
+                // Falls während refresh wieder dirty gesetzt wurde, nochmal durch.
+            } while (dirty.get());
+        } finally {
+            scheduled.set(false);
+            // Race-Fenster zwischen letztem dirty.get()==false und scheduled=false:
+            // ein modified() könnte exakt hier ankommen und sehen, dass bereits ein Task
+            // pending ist (scheduled==true). Nach dem Reset auf false muss daher nochmal
+            // geprüft werden, sonst bleibt dirty stehen.
+            if (dirty.get()) {
+                scheduleIfNeeded();
+            }
         }
     }
 
     /**
-     * Storniert den ausstehenden Task und beendet den Debounce-Executor vollständig.
-     * Wird beim Schließen des Dokuments ({@link #disposing(EventObject)}) aufgerufen.
+     * Storniert evtl. ausstehende Tasks ohne den Executor zu beenden.
+     * Wird bei Deregistrierung vom Dokument aufgerufen.
      */
+    public void abbrechen() {
+        // Kein direktes Cancel – der Task läuft (falls in Ausführung) auf ws==null und beendet
+        // sich selbst. Pending-Schedules laufen einmal leer durch, was billig ist.
+        dirty.set(false);
+        dirtySeitMs = 0L;
+    }
+
+    /** Storniert ausstehende Tasks und beendet den Debounce-Executor vollständig. */
     public void herunterfahren() {
         abbrechen();
         debounceScheduler.shutdownNow();

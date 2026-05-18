@@ -107,6 +107,11 @@ public class CompositeViewInstanz implements SseElternInstanz, WebServerSlot {
                 konfiguration.port(), sseVerbindungen.size());
     }
 
+    /** @return {@code true} wenn mindestens ein Browser-Client per SSE verbunden ist. */
+    public boolean hatAktiveVerbindungen() {
+        return !sseVerbindungen.isEmpty();
+    }
+
     @Override
     public int getPort() {
         return konfiguration.port();
