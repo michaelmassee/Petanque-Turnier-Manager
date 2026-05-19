@@ -32,6 +32,7 @@ import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.Selection;
 import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XTopWindow;
+import com.sun.star.awt.XTopWindowListener;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindow2;
 import com.sun.star.beans.XPropertySet;
@@ -333,6 +334,12 @@ public class ProcessBox implements TimerListener {
         XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
         xWindow.setVisible(false);
         dialogControl.createPeer(xToolkit, null);
+
+        // XTopWindowListener für Klick auf das X (Close-Button im Fensterrahmen)
+        XTopWindow xTopWindow = Lo.qi(XTopWindow.class, dialogControl.getPeer());
+        if (xTopWindow != null) {
+            xTopWindow.addTopWindowListener(new CloseListener());
+        }
 
         controls = Lo.qi(XControlContainer.class, dialog);
 
@@ -779,6 +786,22 @@ public class ProcessBox implements TimerListener {
         public void disposing(EventObject e) {
             // nichts
         }
+    }
+
+    /** XTopWindowListener: blendet den Dialog beim Klick auf das X aus, ohne ihn zu disposen. */
+    private final class CloseListener implements XTopWindowListener {
+        @Override
+        public void windowClosing(EventObject e) {
+            setVisibleInternal(false);
+        }
+
+        @Override public void windowOpened(EventObject e) { /* no-op */ }
+        @Override public void windowClosed(EventObject e) { /* no-op */ }
+        @Override public void windowMinimized(EventObject e) { /* no-op */ }
+        @Override public void windowNormalized(EventObject e) { /* no-op */ }
+        @Override public void windowActivated(EventObject e) { /* no-op */ }
+        @Override public void windowDeactivated(EventObject e) { /* no-op */ }
+        @Override public void disposing(EventObject e) { /* no-op */ }
     }
 
 }
