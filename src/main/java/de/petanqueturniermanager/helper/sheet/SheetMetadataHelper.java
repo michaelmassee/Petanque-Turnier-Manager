@@ -86,6 +86,12 @@ public class SheetMetadataHelper {
     public static final String SCHLUESSEL_LIGA_RANGLISTE = "__PTM_LIGA_RANGLISTE__";
     public static final String SCHLUESSEL_LIGA_DIREKTVERGLEICH = "__PTM_LIGA_DIREKTVERGLEICH__";
 
+    // ── Konstanten: TripTete ─────────────────────────────────────────────────
+
+    public static final String SCHLUESSEL_TRIPTETE_MELDELISTE  = "__PTM_TRIPTETE_MELDELISTE__";
+    public static final String SCHLUESSEL_TRIPTETE_SPIELPLAN   = "__PTM_TRIPTETE_SPIELPLAN__";
+    public static final String SCHLUESSEL_TRIPTETE_RANGLISTE   = "__PTM_TRIPTETE_RANGLISTE__";
+
     // ── Konstanten: Schweizer ────────────────────────────────────────────────
 
     public static final String SCHLUESSEL_SCHWEIZER_RANGLISTE = "__PTM_SCHWEIZER_RANGLISTE__";

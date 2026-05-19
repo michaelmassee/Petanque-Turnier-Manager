@@ -46,4 +46,7 @@ public class DefaultSheetPos {
 	public static final short KASKADE_GRUPPENRANGLISTE = 3; // Kaskaden-KO Gruppenrangliste
 	public static final short KASKADE_FELDER           = 4; // Kaskaden-KO KO-Feld-Sheets (A/B/C/D)
 
+	public static final short TRIPTETE_WORK         = 2; // Trip-Tête Spielplan
+	public static final short TRIPTETE_ENDRANGLISTE = 3;
+
 }
