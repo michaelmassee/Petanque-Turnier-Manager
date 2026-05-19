@@ -38,9 +38,13 @@ import de.petanqueturniermanager.toolbar.TurnierModus;
  * {@link #schuetzen} stillgelegt; das echte Entsperren passiert erst beim
  * ersten Aufruf von {@link #ensureUnprotectedInScope} (typischerweise aus
  * {@code ConditionalFormatHelper}, {@code RangeHelper.clearRange} oder
- * {@code RangeHelper.setDataInRange}). Beim {@link #endCommandScope} wird –
- * falls überhaupt entsperrt wurde – einmalig geschützt. Pro Kommando also
- * höchstens ein entsperren/schützen-Paar, egal wie viele Sub-Operationen.
+ * {@code RangeHelper.setDataInRange}). Beim {@link #endCommandScope} läuft
+ * <em>immer</em> ein abschließendes {@code doSchuetzen()}, auch wenn im Scope
+ * kein {@code ensureUnprotectedInScope}-Trigger gefeuert hat. Damit werden
+ * auch Doc-Struktur-Mutationen abgedeckt, die kein {@code ensureUnprotectedInScope}
+ * aufrufen (z.B. {@code NewSheet.forceCreate()}, das ein Sheet entfernt und
+ * neu, ungeschützt anlegt). Pro Kommando also höchstens ein entsperren-Aufruf
+ * (lazy) und genau ein schützen-Aufruf am Ende.
  * <p>
  * Hinweis: Auch {@code setDataInRange} triggert den Lazy-Unprotect. Auf Sheets
  * mit editierbarem Datenbereich (Zellen mit {@code IsLocked=false}) wäre das
@@ -56,7 +60,8 @@ public class BlattschutzManager {
     /**
      * Thread-lokaler Scope-Zustand eines laufenden Kommandos. Ein Scope hält
      * die Konfiguration und das Spreadsheet fest und merkt sich, ob im Verlauf
-     * tatsächlich entsperrt wurde (lazy).
+     * lazy bereits entsperrt wurde (damit weitere {@code ensureUnprotectedInScope}-
+     * Calls No-Ops sind).
      */
     private static final class ScopeState {
         final IBlattschutzKonfiguration konfig;
@@ -110,10 +115,14 @@ public class BlattschutzManager {
     }
 
     /**
-     * Schließt den thread-lokalen Scope. Wurde im Verlauf entsperrt, läuft
-     * jetzt einmalig {@code doSchuetzen()}. Der ThreadLocal wird auch dann
-     * aufgeräumt, wenn das Schützen wirft – damit der nächste Lauf in einem
-     * Thread-Pool sauber startet.
+     * Schließt den thread-lokalen Scope. Beim Schließen des äußersten Scopes
+     * läuft <em>immer</em> ein abschließendes {@code doSchuetzen()} – auch
+     * wenn im Scope kein {@code ensureUnprotectedInScope}-Trigger gefeuert
+     * hat. Damit sind Doc-Struktur-Mutationen abgedeckt, die kein Lazy-Trigger
+     * auslösen (z.B. {@code NewSheet.forceCreate()}, das ein Sheet entfernt
+     * und ungeschützt neu anlegt). Der ThreadLocal wird auch dann aufgeräumt,
+     * wenn das Schützen wirft – damit der nächste Lauf in einem Thread-Pool
+     * sauber startet.
      */
     public void endCommandScope() {
         ScopeState state = SCOPE.get();
@@ -124,9 +133,7 @@ public class BlattschutzManager {
             return;
         }
         try {
-            if (state.wurdeEntsperrt) {
-                doSchuetzen(state.konfig, state.ws);
-            }
+            doSchuetzen(state.konfig, state.ws);
         } finally {
             SCOPE.remove();
         }
