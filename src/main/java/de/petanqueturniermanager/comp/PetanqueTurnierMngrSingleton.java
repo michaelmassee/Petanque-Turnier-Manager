@@ -104,6 +104,12 @@ public class PetanqueTurnierMngrSingleton {
 
 		globalEventListener(context);
 		I18n.init(context); // muss vor ProcessBox, da ProcessBox I18n-Texte beim Aufbau verwendet
+		// TEMP DEBUG: ProcessBox komplett abschalten zur Eingrenzung des LO-Crashes
+		// beim Anwender (Win11 + LO 25.8). Minidump zeigte sun.java2d.d3d.D3DScreenUpdateManager,
+		// also Java-Swing-Renderpfad. ProcessBox ist ein JFrame mit Spinner-Timer
+		// (100ms) und vielen invokeLater-Calls – Hauptlast auf dieser Pipeline.
+		// Wenn der Crash damit verschwindet, ist die Ursache bestaetigt.
+		ProcessBox.setHeadlessMode(true);
 		ProcessBox.init(context);
 		TimerManager.init(context);
 		TimerManager.get().addListener(ProcessBox.from());
