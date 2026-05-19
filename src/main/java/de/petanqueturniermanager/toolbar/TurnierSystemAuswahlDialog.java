@@ -3,6 +3,10 @@
  */
 package de.petanqueturniermanager.toolbar;
 
+import java.text.Collator;
+import java.util.Arrays;
+import java.util.Comparator;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,17 +56,18 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
     private static final String CTL_BTN_OK        = "btnOk";
     private static final String CTL_BTN_ABBRECHEN = "btnAbbrechen";
 
-    protected static final TurnierSystem[] AUSWAHL_SYSTEME = {
-        TurnierSystem.FORMULEX,
-        TurnierSystem.JGJ,
-        TurnierSystem.KO,
-        TurnierSystem.KASKADE,
-        TurnierSystem.LIGA,
-        TurnierSystem.MAASTRICHTER,
-        TurnierSystem.POULE,
-        TurnierSystem.SCHWEIZER,
-        TurnierSystem.SUPERMELEE
-    };
+    protected static final TurnierSystem[] AUSWAHL_SYSTEME = Arrays.stream(new TurnierSystem[] {
+            TurnierSystem.FORMULEX,
+            TurnierSystem.JGJ,
+            TurnierSystem.KO,
+            TurnierSystem.KASKADE,
+            TurnierSystem.LIGA,
+            TurnierSystem.MAASTRICHTER,
+            TurnierSystem.POULE,
+            TurnierSystem.SCHWEIZER,
+            TurnierSystem.SUPERMELEE
+    }).sorted(Comparator.comparing(TurnierSystem::getBezeichnung, Collator.getInstance()))
+            .toArray(TurnierSystem[]::new);
 
     private WorkingSpreadsheet ws;
     protected XListBox listBox;
@@ -173,15 +178,15 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
     protected static void starteNeueTurnierInDokument(WorkingSpreadsheet zielWs, TurnierSystem system)
             throws Exception {
         switch (system) {
-            case SUPERMELEE   -> new MeldeListeSheet_New(zielWs).start();
-            case SCHWEIZER    -> new SchweizerMeldeListeSheetNew(zielWs).start();
-            case MAASTRICHTER -> new MaastrichterMeldeListeSheetNew(zielWs).start();
-            case POULE        -> new PouleMeldeListeSheetNew(zielWs).start();
-            case LIGA         -> new LigaMeldeListeSheetNew(zielWs).start();
-            case JGJ          -> new JGJMeldeListeSheet_New(zielWs).start();
-            case KO           -> new KoMeldeListeSheetNew(zielWs).start();
-            case KASKADE      -> new KaskadeMeldeListeSheetNew(zielWs).start();
-            case FORMULEX     -> new FormuleXMeldeListeSheetNew(zielWs).start();
+            case SUPERMELEE   -> new MeldeListeSheet_New(zielWs).startSilent();
+            case SCHWEIZER    -> new SchweizerMeldeListeSheetNew(zielWs).startSilent();
+            case MAASTRICHTER -> new MaastrichterMeldeListeSheetNew(zielWs).startSilent();
+            case POULE        -> new PouleMeldeListeSheetNew(zielWs).startSilent();
+            case LIGA         -> new LigaMeldeListeSheetNew(zielWs).startSilent();
+            case JGJ          -> new JGJMeldeListeSheet_New(zielWs).startSilent();
+            case KO           -> new KoMeldeListeSheetNew(zielWs).startSilent();
+            case KASKADE      -> new KaskadeMeldeListeSheetNew(zielWs).startSilent();
+            case FORMULEX     -> new FormuleXMeldeListeSheetNew(zielWs).startSilent();
             default           -> logger.warn("Unbekanntes Turniersystem für Start-Aktion: {}", system);
         }
     }

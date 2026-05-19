@@ -973,12 +973,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			// ------------------------------
 			// Symbolleiste
-			case CMD_TOOLBAR_START:
-				new TurnierSystemAuswahlDialog(ws).zeige();
-				break;
-			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI:
-				new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
-				break;
 			case CMD_TOOLBAR_OEFFNEN:
 				ws.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
 				break;
@@ -1045,6 +1039,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		switch (command) {
 			case CMD_PLUGIN_KONFIGURATION -> new GlobalPropertiesDialog(xContext).zeigen();
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
+			case CMD_TOOLBAR_START        -> new TurnierSystemAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
+			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI -> new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
 			default -> { return false; }
 		}
 		return true;
