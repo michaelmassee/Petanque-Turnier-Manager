@@ -78,6 +78,7 @@
             <Class name="de.petanqueturniermanager.webserver.CompositeViewInstanz"/>
             <Class name="de.petanqueturniermanager.webserver.WebServerInstanz"/>
             <Class name="de.petanqueturniermanager.webserver.TurnierStartseiteWebServerInstanz"/>
+            <Class name="de.petanqueturniermanager.helper.msgbox.ProcessBox"/>
         </Or>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
     </Match>
