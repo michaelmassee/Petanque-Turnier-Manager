@@ -626,6 +626,43 @@
 									</node>
 								</node>
 							</node>
+								<!-- B1: Trip-Tête -->
+								<node oor:name="B1" oor:op="replace">
+									<prop oor:name="URL" oor:type="xs:string">
+										<value/>
+									</prop>
+									<prop oor:name="ImageIdentifier" oor:type="xs:string">
+										<value/>
+									</prop>
+									<prop oor:name="Title" oor:type="xs:string">
+										<value xml:lang="de">Trip-Tête</value>
+										<value xml:lang="en">Trip-Tête</value>
+										<value xml:lang="es">Trip-Tête</value>
+										<value xml:lang="fr">Trip-Tête</value>
+										<value xml:lang="nl">Trip-Tête</value>
+									</prop>
+									<prop oor:name="Target" oor:type="xs:string">
+										<value>_self</value>
+									</prop>
+									<node oor:name="Submenu">
+										<node oor:name="B1A1" oor:op="replace">
+											<prop oor:name="Title">
+												<value xml:lang="de">Komplettes Turnier (6 Teams)</value>
+												<value xml:lang="en">Complete tournament (6 teams)</value>
+												<value xml:lang="es">Torneo completo (6 equipos)</value>
+												<value xml:lang="fr">Tournoi complet (6 équipes)</value>
+												<value xml:lang="nl">Volledig toernooi (6 teams)</value>
+											</prop>
+											<prop oor:name="URL">
+												<value>ptm:triptete_testdaten</value>
+											</prop>
+											<prop oor:name="Target" oor:type="xs:string">
+												<value>_self</value>
+											</prop>
+										</node>
+									</node>
+								</node>
+
 
 						</node>
 					</node>

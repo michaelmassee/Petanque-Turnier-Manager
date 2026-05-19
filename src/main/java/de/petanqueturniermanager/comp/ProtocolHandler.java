@@ -98,6 +98,7 @@ import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
+import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheetTestDaten;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
@@ -618,7 +619,9 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_TRIPTETE_KONFIGURATION:
 				TripTeteKonfigurationSheetStarter.start(ws);
 				break;
-			// CMD_TRIPTETE_TESTDATEN: siehe Phase 4
+			case CMD_TRIPTETE_TESTDATEN:
+				new TripTeteSpielPlanSheetTestDaten(ws).start();
+				break;
 			// ------------------------------
 			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE:
