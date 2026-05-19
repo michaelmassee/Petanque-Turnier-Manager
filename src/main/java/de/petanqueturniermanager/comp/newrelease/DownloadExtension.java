@@ -6,17 +6,12 @@ package de.petanqueturniermanager.comp.newrelease;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jspecify.annotations.Nullable;
-
-import com.sun.star.ui.dialogs.ExecutableDialogResults;
-import com.sun.star.ui.dialogs.FolderPicker;
-import com.sun.star.ui.dialogs.XFolderPicker2;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
@@ -40,8 +35,17 @@ public class DownloadExtension extends SheetRunner {
 
     private static final Logger logger = LogManager.getLogger(DownloadExtension.class);
 
-    public DownloadExtension(WorkingSpreadsheet workingSpreadsheet) {
+    private final File zielVerzeichnis;
+
+    /**
+     * @param zielVerzeichnis vom Nutzer zuvor (auf dem LO-Main-Thread, vor dem
+     *        Aufpoppen der ProcessBox) ausgewähltes Download-Verzeichnis. Wenn
+     *        der FolderPicker erst im SheetRunner-Thread geöffnet wird, kommt
+     *        er unter der ProcessBox zu liegen und ist für den Nutzer unsichtbar.
+     */
+    public DownloadExtension(WorkingSpreadsheet workingSpreadsheet, File zielVerzeichnis) {
         super(workingSpreadsheet, TurnierSystem.KEIN, "Download");
+        this.zielVerzeichnis = zielVerzeichnis;
     }
 
     @Override
@@ -82,17 +86,8 @@ public class DownloadExtension extends SheetRunner {
         processBoxinfo("processbox.github.version", release.name());
         processBox().info(downloadURL.toString());
 
-        XFolderPicker2 picker = FolderPicker.create(getWorkingSpreadsheet().getxContext());
-        picker.setTitle("Download Verzeichnis");
-        short res = picker.execute();
-        if (res != ExecutableDialogResults.OK) {
-            processBoxinfo("processbox.abbruch");
-            return;
-        }
         try {
-            String directoryUrl = picker.getDirectory();
-            URI dirURL = new URI(directoryUrl);
-            File selectedPath = new File(dirURL);
+            File selectedPath = zielVerzeichnis;
             File targetFile = new File(selectedPath, oxtAsset.name());
             if (targetFile.exists()) {
                 processBoxinfo("processbox.datei.bereits.vorhanden", targetFile);
@@ -115,7 +110,7 @@ public class DownloadExtension extends SheetRunner {
                 processBox().fehler("keine Schreibrechte");
             }
             processBox().infoText("");
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             logger.error(e);
             processBox().fehler(e.getMessage());
         }
