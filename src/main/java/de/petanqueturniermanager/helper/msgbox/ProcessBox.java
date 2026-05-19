@@ -66,6 +66,8 @@ public class ProcessBox implements TimerListener {
     private static final Logger logger = LogManager.getLogger(ProcessBox.class);
 
     private static final int AUTO_CLOSE_DELAY_MS = 5000;
+    private static final int MAX_LOG_CHARS = 50_000;
+    private static final String LOG_TRUNCATED_MARKER = "… [gekürzt] …\r\n";
     private static final String TITLE = "Pétanque Turnier Manager";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -454,6 +456,14 @@ public class ProcessBox implements TimerListener {
         return this;
     }
 
+    /**
+     * Setzt einen Log-Prefix für den <b>nächsten</b> {@link #info(String)}-Aufruf
+     * desselben Threads. Der Prefix ist <b>einmalig</b>: er wird im {@code finally}
+     * von {@code info()} automatisch wieder entfernt. Für jeden weiteren Log-Eintrag
+     * mit Prefix muss {@code prefix(...)} erneut aufgerufen werden.
+     *
+     * <p>Der Prefix ist thread-local und beeinflusst andere Threads nicht.
+     */
     public ProcessBox prefix(String nextLogPrefix) {
         if (disposed) return this;
         if (nextLogPrefix != null) {
@@ -500,6 +510,12 @@ public class ProcessBox implements TimerListener {
             Object current = logEditProps.getPropertyValue("Text");
             String currentStr = current instanceof String s ? s : "";
             String neu = currentStr + zeile;
+            if (neu.length() > MAX_LOG_CHARS) {
+                int schnittAb = neu.length() - MAX_LOG_CHARS / 2;
+                int nextNl = neu.indexOf('\n', schnittAb);
+                int cut = nextNl >= 0 ? nextNl + 1 : schnittAb;
+                neu = LOG_TRUNCATED_MARKER + neu.substring(cut);
+            }
             logEditProps.setPropertyValue("Text", neu);
             // Caret ans Ende setzen → Edit-Control scrollt zur letzten Zeile
             if (logEditText != null) {
@@ -575,6 +591,7 @@ public class ProcessBox implements TimerListener {
             laeuft.set(false);
             return this;
         }
+        isFehler = false;
         stopAutoCloseTask();
 
         boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
