@@ -118,7 +118,7 @@ public final class MeldelisteZielFactory {
                     yield Optional.of(new MeldelisteLayout(k.getMeldeListeFormation(),
                             k.isMeldeListeTeamnameAnzeigen(), k.isMeldeListeVereinsnameAnzeigen()));
                 }
-                case LIGA, KEIN -> Optional.empty();
+                case LIGA, TRIPTETE, KEIN -> Optional.empty();
             };
         } catch (RuntimeException e) {
             logger.warn("Konfig-Layout für {} konnte nicht gelesen werden", ts, e);

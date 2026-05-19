@@ -14,7 +14,8 @@ public enum TurnierSystem {
 	JGJ(5, "enum.turniersystem.jgj"), KO(6, "enum.turniersystem.ko"),
 	POULE(7, "enum.turniersystem.poule"),
 	KASKADE(8, "enum.turniersystem.kaskade"),
-	FORMULEX(9, "enum.turniersystem.formulex");
+	FORMULEX(9, "enum.turniersystem.formulex"),
+	TRIPTETE(10, "enum.turniersystem.triptete");
 
 	private final String i18nKey;
 	private final int id;

@@ -21,6 +21,7 @@ import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigur
 import de.petanqueturniermanager.poule.konfiguration.PouleKonfigurationSheet;
 import de.petanqueturniermanager.schweizer.konfiguration.SchweizerKonfigurationSheet;
 import de.petanqueturniermanager.supermelee.konfiguration.SuperMeleeKonfigurationSheet;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -46,7 +47,8 @@ public final class KonfigurationSheetRegistry {
             TurnierSystem.KO,           KoKonfigurationSheet::new,
             TurnierSystem.POULE,        PouleKonfigurationSheet::new,
             TurnierSystem.KASKADE,      KaskadeKonfigurationSheet::new,
-            TurnierSystem.FORMULEX,     FormuleXKonfigurationSheet::new);
+            TurnierSystem.FORMULEX,     FormuleXKonfigurationSheet::new,
+            TurnierSystem.TRIPTETE,     TripTeteKonfigurationSheet::new);
 
     private KonfigurationSheetRegistry() {
     }

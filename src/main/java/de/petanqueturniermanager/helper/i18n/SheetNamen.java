@@ -32,6 +32,7 @@ public final class SheetNamen {
     public static final String KEY_KO_KONFIGURATION                 = "sheet.name.ko.konfiguration";
     public static final String KEY_KASKADE_KONFIGURATION            = "sheet.name.kaskade.konfiguration";
     public static final String KEY_FORMULEX_KONFIGURATION           = "sheet.name.formulex.konfiguration";
+    public static final String KEY_TRIPTETE_KONFIGURATION           = "sheet.name.triptete.konfiguration";
     public static final String KEY_FORMULEX_RANGLISTE               = "sheet.name.formulex.rangliste";
     public static final String KEY_KO_RUNDE                        = "sheet.name.ko.runde";
     public static final String KEY_CADRAGE                          = "sheet.name.cadrage";
@@ -111,6 +112,7 @@ public final class SheetNamen {
     public static final String LEGACY_POULE_SPIELPLAN_PRAEFIX        = "Spielplan";
     public static final String LEGACY_POULE_VORRUNDEN_RANGLISTE      = "Poule Vorrunden-Rangliste";
     public static final String LEGACY_FORMULEX_KONFIGURATION        = "Formule X Konfiguration";
+    public static final String LEGACY_TRIPTETE_KONFIGURATION         = "Trip-Tête Konfiguration";
     public static final String LEGACY_FORMULEX_SPIELRUNDE_PRAEFIX   = "Spielrunde";
     public static final String LEGACY_FORMULEX_RANGLISTE            = "Formule X Rangliste";
     public static final String LEGACY_KASKADE_RUNDE_PRAEFIX          = "Kaskaden-Runde";
@@ -157,6 +159,10 @@ public final class SheetNamen {
 
     public static String formulexKonfiguration() {
         return getOderFallback(KEY_FORMULEX_KONFIGURATION, LEGACY_FORMULEX_KONFIGURATION);
+    }
+
+    public static String tripTeteKonfiguration() {
+        return getOderFallback(KEY_TRIPTETE_KONFIGURATION, LEGACY_TRIPTETE_KONFIGURATION);
     }
 
     public static String formulexRangliste() {
