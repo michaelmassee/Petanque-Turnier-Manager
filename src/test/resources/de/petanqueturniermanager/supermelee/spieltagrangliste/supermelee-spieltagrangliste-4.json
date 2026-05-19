@@ -88,42 +88,13 @@
   ],
   [
     {
-      "data": 85.0
-    },
-    {
-      "data": "Linder, Roger"
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 7.0
-    }
-  ],
-  [
-    {
       "data": 113.0
     },
     {
       "data": "Knöpfle, Collin"
     },
     {
-      "data": 2.0
+      "data": 1.0
     },
     {
       "data": 10.0
@@ -142,6 +113,35 @@
     },
     {
       "data": 3.0
+    }
+  ],
+  [
+    {
+      "data": 85.0
+    },
+    {
+      "data": "Linder, Roger"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 11.0
     }
   ],
   [
@@ -225,39 +225,10 @@
       "data": 3.0
     },
     {
-      "data": 7.0
-    },
-    {
-      "data": 10.0
-    }
-  ],
-  [
-    {
-      "data": 162.0
-    },
-    {
-      "data": "Burmeister, Selma"
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 9.0
-    },
-    {
       "data": 0.0
     },
     {
-      "data": 3.0
-    },
-    {
       "data": 9.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 7.0
     }
   ],
   [
@@ -268,7 +239,7 @@
       "data": "Bitsch, Sieghardt"
     },
     {
-      "data": 7.0
+      "data": 6.0
     },
     {
       "data": 2.0
@@ -297,7 +268,7 @@
       "data": "Krauss, Siegulf"
     },
     {
-      "data": 8.0
+      "data": 7.0
     },
     {
       "data": 9.0
@@ -326,7 +297,7 @@
       "data": "Husmann, Isedore"
     },
     {
-      "data": 9.0
+      "data": 8.0
     },
     {
       "data": 13.0
@@ -349,16 +320,45 @@
   ],
   [
     {
-      "data": 128.0
+      "data": 162.0
     },
     {
-      "data": "Linner, Friedhilde"
+      "data": "Burmeister, Selma"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 152.0
+    },
+    {
+      "data": "Nienaber, Nadine"
     },
     {
       "data": 10.0
     },
     {
-      "data": 2.0
+      "data": 13.0
     },
     {
       "data": 10.0
@@ -378,39 +378,39 @@
   ],
   [
     {
-      "data": 152.0
+      "data": 50.0
     },
     {
-      "data": "Nienaber, Nadine"
+      "data": "Romero, Imke"
     },
     {
       "data": 11.0
-    },
-    {
-      "data": 13.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 5.0
-    },
-    {
-      "data": 11.0
+      "data": 13.0
     },
     {
       "data": 0.0
     },
     {
-      "data": 9.0
+      "data": 13.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 10.0
     }
   ],
   [
     {
-      "data": 50.0
+      "data": 75.0
     },
     {
-      "data": "Romero, Imke"
+      "data": "Gehrig, Marina"
     },
     {
       "data": 12.0
@@ -422,10 +422,39 @@
       "data": 13.0
     },
     {
-      "data": 0.0
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 7.0
+    }
+  ],
+  [
+    {
+      "data": 128.0
+    },
+    {
+      "data": "Linner, Friedhilde"
     },
     {
       "data": 13.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 11.0
     },
     {
       "data": 0.0
@@ -442,7 +471,7 @@
       "data": "Baake, Theodore"
     },
     {
-      "data": 13.0
+      "data": 14.0
     },
     {
       "data": 0.0
@@ -457,10 +486,10 @@
       "data": 5.0
     },
     {
-      "data": 0.0
+      "data": 7.0
     },
     {
-      "data": 9.0
+      "data": 10.0
     }
   ],
   [
@@ -471,7 +500,7 @@
       "data": "Puls, Gaby"
     },
     {
-      "data": 14.0
+      "data": 15.0
     },
     {
       "data": 0.0
@@ -494,31 +523,31 @@
   ],
   [
     {
-      "data": 75.0
+      "data": 103.0
     },
     {
-      "data": "Gehrig, Marina"
+      "data": "Drees, Anika"
     },
     {
-      "data": 15.0
+      "data": 16.0
     },
     {
-      "data": 10.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 3.0
+      "data": 0.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 3.0
+      "data": 0.0
     },
     {
-      "data": 11.0
+      "data": 13.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 7.0
     }
   ],
   [
@@ -529,7 +558,7 @@
       "data": "Käding, Arabella"
     },
     {
-      "data": 16.0
+      "data": 17.0
     },
     {
       "data": 2.0
@@ -548,35 +577,6 @@
     },
     {
       "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 103.0
-    },
-    {
-      "data": "Drees, Anika"
-    },
-    {
-      "data": 17.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 11.0
     }
   ],
   [

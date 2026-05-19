@@ -88,10 +88,10 @@
   ],
   [
     {
-      "data": 129.0
+      "data": 139.0
     },
     {
-      "data": "Puls, Gaby"
+      "data": "Rackow, Jil"
     },
     {
       "data": 1.0
@@ -103,68 +103,10 @@
       "data": 1.0
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 10.0
-    }
-  ],
-  [
-    {
-      "data": 6.0
-    },
-    {
-      "data": "Rentschler, Theodeline"
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 5.0
-    }
-  ],
-  [
-    {
-      "data": 101.0
-    },
-    {
-      "data": "Jakobs, Anett"
+      "data": 13.0
     },
     {
       "data": 3.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 7.0
     },
     {
       "data": 10.0
@@ -181,19 +123,19 @@
       "data": "Görgens, Gerlach"
     },
     {
-      "data": 4.0
-    },
-    {
-      "data": 12.0
-    },
-    {
       "data": 2.0
     },
     {
-      "data": 3.0
+      "data": 11.0
+    },
+    {
+      "data": 9.0
     },
     {
       "data": 13.0
+    },
+    {
+      "data": 3.0
     },
     {
       "data": 11.0
@@ -204,13 +146,42 @@
   ],
   [
     {
-      "data": 139.0
+      "data": 6.0
     },
     {
-      "data": "Rackow, Jil"
+      "data": "Rentschler, Theodeline"
     },
     {
-      "data": 5.0
+      "data": 3.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 132.0
+    },
+    {
+      "data": "Hüttel, Gretchen"
+    },
+    {
+      "data": 4.0
     },
     {
       "data": 9.0
@@ -219,16 +190,45 @@
       "data": 1.0
     },
     {
-      "data": 3.0
+      "data": 10.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 103.0
+    },
+    {
+      "data": "Drees, Anika"
+    },
+    {
+      "data": 5.0
     },
     {
       "data": 10.0
     },
     {
+      "data": 2.0
+    },
+    {
       "data": 7.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 5.0
     }
   ],
   [
@@ -248,10 +248,10 @@
       "data": 1.0
     },
     {
-      "data": 10.0
+      "data": 5.0
     },
     {
-      "data": 11.0
+      "data": 10.0
     },
     {
       "data": 0.0
@@ -262,103 +262,45 @@
   ],
   [
     {
-      "data": 22.0
+      "data": 129.0
     },
     {
-      "data": "Nuber, Joana"
+      "data": "Puls, Gaby"
     },
     {
       "data": 7.0
     },
     {
-      "data": 10.0
+      "data": 9.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 13.0
-    },
-    {
       "data": 3.0
     },
     {
-      "data": 0.0
-    },
-    {
       "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 133.0
-    },
-    {
-      "data": "Ney, Hartwig"
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 10.0
     },
     {
       "data": 5.0
     },
     {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 71.0
-    },
-    {
-      "data": "Prüfer, Irmgardt"
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 12.0
-    },
-    {
       "data": 11.0
     }
   ],
   [
     {
-      "data": 103.0
+      "data": 51.0
     },
     {
-      "data": "Drees, Anika"
+      "data": "Scheld, Wernhard"
     },
     {
-      "data": 8.0
+      "data": 7.0
     },
     {
-      "data": 10.0
+      "data": 12.0
     },
     {
       "data": 2.0
@@ -370,35 +312,6 @@
       "data": 10.0
     },
     {
-      "data": 5.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 90.0
-    },
-    {
-      "data": "Meiß, Huldine"
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 10.0
-    },
-    {
       "data": 0.0
     },
     {
@@ -407,19 +320,19 @@
   ],
   [
     {
-      "data": 151.0
+      "data": 106.0
     },
     {
-      "data": "Döll, Muthild"
-    },
-    {
-      "data": 12.0
+      "data": "Meinzer, Berndt"
     },
     {
       "data": 9.0
     },
     {
-      "data": 11.0
+      "data": 2.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 13.0
@@ -428,21 +341,21 @@
       "data": 3.0
     },
     {
-      "data": 7.0
+      "data": 12.0
     },
     {
-      "data": 10.0
+      "data": 11.0
     }
   ],
   [
     {
-      "data": 56.0
+      "data": 85.0
     },
     {
-      "data": "Bäder, Rita"
+      "data": "Linder, Roger"
     },
     {
-      "data": 13.0
+      "data": 10.0
     },
     {
       "data": 1.0
@@ -451,10 +364,10 @@
       "data": 10.0
     },
     {
-      "data": 7.0
+      "data": 3.0
     },
     {
-      "data": 12.0
+      "data": 13.0
     },
     {
       "data": 11.0
@@ -471,16 +384,16 @@
       "data": "Knuth, Brandolf"
     },
     {
-      "data": 14.0
+      "data": 11.0
     },
     {
-      "data": 12.0
+      "data": 11.0
     },
     {
-      "data": 2.0
+      "data": 9.0
     },
     {
-      "data": 5.0
+      "data": 11.0
     },
     {
       "data": 10.0
@@ -494,13 +407,71 @@
   ],
   [
     {
+      "data": 22.0
+    },
+    {
+      "data": "Nuber, Joana"
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 71.0
+    },
+    {
+      "data": "Prüfer, Irmgardt"
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
       "data": 116.0
     },
     {
       "data": "Ciftci, Detmar"
     },
     {
-      "data": 15.0
+      "data": 14.0
     },
     {
       "data": 10.0
@@ -509,10 +480,10 @@
       "data": 2.0
     },
     {
-      "data": 10.0
+      "data": 5.0
     },
     {
-      "data": 11.0
+      "data": 10.0
     },
     {
       "data": 0.0
@@ -529,7 +500,7 @@
       "data": "Steinborn, Joana"
     },
     {
-      "data": 16.0
+      "data": 15.0
     },
     {
       "data": 9.0
@@ -544,85 +515,143 @@
       "data": 13.0
     },
     {
-      "data": 11.0
+      "data": 7.0
     },
     {
-      "data": 5.0
+      "data": 10.0
     }
   ],
   [
     {
-      "data": 143.0
+      "data": 151.0
     },
     {
-      "data": "Ott, Manfried"
+      "data": "Döll, Muthild"
+    },
+    {
+      "data": 16.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 101.0
+    },
+    {
+      "data": "Jakobs, Anett"
     },
     {
       "data": 17.0
     },
     {
-      "data": 1.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 85.0
-    },
-    {
-      "data": "Linder, Roger"
-    },
-    {
-      "data": 18.0
-    },
-    {
-      "data": 1.0
+      "data": 2.0
     },
     {
       "data": 10.0
     },
     {
-      "data": 12.0
+      "data": 3.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 7.0
+    }
+  ],
+  [
+    {
+      "data": 133.0
+    },
+    {
+      "data": "Ney, Hartwig"
+    },
+    {
+      "data": 18.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 5.0
     },
     {
-      "data": 11.0
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     }
   ],
   [
     {
-      "data": 132.0
+      "data": 122.0
     },
     {
-      "data": "Hüttel, Gretchen"
+      "data": "Goetze, Eustachius"
     },
     {
       "data": 19.0
     },
     {
+      "data": 1.0
+    },
+    {
       "data": 9.0
     },
     {
-      "data": 1.0
+      "data": 5.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 154.0
+    },
+    {
+      "data": "Dold, Otbert"
+    },
+    {
+      "data": 20.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 2.0
     },
     {
       "data": 7.0
@@ -645,7 +674,7 @@
       "data": "Erickson, Mariegret"
     },
     {
-      "data": 20.0
+      "data": 21.0
     },
     {
       "data": 9.0
@@ -668,129 +697,42 @@
   ],
   [
     {
-      "data": 51.0
+      "data": 90.0
     },
     {
-      "data": "Scheld, Wernhard"
-    },
-    {
-      "data": 21.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 106.0
-    },
-    {
-      "data": "Meinzer, Berndt"
+      "data": "Meiß, Huldine"
     },
     {
       "data": 22.0
     },
     {
-      "data": 2.0
+      "data": 1.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 7.0
     },
     {
       "data": 12.0
     },
     {
-      "data": 3.0
+      "data": 0.0
     },
     {
       "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 11.0
     }
   ],
   [
     {
-      "data": 154.0
+      "data": 143.0
     },
     {
-      "data": "Dold, Otbert"
+      "data": "Ott, Manfried"
     },
     {
       "data": 23.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 125.0
-    },
-    {
-      "data": "Moog, Falk"
-    },
-    {
-      "data": 24.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 122.0
-    },
-    {
-      "data": "Goetze, Eustachius"
-    },
-    {
-      "data": 25.0
     },
     {
       "data": 1.0
@@ -805,10 +747,68 @@
       "data": 11.0
     },
     {
-      "data": 5.0
+      "data": 11.0
+    },
+    {
+      "data": 12.0
+    }
+  ],
+  [
+    {
+      "data": 56.0
+    },
+    {
+      "data": "Bäder, Rita"
+    },
+    {
+      "data": 24.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 11.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 10.0
+    }
+  ],
+  [
+    {
+      "data": 125.0
+    },
+    {
+      "data": "Moog, Falk"
+    },
+    {
+      "data": 25.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     }
   ],
   [

@@ -54,15 +54,19 @@ class BlattschutzManagerScopeTest {
         TurnierModus.get().setAktivForTest(false);
     }
 
-    // ── Lazy: ohne Trigger gar kein Toggle ───────────────────────────────────
+    // ── Lazy unprotect, aber: protect läuft IMMER am Scope-Ende ──────────────
+    // Begründung: Doc-Struktur-Mutationen wie NewSheet.forceCreate() (Sheet
+    // entfernen und ungeschützt neu anlegen) feuern keinen
+    // ensureUnprotectedInScope-Trigger. Ein abschließendes doSchuetzen ist
+    // daher unverzichtbar, sonst bleiben neu angelegte Sheets ungeschützt.
 
     @Test
-    void scopeOhneTrigger_keinUnprotectKeinProtect() {
+    void scopeOhneTrigger_keinUnprotect_aberProtectAmEnde() {
         manager.beginCommandScope(konfigA, ws);
         manager.endCommandScope();
 
         assertThat(manager.getUnprotectCallCount()).isZero();
-        assertThat(manager.getProtectCallCount()).isZero();
+        assertThat(manager.getProtectCallCount()).isEqualTo(1);
     }
 
     @Test
@@ -123,15 +127,16 @@ class BlattschutzManagerScopeTest {
     // ── Scope-aware entsperren()/schuetzen() im Scope: No-Op ─────────────────
 
     @Test
-    void entsperrenSchuetzenInScope_sindNoOp() {
+    void entsperrenSchuetzenInScope_sindNoOp_aberProtectAmScopeEnde() {
         manager.beginCommandScope(konfigA, ws);
         manager.entsperren(konfigA, ws);
         manager.schuetzen(konfigA, ws);
         manager.endCommandScope();
 
-        // Weder echte unprotect noch protect, da kein Trigger
+        // entsperren/schuetzen im Scope: weiterhin No-Op (keine Direkt-Aufrufe
+        // an doEntsperren). Aber endCommandScope schützt jetzt am Ende immer.
         assertThat(manager.getUnprotectCallCount()).isZero();
-        assertThat(manager.getProtectCallCount()).isZero();
+        assertThat(manager.getProtectCallCount()).isEqualTo(1);
     }
 
     // ── Robustness: Scope-State wird auch bei Exception in doSchuetzen aufgeräumt

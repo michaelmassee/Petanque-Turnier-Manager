@@ -353,8 +353,9 @@ public abstract class BaseCalcUITest {
 				soft.fail("Sheet ohne XProtectable angetroffen");
 				continue;
 			}
+			String sheetName = named.getName();
 			soft.assertThat(prot.isProtected())
-					.as("Sheet muss nach Operation noch geschützt sein")
+					.as("Sheet '%s' muss nach Operation noch geschützt sein", sheetName)
 					.isTrue();
 			for (RangePosition bereich : info.editierbareBereich()) {
 				int spalte = bereich.getStartSpalte();
@@ -364,12 +365,12 @@ public abstract class BaseCalcUITest {
 					XPropertySet props = Lo.qi(XPropertySet.class, cell);
 					CellProtection cellProt = (CellProtection) props.getPropertyValue("CellProtection");
 					soft.assertThat(cellProt.IsLocked)
-							.as("Editierbarer Bereich (Spalte=%d, Zeile=%d) muss IsLocked=false bleiben",
-									spalte, zeile)
+							.as("Sheet '%s' editierbarer Bereich (Spalte=%d, Zeile=%d) muss IsLocked=false bleiben",
+									sheetName, spalte, zeile)
 							.isFalse();
 				} catch (Exception e) {
-					soft.fail("Fehler beim Lesen von CellProtection (Spalte=%d, Zeile=%d): %s",
-							spalte, zeile, e.getMessage());
+					soft.fail("Sheet '%s' Fehler beim Lesen von CellProtection (Spalte=%d, Zeile=%d): %s",
+							sheetName, spalte, zeile, e.getMessage());
 				}
 			}
 		}

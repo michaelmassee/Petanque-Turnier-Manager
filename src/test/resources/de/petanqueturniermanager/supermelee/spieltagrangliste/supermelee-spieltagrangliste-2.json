@@ -88,10 +88,10 @@
   ],
   [
     {
-      "data": 57.0
+      "data": 134.0
     },
     {
-      "data": "Kieslich, Zoé"
+      "data": "Köhnen, Hasko"
     },
     {
       "data": 1.0
@@ -100,7 +100,36 @@
       "data": 12.0
     },
     {
-      "data": 4.0
+      "data": 2.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 57.0
+    },
+    {
+      "data": "Kieslich, Zoé"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 12.0
     },
     {
       "data": 9.0
@@ -123,13 +152,13 @@
       "data": "Thielemann, Michaela"
     },
     {
-      "data": 2.0
+      "data": 3.0
     },
     {
-      "data": 1.0
+      "data": 12.0
     },
     {
-      "data": 13.0
+      "data": 4.0
     },
     {
       "data": 9.0
@@ -138,10 +167,39 @@
       "data": 3.0
     },
     {
+      "data": 7.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 160.0
+    },
+    {
+      "data": "Gentsch, Rotraut"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 1.0
+    },
+    {
       "data": 12.0
     },
     {
+      "data": 8.0
+    },
+    {
       "data": 5.0
+    },
+    {
+      "data": 11.0
     }
   ],
   [
@@ -152,7 +210,7 @@
       "data": "Grau, Franka"
     },
     {
-      "data": 3.0
+      "data": 5.0
     },
     {
       "data": 12.0
@@ -167,10 +225,242 @@
       "data": 13.0
     },
     {
+      "data": 7.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 102.0
+    },
+    {
+      "data": "Elsen, Angelika"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 139.0
+    },
+    {
+      "data": "Rackow, Jil"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 135.0
+    },
+    {
+      "data": "Wetzig, Ilsetraud"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 110.0
+    },
+    {
+      "data": "Knuth, Brandolf"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 12.0
+    }
+  ],
+  [
+    {
+      "data": 106.0
+    },
+    {
+      "data": "Meinzer, Berndt"
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 64.0
+    },
+    {
+      "data": "Steuermann, Wiegand"
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 8.0
+    },
+    {
       "data": 12.0
     },
     {
       "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 125.0
+    },
+    {
+      "data": "Moog, Falk"
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 103.0
+    },
+    {
+      "data": "Drees, Anika"
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 7.0
     }
   ],
   [
@@ -181,13 +471,13 @@
       "data": "Knöpfle, Collin"
     },
     {
-      "data": 4.0
+      "data": 14.0
+    },
+    {
+      "data": 2.0
     },
     {
       "data": 12.0
-    },
-    {
-      "data": 4.0
     },
     {
       "data": 12.0
@@ -210,7 +500,7 @@
       "data": "Zipfel, Kurth"
     },
     {
-      "data": 5.0
+      "data": 15.0
     },
     {
       "data": 12.0
@@ -233,100 +523,13 @@
   ],
   [
     {
-      "data": 160.0
+      "data": 105.0
     },
     {
-      "data": "Gentsch, Rotraut"
+      "data": "Stocker, Benjamin"
     },
     {
-      "data": 6.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 102.0
-    },
-    {
-      "data": "Elsen, Angelika"
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 5.0
-    }
-  ],
-  [
-    {
-      "data": 106.0
-    },
-    {
-      "data": "Meinzer, Berndt"
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 5.0
-    }
-  ],
-  [
-    {
-      "data": 103.0
-    },
-    {
-      "data": "Drees, Anika"
-    },
-    {
-      "data": 9.0
+      "data": 16.0
     },
     {
       "data": 4.0
@@ -335,10 +538,68 @@
       "data": 12.0
     },
     {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 12.0
+    }
+  ],
+  [
+    {
+      "data": 58.0
+    },
+    {
+      "data": "Bremen, Ehrentraut"
+    },
+    {
+      "data": 17.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 51.0
+    },
+    {
+      "data": "Scheld, Wernhard"
+    },
+    {
+      "data": 18.0
+    },
+    {
+      "data": 4.0
+    },
+    {
       "data": 12.0
     },
     {
       "data": 8.0
+    },
+    {
+      "data": 12.0
     },
     {
       "data": 13.0
@@ -349,97 +610,51 @@
   ],
   [
     {
-      "data": 139.0
+      "data": 120.0
     },
     {
-      "data": "Rackow, Jil"
+      "data": "Pokorny, Elfgard"
     },
     {
-      "data": 10.0
-    },
-    {
-      "data": 13.0
+      "data": 19.0
     },
     {
       "data": 1.0
     },
     {
-      "data": 0.0
-    },
-    {
       "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 125.0
-    },
-    {
-      "data": "Moog, Falk"
-    },
-    {
-      "data": 11.0
     },
     {
       "data": 3.0
-    },
-    {
-      "data": 12.0
     },
     {
       "data": 9.0
     },
     {
-      "data": 3.0
+      "data": 5.0
     },
     {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
+      "data": 11.0
     }
   ],
   [
     {
-      "data": 135.0
+      "data": 158.0
     },
     {
-      "data": "Wetzig, Ilsetraud"
+      "data": "Petter, Roseliese"
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 12.0
+      "data": 20.0
     },
     {
       "data": 2.0
     },
     {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
+      "data": 12.0
     },
     {
       "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 134.0
-    },
-    {
-      "data": "Köhnen, Hasko"
     },
     {
       "data": 13.0
@@ -448,10 +663,27 @@
       "data": 12.0
     },
     {
-      "data": 2.0
+      "data": 5.0
+    }
+  ],
+  [
+    {
+      "data": 44.0
     },
     {
-      "data": 8.0
+      "data": "Görgens, Gerlach"
+    },
+    {
+      "data": 21.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 9.0
     },
     {
       "data": 12.0
@@ -471,257 +703,25 @@
       "data": "Ciftci, Detmar"
     },
     {
-      "data": 14.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 44.0
-    },
-    {
-      "data": "Görgens, Gerlach"
-    },
-    {
-      "data": 15.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 5.0
-    }
-  ],
-  [
-    {
-      "data": 110.0
-    },
-    {
-      "data": "Knuth, Brandolf"
-    },
-    {
-      "data": 16.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 51.0
-    },
-    {
-      "data": "Scheld, Wernhard"
-    },
-    {
-      "data": 17.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 7.0
-    }
-  ],
-  [
-    {
-      "data": 158.0
-    },
-    {
-      "data": "Petter, Roseliese"
-    },
-    {
-      "data": 18.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 64.0
-    },
-    {
-      "data": "Steuermann, Wiegand"
-    },
-    {
-      "data": 19.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 105.0
-    },
-    {
-      "data": "Stocker, Benjamin"
-    },
-    {
-      "data": 20.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 120.0
-    },
-    {
-      "data": "Pokorny, Elfgard"
-    },
-    {
-      "data": 21.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 58.0
-    },
-    {
-      "data": "Bremen, Ehrentraut"
-    },
-    {
       "data": 22.0
     },
     {
-      "data": 1.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 9.0
+      "data": 3.0
     },
     {
       "data": 12.0
     },
     {
-      "data": 0.0
+      "data": 3.0
     },
     {
-      "data": 13.0
+      "data": 9.0
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 12.0
     }
   ],
   [
