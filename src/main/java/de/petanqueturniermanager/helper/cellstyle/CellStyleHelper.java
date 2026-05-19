@@ -27,6 +27,7 @@ import com.sun.star.util.XProtectable;
 
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 
 public class CellStyleHelper {
 
@@ -89,11 +90,24 @@ public class CellStyleHelper {
 		var styleName = cellStyleDef.getName();
 
 		// LO-Einschränkung (sc/source/ui/unoobj/styleuno.cxx): Zellstile können nicht
-		// geändert werden, solange irgendein Sheet im Doc tab-geschützt ist. Daher
-		// alle Sheets mit leerem Passwort temporär entsperren, Style schreiben,
-		// danach Schutz wiederherstellen. Passwortgeschützte Sheets (durch User)
-		// bleiben gesperrt – dort logged der Catch-Zweig wie zuvor.
-		var temporaerEntsperrt = entsperreAlleSheetsMitLeeremPasswort(currentSpreadsheetDocument);
+		// geändert werden, solange irgendein Sheet im Doc tab-geschützt ist.
+		//
+		// Zwei Aufruf-Kontexte:
+		//   1. Innerhalb eines aktiven SheetRunner-Lazy-Scope (Standardfall via
+		//      ConditionalFormatHelper oder zelleStylesAktualisieren in
+		//      endCommandScope): tryEnsureUnprotectedInScope() entsperrt die
+		//      konfigurierten Sheets einmalig im Scope – kein zusätzlicher
+		//      Protect/Unprotect-Roundtrip pro Style-Call.
+		//   2. Ohne Scope (z. B. TurnierModus.aktivieren -> BlattschutzManager.schuetzen):
+		//      Defensiver Sweep über alle Sheets mit leerem Passwort, Style
+		//      schreiben, danach Schutz wiederherstellen.
+		// Passwortgeschützte Sheets (durch User) bleiben in beiden Fällen gesperrt –
+		// dort logged der Catch-Zweig wie zuvor.
+
+		boolean scopeHandlesProtection = BlattschutzManager.get().tryEnsureUnprotectedInScope();
+		List<XProtectable> temporaerEntsperrt = scopeHandlesProtection
+				? List.of()
+				: entsperreAlleSheetsMitLeeremPasswort(currentSpreadsheetDocument);
 		try {
 			var xFamiliesSupplier = Lo.qi(XStyleFamiliesSupplier.class, currentSpreadsheetDocument);
 			var xFamiliesNA = xFamiliesSupplier.getStyleFamilies();
@@ -122,15 +136,11 @@ public class CellStyleHelper {
 				}
 			}
 		} catch (RuntimeException e) {
-			if (!temporaerEntsperrt.isEmpty()) {
-				getLogger().warn(
-						"Zellstil '{}' konnte nicht gesetzt werden – LO-Einschränkung: " +
-						"Zellstile können nicht geändert werden, solange ein Sheet im Dokument " +
-						"tab-geschützt ist. (sc/source/ui/unoobj/styleuno.cxx)",
-						styleName);
-			} else {
-				getLogger().error(e.getMessage(), e);
-			}
+			getLogger().warn(
+					"Zellstil '{}' konnte nicht gesetzt werden – evtl. LO-Einschränkung: " +
+					"Zellstile können nicht geändert werden, solange ein Sheet im Dokument " +
+					"tab-geschützt ist. (sc/source/ui/unoobj/styleuno.cxx)",
+					styleName, e);
 		} catch (Exception e) {
 			getLogger().error(e.getMessage(), e);
 		} finally {
@@ -142,6 +152,11 @@ public class CellStyleHelper {
 	 * Entsperrt alle aktuell mit leerem Passwort geschützten Sheets im Dokument
 	 * und gibt sie zur Wiederherstellung des Schutzes zurück.
 	 * Sheets mit echtem Passwort bleiben unverändert gesperrt.
+	 * <p>
+	 * Wird nur im Pfad <em>ohne</em> aktiven BlattschutzScope verwendet
+	 * (z. B. {@code TurnierModus.aktivieren()}). Innerhalb eines Scope übernimmt
+	 * {@link de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager#tryEnsureUnprotectedInScope()}
+	 * diese Aufgabe einmalig.
 	 */
 	private List<XProtectable> entsperreAlleSheetsMitLeeremPasswort(XSpreadsheetDocument doc) {
 		List<XProtectable> entsperrt = new ArrayList<>();

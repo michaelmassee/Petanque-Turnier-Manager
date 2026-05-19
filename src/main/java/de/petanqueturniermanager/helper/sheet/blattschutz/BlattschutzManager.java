@@ -165,6 +165,33 @@ public class BlattschutzManager {
         }
     }
 
+    /**
+     * Nicht-werfende Variante von {@link #ensureUnprotectedInScope()}.
+     * <p>
+     * Hat ein offener Scope: entsperrt einmalig (oder no-op wenn bereits entsperrt)
+     * und gibt {@code true} zurück. Der Caller darf davon ausgehen, dass die
+     * konfigurierten Sheets offen sind.
+     * <p>
+     * Hat kein Scope: gibt {@code false} zurück. Der Caller muss in diesem Fall
+     * selbst für entsperrte Sheets sorgen – z. B. via eigenem defensiven Sweep
+     * mit leerem Passwort (siehe {@link de.petanqueturniermanager.helper.cellstyle.CellStyleHelper}).
+     * <p>
+     * Gedacht für Stellen, die sowohl im SheetRunner-Scope als auch außerhalb
+     * (z. B. {@code TurnierModus.aktivieren()}-Pfad via {@link #schuetzen}) laufen
+     * können.
+     */
+    public boolean tryEnsureUnprotectedInScope() {
+        ScopeState state = SCOPE.get();
+        if (state == null) {
+            return false;
+        }
+        if (!state.wurdeEntsperrt) {
+            doEntsperren(state.konfig, state.ws);
+            state.wurdeEntsperrt = true;
+        }
+        return true;
+    }
+
     // ── Public API (scope-aware) ─────────────────────────────────────────────
 
     /**
