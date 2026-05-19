@@ -29,6 +29,8 @@ import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
 import com.sun.star.awt.XToolkit;
+import com.sun.star.awt.Selection;
+import com.sun.star.awt.XTextComponent;
 import com.sun.star.awt.XTopWindow;
 import com.sun.star.awt.XWindow;
 import com.sun.star.awt.XWindow2;
@@ -173,6 +175,7 @@ public class ProcessBox implements TimerListener {
     private XControlContainer controls;
 
     private XPropertySet logEditProps;
+    private XTextComponent logEditText;
     private XPropertySet infoLabelProps;
     private XPropertySet neueVersionLabelProps;
     private XPropertySet timerUhrProps;
@@ -338,6 +341,9 @@ public class ProcessBox implements TimerListener {
         XControl throbberControl = controls.getControl("throbber");
         throbber = Lo.qi(XAnimation.class, throbberControl);
 
+        // Log-Edit-XTextComponent auflösen (für Caret/Selection → Auto-Scroll)
+        logEditText = Lo.qi(XTextComponent.class, controls.getControl("logEdit"));
+
         // Button-Listener
         XButton logBtn = Lo.qi(XButton.class, controls.getControl("logBtn"));
         if (logBtn != null) {
@@ -487,7 +493,17 @@ public class ProcessBox implements TimerListener {
         try {
             Object current = logEditProps.getPropertyValue("Text");
             String currentStr = current instanceof String s ? s : "";
-            logEditProps.setPropertyValue("Text", currentStr + zeile);
+            String neu = currentStr + zeile;
+            logEditProps.setPropertyValue("Text", neu);
+            // Caret ans Ende setzen → Edit-Control scrollt zur letzten Zeile
+            if (logEditText != null) {
+                try {
+                    int end = neu.length();
+                    logEditText.setSelection(new Selection(end, end));
+                } catch (RuntimeException e) {
+                    logger.debug("Auto-Scroll fehlgeschlagen", e);
+                }
+            }
         } catch (com.sun.star.uno.Exception e) {
             logger.debug("appendLog fehlgeschlagen", e);
         }
