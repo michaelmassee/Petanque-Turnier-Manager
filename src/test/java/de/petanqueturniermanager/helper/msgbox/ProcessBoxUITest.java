@@ -68,9 +68,11 @@ public class ProcessBoxUITest extends BaseCalcUITest {
         assertThat(throbber.isAnimationRunning()).as("Throbber initial gestoppt").isFalse();
 
         pb.run();
+        pb.flushUiUpdatesForTest();
         assertThat(throbber.isAnimationRunning()).as("Throbber läuft nach run()").isTrue();
 
         pb.ready();
+        pb.flushUiUpdatesForTest();
         assertThat(throbber.isAnimationRunning()).as("Throbber gestoppt nach ready()").isFalse();
     }
 
@@ -81,10 +83,12 @@ public class ProcessBoxUITest extends BaseCalcUITest {
         var pb = ProcessBox.from();
 
         pb.clear();
+        pb.flushUiUpdatesForTest();
         assertThat(pb.getLogText()).as("Log initial leer nach clear()").isEmpty();
 
         pb.info("erste Zeile");
         pb.info("zweite Zeile");
+        pb.flushUiUpdatesForTest();
 
         String text = pb.getLogText();
         assertThat(text).contains("erste Zeile").contains("zweite Zeile");

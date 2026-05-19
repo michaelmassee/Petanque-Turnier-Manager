@@ -688,6 +688,28 @@ public class ProcessBox implements TimerListener {
         return throbber;
     }
 
+    /**
+     * Wartet (nur für Tests), bis alle bisher per {@link #runOnMain(Runnable)} geposteten
+     * UI-Updates auf dem LO-Main-Thread abgearbeitet sind. Postet selbst einen
+     * {@link java.util.concurrent.CountDownLatch}-Callback hinter alle pending Updates
+     * (FIFO) und blockiert bis dieser ausgeführt wurde.
+     */
+    public final void flushUiUpdatesForTest() {
+        XRequestCallback dispatcher = mainThreadDispatcher;
+        if (dispatcher == null || disposed) return;
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+        try {
+            dispatcher.addCallback((XCallback) data -> latch.countDown(), null);
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                logger.warn("flushUiUpdatesForTest: Timeout beim Warten auf LO-Main-Thread");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (RuntimeException e) {
+            logger.debug("flushUiUpdatesForTest fehlgeschlagen", e);
+        }
+    }
+
     /** Liefert den aktuellen Log-Text (für Tests). */
     public final String getLogText() {
         if (logEditProps == null) return "";
