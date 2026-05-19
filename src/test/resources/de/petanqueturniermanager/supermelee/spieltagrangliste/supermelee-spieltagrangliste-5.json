@@ -103,248 +103,16 @@
       "data": 5.0
     },
     {
-      "data": 10.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 1.0
-    }
-  ],
-  [
-    {
-      "data": 118.0
-    },
-    {
-      "data": "Kühnle, Dietmar"
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 2.0
-    }
-  ],
-  [
-    {
-      "data": 82.0
-    },
-    {
-      "data": "Hey, Volkwart"
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 8.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 0.0
-    }
-  ],
-  [
-    {
-      "data": 61.0
-    },
-    {
-      "data": "Bulut, Adolf"
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 6.0
-    },
-    {
       "data": 13.0
     },
     {
       "data": 2.0
     },
     {
-      "data": 2.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 150.0
-    },
-    {
-      "data": "Lott, Milan"
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 8.0
-    },
-    {
       "data": 13.0
     },
     {
       "data": 2.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 107.0
-    },
-    {
-      "data": "Böhme, Berndt"
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 1.0
-    }
-  ],
-  [
-    {
-      "data": 109.0
-    },
-    {
-      "data": "Reuß, Birk"
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 2.0
-    }
-  ],
-  [
-    {
-      "data": 120.0
-    },
-    {
-      "data": "Pokorny, Elfgard"
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 0.0
-    }
-  ],
-  [
-    {
-      "data": 106.0
-    },
-    {
-      "data": "Meinzer, Berndt"
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 12.0
     }
   ],
   [
@@ -355,7 +123,7 @@
       "data": "Goetze, Eustachius"
     },
     {
-      "data": 10.0
+      "data": 2.0
     },
     {
       "data": 9.0
@@ -368,93 +136,6 @@
     },
     {
       "data": 12.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 1.0
-    }
-  ],
-  [
-    {
-      "data": 9.0
-    },
-    {
-      "data": "Thielmann, Kreszenzia"
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 159.0
-    },
-    {
-      "data": "Zoll, Rosmarie"
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 2.0
-    }
-  ],
-  [
-    {
-      "data": 144.0
-    },
-    {
-      "data": "Quick, Margund"
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 6.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 2.0
-    },
-    {
-      "data": 13.0
     },
     {
       "data": 13.0
@@ -471,7 +152,210 @@
       "data": "Mühlmann, Arne"
     },
     {
-      "data": 14.0
+      "data": 3.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 115.0
+    },
+    {
+      "data": "Witschel, Danny"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 2.0
+    }
+  ],
+  [
+    {
+      "data": 82.0
+    },
+    {
+      "data": "Hey, Volkwart"
+    },
+    {
+      "data": 5.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
+    }
+  ],
+  [
+    {
+      "data": 147.0
+    },
+    {
+      "data": "Drewitz, Mark"
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 1.0
+    }
+  ],
+  [
+    {
+      "data": 159.0
+    },
+    {
+      "data": "Zoll, Rosmarie"
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 2.0
+    }
+  ],
+  [
+    {
+      "data": 118.0
+    },
+    {
+      "data": "Kühnle, Dietmar"
+    },
+    {
+      "data": 8.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 120.0
+    },
+    {
+      "data": "Pokorny, Elfgard"
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 7.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
+    }
+  ],
+  [
+    {
+      "data": 150.0
+    },
+    {
+      "data": "Lott, Milan"
+    },
+    {
+      "data": 10.0
     },
     {
       "data": 13.0
@@ -486,36 +370,36 @@
       "data": 10.0
     },
     {
-      "data": 2.0
+      "data": 0.0
     },
     {
-      "data": 11.0
+      "data": 13.0
     }
   ],
   [
     {
-      "data": 115.0
+      "data": 107.0
     },
     {
-      "data": "Witschel, Danny"
+      "data": "Böhme, Berndt"
     },
     {
-      "data": 15.0
+      "data": 10.0
     },
     {
-      "data": 3.0
+      "data": 12.0
     },
     {
-      "data": 9.0
+      "data": 6.0
     },
     {
-      "data": 0.0
+      "data": 2.0
     },
     {
       "data": 13.0
     },
     {
-      "data": 11.0
+      "data": 13.0
     },
     {
       "data": 2.0
@@ -523,13 +407,39 @@
   ],
   [
     {
-      "data": 71.0
+      "data": 112.0
     },
     {
-      "data": "Prüfer, Irmgardt"
+      "data": "Bohnet, Collin"
     },
     {
-      "data": 16.0
+      "data": 12.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 9.0
+    },
+    {
+      "data": "Thielmann, Kreszenzia"
     },
     {
       "data": 13.0
@@ -538,16 +448,19 @@
       "data": 5.0
     },
     {
+      "data": 13.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
       "data": 0.0
     },
     {
       "data": 13.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 2.0
     }
   ],
   [
@@ -558,19 +471,19 @@
       "data": "Döll, Muthild"
     },
     {
-      "data": 17.0
+      "data": 14.0
     },
     {
-      "data": 12.0
+      "data": 5.0
     },
     {
-      "data": 7.0
+      "data": 13.0
     },
     {
-      "data": 10.0
+      "data": 13.0
     },
     {
-      "data": 4.0
+      "data": 2.0
     },
     {
       "data": 1.0
@@ -587,16 +500,10 @@
       "data": "Molz, Kornelia"
     },
     {
-      "data": 18.0
+      "data": 15.0
     },
     {
-      "data": 12.0
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 0.0
+      "data": 5.0
     },
     {
       "data": 13.0
@@ -605,7 +512,100 @@
       "data": 0.0
     },
     {
+      "data": 13.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 1.0
+    }
+  ],
+  [
+    {
+      "data": 106.0
+    },
+    {
+      "data": "Meinzer, Berndt"
+    },
+    {
+      "data": 16.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 12.0
+    }
+  ],
+  [
+    {
+      "data": 61.0
+    },
+    {
+      "data": "Bulut, Adolf"
+    },
+    {
+      "data": 17.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 109.0
+    },
+    {
+      "data": "Reuß, Birk"
+    },
+    {
+      "data": 18.0
+    },
+    {
+      "data": 6.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
       "data": 11.0
+    },
+    {
+      "data": 2.0
     }
   ],
   [
@@ -634,15 +634,15 @@
       "data": 2.0
     },
     {
-      "data": 13.0
+      "data": 11.0
     }
   ],
   [
     {
-      "data": 154.0
+      "data": 163.0
     },
     {
-      "data": "Dold, Otbert"
+      "data": "Bitsch, Sieghardt"
     },
     {
       "data": 20.0
@@ -660,65 +660,7 @@
       "data": 13.0
     },
     {
-      "data": 2.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 163.0
-    },
-    {
-      "data": "Bitsch, Sieghardt"
-    },
-    {
-      "data": 21.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 3.0
-    },
-    {
       "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 100.0
-    },
-    {
-      "data": "Matthiessen, Annehilde"
-    },
-    {
-      "data": 22.0
-    },
-    {
-      "data": 5.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 2.0
     },
     {
       "data": 13.0
@@ -732,13 +674,13 @@
       "data": "Enzmann, Gesine"
     },
     {
-      "data": 23.0
+      "data": 21.0
     },
     {
-      "data": 3.0
+      "data": 12.0
     },
     {
-      "data": 9.0
+      "data": 7.0
     },
     {
       "data": 4.0
@@ -755,19 +697,48 @@
   ],
   [
     {
-      "data": 147.0
+      "data": 154.0
     },
     {
-      "data": "Drewitz, Mark"
+      "data": "Dold, Otbert"
     },
     {
-      "data": 24.0
+      "data": 22.0
     },
     {
-      "data": 8.0
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 0.0
     },
     {
       "data": 13.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 71.0
+    },
+    {
+      "data": "Prüfer, Irmgardt"
+    },
+    {
+      "data": 23.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 5.0
     },
     {
       "data": 0.0
@@ -784,13 +755,13 @@
   ],
   [
     {
-      "data": 112.0
+      "data": 144.0
     },
     {
-      "data": "Bohnet, Collin"
+      "data": "Quick, Margund"
     },
     {
-      "data": 25.0
+      "data": 24.0
     },
     {
       "data": 6.0
@@ -799,16 +770,45 @@
       "data": 12.0
     },
     {
-      "data": 4.0
+      "data": 2.0
     },
     {
-      "data": 10.0
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 100.0
+    },
+    {
+      "data": "Matthiessen, Annehilde"
+    },
+    {
+      "data": 25.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
     },
     {
       "data": 2.0
     },
     {
-      "data": 13.0
+      "data": 11.0
     }
   ],
   [
