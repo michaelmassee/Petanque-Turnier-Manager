@@ -50,7 +50,6 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerState;
-import de.petanqueturniermanager.timer.TimerZustand;
 
 /**
  * Process-Statusfenster als modeloser UNO-Dialog. Zeigt Log-Ausgaben, einen
@@ -713,9 +712,6 @@ public class ProcessBox implements TimerListener {
     @Override
     public void onChange(TimerState state) {
         if (disposed || headlessMode || timerUhrProps == null) return;
-        if (state.zustand() == TimerZustand.BEENDET) {
-            java.awt.Toolkit.getDefaultToolkit().beep();
-        }
         setPropertySafe(timerUhrProps, "Label", state.anzeige());
         setPropertySafe(timerBezeichnungProps, "Label",
                 state.bezeichnung() != null ? state.bezeichnung() : "");
