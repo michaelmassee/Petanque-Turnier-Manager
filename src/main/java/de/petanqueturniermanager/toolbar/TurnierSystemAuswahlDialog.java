@@ -87,6 +87,14 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
     }
 
     @Override
+    protected XWindowPeer holeParentPeer() {
+        // Container-Fenster des aufrufenden Calc-Frames als Parent setzen, damit
+        // nach Schließen des Dialogs der Focus beim Ursprungs-Dokument bleibt
+        // (sonst entscheidet der WM bei mehreren offenen Calc-Fenstern beliebig).
+        return ws != null ? ws.getContainerWindowPeer() : null;
+    }
+
+    @Override
     protected String getTitel() {
         return I18n.get("toolbar.start.dialog.titel");
     }

@@ -8,10 +8,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.XWindowPeer;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.XController;
 import com.sun.star.frame.XDispatchHelper;
 import com.sun.star.frame.XDispatchProvider;
+import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XModel;
 import com.sun.star.frame.XStorable;
 import com.sun.star.lang.XMultiServiceFactory;
@@ -105,6 +107,26 @@ public class WorkingSpreadsheet {
 	 */
 	public XSpreadsheetView getWorkingSpreadsheetView() {
 		return workingSpreadsheetView;
+	}
+
+	/**
+	 * Liefert den Window-Peer des Container-Fensters des zugehörigen Frames –
+	 * geeignet als Parent für UNO-Dialoge. So bleibt der Tastatur-Focus nach
+	 * Schließen des Dialogs deterministisch beim aufrufenden Dokument, auch
+	 * wenn mehrere Calc-Fenster offen sind.
+	 *
+	 * @return Container-Window-Peer oder {@code null}, falls Controller/Frame
+	 *         (noch) nicht verfügbar.
+	 */
+	public XWindowPeer getContainerWindowPeer() {
+		if (xController == null) {
+			return null;
+		}
+		XFrame xFrame = xController.getFrame();
+		if (xFrame == null) {
+			return null;
+		}
+		return Lo.qi(XWindowPeer.class, xFrame.getContainerWindow());
 	}
 
 	public void executeDispatch(String str1, String str2, int val, PropertyValue[] propertyVals) {

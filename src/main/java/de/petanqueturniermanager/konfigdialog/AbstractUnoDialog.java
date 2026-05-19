@@ -62,7 +62,12 @@ public abstract class AbstractUnoDialog {
         XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
         XWindow xWindow = Lo.qi(XWindow.class, xControl);
         xWindow.setVisible(false);
-        xControl.createPeer(xToolkit, null);
+        // Parent-Peer = Container-Window des aufrufenden LO-Frames. Damit erkennt der
+        // Window-Manager den Dialog als Transient/Child des Frames; nach Schließen kehrt
+        // der Tastatur-Focus deterministisch zum aufrufenden Dokument zurück.
+        // Ohne Parent (null) entscheidet der WM rein anhand der Stack-Order – bei mehreren
+        // offenen Calc-Fenstern springt der Focus dann auf das zuletzt aktive andere Fenster.
+        xControl.createPeer(xToolkit, holeParentPeer());
         XWindowPeer windowPeer = xControl.getPeer();
 
         // Steuerelemente durch Unterklasse hinzufügen
@@ -99,6 +104,15 @@ public abstract class AbstractUnoDialog {
     /** Ob der Dialog vom Benutzer in der Größe verändert werden kann. Standard: false. */
     protected boolean istVeraenderbar() {
         return false;
+    }
+
+    /**
+     * Liefert das Parent-Window des Dialogs. Unterklassen, die einen sinnvollen
+     * Parent (z.B. das Container-Fenster des aufrufenden LO-Frames) liefern können,
+     * sollten diese Methode überschreiben. Standard: {@code null} (kein Parent).
+     */
+    protected XWindowPeer holeParentPeer() {
+        return null;
     }
 
     /**

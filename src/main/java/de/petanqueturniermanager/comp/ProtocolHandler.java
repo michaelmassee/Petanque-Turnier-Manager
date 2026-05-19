@@ -17,11 +17,14 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.frame.DispatchDescriptor;
 import com.sun.star.frame.FeatureStateEvent;
+import com.sun.star.frame.XController;
 import com.sun.star.frame.XDispatch;
 import com.sun.star.frame.XDispatchProvider;
+import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XStatusListener;
 import com.sun.star.frame.XModel;
 import com.sun.star.lang.DisposedException;
+import com.sun.star.lang.XInitialization;
 import com.sun.star.lang.XServiceInfo;
 import com.sun.star.lang.XSingleComponentFactory;
 import com.sun.star.lib.uno.helper.Factory;
@@ -29,6 +32,9 @@ import com.sun.star.lib.uno.helper.WeakBase;
 import com.sun.star.registry.XRegistryKey;
 import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.sheet.XSpreadsheetView;
+import com.sun.star.ui.dialogs.ExecutableDialogResults;
+import com.sun.star.ui.dialogs.FolderPicker;
+import com.sun.star.ui.dialogs.XFolderPicker2;
 import com.sun.star.util.URL;
 import com.sun.star.uno.XComponentContext;
 
@@ -158,7 +164,7 @@ import de.petanqueturniermanager.toolbar.TurnierSystemToolbarStrategieRegistry;
  * <p>
  * Zentraler Einstiegspunkt für alle Menüaktionen aller Turniersysteme.
  */
-public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDispatch, XServiceInfo {
+public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDispatch, XInitialization, XServiceInfo {
 
 	private static final Logger logger = LogManager.getLogger(ProtocolHandler.class);
 
@@ -345,6 +351,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_TURNIER_MODUS                 = "turnier_modus";
 	private final XComponentContext xContext;
 
+	/**
+	 * Frame, dessen Menü/Toolbar diesen ProtocolHandler aufruft. Wird per
+	 * {@link #initialize(Object[])} von LibreOffice gesetzt — UNO-Standard für
+	 * Protocol Handler. Über diesen Frame wird das Ziel-Dokument deterministisch
+	 * aufgelöst statt über den globalen {@code desktop.getCurrentComponent()},
+	 * der durch zwischenzeitliche Focus-Wechsel (z.B. ProcessBox-Anzeige) auf
+	 * ein anderes Dokument zeigen kann.
+	 */
+	private XFrame frame;
+
 	public ProtocolHandler(XComponentContext xContext) {
 		this.xContext = xContext;
 		SHARED_CONTEXT = xContext;
@@ -463,6 +479,59 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	}
 
 	// -------------------------------------------------------------------------
+	// XInitialization
+
+	/**
+	 * Wird von LibreOffice direkt nach dem Konstruktor aufgerufen. Argumente[0]
+	 * ist der {@link XFrame}, dem dieser Protocol Handler zugeordnet ist.
+	 */
+	@Override
+	public void initialize(Object[] arguments) {
+		if (arguments == null || arguments.length == 0) {
+			return;
+		}
+		XFrame xFrame = Lo.qi(XFrame.class, arguments[0]);
+		if (xFrame != null) {
+			frame = xFrame;
+		}
+	}
+
+	/**
+	 * Liefert eine {@link WorkingSpreadsheet}-Instanz für das Dokument, dessen
+	 * Menü/Toolbar diesen Dispatch ausgelöst hat. Auflösung über den per
+	 * {@link #initialize(Object[])} gesetzten Frame; Fallback auf das aktuell
+	 * fokussierte Dokument, falls kein Frame verfügbar.
+	 */
+	private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerDispatch() {
+		XSpreadsheetDocument doc = ermittleDokumentAusFrame();
+		if (doc != null) {
+			return new WorkingSpreadsheet(xContext, doc);
+		}
+		return new WorkingSpreadsheet(xContext);
+	}
+
+	private XSpreadsheetDocument ermittleDokumentAusFrame() {
+		XFrame f = frame;
+		if (f == null) {
+			return null;
+		}
+		try {
+			XController controller = f.getController();
+			if (controller == null) {
+				return null;
+			}
+			XModel model = controller.getModel();
+			if (model == null) {
+				return null;
+			}
+			return Lo.qi(XSpreadsheetDocument.class, model);
+		} catch (DisposedException e) {
+			logger.debug("Frame disposed beim Auflösen des Ziel-Dokuments – Fallback auf aktuelles Dokument");
+			return null;
+		}
+	}
+
+	// -------------------------------------------------------------------------
 	// XDispatchProvider
 
 	@Override
@@ -497,8 +566,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			if (behandleWebserverBefehl(command)) {
 				return;
 			}
+			// Reine Dialog-/Anzeige-Befehle ohne ProcessBox-Aktivierung,
+			// damit die ProcessBox nicht in den Vordergrund kommt und Dialoge nicht überdeckt.
+			if (behandleDialogBefehl(command)) {
+				return;
+			}
+			// WICHTIG: WorkingSpreadsheet VOR ProcessBox.visibleWennAutomatisch erzeugen
+			// wäre zwar zusätzlicher Schutz, reicht aber nicht — der Bezug zum richtigen
+			// Dokument muss über den Frame laufen (siehe initialize/ermittleDokumentAusFrame),
+			// damit Focus-Wechsel zwischen Klick und Dispatch nicht das Ziel-Doc verändern.
+			WorkingSpreadsheet ws = erzeugeWorkingSpreadsheetFuerDispatch();
 			ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + command);
-			WorkingSpreadsheet ws = new WorkingSpreadsheet(xContext);
 			switch (command) {
 			// ------------------------------
 			// SuperMelee
@@ -875,9 +953,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			// ------------------------------
 			// Download / Stop / Neue Version
-			case CMD_DOWNLOAD_EXTENSION:
-				new DownloadExtension(ws).start();
-				break;
 			case CMD_RELEASE_INFOS_ANZEIGEN:
 				new ReleaseInfosAnzeigen(ws).start();
 				break;
@@ -886,9 +961,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_LOGFILE_ANZEIGEN:
 				Log4J.openLogFile();
-				break;
-			case CMD_PLUGIN_KONFIGURATION:
-				new GlobalPropertiesDialog(ws.getxContext()).zeigen();
 				break;
 			case CMD_PROCESSBOX_ANZEIGEN:
 				ProcessBox.zeigeImVordergrund();
@@ -962,6 +1034,44 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			default -> { return false; }
 		}
 		return true;
+	}
+
+	/**
+	 * Behandelt reine Dialog-/Anzeige-Befehle, die keine ProcessBox brauchen.
+	 * Dadurch öffnet sich der jeweilige Dialog im Vordergrund und wird nicht
+	 * von der ProcessBox überdeckt.
+	 */
+	private boolean behandleDialogBefehl(String command) throws com.sun.star.uno.Exception {
+		switch (command) {
+			case CMD_PLUGIN_KONFIGURATION -> new GlobalPropertiesDialog(xContext).zeigen();
+			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
+			default -> { return false; }
+		}
+		return true;
+	}
+
+	/**
+	 * Öffnet den FolderPicker auf dem LO-Main-Thread (vor dem Aufpoppen der
+	 * ProcessBox) und startet den Download erst nach Bestätigung des Nutzers.
+	 * Würde der Picker im SheetRunner-Thread geöffnet, läge er hinter der
+	 * ProcessBox und wäre für den Nutzer unsichtbar.
+	 */
+	private void starteDownloadExtension() {
+		XFolderPicker2 picker = FolderPicker.create(xContext);
+		picker.setTitle(I18n.get("download.verzeichnis.title"));
+		if (picker.execute() != ExecutableDialogResults.OK) {
+			return;
+		}
+		java.io.File zielVerzeichnis;
+		try {
+			zielVerzeichnis = new java.io.File(new java.net.URI(picker.getDirectory()));
+		} catch (java.net.URISyntaxException e) {
+			logger.error("Ungültiges Download-Verzeichnis: {}", e.getMessage(), e);
+			return;
+		}
+		WorkingSpreadsheet ws = erzeugeWorkingSpreadsheetFuerDispatch();
+		ProcessBox.from().visibleWennAutomatisch().clearWennNotRunning().info("Start " + CMD_DOWNLOAD_EXTENSION);
+		new DownloadExtension(ws, zielVerzeichnis).start();
 	}
 
 	/**
