@@ -37,6 +37,7 @@ import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeS
 import de.petanqueturniermanager.poule.meldeliste.PouleMeldeListeSheetNew;
 import de.petanqueturniermanager.schweizer.meldeliste.SchweizerMeldeListeSheetNew;
 import de.petanqueturniermanager.supermelee.meldeliste.MeldeListeSheet_New;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -61,7 +62,8 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
         TurnierSystem.MAASTRICHTER,
         TurnierSystem.POULE,
         TurnierSystem.SCHWEIZER,
-        TurnierSystem.SUPERMELEE
+        TurnierSystem.SUPERMELEE,
+        TurnierSystem.TRIPTETE
     };
 
     private WorkingSpreadsheet ws;
@@ -174,6 +176,7 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
             case KO           -> new KoMeldeListeSheetNew(zielWs).start();
             case KASKADE      -> new KaskadeMeldeListeSheetNew(zielWs).start();
             case FORMULEX     -> new FormuleXMeldeListeSheetNew(zielWs).start();
+            case TRIPTETE     -> new TripTeteMeldeListeSheetNew(zielWs).start();
             default           -> logger.warn("Unbekanntes Turniersystem für Start-Aktion: {}", system);
         }
     }

@@ -1236,6 +1236,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			// JGJ-Testdaten: auch wenn kein Turnier vorhanden
 			case CMD_JGJ_TESTDATEN_TURNIER,
 				 CMD_JGJ_TESTDATEN_TURNIER_DOUBLETTE_17     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.JGJ;
+			// Trip-Tête
+			case CMD_TRIPTETE_NEUE_MELDELISTE               -> ts == TurnierSystem.KEIN;
+			case CMD_TRIPTETE_UPDATE_MELDELISTE,
+				 CMD_TRIPTETE_SPIELPLAN,
+				 CMD_TRIPTETE_RANGLISTE,
+				 CMD_TRIPTETE_KONFIGURATION                 -> ts == TurnierSystem.TRIPTETE;
+			case CMD_TRIPTETE_TESTDATEN                     -> ts == TurnierSystem.KEIN || ts == TurnierSystem.TRIPTETE;
 			// Schweizer
 			case CMD_SCHWEIZER_START                        -> ts == TurnierSystem.KEIN;
 			// Maastrichter
