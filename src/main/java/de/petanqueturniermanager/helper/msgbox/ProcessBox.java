@@ -24,10 +24,12 @@ import com.sun.star.awt.ActionEvent;
 import com.sun.star.awt.XActionListener;
 import com.sun.star.awt.XAnimation;
 import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCallback;
 import com.sun.star.awt.XControl;
 import com.sun.star.awt.XControlContainer;
 import com.sun.star.awt.XControlModel;
 import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XRequestCallback;
 import com.sun.star.awt.XToolkit;
 import com.sun.star.awt.Selection;
 import com.sun.star.awt.XTextComponent;
@@ -57,9 +59,13 @@ import de.petanqueturniermanager.timer.TimerState;
  * Throbber (LO-eigene Spinner-Animation), Statusicons für Erfolg/Fehler, eine
  * Timer-Zeile und eine optionale Hinweiszeile auf eine neue Plugin-Version.
  *
- * <p>Threading: Aufrufer aus Worker-Threads (z.B. {@link SheetRunner}) setzen
- * Properties direkt — die UNO-Bridge serialisiert intern über den SolarMutex.
- * Lifecycle-Operationen (Sichtbarkeit, Auto-Close) laufen ebenfalls direkt.
+ * <p>Threading: UI-Mutationen (Property-Set, Sichtbarkeit, Throbber, Auto-Scroll)
+ * werden via {@code com.sun.star.awt.AsyncCallback} auf den LO-Main-Thread
+ * gepostet. Direkter {@code setPropertyValue}-Aufruf auf UI-Models/Peers aus
+ * Fremd-Threads ist NICHT thread-safe — die UNO-Bridge synchronisiert nur
+ * Inter-Prozess-Aufrufe, nicht in-process Java-Calls. Ohne dieses Marshalling
+ * kann LO nativ crashen (SIGSEGV im VCL), sobald der Main-Thread parallel
+ * Benutzer-Events verarbeitet (Klick im Calc-Fenster, Repaint o.ä.).
  */
 public class ProcessBox implements TimerListener {
 
@@ -73,7 +79,6 @@ public class ProcessBox implements TimerListener {
 
     // Dialog-Geometrie in AppFont-Einheiten (ca. 1.5 px pro Einheit)
     private static final int DLG_WIDTH = 320;
-    private static final int DLG_HEIGHT = 180;
     private static final int PAD = 4;
     private static final int LOG_HEIGHT = 110;
     private static final int VERSION_Y = PAD + LOG_HEIGHT + 2;
@@ -82,6 +87,7 @@ public class ProcessBox implements TimerListener {
     private static final int TIMER_HEIGHT = 10;
     private static final int FOOTER_Y = TIMER_Y + TIMER_HEIGHT + 2;
     private static final int FOOTER_HEIGHT = 14;
+    private static final int DLG_HEIGHT = FOOTER_Y + FOOTER_HEIGHT + PAD;
     private static final int STATUS_WIDTH = 20;
     private static final int BUTTON_WIDTH = 30;
 
@@ -188,6 +194,9 @@ public class ProcessBox implements TimerListener {
     private XPropertySet errorImageProps;
     private XPropertySet stopBtnProps;
 
+    /** Postet Runnables auf den LO-Main-Thread (FIFO). Null wenn Init fehlschlug. */
+    private XRequestCallback mainThreadDispatcher;
+
     private ScheduledExecutorService autoCloseExec;
     private ScheduledFuture<?> autoCloseTask;
 
@@ -213,6 +222,15 @@ public class ProcessBox implements TimerListener {
 
     private void initDialog() throws com.sun.star.uno.Exception {
         XMultiComponentFactory mcf = xContext.getServiceManager();
+
+        // Main-Thread-Dispatcher (für alle UI-Mutationen aus Fremd-Threads)
+        try {
+            Object asyncCallback = mcf.createInstanceWithContext(
+                    "com.sun.star.awt.AsyncCallback", xContext);
+            mainThreadDispatcher = Lo.qi(XRequestCallback.class, asyncCallback);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.warn("AsyncCallback-Service nicht verfügbar – UI-Updates laufen direkt", e);
+        }
 
         // Dialog-Modell
         Object dialogModel = mcf.createInstanceWithContext(
@@ -452,7 +470,8 @@ public class ProcessBox implements TimerListener {
 
     public ProcessBox infoText(String newInfoText) {
         if (disposed || infoLabelProps == null) return this;
-        setPropertySafe(infoLabelProps, "Label", newInfoText != null ? newInfoText : "");
+        String text = newInfoText != null ? newInfoText : "";
+        runOnMain(() -> setPropertySafe(infoLabelProps, "Label", text));
         return this;
     }
 
@@ -477,7 +496,7 @@ public class ProcessBox implements TimerListener {
     public ProcessBox clear() {
         if (disposed || logEditProps == null) return this;
         isFehler = false;
-        setPropertySafe(logEditProps, "Text", "");
+        runOnMain(() -> setPropertySafe(logEditProps, "Text", ""));
         return this;
     }
 
@@ -506,38 +525,42 @@ public class ProcessBox implements TimerListener {
     }
 
     private void appendLog(String zeile) {
-        try {
-            Object current = logEditProps.getPropertyValue("Text");
-            String currentStr = current instanceof String s ? s : "";
-            String neu = currentStr + zeile;
-            if (neu.length() > MAX_LOG_CHARS) {
-                int schnittAb = neu.length() - MAX_LOG_CHARS / 2;
-                int nextNl = neu.indexOf('\n', schnittAb);
-                int cut = nextNl >= 0 ? nextNl + 1 : schnittAb;
-                neu = LOG_TRUNCATED_MARKER + neu.substring(cut);
-            }
-            logEditProps.setPropertyValue("Text", neu);
-            // Caret ans Ende setzen → Edit-Control scrollt zur letzten Zeile
-            if (logEditText != null) {
-                try {
-                    int end = neu.length();
-                    logEditText.setSelection(new Selection(end, end));
-                } catch (RuntimeException e) {
-                    logger.debug("Auto-Scroll fehlgeschlagen", e);
+        runOnMain(() -> {
+            try {
+                Object current = logEditProps.getPropertyValue("Text");
+                String currentStr = current instanceof String s ? s : "";
+                String neu = currentStr + zeile;
+                if (neu.length() > MAX_LOG_CHARS) {
+                    int schnittAb = neu.length() - MAX_LOG_CHARS / 2;
+                    int nextNl = neu.indexOf('\n', schnittAb);
+                    int cut = nextNl >= 0 ? nextNl + 1 : schnittAb;
+                    neu = LOG_TRUNCATED_MARKER + neu.substring(cut);
                 }
+                logEditProps.setPropertyValue("Text", neu);
+                // Caret ans Ende setzen → Edit-Control scrollt zur letzten Zeile
+                if (logEditText != null) {
+                    try {
+                        int end = neu.length();
+                        logEditText.setSelection(new Selection(end, end));
+                    } catch (RuntimeException e) {
+                        logger.debug("Auto-Scroll fehlgeschlagen", e);
+                    }
+                }
+            } catch (com.sun.star.uno.Exception e) {
+                logger.debug("appendLog fehlgeschlagen", e);
             }
-        } catch (com.sun.star.uno.Exception e) {
-            logger.debug("appendLog fehlgeschlagen", e);
-        }
+        });
     }
 
     public ProcessBox title(String title) {
         if (disposed || xDialog == null) return this;
-        try {
-            xDialog.setTitle(title);
-        } catch (RuntimeException e) {
-            logger.debug("setTitle fehlgeschlagen", e);
-        }
+        runOnMain(() -> {
+            try {
+                xDialog.setTitle(title);
+            } catch (RuntimeException e) {
+                logger.debug("setTitle fehlgeschlagen", e);
+            }
+        });
         return this;
     }
 
@@ -599,21 +622,22 @@ public class ProcessBox implements TimerListener {
             setVisibleInternal(true);
             toFrontInternal();
         }
-        if (stopBtnProps != null) {
-            setPropertySafe(stopBtnProps, "Enabled", Boolean.TRUE);
-        }
-
-        // Throbber sichtbar machen + starten, Ready/Error verstecken
-        setPropertySafe(readyImageProps, "EnableVisible", Boolean.FALSE);
-        setPropertySafe(errorImageProps, "EnableVisible", Boolean.FALSE);
-        setPropertySafe(throbberProps, "EnableVisible", Boolean.TRUE);
-        if (throbber != null) {
-            try {
-                throbber.startAnimation();
-            } catch (RuntimeException e) {
-                logger.debug("Throbber-Start fehlgeschlagen", e);
+        runOnMain(() -> {
+            if (stopBtnProps != null) {
+                setPropertySafe(stopBtnProps, "Enabled", Boolean.TRUE);
             }
-        }
+            // Throbber sichtbar machen + starten, Ready/Error verstecken
+            setPropertySafe(readyImageProps, "EnableVisible", Boolean.FALSE);
+            setPropertySafe(errorImageProps, "EnableVisible", Boolean.FALSE);
+            setPropertySafe(throbberProps, "EnableVisible", Boolean.TRUE);
+            if (throbber != null) {
+                try {
+                    throbber.startAnimation();
+                } catch (RuntimeException e) {
+                    logger.debug("Throbber-Start fehlgeschlagen", e);
+                }
+            }
+        });
         return this;
     }
 
@@ -628,25 +652,27 @@ public class ProcessBox implements TimerListener {
             setVisibleInternal(true);
             toFrontInternal();
         }
-        if (stopBtnProps != null) {
-            setPropertySafe(stopBtnProps, "Enabled", Boolean.FALSE);
-        }
-
-        if (throbber != null) {
-            try {
-                throbber.stopAnimation();
-            } catch (RuntimeException e) {
-                logger.debug("Throbber-Stop fehlgeschlagen", e);
+        boolean fehler = isFehler;
+        runOnMain(() -> {
+            if (stopBtnProps != null) {
+                setPropertySafe(stopBtnProps, "Enabled", Boolean.FALSE);
             }
-        }
-        setPropertySafe(throbberProps, "EnableVisible", Boolean.FALSE);
-        if (isFehler) {
-            setPropertySafe(readyImageProps, "EnableVisible", Boolean.FALSE);
-            setPropertySafe(errorImageProps, "EnableVisible", Boolean.TRUE);
-        } else {
-            setPropertySafe(errorImageProps, "EnableVisible", Boolean.FALSE);
-            setPropertySafe(readyImageProps, "EnableVisible", Boolean.TRUE);
-        }
+            if (throbber != null) {
+                try {
+                    throbber.stopAnimation();
+                } catch (RuntimeException e) {
+                    logger.debug("Throbber-Stop fehlgeschlagen", e);
+                }
+            }
+            setPropertySafe(throbberProps, "EnableVisible", Boolean.FALSE);
+            if (fehler) {
+                setPropertySafe(readyImageProps, "EnableVisible", Boolean.FALSE);
+                setPropertySafe(errorImageProps, "EnableVisible", Boolean.TRUE);
+            } else {
+                setPropertySafe(errorImageProps, "EnableVisible", Boolean.FALSE);
+                setPropertySafe(readyImageProps, "EnableVisible", Boolean.TRUE);
+            }
+        });
 
         planeAutoCloseFallsMoeglich();
         return this;
@@ -722,13 +748,18 @@ public class ProcessBox implements TimerListener {
             return;
         }
         if (disposed) return;
-        if (neueVersion) {
-            setPropertySafe(neueVersionLabelProps, "Label",
-                    I18n.get("processbox.neue.version.verfuegbar",
-                            installierteVersion != null ? installierteVersion : "?",
-                            neueVersionNummer != null ? neueVersionNummer : "?"));
-        }
-        setPropertySafe(neueVersionLabelProps, "EnableVisible", neueVersion);
+        String label = neueVersion
+                ? I18n.get("processbox.neue.version.verfuegbar",
+                        installierteVersion != null ? installierteVersion : "?",
+                        neueVersionNummer != null ? neueVersionNummer : "?")
+                : null;
+        boolean sichtbar = neueVersion;
+        runOnMain(() -> {
+            if (label != null) {
+                setPropertySafe(neueVersionLabelProps, "Label", label);
+            }
+            setPropertySafe(neueVersionLabelProps, "EnableVisible", sichtbar);
+        });
     }
 
     // ── TimerListener ──────────────────────────────────────────────────────────
@@ -736,39 +767,46 @@ public class ProcessBox implements TimerListener {
     @Override
     public void onChange(TimerState state) {
         if (disposed || headlessMode || timerUhrProps == null) return;
-        setPropertySafe(timerUhrProps, "Label", state.anzeige());
-        setPropertySafe(timerBezeichnungProps, "Label",
-                state.bezeichnung() != null ? state.bezeichnung() : "");
+        String anzeige = state.anzeige();
+        String bezeichnung = state.bezeichnung() != null ? state.bezeichnung() : "";
         Integer farbe = switch (state.zustand()) {
             case LAEUFT   -> COLOR_TIMER_LAEUFT;
             case PAUSIERT -> COLOR_TIMER_PAUSE;
             case BEENDET  -> COLOR_TIMER_BEENDET;
             case INAKTIV  -> COLOR_TIMER_INAKTIV;
         };
-        setPropertySafe(timerUhrProps, "TextColor", farbe);
+        runOnMain(() -> {
+            setPropertySafe(timerUhrProps, "Label", anzeige);
+            setPropertySafe(timerBezeichnungProps, "Label", bezeichnung);
+            setPropertySafe(timerUhrProps, "TextColor", farbe);
+        });
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     private void setVisibleInternal(boolean sichtbar) {
         if (xWindow == null) return;
-        try {
-            xWindow.setVisible(sichtbar);
-        } catch (RuntimeException e) {
-            logger.debug("setVisible({}) fehlgeschlagen", sichtbar, e);
-        }
+        runOnMain(() -> {
+            try {
+                xWindow.setVisible(sichtbar);
+            } catch (RuntimeException e) {
+                logger.debug("setVisible({}) fehlgeschlagen", sichtbar, e);
+            }
+        });
     }
 
     private void toFrontInternal() {
         if (dialogControl == null) return;
-        try {
-            XTopWindow top = Lo.qi(XTopWindow.class, dialogControl.getPeer());
-            if (top != null) {
-                top.toFront();
+        runOnMain(() -> {
+            try {
+                XTopWindow top = Lo.qi(XTopWindow.class, dialogControl.getPeer());
+                if (top != null) {
+                    top.toFront();
+                }
+            } catch (RuntimeException e) {
+                logger.debug("toFront fehlgeschlagen", e);
             }
-        } catch (RuntimeException e) {
-            logger.debug("toFront fehlgeschlagen", e);
-        }
+        });
     }
 
     private static void setPropertySafe(XPropertySet props, String name, Object value) {
@@ -777,6 +815,41 @@ public class ProcessBox implements TimerListener {
             props.setPropertyValue(name, value);
         } catch (com.sun.star.uno.Exception e) {
             logger.debug("setPropertyValue({}, ...) fehlgeschlagen", name, e);
+        }
+    }
+
+    /**
+     * Postet {@code r} via {@code AsyncCallback} auf den LO-Main-Thread. Reihenfolge ist FIFO.
+     * Fallback: synchroner Aufruf, wenn der Dispatcher nicht verfügbar ist (Init-Fehler).
+     * Bei Dispose zum Zeitpunkt der Ausführung wird {@code r} verworfen.
+     */
+    private void runOnMain(Runnable r) {
+        if (disposed) return;
+        XRequestCallback dispatcher = mainThreadDispatcher;
+        if (dispatcher == null) {
+            try {
+                r.run();
+            } catch (RuntimeException e) {
+                logger.debug("UI-Update (direkt) fehlgeschlagen", e);
+            }
+            return;
+        }
+        try {
+            dispatcher.addCallback((XCallback) data -> {
+                if (disposed) return;
+                try {
+                    r.run();
+                } catch (RuntimeException e) {
+                    logger.debug("UI-Update (Main-Thread) fehlgeschlagen", e);
+                }
+            }, null);
+        } catch (RuntimeException e) {
+            logger.debug("AsyncCallback-Post fehlgeschlagen – führe direkt aus", e);
+            try {
+                r.run();
+            } catch (RuntimeException ex) {
+                logger.debug("UI-Update (Fallback) fehlgeschlagen", ex);
+            }
         }
     }
 
