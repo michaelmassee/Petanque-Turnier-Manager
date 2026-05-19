@@ -150,6 +150,20 @@ public final class SignaturQuellen {
         return quellen;
     }
 
+    /** Quellen für Trip-Tête-Rangliste. */
+    public static List<SignaturQuelle> fuerTripTete(XSpreadsheetDocument xDoc) {
+        List<SignaturQuelle> quellen = new ArrayList<>();
+        quellen.add(meldelisteSchweizerLike("TRIPTETE-MELDELISTE",
+                SheetMetadataHelper.SCHLUESSEL_TRIPTETE_MELDELISTE));
+        // Spielplan: Bahnen + Triplette/Doublette/Tête-Ergebnisspalten + Arbeitsspalten.
+        quellen.add(new SignaturQuelle("TRIPTETE-SPIELPLAN",
+                SheetMetadataHelper.SCHLUESSEL_TRIPTETE_SPIELPLAN,
+                /* ersteZeile */ 2,
+                /* maxZeilen */ 5000,
+                unmodifiableIntRange(0, 18), true));
+        return quellen;
+    }
+
     /** Quellen für Poule-Vorrunden-Rangliste. */
     public static List<SignaturQuelle> fuerPoule(XSpreadsheetDocument xDoc) {
         List<SignaturQuelle> quellen = new ArrayList<>();

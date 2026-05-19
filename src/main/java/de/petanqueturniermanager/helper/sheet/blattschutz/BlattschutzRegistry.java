@@ -16,6 +16,7 @@ import de.petanqueturniermanager.maastrichter.blattschutz.MaastrichterBlattschut
 import de.petanqueturniermanager.poule.blattschutz.PouleBlattschutzKonfiguration;
 import de.petanqueturniermanager.schweizer.blattschutz.SchweizerBlattschutzKonfiguration;
 import de.petanqueturniermanager.supermelee.blattschutz.SupermeleeBlattschutzKonfiguration;
+import de.petanqueturniermanager.triptete.blattschutz.TripTeteBlattschutzKonfiguration;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 
 /**
@@ -40,6 +41,7 @@ public class BlattschutzRegistry {
         REGISTRY.put(TurnierSystem.POULE, PouleBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.KASKADE, KaskadeBlattschutzKonfiguration.get());
         REGISTRY.put(TurnierSystem.FORMULEX, FormuleXBlattschutzKonfiguration.get());
+        REGISTRY.put(TurnierSystem.TRIPTETE, TripTeteBlattschutzKonfiguration.get());
     }
 
     private BlattschutzRegistry() {

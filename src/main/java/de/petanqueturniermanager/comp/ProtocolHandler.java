@@ -93,6 +93,11 @@ import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheet;
 import de.petanqueturniermanager.liga.rangliste.LigaRanglisteSheetSortOnly;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheet;
 import de.petanqueturniermanager.liga.spielplan.LigaSpielPlanSheetTestDaten;
+import de.petanqueturniermanager.triptete.konfiguration.TripTeteKonfigurationSheetStarter;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetNew;
+import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
+import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheet;
+import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 import de.petanqueturniermanager.maastrichter.MaastrichterTurnierTestDaten;
 import de.petanqueturniermanager.maastrichter.finalrunde.MaastrichterFinalrundeSheet;
 import de.petanqueturniermanager.maastrichter.meldeliste.MaastrichterMeldeListeSheetNew;
@@ -203,6 +208,14 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public static final String CMD_LIGA_DIREKTVERGLEICH = "liga_direktvergleich";
 	public static final String CMD_LIGA_EXPORT = "liga_export";
 	public static final String CMD_LIGA_TESTDATEN_MELDELISTE = "liga_testdaten_meldeliste";
+
+	// Trip-Tête
+	public static final String CMD_TRIPTETE_NEUE_MELDELISTE   = "triptete_neue_meldeliste";
+	public static final String CMD_TRIPTETE_UPDATE_MELDELISTE = "triptete_update_meldeliste";
+	public static final String CMD_TRIPTETE_SPIELPLAN         = "triptete_spielplan";
+	public static final String CMD_TRIPTETE_RANGLISTE         = "triptete_rangliste";
+	public static final String CMD_TRIPTETE_KONFIGURATION     = "triptete_konfiguration";
+	public static final String CMD_TRIPTETE_TESTDATEN         = "triptete_testdaten";
 	// JGJ
 	public static final String CMD_JGJ_NEUE_MELDELISTE = "jgj_neue_meldeliste";
 	public static final String CMD_JGJ_UPDATE_MELDELISTE = "jgj_update_meldeliste";
@@ -588,6 +601,24 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_LIGA_EXPORT:
 				new LigaMeldeListeSheetExport(ws).testTurnierVorhanden().start();
 				break;
+			// ------------------------------
+			// Trip-Tête
+			case CMD_TRIPTETE_NEUE_MELDELISTE:
+				new TripTeteMeldeListeSheetNew(ws).start();
+				break;
+			case CMD_TRIPTETE_UPDATE_MELDELISTE:
+				new TripTeteMeldeListeSheetUpdate(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_TRIPTETE_SPIELPLAN:
+				new TripTeteSpielPlanSheet(ws).testTurnierVorhanden().backUpDocument().backupDocumentAfterRun().start();
+				break;
+			case CMD_TRIPTETE_RANGLISTE:
+				new TripTeteRanglisteSheet(ws).testTurnierVorhanden().backUpDocument().start();
+				break;
+			case CMD_TRIPTETE_KONFIGURATION:
+				TripTeteKonfigurationSheetStarter.start(ws);
+				break;
+			// CMD_TRIPTETE_TESTDATEN: siehe Phase 4
 			// ------------------------------
 			// Jeder gegen Jeden
 			case CMD_JGJ_NEUE_MELDELISTE:

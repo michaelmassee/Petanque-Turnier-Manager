@@ -24,6 +24,7 @@ import de.petanqueturniermanager.kaskade.spielrunde.KaskadeGruppenRanglisteSheet
 import de.petanqueturniermanager.maastrichter.rangliste.MaastrichterVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.poule.rangliste.PouleVorrundenRanglisteSheetUpdate;
 import de.petanqueturniermanager.schweizer.rangliste.SchweizerRanglisteSheetUpdate;
+import de.petanqueturniermanager.triptete.rangliste.TripTeteRanglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.supermelee.endrangliste.EndranglisteSheetUpdate;
 import de.petanqueturniermanager.supermelee.spieltagrangliste.SpieltagRanglisteSheetUpdate;
@@ -149,6 +150,11 @@ public class PetanqueTurnierMngrSingleton {
 				TurnierSystem.KASKADE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerKaskade),
 				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
+		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
+				SheetMetadataHelper.SCHLUESSEL_TRIPTETE_RANGLISTE,
+				TurnierSystem.TRIPTETE,
+				new RanglisteEingabeSignatur(SignaturQuellen::fuerTripTete),
+				(ws, ignored) -> new TripTeteRanglisteSheetUpdate(ws)));
 		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
 				spieltagNr -> new RanglisteEingabeSignatur(
