@@ -14,9 +14,9 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
-import de.petanqueturniermanager.algorithmen.SchweizerSystem;
-import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystem;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;

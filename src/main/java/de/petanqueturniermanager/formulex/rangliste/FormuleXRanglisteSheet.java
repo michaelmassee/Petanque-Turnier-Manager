@@ -17,8 +17,8 @@ import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.FormuleX;
-import de.petanqueturniermanager.algorithmen.FormuleXErgebnis;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.formulex.konfiguration.FormuleXKonfigurationSheet;

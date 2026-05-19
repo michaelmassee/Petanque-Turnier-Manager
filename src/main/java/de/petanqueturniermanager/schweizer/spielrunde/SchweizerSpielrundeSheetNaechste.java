@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.sun.star.sheet.XSpreadsheet;
 
-import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.I18n;

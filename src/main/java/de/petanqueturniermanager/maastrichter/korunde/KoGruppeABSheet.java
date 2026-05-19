@@ -6,7 +6,7 @@ package de.petanqueturniermanager.maastrichter.korunde;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.KoRundeTeamPaarungen;
+import de.petanqueturniermanager.algorithmen.common.KoRundeTeamPaarungen;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.maastrichter.konfiguration.MaastrichterKonfigurationSheet;
 import de.petanqueturniermanager.exception.GenerateException;

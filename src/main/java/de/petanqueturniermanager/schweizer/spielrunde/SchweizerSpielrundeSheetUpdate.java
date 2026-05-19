@@ -2,7 +2,7 @@ package de.petanqueturniermanager.schweizer.spielrunde;
 
 import java.util.List;
 
-import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.schweizer.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.model.TeamMeldungen;

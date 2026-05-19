@@ -11,7 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.addins.GlobalImpl;
-import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
+import de.petanqueturniermanager.algorithmen.liga.DirektvergleichResult;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;

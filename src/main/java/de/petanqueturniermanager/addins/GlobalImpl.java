@@ -16,9 +16,9 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.addin.XGlobal;
-import de.petanqueturniermanager.algorithmen.CadrageRechner;
-import de.petanqueturniermanager.algorithmen.Direktvergleich;
-import de.petanqueturniermanager.algorithmen.PouleGruppenRechner;
+import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
+import de.petanqueturniermanager.algorithmen.liga.Direktvergleich;
+import de.petanqueturniermanager.algorithmen.poule.PouleGruppenRechner;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;

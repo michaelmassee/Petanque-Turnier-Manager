@@ -22,9 +22,9 @@ import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.KaskadenKoRunde;
-import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlan;
-import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlaner;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRunde;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;

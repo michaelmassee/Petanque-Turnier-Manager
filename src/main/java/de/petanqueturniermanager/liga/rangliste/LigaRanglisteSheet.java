@@ -11,7 +11,7 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.TableBorder2;
 
-import de.petanqueturniermanager.algorithmen.JederGegenJeden;
+import de.petanqueturniermanager.algorithmen.liga.JederGegenJeden;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;

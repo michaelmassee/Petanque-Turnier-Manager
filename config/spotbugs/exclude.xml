@@ -95,7 +95,7 @@
         <Or>
             <Class name="de.petanqueturniermanager.supermelee.ergebnis.SpielerEndranglisteErgebnis"/>
             <Class name="de.petanqueturniermanager.supermelee.ergebnis.SpielerSpieltagErgebnis"/>
-            <Class name="de.petanqueturniermanager.algorithmen.TripTeteTeamErgebnis"/>
+            <Class name="de.petanqueturniermanager.algorithmen.triptete.TripTeteTeamErgebnis"/>
         </Or>
         <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS"/>
     </Match>

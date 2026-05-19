@@ -29,8 +29,8 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.FormuleX;
-import de.petanqueturniermanager.algorithmen.FormuleXErgebnis;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleX;
+import de.petanqueturniermanager.algorithmen.formulex.FormuleXErgebnis;
 import de.petanqueturniermanager.basesheet.SheetTabFarben;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;

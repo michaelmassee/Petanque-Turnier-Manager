@@ -20,8 +20,8 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.uno.UnoRuntime;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.CadrageRechner;
-import de.petanqueturniermanager.algorithmen.GruppenAufteilungRechner;
+import de.petanqueturniermanager.algorithmen.common.CadrageRechner;
+import de.petanqueturniermanager.algorithmen.common.GruppenAufteilungRechner;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldeListeHelper;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;

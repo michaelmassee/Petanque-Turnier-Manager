@@ -10,7 +10,7 @@ import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.BaseCalcUITest;
 import de.petanqueturniermanager.addins.GlobalImpl;
-import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
+import de.petanqueturniermanager.algorithmen.liga.DirektvergleichResult;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.cellvalue.StringCellValue;
 import de.petanqueturniermanager.helper.position.Position;

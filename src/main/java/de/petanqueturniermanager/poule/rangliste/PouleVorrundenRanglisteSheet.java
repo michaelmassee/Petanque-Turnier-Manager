@@ -18,8 +18,8 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.PouleRanglisteRechner;
-import de.petanqueturniermanager.algorithmen.PouleTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.poule.PouleRanglisteRechner;
+import de.petanqueturniermanager.algorithmen.poule.PouleTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;

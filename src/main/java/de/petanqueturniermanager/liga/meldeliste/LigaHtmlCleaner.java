@@ -16,7 +16,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.TextNode;
 
-import de.petanqueturniermanager.algorithmen.DirektvergleichResult;
+import de.petanqueturniermanager.algorithmen.liga.DirektvergleichResult;
 import de.petanqueturniermanager.helper.StringTools;
 import de.petanqueturniermanager.helper.i18n.I18n;
 

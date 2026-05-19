@@ -21,9 +21,9 @@ import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.KaskadenFeldBelegung;
-import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlan;
-import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlaner;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenFeldBelegung;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlaner;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;

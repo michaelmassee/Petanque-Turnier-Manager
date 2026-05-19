@@ -26,7 +26,7 @@ import com.sun.star.table.TableBorder2;
 import com.sun.star.util.CellProtection;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.SuperMeleePaarungenV2;
+import de.petanqueturniermanager.algorithmen.supermelee.SuperMeleePaarungenV2;
 import de.petanqueturniermanager.basesheet.meldeliste.MeldungenSpalte;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeHelper;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;

@@ -11,8 +11,8 @@ import java.util.Map;
 import com.sun.star.sheet.XSpreadsheet;
 
 import de.petanqueturniermanager.SheetRunner;
-import de.petanqueturniermanager.algorithmen.PouleRanglisteRechner;
-import de.petanqueturniermanager.algorithmen.PouleTeamErgebnis;
+import de.petanqueturniermanager.algorithmen.poule.PouleRanglisteRechner;
+import de.petanqueturniermanager.algorithmen.poule.PouleTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;

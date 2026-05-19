@@ -43,7 +43,7 @@ Direct Gradle commands (when no conflicting global init.gradle exists):
 ./gradlew buildPlugin            # Build OXT and show output path
 ./gradlew buildOXT               # Create OXT extension
 ./gradlew test                   # Run all tests (unit only, UI tests need LibreOffice)
-./gradlew test --tests "de.petanqueturniermanager.algorithmen.SchweizerSystemTest"  # Single test class
+./gradlew test --tests "de.petanqueturniermanager.algorithmen.schweizer.SchweizerSystemTest"  # Single test class
 ./gradlew reinstallExtension     # Uninstall + install extension in LibreOffice
 ./gradlew debugLibreOffice       # Reinstall and start LibreOffice with JDWP on port 5005
 ```
@@ -85,7 +85,18 @@ Each tournament system typically has sheet classes for: Meldeliste (entry list),
 - **`helper/`** — UNO API abstraction layer (SheetHelper, ColorHelper, MessageBox, Lo)
 - **`model/`** — Data classes: Team, Spieler, TeamPaarung, TeamRangliste, SpielErgebnis
 - **`basesheet/`** — Base classes for sheet types (meldeliste, spielrunde, konfiguration)
-- **`algorithmen/`** — Core algorithms: SchweizerSystem, SuperMeleePaarungen, Direktvergleich, CadrageRechner
+- **`algorithmen/`** — Core algorithms, thematisch in Sub-Packages organisiert:
+
+  | Sub-Package | Inhalt |
+  |---|---|
+  | `algorithmen/common/` | Querschnitt-Utilities: `CadrageRechner`, `GruppenAufteilungRechner`, `KoRundeTeamPaarungen`, `IsEvenOrOdd`, `TauschTeams` |
+  | `algorithmen/liga/` | `JederGegenJeden`, `Direktvergleich`, `DirektvergleichResult` |
+  | `algorithmen/schweizer/` | `SchweizerSystem`, `SchweizerTeamErgebnis` |
+  | `algorithmen/poule/` | `PouleRanglisteRechner`, `PouleGruppenRechner`, `PouleTeamErgebnis` |
+  | `algorithmen/kaskaden/` | `KaskadenKoRundenPlaner`, `KaskadenKoRundenPlan`, `KaskadenKoRunde`, `KaskadenKoGruppenRunde`, `KaskadenKoFeldRechner`, `KaskadenKoFeldInfo`, `KaskadenKoSpielPaar`, `KaskadenKoPaarungsStrategie`, `KaskadenFeldBelegung` |
+  | `algorithmen/formulex/` | `FormuleX`, `FormuleXErgebnis` |
+  | `algorithmen/triptete/` | `TripTeteRangliste`, `TripTeteTeamErgebnis`, `TripTeteBegegnungErgebnis`, `TripTetePaarungen`, `TripTeteAufstellung`, `TripTetePartie` |
+  | `algorithmen/supermelee/` | `SuperMeleePaarungenV2` |
 - **`addin/`** — Generated Java interface (`XGlobal`) from IDL; **`addins/`** contains the implementations (`GlobalImpl`, `AbstractAddInImpl`)
 - **`konfigdialog/`** — Configuration UI dialogs
 - **`sidebar/`** — Sidebar info panels (zeigt Plugin-Version als Label)

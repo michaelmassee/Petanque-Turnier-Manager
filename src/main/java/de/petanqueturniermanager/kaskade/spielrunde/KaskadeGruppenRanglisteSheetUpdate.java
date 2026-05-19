@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
-import de.petanqueturniermanager.algorithmen.KaskadenFeldBelegung;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenFeldBelegung;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;

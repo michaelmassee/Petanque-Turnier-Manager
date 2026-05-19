@@ -14,9 +14,9 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.petanqueturniermanager.algorithmen.KaskadenFeldBelegung;
-import de.petanqueturniermanager.algorithmen.KaskadenKoGruppenRunde;
-import de.petanqueturniermanager.algorithmen.KaskadenKoRundenPlan;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenFeldBelegung;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoGruppenRunde;
+import de.petanqueturniermanager.algorithmen.kaskaden.KaskadenKoRundenPlan;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;

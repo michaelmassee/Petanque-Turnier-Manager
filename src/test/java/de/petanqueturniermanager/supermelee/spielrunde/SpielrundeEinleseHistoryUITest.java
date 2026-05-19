@@ -36,7 +36,7 @@ import de.petanqueturniermanager.supermelee.meldeliste.TestSuperMeleeMeldeListeE
  * dass dabei <b>sowohl</b> {@link Spieler#warImTeamMit} <b>als auch</b>
  * {@link Spieler#warGegnerVon} korrekt wiederhergestellt werden — letzteres
  * fehlte historisch und führte bei Mehr-Runden-/Mehr-Spieltage-Turnieren zu
- * doppelten Gegner-Paarungen, weil {@link de.petanqueturniermanager.algorithmen.SuperMeleePaarungenV2}
+ * doppelten Gegner-Paarungen, weil {@link de.petanqueturniermanager.algorithmen.supermelee.SuperMeleePaarungenV2}
  * die Gegner-Optimierung dann auf einem leeren Score-Modell betrieb.
  */
 public class SpielrundeEinleseHistoryUITest extends BaseCalcUITest {

@@ -7,7 +7,7 @@ import de.petanqueturniermanager.helper.random.RandomSource;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.petanqueturniermanager.algorithmen.JederGegenJeden;
+import de.petanqueturniermanager.algorithmen.liga.JederGegenJeden;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.petanqueturniermanager.helper.random.RandomSource;
-import de.petanqueturniermanager.algorithmen.JederGegenJeden;
+import de.petanqueturniermanager.algorithmen.liga.JederGegenJeden;
 
 /**
  * @author Michael Massee
