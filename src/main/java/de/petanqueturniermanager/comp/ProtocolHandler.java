@@ -907,47 +907,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				handleKonfiguration(command, ws);
 				break;
 			// ------------------------------
-			// Spieler-DB
-			case CMD_SPIELERDB_OEFFNEN:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.oeffneSpielerVerwaltung(ws);
-				break;
-			case CMD_SPIELERDB_IN_MELDELISTE:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.uebernehmenInMeldeliste(ws);
-				break;
-			case CMD_SPIELERDB_VEREINE:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.oeffneVereinsVerwaltung(ws);
-				break;
-			case CMD_SPIELERDB_LABELS:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.oeffneLabelVerwaltung(ws);
-				break;
-			case CMD_SPIELERDB_ABGLEICH:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.abgleichMitMeldeliste(ws);
-				break;
-			case CMD_SPIELERDB_VORLAGE_ERSTELLEN:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.vorlageErstellen(ws);
-				break;
-			case CMD_SPIELERDB_VORLAGE_ABGLEICH:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.abgleichMitVorlage(ws);
-				break;
-			case CMD_SPIELERDB_EXPORT:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.exportSpielerDb(ws);
-				break;
-			case CMD_SPIELERDB_IMPORT:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.importSpielerDb(ws);
-				break;
-			case CMD_SPIELERDB_WEBVIEW:
-				de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
-						.zeigeWebView(ws);
-				break;
+			// Spieler-DB-Aktionen werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				handleKonfiguration(command, ws);
 				break;
@@ -973,15 +933,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			// ------------------------------
 			// Symbolleiste
-			case CMD_TOOLBAR_OEFFNEN:
-				ws.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
-				break;
-			case CMD_TOOLBAR_DRUCKEN:
-				ws.executeDispatch(".uno:Print", "_self", 0, new PropertyValue[0]);
-				break;
-			case CMD_TOOLBAR_DRUCKVORSCHAU:
-				ws.executeDispatch(".uno:PrintPreview", "_self", 0, new PropertyValue[0]);
-				break;
+			// Öffnen / Drucken / Druckvorschau werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
 			case CMD_TOOLBAR_WEITER:
 				ToolbarAktionDispatcher.weiter(ws);
 				break;
@@ -1041,6 +993,33 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
 			case CMD_TOOLBAR_START        -> new TurnierSystemAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI -> new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
+			case CMD_TOOLBAR_OEFFNEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
+					.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
+			case CMD_TOOLBAR_DRUCKEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
+					.executeDispatch(".uno:Print", "_self", 0, new PropertyValue[0]);
+			case CMD_TOOLBAR_DRUCKVORSCHAU      -> erzeugeWorkingSpreadsheetFuerDispatch()
+					.executeDispatch(".uno:PrintPreview", "_self", 0, new PropertyValue[0]);
+			// Spieler-DB-Aktionen: alle ohne ProcessBox, damit Dialoge nicht überdeckt werden
+			case CMD_SPIELERDB_OEFFNEN          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.oeffneSpielerVerwaltung(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_IN_MELDELISTE    -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.uebernehmenInMeldeliste(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_VEREINE          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.oeffneVereinsVerwaltung(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_LABELS           -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.oeffneLabelVerwaltung(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_ABGLEICH         -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.abgleichMitMeldeliste(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_VORLAGE_ERSTELLEN -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.vorlageErstellen(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_VORLAGE_ABGLEICH -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.abgleichMitVorlage(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_EXPORT           -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.exportSpielerDb(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_IMPORT           -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.importSpielerDb(erzeugeWorkingSpreadsheetFuerDispatch());
+			case CMD_SPIELERDB_WEBVIEW          -> de.petanqueturniermanager.spielerdb.ui.SpielerDbDispatcher
+					.zeigeWebView(erzeugeWorkingSpreadsheetFuerDispatch());
 			default -> { return false; }
 		}
 		return true;
