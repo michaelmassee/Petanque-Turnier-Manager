@@ -970,6 +970,41 @@ public class SuperMeleePaarungenV2Test {
         }
     }
 
+    /**
+     * Bug-Reproduktion (Datensatz {@code pf_robot_mai08.ods}): 22 Spieler im Triplette-Modus,
+     * 3 Runden, 2D + 6T pro Runde. Vor dem Fix landeten dieselben Spieler in allen Runden im
+     * Doublette — der Algorithmus hatte keinerlei Buchhaltung darüber, wer schon einmal im
+     * Ausnahme-Team war.<br>
+     * <br>
+     * Erwartung: bei 22 Spielern × 3 Runden = 12 Doublette-Slots auf 22 Spieler ist es
+     * strukturell möglich, dass kein Spieler mehr als einmal Doublette spielt. Der
+     * Fairness-Constraint im Algorithmus muss diese Verteilung herstellen.
+     */
+    @Test
+    public void paarung_22Spieler_3Runden_keinSpielerMehrfachImDoublette() throws AlgorithmenException {
+        RandomSource.setSeed(42L);
+        SpielerMeldungen meldungen = newTestMeldungen(22);
+
+        Map<Integer, Integer> doubletteCount = new HashMap<>();
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            assertThat(runde.teams()).as("Runde %d: 8 Teams", rnd).hasSize(8);
+            for (Team team : runde.teams()) {
+                if (team.size() == 2) {
+                    for (Spieler s : team.spieler()) {
+                        doubletteCount.merge(s.getNr(), 1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        int maxDoubletten = doubletteCount.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+        assertThat(maxDoubletten)
+                .as("Kein Spieler darf bei 22 Spielern / 3 Runden mehr als einmal Doublette spielen. "
+                        + "Belegung pro Spieler-Nr: %s", doubletteCount)
+                .isLessThanOrEqualTo(1);
+    }
+
     // =========================================================================
     // Hilfsmethoden
     // =========================================================================
