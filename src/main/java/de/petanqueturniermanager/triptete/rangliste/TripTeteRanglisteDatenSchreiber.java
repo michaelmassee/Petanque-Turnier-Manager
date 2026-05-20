@@ -1,7 +1,10 @@
 package de.petanqueturniermanager.triptete.rangliste;
 
+import java.util.List;
+
 import com.sun.star.sheet.XSpreadsheet;
 
+import de.petanqueturniermanager.algorithmen.triptete.TripTetePaarungen;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.ISheet;
 import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
@@ -10,6 +13,7 @@ import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.model.Team;
 import de.petanqueturniermanager.model.TeamMeldungen;
+import de.petanqueturniermanager.model.TeamPaarung;
 import de.petanqueturniermanager.triptete.meldeliste.TripTeteMeldeListeSheetUpdate;
 import de.petanqueturniermanager.triptete.spielplan.TripTeteSpielPlanSheet;
 
@@ -43,6 +47,13 @@ final class TripTeteRanglisteDatenSchreiber {
 		String punkteRange = adresse(TripTeteRanglisteSheet.BEG_SIEGE_SPALTE, erstePunkteZeile)
 				+ ":" + adresse(TripTeteRanglisteSheet.BEG_SIEGE_SPALTE, letztePunkteZeile);
 
+		// Spielplan-Bereich strikt begrenzen: SUMPRODUCT/VLOOKUP auf $X:$X-Vollspalten
+		// rechnet pro Formel-Zelle über alle 1 048 576 Zeilen — bei N Teams werden
+		// daraus N × 1 Mio VLOOKUPs, und LO friert beim Recalc ein.
+		List<List<TeamPaarung>> spielPlan = TripTetePaarungen.jederGegenJeden(meldungen);
+		int anzSpielzeilen = spielPlan.isEmpty() ? 0 : spielPlan.size() * spielPlan.get(0).size();
+		int letzteSpielplanZeile = TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE + Math.max(anzSpielzeilen, 1) - 1;
+
 		for (Team team : meldungen.teams()) {
 			int teamNr = team.getNr();
 
@@ -69,14 +80,16 @@ final class TripTeteRanglisteDatenSchreiber {
 					StringCellValue.from(sheet, Position.from(TripTeteRanglisteSheet.BEG_SIEGE_SPALTE, zeile))
 							.setValue(sumIfFormel(teamNr,
 									TripTeteSpielPlanSheet.BEG_PUNKT_A,
-									TripTeteSpielPlanSheet.BEG_PUNKT_B)));
+									TripTeteSpielPlanSheet.BEG_PUNKT_B,
+									letzteSpielplanZeile)));
 
 			// Spalte 4: Σ Partien-Siege aus Spielplan
 			ranglisteSheet.getSheetHelper().setFormulaInCell(
 					StringCellValue.from(sheet, Position.from(TripTeteRanglisteSheet.PAR_SIEGE_SPALTE, zeile))
 							.setValue(sumIfFormel(teamNr,
 									TripTeteSpielPlanSheet.PARTIE_SIEGE_A,
-									TripTeteSpielPlanSheet.PARTIE_SIEGE_B)));
+									TripTeteSpielPlanSheet.PARTIE_SIEGE_B,
+									letzteSpielplanZeile)));
 
 			// Spalte 5: Buchholz – Summe der Begegnungs-Siege der gespielten Gegner.
 			// Vereinfachte Variante: Σ über alle Begegnungen, in denen das Team
@@ -84,7 +97,8 @@ final class TripTeteRanglisteDatenSchreiber {
 			// Implementiert als SUMPRODUCT.
 			ranglisteSheet.getSheetHelper().setFormulaInCell(
 					StringCellValue.from(sheet, Position.from(TripTeteRanglisteSheet.BUCHHOLZ_SPALTE, zeile))
-							.setValue(buchholzFormel(teamNr, erstePunkteZeile, letztePunkteZeile)));
+							.setValue(buchholzFormel(teamNr, erstePunkteZeile, letztePunkteZeile,
+									letzteSpielplanZeile)));
 			zeile++;
 		}
 	}
@@ -95,12 +109,12 @@ final class TripTeteRanglisteDatenSchreiber {
 	 * teamNr gesucht und die BEG_PUNKT_A-Spalte aufsummiert, plus analoge Suche
 	 * in TeamB-Spalte.
 	 */
-	private static String sumIfFormel(int teamNr, int spaltenA, int spaltenB) {
+	private static String sumIfFormel(int teamNr, int spaltenA, int spaltenB, int letzteSpielplanZeile) {
 		String spielplan = "$'" + SheetNamen.spielplan() + "'.";
-		String teamASpalte = spielplan + spalteAlsRange(TripTeteSpielPlanSheet.TEAM_A_NR_SPALTE);
-		String teamBSpalte = spielplan + spalteAlsRange(TripTeteSpielPlanSheet.TEAM_B_NR_SPALTE);
-		String wertSpalteA = spielplan + spalteAlsRange(spaltenA);
-		String wertSpalteB = spielplan + spalteAlsRange(spaltenB);
+		String teamASpalte = spielplan + spielplanRange(TripTeteSpielPlanSheet.TEAM_A_NR_SPALTE, letzteSpielplanZeile);
+		String teamBSpalte = spielplan + spielplanRange(TripTeteSpielPlanSheet.TEAM_B_NR_SPALTE, letzteSpielplanZeile);
+		String wertSpalteA = spielplan + spielplanRange(spaltenA, letzteSpielplanZeile);
+		String wertSpalteB = spielplan + spielplanRange(spaltenB, letzteSpielplanZeile);
 		return "SUMIF(" + teamASpalte + ";" + teamNr + ";" + wertSpalteA + ")"
 				+ "+SUMIF(" + teamBSpalte + ";" + teamNr + ";" + wertSpalteB + ")";
 	}
@@ -113,10 +127,11 @@ final class TripTeteRanglisteDatenSchreiber {
 	 * <p>Vereinfachung: wir nutzen SUMPRODUCT mit Indikator-Funktion über die
 	 * Spielplan-Reihen.
 	 */
-	private static String buchholzFormel(int teamNr, int erstePunkteZeile, int letztePunkteZeile) {
+	private static String buchholzFormel(int teamNr, int erstePunkteZeile, int letztePunkteZeile,
+			int letzteSpielplanZeile) {
 		String spielplan = "$'" + SheetNamen.spielplan() + "'.";
-		String teamA = spielplan + spalteAlsRange(TripTeteSpielPlanSheet.TEAM_A_NR_SPALTE);
-		String teamB = spielplan + spalteAlsRange(TripTeteSpielPlanSheet.TEAM_B_NR_SPALTE);
+		String teamA = spielplan + spielplanRange(TripTeteSpielPlanSheet.TEAM_A_NR_SPALTE, letzteSpielplanZeile);
+		String teamB = spielplan + spielplanRange(TripTeteSpielPlanSheet.TEAM_B_NR_SPALTE, letzteSpielplanZeile);
 		// für jede Spielplan-Zeile:
 		//   wenn teamA == teamNr → Gegner = teamB, VLOOKUP dessen Begegnungs-Siege
 		//   wenn teamB == teamNr → Gegner = teamA, VLOOKUP
@@ -134,9 +149,11 @@ final class TripTeteRanglisteDatenSchreiber {
 		return "$" + spalteBuchstabe(spalte) + "$" + (zeile + 1);
 	}
 
-	private static String spalteAlsRange(int spalte) {
+	private static String spielplanRange(int spalte, int letzteSpielplanZeile) {
 		String buchstabe = spalteBuchstabe(spalte);
-		return "$" + buchstabe + ":$" + buchstabe;
+		int ersteZeileEinsBasiert = TripTeteSpielPlanSheet.ERSTE_DATEN_ZEILE + 1;
+		int letzteZeileEinsBasiert = letzteSpielplanZeile + 1;
+		return "$" + buchstabe + "$" + ersteZeileEinsBasiert + ":$" + buchstabe + "$" + letzteZeileEinsBasiert;
 	}
 
 	private static String spalteBuchstabe(int spalte) {
