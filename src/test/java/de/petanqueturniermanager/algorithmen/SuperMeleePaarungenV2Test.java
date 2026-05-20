@@ -1006,6 +1006,51 @@ public class SuperMeleePaarungenV2Test {
                 .isLessThanOrEqualTo(1);
     }
 
+    /**
+     * Regression: Über mehrere Spieltage hinweg darf der {@code anzMalKleinesTeam}-Counter
+     * nicht ignoriert werden, wenn ein Teil der Spieler bereits oft im Ausnahme-Team
+     * (Doublette) war. Reproduziert die Situation aus dem 6.-Spieltag-Datensatz
+     * {@code ~/tmp/locrash-2/supermelee_6_spieltag_fehlerhaft.ods}, in dem dieselben
+     * Spieler drei Runden hintereinander im Doublette gefangen waren.
+     */
+    @Test
+    public void paarung_22Spieler_3Runden_bereitsBelasteteSpielerMeidenDoublette()
+            throws AlgorithmenException {
+        RandomSource.setSeed(42L);
+        SpielerMeldungen meldungen = newTestMeldungen(22);
+        // Simuliere 5 Vorspieltage: Spieler 1..4 sind bereits 5× im Doublette gewesen,
+        // Spieler 5..22 noch nie. Der Fairness-Mechanismus muss diese 4 in den nächsten
+        // 3 Runden zuverlässig aus den Doublette-Slots heraushalten — es gibt 18 unbelastete
+        // Spieler für 12 Doublette-Slots (3 Runden × 4 Slots), strukturell trivial möglich.
+        Set<Integer> belastet = Set.of(1, 2, 3, 4);
+        for (Spieler s : meldungen.spieler()) {
+            if (belastet.contains(s.getNr())) {
+                for (int i = 0; i < 5; i++) {
+                    s.incAnzMalKleinesTeam();
+                }
+            }
+        }
+
+        Map<Integer, Integer> doubletteCount = new HashMap<>();
+        for (int rnd = 1; rnd <= 3; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            for (Team team : runde.teams()) {
+                if (team.size() == 2) {
+                    for (Spieler s : team.spieler()) {
+                        doubletteCount.merge(s.getNr(), 1, Integer::sum);
+                    }
+                }
+            }
+        }
+
+        for (int nr : belastet) {
+            assertThat(doubletteCount.getOrDefault(nr, 0))
+                    .as("Spieler %d war bereits 5× im Doublette — darf in den nächsten 3 Runden "
+                            + "nicht erneut. Verteilung pro Spieler-Nr: %s", nr, doubletteCount)
+                    .isZero();
+        }
+    }
+
     // =========================================================================
     // Hilfsmethoden
     // =========================================================================

@@ -378,9 +378,13 @@ public class SuperMeleePaarungenV2 {
         int minKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).min().orElse(0);
 
         AlgorithmenException letzteException = null;
-        // Von strikt nach locker: zuerst die meistbelasteten Spieler ausschließen,
-        // bei Backtracking-Fehlschlag die Schwelle absenken.
-        for (int schwelle = maxKlein; schwelle > minKlein; schwelle--) {
+        // Von strikt nach locker, in Richtung „minimaler Counter bevorzugt":
+        // Schwelle = minKlein + 1 sperrt alle Spieler, die mehr als minKlein mal im
+        // Ausnahme-Team waren — übrig bleiben nur die Spieler mit dem niedrigsten Zähler.
+        // Findet das Backtracking keine Lösung, wird die Schwelle schrittweise angehoben
+        // (mehr Spieler werden zugelassen). So landen Doublette-Slots immer zuerst bei
+        // den am wenigsten belasteten Spielern.
+        for (int schwelle = minKlein + 1; schwelle <= maxKlein; schwelle++) {
             try {
                 for (Spieler dummy : dummies) {
                     for (Spieler s : realeSpieler) {
@@ -392,7 +396,7 @@ public class SuperMeleePaarungenV2 {
                 return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
             } catch (AlgorithmenException ex) {
                 letzteException = ex;
-                logger.debug("Spielrunde {}: Fairness-Schwelle {} nicht lösbar — relaxiere.", rndNr, schwelle);
+                logger.debug("Spielrunde {}: Fairness-Schwelle {} nicht lösbar — lockere.", rndNr, schwelle);
                 // Dummy-Konflikte vor nächstem Versuch zurücksetzen — beide Seiten, weil
                 // addWarImTeamMitWennNichtVorhanden symmetrisch ist, deleteWarImTeam aber nicht.
                 for (Spieler dummy : dummies) {
