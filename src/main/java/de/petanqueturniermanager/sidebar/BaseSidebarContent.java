@@ -148,6 +148,19 @@ public abstract class BaseSidebarContent extends ComponentBase
 		PetanqueTurnierMngrSingleton.addTurnierEventListener(this);
 	}
 
+	/**
+	 * Opak-weiß für den Panel-Hintergrund.
+	 * <p>
+	 * LibreOffice interpretiert den Wert mit {@code ColorTransparency}-Semantik
+	 * ({@code Color aColor(ColorTransparency, nColor)} in
+	 * {@code toolkit/source/awt/vclxwindow.cxx}): das hohe Byte steuert die
+	 * Transparenz – {@code 0xFF} = transparent, {@code 0x00} = opak. Der frühere
+	 * Wert {@code 0xFFFFFFFF} war damit <em>transparent</em>, nicht weiß. Auf
+	 * Windows mit D3D-Backend zeigt eine transparente Region uninitialisierte
+	 * Pixel als schwarz – exakt das Symptom „schwarze Sidebar während Lauf".
+	 */
+	private static final int BACKGROUND_OPAQUE_WHITE = 0x00FFFFFF;
+
 	private void neuesBasisFenster() {
 		layout = new VerticalLayout(0, 2);
 		XMultiComponentFactory xMCF = Lo.qi(XMultiComponentFactory.class,
@@ -155,7 +168,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		XWindowPeer parentWindowPeer = Lo.qi(XWindowPeer.class, parentWindow);
 		XToolkit parentToolkit = parentWindowPeer.getToolkit();
 		XWindowPeer windowPeer = GuiFactory.createWindow(parentToolkit, parentWindowPeer);
-		windowPeer.setBackground(0xffffffff);
+		windowPeer.setBackground(BACKGROUND_OPAQUE_WHITE);
 		window = Lo.qi(XWindow.class, windowPeer);
 		window.setVisible(true);
 		guiFactoryCreateParam = new GuiFactoryCreateParam(xMCF, currentSpreadsheet.getxContext(), parentToolkit,
@@ -168,15 +181,19 @@ public abstract class BaseSidebarContent extends ComponentBase
 	 * vollständiger Neuaufbau nötig ist.
 	 */
 	protected void allesFelderEntfernenUndNeuFenster() {
-		logger.debug("allesFelderEntfernenUndNeuFenster");
+		String panel = this.getClass().getSimpleName();
+		long startNs = System.nanoTime();
+		long t = startNs;
 		try {
 			vorFensterDispose();
 		} catch (Exception e) {
 			logger.error("Fehler beim Freigeben vor Window-Dispose", e);
 		}
+		long tVorFensterDispose = System.nanoTime();
 		if (window != null) {
 			window.dispose();
 		}
+		long tWindowDisposed = System.nanoTime();
 		uiGeneration.incrementAndGet(); // erst nach dispose – alte UI ist jetzt tot, neue Generation beginnt
 		window = null;
 		if (guiFactoryCreateParam != null) {
@@ -185,8 +202,21 @@ public abstract class BaseSidebarContent extends ComponentBase
 		}
 		ausstehendAktualisierung = null; // Rebuild ist vollständige Aktualisierung – pending Event obsolet
 		neuesBasisFenster();
+		long tNeuesBasisFenster = System.nanoTime();
 		felderHinzufuegen();
+		long tFelderHinzu = System.nanoTime();
 		requestLayout();
+		long tFertig = System.nanoTime();
+		logger.info(
+				"[SIDEBAR-TIMING] {} allesFelderEntfernenUndNeuFenster: vorDispose={} ms, dispose={} ms, neuesFenster={} ms, felderHinzufuegen={} ms, requestLayout={} ms, GESAMT={} ms, thread={}",
+				panel,
+				(tVorFensterDispose - t) / 1_000_000L,
+				(tWindowDisposed - tVorFensterDispose) / 1_000_000L,
+				(tNeuesBasisFenster - tWindowDisposed) / 1_000_000L,
+				(tFelderHinzu - tNeuesBasisFenster) / 1_000_000L,
+				(tFertig - tFelderHinzu) / 1_000_000L,
+				(tFertig - startNs) / 1_000_000L,
+				Thread.currentThread().getName());
 	}
 
 	/**
@@ -453,8 +483,15 @@ public abstract class BaseSidebarContent extends ComponentBase
 			ausstehendAktualisierung = eventObj;
 			return;
 		}
-		logger.debug("onPropertiesChanged");
-		felderAktualisieren(eventObj);
+		String panel = this.getClass().getSimpleName();
+		long startNs = System.nanoTime();
+		try {
+			felderAktualisieren(eventObj);
+		} finally {
+			long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+			logger.info("[SIDEBAR-TIMING] {} onPropertiesChanged.felderAktualisieren: {} ms, thread={}",
+					panel, dauerMs, Thread.currentThread().getName());
+		}
 	}
 
 	protected void doLayout() {

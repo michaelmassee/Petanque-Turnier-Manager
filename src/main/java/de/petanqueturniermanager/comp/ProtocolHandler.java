@@ -575,6 +575,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
+		StartupClock.logErstesVorkommen("dispatch:first", "ProtocolHandler.dispatch erster Aufruf (" + command + ")");
 		try {
 			// Timer-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
 			if (behandleTimerBefehl(command)) {

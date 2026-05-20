@@ -34,6 +34,7 @@ public final class StartupInfoLogger {
         try {
             String banner = baueBanner(context);
             logger.info(banner);
+            logger.info("[STARTUP-TIMING] JVM-Uptime beim Plugin-Init: {} ms", StartupClock.uptimeMs());
         } catch (Exception e) {
             // Banner darf den Startup niemals scheitern lassen
             logger.warn("Startup-Banner konnte nicht geschrieben werden: {}", e.getMessage(), e);

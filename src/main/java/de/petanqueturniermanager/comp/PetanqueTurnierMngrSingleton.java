@@ -95,6 +95,8 @@ public class PetanqueTurnierMngrSingleton {
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
+		logger.info("[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init START jvm-uptime={} ms",
+				StartupClock.uptimeMs());
 		long initStartNs = System.nanoTime();
 		long t = initStartNs;
 		try {
@@ -188,7 +190,8 @@ public class PetanqueTurnierMngrSingleton {
 		logTimingAndReset("RanglisteRefreshListener SUPERMELEE-END", t);
 
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
-		logger.info("[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms", initGesamtMs);
+		logger.info("[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",
+				initGesamtMs, StartupClock.uptimeMs());
 	}
 
 	private static long logTimingAndReset(String abschnitt, long startNs) {
