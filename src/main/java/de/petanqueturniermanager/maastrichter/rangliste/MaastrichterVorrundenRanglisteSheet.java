@@ -3,7 +3,14 @@
  */
 package de.petanqueturniermanager.maastrichter.rangliste;
 
+import java.util.List;
+import java.util.Map;
+
+import com.sun.star.sheet.XSpreadsheet;
+
+import de.petanqueturniermanager.algorithmen.SchweizerTeamErgebnis;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
@@ -22,9 +29,33 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
  */
 public class MaastrichterVorrundenRanglisteSheet extends SchweizerRanglisteSheet {
 
+	private Map<Integer, String> preservedGruppen = Map.of();
 
 	public MaastrichterVorrundenRanglisteSheet(WorkingSpreadsheet workingSpreadsheet) {
 		super(workingSpreadsheet, TurnierSystem.MAASTRICHTER);
+	}
+
+	@Override
+	public void doRun() throws GenerateException {
+		// Gruppe-Zuweisungen vor NewSheet.forceCreate() retten, sonst gehen sie verloren.
+		preservedGruppen = MaastrichterGruppenSpalteHelper.lesePreservedGruppen(this);
+		super.doRun();
+	}
+
+	@Override
+	protected int letzteAnzeigeSpalte() {
+		return MaastrichterGruppenSpalteHelper.GRUPPE_SPALTE;
+	}
+
+	@Override
+	protected void erweitereHeader(XSpreadsheet sheet, Integer headerColor) throws GenerateException {
+		MaastrichterGruppenSpalteHelper.schreibeHeader(this, sheet, headerColor);
+	}
+
+	@Override
+	protected void erweitereDaten(XSpreadsheet sheet, List<SchweizerTeamErgebnis> sortiert,
+			int letzteZeile) throws GenerateException {
+		MaastrichterGruppenSpalteHelper.schreibeDaten(this, sheet, sortiert, letzteZeile, preservedGruppen);
 	}
 
 	@Override

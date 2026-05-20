@@ -168,6 +168,35 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 		return rangListeSorter;
 	}
 
+	/**
+	 * Letzte sichtbare Datenspalte (vor der versteckten Validate-Spalte).
+	 * <p>
+	 * Subklassen (z.B. Maastrichter mit zusätzlicher Gruppe-Spalte) überschreiben
+	 * diesen Hook, damit Druckbereich, Zebra-Bereich und Validate-Spaltenposition
+	 * automatisch mitwachsen.
+	 */
+	protected int letzteAnzeigeSpalte() {
+		return PUNKTE_DIFF_SPALTE;
+	}
+
+	/**
+	 * Hook für Subklassen, die zusätzliche Header-Spalten rechts der Standard-Header
+	 * benötigen. Default: no-op.
+	 */
+	protected void erweitereHeader(XSpreadsheet sheet, Integer headerColor) throws GenerateException {
+		// no-op
+	}
+
+	/**
+	 * Hook für Subklassen, die zusätzliche Datenspalten rechts der Punkte-Differenz
+	 * füllen. Wird aufgerufen, nachdem die Standardspalten geschrieben sind.
+	 * Default: no-op.
+	 */
+	protected void erweitereDaten(XSpreadsheet sheet, List<SchweizerTeamErgebnis> sortiert,
+			int letzteZeile) throws GenerateException {
+		// no-op
+	}
+
 	@Override
 	public XSpreadsheet getXSpreadSheet() throws GenerateException {
 		return SheetMetadataHelper.findeSheetUndHeile(
@@ -273,11 +302,14 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 							.setCharWeight(com.sun.star.awt.FontWeight.BOLD));
 		}
 
+		// Erweiterungen für Subklassen (z.B. Maastrichter: Gruppe-Spalte)
+		erweitereDaten(sheet, sortiert, ERSTE_DATEN_ZEILE + sortiert.size() - 1);
+
 		// Zebra-Formatierung für Datenbereich
 		if (!sortiert.isEmpty()) {
 			int letzteZeile = ERSTE_DATEN_ZEILE + sortiert.size() - 1;
 			RangePosition datenRange = RangePosition.from(TEAM_NR_SPALTE, ERSTE_DATEN_ZEILE,
-					PUNKTE_DIFF_SPALTE, letzteZeile);
+					letzteAnzeigeSpalte(), letzteZeile);
 			RanglisteGeradeUngeradeFormatHelper.from(this, datenRange)
 					.geradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeGerade())
 					.ungeradeFarbe(getKonfigurationSheet().getRanglisteHintergrundFarbeUnGerade())
@@ -483,6 +515,9 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 					.setHoriJustify(CellHoriJustify.CENTER)
 					.setShrinkToFit(true));
 		}
+
+		// Erweiterungen für Subklassen (z.B. Maastrichter: Gruppe-Spalte)
+		erweitereHeader(sheet, headerColor);
 	}
 
 	/**
@@ -631,7 +666,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	@Override
 	public int getLetzteSpalte() throws GenerateException {
-		return PUNKTE_DIFF_SPALTE;
+		return letzteAnzeigeSpalte();
 	}
 
 	@Override
@@ -646,7 +681,7 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	@Override
 	public int validateSpalte() throws GenerateException {
-		return VALIDATE_SPALTE;
+		return letzteAnzeigeSpalte() + 1;
 	}
 
 	@Override
@@ -685,10 +720,10 @@ public class SchweizerRanglisteSheet extends SheetRunner implements IRangliste {
 
 	// ── Hilfsmethoden ────────────────────────────────────────────────────────────
 
-	/** Setzt den Druckbereich: Spalten A–I (ohne Validator-Spalte J), Zeilen 1 bis letzteZeile. */
+	/** Setzt den Druckbereich: Spalten A bis letzteAnzeigeSpalte (ohne Validator-Spalte), Zeilen 1 bis letzteZeile. */
 	private void setzeDruckbereich(XSpreadsheet sheet, int letzteZeile) throws GenerateException {
 		var linksOben   = Position.from(TEAM_NR_SPALTE, HEADER_ZEILE);
-		var rechtsUnten = Position.from(PUNKTE_DIFF_SPALTE, letzteZeile);
+		var rechtsUnten = Position.from(letzteAnzeigeSpalte(), letzteZeile);
 		PrintArea.from(sheet, getWorkingSpreadsheet())
 				.setPrintArea(RangePosition.from(linksOben, rechtsUnten));
 	}

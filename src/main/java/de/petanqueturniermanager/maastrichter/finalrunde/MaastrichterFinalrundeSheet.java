@@ -141,6 +141,7 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 		KoTurnierbaumSheet koSheet = new KoTurnierbaumSheet(getWorkingSpreadsheet());
 		short sheetPos = DefaultSheetPos.MAASTRICHTER_FINALE;
 		char naechsterBuchstabe = 'A';
+		Map<Integer, String> teamNrZuGruppe = new HashMap<>();
 
 		for (List<SchweizerTeamErgebnis> gruppeErg : gruppen) {
 			SheetRunner.testDoCancelTask();
@@ -152,9 +153,18 @@ public class MaastrichterFinalrundeSheet extends SheetRunner implements ISheet {
 				koSheet.erstelleGruppeBracket(gruppeTeams, sheetName, sheetPos, konfigSheet,
 						SheetMetadataHelper.schluesselMaastrichterFinalrunde(gruppenBuchstabe), gruppenBuchstabe);
 				sheetPos++;
+				for (SchweizerTeamErgebnis erg : gruppeErg) {
+					teamNrZuGruppe.put(erg.teamNr(), gruppenBuchstabe);
+				}
 			}
 		}
 
+		// Gruppen-Buchstaben einmalig in die Vorrunden-Rangliste schreiben
+		// (Spalte "Gruppe"). Nachfolgende Rangliste-Refreshs erhalten die Werte.
+		if (!teamNrZuGruppe.isEmpty()) {
+			new MaastrichterVorrundenRanglisteSheetUpdate(getWorkingSpreadsheet())
+					.schreibeGruppenZuweisungen(teamNrZuGruppe);
+		}
 	}
 
 	/**
