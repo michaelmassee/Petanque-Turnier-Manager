@@ -393,6 +393,7 @@ public class SuperMeleePaarungenV2Test {
      */
     @Test
     public void testMehrereRunden_Triplette_MitDoublette_11Spieler() throws AlgorithmenException {
+        RandomSource.setSeed(42L);
         int anzSpieler = 11;
         int testeRunden = 4; // Paare/Runde = 3×C(3,2) + 1×C(2,2) = 10
         SpielerMeldungen meldungen = newTestMeldungen(anzSpieler);
