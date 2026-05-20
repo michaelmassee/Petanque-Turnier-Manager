@@ -122,9 +122,12 @@ public class SuperMeleePaarungenV2 {
             throw new AlgorithmenException(I18n.get("error.algorithmus.keine.triplette"));
         }
 
+        // Doublette-Hauptmodus: das Dummy-Team wird nach Cleanup zum Doublette = Default-Größe.
+        // Die "Ausnahme" sind hier die dummylosen Triplettes. Spieler im Dummy-Team auf
+        // anzMalKleinesTeam zu sperren wäre kontraproduktiv → Fairness-Constraint deaktiviert.
         MeleeSpielRunde spielRunde = nurTriplette
                 ? generiereRundeMitFesteTeamGroese(rndNr, 3, meldungen)
-                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen);
+                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen, false);
         return finalizeRunde(spielRunde);
     }
 
@@ -151,9 +154,11 @@ public class SuperMeleePaarungenV2 {
             throw new AlgorithmenException(I18n.get("error.algorithmus.keine.doublette"));
         }
 
+        // Triplette-Hauptmodus: Dummy-Teams werden nach Cleanup zu Doublettes = Ausnahme.
+        // Fairness-Constraint aktivieren, damit niemand wiederholt im Doublette landet.
         MeleeSpielRunde spielRunde = nurDoublette
                 ? generiereRundeMitFesteTeamGroese(rndNr, 2, meldungen)
-                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen);
+                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen, true);
         return finalizeRunde(spielRunde);
     }
 
@@ -311,14 +316,19 @@ public class SuperMeleePaarungenV2 {
      * @throws AlgorithmenException wenn keine gültige Paarung generiert werden konnte
      */
     private MeleeSpielRunde generiereRundeMitDummies(int rndNr, int teamSize, int anzDummies,
-            SpielerMeldungen meldungen) throws AlgorithmenException {
+            SpielerMeldungen meldungen, boolean dummyTeamIstAusnahme) throws AlgorithmenException {
+        // Snapshot der realen Spieler VOR dem Hinzufügen der Dummies — die Fairness-Schwellen
+        // dürfen sich nicht auf Dummies stützen.
+        List<Spieler> realeSpieler = new ArrayList<>(meldungen.spieler());
+
         Spieler[] dummies = new Spieler[anzDummies];
         for (int i = 0; i < anzDummies; i++) {
             dummies[i] = Spieler.from(DUMMY_SPIELER_START_NR + i).setSetzPos(DUMMY_SPIELER_SETZPOS);
             meldungen.addSpielerWennNichtVorhanden(dummies[i]);
         }
         try {
-            MeleeSpielRunde spielRunde = generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+            MeleeSpielRunde spielRunde = generiereRundeMitFairnessConstraint(rndNr, teamSize, meldungen, dummies,
+                    realeSpieler, dummyTeamIstAusnahme);
             for (Spieler dummy : dummies) {
                 spielRunde.removeSpieler(dummy);
                 // Dummy-Einträge aus warImTeamMit der echten Spieler entfernen:
@@ -328,12 +338,82 @@ public class SuperMeleePaarungenV2 {
                     spieler.deleteWarImTeam(dummy);
                 }
             }
+            if (dummyTeamIstAusnahme) {
+                // Buchhaltung: jeder reale Spieler in einem Team kleiner als teamSize hat in
+                // dieser Runde im Ausnahme-Team (Doublette) gespielt. Konsistent zum Eintrag
+                // beim Wieder-Einlesen der Sheets ({@code SpielrundeDelegate.gespieltenRundenEinlesen}).
+                for (Team team : spielRunde.teams()) {
+                    if (team.size() > 0 && team.size() < teamSize) {
+                        for (Spieler s : team.spieler()) {
+                            s.incAnzMalKleinesTeam();
+                        }
+                    }
+                }
+            }
             return spielRunde;
         } finally {
             // Garantiertes Cleanup — auch bei Exception
             for (Spieler dummy : dummies) {
                 meldungen.removeSpieler(dummy);
             }
+        }
+    }
+
+    /**
+     * Generiert eine Runde mit fest definierter Teamgröße und sorgt — falls
+     * {@code dummyTeamIstAusnahme} gesetzt ist — dafür, dass Spieler, die in
+     * früheren Runden bereits am häufigsten im Ausnahme-Team waren, möglichst
+     * nicht erneut in einem Dummy-Team landen. Realisiert via Hard-Constraint
+     * zwischen Dummy und "Vielspielern", die schrittweise relaxiert wird, wenn
+     * die Backtracking-Suche kein gültiges Layout findet.
+     */
+    private MeleeSpielRunde generiereRundeMitFairnessConstraint(int rndNr, int teamSize,
+            SpielerMeldungen meldungen, Spieler[] dummies, List<Spieler> realeSpieler,
+            boolean dummyTeamIstAusnahme) throws AlgorithmenException {
+        if (!dummyTeamIstAusnahme || dummies.length == 0 || realeSpieler.isEmpty()) {
+            return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+        }
+
+        int maxKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).max().orElse(0);
+        int minKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).min().orElse(0);
+
+        AlgorithmenException letzteException = null;
+        // Von strikt nach locker: zuerst die meistbelasteten Spieler ausschließen,
+        // bei Backtracking-Fehlschlag die Schwelle absenken.
+        for (int schwelle = maxKlein; schwelle > minKlein; schwelle--) {
+            try {
+                for (Spieler dummy : dummies) {
+                    for (Spieler s : realeSpieler) {
+                        if (s.getAnzMalKleinesTeam() >= schwelle) {
+                            dummy.addWarImTeamMitWennNichtVorhanden(s);
+                        }
+                    }
+                }
+                return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+            } catch (AlgorithmenException ex) {
+                letzteException = ex;
+                logger.debug("Spielrunde {}: Fairness-Schwelle {} nicht lösbar — relaxiere.", rndNr, schwelle);
+                // Dummy-Konflikte vor nächstem Versuch zurücksetzen — beide Seiten, weil
+                // addWarImTeamMitWennNichtVorhanden symmetrisch ist, deleteWarImTeam aber nicht.
+                for (Spieler dummy : dummies) {
+                    for (Spieler s : realeSpieler) {
+                        dummy.deleteWarImTeam(s);
+                        s.deleteWarImTeam(dummy);
+                    }
+                }
+            }
+        }
+        // Schwelle vollständig zurückgenommen → identisches Verhalten zum Algorithmus
+        // vor der Fairness-Erweiterung. Vorhandene Dummies haben hier keine zusätzlichen
+        // Constraints mehr.
+        try {
+            return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+        } catch (AlgorithmenException ex) {
+            // Wenn auch das nicht klappt: die ursprüngliche Exception ist informativer.
+            if (letzteException != null) {
+                throw letzteException;
+            }
+            throw ex;
         }
     }
 
