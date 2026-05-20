@@ -122,9 +122,12 @@ public class SuperMeleePaarungenV2 {
             throw new AlgorithmenException(I18n.get("error.algorithmus.keine.triplette"));
         }
 
+        // Doublette-Hauptmodus: das Dummy-Team wird nach Cleanup zum Doublette = Default-Größe.
+        // Die "Ausnahme" sind hier die dummylosen Triplettes. Spieler im Dummy-Team auf
+        // anzMalKleinesTeam zu sperren wäre kontraproduktiv → Fairness-Constraint deaktiviert.
         MeleeSpielRunde spielRunde = nurTriplette
                 ? generiereRundeMitFesteTeamGroese(rndNr, 3, meldungen)
-                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen);
+                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen, false);
         return finalizeRunde(spielRunde);
     }
 
@@ -151,9 +154,11 @@ public class SuperMeleePaarungenV2 {
             throw new AlgorithmenException(I18n.get("error.algorithmus.keine.doublette"));
         }
 
+        // Triplette-Hauptmodus: Dummy-Teams werden nach Cleanup zu Doublettes = Ausnahme.
+        // Fairness-Constraint aktivieren, damit niemand wiederholt im Doublette landet.
         MeleeSpielRunde spielRunde = nurDoublette
                 ? generiereRundeMitFesteTeamGroese(rndNr, 2, meldungen)
-                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen);
+                : generiereRundeMitDummies(rndNr, 3, teamRechner.getAnzDoublette(), meldungen, true);
         return finalizeRunde(spielRunde);
     }
 
@@ -170,29 +175,49 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Ordnet die Teams so um, dass Gegner-Wiederholungen minimiert werden (2. Rang).<br>
+     * Ordnet die Teams so um, dass Gegner-Wiederholungen minimiert werden (2. Rang) und
+     * gleichzeitig Doublette gegen Triplette (5er-Partie) nur dort entsteht, wo die
+     * Parität es zwingend erfordert.<br>
      * <br>
-     * Greedy-Algorithmus: Nimm jeweils das erste ungepaarte Team, wähle als Gegner das
-     * ungepaarte Team mit dem geringsten Gegner-Score. Nach der Umsortierung werden die
-     * Gegner paarweise in die Spieler-Objekte eingetragen ({@link Spieler#addGegner}).
+     * Algorithmus:
+     * <ol>
+     *   <li>Teams nach Größe in zwei Gruppen aufteilen (Doublettes / Triplettes).</li>
+     *   <li>Sind beide Gruppen ungerade, wird genau eine 5er-Partie gebildet —
+     *       das D-/T-Paar mit minimalem Gegner-Score.</li>
+     *   <li>Innerhalb jeder Gruppe wird die bisherige Greedy-Paarung
+     *       (Gegner-Score-Minimierung) angewendet.</li>
+     * </ol>
+     * Anschließend werden die Gegner paarweise in die Spieler-Objekte eingetragen
+     * ({@link Spieler#addGegner}).
      *
      * @param spielRunde die zu optimierende Spielrunde (Teams bereits nach Größe sortiert)
      */
     private void optimiereGegnerPaarung(MeleeSpielRunde spielRunde) throws AlgorithmenException {
-        List<Team> unpaired = new ArrayList<>(spielRunde.teams());
-        List<Team> ergebnis = new ArrayList<>(unpaired.size());
-
-        while (!unpaired.isEmpty()) {
-            Team team1 = unpaired.remove(0);
-            Team besteGegner = unpaired.stream()
-                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
-                    .orElse(null);
-            ergebnis.add(team1);
-            if (besteGegner != null) {
-                unpaired.remove(besteGegner);
-                ergebnis.add(besteGegner);
-            }
+        List<Team> doublettes = new ArrayList<>();
+        List<Team> triplettes = new ArrayList<>();
+        for (Team team : spielRunde.teams()) {
+            (team.size() == 2 ? doublettes : triplettes).add(team);
         }
+
+        // Bei ungerader Parität in beiden Gruppen: genau eine 5er-Partie bilden.
+        // Laut SuperMeleeTeamRechner fallen D- und T-Parität immer zusammen, daher
+        // entsteht maximal eine gemischte Paarung pro Runde.
+        Team[] mixedPaar = null;
+        if (doublettes.size() % 2 != 0 && triplettes.size() % 2 != 0) {
+            mixedPaar = besteMischpaarung(doublettes, triplettes);
+            doublettes.remove(mixedPaar[0]);
+            triplettes.remove(mixedPaar[1]);
+        }
+
+        // Reihenfolge: erst alle D-Paare, dann ggf. 5er-Partie, dann alle T-Paare —
+        // bleibt damit aufsteigend nach Teamgröße sortiert.
+        List<Team> ergebnis = new ArrayList<>(spielRunde.teams().size());
+        paareInnerhalbGruppe(doublettes, ergebnis);
+        if (mixedPaar != null) {
+            ergebnis.add(mixedPaar[0]);
+            ergebnis.add(mixedPaar[1]);
+        }
+        paareInnerhalbGruppe(triplettes, ergebnis);
 
         spielRunde.setzeTeamReihenfolge(ergebnis);
 
@@ -212,6 +237,48 @@ public class SuperMeleePaarungenV2 {
                 }
             }
         }
+    }
+
+    /**
+     * Greedy-Paarung innerhalb einer Größen-Gruppe: nimmt jeweils das erste ungepaarte
+     * Team und wählt den Gegner mit minimalem Gegner-Score. Die Gruppe muss gerade
+     * Anzahl Teams enthalten (durch Aufrufer sichergestellt).
+     */
+    private void paareInnerhalbGruppe(List<Team> gruppe, List<Team> ergebnis) {
+        List<Team> unpaired = new ArrayList<>(gruppe);
+        while (!unpaired.isEmpty()) {
+            Team team1 = unpaired.remove(0);
+            Team besteGegner = unpaired.stream()
+                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
+                    .orElse(null);
+            ergebnis.add(team1);
+            if (besteGegner != null) {
+                unpaired.remove(besteGegner);
+                ergebnis.add(besteGegner);
+            }
+        }
+    }
+
+    /**
+     * Wählt aus dem kartesischen Produkt von Doublettes × Triplettes das Paar
+     * mit minimalem {@link #berechneGegnerScore(Team, Team)} — bildet die
+     * unvermeidbare 5er-Partie mit der geringsten gemeinsamen Geschichte.
+     */
+    private Team[] besteMischpaarung(List<Team> doublettes, List<Team> triplettes) {
+        Team bestD = doublettes.get(0);
+        Team bestT = triplettes.get(0);
+        int bestScore = Integer.MAX_VALUE;
+        for (Team d : doublettes) {
+            for (Team t : triplettes) {
+                int score = berechneGegnerScore(d, t);
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestD = d;
+                    bestT = t;
+                }
+            }
+        }
+        return new Team[] { bestD, bestT };
     }
 
     /**
@@ -249,14 +316,19 @@ public class SuperMeleePaarungenV2 {
      * @throws AlgorithmenException wenn keine gültige Paarung generiert werden konnte
      */
     private MeleeSpielRunde generiereRundeMitDummies(int rndNr, int teamSize, int anzDummies,
-            SpielerMeldungen meldungen) throws AlgorithmenException {
+            SpielerMeldungen meldungen, boolean dummyTeamIstAusnahme) throws AlgorithmenException {
+        // Snapshot der realen Spieler VOR dem Hinzufügen der Dummies — die Fairness-Schwellen
+        // dürfen sich nicht auf Dummies stützen.
+        List<Spieler> realeSpieler = new ArrayList<>(meldungen.spieler());
+
         Spieler[] dummies = new Spieler[anzDummies];
         for (int i = 0; i < anzDummies; i++) {
             dummies[i] = Spieler.from(DUMMY_SPIELER_START_NR + i).setSetzPos(DUMMY_SPIELER_SETZPOS);
             meldungen.addSpielerWennNichtVorhanden(dummies[i]);
         }
         try {
-            MeleeSpielRunde spielRunde = generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+            MeleeSpielRunde spielRunde = generiereRundeMitFairnessConstraint(rndNr, teamSize, meldungen, dummies,
+                    realeSpieler, dummyTeamIstAusnahme);
             for (Spieler dummy : dummies) {
                 spielRunde.removeSpieler(dummy);
                 // Dummy-Einträge aus warImTeamMit der echten Spieler entfernen:
@@ -266,12 +338,82 @@ public class SuperMeleePaarungenV2 {
                     spieler.deleteWarImTeam(dummy);
                 }
             }
+            if (dummyTeamIstAusnahme) {
+                // Buchhaltung: jeder reale Spieler in einem Team kleiner als teamSize hat in
+                // dieser Runde im Ausnahme-Team (Doublette) gespielt. Konsistent zum Eintrag
+                // beim Wieder-Einlesen der Sheets ({@code SpielrundeDelegate.gespieltenRundenEinlesen}).
+                for (Team team : spielRunde.teams()) {
+                    if (team.size() > 0 && team.size() < teamSize) {
+                        for (Spieler s : team.spieler()) {
+                            s.incAnzMalKleinesTeam();
+                        }
+                    }
+                }
+            }
             return spielRunde;
         } finally {
             // Garantiertes Cleanup — auch bei Exception
             for (Spieler dummy : dummies) {
                 meldungen.removeSpieler(dummy);
             }
+        }
+    }
+
+    /**
+     * Generiert eine Runde mit fest definierter Teamgröße und sorgt — falls
+     * {@code dummyTeamIstAusnahme} gesetzt ist — dafür, dass Spieler, die in
+     * früheren Runden bereits am häufigsten im Ausnahme-Team waren, möglichst
+     * nicht erneut in einem Dummy-Team landen. Realisiert via Hard-Constraint
+     * zwischen Dummy und "Vielspielern", die schrittweise relaxiert wird, wenn
+     * die Backtracking-Suche kein gültiges Layout findet.
+     */
+    private MeleeSpielRunde generiereRundeMitFairnessConstraint(int rndNr, int teamSize,
+            SpielerMeldungen meldungen, Spieler[] dummies, List<Spieler> realeSpieler,
+            boolean dummyTeamIstAusnahme) throws AlgorithmenException {
+        if (!dummyTeamIstAusnahme || dummies.length == 0 || realeSpieler.isEmpty()) {
+            return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+        }
+
+        int maxKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).max().orElse(0);
+        int minKlein = realeSpieler.stream().mapToInt(Spieler::getAnzMalKleinesTeam).min().orElse(0);
+
+        AlgorithmenException letzteException = null;
+        // Von strikt nach locker: zuerst die meistbelasteten Spieler ausschließen,
+        // bei Backtracking-Fehlschlag die Schwelle absenken.
+        for (int schwelle = maxKlein; schwelle > minKlein; schwelle--) {
+            try {
+                for (Spieler dummy : dummies) {
+                    for (Spieler s : realeSpieler) {
+                        if (s.getAnzMalKleinesTeam() >= schwelle) {
+                            dummy.addWarImTeamMitWennNichtVorhanden(s);
+                        }
+                    }
+                }
+                return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+            } catch (AlgorithmenException ex) {
+                letzteException = ex;
+                logger.debug("Spielrunde {}: Fairness-Schwelle {} nicht lösbar — relaxiere.", rndNr, schwelle);
+                // Dummy-Konflikte vor nächstem Versuch zurücksetzen — beide Seiten, weil
+                // addWarImTeamMitWennNichtVorhanden symmetrisch ist, deleteWarImTeam aber nicht.
+                for (Spieler dummy : dummies) {
+                    for (Spieler s : realeSpieler) {
+                        dummy.deleteWarImTeam(s);
+                        s.deleteWarImTeam(dummy);
+                    }
+                }
+            }
+        }
+        // Schwelle vollständig zurückgenommen → identisches Verhalten zum Algorithmus
+        // vor der Fairness-Erweiterung. Vorhandene Dummies haben hier keine zusätzlichen
+        // Constraints mehr.
+        try {
+            return generiereRundeMitFesteTeamGroese(rndNr, teamSize, meldungen);
+        } catch (AlgorithmenException ex) {
+            // Wenn auch das nicht klappt: die ursprüngliche Exception ist informativer.
+            if (letzteException != null) {
+                throw letzteException;
+            }
+            throw ex;
         }
     }
 

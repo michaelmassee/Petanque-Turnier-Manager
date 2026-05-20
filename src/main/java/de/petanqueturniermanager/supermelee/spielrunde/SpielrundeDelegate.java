@@ -260,6 +260,7 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 
 		sheet.processBoxinfo("processbox.meldungen.gespielter.runden.einlesen", spielTagNr.getNr());
 		var xDoc = sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument();
+		int defaultTeamGroesse = konfigurationSheet.getSuperMeleeMode() == SuperMeleeMode.Doublette ? 2 : 3;
 
 		for (; spielrunde <= bisSpielrunde; spielrunde++) {
 			SheetRunner.testDoCancelTask();
@@ -304,6 +305,16 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 				for (Spieler sA : team1.spieler()) {
 					for (Spieler sB : team2.spieler()) {
 						sA.addGegner(sB);
+					}
+				}
+				// Pendant zur Doublette-/Triplette-Buchhaltung im Algorithmus: Spieler in einem
+				// Team kleiner als die Default-Modus-Größe zählen, damit der nächste
+				// Paarungslauf die Ausnahme-Slots fair über die Runden verteilen kann.
+				for (Team team : new Team[] { team1, team2 }) {
+					if (team.size() > 0 && team.size() < defaultTeamGroesse) {
+						for (Spieler s : team.spieler()) {
+							s.incAnzMalKleinesTeam();
+						}
 					}
 				}
 				pospielerNr.zeilePlusEins().spalte(PAARUNG_CNTR_SPALTE);

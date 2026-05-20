@@ -14,12 +14,16 @@ import de.petanqueturniermanager.exception.AlgorithmenException;
  *
  */
 public class Spieler extends NrComparable implements IMeldung<Spieler> {
-	private int setzPos; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team. 
+	private int setzPos; // spieler mit der gleiche setztposition dürfen nicht im gleichen Team.
 	private final HashSet<Integer> warImTeamMit = new HashSet<>();
 	private final HashSet<Integer> gegner = new HashSet<>();
 	private WeakReference<Team> wkRefteam;
 	private boolean istInTeam;
 	private boolean hatteFreilos; // Spieler hatte bereits ein freilos
+	// Zähler, wie oft der Spieler in einem Team mit Ausnahmegröße (kleiner als die
+	// Default-Modus-Größe) spielte. Wird vom Supermêlée-Paarungsalgorithmus verwendet,
+	// um Doublette-Slots fair über die Runden zu verteilen.
+	private int anzMalKleinesTeam;
 
 	private Spieler(int nr) {
 		super(nr);
@@ -177,6 +181,20 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 	@Override
 	public Spieler setSetzPos(int setzPos) {
 		this.setzPos = setzPos;
+		return this;
+	}
+
+	public int getAnzMalKleinesTeam() {
+		return anzMalKleinesTeam;
+	}
+
+	public Spieler incAnzMalKleinesTeam() {
+		anzMalKleinesTeam++;
+		return this;
+	}
+
+	public Spieler resetAnzMalKleinesTeam() {
+		anzMalKleinesTeam = 0;
 		return this;
 	}
 

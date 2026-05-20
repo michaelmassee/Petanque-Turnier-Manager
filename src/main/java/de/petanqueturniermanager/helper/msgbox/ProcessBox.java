@@ -3,109 +3,110 @@ package de.petanqueturniermanager.helper.msgbox;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.text.DefaultCaret;
-
-import java.awt.Font;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.sun.star.awt.ActionEvent;
+import com.sun.star.awt.XActionListener;
+import com.sun.star.awt.XAnimation;
+import com.sun.star.awt.XButton;
+import com.sun.star.awt.XCallback;
+import com.sun.star.awt.XControl;
+import com.sun.star.awt.XControlContainer;
+import com.sun.star.awt.XControlModel;
+import com.sun.star.awt.XDialog;
+import com.sun.star.awt.XRequestCallback;
+import com.sun.star.awt.XToolkit;
+import com.sun.star.awt.Selection;
+import com.sun.star.awt.XTextComponent;
+import com.sun.star.awt.XTopWindow;
+import com.sun.star.awt.XTopWindowListener;
+import com.sun.star.awt.XWindow;
+import com.sun.star.awt.XWindow2;
+import com.sun.star.beans.XPropertySet;
+import com.sun.star.container.XNameContainer;
+import com.sun.star.lang.EventObject;
+import com.sun.star.lang.XComponent;
+import com.sun.star.lang.XMultiComponentFactory;
+import com.sun.star.lang.XMultiServiceFactory;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.GlobalProperties;
 import de.petanqueturniermanager.comp.Log4J;
 import de.petanqueturniermanager.comp.newrelease.ReleaseUpdateService;
+import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.timer.TimerListener;
 import de.petanqueturniermanager.timer.TimerState;
-import de.petanqueturniermanager.timer.TimerZustand;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-
+/**
+ * Process-Statusfenster als modeloser UNO-Dialog. Zeigt Log-Ausgaben, einen
+ * Throbber (LO-eigene Spinner-Animation), Statusicons für Erfolg/Fehler, eine
+ * Timer-Zeile und eine optionale Hinweiszeile auf eine neue Plugin-Version.
+ *
+ * <p>Threading: UI-Mutationen (Property-Set, Sichtbarkeit, Throbber, Auto-Scroll)
+ * werden via {@code com.sun.star.awt.AsyncCallback} auf den LO-Main-Thread
+ * gepostet. Direkter {@code setPropertyValue}-Aufruf auf UI-Models/Peers aus
+ * Fremd-Threads ist NICHT thread-safe — die UNO-Bridge synchronisiert nur
+ * Inter-Prozess-Aufrufe, nicht in-process Java-Calls. Ohne dieses Marshalling
+ * kann LO nativ crashen (SIGSEGV im VCL), sobald der Main-Thread parallel
+ * Benutzer-Events verarbeitet (Klick im Calc-Fenster, Repaint o.ä.).
+ */
 public class ProcessBox implements TimerListener {
+
     private static final Logger logger = LogManager.getLogger(ProcessBox.class);
 
-    private static final int ANZAHLSPALTEN = 1;
-
-    private static final int MIN_HEIGHT = 200;
-    private static final int MIN_WIDTH = 600;
     private static final int AUTO_CLOSE_DELAY_MS = 5000;
+    private static final int MAX_LOG_CHARS = 50_000;
+    private static final String LOG_TRUNCATED_MARKER = "… [gekürzt] …\r\n";
     private static final String TITLE = "Pétanque Turnier Manager";
-    private static volatile ProcessBox processBox;
-    private static volatile boolean headlessMode = false;
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    // Dialog-Geometrie in AppFont-Einheiten (ca. 1.5 px pro Einheit)
+    private static final int DLG_WIDTH = 320;
+    private static final int PAD = 4;
+    private static final int LOG_HEIGHT = 110;
+    private static final int VERSION_Y = PAD + LOG_HEIGHT + 2;
+    private static final int VERSION_HEIGHT = 10;
+    private static final int TIMER_Y = VERSION_Y + VERSION_HEIGHT + 2;
+    private static final int TIMER_HEIGHT = 10;
+    private static final int FOOTER_Y = TIMER_Y + TIMER_HEIGHT + 2;
+    private static final int FOOTER_HEIGHT = 14;
+    private static final int DLG_HEIGHT = FOOTER_Y + FOOTER_HEIGHT + PAD;
+    private static final int STATUS_WIDTH = 20;
+    private static final int BUTTON_WIDTH = 30;
+
+    private static final int COLOR_VERSION = 0xCC4400;
+    private static final int COLOR_TIMER_TITEL = 0x666666;
+    private static final int COLOR_TIMER_LAEUFT = 0x00AA33;
+    private static final int COLOR_TIMER_PAUSE = 0xBB9900;
+    private static final int COLOR_TIMER_BEENDET = 0xCC0000;
+    private static final int COLOR_TIMER_INAKTIV = 0x555555;
+
+    private static volatile ProcessBox processBox;
+    private static volatile boolean headlessMode = false;
 
     public static void setHeadlessMode(boolean headless) {
         headlessMode = headless;
     }
 
-    private final JFrame frame;
-    private JTextArea logOut;
-    private JButton logfileBtn;
-    private JButton cancelBtn;
-    private final ThreadLocal<String> threadLocalPrefix = new ThreadLocal<>();
-
-    private JLabel statusLabel;
-    private JLabel infoLabel;
-    private JLabel neueVersionLabel;
-    private JPanel timerZeile;
-    private JLabel timerUhrLabel;
-    private JLabel timerBezeichnungLabel;
-
-    private ImageIcon imageIconReady;
-    private ImageIcon imageIconError;
-
-    private ArrayList<ImageIcon> inworkIcons;
-
-    private DialogTools dialogTools;
-    private Timer spinnerTimer;
-    private Timer autoCloseTimer;
-    private int inWorkImgIdx = 0;
-
-    private volatile boolean disposed = false;
-    private final AtomicBoolean laeuft = new AtomicBoolean(false);
-    private boolean isFehler = false;
-    private final XComponentContext xContext;
-    private final Runnable versionsStatusListener = this::aktualisiereNeueVersionLabel;
-
-    private ProcessBox(XComponentContext xContext) {
-        this.xContext = checkNotNull(xContext);
-        if (headlessMode) {
-            frame = null;
-            return;
-        }
-        frame = new JFrame();
-        frame.setAlwaysOnTop(GlobalProperties.get().isProzessBoxAutomatischAnzeigen());
-        dialogTools = DialogTools.from(xContext, frame);
-        inworkIcons = new ArrayList<>();
-        spinnerTimer = new Timer(100, _ -> {
-            statusLabel.setIcon(inworkIcons.get(inWorkImgIdx));
-            inWorkImgIdx = (inWorkImgIdx + 1) % inworkIcons.size();
-        });
-        logOut = null;
-        logfileBtn = null;
-        cancelBtn = null;
-        statusLabel = null;
-        neueVersionLabel = null;
-        imageIconReady = null;
-        imageIconError = null;
-        initBox();
-    }
-
     public static ProcessBox from() {
-        var pb = ProcessBox.processBox; // ein einzelner volatile-Lesezugriff
+        var pb = processBox;
         if (pb == null) {
             logger.error("ProcessBox nicht initialisiert");
             throw new IllegalStateException("ProcessBox nicht initialisiert");
@@ -113,335 +114,352 @@ public class ProcessBox implements TimerListener {
         return pb;
     }
 
-    /**
-     * Box schließen, kann wieder geöfnet werden
-     */
-    public static void dispose() {
-        synchronized (ProcessBox.class) {
-            if (ProcessBox.processBox != null) {
-                ProcessBox.processBox._dispose();
-                ProcessBox.processBox = null;
-            }
-        }
-    }
-
-    /**
-     * nur intern verwenden
-     */
-    private void _dispose() {
-        disposed = true; // sofort: alle anderen Threads schlagen ab
-        laeuft.set(false);
-        try {
-            ReleaseUpdateService.get().removeStatusListener(versionsStatusListener);
-        } catch (IllegalStateException e) {
-            // Service wurde nie initialisiert – ok.
-        }
-        SwingUtilities.invokeLater(() -> {
-            if (spinnerTimer != null) {
-                spinnerTimer.stop();
-            }
-            if (autoCloseTimer != null) {
-                autoCloseTimer.stop();
-            }
-            if (frame != null) {
-                frame.dispose();
-            }
-        });
-        dialogTools = null;
-    }
-
-
-    /**
-     * Einmalige Initialisierung; bei bereits vorhandener Instanz wird diese zurückgegeben.
-     */
     public static ProcessBox init(XComponentContext xContext) {
         logger.debug("ProcessBox INIT");
         checkNotNull(xContext);
-        if (ProcessBox.processBox == null) {
+        if (processBox == null) {
             synchronized (ProcessBox.class) {
-                if (ProcessBox.processBox == null) {
-                    ProcessBox.processBox = new ProcessBox(xContext);
+                if (processBox == null) {
+                    processBox = new ProcessBox(xContext);
                 }
             }
         }
-        return ProcessBox.processBox;
+        return processBox;
     }
 
     public static ProcessBox forceinit(XComponentContext xContext) {
         checkNotNull(xContext);
         checkState(!SheetRunner.isRunning(), "forceinit darf nicht aufgerufen werden während SheetRunner aktiv ist");
         synchronized (ProcessBox.class) {
-            if (ProcessBox.processBox != null) {
-                ProcessBox.processBox._dispose();
+            if (processBox != null) {
+                processBox._dispose();
             }
-            ProcessBox.processBox = new ProcessBox(xContext);
-            return ProcessBox.processBox;
+            processBox = new ProcessBox(xContext);
+            return processBox;
         }
     }
 
-    private void initBox() {
-        logger.debug("ProcessBox.initBox");
-        frame.setLayout(new GridBagLayout());
-        setIcons();
+    public static void dispose() {
+        synchronized (ProcessBox.class) {
+            if (processBox != null) {
+                processBox._dispose();
+                processBox = null;
+            }
+        }
+    }
 
-        // log
-        initLog();
-        // Neue-Version-Hinweiszeile (nur sichtbar wenn neue Version verfügbar)
-        initNeueVersionZeile();
-        // Timer-Zeile (immer sichtbar)
-        initTimerZeile();
-        // Footer: Status, Info, Log, Stop
-        initSpieltagUndSpielrundInfo();
+    public static void zeigeImVordergrund() {
+        var pb = processBox;
+        if (pb != null) {
+            pb.visible();
+            pb.toFront();
+        }
+    }
 
-        frame.setPreferredSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
-        frame.setSize(MIN_WIDTH, MIN_HEIGHT);
-        frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        title(TITLE);
+    public static void applyVordergrundEinstellung() {
+        var pb = processBox;
+        if (pb == null || pb.disposed) return;
+        boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
+        pb.setVisibleInternal(automatisch);
+        if (automatisch) {
+            pb.toFrontInternal();
+        }
+    }
 
-        // Callback registrieren: Neue-Version-Label einblenden sobald Cache-Thread fertig
+    // ── Instanz-State ──────────────────────────────────────────────────────────
+
+    private final XComponentContext xContext;
+    private final ThreadLocal<String> threadLocalPrefix = new ThreadLocal<>();
+    private final AtomicBoolean laeuft = new AtomicBoolean(false);
+    private final Runnable versionsStatusListener = this::aktualisiereNeueVersionLabel;
+
+    private volatile boolean disposed = false;
+    private volatile boolean isFehler = false;
+
+    // UNO-Controls (null im Headless-Modus oder wenn Init fehlschlug)
+    private XControl dialogControl;
+    private XDialog xDialog;
+    private XWindow xWindow;
+    private XControlContainer controls;
+
+    private XPropertySet logEditProps;
+    private XTextComponent logEditText;
+    private XPropertySet infoLabelProps;
+    private XPropertySet neueVersionLabelProps;
+    private XPropertySet timerUhrProps;
+    private XPropertySet timerBezeichnungProps;
+    private XPropertySet throbberProps;
+    private XAnimation throbber;
+    private XPropertySet readyImageProps;
+    private XPropertySet errorImageProps;
+    private XPropertySet stopBtnProps;
+
+    /** Postet Runnables auf den LO-Main-Thread (FIFO). Null wenn Init fehlschlug. */
+    private XRequestCallback mainThreadDispatcher;
+
+    private ScheduledExecutorService autoCloseExec;
+    private ScheduledFuture<?> autoCloseTask;
+
+    private ProcessBox(XComponentContext xContext) {
+        this.xContext = checkNotNull(xContext);
+        if (headlessMode) {
+            return;
+        }
+        try {
+            initDialog();
+        } catch (RuntimeException | com.sun.star.uno.Exception e) {
+            logger.error("ProcessBox-Dialog konnte nicht initialisiert werden", e);
+        }
         try {
             ReleaseUpdateService.get().addStatusListener(versionsStatusListener);
-            // Erstaufruf nicht abwarten: aktueller Status sofort anwenden, falls bereits ermittelt.
             aktualisiereNeueVersionLabel();
         } catch (IllegalStateException e) {
-            // Service noch nicht initialisiert (z.B. im Test). Stillschweigend überspringen.
             logger.debug("ReleaseUpdateService noch nicht initialisiert – Versions-Label inaktiv");
         }
     }
 
-    private void initNeueVersionZeile() {
-        neueVersionLabel = new JLabel();
-        neueVersionLabel.setForeground(new Color(0xcc4400));
-        neueVersionLabel.setFont(neueVersionLabel.getFont().deriveFont(Font.BOLD, 13f));
-        neueVersionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        neueVersionLabel.setVisible(false);
+    // ── Init ───────────────────────────────────────────────────────────────────
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridy = 1;
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        gbc.insets = new Insets(2, 5, 2, 5);
-        frame.add(neueVersionLabel, gbc);
-    }
+    private void initDialog() throws com.sun.star.uno.Exception {
+        XMultiComponentFactory mcf = xContext.getServiceManager();
 
-    private void initTimerZeile() {
-        timerZeile = new JPanel(new GridBagLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                int w = getWidth();
-                int h = getHeight();
-                Color color1 = new Color(0x1a1a2e);
-                Color color2 = new Color(0x16213e);
-                GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
-                g2d.setPaint(gp);
-                g2d.fillRect(0, 0, w, h);
-            }
-        };
-        timerZeile.setBorder(BorderFactory.createRaisedBevelBorder());
-
-        var gbc = new GridBagConstraints();
-        gbc.gridy = 2;
-        gbc.gridx = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        gbc.insets = new Insets(0, 5, 0, 5);
-        frame.add(timerZeile, gbc);
-
-        var gbcPanel = new GridBagConstraints();
-        gbcPanel.gridy = 0;
-        gbcPanel.gridx = 0;
-        gbcPanel.insets = new Insets(2, 8, 2, 5);
-        gbcPanel.anchor = GridBagConstraints.WEST;
-
-        var titelLabel = new JLabel(I18n.get("timer.processbox.zeile.label") + ":");
-        titelLabel.setForeground(new Color(0x888888));
-        titelLabel.setFont(titelLabel.getFont().deriveFont(Font.PLAIN, 11f));
-        timerZeile.add(titelLabel, gbcPanel);
-        gbcPanel.gridx++;
-
-        timerUhrLabel = new JLabel("--:--");
-        timerUhrLabel.setForeground(new Color(0x555555));
-        timerUhrLabel.setFont(new Font(Font.MONOSPACED, Font.BOLD, 16));
-        gbcPanel.insets = new Insets(2, 5, 2, 10);
-        timerZeile.add(timerUhrLabel, gbcPanel);
-        gbcPanel.gridx++;
-
-        timerBezeichnungLabel = new JLabel("");
-        timerBezeichnungLabel.setForeground(new Color(0x888888));
-        timerBezeichnungLabel.setFont(timerBezeichnungLabel.getFont().deriveFont(Font.ITALIC, 11f));
-        gbcPanel.insets = new Insets(2, 0, 2, 5);
-        gbcPanel.weightx = 1.0;
-        gbcPanel.fill = GridBagConstraints.HORIZONTAL;
-        timerZeile.add(timerBezeichnungLabel, gbcPanel);
-    }
-
-    private void aktualisiereNeueVersionLabel() {
-        if (neueVersionLabel == null) {
-            return;
-        }
-        boolean neueVersion;
-        String installierteVersion;
-        String neueVersionNummer;
+        // Main-Thread-Dispatcher (für alle UI-Mutationen aus Fremd-Threads)
         try {
-            var service = ReleaseUpdateService.get();
-            neueVersion = service.isUpdateVerfuegbar()
-                    || GlobalProperties.get().isNewVersionCheckImmerTrue();
-            installierteVersion = service.getInstallierteVersion().orElse(null);
-            neueVersionNummer = service.getNeuesteVersionTag().orElse(null);
-        } catch (IllegalStateException e) {
-            return;
+            Object asyncCallback = mcf.createInstanceWithContext(
+                    "com.sun.star.awt.AsyncCallback", xContext);
+            mainThreadDispatcher = Lo.qi(XRequestCallback.class, asyncCallback);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.warn("AsyncCallback-Service nicht verfügbar – UI-Updates laufen direkt", e);
         }
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            if (neueVersion) {
-                neueVersionLabel.setText(I18n.get("processbox.neue.version.verfuegbar",
-                        installierteVersion != null ? installierteVersion : "?",
-                        neueVersionNummer != null ? neueVersionNummer : "?"));
-            }
-            neueVersionLabel.setVisible(neueVersion);
-            if (frame != null) {
-                frame.revalidate();
-            }
-        });
+
+        // Dialog-Modell
+        Object dialogModel = mcf.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialogModel", xContext);
+        XPropertySet dlgProps = Lo.qi(XPropertySet.class, dialogModel);
+        dlgProps.setPropertyValue("PositionX", 60);
+        dlgProps.setPropertyValue("PositionY", 60);
+        dlgProps.setPropertyValue("Width", DLG_WIDTH);
+        dlgProps.setPropertyValue("Height", DLG_HEIGHT);
+        dlgProps.setPropertyValue("Moveable", Boolean.TRUE);
+        dlgProps.setPropertyValue("Sizeable", Boolean.TRUE);
+        dlgProps.setPropertyValue("Closeable", Boolean.TRUE);
+        dlgProps.setPropertyValue("Title", TITLE);
+
+        XMultiServiceFactory msf = Lo.qi(XMultiServiceFactory.class, dialogModel);
+        XNameContainer modelContainer = Lo.qi(XNameContainer.class, dialogModel);
+
+        // Log-Edit
+        logEditProps = addControl(msf, modelContainer, "logEdit",
+                "com.sun.star.awt.UnoControlEditModel",
+                PAD, PAD, DLG_WIDTH - 2 * PAD, LOG_HEIGHT, m -> {
+                    m.setPropertyValue("MultiLine", Boolean.TRUE);
+                    m.setPropertyValue("ReadOnly", Boolean.TRUE);
+                    m.setPropertyValue("VScroll", Boolean.TRUE);
+                });
+
+        // Neue-Version-Hinweis
+        neueVersionLabelProps = addControl(msf, modelContainer, "nvLabel",
+                "com.sun.star.awt.UnoControlFixedTextModel",
+                PAD, VERSION_Y, DLG_WIDTH - 2 * PAD, VERSION_HEIGHT, m -> {
+                    m.setPropertyValue("Align", (short) 1);
+                    m.setPropertyValue("TextColor", COLOR_VERSION);
+                    m.setPropertyValue("EnableVisible", Boolean.FALSE);
+                });
+
+        // Timer-Zeile
+        addControl(msf, modelContainer, "timerTitel",
+                "com.sun.star.awt.UnoControlFixedTextModel",
+                PAD, TIMER_Y, 80, TIMER_HEIGHT, m -> {
+                    m.setPropertyValue("Label", I18n.get("timer.processbox.zeile.label") + ":");
+                    m.setPropertyValue("TextColor", COLOR_TIMER_TITEL);
+                });
+        timerUhrProps = addControl(msf, modelContainer, "timerUhr",
+                "com.sun.star.awt.UnoControlFixedTextModel",
+                PAD + 82, TIMER_Y, 50, TIMER_HEIGHT, m -> {
+                    m.setPropertyValue("Label", "--:--");
+                    m.setPropertyValue("TextColor", COLOR_TIMER_INAKTIV);
+                });
+        timerBezeichnungProps = addControl(msf, modelContainer, "timerBez",
+                "com.sun.star.awt.UnoControlFixedTextModel",
+                PAD + 134, TIMER_Y, DLG_WIDTH - PAD - 138, TIMER_HEIGHT, m -> {
+                    m.setPropertyValue("Label", "");
+                    m.setPropertyValue("TextColor", COLOR_TIMER_TITEL);
+                });
+
+        // Status-Bereich (überlappend an Position PAD/FOOTER_Y):
+        // Throbber (sichtbar während run), Ready/Error-Bild (sichtbar nach ready)
+        throbberProps = addControl(msf, modelContainer, "throbber",
+                "com.sun.star.awt.SpinningProgressControlModel",
+                PAD, FOOTER_Y, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
+                    m.setPropertyValue("EnableVisible", Boolean.FALSE);
+                });
+
+        String readyUrl = extractImageToTemp("check25x32.png");
+        readyImageProps = addControl(msf, modelContainer, "readyImg",
+                "com.sun.star.awt.UnoControlImageControlModel",
+                PAD, FOOTER_Y, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
+                    if (readyUrl != null) {
+                        m.setPropertyValue("ImageURL", readyUrl);
+                    }
+                    m.setPropertyValue("ScaleImage", Boolean.TRUE);
+                    m.setPropertyValue("Border", (short) 0);
+                });
+
+        String errorUrl = extractImageToTemp("cross32x32.png");
+        errorImageProps = addControl(msf, modelContainer, "errorImg",
+                "com.sun.star.awt.UnoControlImageControlModel",
+                PAD, FOOTER_Y, STATUS_WIDTH, FOOTER_HEIGHT, m -> {
+                    if (errorUrl != null) {
+                        m.setPropertyValue("ImageURL", errorUrl);
+                    }
+                    m.setPropertyValue("ScaleImage", Boolean.TRUE);
+                    m.setPropertyValue("Border", (short) 0);
+                    m.setPropertyValue("EnableVisible", Boolean.FALSE);
+                });
+
+        // Info-Label rechts neben Status
+        int infoX = PAD + STATUS_WIDTH + 4;
+        int buttonsBlock = 2 * BUTTON_WIDTH + 8;
+        infoLabelProps = addControl(msf, modelContainer, "infoLbl",
+                "com.sun.star.awt.UnoControlFixedTextModel",
+                infoX, FOOTER_Y + 2, DLG_WIDTH - infoX - buttonsBlock - PAD, FOOTER_HEIGHT - 4, m -> {
+                    m.setPropertyValue("Label", "..");
+                    m.setPropertyValue("Align", (short) 0);
+                });
+
+        // Buttons
+        addControl(msf, modelContainer, "logBtn",
+                "com.sun.star.awt.UnoControlButtonModel",
+                DLG_WIDTH - 2 * BUTTON_WIDTH - PAD - 4, FOOTER_Y, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
+                    m.setPropertyValue("Label", "Log");
+                    m.setPropertyValue("HelpText", "Logdatei");
+                });
+        stopBtnProps = addControl(msf, modelContainer, "stopBtn",
+                "com.sun.star.awt.UnoControlButtonModel",
+                DLG_WIDTH - BUTTON_WIDTH - PAD, FOOTER_Y, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
+                    m.setPropertyValue("Label", "Stop");
+                    m.setPropertyValue("HelpText", "Stop Verarbeitung");
+                    m.setPropertyValue("Enabled", Boolean.FALSE);
+                });
+
+        // Dialog-Control + Peer
+        Object dialog = mcf.createInstanceWithContext(
+                "com.sun.star.awt.UnoControlDialog", xContext);
+        dialogControl = Lo.qi(XControl.class, dialog);
+        dialogControl.setModel(Lo.qi(XControlModel.class, dialogModel));
+        xDialog = Lo.qi(XDialog.class, dialog);
+        xWindow = Lo.qi(XWindow.class, dialogControl);
+
+        Object toolkit = mcf.createInstanceWithContext("com.sun.star.awt.Toolkit", xContext);
+        XToolkit xToolkit = Lo.qi(XToolkit.class, toolkit);
+        xWindow.setVisible(false);
+        dialogControl.createPeer(xToolkit, null);
+
+        // XTopWindowListener für Klick auf das X (Close-Button im Fensterrahmen)
+        XTopWindow xTopWindow = Lo.qi(XTopWindow.class, dialogControl.getPeer());
+        if (xTopWindow != null) {
+            xTopWindow.addTopWindowListener(new CloseListener());
+        }
+
+        controls = Lo.qi(XControlContainer.class, dialog);
+
+        // Throbber-Animation auflösen
+        XControl throbberControl = controls.getControl("throbber");
+        throbber = Lo.qi(XAnimation.class, throbberControl);
+
+        // Log-Edit-XTextComponent auflösen (für Caret/Selection → Auto-Scroll)
+        logEditText = Lo.qi(XTextComponent.class, controls.getControl("logEdit"));
+
+        // Button-Listener
+        XButton logBtn = Lo.qi(XButton.class, controls.getControl("logBtn"));
+        if (logBtn != null) {
+            logBtn.addActionListener(new ButtonListener(_ -> Log4J.openLogFile()));
+        }
+        XButton stopBtn = Lo.qi(XButton.class, controls.getControl("stopBtn"));
+        if (stopBtn != null) {
+            stopBtn.addActionListener(new ButtonListener(_ -> SheetRunner.cancelRunner()));
+        }
     }
 
-    private void setIcons() {
-        // icons laden
-        try {
-            var logoStream = this.getClass().getResourceAsStream("petanqueturniermanager-logo-256px.png");
-            if (logoStream != null) {
-                BufferedImage img256 = ImageIO.read(logoStream);
-                frame.setIconImages(java.util.List.of(img256));
-            }
+    @FunctionalInterface
+    private interface ModelInitializer {
+        void apply(XPropertySet model) throws com.sun.star.uno.Exception;
+    }
 
-            // https://loading.io/
-            // https://ezgif.com/
-            for (int i = 0; i < 31; i++) {
-                var stream = this.getClass().getResourceAsStream("spinner/frame-" + i + ".png");
-                if (stream != null) {
-                    inworkIcons.add(new ImageIcon(ImageIO.read(stream)));
-                }
+    private static XPropertySet addControl(XMultiServiceFactory msf, XNameContainer container,
+            String name, String service, int x, int y, int w, int h,
+            ModelInitializer initializer) throws com.sun.star.uno.Exception {
+        Object model = msf.createInstance(service);
+        XPropertySet props = Lo.qi(XPropertySet.class, model);
+        props.setPropertyValue("PositionX", x);
+        props.setPropertyValue("PositionY", y);
+        props.setPropertyValue("Width", w);
+        props.setPropertyValue("Height", h);
+        props.setPropertyValue("Name", name);
+        initializer.apply(props);
+        container.insertByName(name, model);
+        return props;
+    }
+
+    /** Extrahiert eine PNG-Resource in eine temporäre Datei und liefert die {@code file://}-URL. */
+    private String extractImageToTemp(String resourceName) {
+        try (InputStream in = getClass().getResourceAsStream(resourceName)) {
+            if (in == null) {
+                logger.warn("Resource nicht gefunden: {}", resourceName);
+                return null;
             }
-            var readyStream = this.getClass().getResourceAsStream("check25x32.png");
-            if (readyStream != null) {
-                imageIconReady = new ImageIcon(ImageIO.read(readyStream));
-            }
-            var errorStream = this.getClass().getResourceAsStream("cross32x32.png");
-            if (errorStream != null) {
-                imageIconError = new ImageIcon(ImageIO.read(errorStream));
-            }
+            Path tmp = Files.createTempFile("ptm-" + resourceName.replace('.', '-') + "-", ".png");
+            tmp.toFile().deleteOnExit();
+            Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+            return tmp.toUri().toString();
         } catch (IOException e) {
-            logger.debug(e);
+            logger.warn("Konnte Resource {} nicht extrahieren", resourceName, e);
+            return null;
         }
     }
 
-    private void initSpieltagUndSpielrundInfo() {
+    // ── Dispose ────────────────────────────────────────────────────────────────
 
-        // -----------------------------
-        // Footer Panel
-        JPanel panel = new JPanel(new GridBagLayout()) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2d = (Graphics2D) g;
-                g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-                int w = getWidth();
-                int h = getHeight();
-                Color color1 = new Color(Integer.parseInt("eaf4ff", 16));
-                Color color2 = new Color(Integer.parseInt("d6e9ff", 16));
-                GradientPaint gp = new GradientPaint(0, 0, color1, 0, h, color2);
-                g2d.setPaint(gp);
-                g2d.fillRect(0, 0, w, h);
+    private void _dispose() {
+        disposed = true;
+        laeuft.set(false);
+        try {
+            ReleaseUpdateService.get().removeStatusListener(versionsStatusListener);
+        } catch (IllegalStateException e) {
+            // Service wurde nie initialisiert – ok.
+        }
+        stopAutoCloseTask();
+        if (autoCloseExec != null) {
+            autoCloseExec.shutdownNow();
+            autoCloseExec = null;
+        }
+        try {
+            if (throbber != null && throbber.isAnimationRunning()) {
+                throbber.stopAnimation();
             }
-        };
-
-        Border raisedbevel = BorderFactory.createRaisedBevelBorder();
-        panel.setBorder(raisedbevel);
-        {
-            GridBagConstraints gridBagConstraintsFrame = new GridBagConstraints();
-            gridBagConstraintsFrame.gridy = 3; // zeile (gridy=2 ist Timer-Zeile)
-            gridBagConstraintsFrame.gridx = 0; // spalte
-            gridBagConstraintsFrame.fill = GridBagConstraints.HORIZONTAL;
-            gridBagConstraintsFrame.weightx = 0.5;
-            gridBagConstraintsFrame.insets = new Insets(0, 5, 5, 5);
-            frame.add(panel, gridBagConstraintsFrame);
+        } catch (RuntimeException e) {
+            logger.debug("Throbber-Stop beim Dispose fehlgeschlagen", e);
         }
-        // -----------------------------
-
-        GridBagConstraints gridBagConstraintsPanel = new GridBagConstraints();
-        gridBagConstraintsPanel.gridy = 0; // zeile
-        gridBagConstraintsPanel.gridx = 0;
-
-        // Working/ERROR/OKAY Image
-        // https://www.flaticon.com/packs/electronic-and-web-element-collection-2
-        statusLabel = new JLabel(imageIconReady);
-        statusLabel.setToolTipText("status");
-        statusLabel.setVisible(true);
-        gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 30);
-        gridBagConstraintsPanel.anchor = GridBagConstraints.WEST;
-        panel.add(statusLabel, gridBagConstraintsPanel);
-        gridBagConstraintsPanel.gridx++;
-
-        gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 0);
-
-        infoLabel = new JLabel("..");
-        infoLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        panel.add(infoLabel, gridBagConstraintsPanel);
-        gridBagConstraintsPanel.gridx++;
-
-        // ----------------------------------------------------------
-        {
-            logfileBtn = new JButton("Log");
-            logfileBtn.setEnabled(true);
-            logfileBtn.setToolTipText("Logdatei");
-            logfileBtn.addActionListener(_ -> Log4J.openLogFile());
-
-            gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
-            gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
-            gridBagConstraintsPanel.weightx = 0.5;
-            panel.add(logfileBtn, gridBagConstraintsPanel);
+        if (xWindow != null) {
+            try {
+                xWindow.setVisible(false);
+            } catch (RuntimeException e) {
+                logger.debug("setVisible(false) beim Dispose fehlgeschlagen", e);
+            }
         }
-        gridBagConstraintsPanel.gridx++; // spalte
-        // ----------------------------------------------------------
-        {
-            cancelBtn = new JButton("Stop");
-            cancelBtn.setEnabled(false);
-            cancelBtn.setToolTipText("Stop verarbeitung");
-            cancelBtn.addActionListener(_ -> SheetRunner.cancelRunner());
-
-            gridBagConstraintsPanel.insets = new Insets(0, 5, 0, 5);
-            gridBagConstraintsPanel.anchor = GridBagConstraints.EAST;
-            gridBagConstraintsPanel.weightx = 0.5;
-            panel.add(cancelBtn, gridBagConstraintsPanel);
+        if (dialogControl != null) {
+            try {
+                XComponent xc = Lo.qi(XComponent.class, dialogControl);
+                if (xc != null) {
+                    xc.dispose();
+                }
+            } catch (RuntimeException e) {
+                logger.debug("Dialog-Dispose fehlgeschlagen", e);
+            }
         }
-        // ----------------------------------------------------------
     }
 
-    private void initLog() {
-        logOut = new JTextArea();
-        logOut.setEditable(false);
-        logOut.setLineWrap(false);
-        // move to the last pos
-        ((DefaultCaret) logOut.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        JScrollPane scrollPane = new JScrollPane(logOut);
-
-        GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 0; // spalte
-        gridBagConstraints.gridy = 0; // zeile
-
-        gridBagConstraints.gridwidth = ANZAHLSPALTEN;
-
-        gridBagConstraints.weightx = 0.5;
-        gridBagConstraints.weighty = 0.5;
-        gridBagConstraints.insets = new Insets(5, 5, 5, 5);
-
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        frame.add(scrollPane, gridBagConstraints);
-    }
+    // ── Public API ────────────────────────────────────────────────────────────
 
     public ProcessBox clearWennNotRunning() {
         if (!disposed && !SheetRunner.isRunning()) {
@@ -451,14 +469,20 @@ public class ProcessBox implements TimerListener {
     }
 
     public ProcessBox infoText(String newInfoText) {
-        if (disposed || infoLabel == null) return this;
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            infoLabel.setText(newInfoText);
-        });
+        if (disposed || infoLabelProps == null) return this;
+        String text = newInfoText != null ? newInfoText : "";
+        runOnMain(() -> setPropertySafe(infoLabelProps, "Label", text));
         return this;
     }
 
+    /**
+     * Setzt einen Log-Prefix für den <b>nächsten</b> {@link #info(String)}-Aufruf
+     * desselben Threads. Der Prefix ist <b>einmalig</b>: er wird im {@code finally}
+     * von {@code info()} automatisch wieder entfernt. Für jeden weiteren Log-Eintrag
+     * mit Prefix muss {@code prefix(...)} erneut aufgerufen werden.
+     *
+     * <p>Der Prefix ist thread-local und beeinflusst andere Threads nicht.
+     */
     public ProcessBox prefix(String nextLogPrefix) {
         if (disposed) return this;
         if (nextLogPrefix != null) {
@@ -470,12 +494,9 @@ public class ProcessBox implements TimerListener {
     }
 
     public ProcessBox clear() {
-        if (disposed || logOut == null) return this;
+        if (disposed || logEditProps == null) return this;
         isFehler = false;
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            logOut.setText(null);
-        });
+        runOnMain(() -> setPropertySafe(logEditProps, "Text", ""));
         return this;
     }
 
@@ -488,22 +509,14 @@ public class ProcessBox implements TimerListener {
     public synchronized ProcessBox info(String logMsg) {
         logger.debug("ProcessBox info -> {}", logMsg);
         try {
-            if (disposed || headlessMode || logOut == null) return this;
-
+            if (disposed || headlessMode || logEditProps == null) return this;
             checkNotNull(logMsg);
 
             var currentPrefix = threadLocalPrefix.get();
-            final String msgToAppend = LocalTime.now().format(TIME_FORMATTER) + " | " +
-                    (currentPrefix != null ? currentPrefix + ": " : "") +
-                    logMsg + "\r\n";
-
-            SwingUtilities.invokeLater(() -> {
-                if (disposed) return;
-                logOut.append(msgToAppend);
-            });
-            // Auto-Close auch für Aufrufer, die nicht über run()/ready() laufen
-            // (z.B. „Logdatei anzeigen" in Log4J.openLogFile()). Während eines aktiven
-            // SheetRunner-Laufs (laeuft==true) bleibt der Timer untätig.
+            String msgToAppend = LocalTime.now().format(TIME_FORMATTER) + " | "
+                    + (currentPrefix != null ? currentPrefix + ": " : "")
+                    + logMsg + "\r\n";
+            appendLog(msgToAppend);
             planeAutoCloseFallsMoeglich();
             return this;
         } finally {
@@ -511,99 +524,89 @@ public class ProcessBox implements TimerListener {
         }
     }
 
+    private void appendLog(String zeile) {
+        runOnMain(() -> {
+            try {
+                Object current = logEditProps.getPropertyValue("Text");
+                String currentStr = current instanceof String s ? s : "";
+                String neu = currentStr + zeile;
+                if (neu.length() > MAX_LOG_CHARS) {
+                    int schnittAb = neu.length() - MAX_LOG_CHARS / 2;
+                    int nextNl = neu.indexOf('\n', schnittAb);
+                    int cut = nextNl >= 0 ? nextNl + 1 : schnittAb;
+                    neu = LOG_TRUNCATED_MARKER + neu.substring(cut);
+                }
+                logEditProps.setPropertyValue("Text", neu);
+                // Caret ans Ende setzen → Edit-Control scrollt zur letzten Zeile
+                if (logEditText != null) {
+                    try {
+                        int end = neu.length();
+                        logEditText.setSelection(new Selection(end, end));
+                    } catch (RuntimeException e) {
+                        logger.debug("Auto-Scroll fehlgeschlagen", e);
+                    }
+                }
+            } catch (com.sun.star.uno.Exception e) {
+                logger.debug("appendLog fehlgeschlagen", e);
+            }
+        });
+    }
 
     public ProcessBox title(String title) {
-        if (disposed || frame == null) return this;
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            frame.setTitle(title);
+        if (disposed || xDialog == null) return this;
+        runOnMain(() -> {
+            try {
+                xDialog.setTitle(title);
+            } catch (RuntimeException e) {
+                logger.debug("setTitle fehlgeschlagen", e);
+            }
         });
         return this;
     }
 
     public ProcessBox moveInsideTopWindow() {
-        if (disposed || dialogTools == null) return this;
-        dialogTools.moveInsideTopWindow();
+        // UNO-Dialog wird vom Toolkit ohnehin innerhalb des LO-Fensters platziert.
         return this;
     }
 
-    /**
-     * Zeigt die ProcessBox im Vordergrund – sicher aufrufbar auch wenn noch nicht initialisiert.
-     */
-    public static void zeigeImVordergrund() {
-        var pb = processBox;
-        if (pb != null) {
-            pb.visible();
-            pb.toFront();
+    public boolean istSichtbar() {
+        if (disposed || xWindow == null) return false;
+        try {
+            XWindow2 xw2 = Lo.qi(XWindow2.class, xWindow);
+            return xw2 != null && xw2.isVisible();
+        } catch (RuntimeException e) {
+            return false;
         }
     }
 
-    public boolean istSichtbar() {
-        if (disposed || frame == null) return false;
-        return frame.isVisible();
-    }
-
     public ProcessBox hide() {
-        if (disposed || frame == null) return this;
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            frame.setVisible(false);
-        });
+        if (disposed || xWindow == null) return this;
+        setVisibleInternal(false);
         return this;
     }
 
     public ProcessBox visible() {
-        if (disposed || frame == null) return this;
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            frame.setVisible(true);
-            moveInsideTopWindow();
-        });
+        if (disposed || xWindow == null) return this;
+        setVisibleInternal(true);
         return this;
     }
 
     public ProcessBox toFront() {
-        if (disposed || frame == null) return this;
+        if (disposed || xWindow == null) return this;
         if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return this;
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            frame.toFront();
-        });
+        toFrontInternal();
         return this;
     }
 
-    /**
-     * Macht die ProzessBox sichtbar, sofern die Plugin-Einstellung
-     * „ProzessBox automatisch anzeigen" aktiv ist. Andernfalls bleibt die Box
-     * unsichtbar – Logs werden trotzdem geschrieben.
-     */
     public ProcessBox visibleWennAutomatisch() {
-        if (disposed || frame == null) return this;
+        if (disposed || xWindow == null) return this;
         if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return this;
         return visible();
     }
 
-    /**
-     * Wendet die aktuelle Plugin-Einstellung „ProzessBox automatisch anzeigen" sofort
-     * auf das Fenster an: Sichtbarkeit und Always-on-Top. Aufruf z.B. nach OK im GlobalPropertiesDialog.
-     */
-    public static void applyVordergrundEinstellung() {
-        var pb = processBox;
-        if (pb == null || pb.disposed || pb.frame == null) return;
-        boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
-        SwingUtilities.invokeLater(() -> {
-            if (pb.disposed || pb.frame == null) return;
-            pb.frame.setAlwaysOnTop(automatisch);
-            pb.frame.setVisible(automatisch);
-            if (automatisch) {
-                pb.moveInsideTopWindow();
-            }
-        });
-    }
-
     public ProcessBox run() {
         logger.debug("ProcessBox run");
-        if (headlessMode || disposed || frame == null) return this;
+        if (headlessMode || disposed || xWindow == null) return this;
         if (!laeuft.compareAndSet(false, true)) {
             return this;
         }
@@ -611,125 +614,306 @@ public class ProcessBox implements TimerListener {
             laeuft.set(false);
             return this;
         }
+        isFehler = false;
+        stopAutoCloseTask();
 
         boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            if (autoCloseTimer != null) {
-                autoCloseTimer.stop();
+        if (automatisch) {
+            setVisibleInternal(true);
+            toFrontInternal();
+        }
+        runOnMain(() -> {
+            if (stopBtnProps != null) {
+                setPropertySafe(stopBtnProps, "Enabled", Boolean.TRUE);
             }
-            if (automatisch) {
-                frame.setVisible(true);
-                moveInsideTopWindow();
-                frame.toFront();
+            // Throbber sichtbar machen + starten, Ready/Error verstecken
+            setPropertySafe(readyImageProps, "EnableVisible", Boolean.FALSE);
+            setPropertySafe(errorImageProps, "EnableVisible", Boolean.FALSE);
+            setPropertySafe(throbberProps, "EnableVisible", Boolean.TRUE);
+            if (throbber != null) {
+                try {
+                    throbber.startAnimation();
+                } catch (RuntimeException e) {
+                    logger.debug("Throbber-Start fehlgeschlagen", e);
+                }
             }
-            if (cancelBtn != null) {
-                cancelBtn.setEnabled(true);
-            }
-            statusLabel.setToolTipText("In Arbeit");
-            spinnerTimer.restart();
         });
         return this;
     }
 
     public ProcessBox ready() {
-        if (headlessMode || disposed || frame == null) return this;
+        if (headlessMode || disposed || xWindow == null) return this;
         if (!laeuft.getAndSet(false)) {
             return this;
         }
 
         boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            if (spinnerTimer != null) {
-                spinnerTimer.stop();
+        if (automatisch) {
+            setVisibleInternal(true);
+            toFrontInternal();
+        }
+        boolean fehler = isFehler;
+        runOnMain(() -> {
+            if (stopBtnProps != null) {
+                setPropertySafe(stopBtnProps, "Enabled", Boolean.FALSE);
             }
-            if (automatisch) {
-                frame.setVisible(true);
-                frame.toFront();
-            }
-            if (cancelBtn != null) {
-                cancelBtn.setEnabled(false);
-            }
-            if (isFehler) {
-                if (statusLabel != null && imageIconError != null) {
-                    statusLabel.setIcon(imageIconError);
-                    statusLabel.setToolTipText("Fehler");
+            if (throbber != null) {
+                try {
+                    throbber.stopAnimation();
+                } catch (RuntimeException e) {
+                    logger.debug("Throbber-Stop fehlgeschlagen", e);
                 }
+            }
+            setPropertySafe(throbberProps, "EnableVisible", Boolean.FALSE);
+            if (fehler) {
+                setPropertySafe(readyImageProps, "EnableVisible", Boolean.FALSE);
+                setPropertySafe(errorImageProps, "EnableVisible", Boolean.TRUE);
             } else {
-                if (statusLabel != null && imageIconReady != null) {
-                    statusLabel.setIcon(imageIconReady);
-                    statusLabel.setToolTipText("Fertig");
-                }
+                setPropertySafe(errorImageProps, "EnableVisible", Boolean.FALSE);
+                setPropertySafe(readyImageProps, "EnableVisible", Boolean.TRUE);
             }
-            planeAutoCloseFallsMoeglich();
         });
+
+        planeAutoCloseFallsMoeglich();
         return this;
     }
 
+    /** Liefert das XWindow des Dialogs (oder null im Headless-Modus / vor Init). */
+    public final XWindow getXWindow() {
+        return xWindow;
+    }
+
+    /** Liefert das XAnimation des Throbber-Controls (für Tests). */
+    public final XAnimation getThrobberAnimation() {
+        return throbber;
+    }
+
     /**
-     * Startet (bzw. resettet) den Auto-Close-Timer, sofern alle Bedingungen erfüllt sind:
-     * keine aktive Verarbeitung, kein Fehler, beide Plugin-Properties aktiv. Wird aus {@link #ready()}
-     * UND aus {@link #info(String)} aufgerufen, damit auch Direkt-Aktionen ohne run()/ready()-Lifecycle
-     * (z.B. „Logdatei anzeigen") die Box wieder zuklappen lassen.
+     * Wartet (nur für Tests), bis alle bisher per {@link #runOnMain(Runnable)} geposteten
+     * UI-Updates auf dem LO-Main-Thread abgearbeitet sind. Postet selbst einen
+     * {@link java.util.concurrent.CountDownLatch}-Callback hinter alle pending Updates
+     * (FIFO) und blockiert bis dieser ausgeführt wurde.
      */
+    public final void flushUiUpdatesForTest() {
+        XRequestCallback dispatcher = mainThreadDispatcher;
+        if (dispatcher == null || disposed) return;
+        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+        try {
+            dispatcher.addCallback((XCallback) data -> latch.countDown(), null);
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                logger.warn("flushUiUpdatesForTest: Timeout beim Warten auf LO-Main-Thread");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (RuntimeException e) {
+            logger.debug("flushUiUpdatesForTest fehlgeschlagen", e);
+        }
+    }
+
+    /** Liefert den aktuellen Log-Text (für Tests). */
+    public final String getLogText() {
+        if (logEditProps == null) return "";
+        try {
+            Object o = logEditProps.getPropertyValue("Text");
+            return o instanceof String s ? s : "";
+        } catch (com.sun.star.uno.Exception e) {
+            return "";
+        }
+    }
+
+    // ── Auto-Close ─────────────────────────────────────────────────────────────
+
     private void planeAutoCloseFallsMoeglich() {
-        if (disposed || frame == null || headlessMode) return;
+        if (disposed || xWindow == null || headlessMode) return;
         if (laeuft.get()) return;
         if (isFehler) return;
         if (!GlobalProperties.get().isProzessBoxAutomatischAnzeigen()) return;
         if (!GlobalProperties.get().isProzessBoxAutomatischSchliessen()) return;
 
-        SwingUtilities.invokeLater(() -> {
-            if (disposed || frame == null) return;
-            if (autoCloseTimer != null) {
-                autoCloseTimer.stop();
-            }
-            autoCloseTimer = new Timer(AUTO_CLOSE_DELAY_MS, _ -> {
-                if (disposed || frame == null) return;
-                if (!laeuft.get() && !isFehler) {
-                    frame.setVisible(false);
-                }
+        stopAutoCloseTask();
+        if (autoCloseExec == null) {
+            autoCloseExec = Executors.newSingleThreadScheduledExecutor(r -> {
+                Thread t = new Thread(r, "ProcessBox-AutoClose");
+                t.setDaemon(true);
+                return t;
             });
-            autoCloseTimer.setRepeats(false);
-            autoCloseTimer.start();
+        }
+        autoCloseTask = autoCloseExec.schedule(() -> {
+            if (disposed || xWindow == null) return;
+            if (laeuft.get() || isFehler) return;
+            setVisibleInternal(false);
+        }, AUTO_CLOSE_DELAY_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopAutoCloseTask() {
+        ScheduledFuture<?> task = autoCloseTask;
+        if (task != null) {
+            task.cancel(false);
+            autoCloseTask = null;
+        }
+    }
+
+    // ── Versions-Hinweis ───────────────────────────────────────────────────────
+
+    private void aktualisiereNeueVersionLabel() {
+        if (neueVersionLabelProps == null) return;
+        boolean neueVersion;
+        String installierteVersion;
+        String neueVersionNummer;
+        try {
+            var service = ReleaseUpdateService.get();
+            neueVersion = service.isUpdateVerfuegbar()
+                    || GlobalProperties.get().isNewVersionCheckImmerTrue();
+            installierteVersion = service.getInstallierteVersion().orElse(null);
+            neueVersionNummer = service.getNeuesteVersionTag().orElse(null);
+        } catch (IllegalStateException e) {
+            return;
+        }
+        if (disposed) return;
+        String label = neueVersion
+                ? I18n.get("processbox.neue.version.verfuegbar",
+                        installierteVersion != null ? installierteVersion : "?",
+                        neueVersionNummer != null ? neueVersionNummer : "?")
+                : null;
+        boolean sichtbar = neueVersion;
+        runOnMain(() -> {
+            if (label != null) {
+                setPropertySafe(neueVersionLabelProps, "Label", label);
+            }
+            setPropertySafe(neueVersionLabelProps, "EnableVisible", sichtbar);
         });
     }
 
     // ── TimerListener ──────────────────────────────────────────────────────────
 
-    /**
-     * Aktualisiert die Timer-Zeile in der ProcessBox.
-     * Wird von {@link de.petanqueturniermanager.timer.TimerManager} bei jedem Tick aufgerufen.
-     */
     @Override
     public void onChange(TimerState state) {
-        if (disposed || headlessMode || timerUhrLabel == null) return;
-        if (state.zustand() == TimerZustand.BEENDET) {
-            java.awt.Toolkit.getDefaultToolkit().beep();
-        }
-        SwingUtilities.invokeLater(() -> {
-            if (disposed) return;
-            timerUhrLabel.setText(state.anzeige());
-            timerBezeichnungLabel.setText(state.bezeichnung() != null ? state.bezeichnung() : "");
-            Color farbe = switch (state.zustand()) {
-                case LAEUFT   -> new Color(0x00cc44);
-                case PAUSIERT -> new Color(0xddcc00);
-                case BEENDET  -> new Color(0xff3333);
-                case INAKTIV  -> new Color(0x555555);
-            };
-            timerUhrLabel.setForeground(farbe);
-            if (timerZeile != null) {
-                timerZeile.repaint();
+        if (disposed || headlessMode || timerUhrProps == null) return;
+        String anzeige = state.anzeige();
+        String bezeichnung = state.bezeichnung() != null ? state.bezeichnung() : "";
+        Integer farbe = switch (state.zustand()) {
+            case LAEUFT   -> COLOR_TIMER_LAEUFT;
+            case PAUSIERT -> COLOR_TIMER_PAUSE;
+            case BEENDET  -> COLOR_TIMER_BEENDET;
+            case INAKTIV  -> COLOR_TIMER_INAKTIV;
+        };
+        runOnMain(() -> {
+            setPropertySafe(timerUhrProps, "Label", anzeige);
+            setPropertySafe(timerBezeichnungProps, "Label", bezeichnung);
+            setPropertySafe(timerUhrProps, "TextColor", farbe);
+        });
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    private void setVisibleInternal(boolean sichtbar) {
+        if (xWindow == null) return;
+        runOnMain(() -> {
+            try {
+                xWindow.setVisible(sichtbar);
+            } catch (RuntimeException e) {
+                logger.debug("setVisible({}) fehlgeschlagen", sichtbar, e);
             }
         });
     }
 
+    private void toFrontInternal() {
+        if (dialogControl == null) return;
+        runOnMain(() -> {
+            try {
+                XTopWindow top = Lo.qi(XTopWindow.class, dialogControl.getPeer());
+                if (top != null) {
+                    top.toFront();
+                }
+            } catch (RuntimeException e) {
+                logger.debug("toFront fehlgeschlagen", e);
+            }
+        });
+    }
+
+    private static void setPropertySafe(XPropertySet props, String name, Object value) {
+        if (props == null) return;
+        try {
+            props.setPropertyValue(name, value);
+        } catch (com.sun.star.uno.Exception e) {
+            logger.debug("setPropertyValue({}, ...) fehlgeschlagen", name, e);
+        }
+    }
+
     /**
-     * @return the frame
+     * Postet {@code r} via {@code AsyncCallback} auf den LO-Main-Thread. Reihenfolge ist FIFO.
+     * Fallback: synchroner Aufruf, wenn der Dispatcher nicht verfügbar ist (Init-Fehler).
+     * Bei Dispose zum Zeitpunkt der Ausführung wird {@code r} verworfen.
      */
-    public final JFrame getFrame() {
-        return frame;
+    private void runOnMain(Runnable r) {
+        if (disposed) return;
+        XRequestCallback dispatcher = mainThreadDispatcher;
+        if (dispatcher == null) {
+            try {
+                r.run();
+            } catch (RuntimeException e) {
+                logger.debug("UI-Update (direkt) fehlgeschlagen", e);
+            }
+            return;
+        }
+        try {
+            dispatcher.addCallback((XCallback) data -> {
+                if (disposed) return;
+                try {
+                    r.run();
+                } catch (RuntimeException e) {
+                    logger.debug("UI-Update (Main-Thread) fehlgeschlagen", e);
+                }
+            }, null);
+        } catch (RuntimeException e) {
+            logger.debug("AsyncCallback-Post fehlgeschlagen – führe direkt aus", e);
+            try {
+                r.run();
+            } catch (RuntimeException ex) {
+                logger.debug("UI-Update (Fallback) fehlgeschlagen", ex);
+            }
+        }
+    }
+
+    // ── Listener-Helfer ────────────────────────────────────────────────────────
+
+    /** Adapter, der eine Consumer-Callback-Funktion an XActionListener bindet. */
+    private record ButtonListener(java.util.function.Consumer<ActionEvent> handler)
+            implements XActionListener {
+
+        private ButtonListener {
+            Objects.requireNonNull(handler);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                handler.accept(e);
+            } catch (RuntimeException ex) {
+                logger.error("Button-Handler-Fehler", ex);
+            }
+        }
+
+        @Override
+        public void disposing(EventObject e) {
+            // nichts
+        }
+    }
+
+    /** XTopWindowListener: blendet den Dialog beim Klick auf das X aus, ohne ihn zu disposen. */
+    private final class CloseListener implements XTopWindowListener {
+        @Override
+        public void windowClosing(EventObject e) {
+            setVisibleInternal(false);
+        }
+
+        @Override public void windowOpened(EventObject e) { /* no-op */ }
+        @Override public void windowClosed(EventObject e) { /* no-op */ }
+        @Override public void windowMinimized(EventObject e) { /* no-op */ }
+        @Override public void windowNormalized(EventObject e) { /* no-op */ }
+        @Override public void windowActivated(EventObject e) { /* no-op */ }
+        @Override public void windowDeactivated(EventObject e) { /* no-op */ }
+        @Override public void disposing(EventObject e) { /* no-op */ }
     }
 
 }
