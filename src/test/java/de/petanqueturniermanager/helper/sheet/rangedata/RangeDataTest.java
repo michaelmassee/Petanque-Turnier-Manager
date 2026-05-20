@@ -1,6 +1,7 @@
 package de.petanqueturniermanager.helper.sheet.rangedata;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -103,6 +104,72 @@ public class RangeDataTest {
 		List<String> expected2 = Arrays.asList(new String[] { "dffdfsdfs" });
 		assertThat(rangeData.get(2)).extracting(CellData::getStringVal).containsExactlyElementsOf(expected2);
 
+	}
+
+	@Test
+	public void testLeereRangeData_getAnzSpaltenIstNull() {
+		RangeData leer = new RangeData();
+		assertThat(leer.getAnzSpalten()).isZero();
+	}
+
+	@Test
+	public void testLeereRangeData_toDataArrayHatLaengeNull() {
+		RangeData leer = new RangeData();
+		Object[][] dataArray = leer.toDataArray();
+		assertThat(dataArray).isEmpty();
+	}
+
+	@Test
+	public void testLeereRangeData_getRangePositionWirftIllegalArgument() {
+		RangeData leer = new RangeData();
+		assertThatThrownBy(() -> leer.getRangePosition(Position.from(1, 1)))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	public void testRaggedArray_getAnzSpaltenIstMaximum() {
+		RangeData ragged = new RangeData();
+		ragged.addNewRow(1, 2);
+		ragged.addNewRow(3, 4, 5, 6);
+		ragged.addNewRow(7);
+
+		assertThat(ragged.getAnzSpalten()).isEqualTo(4);
+	}
+
+	@Test
+	public void testRaggedArray_toDataArrayFuelltKurzeReihenAuf() {
+		RangeData ragged = new RangeData();
+		ragged.addNewRow(1, 2);
+		ragged.addNewRow(3, 4, 5);
+
+		Object[][] dataArray = ragged.toDataArray();
+		assertThat(dataArray).hasNumberOfRows(2);
+		assertThat(dataArray[0]).hasSize(3);
+		assertThat(dataArray[1]).hasSize(3);
+		// kurze Reihe wird mit "" aufgefuellt (siehe RowData.toDataArray)
+		assertThat(dataArray[0][2]).isEqualTo("");
+	}
+
+	@Test
+	public void testKonstruktor_leeresZweidimensionalesArray() {
+		RangeData leer = new RangeData(new Object[0][0]);
+		assertThat(leer).isEmpty();
+		assertThat(leer.getAnzSpalten()).isZero();
+	}
+
+	@Test
+	public void testKonstruktor_anzZeilenNull_liefertLeereRangeData() {
+		RangeData leer = new RangeData(0, 1, 2, 3);
+		assertThat(leer).isEmpty();
+	}
+
+	@Test
+	public void testIterationKonsistentMitSize() {
+		int sizeViaIter = 0;
+		for (RowData ignored : rangeData) {
+			sizeViaIter++;
+		}
+		assertThat(sizeViaIter).isEqualTo(rangeData.size());
 	}
 
 	@Test
