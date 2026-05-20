@@ -1,6 +1,10 @@
-# UI-Freeze: weißes Startfenster + schwarze Toolbar-Bereiche
+# UI-Freeze: weiße Bereiche + schwarze Toolbar-Bereiche
 
-Stand: 2026-05-20, Version 5.30.4 (Branch `lo-crash-2`).
+Stand: 2026-05-20, Version 5.30.6 (Branch `lo-crash-2`).
+
+> **Update 5.30.6 (info-4.log, Windows-11-VM):** Die ursprünglich vermutete
+> Startup-Weißwand durch `ProcessBox.initDialog()` ist **widerlegt**. Hauptursache
+> ist allein der `ControllerLock` um `SheetRunner.run()`. Details siehe unten.
 
 ## Symptome (User-Report, Dirk, Windows 11 + LO 25.8.6.2)
 
@@ -12,126 +16,148 @@ Stand: 2026-05-20, Version 5.30.4 (Branch `lo-crash-2`).
    Screenshot `Screenshot_2026-05-20_Calc_schwarze_Bereiche.png` zeigt
    Plugin-Toolbar mit dunklen/leeren Slots zwischen Icons.
 
+In der 5.30.6-Messung wurde Symptom 1 **nicht** reproduziert (LO erreicht
+`OnViewCreated` nach jvm-uptime 1805 ms, Plugin-Init ist nach 1129 ms fertig).
+Wahrscheinliche Erklärungen für Dirks Originalbericht: Antivirus-Scan beim
+ersten Class-Load der OXT-JARs, JAR-Verifikation, Profil-Migration. Falls
+Symptom 1 bei einem User stabil wiederkehrt, ist es vermutlich aus dem
+Plugin-Pfad nicht weiter zu fixen — siehe Skia-Empfehlung unten.
+
+Symptom 2 (schwarze Toolbar-Bereiche während Lauf) ist durch die Messung
+**bestätigt** und unten als alleiniger Hauptverdacht geführt.
+
 Auf Linux nicht reproduzierbar.
 
 ## Warum Linux das nicht zeigt
 
-- Symptom 1: X11/Wayland-Compositoren stellen den letzten gemalten Frame dar,
+- Symptom 2: X11/Wayland-Compositoren stellen den letzten gemalten Frame dar,
   während die App blockiert. Windows (GDI/D3D) füllt invalide Regionen weiß
   bzw. lässt sie schwarz, bis die App `WM_PAINT` beantwortet.
-- Antivirus auf Windows scannt JAR-Entries beim ersten Class-Load und Temp-File-
-  Schreibungen – beides explodiert exakt auf den heißen Pfaden, die hier
-  gefunden wurden.
 - D3D-Frame-Compositor von LO unter Windows hält offenbar die ganze
   Top-Window-Region "dirty", solange irgendein Sub-Renderer locked ist
-  (siehe ControllerLock weiter unten). Linux/Wayland nicht.
+  (siehe `ControllerLock` weiter unten). Linux/Wayland nicht.
 
-## Hauptverdacht 1: `ProcessBox.initDialog()` (Commit `1e7c7ce0`, ab 5.30.2)
+## Messung Version 5.30.6 (info-4.log)
 
-Vor 5.30.2 war die ProcessBox ein Swing-`JFrame`, der im Java-AWT-EDT initialisiert
-wurde – also **nicht** auf dem LO-Main-Thread. Mit dem Umbau auf einen UNO-Dialog
-mit Throbber läuft der komplette Dialog-Aufbau jetzt synchron im
-`ProtocolHandler`-Konstruktor (über `PetanqueTurnierMngrSingleton.init` →
-`ProcessBox.init`).
+`[STARTUP-TIMING]` (Auszug):
 
-Was `ProcessBox.initDialog()` (`src/main/java/de/petanqueturniermanager/helper/msgbox/ProcessBox.java:223-382`)
-auf dem LO-Main-Thread macht:
+| Phase | Dauer |
+|---|---|
+| JVM-Uptime beim Plugin-Init | 687 ms |
+| `ProcessBox.init` (UNO-Dialog-Aufbau) | **72 ms** |
+| `PetanqueTurnierMngrSingleton.init` GESAMT | 436 ms |
+| `ProtocolHandler`-ctor GESAMT | 567 ms |
+| Erster `OnViewCreated` | jvm-uptime 1805 ms |
+| Erster `OnNew` | jvm-uptime 1831 ms |
+| Erster User-Dispatch (`spielrunden_testdaten`) | jvm-uptime 17 646 ms |
 
-| Schritt | Operation | Anmerkung |
-|--------|-----------|-----------|
-| 1 | `createInstanceWithContext("com.sun.star.awt.AsyncCallback", …)` | UNO-Service-Lookup |
-| 2 | `createInstanceWithContext("com.sun.star.awt.UnoControlDialogModel", …)` | Service-Lookup |
-| 3 | 8× `setPropertyValue` auf `dlgProps` | Position, Size, Moveable, … |
-| 4 | 11× `addControl(...)` | jeder Call: `msf.createInstance` + 5 Base-`setPropertyValue` + 1–3 Spezial-Properties + `container.insertByName` → **≈80 UNO-Calls** |
-| 5 | 2× `extractImageToTemp(...)` (Z. 404-419) | `getResourceAsStream` + `Files.createTempFile` + `Files.copy` + `deleteOnExit()` – **Disk-IO**, AV-anfällig |
-| 6 | `createInstanceWithContext("com.sun.star.awt.UnoControlDialog", …)` | Service-Lookup |
-| 7 | `createInstanceWithContext("com.sun.star.awt.Toolkit", …)` | Service-Lookup |
-| 8 | **`dialogControl.createPeer(xToolkit, null)`** (Z. 356) | **teuerster Einzel-Call**: legt nativen Window-Peer an (Windows: HWND-Allokation, GDI-Resources, ggf. D3D-/Skia-Init für verstecktes Fenster). Einmaliger Kalt-Pfad pro Calc-Session. |
-| 9 | `addTopWindowListener` + 2× `addActionListener` | UNO-Listener-Registrierung |
+`[WORKER-TIMING]` (Auszug):
 
-**Summe: ≈100 UNO-Roundtrips + 2 Disk-Schreiboperationen + 1 native Peer-Allokation**,
-alles seriell auf dem Main-Thread, ausgelöst aus dem `ProtocolHandler`-Konstruktor,
-also bevor LO sein eigenes UI fertig zeichnen kann.
+| SheetRunner | Dauer |
+|---|---|
+| `SpielrundeSheet_TestDaten` | 10 134 ms |
+| **`SpieltagRanglisteSheet_TestDaten`** | **56 243 ms** |
+| `EndranglisteSheet` | 3 648 ms |
+| `SpieltagRanglisteSheetUpdate` | 485–568 ms |
+| `EndranglisteSheetUpdate` | 1 015–1 184 ms |
 
-## Hauptverdacht 2: `ControllerLock` um `SheetRunner.run()` (Commit `2a6b004a`, ab 5.30.2)
+`TurnierEventHandler` koalesziert sauber (30 bzw. 24 Events → 1 Broadcast),
+also kein Event-Storm.
 
-`src/main/java/de/petanqueturniermanager/helper/sheet/ControllerLock.java` ist ein
-schlanker `AutoCloseable`-Wrapper um `XModel.lockControllers()` /
+## Verworfen nach 5.30.6-Messung: `ProcessBox.initDialog()`
+
+Ursprünglicher Verdacht: Der UNO-Dialog-Aufbau in `ProcessBox.initDialog()`
+(~100 UNO-Roundtrips, 2× Temp-File-IO, 1× nativer `createPeer`), aufgerufen
+im `ProtocolHandler`-Konstruktor, blockiere den LO-Main-Thread vor dem ersten
+Paint.
+
+**Messung:** `ProcessBox.init` kostet **72 ms** auf der Windows-11-VM, der
+gesamte `ProtocolHandler`-Konstruktor 567 ms. LO erreicht `OnViewCreated` nach
+1805 ms. Damit kann der Startup-Pfad keine 20-s-Weißwand verursachen.
+
+Konsequenz: Lazy-Umbau bleibt als saubere Hygiene-Option (Native-Peer-Allokation
+und Temp-File-IO erst on demand), ist aber **nicht** mehr Symptom-Fix. Wenn er
+gemacht wird, dann unabhängig — z. B. zusammen mit anderen Init-Hardenings.
+
+Referenz-Stelle: `src/main/java/de/petanqueturniermanager/helper/msgbox/ProcessBox.java:223-382`.
+
+## Hauptverdacht (alleinig): `ControllerLock` um `SheetRunner.run()` (Commit `2a6b004a`)
+
+`src/main/java/de/petanqueturniermanager/helper/sheet/ControllerLock.java` ist
+ein schlanker `AutoCloseable`-Wrapper um `XModel.lockControllers()` /
 `unlockControllers()`. In `SheetRunner.run()` umklammert er den **kompletten**
 Lauf inklusive `finally`-Block.
 
 **Motivation laut Commit:** Windows-11-Renderer-Crash (D3D, `scfiltlo` +
-`D3DScreenUpdateManager`) bei hunderten unbatchter UNO-Property-Writes pro Lauf.
-`lockControllers()` unterdrückt den Repaint zwischen den Writes → kein
+`D3DScreenUpdateManager`) bei hunderten unbatchter UNO-Property-Writes pro
+Lauf. `lockControllers()` unterdrückt den Repaint zwischen den Writes → kein
 Render-Flush mehr pro Property → kein Crash.
 
-**Nebenwirkung:** Auf Windows mit D3D-Frame-Compositor bleibt die gesamte
-Top-Window-Region "dirty", solange irgendein Sub-Renderer (Sheet-View) locked
-ist. Damit werden auch Toolbar-/Sidebar-Repaints für die Lauf-Dauer angehalten.
-`notifyAllListeners()` + `SpieltagToolbarSteuerung.aktualisiereInAllenFrames()`,
-die während des Laufs durch unsere eigenen Event-Listener mehrfach gefeuert
-werden, **können den Repaint nicht durchsetzen** – Ergebnis sind die schwarzen
-Toolbar-Slots auf Dirks Screenshot.
+**Nebenwirkung — durch info-4.log belegt:** Während eines 56-Sekunden-Laufs
+(`SpieltagRanglisteSheet_TestDaten`) bleibt die D3D-Top-Window-Region "dirty".
+Toolbar-Repaints (z. B. nach `ToolbarAnzeigenListener` oder
+`SpieltagToolbarSteuerung.aktualisiereInAllenFrames()`) können nicht
+durchsetzen — Resultat: schwarze Toolbar-Slots auf Dirks Screenshot. Bei sehr
+langen Läufen (1 min) kann der User das Gesamtfenster zudem als "weiß" oder
+"eingefroren" wahrnehmen, selbst wenn der Startup-Pfad sauber ist.
 
 Auf Linux: Compositor zeigt einfach den letzten Frame, daher unsichtbar.
 
 **Zusatz-Effekt aus demselben Commit:** `CellStyleHelper.apply()` läuft jetzt
 zweigleisig (`tryEnsureUnprotectedInScope()` im Scope), `BlattschutzManager`
 ebenfalls mit mehr Lazy-Logik. Diese Pfade laufen jetzt unter dem Lock und
-können die D3D-Render-Queue im "locked"-Zustand zusätzlich belasten.
+verlängern die "locked"-Phase weiter.
 
-## Fix-Ansätze
+## Fix-Ansätze (neu priorisiert)
 
-### Für `ProcessBox.init` (Symptom 1)
+### Priorität 1: Yield-Pattern für `ControllerLock`
 
-**Empfohlen: Lazy Dialog-Aufbau.**
+Worker löst den Lock alle 250–500 ms kurz, damit Frame-Repaints durchkommen,
+und setzt ihn sofort wieder. Integrationspunkte:
 
-- Konstruktor speichert nur `xContext`, kein Service-Lookup, kein
-  `createPeer`, keine Temp-Files.
-- `initDialog()` läuft erst beim ersten Aufruf, der den Dialog wirklich
-  *sichtbar* braucht (`visible()` / `toFront()` / `applyVordergrundEinstellung()`).
-- `info(...)`-/`fehler(...)`-/`clear()`-Aufrufe puffern in einem In-Memory-Log
-  (`StringBuilder` oder `Deque<String>` mit `MAX_LOG_CHARS`-Cap). Beim ersten
-  echten Dialog-Aufbau wird der Puffer einmal an das dann existierende
-  Edit-Control übergeben.
-- Headless-Modus bleibt wie er ist.
+- `RangeHelper.setDataInRange` (Hauptlast bei den großen `SheetRunner`-Läufen)
+- `CellStyleHelper.apply` im Scope
+- ggf. zentrale Yield-API in `ControllerLock` (z. B.
+  `ControllerLock.yieldIfDue()` mit Wandtaktzeit-Check)
 
-Damit kostet der `ProtocolHandler`-Konstruktor nur noch:
-Klassen-Load + Singleton-Anlage + Listener-Registrierungen → erwartete
-Reduktion: 20 s → < 1 s.
+Erwarteter Effekt: Toolbar-Repaints kommen alle ~250 ms durch → keine
+schwarzen Slots mehr; der Crash-Schutz (kein einzelner Property-Flush
+synchron rendert) bleibt für die jeweiligen Sub-Intervalle erhalten.
 
-**Risiko:** Niedrig. Das `ProcessBox`-API ist bereits defensiv (`if (disposed ||
-logEditProps == null) return this;`), die Lazy-Variante baut auf demselben
-Pattern auf.
+**Risiko:** Wenn der Crash-Mechanismus tatsächlich nur ab einer
+*Mindest-Sweep-Länge* greift, kann ein Yield mitten im Sweep den Crash
+zurückbringen. Vor Live-Roll mit `SpieltagRanglisteSheet_TestDaten` und
+echtem 8000+-Zeilen-Sheet validieren.
 
-### Für `ControllerLock` (Symptom 2)
+### Priorität 2: Granularer Lock
 
-Mehrere Optionen, in Reihenfolge des Erwartungswerts:
+Lock nicht um `run()` insgesamt, sondern nur um die wirklich heißen
+Schreib-Schleifen (innerhalb `RangeHelper.setDataInRange`, maximal um
+`doRun()`, aber nicht um die `finally`-Cleanup-Phase). Aufwand größer, weil
+pro Generator-Klasse das Scope-Pattern eingepflegt werden muss, dafür
+Crash-Schutz an den richtigen Stellen punktgenau.
 
-1. **Periodische Unlock-Yields.** Worker löst den Lock alle ~250 ms kurz,
-   damit Frame-Repaints durchkommen, und setzt ihn sofort wieder. Erfordert
-   Integration in die heißen Schreib-Helper (`RangeHelper.setDataInRange`,
-   `CellStyleHelper.apply` im Scope). Aufwand mittel, Effekt vermutlich groß.
+### Priorität 3: Lazy `ProcessBox` (Hygiene, nicht Symptom-Fix)
 
-2. **Granularer Lock.** Lock nicht um `run()` insgesamt, sondern nur um die
-   wirklich heißen Schreib-Schleifen (innerhalb `RangeHelper.setDataInRange`,
-   maximal um `doRun()`, aber nicht um die `finally`-Cleanup-Phase – damit
-   ProcessBox-Ready-Update + Auto-Save Repaints kriegen). Aufwand größer,
-   weil pro Generator-Klasse das Scope-Pattern eingepflegt werden muss.
+Konstruktor speichert nur `xContext`. `initDialog()` läuft erst beim ersten
+sichtbarkeits-relevanten Aufruf. `info(...)`-/`fehler(...)`-Aufrufe puffern
+in einer `Deque<String>` mit `MAX_LOG_CHARS`-Cap.
 
-3. **Lock-Replacement durch `enableAutomaticCalculation(false)` + manuellen
-   `calculate()` am Ende.** Greift den ursprünglichen D3D-Crash-Mechanismus
-   nicht (Crash ging über Property-Writes, nicht Recalcs), Crash-Schutz fiele
-   weg.
+**Nicht** mehr als Fix für die berichtete Weißwand verkauft — die Messung
+zeigt 72 ms, nicht 20 s. Trotzdem sinnvoll, weil der native `createPeer`
+und die Temp-File-IO im Startup-Pfad eine zukünftige Regressions-Falle sind
+(AV-/JAR-Cache-Effekte beim ersten Class-Load).
 
-4. **Skia-Backend statt D3D empfehlen** – Workaround, kein Fix; nur als
-   Fallback für Anwender mit hartnäckigem Problem.
+### Notnägel
 
-**Empfohlene Reihenfolge:** Erst Lazy-ProcessBox (großer Hebel, kleines Risiko),
-dann `[WORKER-TIMING]`-Logs aus Dirks Lauf auswerten. Falls die schwarzen
-Bereiche bestehen bleiben, Variante 1 (Yield-Pattern) als zweiten Schritt.
+- `enableAutomaticCalculation(false)` + manueller `calculate()` am Ende
+  greift den D3D-Crash-Mechanismus nicht (geht über Property-Writes, nicht
+  Recalcs) — kein Ersatz für den Lock.
+- **Skia-Backend statt D3D** dem User empfehlen, falls Symptom 1 (weiße
+  Bereiche beim Start) bei ihm stabil wiederkehrt: `Extras → Optionen →
+  LibreOffice → Ansicht → Skia für Rendering verwenden`. Reiner Workaround.
 
-## Vor Fix: Diagnose-Logging (in 5.30.4, Commit `4b4b01f3`)
+## Diagnose-Logging (in 5.30.4, Commit `4b4b01f3`)
 
 Eingebaut sind Präfixe `[STARTUP-TIMING]` und `[WORKER-TIMING]` (info-Level)
 in:
@@ -147,13 +173,9 @@ in:
 - `RanglisteRefreshListener.pruefeUndStarte` – Key, System, Hash-Dauer,
   Gesamt-Dauer, Ergebnis-Typ, Thread
 
-**Diagnose-Run für Dirk:**
-
-1. Version 5.30.4 installieren.
-2. Calc starten (Weißwand abwarten).
-3. Ein Beispielturnier generieren (Schweizer oder Supermêlée).
-4. Plugin-Menü → Info → Logfile anzeigen.
-5. Zeilen mit `[STARTUP-TIMING]` und `[WORKER-TIMING]` zurückschicken.
+**Auswertungsfokus nach 5.30.6:** `[STARTUP-TIMING]` ist als Diagnose-Treiber
+abgeräumt — Plugin-Init bewegt sich im < 1 s-Bereich. Künftige Runs primär
+auf `[WORKER-TIMING]` schauen, insbesondere `SheetRunner.run`-Dauern > 5 s.
 
 ## Was sich zwischen 5.30.0 und 5.30.2 änderte – Kurzliste
 
@@ -161,32 +183,28 @@ Aus `git log --oneline 757c5475..25bf00e9`:
 
 | Commit | Inhalt | Relevanz |
 |--------|--------|----------|
-| `1e7c7ce0` | ProcessBox: Swing-JFrame durch UNO-Dialog mit LO-Throbber ersetzt | **Hauptverdacht Symptom 1** |
-| `b370e87d` | ProcessBox: `java.awt.Toolkit.beep()` entfernt | Verwandt (AWT-Init im LO-Prozess) |
+| `1e7c7ce0` | ProcessBox: Swing-JFrame durch UNO-Dialog mit LO-Throbber ersetzt | nach 5.30.6-Messung verworfen (72 ms) |
+| `b370e87d` | ProcessBox: `java.awt.Toolkit.beep()` entfernt | klein |
 | `e15bb756` | ProcessBox: Auto-Scroll zur letzten Log-Zeile beim Anhängen | klein |
 | `e06b0c9d` | ProcessBox: Klick auf X im Fensterrahmen blendet Dialog aus | klein |
 | `5a47d7fc` | ProcessBox: Fehlerstatus-Reset, Log-Begrenzung, Prefix-JavaDoc | klein |
 | `792503ae` | ProcessBox: UI-Updates auf LO-Main-Thread marshallen (Fix LO-Crash) | reduziert Marshalling-Risiko – nicht ursächlich |
-| `2a6b004a` | SheetRunner: ControllerLock um `run()` gegen LO-Render-Crash | **Hauptverdacht Symptom 2** |
+| `2a6b004a` | SheetRunner: ControllerLock um `run()` gegen LO-Render-Crash | **alleiniger Hauptverdacht** |
 | `0ada9816` | Blattschutz: `endCommandScope` schützt immer am Scope-Ende | unter Lock relevant |
-
-Ältere Versionen (vor 5.30.1) zeigten weder die Weißwand noch die schwarzen
-Toolbar-Bereiche, wenn die Hypothesen stimmen.
 
 ## Beteiligte Dateien (Kurzliste)
 
-- `src/main/java/de/petanqueturniermanager/helper/msgbox/ProcessBox.java`
-  – `initDialog()` (Z. 223-382) ist der Lazy-Kandidat
 - `src/main/java/de/petanqueturniermanager/SheetRunner.java`
   – `run()` mit `try (ControllerLock _ = ControllerLock.lock(doc))` um den
   gesamten Lauf
 - `src/main/java/de/petanqueturniermanager/helper/sheet/ControllerLock.java`
-  – schlanker Wrapper, würde um Yield-/Re-Entry-API erweitert
+  – schlanker Wrapper, Kandidat für Yield-/Re-Entry-API
 - `src/main/java/de/petanqueturniermanager/helper/sheet/blattschutz/BlattschutzManager.java`
-  – läuft im Lock-Scope, könnte mit-yielden
+  – läuft im Lock-Scope, sollte mit-yielden
 - `src/main/java/de/petanqueturniermanager/helper/cellstyle/CellStyleHelper.java`
   – Apply-Pfad läuft jetzt unter Lock
-- `src/main/java/de/petanqueturniermanager/comp/PetanqueTurnierMngrSingleton.java`
-  – Ruf-Kette zum `ProcessBox.init` (Z. 107)
-- `src/main/java/de/petanqueturniermanager/comp/ProtocolHandler.java`
-  – Konstruktor blockiert auf der Init-Kette
+- `src/main/java/de/petanqueturniermanager/helper/sheet/RangeHelper.java`
+  – Haupt-Schreib-Schleife, Hauptort für ein Yield-Pattern
+- `src/main/java/de/petanqueturniermanager/helper/msgbox/ProcessBox.java`
+  – `initDialog()` (Z. 223-382): nach Messung **kein** Symptom-Fix-Kandidat
+  mehr, nur noch Hygiene-Optimierung
