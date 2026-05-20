@@ -28,6 +28,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -294,7 +295,7 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
                     pe.cause());
         }
         long gesamtMs = (System.nanoTime() - startNs) / 1_000_000L;
-        logger.info("[WORKER-TIMING] RanglisteRefreshListener.pruefeUndStarte key={} system={} hash={} ms gesamt={} ms ergebnis={} thread={}",
+        PerfLog.log(logger, "[WORKER-TIMING] RanglisteRefreshListener.pruefeUndStarte key={} system={} hash={} ms gesamt={} ms ergebnis={} thread={}",
                 key, erwartesTurnierSystem, hashDauerMs, gesamtMs,
                 ergebnis.getClass().getSimpleName(), Thread.currentThread().getName());
     }

@@ -13,6 +13,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.newrelease.ExtensionsHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 
 /**
  * Schreibt beim ersten Plugin-Start einen Banner-Block mit allen relevanten
@@ -34,7 +35,7 @@ public final class StartupInfoLogger {
         try {
             String banner = baueBanner(context);
             logger.info(banner);
-            logger.info("[STARTUP-TIMING] JVM-Uptime beim Plugin-Init: {} ms", StartupClock.uptimeMs());
+            PerfLog.log(logger, "[STARTUP-TIMING] JVM-Uptime beim Plugin-Init: {} ms", StartupClock.uptimeMs());
         } catch (Exception e) {
             // Banner darf den Startup niemals scheitern lassen
             logger.warn("Startup-Banner konnte nicht geschrieben werden: {}", e.getMessage(), e);

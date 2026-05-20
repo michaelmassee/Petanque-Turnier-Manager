@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import de.petanqueturniermanager.helper.perflog.PerfLog;
+
 /**
  * Liefert die JVM-Uptime in Millisekunden und loggt das erste Vorkommen eines
  * Startup-Ereignisses (z.B. {@code OnTitleChanged}, erster Menü-Dispatch).
@@ -39,7 +41,7 @@ public final class StartupClock {
 	 */
 	public static void logErstesVorkommen(String schluessel, String beschreibung) {
 		if (BEREITS_GELOGGT.add(schluessel)) {
-			logger.info("[STARTUP-TIMING] {} (erstes Vorkommen) jvm-uptime={} ms",
+			PerfLog.log(logger, "[STARTUP-TIMING] {} (erstes Vorkommen) jvm-uptime={} ms",
 					beschreibung, uptimeMs());
 		}
 	}

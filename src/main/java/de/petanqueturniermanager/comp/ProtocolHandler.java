@@ -53,6 +53,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEvent;
 import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
@@ -367,7 +368,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		long ctorStartNs = System.nanoTime();
 		PetanqueTurnierMngrSingleton.init(xContext);
 		long t = System.nanoTime();
-		logger.info("[STARTUP-TIMING] ProtocolHandler-ctor PetanqueTurnierMngrSingleton.init: {} ms",
+		PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor PetanqueTurnierMngrSingleton.init: {} ms",
 				(t - ctorStartNs) / 1_000_000L);
 		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
 		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt).
@@ -377,12 +378,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		if (!PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
 			long tNachToolbar = System.nanoTime();
-			logger.info("[STARTUP-TIMING] ProtocolHandler-ctor ToolbarAnzeigenListener.zeigeToolbarInAllenFrames: {} ms",
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor ToolbarAnzeigenListener.zeigeToolbarInAllenFrames: {} ms",
 					(tNachToolbar - t) / 1_000_000L);
 			t = tNachToolbar;
 			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
 			long tNachSpieltag = System.nanoTime();
-			logger.info("[STARTUP-TIMING] ProtocolHandler-ctor SpieltagToolbarSteuerung.aktualisiereInAllenFrames: {} ms",
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor SpieltagToolbarSteuerung.aktualisiereInAllenFrames: {} ms",
 					(tNachSpieltag - t) / 1_000_000L);
 			t = tNachSpieltag;
 		} else {
@@ -488,12 +489,12 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			});
 			SheetRunner.addStateChangeListener(ProtocolHandler::notifyAllListeners);
 			long tNachRegistriert = System.nanoTime();
-			logger.info("[STARTUP-TIMING] ProtocolHandler-ctor REGISTERED-Block (IGlobalEventListener+ITurnierEventListener+SheetRunner): {} ms",
+			PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor REGISTERED-Block (IGlobalEventListener+ITurnierEventListener+SheetRunner): {} ms",
 					(tNachRegistriert - t) / 1_000_000L);
 			t = tNachRegistriert;
 		}
 		long ctorGesamtMs = (System.nanoTime() - ctorStartNs) / 1_000_000L;
-		logger.info("[STARTUP-TIMING] ProtocolHandler-ctor GESAMT={} ms", ctorGesamtMs);
+		PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor GESAMT={} ms", ctorGesamtMs);
 	}
 
 	// -------------------------------------------------------------------------
@@ -1574,7 +1575,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 		if (NOTIFY_ALL_FIRST_LOG.compareAndSet(true, false)) {
 			long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-			logger.info("[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",
+			PerfLog.log(logger, "[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",
 					dauerMs, listenerAnzahl, Thread.currentThread().getName());
 		}
 	}

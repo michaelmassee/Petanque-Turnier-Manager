@@ -19,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.SheetRunner;
 import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 
 /**
  * Broadcastet TurnierEvents an registrierte {@link ITurnierEventListener}.
@@ -80,7 +81,7 @@ public class TurnierEventHandler {
 		ITurnierEvent ev = pending.getAndSet(null);
 		int coalesced = coalescedSeitFlush.getAndSet(0);
 		if (ev != null) {
-			logger.info("[WORKER-TIMING] TurnierEventHandler.flushPending koalesziert={}",
+			PerfLog.log(logger, "[WORKER-TIMING] TurnierEventHandler.flushPending koalesziert={}",
 					coalesced);
 			dispatch(ev, "flushPending");
 		}
@@ -114,7 +115,7 @@ public class TurnierEventHandler {
 			}
 		}
 		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-		logger.info("[WORKER-TIMING] TurnierEventHandler broadcast PropertiesChanged quelle={} pfad={} : {} ms, listener={}, thread={}",
+		PerfLog.log(logger, "[WORKER-TIMING] TurnierEventHandler broadcast PropertiesChanged quelle={} pfad={} : {} ms, listener={}, thread={}",
 				quelle, synchronerPfad ? "sync" : "main", dauerMs, anzahl,
 				Thread.currentThread().getName());
 	}

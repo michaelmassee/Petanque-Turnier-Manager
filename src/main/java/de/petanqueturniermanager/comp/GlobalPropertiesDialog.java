@@ -39,6 +39,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
     private static final String CTL_CB_NEW_VERSION = "cbNewVersion";
     private static final String CTL_CB_PROZESSBOX_AUTOMATISCH = "cbProzessBoxAutomatisch";
     private static final String CTL_CB_PROZESSBOX_SCHLIESSEN  = "cbProzessBoxSchliessen";
+    private static final String CTL_CB_PERFORMANCE_LOGGING    = "cbPerformanceLogging";
     private static final String CTL_CMB_LOGLEVEL   = "cmbLogLevel";
 
     // Gespeicherte Control-Referenzen für beiOkGeklickt()
@@ -47,6 +48,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
     private XCheckBox      cbNewVersion;
     private XCheckBox      cbProzessBoxAutomatisch;
     private XCheckBox      cbProzessBoxSchliessen;
+    private XCheckBox      cbPerformanceLogging;
     private XTextComponent cmbLogLevel;
 
     public GlobalPropertiesDialog(XComponentContext xContext) {
@@ -69,7 +71,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
 
     @Override
     protected int getHoehe() {
-        return 120;
+        return 135;
     }
 
     @Override
@@ -97,16 +99,19 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
         fuegeCheckBoxEin(xMSF, cont, CTL_CB_PROZESSBOX_SCHLIESSEN,
                 I18n.get("konfig.prozessbox.automatisch.schliessen"), 5, 65, 188, 12,
                 gp.isProzessBoxAutomatischSchliessen());
+        fuegeCheckBoxEin(xMSF, cont, CTL_CB_PERFORMANCE_LOGGING,
+                I18n.get("konfig.performance.logging"), 5, 80, 188, 12,
+                gp.isPerformanceLogging());
 
         // --- Log-Level ---
-        fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 82, 60, 10);
+        fuegeFixedTextEin(xMSF, cont, "lblLogLevel", "Log-Level:", 5, 97, 60, 10);
         fuegeComboBoxEin(xMSF, cont, CTL_CMB_LOGLEVEL, new String[]{ "", "info", "debug" },
-                70, 80, 120, 12, gp.getLogLevel().toLowerCase());
+                70, 95, 120, 12, gp.getLogLevel().toLowerCase());
 
         // --- Buttons ---
-        fuegeButtonEin(xMSF, cont, "btnOk",       "OK",        50,  100, 50, 14,
+        fuegeButtonEin(xMSF, cont, "btnOk",       "OK",        50,  115, 50, 14,
                 (short) PushButtonType.OK_value);
-        fuegeButtonEin(xMSF, cont, "btnAbbrechen", "Abbrechen", 110, 100, 70, 14,
+        fuegeButtonEin(xMSF, cont, "btnAbbrechen", "Abbrechen", 110, 115, 70, 14,
                 (short) PushButtonType.CANCEL_value);
 
         // Control-Referenzen für beiOkGeklickt() merken
@@ -116,6 +121,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
         cbNewVersion            = leseCheckBox(xcc, CTL_CB_NEW_VERSION);
         cbProzessBoxAutomatisch = leseCheckBox(xcc, CTL_CB_PROZESSBOX_AUTOMATISCH);
         cbProzessBoxSchliessen  = leseCheckBox(xcc, CTL_CB_PROZESSBOX_SCHLIESSEN);
+        cbPerformanceLogging    = leseCheckBox(xcc, CTL_CB_PERFORMANCE_LOGGING);
         cmbLogLevel             = leseTextComponent(xcc, CTL_CMB_LOGLEVEL);
     }
 
@@ -129,6 +135,7 @@ public class GlobalPropertiesDialog extends AbstractUnoDialog {
                 cbNewVersion            != null && cbNewVersion.getState()            == 1,
                 cbProzessBoxAutomatisch != null && cbProzessBoxAutomatisch.getState() == 1,
                 cbProzessBoxSchliessen  != null && cbProzessBoxSchliessen.getState()  == 1,
+                cbPerformanceLogging    != null && cbPerformanceLogging.getState()    == 1,
                 gewaehlterLevel
         );
         try {

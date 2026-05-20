@@ -19,6 +19,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.helper.perflog.PerfLog;
+
 /**
  * Zentraler Service für die Plugin-Versionserkennung und den Update-Check.
  *
@@ -152,7 +154,7 @@ public final class ReleaseUpdateService {
             initialerRefreshInternal();
         } finally {
             long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-            logger.info("[STARTUP-TIMING] ReleaseUpdateService initialerRefresh (background): {} ms", dauerMs);
+            PerfLog.log(logger, "[STARTUP-TIMING] ReleaseUpdateService initialerRefresh (background): {} ms", dauerMs);
         }
     }
 

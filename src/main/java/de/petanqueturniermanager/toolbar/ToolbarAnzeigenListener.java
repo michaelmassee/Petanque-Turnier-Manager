@@ -18,6 +18,7 @@ import com.sun.star.uno.XComponentContext;
 import de.petanqueturniermanager.comp.DocumentHelper;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 
 /**
  * Zeigt die PétTurnMngr-Symbolleiste automatisch an, sobald ein Calc-Dokument geöffnet oder neu erstellt wird.
@@ -142,7 +143,7 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
             xLayoutManager.showElement(TOOLBAR_RESOURCE_URL);
             boolean result = xLayoutManager.requestElement(TOOLBAR_RESOURCE_URL);
             long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-            logger.info("[STARTUP-TIMING] zeigeToolbarInFrame '{}': {} ms (showElement+requestElement={} isVisible={})",
+            PerfLog.log(logger, "[STARTUP-TIMING] zeigeToolbarInFrame '{}': {} ms (showElement+requestElement={} isVisible={})",
                     xFrame.getName(), dauerMs, result, xLayoutManager.isElementVisible(TOOLBAR_RESOURCE_URL));
         } catch (Exception e) {
             logger.error("Fehler beim Anzeigen der Symbolleiste in Frame '{}'",

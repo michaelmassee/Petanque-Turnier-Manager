@@ -46,7 +46,7 @@ class GlobalPropertiesTest {
     void testSpeichernUndLesen() {
         var gp = GlobalProperties.get();
 
-        gp.speichern(true, true, false, true, true, "debug");
+        gp.speichern(true, true, false, true, true, true, "debug");
 
         GlobalProperties.resetForTest();
         var gp2 = GlobalProperties.get();
@@ -54,7 +54,22 @@ class GlobalPropertiesTest {
         assertTrue(gp2.isAutoSave());
         assertTrue(gp2.isCreateBackup());
         assertFalse(gp2.isNewVersionCheckImmerTrue());
+        assertTrue(gp2.isPerformanceLogging());
         assertEquals("debug", gp2.getLogLevel());
+    }
+
+    @Test
+    void testPerformanceLoggingDefaultUndRoundtrip() {
+        var gp = GlobalProperties.get();
+        assertFalse(gp.isPerformanceLogging(), "Default muss false sein");
+
+        gp.speichern(false, false, false, true, true, true, "");
+        GlobalProperties.resetForTest();
+        assertTrue(GlobalProperties.get().isPerformanceLogging());
+
+        GlobalProperties.get().speichern(false, false, false, true, true, false, "");
+        GlobalProperties.resetForTest();
+        assertFalse(GlobalProperties.get().isPerformanceLogging());
     }
 
     @Test
@@ -158,7 +173,7 @@ class GlobalPropertiesTest {
 
         Runnable schreibend = () -> {
             for (int i = 0; i < 20; i++) {
-                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, true, "info");
+                gp.speichern(i % 2 == 0, i % 3 == 0, false, true, true, false, "info");
             }
         };
 

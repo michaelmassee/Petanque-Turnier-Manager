@@ -39,6 +39,7 @@ import de.petanqueturniermanager.comp.turnierevent.ITurnierEventListener;
 import de.petanqueturniermanager.comp.turnierevent.OnProperiesChangedEvent;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.sidebar.layout.Layout;
 import de.petanqueturniermanager.sidebar.layout.VerticalLayout;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -207,7 +208,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 		long tFelderHinzu = System.nanoTime();
 		requestLayout();
 		long tFertig = System.nanoTime();
-		logger.info(
+		PerfLog.log(logger,
 				"[SIDEBAR-TIMING] {} allesFelderEntfernenUndNeuFenster: vorDispose={} ms, dispose={} ms, neuesFenster={} ms, felderHinzufuegen={} ms, requestLayout={} ms, GESAMT={} ms, thread={}",
 				panel,
 				(tVorFensterDispose - t) / 1_000_000L,
@@ -489,7 +490,7 @@ public abstract class BaseSidebarContent extends ComponentBase
 			felderAktualisieren(eventObj);
 		} finally {
 			long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
-			logger.info("[SIDEBAR-TIMING] {} onPropertiesChanged.felderAktualisieren: {} ms, thread={}",
+			PerfLog.log(logger, "[SIDEBAR-TIMING] {} onPropertiesChanged.felderAktualisieren: {} ms, thread={}",
 					panel, dauerMs, Thread.currentThread().getName());
 		}
 	}

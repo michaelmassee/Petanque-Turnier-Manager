@@ -17,6 +17,7 @@ import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoa
 import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
 import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
@@ -95,7 +96,7 @@ public class PetanqueTurnierMngrSingleton {
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
-		logger.info("[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init START jvm-uptime={} ms",
+		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init START jvm-uptime={} ms",
 				StartupClock.uptimeMs());
 		long initStartNs = System.nanoTime();
 		long t = initStartNs;
@@ -190,14 +191,14 @@ public class PetanqueTurnierMngrSingleton {
 		logTimingAndReset("RanglisteRefreshListener SUPERMELEE-END", t);
 
 		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
-		logger.info("[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",
+		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",
 				initGesamtMs, StartupClock.uptimeMs());
 	}
 
 	private static long logTimingAndReset(String abschnitt, long startNs) {
 		long jetzt = System.nanoTime();
 		long dauerMs = (jetzt - startNs) / 1_000_000L;
-		logger.info("[STARTUP-TIMING] {}: {} ms", abschnitt, dauerMs);
+		PerfLog.log(logger, "[STARTUP-TIMING] {}: {} ms", abschnitt, dauerMs);
 		return jetzt;
 	}
 
