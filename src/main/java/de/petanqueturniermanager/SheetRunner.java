@@ -28,6 +28,7 @@ import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
+import de.petanqueturniermanager.helper.sheet.ControllerLock;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzRegistry;
@@ -172,65 +173,75 @@ public abstract class SheetRunner extends Thread {
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
 			boolean isFehler = false;
 
-			try {
-				if (koordinatorVorgekoppelt && !silentBackground) {
-					processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
-				}
-				if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
-						&& isDocumentAlive()) {
-					updateKonfigurationSheet();
-				}
-				// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
-				// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
-				// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
-				if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
-					BlattschutzRegistry.fuer(turnierSystem)
-							.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
-				}
-				if (isDocumentAlive()) {
-					doRun();
-					WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
-					// Während des Runners eingetroffene Modify-Events wurden vom Listener
-					// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
-					// damit kein Benutzer-Event verloren geht.
-					WebServerManager.get().getModifyListener().markDirtyAndSchedule();
-				}
-			} catch (DisposedException e) {
-				documentDisposed = true;
-				logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
-			} catch (GenerateException e) {
-				handleGenerateException(e);
-			} catch (Exception e) {
-				isFehler = true;
-				processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
-						.fehler(I18n.get("processbox.log.hinweis"));
-				getLogger().error(e.getMessage(), e);
-			} finally {
-				koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
-				// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
-				// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
-				BlattschutzManager.get().endCommandScope();
-				koordinator.setRunner(null);
-				koordinator.benachrichtigeListener(); // Menü reaktivieren
-				if (documentDisposed) {
-					logger.debug("SheetRunner-Cleanup: Dokument bereits disposed, keine UI-Updates");
-				} else if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
-					// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
-					if (isFehler) {
-						processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
-					} else {
-						processBox().visibleWennAutomatisch().info(I18n.get("processbox.fertig.status")).ready();
+			// Renderpfad des Calc-Dokuments für die Dauer des Laufs sperren: LO
+			// unterdrückt das Repaint zwischen den (potentiell hunderten) UNO-
+			// Property-Writes. Auf Windows mit D3D-Backend ist das die Schutzklammer
+			// gegen native Renderer-Crashes (scfiltlo / D3DScreenUpdateManager,
+			// nachgewiesen via Minidump beim Anwender). Der Lock umschließt
+			// bewusst auch das finally – endCommandScope() macht den Großteil
+			// der Protect/Unprotect- und CellStyle-Last und muss ebenfalls unter
+			// dem Lock laufen.
+			try (ControllerLock _ = ControllerLock.lock(workingSpreadsheet.getWorkingSpreadsheetDocument())) {
+				try {
+					if (koordinatorVorgekoppelt && !silentBackground) {
+						processBox().run(); // Nur Menü-Aktionen: ProcessBox animieren und sichtbar halten
 					}
-				} else {
-					// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
-					processBox().info(I18n.get("processbox.fertig.status"));
-				}
-				if (isDocumentAlive()) {
-					try {
-						getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
-					} catch (DisposedException e) {
-						documentDisposed = true;
-						logger.debug("Dokument disposed bei enableAutomaticCalculation", e);
+					if (turnierSystem != TurnierSystem.KEIN && isUpdateKonfigurationSheetBeforeDoRun()
+							&& isDocumentAlive()) {
+						updateKonfigurationSheet();
+					}
+					// Lazy-Unprotect-Scope öffnen: ein einziges entsperren/schuetzen pro Kommando
+					// statt mehrfaches Toggle in jeder Sub-Operation. Echte Entsperrung passiert
+					// erst beim ersten Style-/CF-Trigger (ConditionalFormatHelper / RangeHelper.clearRange).
+					if (turnierSystem != TurnierSystem.KEIN && TurnierModus.get().istAktiv()) {
+						BlattschutzRegistry.fuer(turnierSystem)
+								.ifPresent(k -> BlattschutzManager.get().beginCommandScope(k, workingSpreadsheet));
+					}
+					if (isDocumentAlive()) {
+						doRun();
+						WebServerManager.get().sseRefreshSenden(workingSpreadsheet);
+						// Während des Runners eingetroffene Modify-Events wurden vom Listener
+						// zwar als dirty markiert, aber nicht eingeplant. Hier nachholen,
+						// damit kein Benutzer-Event verloren geht.
+						WebServerManager.get().getModifyListener().markDirtyAndSchedule();
+					}
+				} catch (DisposedException e) {
+					documentDisposed = true;
+					logger.debug("Dokument disposed während SheetRunner – sauberer Abbruch", e);
+				} catch (GenerateException e) {
+					handleGenerateException(e);
+				} catch (Exception e) {
+					isFehler = true;
+					processBox().fehler(I18n.get("processbox.interner.fehler", e.getClass().getName())).fehler(e.getMessage())
+							.fehler(I18n.get("processbox.log.hinweis"));
+					getLogger().error(e.getMessage(), e);
+				} finally {
+					koordinator.setLaeuft(false); // Immer an erste stelle diesen flag zurück
+					// Lazy-Unprotect-Scope schließen: wenn unterwegs entsperrt wurde, jetzt einmal schützen.
+					// Idempotent (No-Op falls kein Scope offen war), eigene try/finally-Robustheit im Manager.
+					BlattschutzManager.get().endCommandScope();
+					koordinator.setRunner(null);
+					koordinator.benachrichtigeListener(); // Menü reaktivieren
+					if (documentDisposed) {
+						logger.debug("SheetRunner-Cleanup: Dokument bereits disposed, keine UI-Updates");
+					} else if ((koordinatorVorgekoppelt && !silentBackground) || isFehler) {
+						// Menü-Aktion oder Fehler: ProcessBox-Fenster sichtbar zeigen
+						if (isFehler) {
+							processBox().visible().fehler(I18n.get("processbox.fehler.status")).ready();
+						} else {
+							processBox().visibleWennAutomatisch().info(I18n.get("processbox.fertig.status")).ready();
+						}
+					} else {
+						// Listener-ausgelöst oder silent-Background: nur in ProcessBox loggen, Fenster NICHT aufpoppen
+						processBox().info(I18n.get("processbox.fertig.status"));
+					}
+					if (isDocumentAlive()) {
+						try {
+							getxCalculatable().enableAutomaticCalculation(true); // falls abgeschaltet wurde
+						} catch (DisposedException e) {
+							documentDisposed = true;
+							logger.debug("Dokument disposed bei enableAutomaticCalculation", e);
+						}
 					}
 				}
 			}
