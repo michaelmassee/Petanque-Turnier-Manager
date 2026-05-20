@@ -170,29 +170,49 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Ordnet die Teams so um, dass Gegner-Wiederholungen minimiert werden (2. Rang).<br>
+     * Ordnet die Teams so um, dass Gegner-Wiederholungen minimiert werden (2. Rang) und
+     * gleichzeitig Doublette gegen Triplette (5er-Partie) nur dort entsteht, wo die
+     * Parität es zwingend erfordert.<br>
      * <br>
-     * Greedy-Algorithmus: Nimm jeweils das erste ungepaarte Team, wähle als Gegner das
-     * ungepaarte Team mit dem geringsten Gegner-Score. Nach der Umsortierung werden die
-     * Gegner paarweise in die Spieler-Objekte eingetragen ({@link Spieler#addGegner}).
+     * Algorithmus:
+     * <ol>
+     *   <li>Teams nach Größe in zwei Gruppen aufteilen (Doublettes / Triplettes).</li>
+     *   <li>Sind beide Gruppen ungerade, wird genau eine 5er-Partie gebildet —
+     *       das D-/T-Paar mit minimalem Gegner-Score.</li>
+     *   <li>Innerhalb jeder Gruppe wird die bisherige Greedy-Paarung
+     *       (Gegner-Score-Minimierung) angewendet.</li>
+     * </ol>
+     * Anschließend werden die Gegner paarweise in die Spieler-Objekte eingetragen
+     * ({@link Spieler#addGegner}).
      *
      * @param spielRunde die zu optimierende Spielrunde (Teams bereits nach Größe sortiert)
      */
     private void optimiereGegnerPaarung(MeleeSpielRunde spielRunde) throws AlgorithmenException {
-        List<Team> unpaired = new ArrayList<>(spielRunde.teams());
-        List<Team> ergebnis = new ArrayList<>(unpaired.size());
-
-        while (!unpaired.isEmpty()) {
-            Team team1 = unpaired.remove(0);
-            Team besteGegner = unpaired.stream()
-                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
-                    .orElse(null);
-            ergebnis.add(team1);
-            if (besteGegner != null) {
-                unpaired.remove(besteGegner);
-                ergebnis.add(besteGegner);
-            }
+        List<Team> doublettes = new ArrayList<>();
+        List<Team> triplettes = new ArrayList<>();
+        for (Team team : spielRunde.teams()) {
+            (team.size() == 2 ? doublettes : triplettes).add(team);
         }
+
+        // Bei ungerader Parität in beiden Gruppen: genau eine 5er-Partie bilden.
+        // Laut SuperMeleeTeamRechner fallen D- und T-Parität immer zusammen, daher
+        // entsteht maximal eine gemischte Paarung pro Runde.
+        Team[] mixedPaar = null;
+        if (doublettes.size() % 2 != 0 && triplettes.size() % 2 != 0) {
+            mixedPaar = besteMischpaarung(doublettes, triplettes);
+            doublettes.remove(mixedPaar[0]);
+            triplettes.remove(mixedPaar[1]);
+        }
+
+        // Reihenfolge: erst alle D-Paare, dann ggf. 5er-Partie, dann alle T-Paare —
+        // bleibt damit aufsteigend nach Teamgröße sortiert.
+        List<Team> ergebnis = new ArrayList<>(spielRunde.teams().size());
+        paareInnerhalbGruppe(doublettes, ergebnis);
+        if (mixedPaar != null) {
+            ergebnis.add(mixedPaar[0]);
+            ergebnis.add(mixedPaar[1]);
+        }
+        paareInnerhalbGruppe(triplettes, ergebnis);
 
         spielRunde.setzeTeamReihenfolge(ergebnis);
 
@@ -212,6 +232,48 @@ public class SuperMeleePaarungenV2 {
                 }
             }
         }
+    }
+
+    /**
+     * Greedy-Paarung innerhalb einer Größen-Gruppe: nimmt jeweils das erste ungepaarte
+     * Team und wählt den Gegner mit minimalem Gegner-Score. Die Gruppe muss gerade
+     * Anzahl Teams enthalten (durch Aufrufer sichergestellt).
+     */
+    private void paareInnerhalbGruppe(List<Team> gruppe, List<Team> ergebnis) {
+        List<Team> unpaired = new ArrayList<>(gruppe);
+        while (!unpaired.isEmpty()) {
+            Team team1 = unpaired.remove(0);
+            Team besteGegner = unpaired.stream()
+                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
+                    .orElse(null);
+            ergebnis.add(team1);
+            if (besteGegner != null) {
+                unpaired.remove(besteGegner);
+                ergebnis.add(besteGegner);
+            }
+        }
+    }
+
+    /**
+     * Wählt aus dem kartesischen Produkt von Doublettes × Triplettes das Paar
+     * mit minimalem {@link #berechneGegnerScore(Team, Team)} — bildet die
+     * unvermeidbare 5er-Partie mit der geringsten gemeinsamen Geschichte.
+     */
+    private Team[] besteMischpaarung(List<Team> doublettes, List<Team> triplettes) {
+        Team bestD = doublettes.get(0);
+        Team bestT = triplettes.get(0);
+        int bestScore = Integer.MAX_VALUE;
+        for (Team d : doublettes) {
+            for (Team t : triplettes) {
+                int score = berechneGegnerScore(d, t);
+                if (score < bestScore) {
+                    bestScore = score;
+                    bestD = d;
+                    bestT = t;
+                }
+            }
+        }
+        return new Team[] { bestD, bestT };
     }
 
     /**
