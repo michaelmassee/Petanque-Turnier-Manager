@@ -7,11 +7,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 /**
  * @author Michael Massee
  *
  */
 public class TurnierEventHandler {
+
+	private static final Logger logger = LogManager.getLogger(TurnierEventHandler.class);
 
 	private final List<ITurnierEventListener> listeners;
 
@@ -33,9 +38,17 @@ public class TurnierEventHandler {
 	 * @param eventObj
 	 */
 	private void onPropertiesChanged(ITurnierEvent eventObj) {
-		for (ITurnierEventListener listner : listeners) {
-			listner.onPropertiesChanged(eventObj);
+		long startNs = System.nanoTime();
+		int anzahl;
+		synchronized (listeners) {
+			anzahl = listeners.size();
+			for (ITurnierEventListener listner : listeners) {
+				listner.onPropertiesChanged(eventObj);
+			}
 		}
+		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+		logger.info("[WORKER-TIMING] TurnierEventHandler.trigger PropertiesChanged: {} ms, listener={}, thread={}",
+				dauerMs, anzahl, Thread.currentThread().getName());
 	}
 
 	public void addTurnierEventListener(ITurnierEventListener listner) {

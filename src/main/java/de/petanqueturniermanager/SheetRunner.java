@@ -167,6 +167,9 @@ public abstract class SheetRunner extends Thread {
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
+			long runStartNs = System.nanoTime();
+			logger.info("[WORKER-TIMING] SheetRunner.run START class={} thread={}",
+					this.getClass().getSimpleName(), Thread.currentThread().getName());
 			registerDisposingListener();
 			koordinator.setRunner(this);
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
@@ -248,6 +251,10 @@ public abstract class SheetRunner extends Thread {
 				}
 			}
 			unregisterDisposingListener();
+
+			long gesamtMs = (System.nanoTime() - runStartNs) / 1_000_000L;
+			logger.info("[WORKER-TIMING] SheetRunner.run ENDE class={} dauer={} ms fehler={}",
+					this.getClass().getSimpleName(), gesamtMs, isFehler);
 
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)

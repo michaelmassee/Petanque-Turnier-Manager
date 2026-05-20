@@ -364,7 +364,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	public ProtocolHandler(XComponentContext xContext) {
 		this.xContext = xContext;
 		SHARED_CONTEXT = xContext;
+		long ctorStartNs = System.nanoTime();
 		PetanqueTurnierMngrSingleton.init(xContext);
+		long t = System.nanoTime();
+		logger.info("[STARTUP-TIMING] ProtocolHandler-ctor PetanqueTurnierMngrSingleton.init: {} ms",
+				(t - ctorStartNs) / 1_000_000L);
 		// Symbolleiste sofort einblenden – deckt das erste Dokument ab, das geöffnet wurde
 		// bevor der GlobalEventListener registriert war (ProtocolHandler wird lazy erzeugt).
 		// Guard: Konstruktor kann von LO's FillToolbar() aufgerufen werden während die Toolbar
@@ -372,7 +376,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// diesem Moment erzeugen Re-Entranz in LO → SIGSEGV. Daher: überspringen wenn Preview aktiv.
 		if (!PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			ToolbarAnzeigenListener.zeigeToolbarInAllenFrames(xContext);
+			long tNachToolbar = System.nanoTime();
+			logger.info("[STARTUP-TIMING] ProtocolHandler-ctor ToolbarAnzeigenListener.zeigeToolbarInAllenFrames: {} ms",
+					(tNachToolbar - t) / 1_000_000L);
+			t = tNachToolbar;
 			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(xContext);
+			long tNachSpieltag = System.nanoTime();
+			logger.info("[STARTUP-TIMING] ProtocolHandler-ctor SpieltagToolbarSteuerung.aktualisiereInAllenFrames: {} ms",
+					(tNachSpieltag - t) / 1_000_000L);
+			t = tNachSpieltag;
 		} else {
 			logger.debug("ProtocolHandler Konstruktor: Druckvorschau aktiv – Toolbar-Initialisierung übersprungen");
 		}
@@ -475,7 +487,13 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				}
 			});
 			SheetRunner.addStateChangeListener(ProtocolHandler::notifyAllListeners);
+			long tNachRegistriert = System.nanoTime();
+			logger.info("[STARTUP-TIMING] ProtocolHandler-ctor REGISTERED-Block (IGlobalEventListener+ITurnierEventListener+SheetRunner): {} ms",
+					(tNachRegistriert - t) / 1_000_000L);
+			t = tNachRegistriert;
 		}
+		long ctorGesamtMs = (System.nanoTime() - ctorStartNs) / 1_000_000L;
+		logger.info("[STARTUP-TIMING] ProtocolHandler-ctor GESAMT={} ms", ctorGesamtMs);
 	}
 
 	// -------------------------------------------------------------------------
@@ -1523,12 +1541,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		return tm.getZustand() == TimerZustand.BEENDET && !tm.getAktuellerZustand().snoozed();
 	}
 
+	private static final AtomicBoolean NOTIFY_ALL_FIRST_LOG = new AtomicBoolean(true);
+
 	static void notifyAllListeners() {
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			logger.debug("notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
 					Thread.currentThread().getName());
 			return;
 		}
+		long startNs = System.nanoTime();
 		Map<String, List<StatusEntry>> snapshot;
 		synchronized (STATUS_LISTENERS) {
 			snapshot = new HashMap<>(STATUS_LISTENERS);
@@ -1538,15 +1559,22 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		// Dokument zeigen → zweites Dokument zeigt falschen Menüzustand (Bug: zweites Dokument
 		// übernimmt Turniersystem-Zustand des ersten Dokuments).
 		var aktivesDokument = holeAktivesDokument();
+		int listenerAnzahl = 0;
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
 				postStatus(e.listener, e.url, isEnabled(entry.getKey(), aktivesDokument));
+				listenerAnzahl++;
 			}
 		}
 		// Spieltag-Toolbar je nach aktivem Turniersystem ein-/ausblenden
 		var ctx = SHARED_CONTEXT;
 		if (ctx != null) {
 			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
+		}
+		if (NOTIFY_ALL_FIRST_LOG.compareAndSet(true, false)) {
+			long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+			logger.info("[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",
+					dauerMs, listenerAnzahl, Thread.currentThread().getName());
 		}
 	}
 

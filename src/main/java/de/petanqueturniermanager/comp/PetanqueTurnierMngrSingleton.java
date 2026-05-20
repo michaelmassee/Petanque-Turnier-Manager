@@ -95,60 +95,80 @@ public class PetanqueTurnierMngrSingleton {
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
+		long initStartNs = System.nanoTime();
+		long t = initStartNs;
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			// only log
 			logger.error(e.getMessage(), e);
 		}
+		t = logTimingAndReset("UIManager.setSystemLookAndFeel", t);
 
 		globalEventListener(context);
+		t = logTimingAndReset("globalEventListener (UNO-Broadcaster)", t);
 		I18n.init(context); // muss vor ProcessBox, da ProcessBox I18n-Texte beim Aufbau verwendet
+		t = logTimingAndReset("I18n.init", t);
 		ProcessBox.init(context);
+		t = logTimingAndReset("ProcessBox.init (UNO-Dialog-Aufbau)", t);
 		TimerManager.init(context);
 		TimerManager.get().addListener(ProcessBox.from());
 		TimerManager.get().addListener(WebServerManager.get());
 		TimerManager.get().addListener(new TimerToolbarSteuerung(context));
 		TimerManager.get().addListener(state -> ProtocolHandler.notifyAllListeners());
+		t = logTimingAndReset("TimerManager.init + 4 Listener", t);
 		TerminateListener.addThisListenerOnce(context);
+		t = logTimingAndReset("TerminateListener.addThisListenerOnce", t);
 		ReleaseUpdateService.init(context);
+		t = logTimingAndReset("ReleaseUpdateService.init (async)", t);
 		if (GlobalProperties.get().isWebserverAktiv()) {
 			WebServerManager.get().starten(context);
+			t = logTimingAndReset("WebServerManager.starten", t);
 		}
 		addGlobalEventListener(new ToolbarAnzeigenListener());
+		t = logTimingAndReset("addGlobalEventListener ToolbarAnzeigenListener", t);
 		addGlobalEventListener(new SidebarAnzeigenListener());
+		t = logTimingAndReset("addGlobalEventListener SidebarAnzeigenListener", t);
 		addGlobalEventListener(SidebarPanelDelegator.get());
+		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
+		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				TurnierSystem.SCHWEIZER,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer),
 				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener SCHWEIZER", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				TurnierSystem.MAASTRICHTER,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener MAASTRICHTER", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				TurnierSystem.POULE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerPoule),
 				(ws, ignored) -> new PouleVorrundenRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener POULE", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
 				TurnierSystem.FORMULEX,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerFormuleX),
 				(ws, ignored) -> new FormuleXRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener FORMULEX", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener JGJ", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerKaskade),
 				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener KASKADE", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
 				spieltagNr -> new RanglisteEingabeSignatur(
@@ -159,11 +179,23 @@ public class PetanqueTurnierMngrSingleton {
 							.orElse(null);
 					return new SpieltagRanglisteSheetUpdate(ws, nr);
 				}));
+		t = logTimingAndReset("RanglisteRefreshListener SUPERMELEE-SPIELTAG", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
 				TurnierSystem.SUPERMELEE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
 				(ws, ignored) -> new EndranglisteSheetUpdate(ws)));
+		logTimingAndReset("RanglisteRefreshListener SUPERMELEE-END", t);
+
+		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
+		logger.info("[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms", initGesamtMs);
+	}
+
+	private static long logTimingAndReset(String abschnitt, long startNs) {
+		long jetzt = System.nanoTime();
+		long dauerMs = (jetzt - startNs) / 1_000_000L;
+		logger.info("[STARTUP-TIMING] {}: {} ms", abschnitt, dauerMs);
+		return jetzt;
 	}
 
 	// register global EventListener

@@ -122,6 +122,7 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
         if (xFrame == null) {
             return;
         }
+        long startNs = System.nanoTime();
         try {
             // Druckvorschau-Frames überspringen: ScPreviewController implementiert XSpreadsheetView nicht
             if (Lo.qi(XSpreadsheetView.class, xFrame.getController()) == null) {
@@ -140,8 +141,9 @@ public class ToolbarAnzeigenListener implements IGlobalEventListener {
             // createElement ist NICHT nötig – LO verwaltet Addon-Toolbars intern via XCU.
             xLayoutManager.showElement(TOOLBAR_RESOURCE_URL);
             boolean result = xLayoutManager.requestElement(TOOLBAR_RESOURCE_URL);
-            logger.debug("zeigeToolbarInFrame '{}': showElement+requestElement={} isVisible={}",
-                    xFrame.getName(), result, xLayoutManager.isElementVisible(TOOLBAR_RESOURCE_URL));
+            long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+            logger.info("[STARTUP-TIMING] zeigeToolbarInFrame '{}': {} ms (showElement+requestElement={} isVisible={})",
+                    xFrame.getName(), dauerMs, result, xLayoutManager.isElementVisible(TOOLBAR_RESOURCE_URL));
         } catch (Exception e) {
             logger.error("Fehler beim Anzeigen der Symbolleiste in Frame '{}'",
                     xFrame.getName(), e);
