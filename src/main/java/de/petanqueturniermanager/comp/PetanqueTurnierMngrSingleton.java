@@ -266,10 +266,25 @@ public class PetanqueTurnierMngrSingleton {
 			globalEventListener.disposing(null);
 		}
 		turnierEventHandler.disposing();
+		sharedContext = null;
 		// didRun zurücksetzen, damit ein erneuter init() nach dispose() wieder
 		// die abhängigen Subsysteme (TimerManager, ProcessBox, …) hochfährt.
 		// Sonst bleibt z.B. TimerManager null und nachfolgende UI-Tests scheitern
 		// in der Sidebar mit "TimerManager nicht initialisiert".
+		didRun.set(false);
+	}
+
+	/**
+	 * Reset des statischen Zustands für UI-Tests. Wird zwischen Test-Klassen aufgerufen
+	 * (BaseCalcUITest.@AfterAll), damit der nachfolgende Test mit frischem LO-Prozess nicht auf
+	 * abgehängte Bridge-Proxies (Dispatcher, sharedContext) der vorherigen Office-Instanz trifft.
+	 * <p>
+	 * Im Unterschied zu {@link #dispose()} ohne Side-effects auf Subsysteme, die im Test-JVM
+	 * gar nicht initialisiert wurden (TimerManager, WebServer, ReleaseUpdateService).
+	 */
+	public static void resetForTest() {
+		turnierEventHandler.disposing();
+		sharedContext = null;
 		didRun.set(false);
 	}
 

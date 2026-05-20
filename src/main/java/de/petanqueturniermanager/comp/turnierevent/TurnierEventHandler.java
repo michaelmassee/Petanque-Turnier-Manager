@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.sun.star.awt.XCallback;
 import com.sun.star.awt.XRequestCallback;
+import com.sun.star.lang.DisposedException;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.SheetRunner;
@@ -139,6 +140,10 @@ public class TurnierEventHandler {
 				dispatcher = Lo.qi(XRequestCallback.class, asyncCallback);
 			} catch (com.sun.star.uno.Exception e) {
 				logger.warn("AsyncCallback-Service nicht verfügbar – Fallback synchron", e);
+			} catch (DisposedException e) {
+				// LO-Bridge tot (z.B. nach Office-Shutdown zwischen UI-Test-Klassen).
+				// Synchroner Fallback. sharedContext bleibt stale; das ist Aufruferproblem.
+				logger.debug("LO-Bridge disposed – Fallback synchron");
 			}
 			return dispatcher;
 		}

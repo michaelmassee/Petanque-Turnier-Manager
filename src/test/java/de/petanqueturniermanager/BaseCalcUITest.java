@@ -33,6 +33,7 @@ import com.sun.star.sheet.XSpreadsheetDocument;
 
 import de.petanqueturniermanager.comp.OfficeDocumentHelper;
 import de.petanqueturniermanager.comp.OfficeStarter;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.exception.GenerateException;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
@@ -193,6 +194,10 @@ public abstract class BaseCalcUITest {
 	@AfterAll
 	public static void shutDown() {
 		BaseCalcUITest.starter.closeOffice();
+		// Static-State der Test-JVM zurücksetzen: turnierEventHandler-Dispatcher und sharedContext
+		// zeigen sonst auf die soeben terminierte LO-Instanz und reißen die nächste Test-Klasse
+		// mit DisposedException ab.
+		PetanqueTurnierMngrSingleton.resetForTest();
 	}
 
 	@AfterEach

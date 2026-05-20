@@ -39,6 +39,8 @@ import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.ConditionalFormatHelper;
 import de.petanqueturniermanager.helper.sheet.EditierbaresZelleFormatHelper;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
+import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
+import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.helper.sheet.SheetFreeze;
 import de.petanqueturniermanager.helper.sheet.TurnierSheet;
 import de.petanqueturniermanager.konfigdialog.ConfigProperty;
@@ -533,16 +535,27 @@ class FormuleXListeDelegate implements MeldeListeKonstanten {
 
     /**
      * Letzte Zeile mit einem nicht-leeren Vorname (Spieler 1) ab ERSTE_DATEN_ZEILE.
+     * Liest die Vorname-Spalte als Block via {@link RangeHelper} statt 500 Einzelzugriffe.
      */
     int letzteZeileMitDaten(XSpreadsheet xSheet) throws GenerateException {
         int vornameSpalte = getVornameSpalte(0);
         int letzte = ERSTE_DATEN_ZEILE - 1;
         int maxZeile = ERSTE_DATEN_ZEILE + 500;
-        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= maxZeile; zeile++) {
-            String vorname = sheet.getSheetHelper().getTextFromCell(xSheet, Position.from(vornameSpalte, zeile));
-            if (vorname != null && !vorname.isEmpty()) {
-                letzte = zeile;
+        RangePosition range = RangePosition.from(vornameSpalte, ERSTE_DATEN_ZEILE, vornameSpalte, maxZeile);
+        RangeData data = RangeHelper.from(xSheet, sheet.getWorkingSpreadsheet().getWorkingSpreadsheetDocument(), range)
+                .getDataFromRange();
+        if (data == null) {
+            return letzte;
+        }
+        int zeile = ERSTE_DATEN_ZEILE;
+        for (RowData row : data) {
+            if (!row.isEmpty()) {
+                String vorname = row.get(0).getStringVal();
+                if (vorname != null && !vorname.isEmpty()) {
+                    letzte = zeile;
+                }
             }
+            zeile++;
         }
         return letzte;
     }
