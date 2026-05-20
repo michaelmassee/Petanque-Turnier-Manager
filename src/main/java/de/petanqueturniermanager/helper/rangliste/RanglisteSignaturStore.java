@@ -75,11 +75,11 @@ public final class RanglisteSignaturStore {
         try {
             DocumentPropertiesHelper props = new DocumentPropertiesHelper(xDoc);
             String jetzt = Instant.now().toString();
-            props.setStringProperty(propName(schluessel, SUFFIX_HASH), hash);
-            props.setStringProperty(propName(schluessel, SUFFIX_REBUILD_TS), jetzt);
-            props.setStringProperty(propName(schluessel, SUFFIX_REASON), reason);
-            props.setStringProperty(propName(schluessel, SUFFIX_VERIFY_TS), jetzt);
-            props.setBooleanProperty(propName(schluessel, SUFFIX_RECOVERY), false);
+            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_HASH), hash);
+            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_REBUILD_TS), jetzt);
+            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_REASON), reason);
+            props.setStringPropertyOhneEvent(propName(schluessel, SUFFIX_VERIFY_TS), jetzt);
+            props.setBooleanPropertyOhneEvent(propName(schluessel, SUFFIX_RECOVERY), false);
         } catch (RuntimeException e) {
             logger.warn("Hash speichern fehlgeschlagen für '{}'", schluessel, e);
         }
@@ -94,7 +94,7 @@ public final class RanglisteSignaturStore {
         checkNotNull(xDoc);
         checkNotNull(schluessel);
         try {
-            new DocumentPropertiesHelper(xDoc).setStringProperty(
+            new DocumentPropertiesHelper(xDoc).setStringPropertyOhneEvent(
                     propName(schluessel, SUFFIX_VERIFY_TS), Instant.now().toString());
         } catch (RuntimeException e) {
             logger.warn("Verify-Zeit aktualisieren fehlgeschlagen für '{}'", schluessel, e);
@@ -171,7 +171,7 @@ public final class RanglisteSignaturStore {
         checkNotNull(xDoc);
         checkNotNull(schluessel);
         try {
-            new DocumentPropertiesHelper(xDoc).setBooleanProperty(
+            new DocumentPropertiesHelper(xDoc).setBooleanPropertyOhneEvent(
                     propName(schluessel, SUFFIX_RECOVERY), true);
         } catch (RuntimeException e) {
             logger.warn("Recovery-Flag setzen fehlgeschlagen für '{}'", schluessel, e);
