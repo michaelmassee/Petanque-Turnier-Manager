@@ -129,7 +129,7 @@ public class TripTeteRanglisteSheet extends SheetRunner implements ISheet {
 
 		ColumnProperties colName = ColumnProperties.from().setWidth(6000);
 		getSheetHelper().setColumnProperties(getXSpreadSheet(), NAME_SPALTE, colName);
-		getSheetHelper().setStringValueInCell(stVal.setColumnProperties(null).setValue("Team").spalte(NAME_SPALTE));
+		getSheetHelper().setStringValueInCell(stVal.setColumnProperties(ColumnProperties.from()).setValue("Team").spalte(NAME_SPALTE));
 
 		getSheetHelper().setStringValueInCell(stVal.setValue("Rang").spalte(RANG_SPALTE));
 		getSheetHelper().setStringValueInCell(stVal.setValue("Beg.-Siege").spalte(BEG_SIEGE_SPALTE));
