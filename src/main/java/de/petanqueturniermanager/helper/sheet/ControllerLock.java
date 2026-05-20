@@ -3,6 +3,9 @@
  */
 package de.petanqueturniermanager.helper.sheet;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.sun.star.frame.XModel;
 import com.sun.star.sheet.XSpreadsheetDocument;
 
@@ -24,6 +27,8 @@ import de.petanqueturniermanager.helper.Lo;
  */
 public final class ControllerLock implements AutoCloseable {
 
+	private static final Logger LOGGER = LogManager.getLogger(ControllerLock.class);
+
 	private final XModel xModel;
 
 	private ControllerLock(XModel xModel) {
@@ -31,21 +36,35 @@ public final class ControllerLock implements AutoCloseable {
 	}
 
 	/**
-	 * Sperrt die Controller des Dokuments. Ist das Dokument oder Model {@code null},
-	 * wird ein No-Op-Lock zurückgegeben (defensiv).
+	 * Sperrt die Controller des Dokuments. Ist das Dokument oder Model {@code null}
+	 * – oder ist das Model bereits disposed – wird ein No-Op-Lock zurückgegeben.
+	 * {@code DisposedException} und sonstige {@link RuntimeException} aus
+	 * {@code lockControllers()} treten beim LO-Shutdown / Dokumentwechsel real auf
+	 * und sollen den Lauf nicht abbrechen.
 	 */
 	public static ControllerLock lock(XSpreadsheetDocument doc) {
 		XModel model = Lo.qi(XModel.class, doc);
-		if (model != null) {
-			model.lockControllers();
+		if (model == null) {
+			return new ControllerLock(null);
 		}
-		return new ControllerLock(model);
+		try {
+			model.lockControllers();
+			return new ControllerLock(model);
+		} catch (RuntimeException e) {
+			LOGGER.debug("lockControllers() fehlgeschlagen – No-Op-Lock", e);
+			return new ControllerLock(null);
+		}
 	}
 
 	@Override
 	public void close() {
-		if (xModel != null) {
+		if (xModel == null) {
+			return;
+		}
+		try {
 			xModel.unlockControllers();
+		} catch (RuntimeException e) {
+			LOGGER.debug("unlockControllers() fehlgeschlagen – ignoriert", e);
 		}
 	}
 }

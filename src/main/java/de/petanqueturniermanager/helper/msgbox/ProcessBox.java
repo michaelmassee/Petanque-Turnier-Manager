@@ -16,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,6 +73,7 @@ public class ProcessBox implements TimerListener {
     private static final Logger logger = LogManager.getLogger(ProcessBox.class);
 
     private static final int AUTO_CLOSE_DELAY_MS = 5000;
+    private static final int AUTO_CLOSE_TICK_MS = 1000;
     private static final int MAX_LOG_CHARS = 50_000;
     private static final String LOG_TRUNCATED_MARKER = "… [gekürzt] …\r\n";
     private static final String TITLE = "Pétanque Turnier Manager";
@@ -193,12 +195,14 @@ public class ProcessBox implements TimerListener {
     private XPropertySet readyImageProps;
     private XPropertySet errorImageProps;
     private XPropertySet stopBtnProps;
+    private XPropertySet abbrechenAutoCloseBtnProps;
 
     /** Postet Runnables auf den LO-Main-Thread (FIFO). Null wenn Init fehlschlug. */
     private XRequestCallback mainThreadDispatcher;
 
     private ScheduledExecutorService autoCloseExec;
     private ScheduledFuture<?> autoCloseTask;
+    private ScheduledFuture<?> autoCloseTickTask;
 
     private ProcessBox(XComponentContext xContext) {
         this.xContext = checkNotNull(xContext);
@@ -341,6 +345,13 @@ public class ProcessBox implements TimerListener {
                     m.setPropertyValue("HelpText", "Stop Verarbeitung");
                     m.setPropertyValue("Enabled", Boolean.FALSE);
                 });
+        // Auto-Close abbrechen — überlagert stopBtn, gegenseitig ausschließend
+        abbrechenAutoCloseBtnProps = addControl(msf, modelContainer, "abbrAcBtn",
+                "com.sun.star.awt.UnoControlButtonModel",
+                DLG_WIDTH - BUTTON_WIDTH - PAD, FOOTER_Y, BUTTON_WIDTH, FOOTER_HEIGHT, m -> {
+                    m.setPropertyValue("Label", "");
+                    m.setPropertyValue("EnableVisible", Boolean.FALSE);
+                });
 
         // Dialog-Control + Peer
         Object dialog = mcf.createInstanceWithContext(
@@ -378,6 +389,10 @@ public class ProcessBox implements TimerListener {
         XButton stopBtn = Lo.qi(XButton.class, controls.getControl("stopBtn"));
         if (stopBtn != null) {
             stopBtn.addActionListener(new ButtonListener(_ -> SheetRunner.cancelRunner()));
+        }
+        XButton abbrAcBtn = Lo.qi(XButton.class, controls.getControl("abbrAcBtn"));
+        if (abbrAcBtn != null) {
+            abbrAcBtn.addActionListener(new ButtonListener(_ -> abbrecheAutoClose()));
         }
     }
 
@@ -616,6 +631,7 @@ public class ProcessBox implements TimerListener {
         }
         isFehler = false;
         stopAutoCloseTask();
+        versteckeAbbrechenAutoCloseBtn();
 
         boolean automatisch = GlobalProperties.get().isProzessBoxAutomatischAnzeigen();
         if (automatisch) {
@@ -738,11 +754,58 @@ public class ProcessBox implements TimerListener {
                 return t;
             });
         }
+
+        int gesamtSekunden = AUTO_CLOSE_DELAY_MS / 1000;
+        zeigeAbbrechenAutoCloseBtn(gesamtSekunden);
+
+        AtomicInteger restSekunden = new AtomicInteger(gesamtSekunden);
+        autoCloseTickTask = autoCloseExec.scheduleAtFixedRate(() -> {
+            if (disposed) return;
+            int rest = restSekunden.decrementAndGet();
+            if (rest <= 0) {
+                ScheduledFuture<?> self = autoCloseTickTask;
+                if (self != null) self.cancel(false);
+                return;
+            }
+            aktualisiereAbbrechenAutoCloseLabel(rest);
+        }, AUTO_CLOSE_TICK_MS, AUTO_CLOSE_TICK_MS, TimeUnit.MILLISECONDS);
+
         autoCloseTask = autoCloseExec.schedule(() -> {
             if (disposed || xWindow == null) return;
             if (laeuft.get() || isFehler) return;
+            versteckeAbbrechenAutoCloseBtn();
             setVisibleInternal(false);
         }, AUTO_CLOSE_DELAY_MS, TimeUnit.MILLISECONDS);
+    }
+
+    private void zeigeAbbrechenAutoCloseBtn(int restSekunden) {
+        if (abbrechenAutoCloseBtnProps == null) return;
+        String label = I18n.get("processbox.autoclose.bleiben", restSekunden);
+        runOnMain(() -> {
+            // stopBtn ausblenden, damit der überlagernde Abbrechen-Button sichtbar wird.
+            setPropertySafe(stopBtnProps, "EnableVisible", Boolean.FALSE);
+            setPropertySafe(abbrechenAutoCloseBtnProps, "Label", label);
+            setPropertySafe(abbrechenAutoCloseBtnProps, "EnableVisible", Boolean.TRUE);
+        });
+    }
+
+    private void aktualisiereAbbrechenAutoCloseLabel(int restSekunden) {
+        if (abbrechenAutoCloseBtnProps == null) return;
+        String label = I18n.get("processbox.autoclose.bleiben", restSekunden);
+        runOnMain(() -> setPropertySafe(abbrechenAutoCloseBtnProps, "Label", label));
+    }
+
+    private void versteckeAbbrechenAutoCloseBtn() {
+        if (abbrechenAutoCloseBtnProps == null) return;
+        runOnMain(() -> {
+            setPropertySafe(abbrechenAutoCloseBtnProps, "EnableVisible", Boolean.FALSE);
+            setPropertySafe(stopBtnProps, "EnableVisible", Boolean.TRUE);
+        });
+    }
+
+    private void abbrecheAutoClose() {
+        stopAutoCloseTask();
+        versteckeAbbrechenAutoCloseBtn();
     }
 
     private void stopAutoCloseTask() {
@@ -750,6 +813,11 @@ public class ProcessBox implements TimerListener {
         if (task != null) {
             task.cancel(false);
             autoCloseTask = null;
+        }
+        ScheduledFuture<?> tick = autoCloseTickTask;
+        if (tick != null) {
+            tick.cancel(false);
+            autoCloseTickTask = null;
         }
     }
 

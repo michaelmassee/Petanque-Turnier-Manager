@@ -157,4 +157,45 @@ public class SpielerSpieltagErgebnisTest {
         assertThat(erg.compareTo(erg)).isZero();
     }
 
+    @Test
+    public void testKonstruktorNegativeSpielerNr() throws Exception {
+        assertThrows(IllegalArgumentException.class,
+                () -> new SpielerSpieltagErgebnis(SpielTagNr.from(1), -3));
+    }
+
+    @Test
+    public void testFluentChaining_setterGebenSelfZurueck() throws Exception {
+        SpielerSpieltagErgebnis erg = SpielerSpieltagErgebnis.from(SpielTagNr.from(1), 1);
+
+        assertThat(erg.setSpielPlus(2)).isSameAs(erg);
+        assertThat(erg.setSpielMinus(1)).isSameAs(erg);
+        assertThat(erg.setPunktePlus(10)).isSameAs(erg);
+        assertThat(erg.setPunkteMinus(5)).isSameAs(erg);
+    }
+
+    @Test
+    public void testCompareTo_gleicherSpielTagUndErgebnisse_niedrigereSpielerNrZuerst() throws Exception {
+        // alle Sort-Kriterien identisch, nur spielerNr unterscheidet sich
+        SpielerSpieltagErgebnis kleinerNr = SpielerSpieltagErgebnis.from(SpielTagNr.from(2), 2);
+        kleinerNr.setSpielPlus(3).setSpielMinus(1).setPunktePlus(13).setPunkteMinus(7);
+
+        SpielerSpieltagErgebnis groessereNr = SpielerSpieltagErgebnis.from(SpielTagNr.from(2), 9);
+        groessereNr.setSpielPlus(3).setSpielMinus(1).setPunktePlus(13).setPunkteMinus(7);
+
+        assertThat(kleinerNr.compareTo(groessereNr)).isNegative();
+        assertThat(groessereNr.compareTo(kleinerNr)).isPositive();
+    }
+
+    @Test
+    public void testCompareTo_nachPunktePlusBeiGleichemPunkteDiv() throws Exception {
+        // gleiche SpielPlus, SpielDiv, PunkteDiv -> PunktePlus entscheidet
+        SpielerSpieltagErgebnis besser = SpielerSpieltagErgebnis.from(SpielTagNr.from(1), 1);
+        besser.setSpielPlus(3).setSpielMinus(1).setPunktePlus(25).setPunkteMinus(15); // PunkteDiv=10, Plus=25
+
+        SpielerSpieltagErgebnis schlechter = SpielerSpieltagErgebnis.from(SpielTagNr.from(1), 2);
+        schlechter.setSpielPlus(3).setSpielMinus(1).setPunktePlus(20).setPunkteMinus(10); // PunkteDiv=10, Plus=20
+
+        assertThat(besser.compareTo(schlechter)).isNegative();
+    }
+
 }
