@@ -236,6 +236,15 @@ public class PetanqueTurnierMngrSingleton {
 		turnierEventHandler.removeTurnierEventListener(listner);
 	}
 
+	/**
+	 * Feuert einen ggf. während eines aktiven {@code SheetRunner}-Laufs
+	 * koaleszierten TurnierEvent. Wird aus dem {@code SheetRunner}-{@code finally}-
+	 * Block aufgerufen, nachdem der ControllerLock freigegeben wurde.
+	 */
+	public static void flushPendingTurnierEvent() {
+		turnierEventHandler.flushPending();
+	}
+
 	public static void triggerTurnierEventListener(TurnierEventType type, ITurnierEvent eventObj) {
 		turnierEventHandler.trigger(type, eventObj);
 	}

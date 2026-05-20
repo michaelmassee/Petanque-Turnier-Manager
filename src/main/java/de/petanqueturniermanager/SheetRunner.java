@@ -19,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -235,6 +236,17 @@ public abstract class SheetRunner extends Thread {
 						documentDisposed = true;
 						logger.debug("Dokument disposed bei enableAutomaticCalculation", e);
 					}
+				}
+			}
+			// Während des Laufs koaleszierte TurnierEvents jetzt einmal feuern.
+			// isRunning() ist hier bereits false (im finally gesetzt), der Dispatch
+			// erfolgt über AsyncCallback auf den LO-Main-Thread und kollidiert daher
+			// nicht mit den Aufräumarbeiten dieses Worker-Threads.
+			if (isDocumentAlive()) {
+				try {
+					PetanqueTurnierMngrSingleton.flushPendingTurnierEvent();
+				} catch (RuntimeException e) {
+					getLogger().warn("Fehler beim flushPendingTurnierEvent: " + e.getMessage(), e);
 				}
 			}
 			if (isDocumentAlive()) {
