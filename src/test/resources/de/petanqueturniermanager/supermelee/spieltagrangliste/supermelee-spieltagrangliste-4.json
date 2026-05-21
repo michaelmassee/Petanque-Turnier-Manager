@@ -117,13 +117,42 @@
   ],
   [
     {
+      "data": 68.0
+    },
+    {
+      "data": "Wonneberger, Anneke"
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 2.0
+    },
+    {
+      "data": 9.0
+    }
+  ],
+  [
+    {
       "data": 28.0
     },
     {
       "data": "Eisenhardt, Annkatrin"
     },
     {
-      "data": 2.0
+      "data": 3.0
     },
     {
       "data": 10.0
@@ -142,35 +171,6 @@
     },
     {
       "data": 0.0
-    }
-  ],
-  [
-    {
-      "data": 138.0
-    },
-    {
-      "data": "Husmann, Isedore"
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 9.0
     }
   ],
   [
@@ -204,13 +204,42 @@
   ],
   [
     {
+      "data": 54.0
+    },
+    {
+      "data": "Doege, Evi"
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 4.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 12.0
+    },
+    {
+      "data": 9.0
+    }
+  ],
+  [
+    {
       "data": 85.0
     },
     {
       "data": "Linder, Roger"
     },
     {
-      "data": 5.0
+      "data": 6.0
     },
     {
       "data": 9.0
@@ -233,13 +262,13 @@
   ],
   [
     {
-      "data": 145.0
+      "data": 138.0
     },
     {
-      "data": "Bieder, Maria"
+      "data": "Husmann, Isedore"
     },
     {
-      "data": 6.0
+      "data": 7.0
     },
     {
       "data": 9.0
@@ -254,39 +283,10 @@
       "data": 8.0
     },
     {
-      "data": 0.0
+      "data": 12.0
     },
     {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 78.0
-    },
-    {
-      "data": "Heering, Marielene"
-    },
-    {
-      "data": 7.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 11.0
-    },
-    {
-      "data": 0.0
+      "data": 9.0
     }
   ],
   [
@@ -320,31 +320,31 @@
   ],
   [
     {
-      "data": 68.0
+      "data": 78.0
     },
     {
-      "data": "Wonneberger, Anneke"
+      "data": "Heering, Marielene"
     },
     {
       "data": 9.0
-    },
-    {
-      "data": 10.0
     },
     {
       "data": 3.0
     },
     {
-      "data": 1.0
+      "data": 10.0
     },
     {
-      "data": 9.0
+      "data": 10.0
     },
     {
-      "data": 2.0
+      "data": 8.0
     },
     {
-      "data": 9.0
+      "data": 11.0
+    },
+    {
+      "data": 0.0
     }
   ],
   [
@@ -407,16 +407,45 @@
   ],
   [
     {
-      "data": 164.0
+      "data": 151.0
     },
     {
-      "data": "Krauss, Siegulf"
+      "data": "Döll, Muthild"
     },
     {
       "data": 12.0
     },
     {
+      "data": 10.0
+    },
+    {
       "data": 3.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
+    }
+  ],
+  [
+    {
+      "data": 155.0
+    },
+    {
+      "data": "Daum, Petra"
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 4.0
     },
     {
       "data": 9.0
@@ -425,13 +454,42 @@
       "data": 10.0
     },
     {
-      "data": 8.0
-    },
-    {
-      "data": 11.0
+      "data": 0.0
     },
     {
       "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 100.0
+    },
+    {
+      "data": "Matthiessen, Annehilde"
+    },
+    {
+      "data": 14.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
     }
   ],
   [
@@ -442,7 +500,7 @@
       "data": "Goetze, Eustachius"
     },
     {
-      "data": 13.0
+      "data": 15.0
     },
     {
       "data": 0.0
@@ -465,68 +523,10 @@
   ],
   [
     {
-      "data": 151.0
+      "data": 145.0
     },
     {
-      "data": "Döll, Muthild"
-    },
-    {
-      "data": 14.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 11.0
-    }
-  ],
-  [
-    {
-      "data": 54.0
-    },
-    {
-      "data": "Doege, Evi"
-    },
-    {
-      "data": 15.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
-    },
-    {
-      "data": 9.0
-    }
-  ],
-  [
-    {
-      "data": 100.0
-    },
-    {
-      "data": "Matthiessen, Annehilde"
+      "data": "Bieder, Maria"
     },
     {
       "data": 16.0
@@ -538,16 +538,16 @@
       "data": 3.0
     },
     {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
       "data": 0.0
     },
     {
       "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 11.0
     }
   ],
   [
@@ -573,39 +573,10 @@
       "data": 10.0
     },
     {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 108.0
-    },
-    {
-      "data": "Wels, Bianka"
-    },
-    {
-      "data": 18.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 10.0
-    },
-    {
       "data": 0.0
     },
     {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
+      "data": 11.0
     }
   ],
   [
@@ -616,7 +587,7 @@
       "data": "Molz, Kornelia"
     },
     {
-      "data": 19.0
+      "data": 18.0
     },
     {
       "data": 4.0
@@ -639,13 +610,71 @@
   ],
   [
     {
-      "data": 157.0
+      "data": 164.0
     },
     {
-      "data": "Tafel, Rosa"
+      "data": "Krauss, Siegulf"
+    },
+    {
+      "data": 19.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 1.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 11.0
+    },
+    {
+      "data": 0.0
+    }
+  ],
+  [
+    {
+      "data": 158.0
+    },
+    {
+      "data": "Petter, Roseliese"
     },
     {
       "data": 20.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    }
+  ],
+  [
+    {
+      "data": 108.0
+    },
+    {
+      "data": "Wels, Bianka"
+    },
+    {
+      "data": 21.0
     },
     {
       "data": 3.0
@@ -660,68 +689,10 @@
       "data": 8.0
     },
     {
-      "data": 9.0
-    },
-    {
-      "data": 12.0
-    }
-  ],
-  [
-    {
-      "data": 155.0
-    },
-    {
-      "data": "Daum, Petra"
-    },
-    {
-      "data": 21.0
-    },
-    {
-      "data": 4.0
-    },
-    {
-      "data": 9.0
-    },
-    {
-      "data": 1.0
-    },
-    {
-      "data": 9.0
-    },
-    {
       "data": 0.0
     },
     {
-      "data": 13.0
-    }
-  ],
-  [
-    {
-      "data": 158.0
-    },
-    {
-      "data": "Petter, Roseliese"
-    },
-    {
-      "data": 22.0
-    },
-    {
-      "data": 10.0
-    },
-    {
-      "data": 3.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
-    },
-    {
-      "data": 0.0
-    },
-    {
-      "data": 13.0
+      "data": 11.0
     }
   ],
   [
@@ -732,7 +703,7 @@
       "data": "Puls, Gaby"
     },
     {
-      "data": 23.0
+      "data": 22.0
     },
     {
       "data": 3.0
@@ -761,7 +732,7 @@
       "data": "Bohnet, Collin"
     },
     {
-      "data": 24.0
+      "data": 23.0
     },
     {
       "data": 0.0
@@ -780,6 +751,35 @@
     },
     {
       "data": 11.0
+    }
+  ],
+  [
+    {
+      "data": 139.0
+    },
+    {
+      "data": "Rackow, Jil"
+    },
+    {
+      "data": 24.0
+    },
+    {
+      "data": 3.0
+    },
+    {
+      "data": 10.0
+    },
+    {
+      "data": 0.0
+    },
+    {
+      "data": 13.0
+    },
+    {
+      "data": 9.0
+    },
+    {
+      "data": 12.0
     }
   ],
   [
@@ -813,10 +813,10 @@
   ],
   [
     {
-      "data": 139.0
+      "data": 157.0
     },
     {
-      "data": "Rackow, Jil"
+      "data": "Tafel, Rosa"
     },
     {
       "data": 26.0
@@ -828,10 +828,10 @@
       "data": 10.0
     },
     {
-      "data": 0.0
+      "data": 1.0
     },
     {
-      "data": 13.0
+      "data": 9.0
     },
     {
       "data": 0.0
