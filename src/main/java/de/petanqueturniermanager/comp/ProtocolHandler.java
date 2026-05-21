@@ -923,11 +923,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			case CMD_KONFIGURATION_FARBEN:
 				handleKonfiguration(command, ws);
 				break;
-			case CMD_KONFIGURATION_TURNIER_STARTSEITE:
-				handleKonfiguration(command, ws);
-				break;
 			// ------------------------------
-			// Spieler-DB-Aktionen werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
+			// Spieler-DB-Aktionen und Turnier-Startseite werden in behandleDialogBefehl() ohne ProcessBox abgewickelt.
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				handleKonfiguration(command, ws);
 				break;
@@ -1010,6 +1007,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private boolean behandleDialogBefehl(String command) throws com.sun.star.uno.Exception {
 		switch (command) {
 			case CMD_PLUGIN_KONFIGURATION -> new GlobalPropertiesDialog(xContext).zeigen();
+			case CMD_KONFIGURATION_TURNIER_STARTSEITE ->
+					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
 			case CMD_TOOLBAR_START        -> new TurnierSystemAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI -> new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
@@ -1205,9 +1204,6 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 				break;
 			case CMD_KONFIGURATION_FARBEN:
 				new FarbenDialog(ws).createDialog();
-				break;
-			case CMD_KONFIGURATION_TURNIER_STARTSEITE:
-				new TurnierStartseiteDialog(ws).zeigen();
 				break;
 			case CMD_KONFIGURATION_UPDATE_ERSTELLT_MIT_VERSION:
 				DocumentHelper.setDocErstelltMitVersion(ws);
