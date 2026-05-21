@@ -163,6 +163,52 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
+     * Notnagel-Paarung: erzeugt eine <b>rein zufällige</b> Spielrunde ohne jegliche
+     * Constraint-Prüfung (Mitspieler-/Gegner-Wiederholungen und Setz-Positionen
+     * werden ignoriert). Wird vom Auslosungs-Retry in {@code SpielrundeDelegate}
+     * aufgerufen, wenn auch nach vollständiger Lockerung der Spieltag-Historie
+     * keine konfliktfreie Paarung gefunden werden kann.
+     *
+     * @param rndNr           Rundennummer
+     * @param meldungen       gemeldete Spieler (Historie/Team werden zurückgesetzt)
+     * @param doubletteRunde  {@code true}: 2er-Modus, sonst Triplette-Modus
+     * @return zufällig befüllte Spielrunde
+     * @throws AlgorithmenException nur bei ungültiger Spieleranzahl
+     */
+    public MeleeSpielRunde erzeugeZufallsRunde(int rndNr, SpielerMeldungen meldungen, boolean doubletteRunde)
+            throws AlgorithmenException {
+        checkNotNull(meldungen, "Meldungen = null");
+        SuperMeleeMode mode = doubletteRunde ? SuperMeleeMode.Doublette : SuperMeleeMode.Triplette;
+        SuperMeleeTeamRechner rechner = new SuperMeleeTeamRechner(meldungen.spieler().size(), mode);
+        if (!rechner.valideAnzahlSpieler()) {
+            throw new AlgorithmenException(I18n.get(
+                    doubletteRunde ? "error.algorithmus.spieleranzahl.doublette"
+                            : "error.algorithmus.spieleranzahl.triplette",
+                    meldungen.spieler().size()));
+        }
+
+        meldungen.resetTeam();
+        List<Spieler> shuffled = new ArrayList<>(meldungen.spieler());
+        Collections.shuffle(shuffled, RandomSource.asJavaRandom());
+
+        MeleeSpielRunde runde = new MeleeSpielRunde(rndNr);
+        int idx = 0;
+        for (int t = 0; t < rechner.getAnzTriplette(); t++) {
+            Team team = runde.newTeam();
+            for (int s = 0; s < 3; s++) {
+                team.addSpielerWennNichtVorhanden(shuffled.get(idx++));
+            }
+        }
+        for (int t = 0; t < rechner.getAnzDoublette(); t++) {
+            Team team = runde.newTeam();
+            for (int s = 0; s < 2; s++) {
+                team.addSpielerWennNichtVorhanden(shuffled.get(idx++));
+            }
+        }
+        return runde;
+    }
+
+    /**
      * Sortiert die Teams nach Größe, validiert die Spieler-Team-Zuordnung und
      * optimiert die Gegner-Paarung (2. Rang: Gegner-Wiederholungen minimieren).
      * Wird von allen öffentlichen Methoden nach der Generierung aufgerufen.

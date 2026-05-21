@@ -232,18 +232,33 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 			}
 		}
 
+		boolean randomFallbackAktiv = false;
 		if (meleeSpielRunde == null) {
-			logger.error(lastEx.getMessage(), lastEx);
-			sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
-			sheet.getSheetHelper().removeSheet(getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()));
-			konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(sheet.getSpielRundeNr().getNr() - 1));
-			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
-					.caption(I18n.get("msg.caption.fehler.auslosen"))
-					.message(lastEx.getMessage()).show();
-			throw new RuntimeException(lastEx);
+			logger.warn("Auslosung mit Lockerung gescheitert — erzeuge Zufalls-Spielplan. Ursache: {}",
+					lastEx.getMessage());
+			try {
+				meldungen.resetTeam();
+			} catch (AlgorithmenException resetEx) {
+				logger.error(resetEx.getMessage(), resetEx);
+				throw new GenerateException(I18n.get("error.spielrunde.einlesen"));
+			}
+			meldungen.resetAllHistorie();
+			try {
+				meleeSpielRunde = paarungen.erzeugeZufallsRunde(neueSpielrundeNr.getNr(), meldungen, doubletteRunde);
+			} catch (AlgorithmenException randomEx) {
+				logger.error(randomEx.getMessage(), randomEx);
+				sheet.getSheetHelper().setActiveSheet(getMeldeListe().getXSpreadSheet());
+				sheet.getSheetHelper().removeSheet(getSheetName(sheet.getSpielTag(), sheet.getSpielRundeNr()));
+				konfigurationSheet.setAktiveSpielRunde(SpielRundeNr.from(sheet.getSpielRundeNr().getNr() - 1));
+				MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.ERROR_OK)
+						.caption(I18n.get("msg.caption.fehler.auslosen"))
+						.message(randomEx.getMessage()).show();
+				throw new RuntimeException(randomEx);
+			}
+			randomFallbackAktiv = true;
 		}
 
-		if (effMaxSpieltage < urspruenglichMaxSpieltage) {
+		if (!randomFallbackAktiv && effMaxSpieltage < urspruenglichMaxSpieltage) {
 			logger.info("Auslosung erfolgreich nach Lockerung: maxAnzGespielteSpieltage {} → {}",
 					urspruenglichMaxSpieltage, effMaxSpieltage);
 			sheet.processBoxinfo("processbox.spielrunde.lockerung.uebernommen",
@@ -268,6 +283,15 @@ class SpielrundeDelegate implements SpielrundeSheetKonstanten {
 		printBereichDefinieren(sheet.getXSpreadSheet());
 		if (konfigurationSheet.getSpielrundePlan()) {
 			new SpielrundePlan(sheet.getWorkingSpreadsheet()).generate();
+		}
+
+		if (randomFallbackAktiv) {
+			MessageBox.from(sheet.getxContext(), MessageBoxTypeEnum.WARN_OK)
+					.forceOk(force)
+					.caption(I18n.get("msg.caption.zufalls.spielplan"))
+					.message(I18n.get("msg.text.zufalls.spielplan",
+							sheet.getSpielTag().getNr(), neueSpielrundeNr.getNr()))
+					.show();
 		}
 		return true;
 	}
