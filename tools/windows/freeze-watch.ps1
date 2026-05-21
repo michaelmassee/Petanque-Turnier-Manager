@@ -33,8 +33,10 @@ function Write-WatcherLog([string] $line) {
     "$ts  $line" | Out-File -FilePath $watcherLog -Append -Encoding UTF8
 }
 
-# jcmd / jhsdb lokalisieren (kompatibel zu PS5.1 -- kein ?.-Operator).
-# 'jstack -F' ist in modernen JDKs entfernt; Ersatz ist 'jhsdb jstack --pid'.
+# jcmd / jhsdb / procdump lokalisieren. 'jstack -F' ist in modernen JDKs
+# entfernt; Ersatz ist 'jhsdb jstack --pid'. jhsdb braucht u.U. Admin und
+# scheitert sonst mit 'WaitForEvent failed (0x80070057)'. Als letzten Anker
+# nutzen wir Sysinternals procdump (Minidump, kein JVM-Mitwirken noetig).
 $jcmdCmd = Get-Command jcmd -ErrorAction SilentlyContinue
 if (-not $jcmdCmd) {
     Write-WatcherLog 'FEHLER: jcmd nicht im PATH gefunden.'
@@ -43,8 +45,11 @@ if (-not $jcmdCmd) {
 $jcmd = $jcmdCmd.Source
 $jhsdbCmd = Get-Command jhsdb -ErrorAction SilentlyContinue
 $jhsdb = if ($jhsdbCmd) { $jhsdbCmd.Source } else { $null }
-Write-WatcherLog "jcmd:  $jcmd"
-Write-WatcherLog "jhsdb: $jhsdb"
+$procdumpCmd = Get-Command procdump.exe -ErrorAction SilentlyContinue
+$procdump = if ($procdumpCmd) { $procdumpCmd.Source } else { $null }
+Write-WatcherLog "jcmd:     $jcmd"
+Write-WatcherLog "jhsdb:    $jhsdb"
+Write-WatcherLog "procdump: $procdump"
 
 # Thread-Dump mit Timeout. Wenn jcmd haengt (JVM wedged), nicht warten -- killen
 # und mit 'jhsdb jstack --pid' (HotSpot-Serviceability-Agent) probieren.
@@ -71,12 +76,36 @@ function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSe
             $proc2 = [System.Diagnostics.Process]::Start($info2)
             if (-not $proc2.WaitForExit(30 * 1000)) {
                 try { $proc2.Kill() } catch { }
-                Write-WatcherLog 'jhsdb jstack ebenfalls TIMEOUT (30s)'
-                return @{ rc = -2; lines = 0 }
+                Write-WatcherLog 'jhsdb jstack TIMEOUT (30s) -- versuche procdump'
             }
-            $out = $proc2.StandardOutput.ReadToEnd() + $proc2.StandardError.ReadToEnd()
-            [System.IO.File]::WriteAllText($outFile, $out)
-            return @{ rc = $proc2.ExitCode; lines = ($out -split "`n").Count }
+            else {
+                $out = $proc2.StandardOutput.ReadToEnd() + $proc2.StandardError.ReadToEnd()
+                if ($proc2.ExitCode -eq 0 -and ($out -notmatch 'WaitForEvent failed')) {
+                    [System.IO.File]::WriteAllText($outFile, $out)
+                    return @{ rc = $proc2.ExitCode; lines = ($out -split "`n").Count }
+                }
+                Write-WatcherLog "jhsdb jstack rc=$($proc2.ExitCode), output suggests failure -- versuche procdump"
+            }
+        }
+        # procdump-Fallback: Minidump, das man offline mit WinDbg / Analyser
+        # untersuchen kann. Braucht kein Mitwirken der JVM.
+        if ($procdump) {
+            $dumpDmp = $outFile -replace '\.txt$', '.dmp'
+            $info3 = New-Object System.Diagnostics.ProcessStartInfo
+            $info3.FileName = $procdump
+            $info3.Arguments = "-accepteula -ma $targetPid `"$dumpDmp`""
+            $info3.RedirectStandardOutput = $true
+            $info3.RedirectStandardError = $true
+            $info3.UseShellExecute = $false
+            $info3.CreateNoWindow = $true
+            $proc3 = [System.Diagnostics.Process]::Start($info3)
+            if ($proc3.WaitForExit(60 * 1000)) {
+                $pdOut = $proc3.StandardOutput.ReadToEnd() + $proc3.StandardError.ReadToEnd()
+                [System.IO.File]::WriteAllText($outFile, "procdump rc=$($proc3.ExitCode)`n$pdOut")
+                return @{ rc = $proc3.ExitCode; lines = ($pdOut -split "`n").Count }
+            }
+            try { $proc3.Kill() } catch { }
+            Write-WatcherLog 'procdump TIMEOUT (60s)'
         }
         return @{ rc = -1; lines = 0 }
     }

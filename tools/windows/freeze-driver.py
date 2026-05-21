@@ -148,7 +148,7 @@ def dispatch(ctx, frame, url, log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DEF
         helper.executeDispatch(frame, url, "", 0, ())
 
 
-def wait_for_idle(ptm_log_path, log, max_wait_s=300.0, quiet_s=5.0,
+def wait_for_idle(ptm_log_path, log, max_wait_s=300.0, quiet_s=15.0,
                   fallback_sleep_s=90.0):
     """Wartet, bis das PTM-Log fuer mindestens quiet_s Sekunden nicht mehr
     waechst (Quiescence) -- robusterer Indikator als '**FERTIG**' (das kommt

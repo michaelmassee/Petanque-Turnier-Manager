@@ -93,6 +93,12 @@ else {
 $env:SAL_LOG = '+INFO.vcl+INFO.framework+INFO.svtools+INFO.sd'
 $env:SAL_LOG_FILE = (Join-Path $outDir 'soffice.log')
 
+# JDWP an der LO-eingebetteten JVM aktivieren. Vorteil: der JDWP-Thread im
+# JVM ist von den Main-Threads getrennt -- selbst wenn AWT/VCL deadlocken,
+# antwortet er weiterhin und liefert Thread-Stacks. Port 5005, kein suspend.
+$env:JAVA_TOOL_OPTIONS = '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+Write-Master "JAVA_TOOL_OPTIONS=$env:JAVA_TOOL_OPTIONS"
+
 # soffice mit URP-Listener starten
 $accept = "socket,host=127.0.0.1,port=$UrpPort;urp;"
 $sofficeArgs = @(

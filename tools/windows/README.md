@@ -36,6 +36,7 @@ wird erzwungen, alle Logs landen in einem Ordner und werden gezippt.
 | JDK mit `jcmd` im PATH | Adoptium 25 (laut Log bereits da) |
 | PowerShell 5+ | Bordmittel |
 | Optional: Sysinternals `Procmon.exe` | per `winget install Microsoft.Sysinternals.ProcessMonitor` |
+| **Empfohlen:** Sysinternals `procdump.exe` | per `winget install Microsoft.Sysinternals.ProcDump` -- Minidump bei wedged JVM |
 
 ## Aufruf
 
@@ -91,6 +92,26 @@ LO bringt unter `program\python.exe` einen kompletten Python-Interpreter mit
 Windows. Eine reine PowerShell-UNO-Anbindung wäre nur über die
 .NET-COM-Bridge möglich, die fragil und schlecht dokumentiert ist. Der Master
 bleibt PowerShell (orchestriert, sammelt Logs, ZIP).
+
+## Thread-Dump trotz wedged JVM erzwingen
+
+Der Watcher faellt in dieser Reihenfolge zurueck:
+
+1. `jcmd <pid> Thread.print` -- braucht kooperative JVM. Bei Wedge: Timeout 10s.
+2. `jhsdb jstack --pid <pid>` -- HotSpot Serviceability Agent. Auf Windows oft
+   nur als Admin erfolgreich; sonst `WaitForEvent failed (0x80070057)`.
+3. `procdump -ma <pid>` -- voller Prozess-Minidump. Kein JVM-Mitwirken noetig.
+   `.dmp`-Datei spaeter offline mit WinDbg + SOS oder `jhsdb hsdb` auswerten.
+
+Parallel ist im LO-JVM JDWP auf Port 5005 aktiv (gesetzt via
+`JAVA_TOOL_OPTIONS`). Wenn der Hauptthread-Pfad deadlockt, kann der
+JDWP-Thread oft trotzdem antworten:
+
+```powershell
+jdb -attach 127.0.0.1:5005
+> threads
+> where all
+```
 
 ## Was tun, wenn der Freeze reproduziert wird
 
