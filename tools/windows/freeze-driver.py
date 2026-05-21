@@ -130,65 +130,38 @@ def dispatch(ctx, frame, url, log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DEF
         helper.executeDispatch(frame, url, "", 0, ())
 
 
-def get_operation_invoker(ctx, log):
-    """PtmPublicService.isOperationAktiv() ist NICHT in einem UNO-IDL-Interface
-    deklariert -- direkte Methodenaufrufe aus pyuno schlagen mit AttributeError
-    fehl. Stattdessen ueber com.sun.star.script.Invocation (XInvocation), so wie
-    Basic-Makros das auch tun.
+def wait_for_idle(ptm_log_path, log, max_wait_s=300.0, quiet_s=5.0,
+                  fallback_sleep_s=90.0):
+    """Wartet, bis das PTM-Log fuer mindestens quiet_s Sekunden nicht mehr
+    waechst (Quiescence) -- robusterer Indikator als '**FERTIG**' (das kommt
+    pro Spieltag, nicht nur am Ende).
 
-    Liefert eine callable(), die isOperationAktiv() aufruft, oder None.
+    Fallback, falls Log nicht erreichbar: fester Sleep.
     """
-    smgr = ctx.ServiceManager
-    try:
-        svc = smgr.createInstanceWithContext(
-            "de.petanqueturniermanager.PublicService", ctx
-        )
-        if svc is None:
-            log.write("PtmPublicService: createInstance liefert None")
-            return None
-        inv_factory = smgr.createInstanceWithContext(
-            "com.sun.star.script.Invocation", ctx
-        )
-        inv = inv_factory.createInstanceWithArguments((svc,))
-        # Schnell-Smoketest
-        result, _, _ = inv.invoke("isOperationAktiv", (), [], [])
-        log.write(f"PtmPublicService via Invocation OK (initial={bool(result)})")
-        def call():
-            r, _, _ = inv.invoke("isOperationAktiv", (), [], [])
-            return bool(r)
-        return call
-    except Exception as e:
-        log.write(f"PtmPublicService nicht nutzbar ({type(e).__name__}: {e})")
-        return None
-
-
-def wait_for_idle(invoker, log, timeout_s=300.0, poll_s=1.0, fallback_sleep_s=60.0):
-    """Wartet, bis SheetRunner nicht mehr aktiv ist.
-
-    Wenn der Invoker fehlt oder waehrend des Polling Fehler wirft, faellt es
-    auf eine fixe Sleep-Dauer zurueck statt sofort zurueckzukehren.
-    """
-    if invoker is None:
-        log.write(f"wait_for_idle: kein Invoker, sleep {fallback_sleep_s}s")
+    if not ptm_log_path or not os.path.exists(ptm_log_path):
+        log.write(f"wait_for_idle: PTM-Log fehlt ({ptm_log_path}) "
+                  f"-- fallback sleep {fallback_sleep_s}s")
         time.sleep(fallback_sleep_s)
         return
-    deadline = time.time() + timeout_s
-    started_active = False
+    deadline = time.time() + max_wait_s
+    last_size = -1
+    last_change = time.time()
     while time.time() < deadline:
         try:
-            aktiv = invoker()
-        except Exception as e:
-            log.write(f"isOperationAktiv-Fehler: {type(e).__name__}: {e} "
-                      f"-- fallback sleep {fallback_sleep_s}s")
+            sz = os.path.getsize(ptm_log_path)
+        except OSError as e:
+            log.write(f"wait_for_idle: getsize-Fehler {e} -- fallback sleep")
             time.sleep(fallback_sleep_s)
             return
-        if aktiv:
-            started_active = True
-        elif started_active:
-            log.write("wait_for_idle: SheetRunner idle")
+        now = time.time()
+        if sz != last_size:
+            last_size = sz
+            last_change = now
+        elif now - last_change >= quiet_s:
+            log.write(f"wait_for_idle: PTM-Log quiet seit {quiet_s}s (idle)")
             return
-        time.sleep(poll_s)
-    log.write(f"WARN: SheetRunner nach {timeout_s}s noch aktiv")
+        time.sleep(0.5)
+    log.write(f"WARN: PTM-Log nicht quiet binnen {max_wait_s}s")
 
 
 def list_sheets(doc, log, freeze_flag):
@@ -235,15 +208,13 @@ def run(args):
         ctx = connect(log)
         desktop, doc = open_calc(ctx, log, freeze_flag)
         frame = doc.getCurrentController().getFrame()
-        isAktiv = get_operation_invoker(ctx, log)
-
         for it in range(1, args.iterations + 1):
             log.write(f"=== Iteration {it}/{args.iterations} ===")
             dispatch(
                 ctx, frame, "ptm:SpieltagRanglisteSheet_TestDaten",
                 log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DISPATCH_S,
             )
-            wait_for_idle(isAktiv, log)
+            wait_for_idle(args.ptm_log, log)
             sheet_storm(doc, log, freeze_flag, rng)
             if os.path.exists(freeze_flag):
                 log.write("Freeze-Flag gesetzt -- Abbruch der Iterationen.")
@@ -270,7 +241,7 @@ def main():
     parser.add_argument("--iterations", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--ptm-log", default="",
-                        help="Pfad zum PTM-Plugin-Log (legacy, nicht mehr benutzt)")
+                        help="Pfad zum PTM-Plugin-Log (Quiescence-Detektion fuer wait_for_idle)")
     args = parser.parse_args()
     if not os.path.isdir(args.output_dir):
         print(f"output-dir existiert nicht: {args.output_dir}", file=sys.stderr)

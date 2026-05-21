@@ -33,20 +33,21 @@ function Write-WatcherLog([string] $line) {
     "$ts  $line" | Out-File -FilePath $watcherLog -Append -Encoding UTF8
 }
 
-# jcmd / jstack lokalisieren (kompatibel zu PS5.1 -- kein ?.-Operator)
+# jcmd / jhsdb lokalisieren (kompatibel zu PS5.1 -- kein ?.-Operator).
+# 'jstack -F' ist in modernen JDKs entfernt; Ersatz ist 'jhsdb jstack --pid'.
 $jcmdCmd = Get-Command jcmd -ErrorAction SilentlyContinue
 if (-not $jcmdCmd) {
     Write-WatcherLog 'FEHLER: jcmd nicht im PATH gefunden.'
     exit 1
 }
 $jcmd = $jcmdCmd.Source
-$jstackCmd = Get-Command jstack -ErrorAction SilentlyContinue
-$jstack = if ($jstackCmd) { $jstackCmd.Source } else { $null }
-Write-WatcherLog "jcmd:   $jcmd"
-Write-WatcherLog "jstack: $jstack"
+$jhsdbCmd = Get-Command jhsdb -ErrorAction SilentlyContinue
+$jhsdb = if ($jhsdbCmd) { $jhsdbCmd.Source } else { $null }
+Write-WatcherLog "jcmd:  $jcmd"
+Write-WatcherLog "jhsdb: $jhsdb"
 
 # Thread-Dump mit Timeout. Wenn jcmd haengt (JVM wedged), nicht warten -- killen
-# und mit 'jstack -F' (Force-Attach) probieren, der umgeht die Attach-API.
+# und mit 'jhsdb jstack --pid' (HotSpot-Serviceability-Agent) probieren.
 function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSec = 10) {
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $jcmd
@@ -58,11 +59,11 @@ function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSe
     $proc = [System.Diagnostics.Process]::Start($info)
     if (-not $proc.WaitForExit($timeoutSec * 1000)) {
         try { $proc.Kill() } catch { }
-        Write-WatcherLog "jcmd TIMEOUT nach ${timeoutSec}s (JVM moeglicherweise wedged) -- versuche jstack -F"
-        if ($jstack) {
+        Write-WatcherLog "jcmd TIMEOUT nach ${timeoutSec}s (JVM moeglicherweise wedged) -- versuche jhsdb jstack"
+        if ($jhsdb) {
             $info2 = New-Object System.Diagnostics.ProcessStartInfo
-            $info2.FileName = $jstack
-            $info2.Arguments = "-F $targetPid"
+            $info2.FileName = $jhsdb
+            $info2.Arguments = "jstack --pid $targetPid"
             $info2.RedirectStandardOutput = $true
             $info2.RedirectStandardError = $true
             $info2.UseShellExecute = $false
@@ -70,7 +71,7 @@ function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSe
             $proc2 = [System.Diagnostics.Process]::Start($info2)
             if (-not $proc2.WaitForExit(30 * 1000)) {
                 try { $proc2.Kill() } catch { }
-                Write-WatcherLog 'jstack -F ebenfalls TIMEOUT (30s)'
+                Write-WatcherLog 'jhsdb jstack ebenfalls TIMEOUT (30s)'
                 return @{ rc = -2; lines = 0 }
             }
             $out = $proc2.StandardOutput.ReadToEnd() + $proc2.StandardError.ReadToEnd()
@@ -84,18 +85,47 @@ function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSe
     return @{ rc = $proc.ExitCode; lines = ($out -split "`n").Count }
 }
 
-# Auf soffice.bin warten (max 60 s). NICHT '$ofpid' verwenden -- Automatic-Variable.
-$ofpid = $null
-for ($i = 0; $i -lt 60; $i++) {
-    $proc = Get-Process -Name soffice.bin -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($proc) { $ofpid = $proc.Id; break }
-    Start-Sleep -Seconds 1
+# Findet unter mehreren soffice.bin-Prozessen den, dessen JVM jcmd anspricht
+# (=jvm.dll ist in dem Prozess geladen). LO startet ggf. mehrere soffice.bin;
+# nur der mit dem Java-UNO-Component-Loader hat die JVM. Probiert
+# jcmd <pid> VM.version mit kurzem Timeout pro Kandidat.
+function Find-JavaSoffice([int] $maxWaitSec = 60) {
+    $deadline = (Get-Date).AddSeconds($maxWaitSec)
+    while ((Get-Date) -lt $deadline) {
+        $cands = Get-Process -Name soffice.bin -ErrorAction SilentlyContinue
+        foreach ($p in $cands) {
+            $info = New-Object System.Diagnostics.ProcessStartInfo
+            $info.FileName = $jcmd
+            $info.Arguments = "$($p.Id) VM.version"
+            $info.RedirectStandardOutput = $true
+            $info.RedirectStandardError = $true
+            $info.UseShellExecute = $false
+            $info.CreateNoWindow = $true
+            $j = [System.Diagnostics.Process]::Start($info)
+            if ($j.WaitForExit(3000)) {
+                $out = $j.StandardOutput.ReadToEnd() + $j.StandardError.ReadToEnd()
+                if ($j.ExitCode -eq 0 -and $out -match 'JVM') {
+                    Write-WatcherLog "Java-soffice.bin gefunden: PID=$($p.Id)"
+                    return [int] $p.Id
+                }
+            }
+            else {
+                try { $j.Kill() } catch { }
+            }
+        }
+        Start-Sleep -Seconds 1
+    }
+    return 0
 }
+
+# Auf den Java-hostenden soffice.bin warten (LO startet u.U. mehrere; nur der
+# mit geladenem jvm.dll laesst sich mit jcmd ansprechen). Variable nicht $pid
+# nennen -- ist Automatic-Variable.
+$ofpid = Find-JavaSoffice -maxWaitSec 90
 if (-not $ofpid) {
-    Write-WatcherLog 'FEHLER: soffice.bin nach 60 s nicht gefunden.'
+    Write-WatcherLog 'FEHLER: kein Java-soffice.bin innerhalb 90s gefunden.'
     exit 1
 }
-Write-WatcherLog "soffice.bin PID=$ofpid"
 
 $lastFreezeDumped = $false
 
