@@ -20,9 +20,7 @@ import random
 import sys
 import threading
 import time
-from contextlib import contextmanager
-
-import uno
+import uno  # noqa: F401  -- importiert pyuno, muss vor com.sun.star-Imports kommen
 from com.sun.star.beans import PropertyValue
 from com.sun.star.connection import NoConnectException
 
@@ -79,33 +77,53 @@ def connect(log):
     raise RuntimeError(f"konnte UNO-Bridge nicht erreichen: {last_exc}")
 
 
-@contextmanager
-def timed_call(log, label, freeze_flag_path, threshold_s=FREEZE_THRESHOLD_DEFAULT_S):
-    """Wickelt einen UNO-Call so, dass langes Hängen einen Freeze-Marker setzt."""
-    start = time.time()
-    done_event = threading.Event()
+class timed_call:
+    """Context manager (Klasse, NICHT @contextmanager-Generator). Pyuno hat
+    einen Bug, dass contextlib.contextmanager in __exit__ versucht
+    exc.__traceback__ auf der UNO-Exception zu setzen, was den
+    UNO-Struct-Setter sprengt ('Couldn't convert traceback object to UNO
+    type'). Class-based __exit__ vermeidet das.
+    """
 
-    def watchdog():
-        while not done_event.wait(1.0):
-            elapsed = time.time() - start
-            if elapsed > threshold_s:
-                log.write(
-                    f"FREEZE-VERDACHT bei '{label}': {elapsed:.1f}s blockiert "
-                    f"(threshold {threshold_s:.0f}s)"
+    def __init__(self, log, label, freeze_flag_path,
+                 threshold_s=FREEZE_THRESHOLD_DEFAULT_S):
+        self.log = log
+        self.label = label
+        self.freeze_flag = freeze_flag_path
+        self.threshold = threshold_s
+
+    def __enter__(self):
+        self.start = time.time()
+        self.done_event = threading.Event()
+        t = threading.Thread(target=self._watchdog, daemon=True)
+        t.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.done_event.set()
+        elapsed = time.time() - self.start
+        if exc_type is None:
+            self.log.write(f"{self.label}  dauer={elapsed:.2f}s")
+        else:
+            self.log.write(
+                f"{self.label}  dauer={elapsed:.2f}s  EXC "
+                f"{exc_type.__name__}: {exc_val}"
+            )
+        return False  # Exception weiterreichen
+
+    def _watchdog(self):
+        while not self.done_event.wait(1.0):
+            elapsed = time.time() - self.start
+            if elapsed > self.threshold:
+                self.log.write(
+                    f"FREEZE-VERDACHT bei '{self.label}': {elapsed:.1f}s "
+                    f"blockiert (threshold {self.threshold:.0f}s)"
                 )
                 try:
-                    open(freeze_flag_path, "a", encoding="utf-8").close()
+                    open(self.freeze_flag, "a", encoding="utf-8").close()
                 except OSError:
                     pass
                 return
-
-    t = threading.Thread(target=watchdog, daemon=True)
-    t.start()
-    try:
-        yield
-    finally:
-        done_event.set()
-        log.write(f"{label}  dauer={time.time()-start:.2f}s")
 
 
 def open_calc(ctx, log, freeze_flag):

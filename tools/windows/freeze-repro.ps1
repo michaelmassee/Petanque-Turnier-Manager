@@ -62,14 +62,21 @@ if (-not (Get-Command jcmd -ErrorAction SilentlyContinue)) {
     throw 'jcmd nicht im PATH. JDK installieren / PATH ergaenzen.'
 }
 
-# LO-Profil-Locks saeubern, damit soffice frisch startet
-$loUserDir = Join-Path $env:APPDATA 'LibreOffice\4\user'
-$lockFile = Join-Path $loUserDir '.~lock.*'
-Get-ChildItem -Path $loUserDir -Filter '.~lock.*' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-$singleLock = Join-Path $loUserDir 'singletons'
-if (Test-Path $singleLock) {
-    Get-ChildItem -Path $singleLock -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+# Alle laufenden soffice-Prozesse killen, damit die neue Instanz nicht via
+# Single-Instance-Manager an die alte delegiert (sonst wird --accept ignoriert
+# und es kommt "Binary URP bridge disposed during call").
+$existing = Get-Process -Name soffice, soffice.bin -ErrorAction SilentlyContinue
+if ($existing) {
+    Write-Master "kille $(@($existing).Count) laufende soffice(.bin)-Prozesse vor Start"
+    $existing | Stop-Process -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
 }
+
+# Lock-Files im User-Profil aufraeumen (defensiv -- alte soffice-Reste).
+# UserInstallation NICHT isolieren: das wuerde die produktiv installierte
+# PTM-Extension nicht sehen.
+$loUserDir = Join-Path $env:APPDATA 'LibreOffice\4\user'
+Get-ChildItem -Path $loUserDir -Filter '.~lock.*' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
 # PTM-Plugin-Log: Plugin schreibt nach ${user.home}/.petanqueturniermanager/info.log
 # (siehe src/main/resources/log4j2-test.xml).

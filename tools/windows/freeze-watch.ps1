@@ -92,6 +92,10 @@ function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSe
 function Find-JavaSoffice([int] $maxWaitSec = 60) {
     $deadline = (Get-Date).AddSeconds($maxWaitSec)
     while ((Get-Date) -lt $deadline) {
+        if (Test-Path $stopFlag) {
+            Write-WatcherLog 'stop.flag gesehen waehrend Find-JavaSoffice -- abgebrochen.'
+            return 0
+        }
         $cands = Get-Process -Name soffice.bin -ErrorAction SilentlyContinue
         foreach ($p in $cands) {
             $info = New-Object System.Diagnostics.ProcessStartInfo
