@@ -28,6 +28,7 @@ import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.comp.adapter.IGlobalEventListener;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.supermelee.SpielTagNr;
 import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
@@ -280,7 +281,10 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
 
     private void pruefeUndStarte(XSpreadsheetDocument xDoc, XSpreadsheet sheet,
             RanglisteEingabeSignatur signatur, String key, String grund, int versuch) {
+        long startNs = System.nanoTime();
+        long hashStartNs = startNs;
         SignaturErgebnis ergebnis = signatur.berechne(xDoc, versuch);
+        long hashDauerMs = (System.nanoTime() - hashStartNs) / 1_000_000L;
         switch (ergebnis) {
             case SignaturErgebnis.Ok ok -> handleOk(xDoc, sheet, key, grund, ok.hash());
             case SignaturErgebnis.SheetFehlt fehlt -> handleSheetFehlt(xDoc, sheet, key, fehlt);
@@ -290,6 +294,10 @@ public final class RanglisteRefreshListener implements IGlobalEventListener {
                     "Rangliste-Signatur fehlgeschlagen (permanent, key={}): {}", key, pe.grund(),
                     pe.cause());
         }
+        long gesamtMs = (System.nanoTime() - startNs) / 1_000_000L;
+        PerfLog.log(logger, "[WORKER-TIMING] RanglisteRefreshListener.pruefeUndStarte key={} system={} hash={} ms gesamt={} ms ergebnis={} thread={}",
+                key, erwartesTurnierSystem, hashDauerMs, gesamtMs,
+                ergebnis.getClass().getSimpleName(), Thread.currentThread().getName());
     }
 
     private void handleOk(XSpreadsheetDocument xDoc, XSpreadsheet sheet, String key,

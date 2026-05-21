@@ -17,6 +17,7 @@ import de.petanqueturniermanager.addins.UpdatePropertieFunctionsSheetRecalcOnLoa
 import de.petanqueturniermanager.helper.rangliste.RanglisteEingabeSignatur;
 import de.petanqueturniermanager.helper.rangliste.RanglisteRefreshListener;
 import de.petanqueturniermanager.helper.rangliste.SignaturQuellen;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheetUpdate;
 import de.petanqueturniermanager.jedergegenjeden.rangliste.JGJRanglisteSheetUpdate;
@@ -95,60 +96,82 @@ public class PetanqueTurnierMngrSingleton {
 		GlobalProperties.get(); // just do an init, read properties if not already there
 
 		logger.debug("PetanqueTurnierMngrSingleton.init");
+		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init START jvm-uptime={} ms",
+				StartupClock.uptimeMs());
+		long initStartNs = System.nanoTime();
+		long t = initStartNs;
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			// only log
 			logger.error(e.getMessage(), e);
 		}
+		t = logTimingAndReset("UIManager.setSystemLookAndFeel", t);
 
 		globalEventListener(context);
+		t = logTimingAndReset("globalEventListener (UNO-Broadcaster)", t);
 		I18n.init(context); // muss vor ProcessBox, da ProcessBox I18n-Texte beim Aufbau verwendet
+		t = logTimingAndReset("I18n.init", t);
 		ProcessBox.init(context);
+		t = logTimingAndReset("ProcessBox.init (UNO-Dialog-Aufbau)", t);
 		TimerManager.init(context);
 		TimerManager.get().addListener(ProcessBox.from());
 		TimerManager.get().addListener(WebServerManager.get());
 		TimerManager.get().addListener(new TimerToolbarSteuerung(context));
 		TimerManager.get().addListener(state -> ProtocolHandler.notifyAllListeners());
+		t = logTimingAndReset("TimerManager.init + 4 Listener", t);
 		TerminateListener.addThisListenerOnce(context);
+		t = logTimingAndReset("TerminateListener.addThisListenerOnce", t);
 		ReleaseUpdateService.init(context);
+		t = logTimingAndReset("ReleaseUpdateService.init (async)", t);
 		if (GlobalProperties.get().isWebserverAktiv()) {
 			WebServerManager.get().starten(context);
+			t = logTimingAndReset("WebServerManager.starten", t);
 		}
 		addGlobalEventListener(new ToolbarAnzeigenListener());
+		t = logTimingAndReset("addGlobalEventListener ToolbarAnzeigenListener", t);
 		addGlobalEventListener(new SidebarAnzeigenListener());
+		t = logTimingAndReset("addGlobalEventListener SidebarAnzeigenListener", t);
 		addGlobalEventListener(SidebarPanelDelegator.get());
+		t = logTimingAndReset("addGlobalEventListener SidebarPanelDelegator", t);
 		addGlobalEventListener(new UpdatePropertieFunctionsSheetRecalcOnLoad());
+		t = logTimingAndReset("addGlobalEventListener UpdatePropertieFunctionsSheetRecalcOnLoad", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SCHWEIZER_RANGLISTE,
 				TurnierSystem.SCHWEIZER,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerSchweizer),
 				(ws, ignored) -> new SchweizerRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener SCHWEIZER", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_MAASTRICHTER_VORRUNDE_PREFIX,
 				TurnierSystem.MAASTRICHTER,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerMaastrichter),
 				(ws, ignored) -> new MaastrichterVorrundenRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener MAASTRICHTER", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_POULE_VORRUNDEN_RANGLISTE,
 				TurnierSystem.POULE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerPoule),
 				(ws, ignored) -> new PouleVorrundenRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener POULE", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_FORMULEX_RANGLISTE,
 				TurnierSystem.FORMULEX,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerFormuleX),
 				(ws, ignored) -> new FormuleXRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener FORMULEX", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_JGJ_RANGLISTE,
 				TurnierSystem.JGJ,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerJGJ),
 				(ws, ignored) -> new JGJRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener JGJ", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_KASKADE_GRUPPENRANGLISTE,
 				TurnierSystem.KASKADE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerKaskade),
 				(ws, ignored) -> new KaskadeGruppenRanglisteSheetUpdate(ws)));
+		t = logTimingAndReset("RanglisteRefreshListener KASKADE", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSpieltagRangliste(context,
 				TurnierSystem.SUPERMELEE,
 				spieltagNr -> new RanglisteEingabeSignatur(
@@ -159,11 +182,24 @@ public class PetanqueTurnierMngrSingleton {
 							.orElse(null);
 					return new SpieltagRanglisteSheetUpdate(ws, nr);
 				}));
+		t = logTimingAndReset("RanglisteRefreshListener SUPERMELEE-SPIELTAG", t);
 		addGlobalEventListener(RanglisteRefreshListener.fuerSchluessel(context,
 				SheetMetadataHelper.SCHLUESSEL_SUPERMELEE_ENDRANGLISTE,
 				TurnierSystem.SUPERMELEE,
 				new RanglisteEingabeSignatur(SignaturQuellen::fuerSupermeleeEnd),
 				(ws, ignored) -> new EndranglisteSheetUpdate(ws)));
+		logTimingAndReset("RanglisteRefreshListener SUPERMELEE-END", t);
+
+		long initGesamtMs = (System.nanoTime() - initStartNs) / 1_000_000L;
+		PerfLog.log(logger, "[STARTUP-TIMING] PetanqueTurnierMngrSingleton.init GESAMT={} ms (jvm-uptime={} ms)",
+				initGesamtMs, StartupClock.uptimeMs());
+	}
+
+	private static long logTimingAndReset(String abschnitt, long startNs) {
+		long jetzt = System.nanoTime();
+		long dauerMs = (jetzt - startNs) / 1_000_000L;
+		PerfLog.log(logger, "[STARTUP-TIMING] {}: {} ms", abschnitt, dauerMs);
+		return jetzt;
 	}
 
 	// register global EventListener
@@ -204,6 +240,15 @@ public class PetanqueTurnierMngrSingleton {
 		turnierEventHandler.removeTurnierEventListener(listner);
 	}
 
+	/**
+	 * Feuert einen ggf. während eines aktiven {@code SheetRunner}-Laufs
+	 * koaleszierten TurnierEvent. Wird aus dem {@code SheetRunner}-{@code finally}-
+	 * Block aufgerufen, nachdem der ControllerLock freigegeben wurde.
+	 */
+	public static void flushPendingTurnierEvent() {
+		turnierEventHandler.flushPending();
+	}
+
 	public static void triggerTurnierEventListener(TurnierEventType type, ITurnierEvent eventObj) {
 		turnierEventHandler.trigger(type, eventObj);
 	}
@@ -221,10 +266,25 @@ public class PetanqueTurnierMngrSingleton {
 			globalEventListener.disposing(null);
 		}
 		turnierEventHandler.disposing();
+		sharedContext = null;
 		// didRun zurücksetzen, damit ein erneuter init() nach dispose() wieder
 		// die abhängigen Subsysteme (TimerManager, ProcessBox, …) hochfährt.
 		// Sonst bleibt z.B. TimerManager null und nachfolgende UI-Tests scheitern
 		// in der Sidebar mit "TimerManager nicht initialisiert".
+		didRun.set(false);
+	}
+
+	/**
+	 * Reset des statischen Zustands für UI-Tests. Wird zwischen Test-Klassen aufgerufen
+	 * (BaseCalcUITest.@AfterAll), damit der nachfolgende Test mit frischem LO-Prozess nicht auf
+	 * abgehängte Bridge-Proxies (Dispatcher, sharedContext) der vorherigen Office-Instanz trifft.
+	 * <p>
+	 * Im Unterschied zu {@link #dispose()} ohne Side-effects auf Subsysteme, die im Test-JVM
+	 * gar nicht initialisiert wurden (TimerManager, WebServer, ReleaseUpdateService).
+	 */
+	public static void resetForTest() {
+		turnierEventHandler.disposing();
+		sharedContext = null;
 		didRun.set(false);
 	}
 

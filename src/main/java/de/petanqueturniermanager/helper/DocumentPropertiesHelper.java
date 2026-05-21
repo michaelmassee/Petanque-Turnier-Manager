@@ -128,9 +128,34 @@ public class DocumentPropertiesHelper {
 	}
 
 	/**
+	 * Wie {@link #setStringProperty(String, String)}, aber ohne {@link TurnierEventType#PropertiesChanged}-Event
+	 * zu feuern. Für interne Infrastruktur-Properties (Hash, Timestamps, Recovery-Flags), an denen kein
+	 * UI-Listener interessiert ist. Wichtig insbesondere, wenn der Aufruf von einem Hintergrund-Thread
+	 * (z.B. {@code PTM-RanglisteRefreshDebouncer}) erfolgt: ohne Event-Trigger werden Sidebar-Rebuilds
+	 * (VCL-Operationen auf falschem Thread) vermieden.
+	 */
+	public void setStringPropertyOhneEvent(String propName, String val) {
+		if (val != null) {
+			String oldVal = currentPropListe.get(propName);
+			if (!Objects.equals(oldVal, val)) {
+				setStringPropertyInDocument(propName, val);
+				currentPropListe.put(propName, val);
+			}
+		}
+	}
+
+	/**
+	 * Wie {@link #setBooleanProperty(String, Boolean)}, aber ohne TurnierEvent. Siehe
+	 * {@link #setStringPropertyOhneEvent(String, String)}.
+	 */
+	public void setBooleanPropertyOhneEvent(String propName, Boolean newVal) {
+		setStringPropertyOhneEvent(propName, StringTools.booleanToString(newVal));
+	}
+
+	/**
 	 * fügt ein neues Property zum Dokument hinzu, wenn nicht vorhanden<br>
 	 * speichert der neue wert
-	 * 
+	 *
 	 */
 	private void setStringPropertyInDocument(String propName, String val) {
 		boolean didExist = insertStringPropertyIfNotExist(propName, val); // zuerst neu einfuegen wenn nicht vorhanden

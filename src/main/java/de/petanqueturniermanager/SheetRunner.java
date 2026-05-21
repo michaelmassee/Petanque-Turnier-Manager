@@ -19,6 +19,7 @@ import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.comp.GlobalProperties;
+import de.petanqueturniermanager.comp.PetanqueTurnierMngrSingleton;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.webserver.WebServerManager;
 import de.petanqueturniermanager.exception.GenerateException;
@@ -27,6 +28,7 @@ import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
+import de.petanqueturniermanager.helper.perflog.PerfLog;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
 import de.petanqueturniermanager.helper.sheet.ControllerLock;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
@@ -168,6 +170,9 @@ public abstract class SheetRunner extends Thread {
 		boolean laueftJetzt = koordinatorVorgekoppelt || !koordinator.getAndSetLaeuft(true);
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
+			long runStartNs = System.nanoTime();
+			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run START class={} thread={}",
+					this.getClass().getSimpleName(), Thread.currentThread().getName());
 			registerDisposingListener();
 			koordinator.setRunner(this);
 			koordinator.benachrichtigeListener(); // Menü deaktivieren
@@ -245,6 +250,17 @@ public abstract class SheetRunner extends Thread {
 					}
 				}
 			}
+			// Während des Laufs koaleszierte TurnierEvents jetzt einmal feuern.
+			// isRunning() ist hier bereits false (im finally gesetzt), der Dispatch
+			// erfolgt über AsyncCallback auf den LO-Main-Thread und kollidiert daher
+			// nicht mit den Aufräumarbeiten dieses Worker-Threads.
+			if (isDocumentAlive()) {
+				try {
+					PetanqueTurnierMngrSingleton.flushPendingTurnierEvent();
+				} catch (RuntimeException e) {
+					getLogger().warn("Fehler beim flushPendingTurnierEvent: " + e.getMessage(), e);
+				}
+			}
 			if (isDocumentAlive()) {
 				try {
 					autoSave();
@@ -259,6 +275,10 @@ public abstract class SheetRunner extends Thread {
 				}
 			}
 			unregisterDisposingListener();
+
+			long gesamtMs = (System.nanoTime() - runStartNs) / 1_000_000L;
+			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run ENDE class={} dauer={} ms fehler={}",
+					this.getClass().getSimpleName(), gesamtMs, isFehler);
 
 		} else {
 			MessageBox.from(getxContext(), MessageBoxTypeEnum.WARN_OK)

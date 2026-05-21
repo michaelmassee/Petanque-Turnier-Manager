@@ -19,6 +19,8 @@ import org.jspecify.annotations.Nullable;
 
 import com.sun.star.uno.XComponentContext;
 
+import de.petanqueturniermanager.helper.perflog.PerfLog;
+
 /**
  * Zentraler Service für die Plugin-Versionserkennung und den Update-Check.
  *
@@ -140,6 +142,23 @@ public final class ReleaseUpdateService {
     }
 
     private void starteInitialenRefresh() {
+        // Komplett asynchron auf dem Background-Executor: InstallierteVersion.ermitteln
+        // und ReleaseCache.lade* sind File-/UNO-IO, die nicht auf dem LO-Main-Thread
+        // im Plugin-Init laufen dürfen (sonst weißes Calc-Fenster beim Start).
+        executor.execute(this::initialerRefreshInternalMitTiming);
+    }
+
+    private void initialerRefreshInternalMitTiming() {
+        long startNs = System.nanoTime();
+        try {
+            initialerRefreshInternal();
+        } finally {
+            long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+            PerfLog.log(logger, "[STARTUP-TIMING] ReleaseUpdateService initialerRefresh (background): {} ms", dauerMs);
+        }
+    }
+
+    private void initialerRefreshInternal() {
         if (installierteVersion.isEmpty()) {
             installierteVersion = InstallierteVersion.ermitteln(context).map(InstallierteVersion::raw);
         }
