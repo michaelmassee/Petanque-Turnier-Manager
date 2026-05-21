@@ -58,7 +58,7 @@ In PowerShell (im Repo-Wurzelverzeichnis):
 .\tools\windows\freeze-repro.ps1 -OutputRoot D:\ptm-freeze -Iterations 5
 ```
 
-Output-Verzeichnis (Standard `%USERPROFILE%\ptm-freeze\<timestamp>\`):
+Output-Verzeichnis (Standard `C:\Users\michael\Desktop\Shared\tmp\ptm-freeze\<timestamp>\`, ueber `-OutputRoot` aenderbar):
 
 ```
 soffice.log               # SAL_LOG

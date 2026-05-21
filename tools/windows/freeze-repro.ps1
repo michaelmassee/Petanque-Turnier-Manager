@@ -27,7 +27,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string] $OutputRoot = (Join-Path $env:USERPROFILE 'ptm-freeze'),
+    [string] $OutputRoot = 'C:\Users\michael\Desktop\Shared\tmp\ptm-freeze',
     [int]    $Iterations = 5,
     [switch] $WithProcMon,
     [string] $SofficeExe = 'C:\Program Files\LibreOffice\program\soffice.exe',
