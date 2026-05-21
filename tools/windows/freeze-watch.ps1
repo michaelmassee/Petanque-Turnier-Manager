@@ -33,14 +33,56 @@ function Write-WatcherLog([string] $line) {
     "$ts  $line" | Out-File -FilePath $watcherLog -Append -Encoding UTF8
 }
 
-# jcmd lokalisieren (kompatibel zu PS5.1 -- kein ?.-Operator)
+# jcmd / jstack lokalisieren (kompatibel zu PS5.1 -- kein ?.-Operator)
 $jcmdCmd = Get-Command jcmd -ErrorAction SilentlyContinue
 if (-not $jcmdCmd) {
     Write-WatcherLog 'FEHLER: jcmd nicht im PATH gefunden.'
     exit 1
 }
 $jcmd = $jcmdCmd.Source
-Write-WatcherLog "jcmd: $jcmd"
+$jstackCmd = Get-Command jstack -ErrorAction SilentlyContinue
+$jstack = if ($jstackCmd) { $jstackCmd.Source } else { $null }
+Write-WatcherLog "jcmd:   $jcmd"
+Write-WatcherLog "jstack: $jstack"
+
+# Thread-Dump mit Timeout. Wenn jcmd haengt (JVM wedged), nicht warten -- killen
+# und mit 'jstack -F' (Force-Attach) probieren, der umgeht die Attach-API.
+function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSec = 10) {
+    $info = New-Object System.Diagnostics.ProcessStartInfo
+    $info.FileName = $jcmd
+    $info.Arguments = "$targetPid Thread.print"
+    $info.RedirectStandardOutput = $true
+    $info.RedirectStandardError = $true
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    $proc = [System.Diagnostics.Process]::Start($info)
+    if (-not $proc.WaitForExit($timeoutSec * 1000)) {
+        try { $proc.Kill() } catch { }
+        Write-WatcherLog "jcmd TIMEOUT nach ${timeoutSec}s (JVM moeglicherweise wedged) -- versuche jstack -F"
+        if ($jstack) {
+            $info2 = New-Object System.Diagnostics.ProcessStartInfo
+            $info2.FileName = $jstack
+            $info2.Arguments = "-F $targetPid"
+            $info2.RedirectStandardOutput = $true
+            $info2.RedirectStandardError = $true
+            $info2.UseShellExecute = $false
+            $info2.CreateNoWindow = $true
+            $proc2 = [System.Diagnostics.Process]::Start($info2)
+            if (-not $proc2.WaitForExit(30 * 1000)) {
+                try { $proc2.Kill() } catch { }
+                Write-WatcherLog 'jstack -F ebenfalls TIMEOUT (30s)'
+                return @{ rc = -2; lines = 0 }
+            }
+            $out = $proc2.StandardOutput.ReadToEnd() + $proc2.StandardError.ReadToEnd()
+            [System.IO.File]::WriteAllText($outFile, $out)
+            return @{ rc = $proc2.ExitCode; lines = ($out -split "`n").Count }
+        }
+        return @{ rc = -1; lines = 0 }
+    }
+    $out = $proc.StandardOutput.ReadToEnd() + $proc.StandardError.ReadToEnd()
+    [System.IO.File]::WriteAllText($outFile, $out)
+    return @{ rc = $proc.ExitCode; lines = ($out -split "`n").Count }
+}
 
 # Auf soffice.bin warten (max 60 s). NICHT '$ofpid' verwenden -- Automatic-Variable.
 $ofpid = $null
@@ -71,11 +113,9 @@ while ($true) {
     $dumpFile = Join-Path $OutputDir "threaddump-$ts.txt"
 
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    & $jcmd $ofpid Thread.print > $dumpFile 2>&1
-    $rc = $LASTEXITCODE
+    $r = Invoke-ThreadDump -targetPid $ofpid -outFile $dumpFile -timeoutSec 10
     $sw.Stop()
-    $lines = (Get-Content $dumpFile -ErrorAction SilentlyContinue).Count
-    Write-WatcherLog "thread-dump  rc=$rc  ms=$($sw.ElapsedMilliseconds)  lines=$lines  -> $dumpFile"
+    Write-WatcherLog "thread-dump  rc=$($r.rc)  ms=$($sw.ElapsedMilliseconds)  lines=$($r.lines)  -> $dumpFile"
 
     # Liveness-Probe: kann sich der TCP-Listener oeffnen lassen?
     try {
@@ -98,8 +138,8 @@ while ($true) {
     if ((Test-Path $freezeFlag) -and (-not $lastFreezeDumped)) {
         $tsX = (Get-Date).ToString('yyyyMMdd-HHmmss-fff')
         $extra = Join-Path $OutputDir "threaddump-FREEZE-$tsX.txt"
-        & $jcmd $ofpid Thread.print > $extra 2>&1
-        Write-WatcherLog "FREEZE-Flag gesehen -- Extra-Dump -> $extra"
+        $rF = Invoke-ThreadDump -targetPid $ofpid -outFile $extra -timeoutSec 20
+        Write-WatcherLog "FREEZE-Flag gesehen -- Extra-Dump rc=$($rF.rc) lines=$($rF.lines) -> $extra"
         $lastFreezeDumped = $true
     }
 

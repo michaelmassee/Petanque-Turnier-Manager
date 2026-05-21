@@ -130,35 +130,57 @@ def dispatch(ctx, frame, url, log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DEF
         helper.executeDispatch(frame, url, "", 0, ())
 
 
-def get_public_service(ctx, log):
-    """PtmPublicService liefert isOperationAktiv() — SheetRunner.isRunning()."""
+def get_operation_invoker(ctx, log):
+    """PtmPublicService.isOperationAktiv() ist NICHT in einem UNO-IDL-Interface
+    deklariert -- direkte Methodenaufrufe aus pyuno schlagen mit AttributeError
+    fehl. Stattdessen ueber com.sun.star.script.Invocation (XInvocation), so wie
+    Basic-Makros das auch tun.
+
+    Liefert eine callable(), die isOperationAktiv() aufruft, oder None.
+    """
     smgr = ctx.ServiceManager
     try:
         svc = smgr.createInstanceWithContext(
             "de.petanqueturniermanager.PublicService", ctx
         )
-        if svc is not None:
-            log.write("PtmPublicService erreicht (isOperationAktiv verfuegbar)")
-            return svc
+        if svc is None:
+            log.write("PtmPublicService: createInstance liefert None")
+            return None
+        inv_factory = smgr.createInstanceWithContext(
+            "com.sun.star.script.Invocation", ctx
+        )
+        inv = inv_factory.createInstanceWithArguments((svc,))
+        # Schnell-Smoketest
+        result, _, _ = inv.invoke("isOperationAktiv", (), [], [])
+        log.write(f"PtmPublicService via Invocation OK (initial={bool(result)})")
+        def call():
+            r, _, _ = inv.invoke("isOperationAktiv", (), [], [])
+            return bool(r)
+        return call
     except Exception as e:
-        log.write(f"PtmPublicService nicht erreichbar: {e}")
-    log.write("WARN: kein PtmPublicService — fallback auf Sleep nach Dispatch")
-    return None
+        log.write(f"PtmPublicService nicht nutzbar ({type(e).__name__}: {e})")
+        return None
 
 
-def wait_for_idle(public_svc, log, timeout_s=300.0, poll_s=1.0):
-    """Wartet, bis SheetRunner nicht mehr aktiv ist."""
-    if public_svc is None:
-        log.write("wait_for_idle: kein PublicService, sleep 60s")
-        time.sleep(60.0)
+def wait_for_idle(invoker, log, timeout_s=300.0, poll_s=1.0, fallback_sleep_s=60.0):
+    """Wartet, bis SheetRunner nicht mehr aktiv ist.
+
+    Wenn der Invoker fehlt oder waehrend des Polling Fehler wirft, faellt es
+    auf eine fixe Sleep-Dauer zurueck statt sofort zurueckzukehren.
+    """
+    if invoker is None:
+        log.write(f"wait_for_idle: kein Invoker, sleep {fallback_sleep_s}s")
+        time.sleep(fallback_sleep_s)
         return
     deadline = time.time() + timeout_s
     started_active = False
     while time.time() < deadline:
         try:
-            aktiv = bool(public_svc.isOperationAktiv())
+            aktiv = invoker()
         except Exception as e:
-            log.write(f"isOperationAktiv-Fehler: {e}")
+            log.write(f"isOperationAktiv-Fehler: {type(e).__name__}: {e} "
+                      f"-- fallback sleep {fallback_sleep_s}s")
+            time.sleep(fallback_sleep_s)
             return
         if aktiv:
             started_active = True
@@ -178,6 +200,9 @@ def list_sheets(doc, log, freeze_flag):
 
 def activate_sheet(doc, name, log, freeze_flag):
     sheets = doc.getSheets()
+    if not sheets.hasByName(name):
+        log.write(f"activate '{name}'  uebersprungen (Sheet weg)")
+        return
     sheet = sheets.getByName(name)
     controller = doc.getCurrentController()
     with timed_call(log, f"activate '{name}'", freeze_flag):
@@ -210,7 +235,7 @@ def run(args):
         ctx = connect(log)
         desktop, doc = open_calc(ctx, log, freeze_flag)
         frame = doc.getCurrentController().getFrame()
-        public_svc = get_public_service(ctx, log)
+        isAktiv = get_operation_invoker(ctx, log)
 
         for it in range(1, args.iterations + 1):
             log.write(f"=== Iteration {it}/{args.iterations} ===")
@@ -218,7 +243,7 @@ def run(args):
                 ctx, frame, "ptm:SpieltagRanglisteSheet_TestDaten",
                 log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DISPATCH_S,
             )
-            wait_for_idle(public_svc, log)
+            wait_for_idle(isAktiv, log)
             sheet_storm(doc, log, freeze_flag, rng)
             if os.path.exists(freeze_flag):
                 log.write("Freeze-Flag gesetzt -- Abbruch der Iterationen.")
