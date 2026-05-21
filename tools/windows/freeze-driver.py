@@ -130,26 +130,43 @@ def dispatch(ctx, frame, url, log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DEF
         helper.executeDispatch(frame, url, "", 0, ())
 
 
-def wait_for_fertig(log, ptm_log_path, timeout_s=180.0):
-    """Wartet bis '**FERTIG**' frisch im PTM-Plugin-Log auftaucht."""
-    if not ptm_log_path or not os.path.exists(ptm_log_path):
-        log.write(f"ptm-log nicht gefunden ({ptm_log_path}) — fallback: sleep 30s")
-        time.sleep(30)
+def get_public_service(ctx, log):
+    """PtmPublicService liefert isOperationAktiv() — SheetRunner.isRunning()."""
+    smgr = ctx.ServiceManager
+    try:
+        svc = smgr.createInstanceWithContext(
+            "de.petanqueturniermanager.PublicService", ctx
+        )
+        if svc is not None:
+            log.write("PtmPublicService erreicht (isOperationAktiv verfuegbar)")
+            return svc
+    except Exception as e:
+        log.write(f"PtmPublicService nicht erreichbar: {e}")
+    log.write("WARN: kein PtmPublicService — fallback auf Sleep nach Dispatch")
+    return None
+
+
+def wait_for_idle(public_svc, log, timeout_s=300.0, poll_s=1.0):
+    """Wartet, bis SheetRunner nicht mehr aktiv ist."""
+    if public_svc is None:
+        log.write("wait_for_idle: kein PublicService, sleep 60s")
+        time.sleep(60.0)
         return
-    start_size = os.path.getsize(ptm_log_path)
     deadline = time.time() + timeout_s
+    started_active = False
     while time.time() < deadline:
-        time.sleep(2.0)
         try:
-            with open(ptm_log_path, "rb") as f:
-                f.seek(start_size)
-                chunk = f.read().decode("utf-8", errors="replace")
-            if "**FERTIG**" in chunk:
-                log.write("ptm-log: **FERTIG** gesehen")
-                return
-        except OSError as e:
-            log.write(f"ptm-log lese-fehler: {e}")
-    log.write(f"WARN: **FERTIG** nicht binnen {timeout_s}s gesehen")
+            aktiv = bool(public_svc.isOperationAktiv())
+        except Exception as e:
+            log.write(f"isOperationAktiv-Fehler: {e}")
+            return
+        if aktiv:
+            started_active = True
+        elif started_active:
+            log.write("wait_for_idle: SheetRunner idle")
+            return
+        time.sleep(poll_s)
+    log.write(f"WARN: SheetRunner nach {timeout_s}s noch aktiv")
 
 
 def list_sheets(doc, log, freeze_flag):
@@ -193,6 +210,7 @@ def run(args):
         ctx = connect(log)
         desktop, doc = open_calc(ctx, log, freeze_flag)
         frame = doc.getCurrentController().getFrame()
+        public_svc = get_public_service(ctx, log)
 
         for it in range(1, args.iterations + 1):
             log.write(f"=== Iteration {it}/{args.iterations} ===")
@@ -200,10 +218,10 @@ def run(args):
                 ctx, frame, "ptm:SpieltagRanglisteSheet_TestDaten",
                 log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DISPATCH_S,
             )
-            wait_for_fertig(log, args.ptm_log)
+            wait_for_idle(public_svc, log)
             sheet_storm(doc, log, freeze_flag, rng)
             if os.path.exists(freeze_flag):
-                log.write("Freeze-Flag gesetzt — Abbruch der Iterationen.")
+                log.write("Freeze-Flag gesetzt -- Abbruch der Iterationen.")
                 break
 
         try:
@@ -227,7 +245,7 @@ def main():
     parser.add_argument("--iterations", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--ptm-log", default="",
-                        help="Pfad zum PTM-Plugin-Log (für **FERTIG**-Polling)")
+                        help="Pfad zum PTM-Plugin-Log (legacy, nicht mehr benutzt)")
     args = parser.parse_args()
     if not os.path.isdir(args.output_dir):
         print(f"output-dir existiert nicht: {args.output_dir}", file=sys.stderr)
