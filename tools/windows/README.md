@@ -41,6 +41,12 @@ wird erzwungen, alle Logs landen in einem Ordner und werden gezippt.
 
 In PowerShell (im Repo-Wurzelverzeichnis):
 
+> Falls die Standard-`ExecutionPolicy` unsignierte Skripte blockt
+> (`UnauthorizedAccess`-Fehler), entweder **einmalig** per
+> `powershell -ExecutionPolicy Bypass -File .\tools\windows\freeze-repro.ps1 ...`
+> oder **für die laufende Session** per
+> `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.
+
 ```powershell
 # Schneller Smoke-Lauf, 1 Iteration, ohne ProcMon
 .\tools\windows\freeze-repro.ps1 -Iterations 1
