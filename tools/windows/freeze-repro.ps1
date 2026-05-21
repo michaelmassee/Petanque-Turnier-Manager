@@ -89,18 +89,14 @@ else {
     Write-Master "PTM-Log noch nicht da, erwarte: $ptmLog"
 }
 
-# Env fuer Child-LO
-$env:SAL_LOG = '+INFO.vcl+INFO.framework+INFO.svtools+INFO.sd'
-$env:SAL_LOG_FILE = (Join-Path $outDir 'soffice.log')
-
-# JDWP an der LO-eingebetteten JVM aktivieren. Vorteil: der JDWP-Thread im
-# JVM ist von den Main-Threads getrennt -- selbst wenn AWT/VCL deadlocken,
-# antwortet er weiterhin und liefert Thread-Stacks. Port 5005, kein suspend.
-$env:JAVA_TOOL_OPTIONS = '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
-Write-Master "JAVA_TOOL_OPTIONS=$env:JAVA_TOOL_OPTIONS"
-
-# soffice mit URP-Listener starten
+# soffice mit URP-Listener starten.
+# Env-Variablen (SAL_LOG / JAVA_TOOL_OPTIONS) nur fuer diesen Child setzen --
+# nicht global, sonst nimmt jcmd JAVA_TOOL_OPTIONS auch auf und versucht
+# selber JDWP zu binden ("Address already in use, port 5005").
 $accept = "socket,host=127.0.0.1,port=$UrpPort;urp;"
+$javaToolOpts = '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+$salLog = '+INFO.vcl+INFO.framework+INFO.svtools+INFO.sd'
+$salLogFile = (Join-Path $outDir 'soffice.log')
 $sofficeArgs = @(
     '--calc',
     '--norestore',
@@ -108,8 +104,18 @@ $sofficeArgs = @(
     '--nodefault',
     "--accept=$accept"
 )
-Write-Master "starte soffice.exe $($sofficeArgs -join ' ')"
-$soffice = Start-Process -FilePath $SofficeExe -ArgumentList $sofficeArgs -PassThru
+Write-Master "starte soffice.exe (JAVA_TOOL_OPTIONS=$javaToolOpts) $($sofficeArgs -join ' ')"
+
+# PS 5.1 hat .NET Framework -> kein ArgumentList, nur Arguments (Single String).
+# Args quotieren wegen Sonderzeichen ';' in --accept=...
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = $SofficeExe
+$psi.Arguments = ($sofficeArgs | ForEach-Object { '"' + ($_ -replace '"', '\"') + '"' }) -join ' '
+$psi.UseShellExecute = $false
+$psi.EnvironmentVariables['JAVA_TOOL_OPTIONS'] = $javaToolOpts
+$psi.EnvironmentVariables['SAL_LOG'] = $salLog
+$psi.EnvironmentVariables['SAL_LOG_FILE'] = $salLogFile
+$soffice = [System.Diagnostics.Process]::Start($psi)
 Write-Master "soffice gestartet, PID=$($soffice.Id)"
 
 # ProcMon optional
