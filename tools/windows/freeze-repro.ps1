@@ -44,9 +44,12 @@ $outDir = Join-Path $OutputRoot $ts
 New-Item -ItemType Directory -Path $outDir -Force | Out-Null
 Write-Host "Output: $outDir"
 
+$masterLog = Join-Path $outDir 'master.log'
 function Write-Master([string] $msg) {
     $t = (Get-Date).ToString('HH:mm:ss.fff')
-    "$t  $msg" | Tee-Object -FilePath (Join-Path $outDir 'master.log') -Append | Write-Host
+    $line = "$t  $msg"
+    Add-Content -Path $masterLog -Value $line -Encoding UTF8
+    Write-Host $line
 }
 
 Write-Master "=== freeze-repro start (iterations=$Iterations, procmon=$WithProcMon) ==="
@@ -114,12 +117,17 @@ if ($WithProcMon) {
     }
 }
 
-# Watcher als Background-Job
-Write-Master 'starte Watcher (Background-Job)'
-$watcherJob = Start-Job -ScriptBlock {
-    param($scriptDir, $outDir, $urpPort)
-    & (Join-Path $scriptDir 'freeze-watch.ps1') -OutputDir $outDir -LivenessPort $urpPort
-} -ArgumentList $scriptDir, $outDir, $UrpPort
+# Watcher als eigener Prozess (Start-Process, mit -ExecutionPolicy Bypass damit
+# der Child-PS unsignierte .ps1 ausführen darf).
+$watcherPs1 = Join-Path $scriptDir 'freeze-watch.ps1'
+Write-Master "starte Watcher (Prozess) -> $watcherPs1"
+$watcherProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @(
+    '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+    '-File', $watcherPs1,
+    '-OutputDir', $outDir,
+    '-LivenessPort', $UrpPort.ToString()
+) -PassThru -WindowStyle Hidden
+Write-Master "Watcher gestartet, PID=$($watcherProc.Id)"
 
 # Driver im Vordergrund
 Write-Master 'starte UNO-Driver (Python)'
@@ -146,11 +154,12 @@ if (-not (Test-Path $stopFlag)) {
     New-Item -ItemType File -Path $stopFlag -Force | Out-Null
 }
 
-# Watcher abwarten
+# Watcher abwarten (Prozess endet selbständig, wenn stop.flag gesehen)
 Write-Master 'warte auf Watcher-Ende'
-Wait-Job $watcherJob -Timeout 15 | Out-Null
-Receive-Job $watcherJob -Keep | Out-File (Join-Path $outDir 'watcher-job.out') -Encoding UTF8
-Remove-Job $watcherJob -Force
+if (-not $watcherProc.WaitForExit(15000)) {
+    Write-Master "Watcher reagiert nicht nach 15 s — Stop-Process PID $($watcherProc.Id)"
+    Stop-Process -Id $watcherProc.Id -Force -ErrorAction SilentlyContinue
+}
 
 # ProcMon stoppen
 if ($procmon) {

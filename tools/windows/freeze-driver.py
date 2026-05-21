@@ -30,7 +30,11 @@ CONNECT_URL = (
     "uno:socket,host=127.0.0.1,port=2083;urp;"
     "StarOffice.ComponentContext"
 )
-FREEZE_THRESHOLD_S = 10.0
+# Per-Operation-Freeze-Thresholds in Sekunden. Turnier-Erstellung darf
+# legitime Minute(n) dauern; Sheet-Switches / Property-Reads müssen schnell
+# sein — wenn die hängen, ist der echte Freeze da.
+FREEZE_THRESHOLD_DEFAULT_S = 10.0
+FREEZE_THRESHOLD_DISPATCH_S = 180.0
 SHEET_SWITCHES_PER_ITER = 20
 
 
@@ -76,7 +80,7 @@ def connect(log):
 
 
 @contextmanager
-def timed_call(log, label, freeze_flag_path):
+def timed_call(log, label, freeze_flag_path, threshold_s=FREEZE_THRESHOLD_DEFAULT_S):
     """Wickelt einen UNO-Call so, dass langes Hängen einen Freeze-Marker setzt."""
     start = time.time()
     done_event = threading.Event()
@@ -84,8 +88,11 @@ def timed_call(log, label, freeze_flag_path):
     def watchdog():
         while not done_event.wait(1.0):
             elapsed = time.time() - start
-            if elapsed > FREEZE_THRESHOLD_S:
-                log.write(f"FREEZE-VERDACHT bei '{label}': {elapsed:.1f}s blockiert")
+            if elapsed > threshold_s:
+                log.write(
+                    f"FREEZE-VERDACHT bei '{label}': {elapsed:.1f}s blockiert "
+                    f"(threshold {threshold_s:.0f}s)"
+                )
                 try:
                     open(freeze_flag_path, "a", encoding="utf-8").close()
                 except OSError:
@@ -114,12 +121,12 @@ def open_calc(ctx, log, freeze_flag):
     return desktop, doc
 
 
-def dispatch(ctx, frame, url, log, freeze_flag):
+def dispatch(ctx, frame, url, log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DEFAULT_S):
     smgr = ctx.ServiceManager
     helper = smgr.createInstanceWithContext(
         "com.sun.star.frame.DispatchHelper", ctx
     )
-    with timed_call(log, f"dispatch {url}", freeze_flag):
+    with timed_call(log, f"dispatch {url}", freeze_flag, threshold_s):
         helper.executeDispatch(frame, url, "", 0, ())
 
 
@@ -164,11 +171,12 @@ def activate_sheet(doc, name, log, freeze_flag):
 
 def sheet_storm(doc, log, freeze_flag, rng):
     names = list_sheets(doc, log, freeze_flag)
-    candidates = [n for n in names if any(tag in n for tag in ("SPIELTAG", "SPIELRUNDE", "ANMELDUNGEN", "TEILNEHMER", "MELDELISTE"))]
+    tags = ("spieltag", "spielrunde", "anmeldungen", "teilnehmer", "meldeliste")
+    candidates = [n for n in names if any(t in n.lower() for t in tags)]
     if not candidates:
         log.write(f"sheet-storm: keine Kandidaten in {names!r}")
         return
-    log.write(f"sheet-storm: {len(candidates)} Kandidaten")
+    log.write(f"sheet-storm: {len(candidates)} Kandidaten von {len(names)}")
     for i in range(SHEET_SWITCHES_PER_ITER):
         name = rng.choice(candidates)
         activate_sheet(doc, name, log, freeze_flag)
@@ -188,7 +196,10 @@ def run(args):
 
         for it in range(1, args.iterations + 1):
             log.write(f"=== Iteration {it}/{args.iterations} ===")
-            dispatch(ctx, frame, "ptm:SpieltagRanglisteSheet_TestDaten", log, freeze_flag)
+            dispatch(
+                ctx, frame, "ptm:SpieltagRanglisteSheet_TestDaten",
+                log, freeze_flag, threshold_s=FREEZE_THRESHOLD_DISPATCH_S,
+            )
             wait_for_fertig(log, args.ptm_log)
             sheet_storm(doc, log, freeze_flag, rng)
             if os.path.exists(freeze_flag):
