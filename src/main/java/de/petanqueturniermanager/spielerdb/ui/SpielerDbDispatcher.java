@@ -9,9 +9,11 @@ import com.sun.star.sheet.XSpreadsheet;
 import com.sun.star.uno.XComponentContext;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.i18n.I18n;
 import de.petanqueturniermanager.helper.i18n.SheetNamen;
 import de.petanqueturniermanager.helper.sheet.SheetHelper;
+import de.petanqueturniermanager.helper.sheet.blattschutz.BlattschutzManager;
 import de.petanqueturniermanager.helper.msgbox.MessageBox;
 import de.petanqueturniermanager.helper.msgbox.MessageBoxTypeEnum;
 import de.petanqueturniermanager.helper.msgbox.ProcessBox;
@@ -87,7 +89,7 @@ public final class SpielerDbDispatcher {
         if (warSichtbar) {
             pb.hide();
         }
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             new SpielerSucheDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
@@ -118,7 +120,7 @@ public final class SpielerDbDispatcher {
         if (warSichtbar) {
             pb.hide();
         }
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             new SpielerDbAbgleichDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
@@ -134,7 +136,7 @@ public final class SpielerDbDispatcher {
 
     public static void vorlageErstellen(WorkingSpreadsheet ws) {
         XComponentContext ctx = ws.getxContext();
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             SpielerDbVorlageSheet.bereitstellen(ws);
         } catch (GenerateException | RuntimeException e) {
             logger.error("Vorlage-Sheet konnte nicht angelegt werden", e);
@@ -170,7 +172,7 @@ public final class SpielerDbDispatcher {
         if (warSichtbar) {
             pb.hide();
         }
-        try {
+        try (var _ = BlattschutzManager.get().scopeFuer(aktivesTurnierSystem(ws), ws)) {
             new SpielerDbAbgleichDialog(ctx,
                     new SpielerRepository(conn.get()),
                     new VereinRepository(conn.get()),
@@ -316,6 +318,16 @@ public final class SpielerDbDispatcher {
         } catch (RuntimeException e) {
             logger.warn("Meldeliste-Sheet konnte nicht aktiviert werden", e);
         }
+    }
+
+    /**
+     * Ermittelt das Turniersystem des aktuellen Dokuments. Die Spieler-DB-Dialoge
+     * laufen direkt aus {@code ProtocolHandler.behandleDialogBefehl} ohne
+     * {@code SheetRunner}, daher müssen sie selbst einen {@link BlattschutzManager}-
+     * Scope öffnen, sonst werfen Sheet-Schreibvorgänge im Turnier-Modus.
+     */
+    private static TurnierSystem aktivesTurnierSystem(WorkingSpreadsheet ws) {
+        return new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
     }
 
     private static Optional<SpielerDbConnection> oeffneOderMelde(XComponentContext ctx) {

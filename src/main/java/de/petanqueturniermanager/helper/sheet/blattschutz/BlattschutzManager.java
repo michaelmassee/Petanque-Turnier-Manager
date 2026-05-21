@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.Lo;
 import de.petanqueturniermanager.helper.position.RangePosition;
@@ -170,6 +171,46 @@ public class BlattschutzManager {
             doEntsperren(state.konfig, state.ws);
             state.wurdeEntsperrt = true;
         }
+    }
+
+    /**
+     * Convenience-Wrapper für Aufrufer, die Sheets <em>außerhalb</em> eines
+     * {@link de.petanqueturniermanager.SheetRunner} mutieren – typischerweise
+     * modale UNO-Dialoge aus dem {@code ProtocolHandler}/Dispatcher-Pfad (z.B.
+     * Spieler-DB-Übernahme).
+     * <p>
+     * Liefert einen {@link AutoCloseable}, der {@link #beginCommandScope} öffnet
+     * und beim {@code close} {@link #endCommandScope} schließt. Ist der
+     * Turnier-Modus inaktiv oder kein Schutz-Mapping für {@code ts} registriert,
+     * ist das Ergebnis ein no-op – der Aufrufer-Code bleibt unverändert.
+     * <p>
+     * Nutzung als try-with-resources:
+     * <pre>
+     * try (var ignored = BlattschutzManager.get().scopeFuer(ts, ws)) {
+     *     ... Sheet-Schreibvorgang ...
+     * }
+     * </pre>
+     */
+    public BlattschutzScope scopeFuer(TurnierSystem ts, WorkingSpreadsheet ws) {
+        if (ts == null || ts == TurnierSystem.KEIN || !TurnierModus.get().istAktiv()) {
+            return () -> { };
+        }
+        IBlattschutzKonfiguration konfig = BlattschutzRegistry.fuer(ts).orElse(null);
+        if (konfig == null) {
+            return () -> { };
+        }
+        beginCommandScope(konfig, ws);
+        return this::endCommandScope;
+    }
+
+    /**
+     * AutoCloseable ohne checked Exception – passt zu try-with-resources im
+     * Dispatcher-Pfad, der weder {@link Exception} fängt noch deklariert.
+     */
+    @FunctionalInterface
+    public interface BlattschutzScope extends AutoCloseable {
+        @Override
+        void close();
     }
 
     // ── Public API (scope-aware) ─────────────────────────────────────────────
