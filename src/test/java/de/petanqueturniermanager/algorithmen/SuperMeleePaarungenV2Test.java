@@ -829,6 +829,91 @@ public class SuperMeleePaarungenV2Test {
         }
     }
 
+    /**
+     * Crossover-Vermeidung (weicher Constraint): 22 Spieler × 4 Runden im
+     * Triplette-Modus reproduzieren die Konstellation aus der Live-ODS
+     * {@code ~/tmp/supermelee_algorithmus.ods}. Die Live-ODS zeigte 43 Spielerpaare,
+     * die mehrfach in derselben Partie waren — davon 4 Tripel mit Mischverteilung
+     * 1× Team-Partner + 2× Gegner ("war erst zusammen, dann gegeneinander").<br>
+     * <br>
+     * Mit dem Two-Pass-Algorithmus (Pass 1 verwendet die Union aus harter
+     * Mitspieler-Matrix und Soft-Matrix {@code warImSpielMit}) sinkt die Anzahl
+     * der Wiederholungen messbar. Wichtiger: das vom Anwender als störend
+     * empfundene Team↔Gegner-Wechselmuster wird strikt verhindert — kein Tripel
+     * mehr mit gemischter Team/Gegner-Historie.
+     */
+    @Test
+    public void testCrossoverVermeidung22Spieler4Runden() throws AlgorithmenException {
+        RandomSource.setSeed(42L);
+        SpielerMeldungen meldungen = newTestMeldungen(22);
+
+        Set<String> bereitsImSpiel = new HashSet<>();
+        Map<String, Integer> teamCount = new HashMap<>();
+        Map<String, Integer> spielCount = new HashMap<>();
+        long mitspielerNachSpiel = 0;
+
+        for (int rnd = 1; rnd <= 4; rnd++) {
+            MeleeSpielRunde runde = paarungen.neueSpielrundeTripletteMode(rnd, meldungen, false);
+            List<Team> teams = runde.teams();
+            Set<String> dieseRunde = new HashSet<>();
+            for (int i = 0; i < teams.size() - 1; i += 2) {
+                List<Spieler> tA = teams.get(i).spieler();
+                List<Spieler> tB = teams.get(i + 1).spieler();
+                mitspielerNachSpiel += zaehleNeueMitspieler(tA, bereitsImSpiel, teamCount, spielCount, dieseRunde);
+                mitspielerNachSpiel += zaehleNeueMitspieler(tB, bereitsImSpiel, teamCount, spielCount, dieseRunde);
+                for (Spieler sA : tA) {
+                    for (Spieler sB : tB) {
+                        String k = paarSchluessel(sA.getNr(), sB.getNr());
+                        spielCount.merge(k, 1, Integer::sum);
+                        dieseRunde.add(k);
+                    }
+                }
+            }
+            bereitsImSpiel.addAll(dieseRunde);
+        }
+
+        assertThat(teamCount.values().stream().filter(v -> v > 1).count())
+                .as("Mitspieler-Wiederholungen (harter Constraint)")
+                .isZero();
+
+        // Live-ODS-Baseline (vor Fix): 43 Wiederholungen. Two-Pass-Fix erreicht 32 (Seed 42).
+        assertThat(spielCount.values().stream().filter(v -> v > 1).count())
+                .as("Wiederholungen ohne Fix waren 43; Soft-Constraint reduziert deutlich")
+                .isLessThanOrEqualTo(35);
+
+        // Pass 1 (Union-Matrix) garantiert: ein Spielerpaar, das in einer früheren
+        // Runde gemeinsam in einer Partie war, darf in keiner späteren Runde
+        // Mitspieler werden. Damit fällt das vom Anwender beobachtete Tripel-Muster
+        // "1× Team + 2× Gegner" weg.
+        assertThat(mitspielerNachSpiel)
+                .as("Kein Spielerpaar darf Mitspieler werden, nachdem es bereits in einer früheren Partie zusammen war")
+                .isZero();
+    }
+
+    /** Zählt Mitspieler in {@code team}, aktualisiert beide Counter und meldet,
+     *  wie viele Paare bereits in einer früheren Runde im selben Spiel waren. */
+    private long zaehleNeueMitspieler(List<Spieler> team, Set<String> bereitsImSpiel,
+            Map<String, Integer> teamCount, Map<String, Integer> spielCount,
+            Set<String> dieseRunde) {
+        long verstoesse = 0;
+        for (int i = 0; i < team.size(); i++) {
+            for (int j = i + 1; j < team.size(); j++) {
+                String k = paarSchluessel(team.get(i).getNr(), team.get(j).getNr());
+                teamCount.merge(k, 1, Integer::sum);
+                spielCount.merge(k, 1, Integer::sum);
+                dieseRunde.add(k);
+                if (bereitsImSpiel.contains(k)) {
+                    verstoesse++;
+                }
+            }
+        }
+        return verstoesse;
+    }
+
+    private static String paarSchluessel(int a, int b) {
+        return a < b ? a + "_" + b : b + "_" + a;
+    }
+
     // =========================================================================
     // Größen-Constraint: D-vs-T nur erlaubt, wenn Parität es erzwingt (5er-Partie)
     // =========================================================================

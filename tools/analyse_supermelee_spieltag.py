@@ -5,9 +5,11 @@ Konsistenz-Analyse für eine Supermelee-Spieltag-ODS.
 Liest direkt aus der ODS (content.xml + meta.xml) und prüft:
   1. Mitspieler-Wiederholungen (gleiche Spieler 2× im selben Team)
   2. Gegner-Wiederholungen (Spielerpaar trifft sich mehrfach als Gegner)
-  3. Rangliste-Werte (Σ+, Σ-, Δ, Siege, Punkte) gegen Spielrunden-Daten,
+  3. Crossover (Spielerpaar mehrfach im selben Spiel — egal ob Mitspieler
+     oder Gegner; weicher Constraint des Supermelee-Algorithmus)
+  4. Rangliste-Werte (Σ+, Σ-, Δ, Siege, Punkte) gegen Spielrunden-Daten,
      inkl. der konfigurierten Default-Punkte für nicht angetretene Spieler
-  4. Rangliste-Sortierung (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓)
+  5. Rangliste-Sortierung (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓)
 
 Konfiguration wird aus den ODS-Document-Properties gelesen (meta.xml,
 Property-Namen "Nicht gespielte Runde, + Punkte" / "... - Punkte"); fehlt
@@ -257,8 +259,28 @@ def main():
             print(f'     {n}× : {a:>3} {nm(a):28s}  vs  {b:>3} {nm(b)}')
     print()
 
-    # --- 3) Rangliste-Werte ---
-    print(f'--- 3) RANGLISTE-WERTE  ({rl_name}) ---')
+    # --- 3) Crossover (Team + Gegner kombiniert) ---
+    crossover = Counter()
+    for k, v in mitspieler.items():
+        crossover[k] += v
+    for k, v in gegner.items():
+        crossover[k] += v
+    cw = {k: v for k, v in crossover.items() if v > 1}
+    print('--- 3) CROSSOVER (Paare mehrfach im selben Spiel, Team ODER Gegner) ---')
+    print(f'  Spielerpaare insgesamt im selben Spiel: {len(crossover)}, davon mehrfach: {len(cw)}')
+    vt = Counter(cw.values())
+    for n in sorted(vt):
+        print(f'     {vt[n]} Paare {n}× im selben Spiel')
+    if cw:
+        def nm(n): return stats.get(n, {}).get('name') or f'#{n}'
+        for (a, b), n in sorted(cw.items(), key=lambda x: (-x[1], x[0])):
+            ms = mitspieler.get((a, b), 0)
+            gg = gegner.get((a, b), 0)
+            print(f'     {n}× : {a:>3} {nm(a):28s}  +  {b:>3} {nm(b):28s}  (Team {ms}×, Gegner {gg}×)')
+    print()
+
+    # --- 4) Rangliste-Werte ---
+    print(f'--- 4) RANGLISTE-WERTE  ({rl_name}) ---')
     if rangliste is None:
         print('  ⚠ Rangliste-Sheet nicht gefunden')
     else:
@@ -300,9 +322,9 @@ def main():
             for rl, fehlt, diffs in abweich[:30]:
                 print(f'     #{rl["nr"]:>3} {rl["name"]:30s} fehlt={fehlt}  {", ".join(diffs)}')
 
-    # --- 4) Sortierung ---
+    # --- 5) Sortierung ---
     print()
-    print('--- 4) RANGLISTE-SORTIERUNG (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓) ---')
+    print('--- 5) RANGLISTE-SORTIERUNG (Siege ↓ → Punkte ↓ → Δ ↓ → Σ+ ↓) ---')
     if rangliste:
         soll = sorted(rangliste,
                       key=lambda x: (-(x['siege'] or 0), -(x['punkte'] or 0),

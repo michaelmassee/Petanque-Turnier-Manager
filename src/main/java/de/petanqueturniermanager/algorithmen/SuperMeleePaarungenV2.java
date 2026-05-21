@@ -171,7 +171,31 @@ public class SuperMeleePaarungenV2 {
         spielRunde.sortiereTeamsNachGroese();
         spielRunde.validateSpielerTeam(null);
         optimiereGegnerPaarung(spielRunde);
+        protokolliereWarImSpielMit(spielRunde);
         return spielRunde;
+    }
+
+    /**
+     * Trägt für jedes Spielerpaar innerhalb einer Partie (TeamA ∪ TeamB)
+     * gegenseitig {@link Spieler#addWarImSpielMit} ein. Diese Statistik wird in
+     * Folgerunden als weicher Constraint im Backtracking-Value-Ordering genutzt,
+     * um Crossover-Wiederholungen (gleiches Paar mehrfach im selben Spiel, egal
+     * ob als Team oder als Gegner) zu vermeiden.
+     */
+    private void protokolliereWarImSpielMit(MeleeSpielRunde spielRunde) {
+        List<Team> teams = spielRunde.teams();
+        for (int i = 0; i < teams.size() - 1; i += 2) {
+            Team teamA = teams.get(i);
+            Team teamB = teams.get(i + 1);
+            List<Spieler> alle = new ArrayList<>(teamA.spieler().size() + teamB.spieler().size());
+            alle.addAll(teamA.spieler());
+            alle.addAll(teamB.spieler());
+            for (int x = 0; x < alle.size(); x++) {
+                for (int y = x + 1; y < alle.size(); y++) {
+                    alle.get(x).addWarImSpielMit(alle.get(y));
+                }
+            }
+        }
     }
 
     /**
@@ -240,22 +264,60 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Greedy-Paarung innerhalb einer Größen-Gruppe: nimmt jeweils das erste ungepaarte
-     * Team und wählt den Gegner mit minimalem Gegner-Score. Die Gruppe muss gerade
-     * Anzahl Teams enthalten (durch Aufrufer sichergestellt).
+     * Paarung innerhalb einer Größen-Gruppe via vollständiger Aufzählung aller
+     * möglichen Pairings (Min-Sum über {@link #berechneGegnerScore}).
+     * <br>
+     * Die Anzahl der Pairings auf {@code k} Teams ist {@code (k-1)!! = 1·3·5·…·(k-1)}.
+     * Für k=8 sind das 105 Pairings — bei Spielerzahlen bis ~30 (k ≤ 10 = 945
+     * Pairings) immer noch günstig im Vergleich zum Greedy-Verfahren, welches
+     * lokale Optima nicht verlassen kann. Die Gruppe muss gerade Anzahl Teams
+     * enthalten (durch Aufrufer sichergestellt).
      */
     private void paareInnerhalbGruppe(List<Team> gruppe, List<Team> ergebnis) {
-        List<Team> unpaired = new ArrayList<>(gruppe);
-        while (!unpaired.isEmpty()) {
-            Team team1 = unpaired.remove(0);
-            Team besteGegner = unpaired.stream()
-                    .min(Comparator.comparingInt(t -> berechneGegnerScore(team1, t)))
-                    .orElse(null);
-            ergebnis.add(team1);
-            if (besteGegner != null) {
-                unpaired.remove(besteGegner);
-                ergebnis.add(besteGegner);
+        if (gruppe.isEmpty()) {
+            return;
+        }
+        List<Team> arbeitskopie = new ArrayList<>(gruppe);
+        List<Team> besteReihenfolge = new ArrayList<>(arbeitskopie.size());
+        int[] bestScore = {Integer.MAX_VALUE};
+        List<Team> aktuelle = new ArrayList<>(arbeitskopie.size());
+        suchePaarungenRekursiv(arbeitskopie, aktuelle, 0, besteReihenfolge, bestScore);
+        ergebnis.addAll(besteReihenfolge);
+    }
+
+    /**
+     * Rekursive Aufzählung aller perfekten Matchings auf {@code teams}: fixiert
+     * das erste ungepaarte Team und probiert jeden möglichen Partner; minimiert
+     * über die Summe der {@link #berechneGegnerScore}-Werte aller Paare.
+     */
+    private void suchePaarungenRekursiv(List<Team> teams, List<Team> aktuelle, int aktScore,
+            List<Team> besteReihenfolge, int[] bestScore) {
+        if (teams.isEmpty()) {
+            if (aktScore < bestScore[0]) {
+                bestScore[0] = aktScore;
+                besteReihenfolge.clear();
+                besteReihenfolge.addAll(aktuelle);
             }
+            return;
+        }
+        if (aktScore >= bestScore[0]) {
+            return; // Branch-Cut: aktueller Pfad kann nicht besser werden
+        }
+        Team team1 = teams.get(0);
+        for (int i = 1; i < teams.size(); i++) {
+            Team partner = teams.get(i);
+            int score = berechneGegnerScore(team1, partner);
+            List<Team> remaining = new ArrayList<>(teams.size() - 2);
+            for (int j = 1; j < teams.size(); j++) {
+                if (j != i) {
+                    remaining.add(teams.get(j));
+                }
+            }
+            aktuelle.add(team1);
+            aktuelle.add(partner);
+            suchePaarungenRekursiv(remaining, aktuelle, aktScore + score, besteReihenfolge, bestScore);
+            aktuelle.remove(aktuelle.size() - 1);
+            aktuelle.remove(aktuelle.size() - 1);
         }
     }
 
@@ -282,14 +344,19 @@ public class SuperMeleePaarungenV2 {
     }
 
     /**
-     * Berechnet den Gegner-Score zweier Teams: Anzahl der Spielerpaare (sA, sB),
-     * bei denen {@code sA.warGegnerVon(sB)} gilt — je höher, desto mehr Wiederholungen.
+     * Berechnet den gewichteten Score zweier Teams für die Greedy-Gegnerpaarung.
+     * Gegner-Wiederholung bleibt dominant (Faktor 10), Crossover (Spieler-Paar war
+     * in einer früheren Runde gemeinsam im selben Spiel — egal ob Team oder Gegner)
+     * wird als Tie-Breaker mit Gewicht 1 hinzugerechnet.
      */
     private int berechneGegnerScore(Team team1, Team team2) {
         int score = 0;
         for (Spieler s1 : team1.spieler()) {
             for (Spieler s2 : team2.spieler()) {
                 if (s1.warGegnerVon(s2)) {
+                    score += 10;
+                }
+                if (s1.warImSpielMit(s2)) {
                     score++;
                 }
             }
@@ -458,8 +525,11 @@ public class SuperMeleePaarungenV2 {
         // Schritt 1: Zufällig mischen — für unterschiedliche Lösungen je Runde
         Collections.shuffle(spieler, RandomSource.asJavaRandom());
 
-        // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf
+        // Schritt 2: Adjazenz-Matrix aufbauen + MCV-Grade in einem einzigen O(n²)-Durchlauf.
+        // Parallel die Soft-Matrix für „war schon im selben Spiel" — wird nur als
+        // Value-Ordering-Heuristik im Backtracking verwendet, nicht zum Pruning.
         boolean[][] matrix = new boolean[n][n];
+        boolean[][] softMatrix = new boolean[n][n];
         int[] degrees = new int[n];
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
@@ -468,25 +538,51 @@ public class SuperMeleePaarungenV2 {
                     degrees[i]++;
                     degrees[j]++;
                 }
+                if (spieler.get(i).warImSpielMit(spieler.get(j))) {
+                    softMatrix[i][j] = softMatrix[j][i] = true;
+                }
             }
         }
 
         // Schritt 3: MCV-Sortierung — Index-Array nach Constraint-Grad absteigend sortieren
-        // (Shuffle hat Gleichstände bereits zufällig gebrochen)
         Integer[] order = new Integer[n];
         for (int i = 0; i < n; i++) {
             order[i] = i;
         }
         Arrays.sort(order, (a, b) -> Integer.compare(degrees[b], degrees[a]));
 
-        // Schritt 4: Vollständiges Backtracking
         List<List<Integer>> teams = new ArrayList<>(numTeams);
         for (int i = 0; i < numTeams; i++) {
             teams.add(new ArrayList<>(teamSize));
         }
 
         int[] knotenZaehler = {0};
-        if (backtrack(order, 0, teams, teamSize, matrix, knotenZaehler)) {
+
+        // Pass 1: Soft-Constraint als zusätzlichen harten Constraint behandeln —
+        // Adjazenz wird zur Union (matrix OR softMatrix). Findet das Backtracking
+        // hier eine Lösung, hat sie 0 Mitspieler-Crossover (keine zwei Spieler im
+        // selben Team waren bereits gemeinsam in einer früheren Partie als Team-
+        // Partner oder Gegner). Damit ist das vom Anwender als störend empfundene
+        // "Team-dann-Gegner"-Muster vermieden.
+        boolean[][] unionMatrix = new boolean[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                unionMatrix[i][j] = matrix[i][j] || softMatrix[i][j];
+            }
+        }
+        if (backtrack(order, 0, teams, teamSize, unionMatrix, softMatrix, knotenZaehler)) {
+            return buildSpielRunde(rndNr, teams, spieler, meldungen);
+        }
+
+        // Pass 1 unmöglich — Teams zurücksetzen und ohne Soft-Constraint erneut
+        // versuchen (Crossover wird dann nur noch als Value-Ordering-Tie-Breaker
+        // im Backtracking sowie als Tie-Breaker in der Greedy-Gegnerpaarung
+        // genutzt). Knotenzähler bleibt erhalten, das Limit gilt summarisch
+        // über beide Pässe.
+        for (List<Integer> team : teams) {
+            team.clear();
+        }
+        if (backtrack(order, 0, teams, teamSize, matrix, softMatrix, knotenZaehler)) {
             return buildSpielRunde(rndNr, teams, spieler, meldungen);
         }
 
@@ -533,11 +629,12 @@ public class SuperMeleePaarungenV2 {
      * @param teams         partielle Team-Zuweisung als Index-Listen (in-place, rückgängig gemacht)
      * @param teamSize      Zielgröße jedes Teams
      * @param matrix        vorberechnete Adjazenz-Matrix; {@code matrix[i][j]==true} bedeutet Konflikt
+     * @param softMatrix    vorberechnete Crossover-Matrix; nur Value-Ordering-Heuristik, kein Pruning
      * @param knotenZaehler einelementiges Array zum Mitzählen der Backtracking-Knoten (Safety-Limit)
      * @return {@code true} wenn eine vollständige gültige Zuweisung gefunden wurde
      */
     private boolean backtrack(Integer[] order, int idx, List<List<Integer>> teams,
-            int teamSize, boolean[][] matrix, int[] knotenZaehler) {
+            int teamSize, boolean[][] matrix, boolean[][] softMatrix, int[] knotenZaehler) {
         if (idx == order.length) {
             return true; // Alle Spieler erfolgreich zugewiesen
         }
@@ -547,9 +644,15 @@ public class SuperMeleePaarungenV2 {
         }
 
         int currentOrigIdx = order[idx];
-        boolean triedEmptyTeam = false;
 
-        for (List<Integer> team : teams) {
+        // Value-Ordering: Teams nach Crossover-Score zum aktuellen Spieler aufsteigend
+        // sortieren (Soft-Constraint). Leere Teams haben Score 0 und liegen damit vorn
+        // — die Symmetriebrechung filtert davon nur das erste leere Team.
+        List<List<Integer>> sortierteTeams = new ArrayList<>(teams);
+        sortierteTeams.sort(Comparator.comparingInt(t -> crossoverScoreTeam(currentOrigIdx, t, softMatrix)));
+
+        boolean triedEmptyTeam = false;
+        for (List<Integer> team : sortierteTeams) {
             if (team.size() >= teamSize) {
                 continue; // Team bereits voll
             }
@@ -566,7 +669,7 @@ public class SuperMeleePaarungenV2 {
                 team.add(currentOrigIdx);
                 boolean teamVoll = (team.size() >= teamSize);
                 if (vorwaertsCheckInkrementell(currentOrigIdx, order, idx + 1, teams, teamSize, matrix, teamVoll)
-                        && backtrack(order, idx + 1, teams, teamSize, matrix, knotenZaehler)) {
+                        && backtrack(order, idx + 1, teams, teamSize, matrix, softMatrix, knotenZaehler)) {
                     return true;
                 }
                 team.remove(team.size() - 1); // Backtrack: Zuweisung rückgängig machen
@@ -574,6 +677,20 @@ public class SuperMeleePaarungenV2 {
         }
 
         return false; // kein gültiger Platz gefunden — eine Ebene zurückgehen
+    }
+
+    /**
+     * Summiert die Crossover-Konflikte von {@code spielerIdx} zu allen bisherigen
+     * Mitgliedern von {@code team} (Soft-Constraint im Backtracking-Value-Ordering).
+     */
+    private int crossoverScoreTeam(int spielerIdx, List<Integer> team, boolean[][] softMatrix) {
+        int score = 0;
+        for (int memberIdx : team) {
+            if (softMatrix[spielerIdx][memberIdx]) {
+                score++;
+            }
+        }
+        return score;
     }
 
     /**
