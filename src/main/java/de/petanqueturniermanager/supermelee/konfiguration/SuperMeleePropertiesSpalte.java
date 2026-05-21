@@ -291,6 +291,11 @@ public class SuperMeleePropertiesSpalte extends BasePropertiesSpalte implements 
 	}
 
 	@Override
+	public void setMaxAnzGespielteSpieltage(int val) {
+		writeIntProperty(KONFIG_PROP_ANZ_GESPIELTE_SPIELTAGE, val);
+	}
+
+	@Override
 	public Integer getMaxAnzSpielerInSpalte() {
 		return readIntProperty(KONFIG_PROP_ANZ_SPIELER_IN_SPALTE);
 	}

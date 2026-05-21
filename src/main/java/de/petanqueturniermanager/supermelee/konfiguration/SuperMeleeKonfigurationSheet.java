@@ -103,6 +103,11 @@ public class SuperMeleeKonfigurationSheet extends BaseKonfigurationSheet
 	}
 
 	@Override
+	public void setMaxAnzGespielteSpieltage(int val) {
+		propertiesSpalte.setMaxAnzGespielteSpieltage(val);
+	}
+
+	@Override
 	public Integer getMaxAnzSpielerInSpalte() {
 		return propertiesSpalte.getMaxAnzSpielerInSpalte();
 	}

@@ -225,6 +225,20 @@ public class Spieler extends NrComparable implements IMeldung<Spieler> {
 		return this;
 	}
 
+	/**
+	 * Setzt die komplette Paarungs-Historie des Spielers zurück: Mitspieler-,
+	 * Gegner- und Spiel-Historie sowie den Counter für Ausnahme-Teamgrößen.
+	 * Wird vom Lockerungs-Retry in der Supermelee-Paarungslogik genutzt, um die
+	 * Historie aus weniger vergangenen Spieltagen neu aufbauen zu können.
+	 */
+	public Spieler resetHistorie() {
+		warImTeamMit.clear();
+		gegner.clear();
+		warImSpielMit.clear();
+		anzMalKleinesTeam = 0;
+		return this;
+	}
+
 	@Override
 	public boolean isHatteFreilos() {
 		return hatteFreilos;

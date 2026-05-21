@@ -118,14 +118,14 @@ public class SpielrundeSheet_Update extends SheetRunner
 		return delegate.canStart(meldungen);
 	}
 
-	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr)
-			throws GenerateException {
-		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr);
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr,
+			int historieAbSpielrunde, int historieBisSpielrunde) throws GenerateException {
+		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, historieAbSpielrunde, historieBisSpielrunde);
 	}
 
-	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force)
-			throws GenerateException {
-		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, force);
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force,
+			int historieAbSpielrunde, int historieBisSpielrunde) throws GenerateException {
+		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, force, historieAbSpielrunde, historieBisSpielrunde);
 	}
 
 	void gespieltenRundenEinlesen(SpielerMeldungen aktiveMeldungen, int abSpielrunde, int bisSpielrunde)
@@ -149,9 +149,10 @@ public class SpielrundeSheet_Update extends SheetRunner
 			return;
 		}
 
-		gespieltenRundenEinlesen(aktiveMeldungen, getKonfigurationSheet().getSpielRundeNeuAuslosenAb(),
-				aktuelleSpielrunde.getNr() - 1);
-		if (neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde)) {
+		int historieAb = getKonfigurationSheet().getSpielRundeNeuAuslosenAb();
+		int historieBis = aktuelleSpielrunde.getNr() - 1;
+		gespieltenRundenEinlesen(aktiveMeldungen, historieAb, historieBis);
+		if (neueSpielrunde(aktiveMeldungen, aktuelleSpielrunde, historieAb, historieBis)) {
 			new SpielrundeSheet_Validator(getWorkingSpreadsheet()).validateSpieltag(getSpielTag());
 			getSheetHelper().setActiveSheet(getXSpreadSheet());
 		}

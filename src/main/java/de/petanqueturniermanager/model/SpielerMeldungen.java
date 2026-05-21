@@ -125,6 +125,18 @@ public class SpielerMeldungen implements IMeldungen<SpielerMeldungen, Spieler> {
 		return this;
 	}
 
+	/**
+	 * Setzt die Paarungs-Historie aller gemeldeten Spieler zurück. Wird vom
+	 * Lockerungs-Retry der Supermelee-Paarung benutzt, um die Historie aus
+	 * weniger vergangenen Spieltagen neu aufzubauen.
+	 */
+	public SpielerMeldungen resetAllHistorie() {
+		for (Spieler spielerausList : spielerList) {
+			spielerausList.resetHistorie();
+		}
+		return this;
+	}
+
 	public List<Spieler> spielerOhneTeam() throws AlgorithmenException {
 		List<Spieler> spielerOhneTeam = new ArrayList<>();
 		for (Spieler spielerausList : spielerList) {

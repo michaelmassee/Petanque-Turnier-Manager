@@ -129,9 +129,9 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 		return delegate.letztePositionRechtsUnten();
 	}
 
-	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force)
-			throws GenerateException {
-		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, force);
+	protected boolean neueSpielrunde(SpielerMeldungen meldungen, SpielRundeNr neueSpielrundeNr, boolean force,
+			int historieAbSpielrunde, int historieBisSpielrunde) throws GenerateException {
+		return delegate.neueSpielrunde(meldungen, neueSpielrundeNr, force, historieAbSpielrunde, historieBisSpielrunde);
 	}
 
 	@Override
@@ -192,9 +192,10 @@ public class SpielrundeSheet_TestDaten extends SheetRunner
 			}
 
 			SpielerMeldungen aktiveMeldungen = getMeldeListe().getAktiveMeldungen();
-			naechsteSpielrundeSheet.gespieltenRundenEinlesen(aktiveMeldungen,
-					getKonfigurationSheet().getSpielRundeNeuAuslosenAb(), spielrundeNr - 1);
-			if (!neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(spielrundeNr), true)) {
+			int historieAb = getKonfigurationSheet().getSpielRundeNeuAuslosenAb();
+			int historieBis = spielrundeNr - 1;
+			naechsteSpielrundeSheet.gespieltenRundenEinlesen(aktiveMeldungen, historieAb, historieBis);
+			if (!neueSpielrunde(aktiveMeldungen, SpielRundeNr.from(spielrundeNr), true, historieAb, historieBis)) {
 				return;
 			}
 
