@@ -85,51 +85,47 @@ function Invoke-ThreadDump([int] $targetPid, [string] $outFile, [int] $timeoutSe
     return @{ rc = $proc.ExitCode; lines = ($out -split "`n").Count }
 }
 
-# Findet unter mehreren soffice.bin-Prozessen den, dessen JVM jcmd anspricht
-# (=jvm.dll ist in dem Prozess geladen). LO startet ggf. mehrere soffice.bin;
-# nur der mit dem Java-UNO-Component-Loader hat die JVM. Probiert
-# jcmd <pid> VM.version mit kurzem Timeout pro Kandidat.
-function Find-JavaSoffice([int] $maxWaitSec = 60) {
-    $deadline = (Get-Date).AddSeconds($maxWaitSec)
-    while ((Get-Date) -lt $deadline) {
-        if (Test-Path $stopFlag) {
-            Write-WatcherLog 'stop.flag gesehen waehrend Find-JavaSoffice -- abgebrochen.'
-            return 0
-        }
-        $cands = Get-Process -Name soffice.bin -ErrorAction SilentlyContinue
-        foreach ($p in $cands) {
-            $info = New-Object System.Diagnostics.ProcessStartInfo
-            $info.FileName = $jcmd
-            $info.Arguments = "$($p.Id) VM.version"
-            $info.RedirectStandardOutput = $true
-            $info.RedirectStandardError = $true
-            $info.UseShellExecute = $false
-            $info.CreateNoWindow = $true
-            $j = [System.Diagnostics.Process]::Start($info)
-            if ($j.WaitForExit(3000)) {
-                $out = $j.StandardOutput.ReadToEnd() + $j.StandardError.ReadToEnd()
-                if ($j.ExitCode -eq 0 -and $out -match 'JVM') {
-                    Write-WatcherLog "Java-soffice.bin gefunden: PID=$($p.Id)"
-                    return [int] $p.Id
-                }
-            }
-            else {
-                try { $j.Kill() } catch { }
-            }
-        }
-        Start-Sleep -Seconds 1
+# Dumpt ALLE aktuell laufenden soffice.bin-Prozesse. Frueher haben wir versucht
+# den "Java-hostenden" Prozess via jcmd VM.version zu identifizieren -- das
+# scheitert aber genau dann, wenn die JVM wedged ist (die Diagnose-Situation,
+# die uns interessiert). Stattdessen dumpen wir ALLE, akzeptieren ein paar
+# leere/Fehler-Dumps fuer Nicht-JVM-Prozesse, und kriegen verlaesslich den
+# Dump des wedged Prozesses sobald jhsdb-Fallback greift.
+function Dump-AllSoffice([string] $tag = '') {
+    $cands = Get-Process -Name soffice.bin -ErrorAction SilentlyContinue
+    if (-not $cands) {
+        Write-WatcherLog "dump-all: keine soffice.bin gefunden"
+        return
     }
-    return 0
+    $tsBase = (Get-Date).ToString('yyyyMMdd-HHmmss-fff')
+    foreach ($p in $cands) {
+        $suffix = if ($tag) { "$tag-pid$($p.Id)" } else { "pid$($p.Id)" }
+        $file = Join-Path $OutputDir "threaddump-$tsBase-$suffix.txt"
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $r = Invoke-ThreadDump -targetPid $p.Id -outFile $file -timeoutSec 10
+        $sw.Stop()
+        Write-WatcherLog "dump pid=$($p.Id) rc=$($r.rc) ms=$($sw.ElapsedMilliseconds) lines=$($r.lines) -> $file"
+    }
 }
 
-# Auf den Java-hostenden soffice.bin warten (LO startet u.U. mehrere; nur der
-# mit geladenem jvm.dll laesst sich mit jcmd ansprechen). Variable nicht $pid
-# nennen -- ist Automatic-Variable.
-$ofpid = Find-JavaSoffice -maxWaitSec 90
-if (-not $ofpid) {
-    Write-WatcherLog 'FEHLER: kein Java-soffice.bin innerhalb 90s gefunden.'
+# Warte bis mindestens eine soffice.bin auftaucht (max 60s).
+$haveSoffice = $false
+for ($i = 0; $i -lt 60; $i++) {
+    if (Test-Path $stopFlag) {
+        Write-WatcherLog 'stop.flag gesehen vor Hauptschleife -- ende.'
+        exit 0
+    }
+    if (Get-Process -Name soffice.bin -ErrorAction SilentlyContinue) {
+        $haveSoffice = $true
+        break
+    }
+    Start-Sleep -Seconds 1
+}
+if (-not $haveSoffice) {
+    Write-WatcherLog 'FEHLER: keine soffice.bin nach 60s.'
     exit 1
 }
+Write-WatcherLog 'soffice.bin gesehen -- starte Polling-Schleife.'
 
 $lastFreezeDumped = $false
 
@@ -138,18 +134,12 @@ while ($true) {
         Write-WatcherLog 'stop.flag gesehen -- beende.'
         break
     }
-    if (-not (Get-Process -Id $ofpid -ErrorAction SilentlyContinue)) {
-        Write-WatcherLog "PID $ofpid weg -- soffice.bin beendet."
+    if (-not (Get-Process -Name soffice.bin -ErrorAction SilentlyContinue)) {
+        Write-WatcherLog 'keine soffice.bin mehr da -- beende.'
         break
     }
 
-    $ts = (Get-Date).ToString('yyyyMMdd-HHmmss-fff')
-    $dumpFile = Join-Path $OutputDir "threaddump-$ts.txt"
-
-    $sw = [System.Diagnostics.Stopwatch]::StartNew()
-    $r = Invoke-ThreadDump -targetPid $ofpid -outFile $dumpFile -timeoutSec 10
-    $sw.Stop()
-    Write-WatcherLog "thread-dump  rc=$($r.rc)  ms=$($sw.ElapsedMilliseconds)  lines=$($r.lines)  -> $dumpFile"
+    Dump-AllSoffice
 
     # Liveness-Probe: kann sich der TCP-Listener oeffnen lassen?
     try {
@@ -168,12 +158,10 @@ while ($true) {
         Write-WatcherLog "liveness exception: $($_.Exception.Message)"
     }
 
-    # Freeze-Flag: sofortigen Extra-Dump erzwingen, einmalig pro Flag
+    # Freeze-Flag: sofortigen Extra-Dump-Schub aller soffice.bin
     if ((Test-Path $freezeFlag) -and (-not $lastFreezeDumped)) {
-        $tsX = (Get-Date).ToString('yyyyMMdd-HHmmss-fff')
-        $extra = Join-Path $OutputDir "threaddump-FREEZE-$tsX.txt"
-        $rF = Invoke-ThreadDump -targetPid $ofpid -outFile $extra -timeoutSec 20
-        Write-WatcherLog "FREEZE-Flag gesehen -- Extra-Dump rc=$($rF.rc) lines=$($rF.lines) -> $extra"
+        Write-WatcherLog 'FREEZE-Flag gesehen -- Extra-Dump-Schub:'
+        Dump-AllSoffice -tag 'FREEZE'
         $lastFreezeDumped = $true
     }
 
