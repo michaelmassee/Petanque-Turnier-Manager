@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
+import de.petanqueturniermanager.formulex.konfiguration.FormuleXPropertiesSpalte;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.jedergegenjeden.konfiguration.JGJPropertiesSpalte;
 import de.petanqueturniermanager.kaskade.konfiguration.KaskadePropertiesSpalte;
@@ -57,6 +58,8 @@ public final class KonfigurationSingleton {
 					return PoulePropertiesSpalte.KONFIG_PROPERTIES;
 				case KASKADE:
 					return KaskadePropertiesSpalte.KONFIG_PROPERTIES;
+				case FORMULEX:
+					return FormuleXPropertiesSpalte.KONFIG_PROPERTIES;
 				default:
 					logger.error("TurnierSystem ungültig " + turnierSystem.getBezeichnung());
 					break;

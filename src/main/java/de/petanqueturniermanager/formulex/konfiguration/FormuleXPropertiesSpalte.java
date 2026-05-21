@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BasePropertiesSpalte;
+import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
 import de.petanqueturniermanager.helper.ISheet;
@@ -21,7 +22,7 @@ import de.petanqueturniermanager.supermelee.SpielRundeNr;
 /**
  * Konfigurationseigenschaften für das Formule X Turniersystem.
  */
-public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
+public class FormuleXPropertiesSpalte extends BasePropertiesSpalte implements IFreispielPropertiesSpalte {
 
     public static final List<ConfigProperty<?>> KONFIG_PROPERTIES = new ArrayList<>();
 
@@ -44,6 +45,9 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
     private static final String KONFIG_PROP_MELDELISTE_FORMATION   = "Meldeliste Formation";
     private static final String KONFIG_PROP_MELDELISTE_TEAMNAME    = "Meldeliste Teamname";
     private static final String KONFIG_PROP_MELDELISTE_VEREINSNAME = "Meldeliste Vereinsname";
+
+    private static final String KONFIG_PROP_FREISPIEL_PUNKTE_PLUS  = "Freispiel Punkte +";
+    private static final String KONFIG_PROP_FREISPIEL_PUNKTE_MINUS = "Freispiel Punkte -";
 
     static {
         KONFIG_PROPERTIES.add(HeaderFooterConfigProperty.from(KONFIG_PROP_KOPF_ZEILE_LINKS)
@@ -90,6 +94,11 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
         KONFIG_PROPERTIES.add(((AuswahlConfigProperty) AuswahlConfigProperty.from(KONFIG_PROP_MELDELISTE_VEREINSNAME)
                 .setDefaultVal("N").setDescription("config.desc.schweizer.vereinsname"))
                 .addAuswahl("J", "Ja").addAuswahl("N", "Nein").inSideBar());
+
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_PLUS)
+                .setDefaultVal(13).setDescription("config.desc.freispiel.punkte.plus").inSideBar());
+        KONFIG_PROPERTIES.add(ConfigProperty.from(ConfigPropertyType.INTEGER, KONFIG_PROP_FREISPIEL_PUNKTE_MINUS)
+                .setDefaultVal(0).setDescription("config.desc.freispiel.punkte.minus").inSideBar());
     }
 
     FormuleXPropertiesSpalte(ISheet sheet) {
@@ -184,5 +193,15 @@ public class FormuleXPropertiesSpalte extends BasePropertiesSpalte {
 
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         setStringProperty(KONFIG_PROP_MELDELISTE_VEREINSNAME, anzeigen ? "J" : "N");
+    }
+
+    @Override
+    public Integer getFreispielPunktePlus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_PLUS);
+    }
+
+    @Override
+    public Integer getFreispielPunkteMinus() {
+        return readIntProperty(KONFIG_PROP_FREISPIEL_PUNKTE_MINUS);
     }
 }

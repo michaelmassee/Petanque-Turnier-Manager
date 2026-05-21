@@ -4,6 +4,7 @@
 package de.petanqueturniermanager.formulex.konfiguration;
 
 import de.petanqueturniermanager.basesheet.konfiguration.BaseKonfigurationSheet;
+import de.petanqueturniermanager.basesheet.konfiguration.IFreispielPropertiesSpalte;
 import de.petanqueturniermanager.basesheet.konfiguration.IKonfigurationSheet;
 import de.petanqueturniermanager.basesheet.meldeliste.Formation;
 import de.petanqueturniermanager.basesheet.spielrunde.SpielrundeSpielbahn;
@@ -20,7 +21,7 @@ import de.petanqueturniermanager.basesheet.meldeliste.TurnierSystem;
 /**
  * Konfigurationssheet für das Formule X Turniersystem.
  */
-public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet {
+public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet implements IFreispielPropertiesSpalte {
 
     private final FormuleXPropertiesSpalte propertiesSpalte;
 
@@ -135,5 +136,15 @@ public class FormuleXKonfigurationSheet extends BaseKonfigurationSheet {
 
     public void setMeldeListeVereinsnameAnzeigen(boolean anzeigen) {
         propertiesSpalte.setMeldeListeVereinsnameAnzeigen(anzeigen);
+    }
+
+    @Override
+    public Integer getFreispielPunktePlus() {
+        return propertiesSpalte.getFreispielPunktePlus();
+    }
+
+    @Override
+    public Integer getFreispielPunkteMinus() {
+        return propertiesSpalte.getFreispielPunkteMinus();
     }
 }

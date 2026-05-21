@@ -13,12 +13,12 @@ import de.petanqueturniermanager.formulex.meldeliste.FormuleXMeldeListeSheetTest
 import de.petanqueturniermanager.formulex.meldeliste.FormuleXTeilnehmerSheet;
 import de.petanqueturniermanager.formulex.rangliste.FormuleXRanglisteSheet;
 import de.petanqueturniermanager.helper.NewTestDatenValidator;
+import de.petanqueturniermanager.helper.cellvalue.NumberCellValue;
 import de.petanqueturniermanager.helper.random.RandomSource;
 import de.petanqueturniermanager.helper.position.Position;
 import de.petanqueturniermanager.helper.position.RangePosition;
 import de.petanqueturniermanager.helper.sheet.RangeHelper;
 import de.petanqueturniermanager.helper.sheet.SheetMetadataHelper;
-import de.petanqueturniermanager.helper.sheet.rangedata.CellData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RangeData;
 import de.petanqueturniermanager.helper.sheet.rangedata.RowData;
 import de.petanqueturniermanager.supermelee.SpielRundeNr;
@@ -98,8 +98,8 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
                 TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE, ERSTE_DATEN_ZEILE + 100);
         RangeData data = RangeHelper.from(sheet, xDoc, readRange).getDataFromRange();
 
-        RangeData ergebnisData = new RangeData();
-        for (RowData row : data) {
+        for (int i = 0; i < data.size(); i++) {
+            RowData row = data.get(i);
             if (row.size() < 2) {
                 break;
             }
@@ -108,21 +108,20 @@ public class FormuleXTurnierTestDaten extends FormuleXAbstractSpielrundeSheet {
                 break;
             }
             int nrB = row.get(1).getIntVal(0);
-            RowData ergebnisZeile = ergebnisData.addNewRow();
-            if (nrB > 0) {
-                int winner = RandomSource.nextInt(2);
-                int loserPts = RandomSource.nextInt(0, 13);
-                ergebnisZeile.add(new CellData(winner == 0 ? 13 : loserPts));
-                ergebnisZeile.add(new CellData(winner == 0 ? loserPts : 13));
-            } else {
-                ergebnisZeile.add(new CellData(0));
-                ergebnisZeile.add(new CellData(0));
+            if (nrB <= 0) {
+                continue; // Freilos – Ergebnis ist bereits per Freispiel-Properties vorbelegt
             }
-        }
 
-        if (!ergebnisData.isEmpty()) {
-            Position startPos = Position.from(ERG_TEAM_A_SPALTE, ERSTE_DATEN_ZEILE);
-            RangeHelper.from(sheet, xDoc, ergebnisData.getRangePosition(startPos)).setDataInRange(ergebnisData);
+            int zeile = ERSTE_DATEN_ZEILE + i;
+            int winner = RandomSource.nextInt(2);
+            int loserPts = RandomSource.nextInt(0, 13);
+            int ergA = (winner == 0) ? 13 : loserPts;
+            int ergB = (winner == 0) ? loserPts : 13;
+
+            getSheetHelper().setNumberValueInCell(
+                    NumberCellValue.from(sheet, Position.from(ERG_TEAM_A_SPALTE, zeile)).setValue(ergA));
+            getSheetHelper().setNumberValueInCell(
+                    NumberCellValue.from(sheet, Position.from(ERG_TEAM_B_SPALTE, zeile)).setValue(ergB));
         }
     }
 }

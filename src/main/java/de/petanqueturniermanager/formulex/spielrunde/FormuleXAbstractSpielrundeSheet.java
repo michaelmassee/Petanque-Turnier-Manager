@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.star.awt.FontWeight;
 import com.sun.star.sheet.XSpreadsheet;
+import com.sun.star.sheet.XSpreadsheetDocument;
 import com.sun.star.table.CellHoriJustify;
 import com.sun.star.table.CellVertJustify2;
 import com.sun.star.table.TableBorder2;
@@ -344,6 +345,8 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         if (paarungen == null) {
             return;
         }
+        int freispielPlus = getKonfigurationSheet().getFreispielPunktePlus();
+        int freispielMinus = getKonfigurationSheet().getFreispielPunkteMinus();
         RangeData rangeData = new RangeData();
 
         for (TeamPaarung teamPaarung : paarungen) {
@@ -353,7 +356,10 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
             if (teamPaarung.hasB()) {
                 row.add(new CellData(teamPaarung.getB().getNr()));
             } else {
-                row.add(new CellData("")); // Freilos: kein Gegner
+                // Freilos: kein Gegner; ERG-Spalten mit Freispiel-Property-Werten vorbelegen
+                row.add(new CellData(""));
+                row.add(new CellData(freispielPlus));
+                row.add(new CellData(freispielMinus));
             }
         }
 
@@ -407,10 +413,60 @@ public abstract class FormuleXAbstractSpielrundeSheet extends SheetRunner implem
         spielrundeHelper.formatiereErgebnissRange(this, ergebnisRange, ERG_TEAM_A_SPALTE);
 
         if (datenEnd != null) {
-            RangePosition ergebnisEditierbarRange = RangePosition.from(
-                    ERG_TEAM_A_SPALTE, ERSTE_DATEN_ZEILE, ERG_TEAM_B_SPALTE, datenEnd.getZeile());
-            EditierbaresZelleFormatHelper.anwenden(this, ergebnisEditierbarRange);
+            // Freilos-Ergebniszellen aus der editierbaren Markierung ausnehmen –
+            // sie sind per Property vorbelegt und gesperrt (siehe FormuleXBlattschutzKonfiguration).
+            List<RangePosition> editierbarRanges = ermittleEditierbareErgebnisRanges(
+                    getXSpreadSheet(), getWorkingSpreadsheet().getWorkingSpreadsheetDocument(),
+                    datenEnd.getZeile());
+            for (RangePosition range : editierbarRanges) {
+                EditierbaresZelleFormatHelper.anwenden(this, range);
+            }
         }
+    }
+
+    /**
+     * Liefert die editierbaren Ergebnis-Zellbereiche für die Spielrunde – Freilos-Zeilen (Team B leer)
+     * werden ausgespart, sodass deren ERG-Zellen weder die Editierbar-Hintergrundfarbe noch eine
+     * editierbare Freigabe im Blattschutz erhalten.
+     */
+    public static List<RangePosition> ermittleEditierbareErgebnisRanges(XSpreadsheet sheet,
+            XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
+        Set<Integer> freilosZeilen = ermittleFreilosZeilen(sheet, xDoc, letzteZeile);
+        List<RangePosition> ranges = new ArrayList<>();
+        int blockStart = -1;
+        for (int zeile = ERSTE_DATEN_ZEILE; zeile <= letzteZeile; zeile++) {
+            if (freilosZeilen.contains(zeile)) {
+                if (blockStart >= 0) {
+                    ranges.add(RangePosition.from(ERG_TEAM_A_SPALTE, blockStart, ERG_TEAM_B_SPALTE, zeile - 1));
+                    blockStart = -1;
+                }
+            } else if (blockStart < 0) {
+                blockStart = zeile;
+            }
+        }
+        if (blockStart >= 0) {
+            ranges.add(RangePosition.from(ERG_TEAM_A_SPALTE, blockStart, ERG_TEAM_B_SPALTE, letzteZeile));
+        }
+        return ranges;
+    }
+
+    private static Set<Integer> ermittleFreilosZeilen(XSpreadsheet sheet,
+            XSpreadsheetDocument xDoc, int letzteZeile) throws GenerateException {
+        if (letzteZeile < ERSTE_DATEN_ZEILE) {
+            return Set.of();
+        }
+        RangeData teamBData = RangeHelper
+                .from(sheet, xDoc, RangePosition.from(TEAM_B_SPALTE, ERSTE_DATEN_ZEILE, TEAM_B_SPALTE, letzteZeile))
+                .getDataFromRange();
+        Set<Integer> freilos = new HashSet<>();
+        for (int i = 0; i < teamBData.size(); i++) {
+            RowData row = teamBData.get(i);
+            int nrB = (row.size() > 0) ? row.get(0).getIntVal(0) : 0;
+            if (nrB <= 0) {
+                freilos.add(ERSTE_DATEN_ZEILE + i);
+            }
+        }
+        return freilos;
     }
 
     private void header() throws GenerateException {
