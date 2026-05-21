@@ -3,18 +3,18 @@
   Master-Skript: orchestriert Windows-Calc-Freeze-Repro.
 
   Startet LO mit URP-Listener + verbose SAL_LOG, startet den Watcher
-  (jcmd-Thread-Dumps + Liveness-Probe) als Background-Job, fährt dann
+  (jcmd-Thread-Dumps + Liveness-Probe) als Background-Job, faehrt dann
   den UNO-Driver (Python) im Vordergrund, sammelt am Ende alle Logs und
   zipt das Output-Verzeichnis.
 
 .PARAMETER OutputRoot
-  Wurzelverzeichnis für Output (Default %USERPROFILE%\ptm-freeze).
+  Wurzelverzeichnis fuer Output (Default %USERPROFILE%\ptm-freeze).
 
 .PARAMETER Iterations
   Anzahl der Turnier+SheetStorm-Iterationen (Default 5).
 
 .PARAMETER WithProcMon
-  ProcMon-Trace mitlaufen lassen (benötigt Procmon.exe im PATH).
+  ProcMon-Trace mitlaufen lassen (benoetigt Procmon.exe im PATH).
 
 .PARAMETER SofficeExe
   Pfad zu soffice.exe (Default C:\Program Files\LibreOffice\program\soffice.exe).
@@ -59,10 +59,10 @@ foreach ($p in @($SofficeExe, $LoPython)) {
     if (-not (Test-Path $p)) { throw "Nicht gefunden: $p" }
 }
 if (-not (Get-Command jcmd -ErrorAction SilentlyContinue)) {
-    throw 'jcmd nicht im PATH. JDK installieren / PATH ergänzen.'
+    throw 'jcmd nicht im PATH. JDK installieren / PATH ergaenzen.'
 }
 
-# LO-Profil-Locks säubern, damit soffice frisch startet
+# LO-Profil-Locks saeubern, damit soffice frisch startet
 $loUserDir = Join-Path $env:APPDATA 'LibreOffice\4\user'
 $lockFile = Join-Path $loUserDir '.~lock.*'
 Get-ChildItem -Path $loUserDir -Filter '.~lock.*' -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
@@ -82,7 +82,7 @@ else {
     Write-Master "PTM-Log noch nicht da, erwarte: $ptmLog"
 }
 
-# Env für Child-LO
+# Env fuer Child-LO
 $env:SAL_LOG = '+INFO.vcl+INFO.framework+INFO.svtools+INFO.sd'
 $env:SAL_LOG_FILE = (Join-Path $outDir 'soffice.log')
 
@@ -105,7 +105,7 @@ if ($WithProcMon) {
     $procmonCmd = Get-Command Procmon.exe -ErrorAction SilentlyContinue
     $procmonExe = if ($procmonCmd) { $procmonCmd.Source } else { $null }
     if (-not $procmonExe) {
-        Write-Master 'WARN: -WithProcMon gesetzt, aber Procmon.exe nicht im PATH. Überspringe.'
+        Write-Master 'WARN: -WithProcMon gesetzt, aber Procmon.exe nicht im PATH. Ueberspringe.'
     }
     else {
         $procmonPml = Join-Path $outDir 'procmon.pml'
@@ -118,7 +118,7 @@ if ($WithProcMon) {
 }
 
 # Watcher als eigener Prozess (Start-Process, mit -ExecutionPolicy Bypass damit
-# der Child-PS unsignierte .ps1 ausführen darf).
+# der Child-PS unsignierte .ps1 ausfuehren darf).
 $watcherPs1 = Join-Path $scriptDir 'freeze-watch.ps1'
 Write-Master "starte Watcher (Prozess) -> $watcherPs1"
 $watcherProc = Start-Process -FilePath 'powershell.exe' -ArgumentList @(
@@ -154,10 +154,10 @@ if (-not (Test-Path $stopFlag)) {
     New-Item -ItemType File -Path $stopFlag -Force | Out-Null
 }
 
-# Watcher abwarten (Prozess endet selbständig, wenn stop.flag gesehen)
+# Watcher abwarten (Prozess endet selbstaendig, wenn stop.flag gesehen)
 Write-Master 'warte auf Watcher-Ende'
 if (-not $watcherProc.WaitForExit(15000)) {
-    Write-Master "Watcher reagiert nicht nach 15 s — Stop-Process PID $($watcherProc.Id)"
+    Write-Master "Watcher reagiert nicht nach 15 s -- Stop-Process PID $($watcherProc.Id)"
     Stop-Process -Id $watcherProc.Id -Force -ErrorAction SilentlyContinue
 }
 
@@ -192,7 +192,7 @@ if (Get-Process -Id $soffice.Id -ErrorAction SilentlyContinue) {
     }
 }
 
-# Stop-Flag entfernen, damit nächster Lauf sauber ist
+# Stop-Flag entfernen, damit naechster Lauf sauber ist
 Remove-Item $stopFlag -Force -ErrorAction SilentlyContinue
 
 # ZIP
