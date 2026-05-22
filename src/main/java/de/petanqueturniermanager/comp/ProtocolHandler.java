@@ -1258,10 +1258,18 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void addStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.trace("addStatusListener: command={} thread={} druckvorschauAktiv={}",
-				command, Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
+		// Frame dieser ProtocolHandler-Instanz mitspeichern: jeder Listener gehört
+		// genau zu dem Frame, dessen Toolbar/Menü ihn registriert hat. Pro Frame
+		// existiert eine eigene ProtocolHandler-Instanz mit eigenem `frame`-Feld
+		// (via initialize gesetzt). Damit kann notifyAllListeners() den Enabled-
+		// Status pro Listener am eigenen Doc bewerten – sonst spiegeln alle
+		// Toolbars den Zustand des global fokussierten Docs.
+		XFrame ownerFrame = frame;
+		logger.trace("addStatusListener: command={} frameHash={} thread={} druckvorschauAktiv={}",
+				command, ownerFrame == null ? "null" : System.identityHashCode(ownerFrame),
+				Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
-				.add(new StatusEntry(listener, url));
+				.add(new StatusEntry(listener, url, ownerFrame));
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			// C++-Toolbar-Controller werden während FillToolbar (Druckvorschau-Exit) angelegt.
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
@@ -1270,7 +1278,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			logger.trace("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
-		postStatus(listener, url, isEnabled(command, holeAktivesDokument()));
+		postStatus(listener, url, isEnabled(command, docOfFrame(ownerFrame)));
 	}
 
 	@Override
@@ -1283,10 +1291,28 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		}
 	}
 
-	/** Liefert das aktuell aktive Spreadsheet-Dokument, oder {@code null} wenn keines aktiv ist. */
-	private static XSpreadsheetDocument holeAktivesDokument() {
+	/**
+	 * Liefert das XSpreadsheetDocument eines Frames – oder {@code null} wenn der
+	 * Frame keinen Controller/Model hat (z. B. während Druckvorschau-Wechsel).
+	 * Wird bei {@link #notifyAllListeners()} und {@link #addStatusListener} pro
+	 * Listener verwendet, damit jeder Frame seinen eigenen Doc-Zustand bekommt.
+	 */
+	private static XSpreadsheetDocument docOfFrame(XFrame frame) {
+		if (frame == null) {
+			return null;
+		}
 		try {
-			return DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);
+			XController controller = frame.getController();
+			if (controller == null) {
+				return null;
+			}
+			XModel model = controller.getModel();
+			if (model == null) {
+				return null;
+			}
+			return Lo.qi(XSpreadsheetDocument.class, model);
+		} catch (DisposedException e) {
+			return null;
 		} catch (Exception e) {
 			return null;
 		}
@@ -1591,15 +1617,17 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		synchronized (STATUS_LISTENERS) {
 			snapshot = new HashMap<>(STATUS_LISTENERS);
 		}
-		// Menü/Toolbar-Zustand immer anhand des aktuell fokussierten Dokuments bewerten.
-		// Ein gespeichertes "eigensDokument" würde bei Singleton-Handler immer auf das erste
-		// Dokument zeigen → zweites Dokument zeigt falschen Menüzustand (Bug: zweites Dokument
-		// übernimmt Turniersystem-Zustand des ersten Dokuments).
-		var aktivesDokument = holeAktivesDokument();
+		// Jeden Listener mit dem Dokument SEINES Frames bewerten. Frühere
+		// Implementierung hat globales desktop.getCurrentComponent() benutzt –
+		// Folge: Klick auf doc1 hat die Toolbar in BEIDEN Docs auf doc1-State
+		// gesetzt (und umgekehrt). Mit ownerFrame pro StatusEntry sieht jedes
+		// Calc-Fenster seinen eigenen Turnier-Zustand, völlig unabhängig vom OS-Fokus.
 		int listenerAnzahl = 0;
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
+			String command = entry.getKey();
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
-				postStatus(e.listener, e.url, isEnabled(entry.getKey(), aktivesDokument));
+				XSpreadsheetDocument docFuerDiesenListener = docOfFrame(e.frame());
+				postStatus(e.listener, e.url, isEnabled(command, docFuerDiesenListener));
 				listenerAnzahl++;
 			}
 		}
@@ -1693,6 +1721,15 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	// -------------------------------------------------------------------------
 
-	private record StatusEntry(XStatusListener listener, URL url) {
+	/**
+	 * Eintrag im {@link #STATUS_LISTENERS}-Register. Das Feld {@code frame} ist der
+	 * Frame, dessen ProtocolHandler-Instanz {@link #addStatusListener} aufgerufen
+	 * hat (also der Frame, dem dieser StatusListener gehört). Bei
+	 * {@link #notifyAllListeners()} wird der Enabled-Status pro Eintrag mit dem
+	 * Dokument *dieses* Frames bewertet – nicht mit dem globalen
+	 * {@code desktop.getCurrentComponent()}. So bekommt jedes Calc-Fenster seine
+	 * eigenen, korrekten Toolbar-/Menü-States.
+	 */
+	private record StatusEntry(XStatusListener listener, URL url, XFrame frame) {
 	}
 }

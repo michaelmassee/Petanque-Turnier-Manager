@@ -55,7 +55,7 @@ public class TurnierSystemNeueDateiAuswahlDialog extends TurnierSystemAuswahlDia
         logger.info("[FOKUS-TRACE] beiOkGeklickt: System={} aufrufendesWs.doc={}",
                 gewaehltesTurnierSystem.getBezeichnung(),
                 de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(
-                        ws == null ? null : ws.getWorkingSpreadsheetDocument()));
+                        ws.getWorkingSpreadsheetDocument()));
 
         var xContext = ws.getxContext();
         XComponentLoader loader = Lo.qi(XComponentLoader.class,
