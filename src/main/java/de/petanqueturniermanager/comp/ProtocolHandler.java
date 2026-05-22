@@ -362,10 +362,16 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	 */
 	private XFrame frame;
 
+	private static final java.util.concurrent.atomic.AtomicInteger CTOR_COUNTER =
+			new java.util.concurrent.atomic.AtomicInteger();
+
 	public ProtocolHandler(XComponentContext xContext) {
 		this.xContext = xContext;
 		SHARED_CONTEXT = xContext;
 		long ctorStartNs = System.nanoTime();
+		int ctorNum = CTOR_COUNTER.incrementAndGet();
+		logger.info("[FOKUS-TRACE] ProtocolHandler-ctor #{} handlerHash={} thread={}",
+				ctorNum, System.identityHashCode(this), Thread.currentThread().getName());
 		PetanqueTurnierMngrSingleton.init(xContext);
 		long t = System.nanoTime();
 		PerfLog.log(logger, "[STARTUP-TIMING] ProtocolHandler-ctor PetanqueTurnierMngrSingleton.init: {} ms",
@@ -398,21 +404,25 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PetanqueTurnierMngrSingleton.addGlobalEventListener(new IGlobalEventListener() {
 				@Override
 				public void onFocus(Object source) {
+					logger.info("[FOKUS-TRACE] onFocus: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onLoadFinished(Object source) {
+					logger.info("[FOKUS-TRACE] onLoadFinished: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onNew(Object source) {
+					logger.info("[FOKUS-TRACE] onNew: source={}", beschreibeSource(source));
 					notifyAllListeners();
 				}
 
 				@Override
 				public void onLoad(Object source) {
+					logger.info("[FOKUS-TRACE] onLoad: source={}", beschreibeSource(source));
 					var doc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
 					if (doc != null) {
 						var ws = new WorkingSpreadsheet(xContext, doc);
@@ -432,6 +442,7 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 				@Override
 				public void onUnload(Object source) {
+					logger.info("[FOKUS-TRACE] onUnload: source={}", beschreibeSource(source));
 					// WS stoppen wenn das Owner-Dokument geschlossen wird → andere Dokumente
 					// können danach wieder starten
 					var geschlossenesDoc = DocumentHelper.getCurrentSpreadsheetDocumentFrom(source);
@@ -484,6 +495,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 			PetanqueTurnierMngrSingleton.addTurnierEventListener(new ITurnierEventListener() {
 				@Override
 				public void onPropertiesChanged(ITurnierEvent event) {
+					XSpreadsheetDocument quelldoc = event == null ? null : event.getWorkingSpreadsheetDocument();
+					XSpreadsheetDocument globalDoc = holeAktivesDokument();
+					logger.info("[FOKUS-TRACE] TurnierEvent onPropertiesChanged: quelldoc={} globalAktivesDoc={} match={}",
+							beschreibeDokument(quelldoc), beschreibeDokument(globalDoc),
+							quelldoc != null && quelldoc.equals(globalDoc));
 					notifyAllListeners();
 				}
 			});
@@ -567,6 +583,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 		} catch (DisposedException e) {
 			logger.debug("Frame disposed beim Auflösen des Ziel-Dokuments – Fallback auf aktuelles Dokument");
 			return null;
+		}
+	}
+
+	/**
+	 * Hilfs-Logging für GlobalEventListener-Quellen (XModel/XComponent). Versucht
+	 * URL und identityHash zu extrahieren – defensiv, niemals throw.
+	 */
+	static String beschreibeSource(Object source) {
+		if (source == null) return "null";
+		try {
+			XModel m = Lo.qi(XModel.class, source);
+			String url = m != null && m.getURL() != null && !m.getURL().isEmpty() ? m.getURL() : "<unbenannt>";
+			return url + "#" + System.identityHashCode(source);
+		} catch (Exception e) {
+			return "<err:" + e.getMessage() + ">#" + System.identityHashCode(source);
 		}
 	}
 
@@ -1258,16 +1289,21 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void addStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.trace("addStatusListener: command={} thread={} druckvorschauAktiv={}",
-				command, Thread.currentThread().getName(), PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
-		STATUS_LISTENERS.computeIfAbsent(command, k -> Collections.synchronizedList(new ArrayList<>()))
-				.add(new StatusEntry(listener, url));
+		List<StatusEntry> list = STATUS_LISTENERS.computeIfAbsent(command,
+				k -> Collections.synchronizedList(new ArrayList<>()));
+		list.add(new StatusEntry(listener, url));
+		logger.info("[FOKUS-TRACE] addStatusListener: cmd='{}' handlerHash={} frameHash={} listeners[{}]={} thread={} druckvorschau={}",
+				command, System.identityHashCode(this),
+				frame == null ? "null" : System.identityHashCode(frame),
+				command, list.size(),
+				Thread.currentThread().getName(),
+				PetanqueTurnierMngrSingleton.isDruckvorschauAktiv());
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
 			// C++-Toolbar-Controller werden während FillToolbar (Druckvorschau-Exit) angelegt.
 			// postStatus() → statusChanged() als Re-Entrant-Callback in LO C++ korrumpiert
 			// den Frame-Zustand → SIGSEGV nach OnCopyToDone. Guard: erst nach OnViewCreated
 			// (dort ruft notifyAllListeners() alle neuen Controller korrekt auf).
-			logger.trace("addStatusListener: command={} – postStatus übersprungen (Druckvorschau aktiv)", command);
+			logger.info("[FOKUS-TRACE] addStatusListener: cmd='{}' – postStatus übersprungen (Druckvorschau aktiv)", command);
 			return;
 		}
 		postStatus(listener, url, isEnabled(command, holeAktivesDokument()));
@@ -1276,18 +1312,27 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void removeStatusListener(XStatusListener listener, URL url) {
 		String command = url.Path;
-		logger.trace("removeStatusListener: command={} thread={}", command, Thread.currentThread().getName());
 		List<StatusEntry> list = STATUS_LISTENERS.get(command);
+		int sizeBefore = list == null ? 0 : list.size();
 		if (list != null) {
 			list.removeIf(e -> e.listener == listener);
 		}
+		int sizeAfter = list == null ? 0 : list.size();
+		logger.info("[FOKUS-TRACE] removeStatusListener: cmd='{}' handlerHash={} listeners[{}]: {}→{} thread={}",
+				command, System.identityHashCode(this), command, sizeBefore, sizeAfter,
+				Thread.currentThread().getName());
 	}
 
 	/** Liefert das aktuell aktive Spreadsheet-Dokument, oder {@code null} wenn keines aktiv ist. */
 	private static XSpreadsheetDocument holeAktivesDokument() {
 		try {
-			return DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);
+			XSpreadsheetDocument doc = DocumentHelper.getCurrentSpreadsheetDocument(SHARED_CONTEXT);
+			if (logger.isDebugEnabled()) {
+				logger.debug("[FOKUS-TRACE] holeAktivesDokument: {}", beschreibeDokument(doc));
+			}
+			return doc;
 		} catch (Exception e) {
+			logger.debug("[FOKUS-TRACE] holeAktivesDokument: Exception {}", e.getMessage());
 			return null;
 		}
 	}
@@ -1308,6 +1353,11 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					? new WorkingSpreadsheet(ctx, document)
 					: new WorkingSpreadsheet(ctx);
 			TurnierSystem ts = new DocumentPropertiesHelper(ws).getTurnierSystemAusDocument();
+			if (logger.isDebugEnabled()) {
+				logger.debug("[FOKUS-TRACE] isEnabled cmd='{}' doc-arg={} effective-doc={} turnierSystem={}",
+						command, beschreibeDokument(document),
+						beschreibeDokument(ws.getWorkingSpreadsheetDocument()), ts);
+			}
 			return switch (command) {
 			// SuperMelee: neues Turnier nur wenn keins aktiv
 			case CMD_NEUE_MELDELISTE                        -> ts == TurnierSystem.KEIN;
@@ -1580,39 +1630,55 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 
 	private static final AtomicBoolean NOTIFY_ALL_FIRST_LOG = new AtomicBoolean(true);
 
+	private static final java.util.concurrent.atomic.AtomicInteger NOTIFY_COUNTER =
+			new java.util.concurrent.atomic.AtomicInteger();
+
 	static void notifyAllListeners() {
 		if (PetanqueTurnierMngrSingleton.isDruckvorschauAktiv()) {
-			logger.debug("notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
+			logger.info("[FOKUS-TRACE] notifyAllListeners: Druckvorschau aktiv – übersprungen (thread={})",
 					Thread.currentThread().getName());
 			return;
 		}
+		int notifyId = NOTIFY_COUNTER.incrementAndGet();
 		long startNs = System.nanoTime();
 		Map<String, List<StatusEntry>> snapshot;
 		synchronized (STATUS_LISTENERS) {
 			snapshot = new HashMap<>(STATUS_LISTENERS);
 		}
-		// Menü/Toolbar-Zustand anhand des aktuell fokussierten Dokuments bewerten.
-		// Pro-Frame-Bewertung wurde zurückgenommen weil sie LO Crashes/Freezes
-		// verursachte – vermutlich durch das Halten von XFrame-Proxies in der
-		// statischen STATUS_LISTENERS-Map plus UNO-Calls auf disposed Frames.
-		// Die Symptom-Behebung (jeder Frame eigene Toolbar-States) bleibt offen –
-		// separate Aufgabe, vermutlich auf anderem Weg (Pro-Frame-Statemap
-		// statt Pro-Listener-Frame).
+		// Top-Frames im Aufruf-Stack loggen damit klar ist, wer notifyAllListeners triggert
+		StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+		StringBuilder caller = new StringBuilder();
+		for (int i = 2; i < Math.min(stack.length, 6); i++) {
+			if (caller.length() > 0) caller.append(" ← ");
+			caller.append(stack[i].getClassName().substring(stack[i].getClassName().lastIndexOf('.') + 1))
+					.append('.').append(stack[i].getMethodName())
+					.append(':').append(stack[i].getLineNumber());
+		}
 		var aktivesDokument = holeAktivesDokument();
+		int totalListeners = snapshot.values().stream().mapToInt(List::size).sum();
+		logger.info("[FOKUS-TRACE] notifyAllListeners #{} START thread={} aktiverDoc={} commands={} listeners={} caller={}",
+				notifyId, Thread.currentThread().getName(), beschreibeDokument(aktivesDokument),
+				snapshot.size(), totalListeners, caller);
 		int listenerAnzahl = 0;
 		for (Map.Entry<String, List<StatusEntry>> entry : snapshot.entrySet()) {
+			boolean enabled = isEnabled(entry.getKey(), aktivesDokument);
+			if (logger.isDebugEnabled()) {
+				logger.debug("[FOKUS-TRACE] notifyAll #{}: cmd='{}' enabled={} count={}",
+						notifyId, entry.getKey(), enabled, entry.getValue().size());
+			}
 			for (StatusEntry e : new ArrayList<>(entry.getValue())) {
-				postStatus(e.listener, e.url, isEnabled(entry.getKey(), aktivesDokument));
+				postStatus(e.listener, e.url, enabled);
 				listenerAnzahl++;
 			}
 		}
-		// Spieltag-Toolbar je nach aktivem Turniersystem ein-/ausblenden
 		var ctx = SHARED_CONTEXT;
 		if (ctx != null) {
 			SpieltagToolbarSteuerung.aktualisiereInAllenFrames(ctx);
 		}
+		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+		logger.info("[FOKUS-TRACE] notifyAllListeners #{} ENDE listenerAnzahl={} dauerMs={}",
+				notifyId, listenerAnzahl, dauerMs);
 		if (NOTIFY_ALL_FIRST_LOG.compareAndSet(true, false)) {
-			long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
 			PerfLog.log(logger, "[STARTUP-TIMING] notifyAllListeners (erster Aufruf): {} ms, Listener-Anzahl={}, thread={}",
 					dauerMs, listenerAnzahl, Thread.currentThread().getName());
 		}

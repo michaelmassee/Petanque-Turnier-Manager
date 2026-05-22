@@ -121,6 +121,11 @@ public class DocumentPropertiesHelper {
 			if (!Objects.equals(oldVal, val)) {
 				setStringPropertyInDocument(propName, val);
 				currentPropListe.put(propName, val);
+				if (logger.isInfoEnabled()) {
+					logger.info("[FOKUS-TRACE] setStringProperty: name='{}' old='{}' new='{}' doc={}",
+							propName, oldVal, val,
+							de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(xSpreadsheetDocument));
+				}
 				PetanqueTurnierMngrSingleton.triggerTurnierEventListener(TurnierEventType.PropertiesChanged,
 						new OnProperiesChangedEvent(xSpreadsheetDocument).addChanged(propName, oldVal, val));
 			}
@@ -131,7 +136,7 @@ public class DocumentPropertiesHelper {
 	 * Wie {@link #setStringProperty(String, String)}, aber ohne {@link TurnierEventType#PropertiesChanged}-Event
 	 * zu feuern. Für interne Infrastruktur-Properties (Hash, Timestamps, Recovery-Flags), an denen kein
 	 * UI-Listener interessiert ist. Wichtig insbesondere, wenn der Aufruf von einem Hintergrund-Thread
-	 * (z.B. {@code PTM-RanglisteRefreshDebouncer}) erfolgt: ohne Event-Trigger werden Sidebar-Rebuilds
+	 * (z.B. {@code PTM-SheetSyncDebouncer}) erfolgt: ohne Event-Trigger werden Sidebar-Rebuilds
 	 * (VCL-Operationen auf falschem Thread) vermieden.
 	 */
 	public void setStringPropertyOhneEvent(String propName, String val) {

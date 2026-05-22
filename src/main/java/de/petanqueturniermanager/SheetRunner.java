@@ -175,6 +175,11 @@ public abstract class SheetRunner extends Thread {
 		if (laueftJetzt) {
 			logger.debug("Start SheetRunner");
 			long runStartNs = System.nanoTime();
+			logger.info("[FOKUS-TRACE] SheetRunner.run START class={} workingDoc={} silentBackground={} thread={}",
+					this.getClass().getSimpleName(),
+					de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(
+							workingSpreadsheet.getWorkingSpreadsheetDocument()),
+					silentBackground, Thread.currentThread().getName());
 			PerfLog.log(logger, "[WORKER-TIMING] SheetRunner.run START class={} thread={}",
 					this.getClass().getSimpleName(), Thread.currentThread().getName());
 			registerDisposingListener();

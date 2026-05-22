@@ -105,8 +105,14 @@ public class TurnierEventHandler {
 	private void broadcastSync(ITurnierEvent eventObj, String quelle, boolean synchronerPfad) {
 		long startNs = System.nanoTime();
 		int anzahl;
+		String eventDoc = eventObj == null ? "null"
+				: de.petanqueturniermanager.comp.ProtocolHandler.beschreibeDokument(
+						eventObj.getWorkingSpreadsheetDocument());
 		synchronized (listeners) {
 			anzahl = listeners.size();
+			logger.info("[FOKUS-TRACE] TurnierEvent broadcast START quelle={} pfad={} eventDoc={} listeners={} thread={}",
+					quelle, synchronerPfad ? "sync" : "main", eventDoc, anzahl,
+					Thread.currentThread().getName());
 			for (ITurnierEventListener listner : listeners) {
 				try {
 					listner.onPropertiesChanged(eventObj);
@@ -116,6 +122,8 @@ public class TurnierEventHandler {
 			}
 		}
 		long dauerMs = (System.nanoTime() - startNs) / 1_000_000L;
+		logger.info("[FOKUS-TRACE] TurnierEvent broadcast ENDE quelle={} dauerMs={} listener={}",
+				quelle, dauerMs, anzahl);
 		PerfLog.log(logger, "[WORKER-TIMING] TurnierEventHandler broadcast PropertiesChanged quelle={} pfad={} : {} ms, listener={}, thread={}",
 				quelle, synchronerPfad ? "sync" : "main", dauerMs, anzahl,
 				Thread.currentThread().getName());
