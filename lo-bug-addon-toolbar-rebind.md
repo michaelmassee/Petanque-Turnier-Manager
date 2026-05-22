@@ -1,8 +1,7 @@
-# LibreOffice Bug-Report (Draft)
+# LibreOffice Bug-Report
 ## Addon-Toolbars: StatusListener nicht re-registriert nach `ToolBarManager` dispose
 
-**Status:** Draft, noch nicht eingereicht. Liegt im Repo, damit Reproduktions-Schritte
-und Source-Analyse versioniert sind.
+**Filed as:** [tdf#172207](https://bugs.documentfoundation.org/show_bug.cgi?id=172207)
 
 ## Component
 - Framework / UI Configuration

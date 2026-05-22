@@ -181,7 +181,9 @@ erscheinen — die Buttons reagieren nicht mehr auf den Turnier-Zustand
 Addon-Toolbar in bestimmten internen Lifecycle-Zuständen ab, ohne ihn neu
 aufzubauen. Das betrifft nur Addon-Toolbars; Menü-Aktionen, Sheets und
 Sidebar funktionieren weiter korrekt. Es handelt sich um einen
-LibreOffice-internen Bug — siehe Analyse in
+LibreOffice-internen Bug — gemeldet als
+[tdf#172207](https://bugs.documentfoundation.org/show_bug.cgi?id=172207),
+Analyse + Reproduktion in
 [`lo-bug-addon-toolbar-rebind.md`](lo-bug-addon-toolbar-rebind.md).
 
 **Workaround:** Betroffenes Doc einmal **schließen und wieder öffnen** —
