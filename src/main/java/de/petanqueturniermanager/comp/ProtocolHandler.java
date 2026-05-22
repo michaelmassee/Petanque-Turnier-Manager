@@ -507,12 +507,24 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void initialize(Object[] arguments) {
 		if (arguments == null || arguments.length == 0) {
+			logger.warn("[FOKUS-TRACE] initialize: ohne Argumente (handlerHash={})", System.identityHashCode(this));
 			return;
 		}
 		XFrame xFrame = Lo.qi(XFrame.class, arguments[0]);
 		if (xFrame != null) {
 			frame = xFrame;
+			logger.info("[FOKUS-TRACE] initialize: handlerHash={} frameHash={} frameTitle='{}'",
+					System.identityHashCode(this), System.identityHashCode(xFrame), holeFrameTitle(xFrame));
 		}
+	}
+
+	private static String holeFrameTitle(XFrame f) {
+		if (f == null) return "<null>";
+		try {
+			var titled = Lo.qi(com.sun.star.frame.XTitle.class, f);
+			if (titled != null) return titled.getTitle();
+		} catch (Exception ignore) { }
+		return "<no-title>";
 	}
 
 	/**
@@ -524,29 +536,51 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	private WorkingSpreadsheet erzeugeWorkingSpreadsheetFuerDispatch() {
 		XSpreadsheetDocument doc = ermittleDokumentAusFrame();
 		if (doc != null) {
+			logger.info("[FOKUS-TRACE] erzeugeWS: handlerHash={} frameHash={} frameTitle='{}' doc={}",
+					System.identityHashCode(this), System.identityHashCode(frame),
+					holeFrameTitle(frame), beschreibeDokument(doc));
 			return new WorkingSpreadsheet(xContext, doc);
 		}
+		logger.warn("[FOKUS-TRACE] erzeugeWS: FALLBACK auf getCurrentSpreadsheetDocument (frame={}) – Ziel nicht deterministisch!",
+				frame == null ? "null" : System.identityHashCode(frame));
 		return new WorkingSpreadsheet(xContext);
 	}
 
 	private XSpreadsheetDocument ermittleDokumentAusFrame() {
 		XFrame f = frame;
 		if (f == null) {
+			logger.warn("[FOKUS-TRACE] ermittleDokumentAusFrame: frame==null – initialize() wurde nicht aufgerufen");
 			return null;
 		}
 		try {
 			XController controller = f.getController();
 			if (controller == null) {
+				logger.warn("[FOKUS-TRACE] ermittleDokumentAusFrame: controller==null (frameHash={})", System.identityHashCode(f));
 				return null;
 			}
 			XModel model = controller.getModel();
 			if (model == null) {
+				logger.warn("[FOKUS-TRACE] ermittleDokumentAusFrame: model==null (frameHash={})", System.identityHashCode(f));
 				return null;
 			}
 			return Lo.qi(XSpreadsheetDocument.class, model);
 		} catch (DisposedException e) {
 			logger.debug("Frame disposed beim Auflösen des Ziel-Dokuments – Fallback auf aktuelles Dokument");
 			return null;
+		}
+	}
+
+	/** Hilfs-Logging: liefert URL+identityHash eines Dokuments für Fokus-Trace. */
+	public static String beschreibeDokument(XSpreadsheetDocument doc) {
+		if (doc == null) {
+			return "null";
+		}
+		try {
+			XModel m = Lo.qi(XModel.class, doc);
+			String url = m != null && m.getURL() != null && !m.getURL().isEmpty() ? m.getURL() : "<unbenannt>";
+			return url + "#" + System.identityHashCode(doc);
+		} catch (Exception e) {
+			return "<err:" + e.getMessage() + ">#" + System.identityHashCode(doc);
 		}
 	}
 
@@ -576,6 +610,10 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 	@Override
 	public void dispatch(URL url, PropertyValue[] args) {
 		String command = url.Path;
+		logger.info("[FOKUS-TRACE] dispatch: cmd='{}' handlerHash={} frameHash={} frameTitle='{}'",
+				command, System.identityHashCode(this),
+				frame == null ? "null" : System.identityHashCode(frame),
+				holeFrameTitle(frame));
 		StartupClock.logErstesVorkommen("dispatch:first", "ProtocolHandler.dispatch erster Aufruf (" + command + ")");
 		try {
 			// Timer-Befehle laufen nicht im SheetRunner-Thread → direkt behandeln
@@ -1011,7 +1049,8 @@ public class ProtocolHandler extends WeakBase implements XDispatchProvider, XDis
 					new TurnierStartseiteDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeigen();
 			case CMD_DOWNLOAD_EXTENSION   -> starteDownloadExtension();
 			case CMD_TOOLBAR_START        -> new TurnierSystemAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
-			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI -> new TurnierSystemNeueDateiAuswahlDialog(xContext).zeige();
+			case CMD_TOOLBAR_NEU_IN_NEUER_DATEI ->
+					new TurnierSystemNeueDateiAuswahlDialog(erzeugeWorkingSpreadsheetFuerDispatch()).zeige();
 			case CMD_TOOLBAR_OEFFNEN            -> erzeugeWorkingSpreadsheetFuerDispatch()
 					.executeDispatch(".uno:Open", "_self", 0, new PropertyValue[0]);
 			case CMD_TOOLBAR_DRUCKEN            -> erzeugeWorkingSpreadsheetFuerDispatch()

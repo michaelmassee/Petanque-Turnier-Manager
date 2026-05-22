@@ -22,8 +22,6 @@ import com.sun.star.container.XNameContainer;
 import com.sun.star.lang.XMultiComponentFactory;
 import com.sun.star.lang.XMultiServiceFactory;
 
-import com.sun.star.uno.XComponentContext;
-
 import de.petanqueturniermanager.comp.WorkingSpreadsheet;
 import de.petanqueturniermanager.helper.DocumentPropertiesHelper;
 import de.petanqueturniermanager.helper.Lo;
@@ -69,22 +67,12 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
     }).sorted(Comparator.comparing(TurnierSystem::getBezeichnung, Collator.getInstance()))
             .toArray(TurnierSystem[]::new);
 
-    private WorkingSpreadsheet ws;
+    protected final WorkingSpreadsheet ws;
     protected XListBox listBox;
 
     public TurnierSystemAuswahlDialog(WorkingSpreadsheet ws) {
         super(ws.getxContext());
         this.ws = ws;
-    }
-
-    /**
-     * Konstruktor für Unterklassen, die kein bestehendes Dokument benötigen.
-     * {@code ws} bleibt {@code null} – {@link #beiOkGeklickt()} muss in der Unterklasse
-     * vollständig überschrieben werden.
-     */
-    protected TurnierSystemAuswahlDialog(XComponentContext xContext) {
-        super(xContext);
-        this.ws = null;
     }
 
     public void zeige() throws com.sun.star.uno.Exception {
@@ -96,7 +84,12 @@ public class TurnierSystemAuswahlDialog extends AbstractUnoDialog {
         // Container-Fenster des aufrufenden Calc-Frames als Parent setzen, damit
         // nach Schließen des Dialogs der Focus beim Ursprungs-Dokument bleibt
         // (sonst entscheidet der WM bei mehreren offenen Calc-Fenstern beliebig).
-        return ws != null ? ws.getContainerWindowPeer() : null;
+        var peer = ws != null ? ws.getContainerWindowPeer() : null;
+        logger.info("[FOKUS-TRACE] {}: holeParentPeer ws={} peer={}",
+                getClass().getSimpleName(),
+                ws == null ? "null" : "set",
+                peer == null ? "null" : "set");
+        return peer;
     }
 
     @Override
